@@ -57,7 +57,7 @@ impl UpdateFiles {
 		let tab = cx.tab_mut();
 
 		let urn = tab.current.url.urn();
-		let leave = matches!(op, FilesOp::Deleting(_, ref urns) if urns.contains(urn));
+		let leave = matches!(op, FilesOp::Deleting(_, ref urns) if urns.contains(&urn));
 
 		if let Some(f) = tab.parent.as_mut() {
 			render!(f.update_pub(tab.id, op));
@@ -102,7 +102,7 @@ impl UpdateFiles {
 	fn update_history(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let tab = &mut cx.tab_mut();
 		let leave = tab.parent.as_ref().and_then(|f| f.url.parent().map(|p| (p, f.url.urn()))).is_some_and(
-			|(p, n)| matches!(op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(n)),
+			|(p, n)| matches!(op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(&n)),
 		);
 
 		tab

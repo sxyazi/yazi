@@ -10,7 +10,7 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::{FilesOp, FsHash64};
 use yazi_plugin::isolate;
-use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlLike}};
+use yazi_shared::{event::CmdCow, path::PathLike, url::{UrlBuf, UrlLike}};
 use yazi_vfs::provider;
 
 use super::{PreworkInFetch, PreworkInLoad, PreworkInSize};
@@ -106,7 +106,7 @@ impl Prework {
 			let parent = buf[0].0.parent().unwrap();
 			FilesOp::Size(
 				parent.into(),
-				HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.urn().to_owned(), s))),
+				HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.urn().owned(), s))),
 			)
 			.emit();
 		});

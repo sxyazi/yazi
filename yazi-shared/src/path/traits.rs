@@ -1,23 +1,87 @@
-use crate::path::PathLike;
+use std::{borrow::Cow, ffi::{OsStr, OsString}};
+
+use super::{PathBufDyn, PathDyn};
+use crate::path::{PathBufLike, PathLike};
 
 pub trait AsPath {
 	fn as_path(&self) -> impl PathLike<'_>;
 }
 
-impl AsPath for &std::ffi::OsStr {
+impl AsPath for OsStr {
 	fn as_path(&self) -> impl PathLike<'_> { std::path::Path::new(self) }
 }
 
-impl AsPath for &std::path::Path {
-	fn as_path(&self) -> impl PathLike<'_> { *self }
+impl AsPath for &OsStr {
+	fn as_path(&self) -> impl PathLike<'_> { std::path::Path::new(self) }
+}
+
+impl AsPath for std::path::Path {
+	fn as_path(&self) -> impl PathLike<'_> { self }
 }
 
 impl AsPath for std::path::PathBuf {
 	fn as_path(&self) -> impl PathLike<'_> { self.as_path() }
 }
 
-impl AsPath for &std::path::PathBuf {
-	fn as_path(&self) -> impl PathLike<'_> { (*self).as_path() }
+impl AsPath for PathDyn<'_> {
+	fn as_path(&self) -> impl PathLike<'_> { *self }
+}
+
+impl AsPath for PathBufDyn {
+	fn as_path(&self) -> impl PathLike<'_> { self.borrow() }
+}
+
+impl AsPath for &PathBufDyn {
+	fn as_path(&self) -> impl PathLike<'_> { self.borrow() }
+}
+
+// --- AsPathDyn
+pub trait AsPathDyn {
+	fn as_path_dyn(&self) -> PathDyn<'_>;
+}
+
+impl AsPathDyn for &str {
+	fn as_path_dyn(&self) -> PathDyn<'_> { std::path::Path::new(self).into() }
+}
+
+impl AsPathDyn for String {
+	fn as_path_dyn(&self) -> PathDyn<'_> { std::path::Path::new(self).into() }
+}
+
+impl AsPathDyn for &String {
+	fn as_path_dyn(&self) -> PathDyn<'_> { std::path::Path::new(self).into() }
+}
+
+impl AsPathDyn for OsStr {
+	fn as_path_dyn(&self) -> PathDyn<'_> { std::path::Path::new(self).into() }
+}
+
+impl AsPathDyn for &OsStr {
+	fn as_path_dyn(&self) -> PathDyn<'_> { std::path::Path::new(self).into() }
+}
+
+impl AsPathDyn for Cow<'_, OsStr> {
+	fn as_path_dyn(&self) -> PathDyn<'_> { std::path::Path::new(self).into() }
+}
+
+impl AsPathDyn for std::path::PathBuf {
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.as_path().into() }
+}
+
+impl AsPathDyn for &std::path::PathBuf {
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.as_path().into() }
+}
+
+impl AsPathDyn for PathDyn<'_> {
+	fn as_path_dyn(&self) -> PathDyn<'_> { *self }
+}
+
+impl AsPathDyn for PathBufDyn {
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.borrow() }
+}
+
+impl AsPathDyn for &PathBufDyn {
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.borrow() }
 }
 
 // --- AsPathView
@@ -26,6 +90,10 @@ pub trait AsPathView<'a, T> {
 }
 
 impl<'a> AsPathView<'a, &'a std::path::Path> for &'a str {
+	fn as_path_view(self) -> &'a std::path::Path { std::path::Path::new(self) }
+}
+
+impl<'a> AsPathView<'a, &'a std::path::Path> for &'a OsStr {
 	fn as_path_view(self) -> &'a std::path::Path { std::path::Path::new(self) }
 }
 
@@ -41,32 +109,20 @@ impl<'a> AsPathView<'a, &'a std::path::Path> for std::path::Components<'a> {
 	fn as_path_view(self) -> &'a std::path::Path { self.as_path() }
 }
 
-impl<'a> AsPathView<'a, super::PathDyn<'a>> for &'a super::PathBufDyn {
-	fn as_path_view(self) -> super::PathDyn<'a> {
+impl<'a> AsPathView<'a, PathDyn<'a>> for &'a PathBufDyn {
+	fn as_path_view(self) -> PathDyn<'a> {
 		match self {
-			super::PathBufDyn::Os(p) => super::PathDyn::Os(p.as_path()),
+			PathBufDyn::Os(p) => PathDyn::Os(p.as_path()),
 		}
 	}
 }
 
+impl<'a> AsPathView<'a, &'a std::path::Path> for &'a Cow<'_, OsStr> {
+	fn as_path_view(self) -> &'a std::path::Path { std::path::Path::new(self) }
+}
+
 impl<'a> AsPathView<'a, &'a std::path::Path> for crate::loc::Loc<'a, &'a std::path::Path> {
 	fn as_path_view(self) -> &'a std::path::Path { *self }
-}
-
-// --- ToPathOwned
-pub trait ToPathOwned<T> {
-	fn to_path_owned(&self) -> T;
-}
-
-impl ToPathOwned<std::path::PathBuf> for std::path::Path {
-	fn to_path_owned(&self) -> std::path::PathBuf { self.to_owned() }
-}
-
-impl<T, U> ToPathOwned<U> for &T
-where
-	T: ?Sized + ToPathOwned<U>,
-{
-	fn to_path_owned(&self) -> U { (*self).to_path_owned() }
 }
 
 // --- AsInnerView
@@ -74,12 +130,12 @@ pub trait AsInnerView<'a, T> {
 	fn as_inner_view(&'a self) -> T;
 }
 
-impl<'a> AsInnerView<'a, &'a std::ffi::OsStr> for std::ffi::OsStr {
-	fn as_inner_view(&'a self) -> &'a std::ffi::OsStr { self }
+impl<'a> AsInnerView<'a, &'a OsStr> for OsStr {
+	fn as_inner_view(&'a self) -> &'a OsStr { self }
 }
 
-impl<'a> AsInnerView<'a, &'a std::ffi::OsStr> for std::ffi::OsString {
-	fn as_inner_view(&'a self) -> &'a std::ffi::OsStr { self }
+impl<'a> AsInnerView<'a, &'a OsStr> for OsString {
+	fn as_inner_view(&'a self) -> &'a OsStr { self }
 }
 
 impl<'a> AsInnerView<'a, &'a [u8]> for [u8] {

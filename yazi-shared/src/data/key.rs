@@ -1,9 +1,9 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::borrow::Cow;
 
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 
-use crate::{Id, SStr, url::{UrlBuf, UrlCow}};
+use crate::{Id, SStr, path::PathBufDyn, url::{UrlBuf, UrlCow}};
 
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(untagged)]
@@ -18,7 +18,7 @@ pub enum DataKey {
 	#[serde(skip_deserializing)]
 	Url(UrlBuf),
 	#[serde(skip_deserializing)]
-	Path(PathBuf),
+	Path(PathBufDyn),
 	#[serde(skip)]
 	Bytes(Vec<u8>),
 }

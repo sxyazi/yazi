@@ -10,11 +10,15 @@ where
 	type InnerRef<'a>: PathInner<'a>;
 	type Borrowed<'a>: PathLike<'a> + AsPathView<'a, Self::Borrowed<'a>> + Debug + Hash;
 
+	fn borrow(&self) -> Self::Borrowed<'_>;
+
 	fn encoded_bytes(&self) -> &[u8];
 
 	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self;
 
 	fn into_encoded_bytes(self) -> Vec<u8>;
+
+	fn is_empty(&self) -> bool { self.encoded_bytes().is_empty() }
 
 	fn len(&self) -> usize { self.encoded_bytes().len() }
 
@@ -29,6 +33,8 @@ impl PathBufLike for std::path::PathBuf {
 	type Borrowed<'a> = &'a std::path::Path;
 	type Inner = std::ffi::OsString;
 	type InnerRef<'a> = &'a std::ffi::OsStr;
+
+	fn borrow(&self) -> Self::Borrowed<'_> { self.as_path() }
 
 	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
 

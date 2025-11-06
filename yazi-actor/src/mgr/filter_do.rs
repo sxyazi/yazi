@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_fs::Filter;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::FilterOpt;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, path::PathLike};
 
 use crate::{Actor, Ctx};
 
@@ -16,10 +16,10 @@ impl Actor for FilterDo {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };
 
-		let hovered = cx.hovered().map(|f| f.urn().to_owned());
+		let hovered = cx.hovered().map(|f| f.urn().owned());
 		cx.current_mut().files.set_filter(filter);
 
-		if cx.hovered().map(|f| f.urn()) != hovered.as_deref() {
+		if cx.hovered().map(|f| f.urn()) != hovered.as_ref().map(Into::into) {
 			act!(mgr:hover, cx, hovered)?;
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;

@@ -8,10 +8,13 @@ where
 	type Owned: PathBufLike + Into<Self::Owned>;
 	type View<'a>;
 	type Components<'a>: AsPathView<'a, Self::View<'a>> + Clone + DoubleEndedIterator;
+	type Display<'a>: std::fmt::Display;
 
 	fn components(self) -> Self::Components<'p>;
 
 	fn default() -> Self;
+
+	fn display(self) -> Self::Display<'p>;
 
 	fn encoded_bytes(self) -> &'p [u8];
 
@@ -27,7 +30,7 @@ where
 
 	#[cfg(unix)]
 	fn is_hidden(self) -> bool {
-		self.file_name().map_or(false, |n| n.encoded_bytes().get(0) == Some(&b'.'))
+		self.file_name().is_some_and(|n| n.encoded_bytes().first() == Some(&b'.'))
 	}
 
 	fn join<'a, T>(self, base: T) -> Self::Owned
@@ -35,6 +38,8 @@ where
 		T: AsPathView<'a, Self::View<'a>>;
 
 	fn len(self) -> usize { self.encoded_bytes().len() }
+
+	fn owned(self) -> Self::Owned;
 
 	fn parent(self) -> Option<Self>;
 
@@ -45,6 +50,7 @@ where
 
 impl<'p> PathLike<'p> for &'p std::path::Path {
 	type Components<'a> = std::path::Components<'a>;
+	type Display<'a> = std::path::Display<'a>;
 	type Inner = &'p std::ffi::OsStr;
 	type Owned = std::path::PathBuf;
 	type View<'a> = &'a std::path::Path;
@@ -52,6 +58,8 @@ impl<'p> PathLike<'p> for &'p std::path::Path {
 	fn components(self) -> Self::Components<'p> { self.components() }
 
 	fn default() -> Self { std::path::Path::new("") }
+
+	fn display(self) -> Self::Display<'p> { self.display() }
 
 	fn encoded_bytes(self) -> &'p [u8] { self.as_os_str().as_encoded_bytes() }
 
@@ -71,6 +79,8 @@ impl<'p> PathLike<'p> for &'p std::path::Path {
 	{
 		self.join(base.as_path_view())
 	}
+
+	fn owned(self) -> Self::Owned { self.to_path_buf() }
 
 	fn parent(self) -> Option<Self> { self.parent() }
 

@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use crate::{loc::Loc, path::PathDyn, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{loc::Loc, path::{AsPathDyn, PathDyn}, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -25,6 +25,15 @@ impl AsUrl for PathBuf {
 impl AsUrl for &PathBuf {
 	#[inline]
 	fn as_url(&self) -> Url<'_> { (*self).as_path().as_url() }
+}
+
+impl AsUrl for PathDyn<'_> {
+	#[inline]
+	fn as_url(&self) -> Url<'_> {
+		match *self {
+			Self::Os(p) => p.as_url(),
+		}
+	}
 }
 
 impl AsUrl for Url<'_> {
@@ -101,13 +110,13 @@ where
 
 	fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
 
-	fn join(&self, path: impl AsRef<Path>) -> UrlBuf { self.as_url().join(path) }
+	fn join(&self, path: impl AsPathDyn) -> UrlBuf { self.as_url().join(path) }
 
 	fn name(&self) -> Option<&OsStr> { self.as_url().name() }
 
 	fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
-	fn pair(&self) -> Option<(Url<'_>, &Path)> { self.as_url().pair() }
+	fn pair(&self) -> Option<(Url<'_>, PathDyn<'_>)> { self.as_url().pair() }
 
 	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
@@ -115,11 +124,13 @@ where
 
 	fn stem(&self) -> Option<&OsStr> { self.as_url().stem() }
 
-	fn strip_prefix(&self, base: impl AsUrl) -> Option<&Path> { self.as_url().strip_prefix(base) }
+	fn strip_prefix(&self, base: impl AsUrl) -> Option<PathDyn<'_>> {
+		self.as_url().strip_prefix(base)
+	}
 
 	fn uri(&self) -> PathDyn<'_> { self.as_url().uri() }
 
-	fn urn(&self) -> &Path { self.as_url().urn() }
+	fn urn(&self) -> PathDyn<'_> { self.as_url().urn() }
 }
 
 impl UrlLike for UrlBuf {}

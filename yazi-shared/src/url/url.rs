@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf
 
 use hashbrown::Equivalent;
 
-use crate::{loc::{Loc, LocBuf}, path::{PathDyn, PathLike}, scheme::SchemeRef, url::{AsUrl, Components, Encode, UrlBuf}};
+use crate::{loc::{Loc, LocBuf}, path::{AsPathDyn, PathDyn, PathLike}, scheme::SchemeRef, url::{AsUrl, Components, Encode, UrlBuf}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub struct Url<'a> {
@@ -64,28 +64,30 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }
 
-	pub fn join(self, path: impl AsRef<Path>) -> UrlBuf {
+	pub fn join(self, path: impl AsPathDyn) -> UrlBuf {
 		use SchemeRef as S;
 
-		let join = self.loc.join(path);
+		let joined = match path.as_path_dyn() {
+			PathDyn::Os(p) => self.loc.join(p),
+		};
 
 		let loc = match self.scheme {
-			S::Regular => join.into(),
-			S::Search(_) => LocBuf::<PathBuf>::new(join, self.loc.base(), self.loc.base()),
-			S::Archive(_) => LocBuf::<PathBuf>::floated(join, self.loc.base()),
-			S::Sftp(_) => join.into(),
+			S::Regular => joined.into(),
+			S::Search(_) => LocBuf::<PathBuf>::new(joined, self.loc.base(), self.loc.base()),
+			S::Archive(_) => LocBuf::<PathBuf>::floated(joined, self.loc.base()),
+			S::Sftp(_) => joined.into(),
 		};
 
 		UrlBuf { loc, scheme: self.scheme.into() }
 	}
 
-	pub fn strip_prefix(self, base: impl AsUrl) -> Option<&'a Path> {
+	pub fn strip_prefix(self, base: impl AsUrl) -> Option<PathDyn<'a>> {
 		use SchemeRef as S;
 
 		let base = base.as_url();
-		let prefix = self.loc.strip_prefix(base.loc)?;
+		let prefix = self.loc.strip_prefix(base.loc)?.into();
 
-		Some(match (self.scheme, base.scheme) {
+		match (self.scheme, base.scheme) {
 			// Same scheme
 			(S::Regular, S::Regular) => Some(prefix),
 			(S::Search(_), S::Search(_)) => Some(prefix),
@@ -109,14 +111,14 @@ impl<'a> Url<'a> {
 			(S::Sftp(_), S::Regular) => None,
 			(S::Sftp(_), S::Search(_)) => None,
 			(S::Sftp(_), S::Archive(_)) => None,
-		}?)
+		}
 	}
 
 	#[inline]
 	pub fn uri(self) -> PathDyn<'a> { self.loc.uri().into() }
 
 	#[inline]
-	pub fn urn(self) -> &'a Path { self.loc.urn() }
+	pub fn urn(self) -> PathDyn<'a> { self.loc.urn().into() }
 
 	#[inline]
 	pub fn name(self) -> Option<&'a OsStr> { self.loc.name() }
@@ -200,7 +202,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn pair(self) -> Option<(Self, &'a Path)> { Some((self.parent()?, self.loc.urn())) }
+	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> { Some((self.parent()?, self.loc.urn().into())) }
 
 	#[inline]
 	pub fn as_path(self) -> Option<&'a Path> {
