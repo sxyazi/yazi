@@ -2,7 +2,7 @@ use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref, path::Path};
 
 use anyhow::{Result, bail};
 
-use crate::{loc::LocBuf, path::{AsPathView, PathBufLike, PathInner, PathLike, ToPathOwned}};
+use crate::{loc::LocBuf, path::{AsPathView, PathBufLike, PathInner, PathLike}};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Loc<'p, P = &'p Path> {
@@ -43,11 +43,11 @@ where
 
 impl<'p, P> From<Loc<'p, P>> for LocBuf<<P as PathLike<'p>>::Owned>
 where
-	P: PathLike<'p> + ToPathOwned<<P as PathLike<'p>>::Owned>,
+	P: PathLike<'p>,
 	<P as PathLike<'p>>::Owned: PathBufLike,
 {
 	fn from(value: Loc<'p, P>) -> Self {
-		Self { inner: value.inner.to_path_owned(), uri: value.uri, urn: value.urn }
+		Self { inner: value.inner.owned(), uri: value.uri, urn: value.urn }
 	}
 }
 

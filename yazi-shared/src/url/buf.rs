@@ -1,14 +1,26 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}, str::FromStr, sync::OnceLock};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, pool::Pool, scheme::{Scheme, SchemeLike}, url::{AsUrl, Encode, EncodeTilded, Url, UrlCow}};
+use crate::{loc::{Loc, LocBuf}, path::PathDyn, pool::Pool, scheme::{Scheme, SchemeLike}, url::{AsUrl, Encode, EncodeTilded, Url, UrlCow}};
 
 #[derive(Clone, Default, Eq, Hash, PartialEq)]
 pub struct UrlBuf {
 	pub loc:    LocBuf,
 	pub scheme: Scheme,
+}
+
+impl From<&UrlBuf> for UrlBuf {
+	fn from(url: &UrlBuf) -> Self { url.clone() }
+}
+
+impl From<Url<'_>> for UrlBuf {
+	fn from(url: Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
+}
+
+impl From<&Url<'_>> for UrlBuf {
+	fn from(url: &Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
 }
 
 impl From<LocBuf> for UrlBuf {
@@ -19,24 +31,20 @@ impl From<PathBuf> for UrlBuf {
 	fn from(path: PathBuf) -> Self { LocBuf::from(path).into() }
 }
 
-impl From<&Url<'_>> for UrlBuf {
-	fn from(url: &Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
-}
-
-impl From<Url<'_>> for UrlBuf {
-	fn from(url: Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
-}
-
-impl From<&Self> for UrlBuf {
-	fn from(url: &Self) -> Self { url.clone() }
-}
-
 impl From<&PathBuf> for UrlBuf {
 	fn from(path: &PathBuf) -> Self { path.to_owned().into() }
 }
 
 impl From<&Path> for UrlBuf {
 	fn from(path: &Path) -> Self { path.to_path_buf().into() }
+}
+
+impl From<PathDyn<'_>> for UrlBuf {
+	fn from(path: PathDyn) -> Self {
+		match path {
+			PathDyn::Os(p) => p.to_path_buf().into(),
+		}
+	}
 }
 
 impl FromStr for UrlBuf {
@@ -81,12 +89,8 @@ impl PartialEq<Url<'_>> for &UrlBuf {
 impl UrlBuf {
 	#[inline]
 	pub fn new() -> &'static Self {
-		static U: OnceLock<UrlBuf> = OnceLock::new();
-		U.get_or_init(Self::default)
-
-		// FIXME: use `LocBuf::empty()` when Rust 1.91.0 released
-		// static U: UrlBuf = UrlBuf { loc: LocBuf::empty(), scheme: Scheme::Regular
-		// }; &U
+		static U: UrlBuf = UrlBuf { loc: LocBuf::empty(), scheme: Scheme::Regular };
+		&U
 	}
 
 	#[inline]
@@ -104,6 +108,9 @@ impl UrlBuf {
 }
 
 impl UrlBuf {
+	#[inline]
+	pub fn loc(&self) -> Loc<'_> { self.loc.as_loc() }
+
 	// --- Regular
 	#[inline]
 	pub fn is_regular(&self) -> bool { self.as_url().is_regular() }

@@ -1,3 +1,6 @@
+use hashbrown::Equivalent;
+use serde::Serialize;
+
 use super::{AsInnerView, AsPathView};
 use crate::path::{PathBufLike, PathLike};
 
@@ -18,8 +21,13 @@ impl<'a> From<&'a std::path::Path> for PathDyn<'a> {
 	fn from(value: &'a std::path::Path) -> Self { PathDyn::Os(value) }
 }
 
+impl<'a> From<&'a PathBufDyn> for PathDyn<'a> {
+	fn from(value: &'a PathBufDyn) -> Self { value.borrow() }
+}
+
 impl<'p> PathLike<'p> for PathDyn<'p> {
 	type Components<'a> = std::path::Components<'a>;
+	type Display<'a> = std::path::Display<'a>;
 	type Inner = &'p [u8];
 	type Owned = PathBufDyn;
 	type View<'a> = PathDyn<'a>;
@@ -32,6 +40,12 @@ impl<'p> PathLike<'p> for PathDyn<'p> {
 
 	// FIXME: remove
 	fn default() -> Self { Self::Os(std::path::Path::new("")) }
+
+	fn display(self) -> Self::Display<'p> {
+		match self {
+			Self::Os(p) => p.display(),
+		}
+	}
 
 	fn encoded_bytes(self) -> &'p [u8] {
 		match self {
@@ -71,6 +85,12 @@ impl<'p> PathLike<'p> for PathDyn<'p> {
 		}
 	}
 
+	fn owned(self) -> Self::Owned {
+		match self {
+			Self::Os(p) => Self::Owned::Os(p.to_path_buf()),
+		}
+	}
+
 	fn parent(self) -> Option<Self> {
 		Some(match self {
 			Self::Os(p) => Self::Os(p.parent()?),
@@ -87,15 +107,39 @@ impl<'p> PathLike<'p> for PathDyn<'p> {
 	}
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+impl PartialEq<PathBufDyn> for PathDyn<'_> {
+	fn eq(&self, other: &PathBufDyn) -> bool { *self == other.borrow() }
+}
+
+impl PartialEq<PathDyn<'_>> for &std::path::Path {
+	fn eq(&self, other: &PathDyn<'_>) -> bool { matches!(*other, PathDyn::Os(p) if p == *self) }
+}
+
+impl Equivalent<PathBufDyn> for PathDyn<'_> {
+	fn equivalent(&self, key: &PathBufDyn) -> bool { *self == key.borrow() }
+}
+
+// --- PathBufDyn
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(untagged)]
 pub enum PathBufDyn {
 	Os(std::path::PathBuf),
+}
+
+impl PathBufDyn {
+	pub const fn os_default() -> Self { Self::Os(std::path::PathBuf::new()) }
 }
 
 impl PathBufLike for PathBufDyn {
 	type Borrowed<'a> = PathDyn<'a>;
 	type Inner = Vec<u8>;
 	type InnerRef<'a> = &'a [u8];
+
+	fn borrow(&self) -> Self::Borrowed<'_> {
+		match self {
+			Self::Os(p) => Self::Borrowed::Os(p.as_path()),
+		}
+	}
 
 	fn encoded_bytes(&self) -> &[u8] {
 		match self {
@@ -129,4 +173,28 @@ impl PathBufLike for PathBufDyn {
 			Self::Os(p) => Self::Os(std::mem::take(p)),
 		}
 	}
+}
+
+impl From<PathDyn<'_>> for PathBufDyn {
+	fn from(value: PathDyn<'_>) -> Self {
+		match value {
+			PathDyn::Os(p) => Self::Os(p.to_path_buf()),
+		}
+	}
+}
+
+impl From<&PathBufDyn> for PathBufDyn {
+	fn from(value: &PathBufDyn) -> Self { value.clone() }
+}
+
+impl PartialEq<PathDyn<'_>> for PathBufDyn {
+	fn eq(&self, other: &PathDyn<'_>) -> bool { self.borrow() == *other }
+}
+
+impl PartialEq<PathDyn<'_>> for &PathBufDyn {
+	fn eq(&self, other: &PathDyn<'_>) -> bool { self.borrow() == *other }
+}
+
+impl Equivalent<PathDyn<'_>> for PathBufDyn {
+	fn equivalent(&self, key: &PathDyn<'_>) -> bool { self.borrow() == *key }
 }

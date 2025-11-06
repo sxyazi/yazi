@@ -1,4 +1,4 @@
-use std::{mem, path::{Path, PathBuf}};
+use std::mem;
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
@@ -6,7 +6,7 @@ use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
 use yazi_macro::err;
 use yazi_parser::Step;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}, url::UrlBuf};
 use yazi_widgets::Scrollable;
 
 pub struct Folder {
@@ -19,7 +19,7 @@ pub struct Folder {
 	pub cursor: usize,
 
 	pub page:  usize,
-	pub trace: Option<PathBuf>,
+	pub trace: Option<PathBufDyn>,
 }
 
 impl Default for Folder {
@@ -101,14 +101,14 @@ impl Folder {
 			self.scroll(step)
 		};
 
-		self.trace = self.hovered().filter(|_| b).map(|h| h.urn().to_owned()).or(self.trace.take());
+		self.trace = self.hovered().filter(|_| b).map(|h| h.urn().owned()).or(self.trace.take());
 		b |= self.squeeze_offset();
 
 		self.sync_page(false);
 		b
 	}
 
-	pub fn hover(&mut self, urn: &Path) -> bool {
+	pub fn hover(&mut self, urn: PathDyn) -> bool {
 		if self.hovered().map(|h| h.urn()) == Some(urn) {
 			return self.arrow(0);
 		}
@@ -117,11 +117,11 @@ impl Folder {
 		self.arrow(new - self.cursor as isize)
 	}
 
-	pub fn repos(&mut self, urn: Option<&Path>) -> bool {
+	pub fn repos(&mut self, urn: Option<PathDyn>) -> bool {
 		if let Some(u) = urn {
 			self.hover(u)
 		} else if let Some(u) = &self.trace {
-			self.hover(&u.clone())
+			self.hover(u.clone().borrow())
 		} else {
 			self.arrow(0)
 		}

@@ -1,7 +1,7 @@
-use std::{mem, ops::{Deref, DerefMut, Not}, path::{Path, PathBuf}};
+use std::{mem, ops::{Deref, DerefMut, Not}};
 
 use hashbrown::{HashMap, HashSet};
-use yazi_shared::Id;
+use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}};
 
 use super::{FilesSorter, Filter};
 use crate::{FILES_TICKET, File, SortBy};
@@ -14,7 +14,7 @@ pub struct Files {
 	version:      u64,
 	pub revision: u64,
 
-	pub sizes: HashMap<PathBuf, u64>,
+	pub sizes: HashMap<PathBufDyn, u64>,
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
@@ -69,7 +69,7 @@ impl Files {
 		}
 	}
 
-	pub fn update_size(&mut self, mut sizes: HashMap<PathBuf, u64>) {
+	pub fn update_size(&mut self, mut sizes: HashMap<PathBufDyn, u64>) {
 		if sizes.len() <= 50 {
 			sizes.retain(|k, v| self.sizes.get(k) != Some(v));
 		}
@@ -97,9 +97,9 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn().to_owned(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn().owned(), f)).collect();
 				for f in &$dist {
-					if todo.remove(f.urn()).is_some() && todo.is_empty() {
+					if todo.remove(&f.urn()).is_some() && todo.is_empty() {
 						break;
 					}
 				}
@@ -120,25 +120,26 @@ impl Files {
 	}
 
 	#[cfg(unix)]
-	pub fn update_deleting(&mut self, urns: HashSet<PathBuf>) -> Vec<usize> {
-		use yazi_shared::path::PathLike;
+	pub fn update_deleting(&mut self, urns: HashSet<PathBufDyn>) -> Vec<usize> {
 		if urns.is_empty() {
 			return vec![];
 		}
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
-			urns.into_iter().partition(|u| (!self.show_hidden && u.is_hidden()) || !filter.matches(u))
+			urns
+				.into_iter()
+				.partition(|u| (!self.show_hidden && u.borrow().is_hidden()) || !filter.matches(u))
 		} else if self.show_hidden {
 			(HashSet::new(), urns)
 		} else {
-			urns.into_iter().partition(|u| u.is_hidden())
+			urns.into_iter().partition(|u| u.borrow().is_hidden())
 		};
 
 		let mut deleted = Vec::with_capacity(items.len());
 		if !items.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = items.remove(f.urn());
+				let b = items.remove(&f.urn());
 				if b {
 					deleted.push(i);
 				}
@@ -147,7 +148,7 @@ impl Files {
 			});
 		}
 		if !hidden.is_empty() {
-			self.hidden.retain(|f| !hidden.remove(f.urn()));
+			self.hidden.retain(|f| !hidden.remove(&f.urn()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
@@ -155,12 +156,12 @@ impl Files {
 	}
 
 	#[cfg(windows)]
-	pub fn update_deleting(&mut self, mut urns: HashSet<PathBuf>) -> Vec<usize> {
+	pub fn update_deleting(&mut self, mut urns: HashSet<PathBufDyn>) -> Vec<usize> {
 		let mut deleted = Vec::with_capacity(urns.len());
 		if !urns.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = urns.remove(f.urn());
+				let b = urns.remove(&f.urn());
 				if b {
 					deleted.push(i)
 				}
@@ -169,7 +170,7 @@ impl Files {
 			});
 		}
 		if !urns.is_empty() {
-			self.hidden.retain(|f| !urns.remove(f.urn()));
+			self.hidden.retain(|f| !urns.remove(&f.urn()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
@@ -178,8 +179,8 @@ impl Files {
 
 	pub fn update_updating(
 		&mut self,
-		files: HashMap<PathBuf, File>,
-	) -> (HashMap<PathBuf, File>, HashMap<PathBuf, File>) {
+		files: HashMap<PathBufDyn, File>,
+	) -> (HashMap<PathBufDyn, File>, HashMap<PathBufDyn, File>) {
 		if files.is_empty() {
 			return Default::default();
 		}
@@ -188,7 +189,7 @@ impl Files {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let mut b = true;
 				for i in 0..$dist.len() {
-					if let Some(f) = $src.remove($dist[i].urn()) {
+					if let Some(f) = $src.remove(&$dist[i].urn()) {
 						b = b && $dist[i].cha.hits(f.cha);
 						b = b && $dist[i].urn() == f.urn();
 
@@ -221,13 +222,13 @@ impl Files {
 		(hidden, items)
 	}
 
-	pub fn update_upserting(&mut self, files: HashMap<PathBuf, File>) {
+	pub fn update_upserting(&mut self, files: HashMap<PathBufDyn, File>) {
 		if files.is_empty() {
 			return;
 		}
 
 		self.update_deleting(
-			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn().to_owned()).collect(),
+			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn().owned()).collect(),
 		);
 
 		let (hidden, items) = self.update_updating(files);
@@ -270,7 +271,7 @@ impl Files {
 impl Files {
 	// --- Items
 	#[inline]
-	pub fn position(&self, urn: &Path) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
+	pub fn position(&self, urn: PathDyn) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
 
 	// --- Ticket
 	#[inline]

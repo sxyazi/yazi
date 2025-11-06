@@ -1,8 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
-use yazi_shared::{Id, Ids, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, Ids, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike}};
 
 use super::File;
 use crate::{cha::Cha, error::Error};
@@ -14,13 +14,13 @@ pub enum FilesOp {
 	Full(UrlBuf, Vec<File>, Cha),
 	Part(UrlBuf, Vec<File>, Id),
 	Done(UrlBuf, Cha, Id),
-	Size(UrlBuf, HashMap<PathBuf, u64>),
+	Size(UrlBuf, HashMap<PathBufDyn, u64>),
 	IOErr(UrlBuf, Error),
 
 	Creating(UrlBuf, Vec<File>),
-	Deleting(UrlBuf, HashSet<PathBuf>),
-	Updating(UrlBuf, HashMap<PathBuf, File>),
-	Upserting(UrlBuf, HashMap<PathBuf, File>),
+	Deleting(UrlBuf, HashSet<PathBufDyn>),
+	Updating(UrlBuf, HashMap<PathBufDyn, File>),
+	Upserting(UrlBuf, HashMap<PathBufDyn, File>),
 }
 
 impl FilesOp {
@@ -57,10 +57,10 @@ impl FilesOp {
 			let Some(o_p) = o.parent() else { continue };
 			let Some(n_p) = n.url.parent() else { continue };
 			if o_p == n_p {
-				parents.entry_ref(&o_p).or_default().1.insert(o.urn().to_owned(), n);
+				parents.entry_ref(&o_p).or_default().1.insert(o.urn().owned(), n);
 			} else {
-				parents.entry_ref(&o_p).or_default().0.insert(o.urn().to_owned());
-				parents.entry_ref(&n_p).or_default().1.insert(n.urn().to_owned(), n);
+				parents.entry_ref(&o_p).or_default().0.insert(o.urn().owned());
+				parents.entry_ref(&n_p).or_default().1.insert(n.urn().owned(), n);
 			}
 		}
 		for (p, (o, n)) in parents {

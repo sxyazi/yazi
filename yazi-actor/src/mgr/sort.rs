@@ -3,7 +3,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::SortOpt;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, path::PathLike};
 
 use crate::{Actor, Ctx};
 
@@ -23,7 +23,7 @@ impl Actor for Sort {
 		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
 
 		let sorter = FilesSorter::from(&*pref);
-		let hovered = cx.hovered().map(|f| f.urn().to_owned());
+		let hovered = cx.hovered().map(|f| f.urn().owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();
@@ -49,7 +49,7 @@ impl Actor for Sort {
 		{
 			render!(h.repos(None));
 			act!(mgr:peek, cx, true)?;
-		} else if hovered.as_deref() != cx.hovered().map(|f| f.urn()) {
+		} else if cx.hovered().map(|f| f.urn()) != hovered.as_ref().map(Into::into) {
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
 		}

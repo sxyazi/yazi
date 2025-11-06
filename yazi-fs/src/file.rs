@@ -40,7 +40,7 @@ impl File {
 	pub fn uri(&self) -> PathDyn<'_> { self.url.uri() }
 
 	#[inline]
-	pub fn urn(&self) -> &Path { self.url.urn() }
+	pub fn urn(&self) -> PathDyn<'_> { self.url.urn() }
 
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.url.name() }

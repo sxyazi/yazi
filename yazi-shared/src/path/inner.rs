@@ -1,7 +1,9 @@
 pub trait PathInner<'a>: Copy {
-	fn len(self) -> usize { self.encoded_bytes().len() }
-
 	fn encoded_bytes(self) -> &'a [u8];
+
+	fn is_empty(self) -> bool { self.encoded_bytes().is_empty() }
+
+	fn len(self) -> usize { self.encoded_bytes().len() }
 }
 
 impl<'a> PathInner<'a> for &'a std::ffi::OsStr {

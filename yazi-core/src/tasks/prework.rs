@@ -52,7 +52,9 @@ impl Tasks {
 			let loading = self.scheduler.prework.sizing.read();
 			targets
 				.iter()
-				.filter(|f| f.is_dir() && !targets.sizes.contains_key(f.urn()) && !loading.contains(&f.url))
+				.filter(|f| {
+					f.is_dir() && !targets.sizes.contains_key(&f.urn()) && !loading.contains(&f.url)
+				})
 				.map(|f| &f.url)
 				.collect()
 		};

@@ -108,10 +108,7 @@ impl UserData for Url {
 			me.ext().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
-		cached_field!(fields, urn, |_, me| {
-			// FIXME: remove type inference
-			Ok(super::Path::<std::path::PathBuf>::new(me.urn()))
-		});
+		cached_field!(fields, urn, |_, me| Ok(super::Path::new(me.urn())));
 		cached_field!(fields, base, |_, me| Ok(me.base().map(Self::new)));
 
 		cached_field!(fields, scheme, |_, me| Ok(Scheme::new(&me.scheme)));
@@ -168,8 +165,8 @@ impl UserData for Url {
 		});
 		methods.add_method("strip_prefix", |_, me, base: Value| {
 			let path = match base {
-				Value::String(s) => me.loc.strip_prefix(s.as_bytes().into_os_str()?).ok(),
-				Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<Self>()?).map(AsRef::as_ref),
+				Value::String(s) => me.loc().strip_prefix(&s.as_bytes().into_os_str()?).map(Into::into),
+				Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<Self>()?),
 				_ => Err("must be a string or Url".into_lua_err())?,
 			};
 			Ok(path.map(Self::new)) // TODO: return `Path` instead of `Url`

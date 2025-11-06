@@ -46,8 +46,8 @@ impl Sendable {
 				Some(t) if t == TypeId::of::<yazi_binding::Url>() => {
 					Data::Url(ud.take::<yazi_binding::Url>()?.into())
 				}
-				Some(t) if t == TypeId::of::<yazi_binding::Path<std::path::PathBuf>>() => {
-					Data::Path(ud.take::<yazi_binding::Path<std::path::PathBuf>>()?.0)
+				Some(t) if t == TypeId::of::<yazi_binding::Path>() => {
+					Data::Path(ud.take::<yazi_binding::Path>()?.0)
 				}
 				Some(t) if t == TypeId::of::<yazi_binding::Id>() => {
 					Data::Id(**ud.borrow::<yazi_binding::Id>()?)
@@ -83,7 +83,7 @@ impl Sendable {
 				Value::Table(tbl)
 			}
 			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
-			Data::Path(u) => yazi_binding::Path::<std::path::PathBuf>::new(u).into_lua(lua)?,
+			Data::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			Data::Any(a) => {
 				if a.is::<yazi_fs::FilesOp>() {
 					lua.create_any_userdata(*a.downcast::<yazi_fs::FilesOp>().unwrap())?.into_lua(lua)?
@@ -121,7 +121,7 @@ impl Sendable {
 			}
 			Data::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
 			Data::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
-			Data::Path(u) => yazi_binding::Path::<std::path::PathBuf>::new(u).into_lua(lua)?,
+			Data::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
 			Data::Any(a) => {
 				if let Some(t) = a.downcast_ref::<yazi_fs::FilesOp>() {
@@ -230,7 +230,7 @@ impl Sendable {
 	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
 		match key {
 			DataKey::Url(u) => yazi_binding::Url::new(u).into_lua(lua),
-			DataKey::Path(u) => yazi_binding::Path::<std::path::PathBuf>::new(u).into_lua(lua),
+			DataKey::Path(u) => yazi_binding::Path::new(u).into_lua(lua),
 			_ => Self::key_to_value_ref(lua, &key),
 		}
 	}
@@ -244,7 +244,7 @@ impl Sendable {
 			DataKey::String(s) => Value::String(lua.create_string(s.as_ref())?),
 			DataKey::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
 			DataKey::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
-			DataKey::Path(u) => yazi_binding::Path::<std::path::PathBuf>::new(u).into_lua(lua)?,
+			DataKey::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			DataKey::Bytes(b) => Value::String(lua.create_string(b)?),
 		})
 	}
