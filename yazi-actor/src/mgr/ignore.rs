@@ -103,7 +103,7 @@ impl Actor for Ignore {
 			if apply(h, hovered_filter) {
 				render!(h.repos(None));
 				act!(mgr:peek, cx, true)?;
-			} else if hovered.as_deref() != cx.hovered().map(|f| f.urn()) {
+			} else if hovered != cx.hovered().map(|f| f.urn().to_owned()) {
 				act!(mgr:peek, cx)?;
 				act!(mgr:watch, cx)?;
 			}

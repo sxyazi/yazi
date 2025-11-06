@@ -40,10 +40,10 @@ impl Files {
 		let mut result = None;
 
 		for exclude in &self.excludes {
-			if exclude.matches_context(context) {
-				if let Some(should_ignore) = exclude.matches_path(path) {
-					result = Some(should_ignore);
-				}
+			if exclude.matches_context(context)
+				&& let Some(should_ignore) = exclude.matches_path(path)
+			{
+				result = Some(should_ignore);
 			}
 		}
 
