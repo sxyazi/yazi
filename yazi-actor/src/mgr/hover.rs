@@ -22,7 +22,7 @@ impl Actor for Hover {
 		}
 
 		// Repos CWD
-		tab.current.repos(opt.urn.as_deref());
+		tab.current.repos(opt.urn.as_ref().map(Into::into));
 
 		// Turn on tracing
 		if let (Some(h), Some(u)) = (tab.hovered(), opt.urn)

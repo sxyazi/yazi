@@ -65,10 +65,10 @@ impl Image {
 		Ok(img)
 	}
 
-	pub(super) fn max_pixel(rect: Rect) -> (u32, u32) {
+	pub(super) fn max_pixel(rect: Rect) -> (u16, u16) {
 		Dimension::cell_size()
 			.map(|(cw, ch)| {
-				let (w, h) = ((rect.width as f64 * cw) as u32, (rect.height as f64 * ch) as u32);
+				let (w, h) = ((rect.width as f64 * cw) as u16, (rect.height as f64 * ch) as u16);
 				(w.min(YAZI.preview.max_width), h.min(YAZI.preview.max_height))
 			})
 			.unwrap_or((YAZI.preview.max_width, YAZI.preview.max_height))
@@ -122,11 +122,11 @@ impl Image {
 		.map_err(|e| ImageError::IoError(e.into()))?
 	}
 
-	fn flip_size(orientation: Orientation, (w, h): (u32, u32)) -> (u32, u32) {
+	fn flip_size(orientation: Orientation, (w, h): (u16, u16)) -> (u32, u32) {
 		use image::metadata::Orientation::{Rotate90, Rotate90FlipH, Rotate270, Rotate270FlipH};
 		match orientation {
-			Rotate90 | Rotate270 | Rotate90FlipH | Rotate270FlipH => (h, w),
-			_ => (w, h),
+			Rotate90 | Rotate270 | Rotate90FlipH | Rotate270FlipH => (h as u32, w as u32),
+			_ => (w as u32, h as u32),
 		}
 	}
 }

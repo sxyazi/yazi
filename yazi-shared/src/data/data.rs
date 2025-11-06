@@ -1,10 +1,10 @@
-use std::{any::Any, borrow::Cow, path::PathBuf};
+use std::{any::Any, borrow::Cow};
 
 use anyhow::{Result, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::{Id, SStr, data::DataKey, url::{UrlBuf, UrlCow}};
+use crate::{Id, SStr, data::DataKey, path::PathBufDyn, url::{UrlBuf, UrlCow}};
 
 // --- Data
 #[derive(Debug, Deserialize, Serialize)]
@@ -21,7 +21,7 @@ pub enum Data {
 	#[serde(skip_deserializing)]
 	Url(UrlBuf),
 	#[serde(skip_deserializing)]
-	Path(PathBuf),
+	Path(PathBufDyn),
 	#[serde(skip)]
 	Bytes(Vec<u8>),
 	#[serde(skip)]

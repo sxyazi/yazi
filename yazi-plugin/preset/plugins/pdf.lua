@@ -40,9 +40,7 @@ function M:preload(job)
 			"-l", job.skip + 1,
 			"-singlefile",
 			"-jpeg", "-jpegopt", "quality=" .. rt.preview.image_quality,
-			"-scale-to-x", rt.preview.max_width, "-scale-to-y", "-1",
-			tostring(job.file.url),
-			tostring(cache),
+			tostring(job.file.url), tostring(cache),
 		})
 		:stderr(Command.PIPED)
 		:output()
@@ -54,12 +52,7 @@ function M:preload(job)
 		return true, Err("Failed to convert PDF to image, stderr: %s", output.stderr), pages
 	end
 
-	local ok, err = os.rename(string.format("%s.jpg", cache), tostring(cache))
-	if ok then
-		return true
-	else
-		return false, Err("Failed to rename `%s.jpg` to `%s`, error: %s", cache, cache, err)
-	end
+	return ya.image_precache(Url(cache .. ".jpg"), cache)
 end
 
 return M

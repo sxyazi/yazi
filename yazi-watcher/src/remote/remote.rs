@@ -6,7 +6,7 @@ use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{File, FilesOp};
 use yazi_proxy::MgrProxy;
-use yazi_shared::url::{Url, UrlBuf, UrlLike};
+use yazi_shared::{path::PathLike, url::{Url, UrlBuf, UrlLike}};
 use yazi_vfs::VfsFile;
 
 use crate::{Reporter, WATCHER};
@@ -39,14 +39,14 @@ impl Remote {
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
 				let Ok(mut file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.to_owned()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn.owned()].into()));
 					continue;
 				};
 
 				let is_file = file.is_file();
 				file.cha.ctime = Some(SystemTime::now());
 
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.to_owned(), file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(urn.owned(), file)].into()));
 				if is_file {
 					ups.push(u);
 				}

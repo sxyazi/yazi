@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{loc::Loc, path::{AsInnerView, AsPathView, PathBufLike, PathLike}};
+use crate::{loc::Loc, path::{AsInnerView, AsPathDyn, AsPathView, PathBufLike, PathDyn, PathLike}};
 
 #[derive(Clone, Default, Eq)]
 pub struct LocBuf<P: PathBufLike = PathBuf> {
@@ -23,6 +23,20 @@ where
 // FIXME: remove
 impl AsRef<std::path::Path> for LocBuf<PathBuf> {
 	fn as_ref(&self) -> &std::path::Path { self.inner.as_ref() }
+}
+
+impl<T> AsPathDyn for LocBuf<T>
+where
+	T: PathBufLike + AsPathDyn,
+{
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.inner.as_path_dyn() }
+}
+
+impl<T> AsPathDyn for &LocBuf<T>
+where
+	T: PathBufLike + AsPathDyn,
+{
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.inner.as_path_dyn() }
 }
 
 impl<P> PartialEq for LocBuf<P>
@@ -117,10 +131,6 @@ where
 		Ok(Self { inner: loc.inner, uri, urn })
 	}
 
-	// FIXME: use `LocBuf::empty()` when Rust 1.91.0 released
-	// pub const fn empty() -> Self { Self { inner: PathBuf::new(), uri: 0, urn: 0 }
-	// }
-
 	pub fn zeroed<T>(path: T) -> Self
 	where
 		T: Into<P>,
@@ -204,11 +214,8 @@ where
 	}
 
 	#[inline]
-	fn mutate<F: FnOnce(&mut P)>(&mut self, f: F)
-	where
-		P: Default,
-	{
-		let mut inner = std::mem::take(&mut self.inner);
+	fn mutate<F: FnOnce(&mut P)>(&mut self, f: F) {
+		let mut inner = self.inner.take();
 		f(&mut inner);
 		self.inner = Self::from(inner).inner;
 	}
@@ -246,6 +253,10 @@ where
 
 	#[inline]
 	pub fn ext(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().ext() }
+}
+
+impl LocBuf<PathBuf> {
+	pub const fn empty() -> Self { Self { inner: PathBuf::new(), uri: 0, urn: 0 } }
 }
 
 #[cfg(test)]

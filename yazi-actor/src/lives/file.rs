@@ -77,7 +77,7 @@ impl UserData for File {
 		yazi_binding::impl_file_methods!(methods);
 
 		methods.add_method("size", |_, me, ()| {
-			Ok(if me.is_dir() { me.folder.files.sizes.get(me.urn()).copied() } else { Some(me.len) })
+			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {

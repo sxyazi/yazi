@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{CWD, SortBy};
-use yazi_shared::{SyncCell, url::{UrlBuf, UrlLike}};
+use yazi_shared::{SyncCell, path::PathLike, url::{UrlBuf, UrlLike}};
 
 use super::{MgrRatio, MouseEvents};
 
@@ -33,8 +33,8 @@ impl Mgr {
 		}
 
 		let home = UrlBuf::from(dirs::home_dir().unwrap_or_default());
-		let cwd = if let Some(u) = CWD.load().strip_prefix(&home) {
-			format!("~{}{}", std::path::MAIN_SEPARATOR, u.display())
+		let cwd = if let Some(p) = CWD.load().strip_prefix(&home) {
+			format!("~{}{}", std::path::MAIN_SEPARATOR, p.display())
 		} else {
 			format!("{}", CWD.load().display())
 		};

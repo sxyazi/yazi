@@ -1,30 +1,21 @@
-use std::{ops::Deref, path::PathBuf};
+use std::ops::Deref;
 
 use mlua::{ExternalError, FromLua, Lua, UserData, Value};
-use yazi_shared::path::PathBufLike;
+use yazi_shared::path::PathBufDyn;
 
-pub struct Path<P: PathBufLike = PathBuf>(pub P);
+pub struct Path(pub PathBufDyn);
 
-impl<P> Deref for Path<P>
-where
-	P: PathBufLike,
-{
-	type Target = P;
+impl Deref for Path {
+	type Target = PathBufDyn;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl<P> Path<P>
-where
-	P: PathBufLike,
-{
-	pub fn new(urn: impl Into<P>) -> Self { Self(urn.into()) }
+impl Path {
+	pub fn new(urn: impl Into<PathBufDyn>) -> Self { Self(urn.into()) }
 }
 
-impl<P> FromLua for Path<P>
-where
-	P: PathBufLike,
-{
+impl FromLua for Path {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
 			Value::UserData(ud) => ud.take()?,
@@ -33,4 +24,4 @@ where
 	}
 }
 
-impl<P> UserData for Path<P> where P: PathBufLike {}
+impl UserData for Path {}
