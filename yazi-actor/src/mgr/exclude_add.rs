@@ -7,7 +7,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::{FolderStage, IgnoreFilter};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::ExcludeAddOpt;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::{data::Data, path::PathLike, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -127,7 +127,7 @@ impl Actor for ExcludeAdd {
 		// Load ignore filter with merged patterns
 		let ignore_filter = IgnoreFilter::from_patterns(glob_matcher.clone());
 
-		let hovered = cx.hovered().map(|f| f.urn().to_owned());
+		let hovered = cx.hovered().map(|f| f.urn().owned());
 		let apply = |f: &mut Folder, filter: Option<IgnoreFilter>| {
 			let changed = f.files.set_ignore_filter(filter);
 			if f.stage == FolderStage::Loading {
@@ -315,7 +315,7 @@ impl Actor for ExcludeAdd {
 			if apply(h, hovered_filter) {
 				render!(h.repos(None));
 				act!(mgr:peek, cx, true)?;
-			} else if hovered != cx.hovered().map(|f| f.urn().to_owned()) {
+			} else if cx.hovered().map(|f| f.urn()) != hovered.as_ref().map(Into::into) {
 				act!(mgr:peek, cx)?;
 				act!(mgr:watch, cx)?;
 			}
