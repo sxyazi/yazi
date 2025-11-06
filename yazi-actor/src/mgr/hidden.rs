@@ -43,7 +43,7 @@ impl Actor for Hidden {
 		{
 			render!(h.repos(None));
 			act!(mgr:peek, cx, true)?;
-		} else if cx.hovered().map(|f| f.urn()) == hovered.as_ref().map(Into::into) {
+		} else if cx.hovered().map(|f| f.urn()) != hovered.as_ref().map(Into::into) {
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
 		}

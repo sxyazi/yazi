@@ -1,9 +1,7 @@
 use std::{mem, ops::{Deref, DerefMut, Not}};
 
 use hashbrown::{HashMap, HashSet};
-#[cfg(unix)]
-use yazi_shared::path::PathBufDyn;
-use yazi_shared::{Id, path::{PathBufLike, PathDyn, PathLike}};
+use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}};
 
 use super::{FilesSorter, Filter};
 use crate::{FILES_TICKET, File, SortBy};
@@ -158,12 +156,12 @@ impl Files {
 	}
 
 	#[cfg(windows)]
-	pub fn update_deleting(&mut self, mut urns: HashSet<PathBuf>) -> Vec<usize> {
+	pub fn update_deleting(&mut self, mut urns: HashSet<PathBufDyn>) -> Vec<usize> {
 		let mut deleted = Vec::with_capacity(urns.len());
 		if !urns.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = urns.remove(f.urn());
+				let b = urns.remove(&f.urn());
 				if b {
 					deleted.push(i)
 				}
@@ -172,7 +170,7 @@ impl Files {
 			});
 		}
 		if !urns.is_empty() {
-			self.hidden.retain(|f| !urns.remove(f.urn()));
+			self.hidden.retain(|f| !urns.remove(&f.urn()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
