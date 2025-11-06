@@ -16,6 +16,14 @@ light = ""
 # : }}}
 
 
+# : App {{{
+
+[app]
+background  = ""
+
+# : }}}
+
+
 # : Manager {{{
 
 [mgr]

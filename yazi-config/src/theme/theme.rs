@@ -12,6 +12,7 @@ use crate::Style;
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Theme {
 	pub flavor:  Flavor,
+	pub app:     App,
 	pub mgr:     Mgr,
 	pub tabs:    Tabs,
 	pub mode:    Mode,
@@ -31,6 +32,11 @@ pub struct Theme {
 	pub filetype: Filetype,
 	#[serde(skip_serializing)]
 	pub icon:     Icon,
+}
+
+#[derive(Deserialize, DeserializeOver2)]
+pub struct App {
+	pub background: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]

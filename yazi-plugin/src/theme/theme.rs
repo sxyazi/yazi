@@ -5,6 +5,7 @@ use yazi_config::THEME;
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
+			b"app" => app(),
 			b"mgr" => mgr(),
 			b"tabs" => tabs(),
 			b"mode" => mode(),
@@ -21,6 +22,20 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
+	}
+
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+
+	Composer::new(get, set)
+}
+
+fn app() -> Composer<ComposerGet, ComposerSet> {
+	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
+		let a = &THEME.app;
+		match key {
+			b"background" => lua.create_string(&a.background)?.into_lua(lua),
+			_ => Ok(Value::Nil),
+		}
 	}
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
