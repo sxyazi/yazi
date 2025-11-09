@@ -37,6 +37,14 @@ pub struct Theme {
 #[derive(Deserialize, DeserializeOver2)]
 pub struct App {
 	pub overall: Style,
+	pub panes:   AppPanes,
+}
+
+#[derive(Deserialize, DeserializeOver2)]
+pub struct AppPanes {
+	pub parent:  String,
+	pub current: String,
+	pub preview: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]

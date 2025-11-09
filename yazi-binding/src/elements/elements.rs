@@ -9,6 +9,7 @@ pub fn compose(p_get: ComposerGet, p_set: ComposerSet) -> Composer<ComposerGet, 
 		match key {
 			b"Align" => super::Align::compose(lua)?,
 			b"Bar" => super::Bar::compose(lua)?,
+			b"Block" => super::Block::compose(lua)?,
 			b"Border" => super::Border::compose(lua)?,
 			b"Clear" => super::Clear::compose(lua)?,
 			b"Constraint" => super::Constraint::compose(lua)?,

@@ -2,6 +2,7 @@ use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_binding::elements::render_once;
+use yazi_config::THEME;
 use yazi_core::Core;
 use yazi_plugin::LUA;
 
@@ -67,6 +68,19 @@ impl Widget for Root<'_> {
 
 		if self.core.which.visible {
 			which::Which::new(self.core).render(area, buf);
+		}
+
+		// Fill background on all cells to create an opaque background (like fzf does).
+		// This is done AFTER all rendering so text/foreground colors are already set.
+		if !THEME.app.background.is_empty() {
+			if let Ok(bg_color) = THEME.app.background.parse::<ratatui::style::Color>() {
+				for y in area.top()..area.bottom() {
+					for x in area.left()..area.right() {
+						// Set background on every cell, but don't touch foreground
+						buf[(x, y)].set_bg(bg_color);
+					}
+				}
+			}
 		}
 	}
 }

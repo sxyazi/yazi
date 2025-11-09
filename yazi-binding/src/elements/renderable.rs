@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError};
 
-use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
+use super::{Bar, Block, Border, Clear, Gauge, Line, List, Table, Text};
 use crate::{Error, elements::Area};
 
 #[derive(Clone, Debug)]
@@ -11,6 +11,7 @@ pub enum Renderable {
 	Text(Text),
 	List(Box<List>),
 	Bar(Bar),
+	Block(Block),
 	Clear(Clear),
 	Border(Border),
 	Gauge(Box<Gauge>),
@@ -24,6 +25,7 @@ impl Renderable {
 			Self::Text(text) => text.area,
 			Self::List(list) => list.area,
 			Self::Bar(bar) => bar.area,
+			Self::Block(block) => block.area,
 			Self::Clear(clear) => clear.area,
 			Self::Border(border) => border.area,
 			Self::Gauge(gauge) => gauge.area,
@@ -38,6 +40,7 @@ impl Renderable {
 			Self::Text(text) => text.area = area,
 			Self::List(list) => list.area = area,
 			Self::Bar(bar) => bar.area = area,
+			Self::Block(block) => block.area = area,
 			Self::Clear(clear) => clear.area = area,
 			Self::Border(border) => border.area = area,
 			Self::Gauge(gauge) => gauge.area = area,
@@ -52,6 +55,7 @@ impl Renderable {
 			Self::Text(text) => text.render(rect, buf),
 			Self::List(list) => list.render(rect, buf),
 			Self::Bar(bar) => bar.render(rect, buf),
+			Self::Block(block) => block.render(rect, buf),
 			Self::Clear(clear) => clear.render(rect, buf),
 			Self::Border(border) => border.render(rect, buf),
 			Self::Gauge(gauge) => gauge.render(rect, buf),
@@ -77,6 +81,7 @@ impl TryFrom<&AnyUserData> for Renderable {
 			Some(t) if t == TypeId::of::<Text>() => Self::Text(ud.take()?),
 			Some(t) if t == TypeId::of::<List>() => Self::List(Box::new(ud.take()?)),
 			Some(t) if t == TypeId::of::<Bar>() => Self::Bar(ud.take()?),
+			Some(t) if t == TypeId::of::<Block>() => Self::Block(ud.take()?),
 			Some(t) if t == TypeId::of::<Clear>() => Self::Clear(ud.take()?),
 			Some(t) if t == TypeId::of::<Border>() => Self::Border(ud.take()?),
 			Some(t) if t == TypeId::of::<Gauge>() => Self::Gauge(Box::new(ud.take()?)),
