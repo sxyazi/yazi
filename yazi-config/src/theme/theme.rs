@@ -42,8 +42,11 @@ pub struct App {
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct AppPanes {
+	#[serde(default)]
 	pub parent:  String,
+	#[serde(default)]
 	pub current: String,
+	#[serde(default)]
 	pub preview: String,
 }
 
