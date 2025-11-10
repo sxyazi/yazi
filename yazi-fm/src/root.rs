@@ -1,8 +1,8 @@
 use mlua::{ObjectLike, Table};
-use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
 use tracing::error;
 use yazi_binding::elements::render_once;
-use yazi_config::THEME;
+use yazi_config::{THEME, YAZI};
 use yazi_core::Core;
 use yazi_plugin::LUA;
 
@@ -70,13 +70,89 @@ impl Widget for Root<'_> {
 			which::Which::new(self.core).render(area, buf);
 		}
 
+		// Calculate the Tab area (excluding Header, Tabs, and Status)
+		// This matches the Root layout in root.lua
+		let tabs_height = if self.core.mgr.tabs.len() > 1 { 1 } else { 0 };
+		let root_chunks = Layout::default()
+			.direction(Direction::Vertical)
+			.constraints([
+				Constraint::Length(1),           // Header
+				Constraint::Length(tabs_height), // Tabs
+				Constraint::Fill(1),             // Tab content (the 3 panes)
+				Constraint::Length(1),           // Status
+			])
+			.split(area);
+		let tab_area = root_chunks[2];
+
+		// Apply per-pane backgrounds first, then app-wide background
+		// Calculate pane areas using the manager ratio within the tab area
+		let ratio = YAZI.mgr.ratio.get();
+		let chunks = Layout::default()
+			.direction(Direction::Horizontal)
+			.constraints([
+				Constraint::Ratio(ratio.parent as u32, ratio.all as u32),
+				Constraint::Ratio(ratio.current as u32, ratio.all as u32),
+				Constraint::Ratio(ratio.preview as u32, ratio.all as u32),
+			])
+			.split(tab_area);
+
+		// Apply pane backgrounds (if configured)
+		// Skip the first and last row of each pane to keep borders transparent
+		if !THEME.app.panes.parent.is_empty() {
+			if let Ok(bg_color) = THEME.app.panes.parent.parse::<ratatui::style::Color>() {
+				let pane = chunks[0];
+				// Skip first and last row of the pane
+				let start_y = pane.top() + 1;
+				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
+				if start_y < end_y {
+					for y in start_y..end_y {
+						for x in pane.left()..pane.right() {
+							buf[(x, y)].set_bg(bg_color);
+						}
+					}
+				}
+			}
+		}
+
+		if !THEME.app.panes.current.is_empty() {
+			if let Ok(bg_color) = THEME.app.panes.current.parse::<ratatui::style::Color>() {
+				let pane = chunks[1];
+				// Skip first and last row of the pane
+				let start_y = pane.top() + 1;
+				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
+				if start_y < end_y {
+					for y in start_y..end_y {
+						for x in pane.left()..pane.right() {
+							buf[(x, y)].set_bg(bg_color);
+						}
+					}
+				}
+			}
+		}
+
+		if !THEME.app.panes.preview.is_empty() {
+			if let Ok(bg_color) = THEME.app.panes.preview.parse::<ratatui::style::Color>() {
+				let pane = chunks[2];
+				// Skip first and last row of the pane
+				let start_y = pane.top() + 1;
+				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
+				if start_y < end_y {
+					for y in start_y..end_y {
+						for x in pane.left()..pane.right() {
+							buf[(x, y)].set_bg(bg_color);
+						}
+					}
+				}
+			}
+		}
+
 		// Fill background on all cells to create an opaque background (like fzf does).
 		// This is done AFTER all rendering so text/foreground colors are already set.
 		if !THEME.app.background.is_empty() {
 			if let Ok(bg_color) = THEME.app.background.parse::<ratatui::style::Color>() {
+				// When using app-wide background, fill everything including borders
 				for y in area.top()..area.bottom() {
 					for x in area.left()..area.right() {
-						// Set background on every cell, but don't touch foreground
 						buf[(x, y)].set_bg(bg_color);
 					}
 				}
