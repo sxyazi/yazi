@@ -97,16 +97,18 @@ impl Widget for Root<'_> {
 			.split(tab_area);
 
 		// Apply pane backgrounds (if configured)
-		// Skip the first and last row of each pane to keep borders transparent
+		// Skip borders: top/bottom rows and left/right edges where borders are drawn
 		if !THEME.app.panes.parent.is_empty() {
 			if let Ok(bg_color) = THEME.app.panes.parent.parse::<ratatui::style::Color>() {
 				let pane = chunks[0];
-				// Skip first and last row of the pane
+				// Skip first and last row, leftmost and rightmost columns
 				let start_y = pane.top() + 1;
 				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
-				if start_y < end_y {
+				let start_x = pane.left() + 1;
+				let end_x = if pane.right() > 0 { pane.right() - 1 } else { pane.right() };
+				if start_y < end_y && start_x < end_x {
 					for y in start_y..end_y {
-						for x in pane.left()..pane.right() {
+						for x in start_x..end_x {
 							buf[(x, y)].set_bg(bg_color);
 						}
 					}
@@ -117,7 +119,7 @@ impl Widget for Root<'_> {
 		if !THEME.app.panes.current.is_empty() {
 			if let Ok(bg_color) = THEME.app.panes.current.parse::<ratatui::style::Color>() {
 				let pane = chunks[1];
-				// Skip first and last row of the pane
+				// Skip first and last row (no vertical borders for current pane)
 				let start_y = pane.top() + 1;
 				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
 				if start_y < end_y {
@@ -133,12 +135,14 @@ impl Widget for Root<'_> {
 		if !THEME.app.panes.preview.is_empty() {
 			if let Ok(bg_color) = THEME.app.panes.preview.parse::<ratatui::style::Color>() {
 				let pane = chunks[2];
-				// Skip first and last row of the pane
+				// Skip first and last row, leftmost and rightmost columns
 				let start_y = pane.top() + 1;
 				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
-				if start_y < end_y {
+				let start_x = pane.left() + 1;
+				let end_x = if pane.right() > 0 { pane.right() - 1 } else { pane.right() };
+				if start_y < end_y && start_x < end_x {
 					for y in start_y..end_y {
-						for x in pane.left()..pane.right() {
+						for x in start_x..end_x {
 							buf[(x, y)].set_bg(bg_color);
 						}
 					}
