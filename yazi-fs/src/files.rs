@@ -350,6 +350,7 @@ impl Files {
 		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
 		(self.hidden, self.items) = self.split_files(it);
 		self.sorter.sort(&mut self.items, &self.sizes);
+		self.revision += 1;
 		true
 	}
 
