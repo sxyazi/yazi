@@ -29,6 +29,27 @@ impl Actor for Ignore {
 
 		let exclude_patterns = YAZI.files.excludes_for_context(&cwd_str);
 
+		// Check if we're inside an excluded directory
+		// If so, don't apply filters to allow viewing excluded directory contents
+		if let Some(cwd_path) = cwd.as_path() {
+			// Quick test: does the CWD match any exclude pattern?
+			for pattern in &exclude_patterns {
+				if pattern.starts_with('!') {
+					continue; // Skip negation patterns
+				}
+
+				// Simple pattern matching for common cases like ".git", "target", etc.
+				if let Some(name) = cwd_path.file_name().and_then(|n| n.to_str()) {
+					// Remove glob wildcards for comparison
+					let clean_pattern = pattern.trim_end_matches("/**").trim_start_matches("**/");
+					if name == clean_pattern || pattern == name {
+						// We're inside an excluded directory, skip applying filters
+						succ!();
+					}
+				}
+			}
+		}
+
 		// Create glob matcher function for compiled patterns
 		let glob_matcher: Option<Arc<dyn Fn(&std::path::Path) -> Option<bool> + Send + Sync>> =
 			if !exclude_patterns.is_empty() {
