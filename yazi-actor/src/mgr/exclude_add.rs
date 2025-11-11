@@ -33,7 +33,7 @@ impl Actor for ExcludeAdd {
 
 		// Check if the current folder itself is matched by any of the patterns
 		// If so, don't apply the filter - we're viewing inside a gitignored directory
-		if let Some(_cwd_path) = cwd.as_path() {
+		if let Some(cwd_path) = cwd.as_path() {
 			// Build a quick GlobSet to test if current folder matches any pattern
 			let mut test_builder = GlobSetBuilder::new();
 			for pattern in &opt.patterns {
@@ -42,6 +42,33 @@ impl Actor for ExcludeAdd {
 					continue;
 				} else if let Ok(glob) = Glob::new(pattern) {
 					test_builder.add(glob);
+				}
+			}
+
+			// Check if CWD matches any ignore pattern
+			if let Ok(test_set) = test_builder.build() {
+				// Test both absolute path and relative components
+				let mut matches_ignore = test_set.is_match(cwd_path);
+
+				// Also check path components for patterns like "target" matching
+				// "/path/to/target"
+				if !matches_ignore {
+					if let Some(components) = cwd_path.to_str() {
+						for (i, _) in components.match_indices('/').skip(1) {
+							if let Some(subpath) = components.get(i + 1..) {
+								if test_set.is_match(subpath) {
+									matches_ignore = true;
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				// If we're inside an excluded directory, don't apply any filters
+				// This allows viewing the contents of gitignored directories
+				if matches_ignore {
+					succ!();
 				}
 			}
 		}
