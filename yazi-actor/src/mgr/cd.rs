@@ -76,7 +76,14 @@ impl Actor for Cd {
 		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
 		act!(mgr:hidden, cx)?;
 		act!(mgr:sort, cx)?;
-		act!(mgr:ignore, cx)?;
+
+		// Apply config excludes if no plugin patterns are set
+		// This ensures config patterns work when gitignore plugin is disabled
+		// When plugins are enabled, they handle merging via exclude_add
+		if cx.tab().current.files.ignore_filter().is_none() {
+			act!(mgr:ignore, cx)?;
+		}
+
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
 		succ!(render!());
