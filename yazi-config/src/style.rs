@@ -5,9 +5,7 @@ use crate::Color;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
 pub struct Style {
-	#[serde(default)]
 	pub fg:          Option<Color>,
-	#[serde(default)]
 	pub bg:          Option<Color>,
 	#[serde(default)]
 	pub bold:        bool,

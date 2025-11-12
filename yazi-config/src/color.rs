@@ -1,9 +1,19 @@
-use std::str::FromStr;
+use std::{ops::Deref, str::FromStr};
 
 use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Color(ratatui::style::Color);
+
+impl Deref for Color {
+	type Target = ratatui::style::Color;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl From<Color> for ratatui::style::Color {
+	fn from(value: Color) -> Self { value.0 }
+}
 
 impl<'de> Deserialize<'de> for Color {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -14,8 +24,4 @@ impl<'de> Deserialize<'de> for Color {
 			.map_err(serde::de::Error::custom)
 			.map(Self)
 	}
-}
-
-impl From<Color> for ratatui::style::Color {
-	fn from(value: Color) -> Self { value.0 }
 }

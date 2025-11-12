@@ -12,6 +12,7 @@ use crate::Style;
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Theme {
 	pub flavor:  Flavor,
+	pub app:     App,
 	pub mgr:     Mgr,
 	pub tabs:    Tabs,
 	pub mode:    Mode,
@@ -31,6 +32,11 @@ pub struct Theme {
 	pub filetype: Filetype,
 	#[serde(skip_serializing)]
 	pub icon:     Icon,
+}
+
+#[derive(Deserialize, DeserializeOver2)]
+pub struct App {
+	pub overall: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
@@ -228,4 +234,8 @@ impl Theme {
 
 		Ok(self)
 	}
+}
+
+impl App {
+	pub fn bg_color(&self) -> String { self.overall.bg.map(|c| c.to_string()).unwrap_or_default() }
 }

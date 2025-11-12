@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux, TMUX};
-use yazi_config::YAZI;
+use yazi_config::{THEME, YAZI};
 use yazi_shared::SyncCell;
 use yazi_term::tty::{TTY, TtyWriter};
 
@@ -38,6 +38,7 @@ impl Term {
 			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
 			Print("\x1b[0c"),         // Request device attributes
 			yazi_term::If(TMUX.get(), EnterAlternateScreen),
+			yazi_term::SetBackground(true, THEME.app.bg_color()), // Set app background
 			EnableBracketedPaste,
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
 		)?;
@@ -100,6 +101,7 @@ impl Term {
 		execute!(
 			TTY.writer(),
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
+			yazi_term::SetBackground(false, THEME.app.bg_color()),
 			yazi_term::RestoreCursor,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
