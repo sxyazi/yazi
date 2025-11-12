@@ -6,7 +6,7 @@ use yazi_config::{THEME, YAZI};
 use yazi_core::Core;
 use yazi_plugin::LUA;
 
-use super::{cmp, confirm, help, input, mgr, pick, spot, tasks, which};
+use super::{bg_render::*, cmp, confirm, help, input, mgr, pick, spot, tasks, which};
 
 pub(super) struct Root<'a> {
 	core: &'a Core,
@@ -101,55 +101,21 @@ impl Widget for Root<'_> {
 		let parent_bg = THEME.app.parent_bg();
 		if !parent_bg.is_empty() {
 			if let Ok(bg_color) = parent_bg.parse::<ratatui::style::Color>() {
-				let pane = chunks[0];
-				// Skip first and last row, leftmost and rightmost columns
-				let start_y = pane.top() + 1;
-				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
-				let start_x = pane.left() + 1;
-				let end_x = if pane.right() > 0 { pane.right() - 1 } else { pane.right() };
-				if start_y < end_y && start_x < end_x {
-					for y in start_y..end_y {
-						for x in start_x..end_x {
-							buf[(x, y)].set_bg(bg_color);
-						}
-					}
-				}
+				apply_pane_bg_with_borders(buf, chunks[0], bg_color);
 			}
 		}
 
 		let current_bg = THEME.app.current_bg();
 		if !current_bg.is_empty() {
 			if let Ok(bg_color) = current_bg.parse::<ratatui::style::Color>() {
-				let pane = chunks[1];
-				// Skip first and last row (no vertical borders for current pane)
-				let start_y = pane.top() + 1;
-				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
-				if start_y < end_y {
-					for y in start_y..end_y {
-						for x in pane.left()..pane.right() {
-							buf[(x, y)].set_bg(bg_color);
-						}
-					}
-				}
+				apply_pane_bg_no_vertical_borders(buf, chunks[1], bg_color);
 			}
 		}
 
 		let preview_bg = THEME.app.preview_bg();
 		if !preview_bg.is_empty() {
 			if let Ok(bg_color) = preview_bg.parse::<ratatui::style::Color>() {
-				let pane = chunks[2];
-				// Skip first and last row, leftmost and rightmost columns
-				let start_y = pane.top() + 1;
-				let end_y = if pane.bottom() > 0 { pane.bottom() - 1 } else { pane.bottom() };
-				let start_x = pane.left() + 1;
-				let end_x = if pane.right() > 0 { pane.right() - 1 } else { pane.right() };
-				if start_y < end_y && start_x < end_x {
-					for y in start_y..end_y {
-						for x in start_x..end_x {
-							buf[(x, y)].set_bg(bg_color);
-						}
-					}
-				}
+				apply_pane_bg_with_borders(buf, chunks[2], bg_color);
 			}
 		}
 
@@ -158,12 +124,7 @@ impl Widget for Root<'_> {
 		let bg_color_str = THEME.app.bg_color();
 		if !bg_color_str.is_empty() {
 			if let Ok(bg_color) = bg_color_str.parse::<ratatui::style::Color>() {
-				// When using app-wide background, fill everything including borders
-				for y in area.top()..area.bottom() {
-					for x in area.left()..area.right() {
-						buf[(x, y)].set_bg(bg_color);
-					}
-				}
+				apply_overall_bg(buf, area, bg_color);
 			}
 		}
 	}
