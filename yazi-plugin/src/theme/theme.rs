@@ -34,14 +34,9 @@ fn app() -> Composer<ComposerGet, ComposerSet> {
 		let a = &THEME.app;
 		match key {
 			b"overall" => Style::from(a.overall).into_lua(lua),
-
-			b"panes" => lua
-				.create_table_from([
-					("parent", Style::from(a.panes.parent).into_lua(lua)?),
-					("current", Style::from(a.panes.current).into_lua(lua)?),
-					("preview", Style::from(a.panes.preview).into_lua(lua)?),
-				])?
-				.into_lua(lua),
+			b"parent" => Style::from(a.parent).into_lua(lua),
+			b"current" => Style::from(a.current).into_lua(lua),
+			b"preview" => Style::from(a.preview).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}

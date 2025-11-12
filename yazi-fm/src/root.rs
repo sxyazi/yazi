@@ -98,7 +98,7 @@ impl Widget for Root<'_> {
 
 		// Apply pane backgrounds (if configured)
 		// Skip borders: top/bottom rows and left/right edges where borders are drawn
-		let parent_bg = THEME.app.panes.parent_bg();
+		let parent_bg = THEME.app.parent_bg();
 		if !parent_bg.is_empty() {
 			if let Ok(bg_color) = parent_bg.parse::<ratatui::style::Color>() {
 				let pane = chunks[0];
@@ -117,7 +117,7 @@ impl Widget for Root<'_> {
 			}
 		}
 
-		let current_bg = THEME.app.panes.current_bg();
+		let current_bg = THEME.app.current_bg();
 		if !current_bg.is_empty() {
 			if let Ok(bg_color) = current_bg.parse::<ratatui::style::Color>() {
 				let pane = chunks[1];
@@ -134,7 +134,7 @@ impl Widget for Root<'_> {
 			}
 		}
 
-		let preview_bg = THEME.app.panes.preview_bg();
+		let preview_bg = THEME.app.preview_bg();
 		if !preview_bg.is_empty() {
 			if let Ok(bg_color) = preview_bg.parse::<ratatui::style::Color>() {
 				let pane = chunks[2];

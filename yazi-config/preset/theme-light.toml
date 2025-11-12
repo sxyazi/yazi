@@ -20,11 +20,9 @@ light = ""
 
 [app]
 overall = {}
-
-[app.panes]
-parent  = ""
-current = ""
-preview = ""
+parent  = {}
+current = {}
+preview = {}
 
 # : }}}
 
