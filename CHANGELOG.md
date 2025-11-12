@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Zoom in or out of the preview image ([#2864])
 - Improve the UX of the pick and input components ([#2906], [#2935])
 - Show progress of each task in task manager ([#3121], [#3131], [#3134])
+- New `overall` option to set the overall background color ([#3317])
 - New `bulk_rename` command always renames files with the editor ([#2984])
 - `key-*` DDS events to allow changing or canceling user key events ([#3005], [#3037])
 - New `--bg` specifying image background color in the preset SVG and ImageMagick previewers ([#3189])
@@ -1535,3 +1536,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3286]: https://github.com/sxyazi/yazi/pull/3286
 [#3290]: https://github.com/sxyazi/yazi/pull/3290
 [#3313]: https://github.com/sxyazi/yazi/pull/3313
+[#3317]: https://github.com/sxyazi/yazi/pull/3317
