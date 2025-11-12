@@ -152,8 +152,9 @@ impl Widget for Root<'_> {
 
 		// Fill background on all cells to create an opaque background (like fzf does).
 		// This is done AFTER all rendering so text/foreground colors are already set.
-		if !THEME.app.background.is_empty() {
-			if let Ok(bg_color) = THEME.app.background.parse::<ratatui::style::Color>() {
+		let bg_color_str = THEME.app.bg_color();
+		if !bg_color_str.is_empty() {
+			if let Ok(bg_color) = bg_color_str.parse::<ratatui::style::Color>() {
 				// When using app-wide background, fill everything including borders
 				for y in area.top()..area.bottom() {
 					for x in area.left()..area.right() {

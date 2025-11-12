@@ -23,7 +23,7 @@ impl Term {
 			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};
-		let background = &THEME.app.background;
+		let background = THEME.app.bg_color();
 
 		enable_raw_mode()?;
 		static FIRST: SyncCell<bool> = SyncCell::new(false);
