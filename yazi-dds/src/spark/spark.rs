@@ -23,6 +23,8 @@ pub enum Spark<'a> {
 	EscapeSearch(yazi_parser::VoidOpt),
 	EscapeSelect(yazi_parser::VoidOpt),
 	EscapeVisual(yazi_parser::VoidOpt),
+	ExcludeAdd(yazi_parser::mgr::ExcludeAddOpt),
+	Excluded(yazi_parser::mgr::ExcludedOpt),
 	Filter(yazi_parser::mgr::FilterOpt),
 	FilterDo(yazi_parser::mgr::FilterOpt),
 	Find(yazi_parser::mgr::FindOpt),
@@ -32,6 +34,7 @@ pub enum Spark<'a> {
 	Forward(yazi_parser::VoidOpt),
 	Hardlink(yazi_parser::mgr::HardlinkOpt),
 	Hidden(yazi_parser::mgr::HiddenOpt),
+	Ignore(yazi_parser::VoidOpt),
 	Hover(yazi_parser::mgr::HoverOpt),
 	Leave(yazi_parser::VoidOpt),
 	Linemode(yazi_parser::mgr::LinemodeOpt),
@@ -146,6 +149,8 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::EscapeSearch(b) => b.into_lua(lua),
 			Self::EscapeSelect(b) => b.into_lua(lua),
 			Self::EscapeVisual(b) => b.into_lua(lua),
+			Self::ExcludeAdd(b) => b.into_lua(lua),
+			Self::Excluded(b) => b.into_lua(lua),
 			Self::Filter(b) => b.into_lua(lua),
 			Self::FilterDo(b) => b.into_lua(lua),
 			Self::Find(b) => b.into_lua(lua),
@@ -155,6 +160,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Forward(b) => b.into_lua(lua),
 			Self::Hardlink(b) => b.into_lua(lua),
 			Self::Hidden(b) => b.into_lua(lua),
+			Self::Ignore(b) => b.into_lua(lua),
 			Self::Hover(b) => b.into_lua(lua),
 			Self::Leave(b) => b.into_lua(lua),
 			Self::Linemode(b) => b.into_lua(lua),
@@ -253,6 +259,7 @@ try_from_spark!(
 	mgr:escape_visual,
 	mgr:follow,
 	mgr:forward,
+	mgr:ignore,
 	mgr:leave,
 	mgr:refresh,
 	mgr:search_stop,
@@ -284,6 +291,7 @@ try_from_spark!(mgr::CopyOpt, mgr:copy);
 try_from_spark!(mgr::CreateOpt, mgr:create);
 try_from_spark!(mgr::DownloadOpt, mgr:download);
 try_from_spark!(mgr::EscapeOpt, mgr:escape);
+try_from_spark!(mgr::ExcludeAddOpt, mgr:exclude_add);
 try_from_spark!(mgr::FilterOpt, mgr:filter, mgr:filter_do);
 try_from_spark!(mgr::FindArrowOpt, mgr:find_arrow);
 try_from_spark!(mgr::FindDoOpt, mgr:find_do);
@@ -304,6 +312,7 @@ try_from_spark!(mgr::RevealOpt, mgr:reveal);
 try_from_spark!(mgr::SearchOpt, mgr:search, mgr:search_do);
 try_from_spark!(mgr::SeekOpt, mgr:seek);
 try_from_spark!(mgr::ShellOpt, mgr:shell);
+try_from_spark!(mgr::ExcludedOpt, mgr:excluded);
 try_from_spark!(mgr::SortOpt, mgr:sort);
 try_from_spark!(mgr::SpotOpt, mgr:spot);
 try_from_spark!(mgr::TabCloseOpt, mgr:tab_close);

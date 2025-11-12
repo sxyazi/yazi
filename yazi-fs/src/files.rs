@@ -3,7 +3,7 @@ use std::{mem, ops::{Deref, DerefMut, Not}};
 use hashbrown::{HashMap, HashSet};
 use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}};
 
-use super::{FilesSorter, Filter};
+use super::{FilesSorter, Filter, IgnoreFilter};
 use crate::{FILES_TICKET, File, SortBy};
 
 #[derive(Default)]
@@ -16,9 +16,11 @@ pub struct Files {
 
 	pub sizes: HashMap<PathBufDyn, u64>,
 
-	sorter:      FilesSorter,
-	filter:      Option<Filter>,
-	show_hidden: bool,
+	sorter:        FilesSorter,
+	filter:        Option<Filter>,
+	show_hidden:   bool,
+	show_excluded: bool,
+	ignore_filter: Option<IgnoreFilter>,
 }
 
 impl Deref for Files {
@@ -257,9 +259,26 @@ impl Files {
 
 	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Vec<File>, Vec<File>) {
 		if let Some(filter) = &self.filter {
-			files
-				.into_iter()
-				.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
+			files.into_iter().partition(|f| {
+				(f.is_hidden() && !self.show_hidden)
+					|| !filter.matches(f.urn())
+					|| (!self.show_excluded
+						&& self.ignore_filter.as_ref().is_some_and(|ig| ig.matches_url(&f.url)))
+			})
+		} else if let Some(ignore_filter) = &self.ignore_filter {
+			if self.show_excluded {
+				// Show excluded files - only hide based on hidden status
+				if self.show_hidden {
+					(vec![], files.into_iter().collect())
+				} else {
+					files.into_iter().partition(|f| f.is_hidden())
+				}
+			} else {
+				// Hide excluded files - apply ignore filter
+				files
+					.into_iter()
+					.partition(|f| (f.is_hidden() && !self.show_hidden) || ignore_filter.matches_url(&f.url))
+			}
 		} else if self.show_hidden {
 			(vec![], files.into_iter().collect())
 		} else {
@@ -313,6 +332,45 @@ impl Files {
 		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
 		(self.hidden, self.items) = self.split_files(it);
 		self.sorter.sort(&mut self.items, &self.sizes);
+		true
+	}
+
+	// --- Ignore filter
+	#[inline]
+	pub fn ignore_filter(&self) -> Option<&IgnoreFilter> { self.ignore_filter.as_ref() }
+
+	pub fn set_ignore_filter(&mut self, ignore_filter: Option<IgnoreFilter>) -> bool {
+		if self.ignore_filter.is_none() && ignore_filter.is_none() {
+			return false;
+		}
+
+		self.ignore_filter = ignore_filter;
+
+		// Re-split files with the new ignore filter
+		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
+		(self.hidden, self.items) = self.split_files(it);
+		self.sorter.sort(&mut self.items, &self.sizes);
+		self.revision += 1;
+		true
+	}
+
+	// --- Show excluded
+	#[inline]
+	pub fn show_excluded(&self) -> bool { self.show_excluded }
+
+	pub fn set_show_excluded(&mut self, state: bool) -> bool {
+		if self.show_excluded == state {
+			return false;
+		}
+
+		self.show_excluded = state;
+
+		// Re-split files with the new state
+		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
+		(self.hidden, self.items) = self.split_files(it);
+		self.sorter.sort(&mut self.items, &self.sizes);
+		self.revision += 1;
+
 		true
 	}
 
