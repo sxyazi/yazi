@@ -98,8 +98,9 @@ impl Widget for Root<'_> {
 
 		// Apply pane backgrounds (if configured)
 		// Skip borders: top/bottom rows and left/right edges where borders are drawn
-		if !THEME.app.panes.parent.is_empty() {
-			if let Ok(bg_color) = THEME.app.panes.parent.parse::<ratatui::style::Color>() {
+		let parent_bg = THEME.app.panes.parent_bg();
+		if !parent_bg.is_empty() {
+			if let Ok(bg_color) = parent_bg.parse::<ratatui::style::Color>() {
 				let pane = chunks[0];
 				// Skip first and last row, leftmost and rightmost columns
 				let start_y = pane.top() + 1;
@@ -116,8 +117,9 @@ impl Widget for Root<'_> {
 			}
 		}
 
-		if !THEME.app.panes.current.is_empty() {
-			if let Ok(bg_color) = THEME.app.panes.current.parse::<ratatui::style::Color>() {
+		let current_bg = THEME.app.panes.current_bg();
+		if !current_bg.is_empty() {
+			if let Ok(bg_color) = current_bg.parse::<ratatui::style::Color>() {
 				let pane = chunks[1];
 				// Skip first and last row (no vertical borders for current pane)
 				let start_y = pane.top() + 1;
@@ -132,8 +134,9 @@ impl Widget for Root<'_> {
 			}
 		}
 
-		if !THEME.app.panes.preview.is_empty() {
-			if let Ok(bg_color) = THEME.app.panes.preview.parse::<ratatui::style::Color>() {
+		let preview_bg = THEME.app.panes.preview_bg();
+		if !preview_bg.is_empty() {
+			if let Ok(bg_color) = preview_bg.parse::<ratatui::style::Color>() {
 				let pane = chunks[2];
 				// Skip first and last row, leftmost and rightmost columns
 				let start_y = pane.top() + 1;

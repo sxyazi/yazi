@@ -43,11 +43,11 @@ pub struct App {
 #[derive(Deserialize, DeserializeOver2)]
 pub struct AppPanes {
 	#[serde(default)]
-	pub parent:  String,
+	pub parent:  Style,
 	#[serde(default)]
-	pub current: String,
+	pub current: Style,
 	#[serde(default)]
-	pub preview: String,
+	pub preview: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
@@ -249,4 +249,10 @@ impl Theme {
 
 impl App {
 	pub fn bg_color(&self) -> String { self.overall.bg.map(|c| c.to_string()).unwrap_or_default() }
+}
+
+impl AppPanes {
+	pub fn parent_bg(&self) -> String { self.parent.bg.map(|c| c.to_string()).unwrap_or_default() }
+	pub fn current_bg(&self) -> String { self.current.bg.map(|c| c.to_string()).unwrap_or_default() }
+	pub fn preview_bg(&self) -> String { self.preview.bg.map(|c| c.to_string()).unwrap_or_default() }
 }

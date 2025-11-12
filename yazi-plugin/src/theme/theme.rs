@@ -37,9 +37,9 @@ fn app() -> Composer<ComposerGet, ComposerSet> {
 
 			b"panes" => lua
 				.create_table_from([
-					("parent", lua.create_string(&a.panes.parent)?),
-					("current", lua.create_string(&a.panes.current)?),
-					("preview", lua.create_string(&a.panes.preview)?),
+					("parent", Style::from(a.panes.parent).into_lua(lua)?),
+					("current", Style::from(a.panes.current).into_lua(lua)?),
+					("preview", Style::from(a.panes.preview).into_lua(lua)?),
 				])?
 				.into_lua(lua),
 			_ => Ok(Value::Nil),
