@@ -36,7 +36,7 @@ pub struct Theme {
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct App {
-	pub background: String,
+	pub overall: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
@@ -234,4 +234,8 @@ impl Theme {
 
 		Ok(self)
 	}
+}
+
+impl App {
+	pub fn bg_color(&self) -> String { self.overall.bg.map(|c| c.to_string()).unwrap_or_default() }
 }

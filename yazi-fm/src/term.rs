@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux, TMUX};
-use yazi_config::{YAZI,THEME};
+use yazi_config::{THEME, YAZI};
 use yazi_shared::SyncCell;
 use yazi_term::tty::{TTY, TtyWriter};
 
@@ -23,7 +23,6 @@ impl Term {
 			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};
-    let background = &THEME.app.background;
 
 		enable_raw_mode()?;
 		static FIRST: SyncCell<bool> = SyncCell::new(false);
@@ -38,9 +37,8 @@ impl Term {
 			Print("\x1b[?12$p"),      // Request cursor blink status (DECRQM query for DECSET 12)
 			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
 			Print("\x1b[0c"),         // Request device attributes
-      // Set terminal background color
-      yazi_term::If(!background.is_empty(), Print(format!("\x1b]11;{}\x1b\\", background))),
 			yazi_term::If(TMUX.get(), EnterAlternateScreen),
+			yazi_term::SetBackground(true, THEME.app.bg_color()), // Set app background
 			EnableBracketedPaste,
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
 		)?;
@@ -103,8 +101,7 @@ impl Term {
 		execute!(
 			TTY.writer(),
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
-      // Restore default terminal background
-      yazi_term::If(!THEME.app.background.is_empty(), Print("\x1b]111\x1b\\")),
+			yazi_term::SetBackground(false, THEME.app.bg_color()),
 			yazi_term::RestoreCursor,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,

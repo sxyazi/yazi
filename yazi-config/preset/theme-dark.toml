@@ -19,7 +19,7 @@ light = ""
 # : App {{{
 
 [app]
-background  = ""
+overall = {}
 
 # : }}}
 

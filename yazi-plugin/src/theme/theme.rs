@@ -33,7 +33,8 @@ fn app() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let a = &THEME.app;
 		match key {
-			b"background" => lua.create_string(&a.background)?.into_lua(lua),
+			b"overall" => Style::from(a.overall).into_lua(lua),
+
 			_ => Ok(Value::Nil),
 		}
 	}
