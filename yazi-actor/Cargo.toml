@@ -31,16 +31,17 @@ yazi-watcher   = { path = "../yazi-watcher", version = "25.9.15" }
 yazi-widgets   = { path = "../yazi-widgets", version = "25.9.15" }
 
 # External dependencies
-anyhow       = { workspace = true }
-crossterm    = { workspace = true }
-futures      = { workspace = true }
-hashbrown    = { workspace = true }
-mlua         = { workspace = true }
-paste        = { workspace = true }
-scopeguard   = { workspace = true }
-tokio        = { workspace = true }
-tokio-stream = { workspace = true }
-tracing      = { workspace = true }
+anyhow        = { workspace = true }
+crossterm     = { workspace = true }
+futures       = { workspace = true }
+hashbrown     = { workspace = true }
+mlua          = { workspace = true }
+paste         = { workspace = true }
+scopeguard    = { workspace = true }
+tokio         = { workspace = true }
+tokio-stream  = { workspace = true }
+tracing       = { workspace = true }
+unicode-width = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }
