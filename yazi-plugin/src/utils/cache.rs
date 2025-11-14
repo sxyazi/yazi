@@ -18,7 +18,7 @@ impl Utils {
 
 			let hex = {
 				let mut h = Twox128::default();
-				file.hash(&mut h);
+				file.url.hash(&mut h);
 				t.raw_get("skip").unwrap_or(0usize).hash(&mut h);
 				format!("{:x}", h.finish_128())
 			};
