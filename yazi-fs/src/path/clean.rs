@@ -1,21 +1,33 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use yazi_shared::{loc::LocBuf, url::{UrlBuf, UrlCow}};
+use yazi_shared::{loc::LocBuf, path::{PathDyn, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 	let cow: UrlCow = url.into();
 	let (path, uri, urn) = clean_path_impl(
-		&cow.loc(),
-		cow.loc().base().components().count(),
-		cow.loc().trail().components().count(),
+		cow.loc(),
+		cow.base().components().count() - 1,
+		cow.trail().components().count() - 1,
 	);
 
-	let loc =
-		LocBuf::<PathBuf>::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
-	UrlBuf { loc, scheme: cow.into_scheme().into() }
+	match cow.as_url() {
+		Url::Regular(_) => UrlBuf::Regular(path.into()),
+		Url::Search { domain, .. } => UrlBuf::Search {
+			loc:    LocBuf::<PathBuf>::with(path, uri, urn).expect("create Loc from cleaned path"),
+			domain: domain.intern(),
+		},
+		Url::Archive { domain, .. } => UrlBuf::Archive {
+			loc:    LocBuf::<PathBuf>::with(path, uri, urn).expect("create Loc from cleaned path"),
+			domain: domain.intern(),
+		},
+		Url::Sftp { domain, .. } => UrlBuf::Sftp {
+			loc:    LocBuf::<PathBuf>::with(path, uri, urn).expect("create Loc from cleaned path"),
+			domain: domain.intern(),
+		},
+	}
 }
 
-fn clean_path_impl(path: &Path, base: usize, trail: usize) -> (PathBuf, usize, usize) {
+fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBuf, usize, usize) {
 	use std::path::Component::*;
 
 	let mut out = vec![];

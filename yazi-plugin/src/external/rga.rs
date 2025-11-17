@@ -14,7 +14,7 @@ pub struct RgaOpt {
 }
 
 pub fn rga(opt: RgaOpt) -> Result<UnboundedReceiver<File>> {
-	let Some(path) = opt.cwd.as_path() else {
+	let Some(path) = opt.cwd.as_local() else {
 		bail!("rga can only search local filesystem");
 	};
 
@@ -34,7 +34,10 @@ pub fn rga(opt: RgaOpt) -> Result<UnboundedReceiver<File>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			if let Ok(file) = File::new(opt.cwd.join(line)).await {
+			let Ok(url) = opt.cwd.try_join(line) else {
+				continue;
+			};
+			if let Ok(file) = File::new(url).await {
 				tx.send(file).ok();
 			}
 		}

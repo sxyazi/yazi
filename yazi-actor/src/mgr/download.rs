@@ -8,7 +8,7 @@ use yazi_fs::{File, FsScheme, provider::{Provider, local::Local}};
 use yazi_macro::succ;
 use yazi_parser::mgr::{DownloadOpt, OpenOpt};
 use yazi_proxy::MgrProxy;
-use yazi_shared::{data::Data, url::UrlCow};
+use yazi_shared::{data::Data, url::{UrlCow, UrlLike}};
 use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx};
@@ -78,7 +78,7 @@ impl Download {
 		let roots: HashSet<_> = urls.iter().filter_map(|u| u.scheme().cache()).collect();
 		for mut root in roots {
 			root.push("%lock");
-			Local.create_dir_all(root).await.ok();
+			Local::regular(&root).create_dir_all().await.ok();
 		}
 	}
 }

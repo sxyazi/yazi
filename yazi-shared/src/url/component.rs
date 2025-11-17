@@ -1,8 +1,10 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
 
-use crate::{scheme::{Scheme, SchemeRef}, url::{Encode, Url, UrlBuf}};
+use anyhow::Result;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+use crate::{path::{PathBufDyn, PathCow, PathLike}, scheme::SchemeRef, url::{Encode, Url, UrlBuf, UrlCow}};
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Component<'a> {
 	Scheme(SchemeRef<'a>),
 	Prefix(PrefixComponent<'a>),
@@ -24,12 +26,12 @@ impl<'a> From<path::Component<'a>> for Component<'a> {
 	}
 }
 
-impl<'a> FromIterator<Component<'a>> for UrlBuf {
+impl<'a> FromIterator<Component<'a>> for Result<UrlBuf> {
 	fn from_iter<I: IntoIterator<Item = Component<'a>>>(iter: I) -> Self {
-		let mut scheme = Scheme::Regular;
 		let mut buf = PathBuf::new();
+		let mut scheme = None;
 		iter.into_iter().for_each(|c| match c {
-			Component::Scheme(s) => scheme = s.into(),
+			Component::Scheme(s) => scheme = Some(s),
 			Component::Prefix(p) => buf.push(path::Component::Prefix(p)),
 			Component::RootDir => buf.push(path::Component::RootDir),
 			Component::CurDir => buf.push(path::Component::CurDir),
@@ -37,7 +39,11 @@ impl<'a> FromIterator<Component<'a>> for UrlBuf {
 			Component::Normal(s) => buf.push(path::Component::Normal(s)),
 		});
 
-		Self { loc: buf.into(), scheme }
+		Ok(if let Some(s) = scheme {
+			UrlCow::try_from((s, PathCow::Owned(PathBufDyn::Os(buf))))?.into_owned()
+		} else {
+			buf.into()
+		})
 	}
 }
 
@@ -66,18 +72,14 @@ pub struct Components<'a> {
 
 impl<'a> From<Url<'a>> for Components<'a> {
 	fn from(value: Url<'a>) -> Self {
-		Self {
-			inner:          value.loc.as_path().components(),
-			url:            value,
-			scheme_yielded: false,
-		}
+		Self { inner: value.loc().components(), url: value, scheme_yielded: false }
 	}
 }
 
 impl<'a> Components<'a> {
 	pub fn os_str(&self) -> Cow<'a, OsStr> {
 		let path = self.inner.as_path();
-		if self.url.scheme.is_local() || self.scheme_yielded {
+		if self.url.kind().is_local() || self.scheme_yielded {
 			return path.as_os_str().into();
 		}
 
@@ -90,7 +92,7 @@ impl<'a> Components<'a> {
 	pub fn covariant(&self, other: &Self) -> bool {
 		match (self.scheme_yielded, other.scheme_yielded) {
 			(false, false) => {}
-			(true, true) if self.url.scheme.covariant(other.url.scheme) => {}
+			(true, true) if self.url.scheme().covariant(other.url.scheme()) => {}
 			_ => return false,
 		}
 		self.inner == other.inner
@@ -103,7 +105,7 @@ impl<'a> Iterator for Components<'a> {
 	fn next(&mut self) -> Option<Self::Item> {
 		if !self.scheme_yielded {
 			self.scheme_yielded = true;
-			Some(Component::Scheme(self.url.scheme))
+			Some(Component::Scheme(self.url.scheme()))
 		} else {
 			self.inner.next().map(Into::into)
 		}
@@ -123,7 +125,7 @@ impl<'a> DoubleEndedIterator for Components<'a> {
 			Some(comp.into())
 		} else if !self.scheme_yielded {
 			self.scheme_yielded = true;
-			Some(Component::Scheme(self.url.scheme))
+			Some(Component::Scheme(self.url.scheme()))
 		} else {
 			None
 		}
@@ -134,8 +136,8 @@ impl<'a> FusedIterator for Components<'a> {}
 
 impl<'a> PartialEq for Components<'a> {
 	fn eq(&self, other: &Self) -> bool {
-		Some(self.url.scheme).filter(|_| !self.scheme_yielded)
-			== Some(other.url.scheme).filter(|_| !other.scheme_yielded)
+		Some(self.url.scheme()).filter(|_| !self.scheme_yielded)
+			== Some(other.url.scheme()).filter(|_| !other.scheme_yielded)
 			&& self.inner == other.inner
 	}
 }
@@ -145,31 +147,35 @@ impl<'a> PartialEq for Components<'a> {
 mod tests {
 	use std::path::Path;
 
+	use anyhow::Result;
+
 	use super::*;
-	use crate::{pool::InternStr, url::UrlLike};
+	use crate::url::UrlLike;
 
 	#[test]
-	fn test_collect() {
+	fn test_collect() -> Result<()> {
 		crate::init_tests();
 
-		let search: UrlBuf = "search://keyword//root/projects/yazi".parse().unwrap();
-		assert_eq!(search.loc.uri().as_os_str(), OsStr::new(""));
-		assert_eq!(search.scheme, Scheme::Search("keyword".intern()));
+		let search: UrlBuf = "search://keyword//root/projects/yazi".parse()?;
+		assert_eq!(search.uri(), "");
+		assert_eq!(search.scheme(), SchemeRef::Search { domain: "keyword", uri: 0, urn: 0 });
 
-		let item = search.join("main.rs");
-		assert_eq!(item.loc.uri().as_os_str(), OsStr::new("main.rs"));
-		assert_eq!(item.scheme, Scheme::Search("keyword".intern()));
+		let item = search.try_join("main.rs")?;
+		assert_eq!(item.uri(), "main.rs");
+		assert_eq!(item.scheme(), SchemeRef::Search { domain: "keyword", uri: 1, urn: 1 });
 
-		let u: UrlBuf = item.components().take(4).collect();
-		assert_eq!(u.scheme, Scheme::Search("keyword".intern()));
-		assert_eq!(u.loc.as_path(), Path::new("/root/projects"));
+		let u: UrlBuf = item.components().take(4).collect::<Result<_>>()?;
+		assert_eq!(u.scheme(), SchemeRef::Search { domain: "keyword", uri: 0, urn: 0 });
+		assert_eq!(u.loc(), Path::new("/root/projects"));
 
 		let u: UrlBuf = item
 			.components()
 			.take(5)
 			.chain([Component::Normal(OsStr::new("target/release/yazi"))])
-			.collect();
-		assert_eq!(u.scheme, Scheme::Search("keyword".intern()));
-		assert_eq!(u.loc.as_path(), Path::new("/root/projects/yazi/target/release/yazi"));
+			.collect::<Result<_>>()?;
+		assert_eq!(u.scheme(), SchemeRef::Search { domain: "keyword", uri: 0, urn: 0 });
+		assert_eq!(u.loc(), Path::new("/root/projects/yazi/target/release/yazi"));
+
+		Ok(())
 	}
 }

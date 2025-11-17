@@ -1,9 +1,9 @@
 use std::{fmt::Debug, str::FromStr};
 
 use anyhow::{Result, bail};
-use globset::GlobBuilder;
+use globset::{Candidate, GlobBuilder};
 use serde::Deserialize;
-use yazi_shared::{scheme::SchemeRef, url::AsUrl};
+use yazi_shared::{path::PathLike, scheme::SchemeKind, url::AsUrl};
 
 #[derive(Deserialize)]
 #[serde(try_from = "String")]
@@ -28,28 +28,32 @@ impl Debug for Pattern {
 }
 
 impl Pattern {
+	// FIXME: simplify conditional compilation
 	pub fn match_url(&self, url: impl AsUrl, is_dir: bool) -> bool {
 		let url = url.as_url();
 
 		if is_dir != self.is_dir {
 			return false;
-		} else if !self.scheme.matches(url.scheme) {
+		} else if !self.scheme.matches(url.kind()) {
 			return false;
 		} else if self.is_star {
 			return true;
 		}
 
 		#[cfg(unix)]
-		let path = &url.loc;
+		{
+			self.inner.is_match_candidate(&Candidate::from_bytes(url.loc().encoded_bytes()))
+		}
 
 		#[cfg(windows)]
-		let path = if self.sep_lit {
-			yazi_fs::path::backslash_to_slash(&url.loc)
+		if self.sep_lit {
+			use yazi_shared::strand::AsStrandDyn;
+			self.inner.is_match_candidate(&Candidate::from_bytes(
+				url.loc().as_strand_dyn().backslash_to_slash().encoded_bytes(),
+			))
 		} else {
-			std::borrow::Cow::Borrowed(url.loc.as_path())
-		};
-
-		self.inner.is_match(path)
+			self.inner.is_match_candidate(&Candidate::from_bytes(url.loc().encoded_bytes()))
+		}
 	}
 
 	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
@@ -144,18 +148,19 @@ impl PatternScheme {
 	}
 
 	#[inline]
-	fn matches(self, scheme: SchemeRef) -> bool {
-		use SchemeRef as S;
-		match (self, scheme) {
+	fn matches(self, kind: SchemeKind) -> bool {
+		use SchemeKind as K;
+
+		match (self, kind) {
 			(Self::Any, _) => true,
 			(Self::Local, s) => s.is_local(),
 			(Self::Remote, s) => s.is_remote(),
 			(Self::Virtual, s) => s.is_virtual(),
 
-			(Self::Regular, S::Regular) => true,
-			(Self::Search, S::Search(_)) => true,
-			(Self::Archive, S::Archive(_)) => true,
-			(Self::Sftp, S::Sftp(_)) => true,
+			(Self::Regular, K::Regular) => true,
+			(Self::Search, K::Search) => true,
+			(Self::Archive, K::Archive) => true,
+			(Self::Sftp, K::Sftp) => true,
 
 			_ => false,
 		}

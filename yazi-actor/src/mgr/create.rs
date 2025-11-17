@@ -27,7 +27,10 @@ impl Actor for Create {
 				return;
 			}
 
-			let new = cwd.join(&name);
+			let Ok(new) = cwd.try_join(&name) else {
+				return;
+			};
+
 			if !opt.force
 				&& maybe_exists(&new).await
 				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await

@@ -5072,6 +5072,7 @@ dependencies = [
  "parking_lot",
  "percent-encoding",
  "serde",
+ "thiserror 2.0.17",
  "tokio",
  "uzers",
  "windows-sys 0.61.2",

@@ -1,8 +1,8 @@
-use std::{ffi::OsStr, fmt::Display, ops::Range};
+use std::{fmt::Display, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
-use yazi_shared::{event::Cmd, path::{AsPath, PathLike}};
+use yazi_shared::{event::Cmd, strand::{AsStrand, StrandLike}};
 
 pub struct Filter {
 	raw:   String,
@@ -26,14 +26,14 @@ impl Filter {
 	#[allow(private_bounds)]
 	pub fn matches<T>(&self, name: T) -> bool
 	where
-		T: AsPath,
+		T: AsStrand,
 	{
-		self.regex.is_match(name.as_path().encoded_bytes())
+		self.regex.is_match(name.as_strand().encoded_bytes())
 	}
 
 	#[inline]
-	pub fn highlighted(&self, name: impl AsRef<OsStr>) -> Option<Vec<Range<usize>>> {
-		self.regex.find(name.as_ref().as_encoded_bytes()).map(|m| vec![m.range()])
+	pub fn highlighted(&self, name: impl AsStrand) -> Option<Vec<Range<usize>>> {
+		self.regex.find(name.as_strand().encoded_bytes()).map(|m| vec![m.range()])
 	}
 }
 

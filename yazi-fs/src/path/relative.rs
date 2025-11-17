@@ -1,19 +1,17 @@
-use std::{borrow::Cow, path::{Path, PathBuf}};
+use std::path::PathBuf;
 
 use anyhow::{Result, bail};
-use yazi_shared::{loc::LocBuf, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{path::PathBufDyn, url::{UrlCow, UrlLike}};
 
-pub fn path_relative_to<'a>(
-	from: impl AsRef<Path>,
-	to: &'a impl AsRef<Path>,
-) -> Result<Cow<'a, Path>> {
-	Ok(match url_relative_to(from.as_ref().into(), to.as_ref().into())? {
-		UrlCow::Borrowed { loc, .. } => Cow::Borrowed(loc.as_path()),
-		UrlCow::Owned { loc, .. } => Cow::Owned(loc.into_path()),
-	})
+pub fn url_relative_to<'a, 'b, U, V>(from: U, to: V) -> Result<UrlCow<'b>>
+where
+	U: Into<UrlCow<'a>>,
+	V: Into<UrlCow<'b>>,
+{
+	url_relative_to_(from.into(), to.into())
 }
 
-pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<UrlCow<'a>> {
+fn url_relative_to_<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<UrlCow<'a>> {
 	use yazi_shared::url::Component::*;
 
 	if from.is_absolute() != to.is_absolute() {
@@ -25,7 +23,7 @@ pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<Ur
 	}
 
 	if from.covariant(&to) {
-		return Ok(UrlBuf { loc: LocBuf::<PathBuf>::zeroed("."), scheme: to.scheme().into() }.into());
+		return UrlCow::try_from((to.scheme().zeroed().to_owned(), PathBufDyn::with(to.kind(), ".")?));
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -46,6 +44,7 @@ pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<Ur
 	let dots = f_head.into_iter().chain(f_it).map(|_| ParentDir);
 	let rest = t_head.into_iter().chain(t_it);
 
-	let buf: PathBuf = dots.chain(rest).collect();
-	Ok(UrlBuf { loc: LocBuf::<PathBuf>::zeroed(buf), scheme: to.scheme().into() }.into())
+	let buf: PathBuf = dots.chain(rest).collect(); // FIXME: remove PathBuf
+	let buf = PathBufDyn::from(buf);
+	UrlCow::try_from((to.scheme().zeroed().to_owned(), buf))
 }

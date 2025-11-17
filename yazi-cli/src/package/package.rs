@@ -15,7 +15,7 @@ pub(crate) struct Package {
 
 impl Package {
 	pub(crate) async fn load() -> Result<Self> {
-		let s = ok_or_not_found!(Local.read_to_string(Self::toml()).await);
+		let s = ok_or_not_found!(Local::regular(&Self::toml()).read_to_string().await);
 		Ok(toml::from_str(&s)?)
 	}
 
@@ -132,7 +132,7 @@ impl Package {
 
 	async fn save(&self) -> Result<()> {
 		let s = toml::to_string_pretty(self)?;
-		Local.write(Self::toml(), s).await.context("Failed to write package.toml")
+		Local::regular(&Self::toml()).write(s).await.context("Failed to write package.toml")
 	}
 
 	fn toml() -> PathBuf { Xdg::config_dir().join("package.toml") }

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use yazi_fs::{ok_or_not_found, provider::{DirReader, FileHolder, Provider, local::Local}};
+use yazi_fs::{ok_or_not_found, provider::{Provider, local::Local}};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -23,9 +23,9 @@ impl Dependency {
 
 	pub(super) async fn delete_assets(&self) -> Result<()> {
 		let assets = self.target().join("assets");
-		match Local.read_dir(&assets).await {
+		match tokio::fs::read_dir(&assets).await {
 			Ok(mut it) => {
-				while let Some(entry) = it.next().await? {
+				while let Some(entry) = it.next_entry().await? {
 					remove_sealed(&entry.path())
 						.await
 						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;
@@ -35,7 +35,7 @@ impl Dependency {
 			Err(e) => Err(e).context(format!("failed to read `{}`", assets.display()))?,
 		};
 
-		Local.remove_dir_clean(assets).await;
+		Local::regular(&assets).remove_dir_clean().await;
 		Ok(())
 	}
 
@@ -49,7 +49,7 @@ impl Dependency {
 				.with_context(|| format!("failed to delete `{}`", path.display()))?;
 		}
 
-		if ok_or_not_found(Local.remove_dir(&dir).await).is_ok() {
+		if ok_or_not_found(Local::regular(&dir).remove_dir().await).is_ok() {
 			outln!("Done!")?;
 		} else {
 			outln!(

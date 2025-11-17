@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
-use mlua::{ExternalError, FromLua, Lua, UserData, Value};
-use yazi_shared::path::PathBufDyn;
+use mlua::{ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
+use yazi_shared::path::{PathBufDyn, PathBufLike};
 
 pub struct Path(pub PathBufDyn);
 
@@ -24,4 +24,9 @@ impl FromLua for Path {
 	}
 }
 
-impl UserData for Path {}
+impl UserData for Path {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods
+			.add_meta_method(MetaMethod::ToString, |lua, me, ()| lua.create_string(me.encoded_bytes()));
+	}
+}

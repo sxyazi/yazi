@@ -1,11 +1,11 @@
-use std::{ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
+use std::{mem, path::MAIN_SEPARATOR_STR};
 
 use anyhow::Result;
 use yazi_fs::{CWD, path::expand_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{OsStrSplit, data::Data, natsort, scheme::SchemeLike, url::{UrlBuf, UrlCow}};
+use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::StrandBufLike, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -32,7 +32,7 @@ impl Actor for Trigger {
 
 		if cmp.caches.contains_key(&parent) {
 			let ticket = cmp.ticket;
-			return act!(cmp:show, cx, ShowOpt { cache_name: parent, word, ticket, ..Default::default() });
+			return act!(cmp:show, cx, ShowOpt { cache: vec![], cache_name: parent, word, ticket });
 		}
 
 		let ticket = cmp.ticket;
@@ -42,8 +42,8 @@ impl Actor for Trigger {
 
 			// "/" is both a directory separator and the root directory per se
 			// As there's no parent directory for the FS root, it is a special case
-			if parent.loc.as_os_str() == "/" {
-				cache.push(CmpItem { name: OsString::new(), is_dir: true });
+			if parent.loc() == "/" {
+				cache.push(CmpItem { name: Default::default(), is_dir: true });
 			}
 
 			while let Ok(Some(ent)) = dir.next().await {
@@ -53,9 +53,8 @@ impl Actor for Trigger {
 			}
 
 			if !cache.is_empty() {
-				cache.sort_unstable_by(|a, b| {
-					natsort(a.name.as_encoded_bytes(), b.name.as_encoded_bytes(), false)
-				});
+				cache
+					.sort_unstable_by(|a, b| natsort(a.name.encoded_bytes(), b.name.encoded_bytes(), false));
 				CmpProxy::show(ShowOpt { cache, cache_name: parent, word, ticket });
 			}
 
@@ -67,23 +66,28 @@ impl Actor for Trigger {
 }
 
 impl Trigger {
-	fn split_url(s: &str) -> Option<(UrlBuf, PathBuf)> {
-		let (scheme, path, ..) = UrlCow::parse(s.as_bytes()).ok()?;
+	fn split_url(s: &str) -> Option<(UrlBuf, PathBufDyn)> {
+		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
 
-		if scheme.is_local() && path.as_os_str() == "~" {
+		if scheme.is_local() && path == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
 		}
 
-		#[cfg(windows)]
-		const SEP: &[char] = &['/', '\\'];
-		#[cfg(not(windows))]
-		const SEP: char = std::path::MAIN_SEPARATOR;
+		let sep = if cfg!(windows) {
+			AnyAsciiChar::new(&[b'/', b'\\']).unwrap()
+		} else {
+			AnyAsciiChar::new(&[b'/']).unwrap()
+		};
 
-		Some(match path.as_os_str().rsplit_once(SEP) {
+		Some(match path.as_path().rsplit_pred(sep) {
 			Some((p, c)) if p.is_empty() => {
-				(UrlBuf { loc: MAIN_SEPARATOR_STR.into(), scheme: scheme.into() }, c.into())
+				let root = PathBufDyn::with(scheme.kind(), MAIN_SEPARATOR_STR).expect("valid root");
+				(UrlCow::try_from((scheme, root)).ok()?.into_owned(), c.into())
 			}
-			Some((p, c)) => (expand_url(UrlBuf { loc: p.into(), scheme: scheme.into() }), c.into()),
+			Some((p, c)) => {
+				let parent = PathBufDyn::with(scheme.kind(), p.as_dyn()).expect("valid parent");
+				(expand_url(UrlCow::try_from((scheme, parent)).ok()?), c.into())
+			}
 			None => (CWD.load().as_ref().clone(), path.into()),
 		})
 	}
@@ -91,13 +95,13 @@ impl Trigger {
 
 #[cfg(test)]
 mod tests {
-	use yazi_shared::url::UrlLike;
+	use yazi_shared::{path::PathBufLike, url::UrlLike};
 
 	use super::*;
 
 	fn compare(s: &str, parent: &str, child: &str) {
 		let (mut p, c) = Trigger::split_url(s).unwrap();
-		if let Some(u) = p.strip_prefix(yazi_fs::CWD.load().as_ref()) {
+		if let Ok(u) = p.try_strip_prefix(yazi_fs::CWD.load().as_ref()) {
 			p = UrlBuf::from(u);
 		}
 		assert_eq!((p, c.to_str().unwrap()), (parent.parse().unwrap(), child));

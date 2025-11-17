@@ -8,7 +8,7 @@ use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::TasksProxy;
-use yazi_shared::{Id, Throttle, scheme::SchemeLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{must_be_dir, provider, unique_name};
 
 use super::{Ongoing, TaskOp};
@@ -79,7 +79,13 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add::<FileProgPaste>(format!("Cut {} to {}", from.display(), to.display()));
 
-		if to.starts_with(&from) && !to.covariant(&from) {
+		let Ok(prefixed) = to.try_starts_with(&from) else {
+			return self
+				.ops
+				.out(id, FileOutPaste::Fail("Path being cut has a different encoding".to_owned()));
+		};
+
+		if prefixed && !to.covariant(&from) {
 			return self.ops.out(id, FileOutPaste::Fail("Cannot cut directory into itself".to_owned()));
 		}
 
@@ -112,7 +118,13 @@ impl Scheduler {
 			to.display()
 		));
 
-		if to.starts_with(&from) && !to.covariant(&from) {
+		let Ok(prefixed) = to.try_starts_with(&from) else {
+			return self
+				.ops
+				.out(id, FileOutPaste::Fail("Path being copied has a different encoding".to_owned()));
+		};
+
+		if prefixed && !to.covariant(&from) {
 			return self.ops.out(id, FileOutPaste::Fail("Cannot copy directory into itself".to_owned()));
 		}
 
@@ -148,7 +160,14 @@ impl Scheduler {
 			to.display()
 		));
 
-		if to.starts_with(&from) && !to.covariant(&from) {
+		let Ok(prefixed) = to.try_starts_with(&from) else {
+			return self.ops.out(
+				id,
+				FileOutHardlink::Fail("Path being hardlinked has a different encoding".to_owned()),
+			);
+		};
+
+		if prefixed && !to.covariant(&from) {
 			return self
 				.ops
 				.out(id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));
@@ -215,7 +234,7 @@ impl Scheduler {
 			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
 		}
 
-		if !url.scheme.is_remote() {
+		if !url.kind().is_remote() {
 			return self.ops.out(id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		};
 
@@ -229,7 +248,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
 
-		if !url.scheme.is_remote() {
+		if !url.kind().is_remote() {
 			return self.ops.out(id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 

@@ -1,14 +1,23 @@
-use crate::path::{AsPathView, PathBufLike, PathInner};
+use std::{borrow::Cow, ffi::OsStr};
+
+use anyhow::Result;
+
+use crate::{BytesExt, Utf8BytePredictor, path::{AsPathView, EndsWithError, JoinError, PathBufDyn, PathBufLike, PathDyn, PathKind, RsplitOnceError, StartsWithError, StripPrefixError}, strand::{AsStrandView, StrandLike}};
 
 pub trait PathLike<'p>
 where
-	Self: Copy + AsPathView<'p, Self::View<'p>>,
+	Self: Copy + AsPathView<'p, Self::View<'p>> + AsStrandView<'p, Self::Strand<'p>>,
 {
-	type Inner: PathInner<'p>;
+	type Strand<'a>: StrandLike<'a>;
 	type Owned: PathBufLike + Into<Self::Owned>;
 	type View<'a>;
-	type Components<'a>: AsPathView<'a, Self::View<'a>> + Clone + DoubleEndedIterator;
+	type Components<'a>: Clone
+		+ DoubleEndedIterator
+		+ AsPathView<'a, Self::View<'a>>
+		+ AsStrandView<'a, Self::Strand<'a>>;
 	type Display<'a>: std::fmt::Display;
+
+	fn as_dyn(self) -> PathDyn<'p>;
 
 	fn components(self) -> Self::Components<'p>;
 
@@ -18,42 +27,70 @@ where
 
 	fn encoded_bytes(self) -> &'p [u8];
 
-	fn extension(self) -> Option<Self::Inner>;
+	fn ext(self) -> Option<Self::Strand<'p>>;
 
-	fn file_name(self) -> Option<Self::Inner>;
+	fn has_root(self) -> bool;
 
-	fn file_stem(self) -> Option<Self::Inner>;
-
-	unsafe fn from_encoded_bytes(bytes: &'p [u8]) -> Self;
+	fn is_absolute(self) -> bool;
 
 	fn is_empty(self) -> bool { self.encoded_bytes().is_empty() }
 
 	#[cfg(unix)]
 	fn is_hidden(self) -> bool {
-		self.file_name().is_some_and(|n| n.encoded_bytes().first() == Some(&b'.'))
+		self.name().is_some_and(|n| n.encoded_bytes().first() == Some(&b'.'))
 	}
 
-	fn join<'a, T>(self, base: T) -> Self::Owned
-	where
-		T: AsPathView<'a, Self::View<'a>>;
+	fn kind(self) -> PathKind;
 
 	fn len(self) -> usize { self.encoded_bytes().len() }
+
+	fn name(self) -> Option<Self::Strand<'p>>;
 
 	fn owned(self) -> Self::Owned;
 
 	fn parent(self) -> Option<Self>;
 
-	fn strip_prefix<'a, T>(self, base: T) -> Option<Self>
+	fn rsplit_pred<T>(self, pred: T) -> Option<(Self, Self)>
 	where
-		T: AsPathView<'a, Self::View<'a>>;
+		T: Utf8BytePredictor;
+
+	fn stem(self) -> Option<Self::Strand<'p>>;
+
+	fn to_str(self) -> Result<&'p str, std::str::Utf8Error> { str::from_utf8(self.encoded_bytes()) }
+
+	fn to_string_lossy(self) -> Cow<'p, str> { String::from_utf8_lossy(self.encoded_bytes()) }
+
+	fn to_buf_dyn(self) -> PathBufDyn { self.as_dyn().owned() }
+
+	fn try_ends_with<'a, T>(self, child: T) -> Result<bool, EndsWithError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>;
+
+	fn try_join<'a, T>(self, path: T) -> Result<Self::Owned, JoinError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>;
+
+	fn try_rsplit_seq<'a, T>(self, pat: T) -> Result<(Self, Self), RsplitOnceError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>;
+
+	fn try_starts_with<'a, T>(self, base: T) -> Result<bool, StartsWithError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>;
+
+	fn try_strip_prefix<'a, T>(self, base: T) -> Result<Self, StripPrefixError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>;
 }
 
 impl<'p> PathLike<'p> for &'p std::path::Path {
 	type Components<'a> = std::path::Components<'a>;
 	type Display<'a> = std::path::Display<'a>;
-	type Inner = &'p std::ffi::OsStr;
 	type Owned = std::path::PathBuf;
+	type Strand<'a> = &'a std::ffi::OsStr;
 	type View<'a> = &'a std::path::Path;
+
+	fn as_dyn(self) -> PathDyn<'p> { PathDyn::Os(self) }
 
 	fn components(self) -> Self::Components<'p> { self.components() }
 
@@ -63,31 +100,85 @@ impl<'p> PathLike<'p> for &'p std::path::Path {
 
 	fn encoded_bytes(self) -> &'p [u8] { self.as_os_str().as_encoded_bytes() }
 
-	fn extension(self) -> Option<Self::Inner> { self.extension() }
+	fn ext(self) -> Option<Self::Strand<'p>> { self.extension() }
 
-	fn file_name(self) -> Option<Self::Inner> { self.file_name() }
+	fn has_root(self) -> bool { self.has_root() }
 
-	fn file_stem(self) -> Option<Self::Inner> { self.file_stem() }
+	fn is_absolute(self) -> bool { self.is_absolute() }
 
-	unsafe fn from_encoded_bytes(bytes: &'p [u8]) -> Self {
-		std::path::Path::new(unsafe { std::ffi::OsStr::from_encoded_bytes_unchecked(bytes) })
-	}
+	fn kind(self) -> PathKind { PathKind::Os }
 
-	fn join<'a, T>(self, base: T) -> Self::Owned
-	where
-		T: AsPathView<'a, Self::View<'a>>,
-	{
-		self.join(base.as_path_view())
-	}
+	fn name(self) -> Option<Self::Strand<'p>> { self.file_name() }
 
 	fn owned(self) -> Self::Owned { self.to_path_buf() }
 
 	fn parent(self) -> Option<Self> { self.parent() }
 
-	fn strip_prefix<'a, T>(self, base: T) -> Option<Self>
+	fn stem(self) -> Option<Self::Strand<'p>> { self.file_stem() }
+
+	fn try_ends_with<'a, T>(self, child: T) -> Result<bool, EndsWithError>
 	where
-		T: AsPathView<'a, Self::View<'a>>,
+		T: AsStrandView<'a, Self::Strand<'a>>,
 	{
-		self.strip_prefix(base.as_path_view()).ok()
+		Ok(self.ends_with(child.as_strand_view()))
 	}
+
+	fn try_join<'a, T>(self, path: T) -> Result<Self::Owned, JoinError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>,
+	{
+		Ok(self.join(path.as_strand_view()))
+	}
+
+	fn rsplit_pred<'a, T>(self, pred: T) -> Option<(Self, Self)>
+	where
+		T: Utf8BytePredictor,
+	{
+		let b = self.encoded_bytes();
+		let (left, right) = b.rsplit_pred_once(pred)?;
+
+		Some(unsafe {
+			(
+				OsStr::from_encoded_bytes_unchecked(left).as_ref(),
+				OsStr::from_encoded_bytes_unchecked(right).as_ref(),
+			)
+		})
+	}
+
+	fn try_rsplit_seq<'a, T>(self, pat: T) -> Result<(Self, Self), RsplitOnceError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>,
+	{
+		let b = self.encoded_bytes();
+		let p = pat.as_strand_view().encoded_bytes();
+
+		let (left, right) = b.rsplit_seq_once(p).ok_or(RsplitOnceError::NotFound)?;
+		Ok(unsafe {
+			(
+				OsStr::from_encoded_bytes_unchecked(left).as_ref(),
+				OsStr::from_encoded_bytes_unchecked(right).as_ref(),
+			)
+		})
+	}
+
+	fn try_starts_with<'a, T>(self, base: T) -> Result<bool, StartsWithError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>,
+	{
+		Ok(self.starts_with(base.as_strand_view()))
+	}
+
+	fn try_strip_prefix<'a, T>(self, base: T) -> Result<Self, StripPrefixError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>,
+	{
+		Ok(self.strip_prefix(base.as_strand_view())?)
+	}
+}
+
+impl<'a, P> From<P> for PathBufDyn
+where
+	P: PathLike<'a>,
+{
+	fn from(value: P) -> Self { value.to_buf_dyn() }
 }

@@ -1,7 +1,7 @@
 use std::{mem, ops::{Deref, DerefMut, Not}};
 
 use hashbrown::{HashMap, HashSet};
-use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}};
+use yazi_shared::{Id, path::{PathBufDyn, PathDyn, PathLike}};
 
 use super::{FilesSorter, Filter};
 use crate::{FILES_TICKET, File, SortBy};
@@ -121,6 +121,7 @@ impl Files {
 
 	#[cfg(unix)]
 	pub fn update_deleting(&mut self, urns: HashSet<PathBufDyn>) -> Vec<usize> {
+		use yazi_shared::path::PathBufLike;
 		if urns.is_empty() {
 			return vec![];
 		}

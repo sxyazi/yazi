@@ -1,206 +1,176 @@
-use std::{io, path::{Path, PathBuf}};
+use std::{io, path::{Path, PathBuf}, sync::Arc};
 
-use yazi_shared::url::{AsUrl, UrlCow};
+use yazi_shared::{path::{AsPathDyn, PathBufDyn}, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow}};
 
 use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
 
 #[derive(Clone, Copy)]
-pub struct Local;
+pub struct Local<'a> {
+	url:  Url<'a>,
+	path: &'a Path,
+}
 
-impl Provider for Local {
+impl<'a> Provider for Local<'a> {
 	type File = tokio::fs::File;
 	type Gate = super::Gate;
+	type Me<'b> = Local<'b>;
 	type ReadDir = super::ReadDir;
+	type UrlCow = UrlCow<'a>;
 
-	async fn absolute<'a, U>(&self, url: &'a U) -> io::Result<UrlCow<'a>>
-	where
-		U: AsUrl,
-	{
-		let url = url.as_url();
-		if url.scheme.is_local() {
-			Ok(absolute_url(url))
-		} else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local URL"))
-		}
+	async fn absolute(&self) -> io::Result<Self::UrlCow> { Ok(absolute_url(self.url)) }
+
+	#[inline]
+	async fn canonicalize(&self) -> io::Result<UrlBuf> {
+		tokio::fs::canonicalize(self.path).await.map(Into::into)
+	}
+
+	async fn casefold(&self) -> io::Result<UrlBuf> {
+		super::casefold(self.path).await.map(Into::into)
 	}
 
 	#[inline]
-	async fn canonicalize<P>(&self, path: P) -> io::Result<PathBuf>
+	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsRef<Path>,
+		P: AsPathDyn,
 	{
-		tokio::fs::canonicalize(path).await
-	}
-
-	async fn casefold<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		super::casefold(path).await
-	}
-
-	#[inline]
-	async fn copy<P, Q>(&self, from: P, to: Q, attrs: Attrs) -> io::Result<u64>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		let from = from.as_ref().to_owned();
-		let to = to.as_ref().to_owned();
+		let to = to.as_path_dyn().to_os_owned()?;
+		let from = self.path.to_owned();
 		Self::copy_impl(from, to, attrs).await
 	}
 
 	#[inline]
-	async fn create_dir<P>(&self, path: P) -> io::Result<()>
+	async fn create_dir(&self) -> io::Result<()> { tokio::fs::create_dir(self.path).await }
+
+	#[inline]
+	async fn create_dir_all(&self) -> io::Result<()> { tokio::fs::create_dir_all(self.path).await }
+
+	#[inline]
+	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsRef<Path>,
+		P: AsPathDyn,
 	{
-		tokio::fs::create_dir(path).await
+		let to = to.as_path_dyn().as_os()?;
+
+		tokio::fs::hard_link(self.path, to).await
 	}
 
 	#[inline]
-	async fn create_dir_all<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::create_dir_all(path).await
+	async fn metadata(&self) -> io::Result<Cha> {
+		Ok(Cha::new(self.path.file_name().unwrap_or_default(), tokio::fs::metadata(self.path).await?))
 	}
 
 	#[inline]
-	async fn gate(&self) -> io::Result<Self::Gate> { Ok(Self::Gate::default()) }
-
-	#[inline]
-	async fn hard_link<P, Q>(&self, original: P, link: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		tokio::fs::hard_link(original, link).await
+	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
+		match url {
+			Url::Regular(loc) | Url::Search { loc, .. } => Ok(Self::Me { url, path: loc.as_path() }),
+			Url::Archive { .. } | Url::Sftp { .. } => {
+				Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url:?}")))
+			}
+		}
 	}
 
 	#[inline]
-	async fn metadata<P>(&self, path: P) -> io::Result<Cha>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref();
-		Ok(Cha::new(path.file_name().unwrap_or_default(), tokio::fs::metadata(path).await?))
+	async fn read_dir(self) -> io::Result<Self::ReadDir> {
+		Ok(match self.url.kind() {
+			SchemeKind::Regular => Self::ReadDir::Regular(tokio::fs::read_dir(self.path).await?),
+			SchemeKind::Search => Self::ReadDir::Others {
+				reader: tokio::fs::read_dir(self.path).await?,
+				dir:    Arc::new(self.url.to_owned()),
+			},
+			SchemeKind::Archive | SchemeKind::Sftp => Err(io::Error::new(
+				io::ErrorKind::InvalidInput,
+				format!("Not a local URL: {:?}", self.url),
+			))?,
+		})
 	}
 
 	#[inline]
-	async fn read_dir<P>(&self, path: P) -> io::Result<Self::ReadDir>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::read_dir(path).await.map(super::ReadDir)
+	async fn read_link(&self) -> io::Result<PathBufDyn> {
+		Ok(tokio::fs::read_link(self.path).await?.into())
 	}
 
 	#[inline]
-	async fn read_link<P>(&self, path: P) -> io::Result<PathBuf>
+	async fn remove_dir(&self) -> io::Result<()> { tokio::fs::remove_dir(self.path).await }
+
+	#[inline]
+	async fn remove_dir_all(&self) -> io::Result<()> { tokio::fs::remove_dir_all(self.path).await }
+
+	#[inline]
+	async fn remove_file(&self) -> io::Result<()> { tokio::fs::remove_file(self.path).await }
+
+	#[inline]
+	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsRef<Path>,
+		P: AsPathDyn,
 	{
-		tokio::fs::read_link(path).await
+		let to = to.as_path_dyn().as_os()?;
+
+		tokio::fs::rename(self.path, to).await
 	}
 
 	#[inline]
-	async fn remove_dir<P>(&self, path: P) -> io::Result<()>
+	async fn symlink<P, F>(&self, original: P, _is_dir: F) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::remove_dir(path).await
-	}
-
-	#[inline]
-	async fn remove_dir_all<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::remove_dir_all(path).await
-	}
-
-	#[inline]
-	async fn remove_file<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::remove_file(path).await
-	}
-
-	#[inline]
-	async fn rename<P, Q>(&self, from: P, to: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		tokio::fs::rename(from, to).await
-	}
-
-	#[inline]
-	async fn symlink<P, Q, F>(&self, original: P, link: Q, _is_dir: F) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPathDyn,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
 		#[cfg(unix)]
 		{
-			tokio::fs::symlink(original, link).await
+			let original = original.as_path_dyn().as_os()?;
+			tokio::fs::symlink(original, self.path).await
 		}
 		#[cfg(windows)]
 		if _is_dir().await? {
-			self.symlink_dir(original, link).await
+			self.symlink_dir(original).await
 		} else {
-			self.symlink_file(original, link).await
+			self.symlink_file(original).await
 		}
 	}
 
 	#[inline]
-	async fn symlink_dir<P, Q>(&self, original: P, link: Q) -> io::Result<()>
+	async fn symlink_dir<P>(&self, original: P) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPathDyn,
 	{
+		let original = original.as_path_dyn().as_os()?;
+
 		#[cfg(unix)]
 		{
-			tokio::fs::symlink(original, link).await
+			tokio::fs::symlink(original, self.path).await
 		}
 		#[cfg(windows)]
 		{
-			tokio::fs::symlink_dir(original, link).await
+			tokio::fs::symlink_dir(original, self.path).await
 		}
 	}
 
 	#[inline]
-	async fn symlink_file<P, Q>(&self, original: P, link: Q) -> io::Result<()>
+	async fn symlink_file<P>(&self, original: P) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPathDyn,
 	{
+		let original = original.as_path_dyn().as_os()?;
+
 		#[cfg(unix)]
 		{
-			tokio::fs::symlink(original, link).await
+			tokio::fs::symlink(original, self.path).await
 		}
 		#[cfg(windows)]
 		{
-			tokio::fs::symlink_file(original, link).await
+			tokio::fs::symlink_file(original, self.path).await
 		}
 	}
 
 	#[inline]
-	async fn symlink_metadata<P>(&self, path: P) -> io::Result<Cha>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref();
-		Ok(Cha::new(path.file_name().unwrap_or_default(), tokio::fs::symlink_metadata(path).await?))
+	async fn symlink_metadata(&self) -> io::Result<Cha> {
+		Ok(Cha::new(
+			self.path.file_name().unwrap_or_default(),
+			tokio::fs::symlink_metadata(self.path).await?,
+		))
 	}
 
-	async fn trash<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref().to_owned();
+	async fn trash(&self) -> io::Result<()> {
+		let path = self.path.to_owned();
 		tokio::task::spawn_blocking(move || {
 			#[cfg(target_os = "android")]
 			{
@@ -222,16 +192,18 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn write<P, C>(&self, path: P, contents: C) -> io::Result<()>
+	fn url(&self) -> Url<'_> { self.url }
+
+	#[inline]
+	async fn write<C>(&self, contents: C) -> io::Result<()>
 	where
-		P: AsRef<Path>,
 		C: AsRef<[u8]>,
 	{
-		tokio::fs::write(path, contents).await
+		tokio::fs::write(self.path, contents).await
 	}
 }
 
-impl Local {
+impl<'a> Local<'a> {
 	async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::Result<u64> {
 		#[cfg(any(target_os = "linux", target_os = "android"))]
 		{
@@ -273,18 +245,18 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn read<P>(&self, path: P) -> io::Result<Vec<u8>>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::read(path).await
+	pub async fn read(&self) -> io::Result<Vec<u8>> { tokio::fs::read(self.path).await }
+
+	#[inline]
+	pub async fn read_to_string(&self) -> io::Result<String> {
+		tokio::fs::read_to_string(self.path).await
 	}
 
 	#[inline]
-	pub async fn read_to_string<P>(&self, path: P) -> io::Result<String>
+	pub fn regular<P>(path: &'a P) -> Self
 	where
-		P: AsRef<Path>,
+		P: ?Sized + AsRef<Path>,
 	{
-		tokio::fs::read_to_string(path).await
+		Self { url: Url::regular(path), path: path.as_ref() }
 	}
 }

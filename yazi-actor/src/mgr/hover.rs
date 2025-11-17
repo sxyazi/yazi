@@ -18,7 +18,7 @@ impl Actor for Hover {
 
 		// Parent should always track CWD
 		if let Some(p) = &mut tab.parent {
-			render!(p.repos(tab.current.url.strip_prefix(&p.url)));
+			render!(p.repos(tab.current.url.try_strip_prefix(&p.url).ok()));
 		}
 
 		// Repos CWD

@@ -1,8 +1,8 @@
-use std::{ffi::OsStr, fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use anyhow::bail;
 use yazi_macro::{unix_either, win_either};
-use yazi_shared::url::AsUrl;
+use yazi_shared::{strand::AsStrand, url::AsUrl};
 
 use super::ChaKind;
 use crate::cha::{ChaMode, ChaType};
@@ -48,7 +48,10 @@ impl Default for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn new(name: &OsStr, meta: Metadata) -> Self {
+	pub fn new<T>(name: T, meta: Metadata) -> Self
+	where
+		T: AsStrand,
+	{
 		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta))
 	}
 

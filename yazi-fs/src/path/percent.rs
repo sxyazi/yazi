@@ -1,7 +1,7 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode, percent_encode};
-use yazi_shared::loc::Loc;
+use yazi_shared::path::PathDyn;
 
 const SET: &AsciiSet =
 	&CONTROLS.add(b'"').add(b'*').add(b':').add(b'<').add(b'>').add(b'?').add(b'\\').add(b'|');
@@ -28,8 +28,16 @@ impl PercentEncoding for Path {
 	}
 }
 
-impl PercentEncoding for Loc<'_> {
-	fn percent_encode(&self) -> Cow<'_, Path> { self.as_path().percent_encode() }
+impl PercentEncoding for PathDyn<'_> {
+	fn percent_encode(&self) -> Cow<'_, Path> {
+		match self {
+			PathDyn::Os(p) => p.percent_encode(),
+		}
+	}
 
-	fn percent_decode(&self) -> Cow<'_, [u8]> { self.as_path().percent_decode() }
+	fn percent_decode(&self) -> Cow<'_, [u8]> {
+		match self {
+			PathDyn::Os(p) => p.percent_decode(),
+		}
+	}
 }

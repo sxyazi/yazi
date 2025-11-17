@@ -1,6 +1,7 @@
-use std::{ffi::OsStr, fs::Metadata};
+use std::fs::Metadata;
 
 use bitflags::bitflags;
+use yazi_shared::strand::AsStrand;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -14,13 +15,16 @@ bitflags! {
 
 impl ChaKind {
 	#[inline]
-	pub(super) fn hidden(_name: &OsStr, _meta: &Metadata) -> Self {
+	pub(super) fn hidden<T>(_name: T, _meta: &Metadata) -> Self
+	where
+		T: AsStrand,
+	{
 		let mut me = Self::empty();
 
 		#[cfg(unix)]
 		{
-			use std::os::unix::ffi::OsStrExt;
-			if _name.as_bytes().starts_with(b".") {
+			use yazi_shared::strand::StrandLike;
+			if _name.as_strand().starts_with(".") {
 				me |= Self::HIDDEN;
 			}
 		}

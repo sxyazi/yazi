@@ -21,7 +21,10 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			if let Ok(file) = File::new(opt.cwd.join(line)).await {
+			let Ok(url) = opt.cwd.try_join(line) else {
+				continue;
+			};
+			if let Ok(file) = File::new(url).await {
 				tx.send(file).ok();
 			}
 		}
@@ -31,7 +34,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 }
 
 fn spawn(program: &str, opt: &FdOpt) -> std::io::Result<Child> {
-	let Some(path) = opt.cwd.as_path() else {
+	let Some(path) = opt.cwd.as_local() else {
 		return Err(std::io::Error::new(
 			std::io::ErrorKind::InvalidInput,
 			"fd can only search local filesystem",

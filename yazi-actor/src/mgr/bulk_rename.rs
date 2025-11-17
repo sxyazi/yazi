@@ -11,7 +11,7 @@ use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
-use yazi_shared::{OsStrJoin, data::Data, terminal_clear, url::{AsUrl, Component, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{OsStrJoin, data::Data, path::PathDyn, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_term::tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -50,7 +50,12 @@ impl Actor for BulkRename {
 				.write_all(old.join(OsStr::new("\n")).as_encoded_bytes())
 				.await?;
 
-			defer! { tokio::spawn(Local.remove_file(tmp.clone())); }
+			defer! {
+				let tmp = tmp.clone();
+				tokio::spawn(async move {
+					Local::regular(&tmp).remove_file().await
+				});
+			}
 			TasksProxy::process_exec(
 				cwd.into(),
 				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
@@ -64,8 +69,8 @@ impl Actor for BulkRename {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> = Local
-				.read_to_string(&tmp)
+			let new: Vec<_> = Local::regular(&tmp)
+				.read_to_string()
 				.await?
 				.lines()
 				.take(old.len())
@@ -120,10 +125,12 @@ impl BulkRename {
 		let permit = WATCHER.acquire().await.unwrap();
 		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
 		for (o, n) in todo {
-			let (old, new): (UrlBuf, UrlBuf) = (
-				selected[o.0].components().take(root).chain([Component::Normal(&o)]).collect(),
-				selected[n.0].components().take(root).chain([Component::Normal(&n)]).collect(),
-			);
+			let (Ok(old), Ok(new)) =
+				(Self::replace_url(&selected[o.0], root, &o), Self::replace_url(&selected[n.0], root, &n))
+			else {
+				failed.push((o, n, anyhow!("Invalid new or old file name")));
+				continue;
+			};
 
 			if maybe_exists(&new).await && !provider::must_identical(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
@@ -137,7 +144,7 @@ impl BulkRename {
 		}
 
 		if !succeeded.is_empty() {
-			let it = succeeded.iter().map(|(o, n)| (o, &n.url));
+			let it = succeeded.iter().map(|(o, n)| (o.as_url(), n.url.as_url()));
 			err!(Pubsub::pub_after_bulk(it));
 			FilesOp::rename(succeeded);
 		}
@@ -151,6 +158,10 @@ impl BulkRename {
 
 	fn opener() -> Option<&'static OpenerRule> {
 		YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
+	}
+
+	fn replace_url(url: &UrlBuf, take: usize, rep: &OsStr) -> Result<UrlBuf> {
+		Ok(url.try_replace(take, PathDyn::with(url.kind(), rep)?)?.into_owned())
 	}
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {

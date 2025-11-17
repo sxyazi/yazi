@@ -74,7 +74,7 @@ impl Local {
 					continue;
 				};
 
-				if let Some(p) = file.url.as_path()
+				if let Some(p) = file.url.as_local()
 					&& !provider::local::must_case_match(p).await
 				{
 					ops.push(FilesOp::Deleting(parent.into(), [urn.owned()].into()));

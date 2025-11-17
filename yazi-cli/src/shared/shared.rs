@@ -6,19 +6,19 @@ use yazi_macro::ok_or_not_found;
 
 #[inline]
 pub async fn must_exists(path: impl AsRef<Path>) -> bool {
-	Local.symlink_metadata(path).await.is_ok()
+	Local::regular(&path).symlink_metadata().await.is_ok()
 }
 
 #[inline]
 pub async fn maybe_exists(path: impl AsRef<Path>) -> bool {
-	match Local.symlink_metadata(path).await {
+	match Local::regular(&path).symlink_metadata().await {
 		Ok(_) => true,
 		Err(e) => e.kind() != std::io::ErrorKind::NotFound,
 	}
 }
 
 pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
-	let b = Local.read(from).await?;
+	let b = Local::regular(from).read().await?;
 	ok_or_not_found!(remove_sealed(to).await);
 
 	let mut file = Gate::default().create_new(true).write(true).truncate(true).open(to).await?;
@@ -31,7 +31,6 @@ pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
 	Ok(())
 }
 
-// TODO: use `yazi_fs` instead of `tokio::fs`
 pub async fn remove_sealed(p: &Path) -> io::Result<()> {
 	#[cfg(windows)]
 	{
@@ -40,5 +39,5 @@ pub async fn remove_sealed(p: &Path) -> io::Result<()> {
 		tokio::fs::set_permissions(p, perm).await?;
 	}
 
-	Local.remove_file(p).await
+	Local::regular(p).remove_file().await
 }

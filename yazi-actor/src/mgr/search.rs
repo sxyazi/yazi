@@ -52,7 +52,7 @@ impl Actor for SearchDo {
 			handle.abort();
 		}
 
-		let cwd = tab.cwd().to_search(opt.subject.as_ref());
+		let cwd = tab.cwd().to_search(opt.subject.as_ref())?;
 		let hidden = tab.pref.show_hidden;
 
 		tab.search = Some(tokio::spawn(async move {
@@ -111,7 +111,7 @@ impl Actor for SearchStop {
 			succ!();
 		}
 
-		let rep = tab.history.remove_or(tab.cwd().to_regular());
+		let rep = tab.history.remove_or(tab.cwd().to_regular()?);
 		drop(mem::replace(&mut tab.current, rep));
 
 		act!(mgr:hidden, cx)?;

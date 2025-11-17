@@ -65,8 +65,11 @@ impl Loader {
 		}
 
 		let p = BOOT.plugin_dir.join(format!("{plugin}.yazi/{entry}.lua"));
-		let chunk =
-			Local.read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
+		let chunk = Local::regular(&p)
+			.read()
+			.await
+			.with_context(|| format!("Failed to load plugin from {p:?}"))?
+			.into();
 
 		let result = Self::compatible_or_error(id, &chunk);
 		let inspect = f(&chunk);

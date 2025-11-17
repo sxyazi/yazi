@@ -1,4 +1,4 @@
-#![allow(clippy::if_same_then_else, clippy::option_map_unit_fn, clippy::unit_arg)]
+#![allow(clippy::if_same_then_else, clippy::option_map_unit_fn)]
 
 yazi_macro::mod_pub!(cha error mounts path provider);
 

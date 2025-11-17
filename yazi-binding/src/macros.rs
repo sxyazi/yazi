@@ -151,10 +151,11 @@ macro_rules! impl_file_fields {
 	($fields:ident) => {
 		$crate::cached_field!($fields, cha, |_, me| Ok($crate::Cha(me.cha)));
 		$crate::cached_field!($fields, url, |_, me| Ok($crate::Url::new(me.url_owned())));
-		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to.clone().map($crate::Url::new)));
+		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to_url().map($crate::Url::new)));
 
 		$crate::cached_field!($fields, name, |lua, me| {
-			me.name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			use yazi_shared::strand::StrandLike;
+			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
 		$crate::cached_field!($fields, cache, |_, me| {
 			use yazi_fs::FsUrl;
