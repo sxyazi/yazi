@@ -11,12 +11,12 @@ pub trait FsScheme {
 impl FsScheme for SchemeRef<'_> {
 	fn cache(&self) -> Option<PathBuf> {
 		match self {
-			SchemeRef::Regular | SchemeRef::Search(_) => None,
-			SchemeRef::Archive(name) => {
-				Some(Xdg::cache_dir().join(format!("archive-{}", yazi_shared::url::Encode::domain(name))))
-			}
-			SchemeRef::Sftp(name) => {
-				Some(Xdg::cache_dir().join(format!("sftp-{}", yazi_shared::url::Encode::domain(name))))
+			Self::Regular { .. } | Self::Search { .. } => None,
+			Self::Archive { domain, .. } => Some(
+				Xdg::cache_dir().join(format!("archive-{}", yazi_shared::scheme::Encode::domain(domain))),
+			),
+			Self::Sftp { domain, .. } => {
+				Some(Xdg::cache_dir().join(format!("sftp-{}", yazi_shared::scheme::Encode::domain(domain))))
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use anyhow::Result;
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
 use yazi_shared::{Id, Ids, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike}};
@@ -98,16 +99,21 @@ impl FilesOp {
 		}
 	}
 
-	pub fn chdir(&self, wd: &Path) -> Self {
+	pub fn chdir(&self, wd: &Path) -> Result<Self> {
 		macro_rules! files {
-			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect() }};
+			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect::<Result<_>>()? }};
 		}
 		macro_rules! map {
-			($map:expr) => {{ $map.iter().map(|(urn, file)| (urn.clone(), file.chdir(wd))).collect() }};
+			($map:expr) => {{
+				$map
+					.iter()
+					.map(|(urn, file)| file.chdir(wd).map(|file| (urn.clone(), file)))
+					.collect::<Result<_>>()?
+			}};
 		}
 
 		let w = UrlBuf::from(wd);
-		match self {
+		Ok(match self {
 			Self::Full(_, files, cha) => Self::Full(w, files!(files), *cha),
 			Self::Part(_, files, ticket) => Self::Part(w, files!(files), *ticket),
 			Self::Done(_, cha, ticket) => Self::Done(w, *cha, *ticket),
@@ -118,16 +124,18 @@ impl FilesOp {
 			Self::Deleting(_, urns) => Self::Deleting(w, urns.clone()),
 			Self::Updating(_, map) => Self::Updating(w, map!(map)),
 			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
-		}
+		})
 	}
 
 	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<UrlBuf>) {
 		match self {
-			Self::Deleting(cwd, urns) => (urns.iter().map(|u| cwd.join(u)).collect(), vec![]),
+			Self::Deleting(cwd, urns) => {
+				(urns.iter().filter_map(|u| cwd.try_join(u).ok()).collect(), vec![])
+			}
 			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns
 				.iter()
 				.filter(|&(u, f)| u != f.urn())
-				.map(|(u, f)| (cwd.join(u), f))
+				.filter_map(|(u, f)| cwd.try_join(u).ok().map(|u| (u, f)))
 				.filter(|(u, _)| contains(u))
 				.map(|(u, f)| (u, f.url_owned()))
 				.unzip(),

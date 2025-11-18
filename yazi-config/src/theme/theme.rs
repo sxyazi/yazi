@@ -229,7 +229,7 @@ impl Theme {
 		self.mgr.syntect_theme = self
 			.flavor
 			.syntect_path(light)
-			.or_else(|| expand_url(UrlBuf::from(&self.mgr.syntect_theme)).into_path())
+			.or_else(|| expand_url(UrlBuf::from(&self.mgr.syntect_theme)).into_local())
 			.ok_or(anyhow!("[mgr].syntect_theme must be a path within local filesystem"))?;
 
 		Ok(self)

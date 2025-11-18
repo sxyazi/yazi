@@ -1,10 +1,10 @@
-yazi_macro::mod_flat!(gate metadata read_dir sftp);
+yazi_macro::mod_flat!(conn gate metadata read_dir sftp);
 
-pub(super) static CONN: yazi_shared::RoCell<
+static CONN: yazi_shared::RoCell<
 	parking_lot::Mutex<
 		hashbrown::HashMap<
 			&'static yazi_config::vfs::ProviderSftp,
-			&'static deadpool::managed::Pool<Sftp>,
+			&'static deadpool::managed::Pool<Conn>,
 		>,
 	>,
 > = yazi_shared::RoCell::new();

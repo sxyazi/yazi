@@ -30,7 +30,7 @@ impl Utils {
 
 	pub(super) fn image_precache(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, (src, dist): (UrlRef, UrlRef)| async move {
-			let Some(dist) = dist.as_path() else {
+			let Some(dist) = dist.as_local() else {
 				return (Value::Nil, Error::custom("Destination must be a local path"))
 					.into_lua_multi(&lua);
 			};

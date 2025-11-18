@@ -3,7 +3,7 @@ use std::path::Path;
 use hashbrown::HashSet;
 use percent_encoding::percent_decode_str;
 use yazi_fs::{Xdg, path::PercentEncoding};
-use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlBuf, UrlLike}};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 
 #[derive(Debug, Default)]
 pub struct Watched(HashSet<UrlBuf>);
@@ -22,7 +22,7 @@ impl Watched {
 
 	#[inline]
 	pub(crate) fn paths(&self) -> impl Iterator<Item = &Path> {
-		self.0.iter().filter_map(|u| u.as_path())
+		self.0.iter().filter_map(|u| u.as_local())
 	}
 
 	#[inline]
@@ -39,16 +39,17 @@ impl Watched {
 		let loc = l2.percent_decode();
 
 		self.0.iter().find(|u| {
-			if u.scheme != SchemeRef::Sftp(&domain) {
-				return false;
-			}
+			todo!()
+			// if u.scheme != SchemeRef::Sftp(&domain) {
+			// 	return false;
+			// }
 
-			let mut it = u.loc.components();
-			if it.next() == Some(std::path::Component::RootDir) {
-				!rel && it.as_path().as_os_str().as_encoded_bytes() == loc.as_ref()
-			} else {
-				rel && u.loc.as_os_str().as_encoded_bytes() == loc.as_ref()
-			}
+			// let mut it = u.loc.components();
+			// if it.next() == Some(std::path::Component::RootDir) {
+			// 	!rel && it.as_path().as_os_str().as_encoded_bytes() == loc.as_ref()
+			// } else {
+			// 	rel && u.loc.as_os_str().as_encoded_bytes() == loc.as_ref()
+			// }
 		})
 	}
 }

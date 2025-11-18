@@ -1,4 +1,4 @@
-use crate::url::{Encode, Url};
+use crate::{path::PathLike, scheme::Encode, url::Url};
 
 pub struct Display<'a> {
 	inner: Url<'a>,
@@ -10,8 +10,8 @@ impl<'a> From<Url<'a>> for Display<'a> {
 
 impl<'a> std::fmt::Display for Display<'a> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let Url { loc, scheme } = self.inner;
-		if scheme.is_virtual() {
+		let (kind, loc) = (self.inner.kind(), self.inner.loc());
+		if kind.is_virtual() {
 			Encode(self.inner).fmt(f)?;
 		}
 		loc.display().fmt(f)

@@ -44,7 +44,7 @@ impl Highlighter {
 	pub fn abort() { INCR.next(); }
 
 	pub async fn highlight(&self, skip: usize, size: Size) -> Result<Text<'static>, PeekError> {
-		let mut reader = BufReader::new(Local.open(&self.path).await?);
+		let mut reader = BufReader::new(Local::regular(&self.path).open().await?);
 
 		let syntax = Self::find_syntax(&self.path, &mut reader).await;
 		let mut plain = syntax.is_err();

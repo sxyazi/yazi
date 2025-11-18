@@ -1,9 +1,9 @@
-use std::{ffi::OsString, io};
+use std::io;
 
 use tokio::{select, sync::{mpsc, oneshot}};
 use yazi_fs::provider::Attrs;
 use yazi_macro::ok_or_not_found;
-use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
+use yazi_shared::{strand::{StrandBuf, StrandBufLike, StrandLike}, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
 use crate::provider;
 
@@ -36,27 +36,30 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let dot_ext = url.ext().map_or_else(OsString::new, |e| {
-		let mut s = OsString::with_capacity(e.len() + 1);
-		s.push(".");
-		s.push(e);
-		s
-	});
+	let dot_ext = match url.ext() {
+		Some(e) => {
+			let mut s = StrandBuf::with_capacity(url.kind(), e.len() + 1);
+			s.try_push(".")?;
+			s.try_push(e)?;
+			s
+		}
+		None => StrandBuf::default(),
+	};
 
-	let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
+	let mut name = StrandBuf::with_capacity(url.kind(), stem.len() + dot_ext.len() + 5);
 	for i in 1u64.. {
 		name.clear();
-		name.push(&stem);
+		name.try_push(&stem)?;
 
 		if append {
-			name.push(&dot_ext);
-			name.push(format!("_{i}"));
+			name.try_push(&dot_ext)?;
+			name.try_push(format!("_{i}"))?;
 		} else {
-			name.push(format!("_{i}"));
-			name.push(&dot_ext);
+			name.try_push(format!("_{i}"))?;
+			name.try_push(&dot_ext)?;
 		}
 
-		url.set_name(&name);
+		url.try_set_name(&name)?;
 		ok_or_not_found!(provider::symlink_metadata(&url).await, break);
 	}
 

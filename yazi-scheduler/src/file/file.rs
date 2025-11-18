@@ -1,12 +1,12 @@
-use std::{borrow::Cow, collections::VecDeque, hash::{BuildHasher, Hash, Hasher}};
+use std::{collections::VecDeque, hash::{BuildHasher, Hash, Hasher}};
 
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{Attrs, DirReader, FileHolder, Provider, local::Local}};
+use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{skip_url, url_relative_to}, provider::{Attrs, DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{scheme::SchemeLike, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{path::PathCow, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
@@ -64,7 +64,7 @@ impl File {
 		let mut dirs = VecDeque::from([task.from.clone()]);
 
 		while let Some(src) = dirs.pop_front() {
-			let dest = root.join(skip_url(&src, skip));
+			let dest = continue_unless_ok!(root.try_join(skip_url(&src, skip)));
 			continue_unless_ok!(match provider::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e),
 				_ => Ok(()),
@@ -80,7 +80,7 @@ impl File {
 					continue;
 				}
 
-				let to = dest.join(from.name().unwrap());
+				let to = continue_unless_ok!(dest.try_join(from.name().unwrap()));
 				if cha.is_orphan() || (cha.is_link() && !task.follow) {
 					self.ops.out(task.id, FileOutPaste::New(0));
 					self.queue(task.spawn(from, to, cha).into_link(), NORMAL);
@@ -132,20 +132,21 @@ impl File {
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
-		let src: Cow<_> = if task.resolve {
+		let src: PathCow = if task.resolve {
 			ok_or_not_found!(
 				provider::read_link(&task.from).await,
 				return Ok(self.ops.out(task.id, FileOutLink::Succ))
 			)
 			.into()
-		} else if task.from.scheme.covariant(&task.to.scheme) {
-			task.from.loc.as_path().into()
+		} else if task.from.scheme().covariant(task.to.scheme()) {
+			task.from.loc().into()
 		} else {
 			Err(anyhow!("Source and target must be on the same filesystem: {task:?}"))?
 		};
 
+		let src = UrlCow::try_from((task.from.scheme(), src))?;
 		let src = if task.relative {
-			path_relative_to(provider::canonicalize(task.to.parent().unwrap()).await?.loc, &src)?
+			url_relative_to(provider::canonicalize(task.to.parent().unwrap()).await?, &src)?
 		} else {
 			src
 		};
@@ -196,7 +197,7 @@ impl File {
 		let mut dirs = VecDeque::from([task.from.clone()]);
 
 		while let Some(src) = dirs.pop_front() {
-			let dest = root.join(skip_url(&src, skip));
+			let dest = continue_unless_ok!(root.try_join(skip_url(&src, skip)));
 			continue_unless_ok!(match provider::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e),
 				_ => Ok(()),
@@ -212,7 +213,7 @@ impl File {
 					continue;
 				}
 
-				let to = dest.join(from.name().unwrap());
+				let to = continue_unless_ok!(dest.try_join(from.name().unwrap()));
 				self.ops.out(task.id, FileOutHardlink::New);
 				self.queue(task.spawn(from, to, cha), NORMAL);
 			}
@@ -353,12 +354,12 @@ impl File {
 		while let Some(res) = it.recv().await {
 			match res {
 				Ok(0) => {
-					Local.remove_dir_all(&cache).await.ok();
+					Local::regular(&cache).remove_dir_all().await.ok();
 					provider::rename(cache_tmp, cache).await.context("Cannot persist downloaded file")?;
 
 					let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
 					let hash = format!("{:x}", cha.hash_u128());
-					Local.write(lock, hash).await.context("Cannot lock cache")?;
+					Local::regular(&lock).write(hash).await.context("Cannot lock cache")?;
 
 					break;
 				}
@@ -448,7 +449,7 @@ impl File {
 	pub(crate) async fn upload_do(&self, task: FileInUploadDo) -> Result<(), FileOutUploadDo> {
 		let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
 
-		let hash = Local.read_to_string(&lock).await.context("Cannot read cache lock")?;
+		let hash = Local::regular(&lock).read_to_string().await.context("Cannot read cache lock")?;
 		let hash = u128::from_str_radix(&hash, 16).context("Cannot parse hash from lock")?;
 		if hash != task.cha.hash_u128() {
 			Err(anyhow!("Remote file has changed since last download"))?;
@@ -474,7 +475,7 @@ impl File {
 
 					let cha = Self::cha(&task.url, true, None).await.context("Cannot stat uploaded file")?;
 					let hash = format!("{:x}", cha.hash_u128());
-					Local.write(lock, hash).await.context("Cannot lock cache")?;
+					Local::regular(&lock).write(hash).await.context("Cannot lock cache")?;
 
 					break;
 				}
@@ -510,7 +511,7 @@ impl File {
 		url.hash(&mut h);
 		timestamp_us().hash(&mut h);
 
-		unique_name(parent.join(format!(".{:x}.%tmp", h.finish())), async { false }).await
+		unique_name(parent.try_join(format!(".{:x}.%tmp", h.finish()))?, async { false }).await
 	}
 }
 

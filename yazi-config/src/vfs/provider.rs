@@ -45,7 +45,7 @@ impl ProviderSftp {
 	fn reshape(&mut self) -> io::Result<()> {
 		if !self.key_file.as_os_str().is_empty() {
 			self.key_file = expand_url(&self.key_file)
-				.into_path()
+				.into_local()
 				.ok_or_else(|| io::Error::other("key_file must be a path within local filesystem"))?;
 		}
 
@@ -56,7 +56,7 @@ impl ProviderSftp {
 				.unwrap_or_default()
 		} else {
 			expand_url(&self.identity_agent)
-				.into_path()
+				.into_local()
 				.ok_or_else(|| io::Error::other("identity_agent must be a path within local filesystem"))?
 		};
 

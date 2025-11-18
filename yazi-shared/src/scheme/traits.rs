@@ -1,4 +1,4 @@
-use crate::scheme::{Scheme, SchemeCow, SchemeRef};
+use crate::scheme::{Scheme, SchemeCow, SchemeKind, SchemeRef};
 
 pub trait AsScheme {
 	fn as_scheme(&self) -> SchemeRef<'_>;
@@ -12,11 +12,11 @@ impl AsScheme for SchemeRef<'_> {
 impl AsScheme for Scheme {
 	#[inline]
 	fn as_scheme(&self) -> SchemeRef<'_> {
-		match self {
-			Scheme::Regular => SchemeRef::Regular,
-			Scheme::Search(d) => SchemeRef::Search(d),
-			Scheme::Archive(d) => SchemeRef::Archive(d),
-			Scheme::Sftp(d) => SchemeRef::Sftp(d),
+		match *self {
+			Scheme::Regular { uri, urn } => SchemeRef::Regular { uri, urn },
+			Scheme::Search { ref domain, uri, urn } => SchemeRef::Search { domain, uri, urn },
+			Scheme::Archive { ref domain, uri, urn } => SchemeRef::Archive { domain, uri, urn },
+			Scheme::Sftp { ref domain, uri, urn } => SchemeRef::Sftp { domain, uri, urn },
 		}
 	}
 }
@@ -46,7 +46,7 @@ pub trait SchemeLike
 where
 	Self: AsScheme + Sized,
 {
-	fn kind(&self) -> &'static str { self.as_scheme().kind() }
+	fn kind(&self) -> SchemeKind { *self.as_scheme() }
 
 	fn domain(&self) -> Option<&str> { self.as_scheme().domain() }
 

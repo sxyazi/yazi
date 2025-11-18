@@ -5,7 +5,7 @@ use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, err, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{Id, data::Data, path::PathLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, data::Data, path::PathLike, strand::StrandLike, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
@@ -49,7 +49,10 @@ impl Actor for Rename {
 				return;
 			}
 
-			let new = old.parent().unwrap().join(name);
+			let Some(Ok(new)) = old.parent().map(|u| u.try_join(name)) else {
+				return;
+			};
+
 			if opt.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
 				Self::r#do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {

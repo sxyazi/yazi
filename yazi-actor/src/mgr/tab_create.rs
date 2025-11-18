@@ -29,10 +29,13 @@ impl Actor for TabCreate {
 			(true, wd.into_owned())
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();
-			(false, h.url.to_regular())
+			(false, h.url.clone())
+		} else if cx.cwd().is_search() {
+			tab.pref = cx.tab().pref.clone();
+			(true, cx.cwd().to_regular()?)
 		} else {
 			tab.pref = cx.tab().pref.clone();
-			(true, cx.cwd().to_regular())
+			(true, cx.cwd().clone())
 		};
 
 		let tabs = &mut cx.mgr.tabs;

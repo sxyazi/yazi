@@ -2,6 +2,7 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
+use tracing::warn;
 use yazi_config::keymap::Key;
 use yazi_macro::{act, emit, succ};
 use yazi_shared::{data::Data, event::{CmdCow, Event, NEED_RENDER}};
@@ -20,7 +21,7 @@ impl<'a> Dispatcher<'a> {
 	#[inline]
 	pub(super) fn dispatch(&mut self, event: Event) -> Result<()> {
 		// FIXME: handle errors
-		_ = match event {
+		let result = match event {
 			Event::Call(cmd) => self.dispatch_call(cmd),
 			Event::Seq(cmds) => self.dispatch_seq(cmds),
 			Event::Render => self.dispatch_render(),
@@ -30,6 +31,10 @@ impl<'a> Dispatcher<'a> {
 			Event::Paste(str) => self.dispatch_paste(str),
 			Event::Quit(opt) => act!(quit, self.app, opt),
 		};
+
+		if let Err(err) = result {
+			warn!("Event dispatch error: {err:?}");
+		}
 		Ok(())
 	}
 

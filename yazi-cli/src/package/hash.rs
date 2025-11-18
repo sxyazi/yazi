@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use twox_hash::XxHash3_128;
-use yazi_fs::provider::{DirReader, FileHolder, Provider, local::Local};
+use yazi_fs::provider::local::Local;
 use yazi_macro::ok_or_not_found;
 
 use super::Dependency;
@@ -15,17 +15,17 @@ impl Dependency {
 		for file in files {
 			h.write(file.as_bytes());
 			h.write(b"VpvFw9Atb7cWGOdqhZCra634CcJJRlsRl72RbZeV0vpG1\0");
-			h.write(&ok_or_not_found!(Local.read(dir.join(file)).await));
+			h.write(&ok_or_not_found!(Local::regular(&dir.join(file)).read().await));
 		}
 
 		let mut assets = vec![];
-		match Local.read_dir(dir.join("assets")).await {
+		match tokio::fs::read_dir(dir.join("assets")).await {
 			Ok(mut it) => {
-				while let Some(entry) = it.next().await? {
-					let Ok(name) = entry.name().into_owned().into_string() else {
+				while let Some(entry) = it.next_entry().await? {
+					let Ok(name) = entry.file_name().into_string() else {
 						bail!("asset path is not valid UTF-8: {}", entry.path().display());
 					};
-					assets.push((name, Local.read(entry.path()).await?));
+					assets.push((name, Local::regular(&entry.path()).read().await?));
 				}
 			}
 			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}

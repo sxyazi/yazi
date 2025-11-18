@@ -50,7 +50,7 @@ impl Preview {
 
 		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
 			Xdg::cache_dir().to_owned()
-		} else if let Some(p) = expand_url(self.cache_dir).into_path() {
+		} else if let Some(p) = expand_url(self.cache_dir).into_local() {
 			p
 		} else {
 			bail!("[preview].cache_dir must be a path within local filesystem.");

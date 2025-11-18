@@ -1,8 +1,8 @@
 #![allow(clippy::option_map_unit_fn)]
 
-yazi_macro::mod_pub!(data errors event loc path pool scheme shell translit url);
+yazi_macro::mod_pub!(data errors event loc path pool scheme shell strand translit url);
 
-yazi_macro::mod_flat!(alias bytes chars condition debounce either env id layer natsort os osstr rand ro_cell source string sync_cell terminal tests throttle time utf8);
+yazi_macro::mod_flat!(alias bytes chars condition debounce either env id layer natsort os osstr predictor rand ro_cell source string sync_cell terminal tests throttle time utf8 wtf8);
 
 pub fn init() {
 	pool::init();

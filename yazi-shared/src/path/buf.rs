@@ -1,54 +1,61 @@
 use std::{fmt::Debug, hash::Hash};
 
-use crate::path::{AsInnerView, AsPathView, PathInner, PathLike};
+use crate::{path::{AsPath, AsPathView, PathBufDyn, PathLike, SetNameError, StartsWithError}, strand::{AsStrandView, StrandLike}};
 
 pub trait PathBufLike
 where
-	Self: 'static,
+	Self: 'static + AsPath,
 {
-	type Inner: for<'a> AsInnerView<'a, Self::InnerRef<'a>>;
-	type InnerRef<'a>: PathInner<'a>;
+	type Strand<'a>: StrandLike<'a>;
 	type Borrowed<'a>: PathLike<'a> + AsPathView<'a, Self::Borrowed<'a>> + Debug + Hash;
 
 	fn borrow(&self) -> Self::Borrowed<'_>;
 
-	fn encoded_bytes(&self) -> &[u8];
+	fn encoded_bytes(&self) -> &[u8] { self.borrow().encoded_bytes() }
 
-	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self;
+	fn into_dyn(self) -> PathBufDyn;
 
 	fn into_encoded_bytes(self) -> Vec<u8>;
 
-	fn is_empty(&self) -> bool { self.encoded_bytes().is_empty() }
+	fn is_empty(&self) -> bool { self.borrow().is_empty() }
 
-	fn len(&self) -> usize { self.encoded_bytes().len() }
+	fn len(&self) -> usize { self.borrow().len() }
 
-	fn set_file_name<T>(&mut self, name: T)
+	fn to_str(&self) -> Result<&str, std::str::Utf8Error> { self.borrow().to_str() }
+
+	fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
 	where
-		T: for<'a> AsInnerView<'a, Self::InnerRef<'a>>;
+		T: AsStrandView<'a, Self::Strand<'a>>;
+
+	fn try_starts_with<'a, T>(&self, base: T) -> Result<bool, StartsWithError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>;
 
 	fn take(&mut self) -> Self;
 }
 
 impl PathBufLike for std::path::PathBuf {
 	type Borrowed<'a> = &'a std::path::Path;
-	type Inner = std::ffi::OsString;
-	type InnerRef<'a> = &'a std::ffi::OsStr;
+	type Strand<'a> = &'a std::ffi::OsStr;
 
 	fn borrow(&self) -> Self::Borrowed<'_> { self.as_path() }
 
-	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
-
-	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self {
-		Self::from(unsafe { Self::Inner::from_encoded_bytes_unchecked(bytes) })
-	}
+	fn into_dyn(self) -> PathBufDyn { PathBufDyn::Os(self) }
 
 	fn into_encoded_bytes(self) -> Vec<u8> { self.into_os_string().into_encoded_bytes() }
 
-	fn set_file_name<T>(&mut self, name: T)
+	fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
 	where
-		T: for<'a> AsInnerView<'a, Self::InnerRef<'a>>,
+		T: AsStrandView<'a, Self::Strand<'a>>,
 	{
-		self.set_file_name(name.as_inner_view());
+		Ok(self.set_file_name(name.as_strand_view()))
+	}
+
+	fn try_starts_with<'a, T>(&self, base: T) -> Result<bool, StartsWithError>
+	where
+		T: AsStrandView<'a, Self::Strand<'a>>,
+	{
+		Ok(self.starts_with(base.as_strand_view()))
 	}
 
 	fn take(&mut self) -> Self { std::mem::take(self) }

@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use yazi_shared::{loc::Loc, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{PathDyn, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::{FsHash128, FsScheme, path::PercentEncoding};
 
@@ -24,22 +24,22 @@ pub trait FsUrl<'a> {
 
 impl<'a> FsUrl<'a> for Url<'a> {
 	fn cache(&self) -> Option<PathBuf> {
-		fn with_loc(loc: Loc, mut path: PathBuf) -> PathBuf {
+		fn with_loc(loc: PathDyn, mut root: PathBuf) -> PathBuf {
 			let mut it = loc.components();
 			if it.next() == Some(std::path::Component::RootDir) {
-				path.push(it.as_path().percent_encode());
+				root.push(it.as_path().percent_encode());
 			} else {
-				path.push(".%2F");
-				path.push(loc.percent_encode());
+				root.push(".%2F");
+				root.push(loc.percent_encode());
 			}
-			path
+			root
 		}
 
-		self.scheme.cache().map(|root| with_loc(self.loc, root))
+		self.scheme().cache().map(|root| with_loc(self.loc(), root))
 	}
 
 	fn cache_lock(&self) -> Option<PathBuf> {
-		self.scheme.cache().map(|mut root| {
+		self.scheme().cache().map(|mut root| {
 			root.push("%lock");
 			root.push(format!("{:x}", self.hash_u128()));
 			root
@@ -47,7 +47,12 @@ impl<'a> FsUrl<'a> for Url<'a> {
 	}
 
 	fn unified_path(self) -> Cow<'a, Path> {
-		self.cache().map(Cow::Owned).unwrap_or_else(|| Cow::Borrowed(self.loc.as_path()))
+		match self {
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.as_path().into(),
+			Self::Archive { .. } | Self::Sftp { .. } => {
+				self.cache().expect("non-local URL should have a cache path").into()
+			}
+		}
 	}
 }
 
@@ -57,7 +62,12 @@ impl FsUrl<'_> for UrlBuf {
 	fn cache_lock(&self) -> Option<PathBuf> { self.as_url().cache_lock() }
 
 	fn unified_path(self) -> Cow<'static, Path> {
-		self.cache().unwrap_or_else(|| self.loc.into_path()).into()
+		match self {
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_path().into(),
+			Self::Archive { .. } | Self::Sftp { .. } => {
+				self.cache().expect("non-local URL should have a cache path").into()
+			}
+		}
 	}
 }
 
@@ -67,10 +77,12 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 	fn cache_lock(&self) -> Option<PathBuf> { self.as_url().cache_lock() }
 
 	fn unified_path(self) -> Cow<'a, Path> {
-		match (self.cache(), self) {
-			(None, UrlCow::Borrowed { loc, .. }) => loc.as_path().into(),
-			(None, UrlCow::Owned { loc, .. }) => loc.into_path().into(),
-			(Some(cache), _) => cache.into(),
+		match self {
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_path().into(),
+			Self::RegularRef(loc) | Self::SearchRef { loc, .. } => loc.as_path().into(),
+			Self::Archive { .. } | Self::ArchiveRef { .. } | Self::Sftp { .. } | Self::SftpRef { .. } => {
+				self.cache().expect("non-local URL should have a cache path").into()
+			}
 		}
 	}
 }

@@ -12,28 +12,6 @@ pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
 	it.os_str()
 }
 
-#[cfg(windows)]
-pub fn backslash_to_slash(p: &std::path::Path) -> Cow<'_, std::path::Path> {
-	use std::{ffi::OsString, path::PathBuf};
-	let bytes = p.as_os_str().as_encoded_bytes();
-
-	// Fast path to skip if there are no backslashes
-	let skip_len = bytes.iter().take_while(|&&b| b != b'\\').count();
-	if skip_len >= bytes.len() {
-		return Cow::Borrowed(p);
-	}
-
-	let (skip, rest) = bytes.split_at(skip_len);
-	let mut out = Vec::new();
-	out.try_reserve_exact(bytes.len()).unwrap_or_else(|_| panic!());
-	out.extend(skip);
-
-	for &b in rest {
-		out.push(if b == b'\\' { b'/' } else { b });
-	}
-	Cow::Owned(PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
-}
-
 #[cfg(test)]
 mod tests {
 	use yazi_shared::url::{AsUrl, UrlCow};

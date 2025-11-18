@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{loc::Loc, path::{AsInnerView, AsPathDyn, AsPathView, PathBufLike, PathDyn, PathLike}};
+use crate::{loc::Loc, path::{AsPathDyn, AsPathView, PathBufLike, PathBufUnsafeExt, PathDyn, PathLike, PathUnsafeExt, SetNameError}, scheme::SchemeKind, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq)]
 pub struct LocBuf<P: PathBufLike = PathBuf> {
@@ -65,7 +65,8 @@ where
 // --- Hash
 impl<P> Hash for LocBuf<P>
 where
-	P: PathBufLike,
+	P: PathBufLike + PathBufUnsafeExt,
+	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
@@ -73,7 +74,8 @@ where
 
 impl<P> Debug for LocBuf<P>
 where
-	P: PathBufLike + Debug,
+	P: PathBufLike + PathBufUnsafeExt + Debug,
+	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -87,7 +89,8 @@ where
 
 impl<P> From<P> for LocBuf<P>
 where
-	P: PathBufLike,
+	P: PathBufLike + PathBufUnsafeExt,
+	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn from(path: P) -> Self {
@@ -106,12 +109,13 @@ impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<PathBuf> {
 
 impl<P> LocBuf<P>
 where
-	P: PathBufLike,
+	P: PathBufLike + PathBufUnsafeExt,
+	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
-	pub fn new<'a, T>(path: P, base: T, trail: T) -> Self
+	pub fn new<'a, S>(path: P, base: S, trail: S) -> Self
 	where
-		T: for<'b> AsPathView<'a, <P::Borrowed<'b> as PathLike<'b>>::View<'a>>,
+		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as PathLike<'b>>::Strand<'a>>,
 	{
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::new(&loc.inner, base, trail);
@@ -142,12 +146,20 @@ where
 		Self { inner: loc.inner, uri, urn }
 	}
 
-	pub fn floated<'a, T>(path: P, base: T) -> Self
+	pub fn floated<'a, S>(path: P, base: S) -> Self
 	where
-		T: for<'b> AsPathView<'a, <P::Borrowed<'b> as PathLike<'b>>::View<'a>>,
+		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as PathLike<'b>>::Strand<'a>>,
 	{
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::floated(&loc.inner, base);
+
+		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
+		Self { inner: loc.inner, uri, urn }
+	}
+
+	pub fn saturated(path: P, kind: SchemeKind) -> Self {
+		let loc = Self::from(path);
+		let Loc { inner, uri, urn, _phantom } = Loc::saturated(&loc.inner, kind);
 
 		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
@@ -174,16 +186,16 @@ where
 	#[inline]
 	pub fn into_path(self) -> P { self.inner }
 
-	pub fn set_name<T>(&mut self, name: T)
+	pub fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
 	where
-		T: for<'a> AsInnerView<'a, P::InnerRef<'a>>,
+		T: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let old = self.inner.len();
-		self.mutate(|path| path.set_file_name(name));
+		self.mutate(|path| path.try_set_name(name))?;
 
 		let new = self.len();
 		if new == old {
-			return;
+			return Ok(());
 		}
 
 		if self.uri != 0 {
@@ -200,31 +212,34 @@ where
 				self.urn -= old - new;
 			}
 		}
+		Ok(())
 	}
 
 	#[inline]
-	pub fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Self
+	pub fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Result<Self>
 	where
 		'a: 'b,
 		for<'c> <P::Borrowed<'c> as PathLike<'c>>::Owned: Into<Self>,
 	{
-		let mut loc: Self = base.join(self.uri()).into();
+		let mut loc: Self = base.try_join(self.uri())?.into();
 		(loc.uri, loc.urn) = (self.uri, self.urn);
-		loc
+		Ok(loc)
 	}
 
 	#[inline]
-	fn mutate<F: FnOnce(&mut P)>(&mut self, f: F) {
+	fn mutate<T, F: FnOnce(&mut P) -> T>(&mut self, f: F) -> T {
 		let mut inner = self.inner.take();
-		f(&mut inner);
+		let result = f(&mut inner);
 		self.inner = Self::from(inner).inner;
+		result
 	}
 }
 
 // FIXME: macro
 impl<P> LocBuf<P>
 where
-	P: PathBufLike,
+	P: PathBufLike + PathBufUnsafeExt,
+	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	#[inline]
@@ -246,13 +261,17 @@ where
 	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
 
 	#[inline]
-	pub fn name(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().name() }
+	pub fn name(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Strand<'_>> {
+		self.as_loc().name()
+	}
 
 	#[inline]
-	pub fn stem(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().stem() }
+	pub fn stem(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Strand<'_>> {
+		self.as_loc().stem()
+	}
 
 	#[inline]
-	pub fn ext(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().ext() }
+	pub fn ext(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Strand<'_>> { self.as_loc().ext() }
 }
 
 impl LocBuf<PathBuf> {
@@ -360,7 +379,7 @@ mod tests {
 		for (input, name, expected) in cases {
 			let mut a: UrlBuf = input.parse()?;
 			let b: UrlBuf = expected.parse()?;
-			a.set_name(name);
+			a.try_set_name(name).unwrap();
 			assert_eq!(
 				(a.name(), format!("{a:?}").replace(r"\", "/")),
 				(b.name(), expected.replace(r"\", "/"))

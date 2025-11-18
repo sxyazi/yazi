@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use yazi_shared::{path::PathLike, scheme::SchemeRef, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{path::PathLike, scheme::SchemeKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::{WATCHED, local::LINKED};
 
@@ -16,10 +16,10 @@ impl Reporter {
 		I::Item: Into<UrlCow<'a>>,
 	{
 		for url in urls.into_iter().map(Into::into) {
-			match url.as_url().scheme {
-				SchemeRef::Regular | SchemeRef::Search(_) => self.report_local(url),
-				SchemeRef::Archive(_) => {}
-				SchemeRef::Sftp(_) => self.report_remote(url),
+			match url.as_url().kind() {
+				SchemeKind::Regular | SchemeKind::Search => self.report_local(url),
+				SchemeKind::Archive => {}
+				SchemeKind::Sftp => self.report_remote(url),
 			}
 		}
 	}
@@ -37,14 +37,15 @@ impl Reporter {
 				self.local_tx.send(url.to_owned()).ok();
 				self.local_tx.send(parent.to_owned()).ok();
 			}
-			if name.extension() == Some("%tmp".as_ref()) {
+			if name.ext().is_some_and(|e| e == "%tmp") {
 				continue;
 			}
 			// SFTP caches
-			if let Some(dir) = watched.find_by_cache(&parent.loc) {
-				self.remote_tx.send(dir.join(name)).ok();
-				self.remote_tx.send(dir.to_owned()).ok();
-			}
+			// todo!();
+			// if let Some(dir) = watched.find_by_cache(&parent.loc()) {
+			// 	self.remote_tx.send(dir.join(name)).ok();
+			// 	self.remote_tx.send(dir.to_owned()).ok();
+			// }
 		}
 	}
 

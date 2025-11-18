@@ -40,7 +40,7 @@ impl Stream {
 
 		let p = Self::socket_file();
 
-		yazi_fs::provider::local::Local.remove_file(&p).await.ok();
+		yazi_fs::provider::local::Local::regular(&p).remove_file().await.ok();
 		tokio::net::UnixListener::bind(p)
 	}
 

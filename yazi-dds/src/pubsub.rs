@@ -4,7 +4,7 @@ use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, RoCell, url::{UrlBuf, UrlBufCov}};
+use yazi_shared::{Id, RoCell, url::{Url, UrlBuf, UrlBufCov}};
 
 use crate::{Client, ID, PEERS, ember::{BodyMoveItem, Ember, EmberBulk, EmberHi}};
 
@@ -123,7 +123,7 @@ impl Pubsub {
 
 	pub fn pub_after_bulk<'a, I>(changes: I) -> Result<()>
 	where
-		I: Iterator<Item = (&'a UrlBuf, &'a UrlBuf)> + Clone,
+		I: Iterator<Item = (Url<'a>, Url<'a>)> + Clone,
 	{
 		if BOOT.local_events.contains("bulk") {
 			EmberBulk::borrowed(changes.clone()).with_receiver(*ID).flush()?;

@@ -1,6 +1,8 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use crate::{loc::Loc, path::{AsPathDyn, PathDyn}, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
+use anyhow::Result;
+
+use crate::{loc::Loc, path::{AsPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, scheme::{SchemeKind, SchemeRef}, strand::{AsStrandDyn, Strand}, url::{Components, Display, Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -9,7 +11,7 @@ pub trait AsUrl {
 
 impl AsUrl for Path {
 	#[inline]
-	fn as_url(&self) -> Url<'_> { Url { loc: Loc::bare(self), scheme: SchemeRef::Regular } }
+	fn as_url(&self) -> Url<'_> { Url::Regular(Loc::bare(self)) }
 }
 
 impl AsUrl for &Path {
@@ -43,7 +45,14 @@ impl AsUrl for Url<'_> {
 
 impl AsUrl for UrlBuf {
 	#[inline]
-	fn as_url(&self) -> Url<'_> { Url { loc: self.loc.as_loc(), scheme: self.scheme.as_scheme() } }
+	fn as_url(&self) -> Url<'_> {
+		match self {
+			Self::Regular(loc) => Url::Regular(loc.as_loc()),
+			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
+			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
+			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+		}
+	}
 }
 
 impl AsUrl for &UrlBuf {
@@ -57,11 +66,17 @@ impl AsUrl for &mut UrlBuf {
 }
 
 impl AsUrl for UrlCow<'_> {
-	#[inline]
 	fn as_url(&self) -> Url<'_> {
 		match self {
-			UrlCow::Borrowed { loc, scheme } => Url { loc: *loc, scheme: scheme.as_scheme() },
-			UrlCow::Owned { loc, scheme } => Url { loc: loc.as_loc(), scheme: scheme.as_scheme() },
+			Self::Regular(loc) => Url::Regular(loc.as_loc()),
+			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
+			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
+			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+
+			Self::RegularRef(loc) => Url::Regular(*loc),
+			Self::SearchRef { loc, domain } => Url::Search { loc: *loc, domain },
+			Self::ArchiveRef { loc, domain } => Url::Archive { loc: *loc, domain },
+			Self::SftpRef { loc, domain } => Url::Sftp { loc: *loc, domain },
 		}
 	}
 }
@@ -90,9 +105,9 @@ pub trait UrlLike
 where
 	Self: AsUrl + Sized,
 {
-	fn as_path(&self) -> Option<&Path> { self.as_url().as_path() }
+	fn as_local(&self) -> Option<&Path> { self.as_url().as_local() }
 
-	fn base(&self) -> Option<Url<'_>> { self.as_url().base() }
+	fn base(&self) -> Url<'_> { self.as_url().base() }
 
 	fn components(&self) -> Components<'_> { self.as_url().into() }
 
@@ -100,9 +115,9 @@ where
 
 	fn display(&self) -> Display<'_> { self.as_url().into() }
 
-	fn ends_with(&self, child: impl AsUrl) -> bool { self.as_url().ends_with(child) }
+	fn ext(&self) -> Option<Strand<'_>> { self.as_url().ext() }
 
-	fn ext(&self) -> Option<&OsStr> { self.as_url().ext() }
+	fn has_base(&self) -> bool { self.as_url().has_base() }
 
 	fn has_root(&self) -> bool { self.as_url().has_root() }
 
@@ -110,9 +125,11 @@ where
 
 	fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
 
-	fn join(&self, path: impl AsPathDyn) -> UrlBuf { self.as_url().join(path) }
+	fn kind(&self) -> SchemeKind { self.as_url().kind() }
 
-	fn name(&self) -> Option<&OsStr> { self.as_url().name() }
+	fn loc(&self) -> PathDyn<'_> { self.as_url().loc() }
+
+	fn name(&self) -> Option<Strand<'_>> { self.as_url().name() }
 
 	fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
@@ -120,12 +137,30 @@ where
 
 	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
-	fn starts_with(&self, base: impl AsUrl) -> bool { self.as_url().starts_with(base) }
+	fn scheme(&self) -> SchemeRef<'_> { self.as_url().scheme() }
 
-	fn stem(&self) -> Option<&OsStr> { self.as_url().stem() }
+	fn stem(&self) -> Option<Strand<'_>> { self.as_url().stem() }
 
-	fn strip_prefix(&self, base: impl AsUrl) -> Option<PathDyn<'_>> {
-		self.as_url().strip_prefix(base)
+	fn trail(&self) -> Url<'_> { self.as_url().trail() }
+
+	fn try_ends_with(&self, child: impl AsUrl) -> Result<bool, EndsWithError> {
+		self.as_url().try_ends_with(child)
+	}
+
+	fn try_join(&self, path: impl AsStrandDyn) -> Result<UrlBuf, JoinError> {
+		self.as_url().try_join(path)
+	}
+
+	fn try_replace<'a>(&self, take: usize, path: impl AsPathRef<'a>) -> Result<UrlCow<'a>> {
+		self.as_url().try_replace(take, path)
+	}
+
+	fn try_starts_with(&self, base: impl AsUrl) -> Result<bool, StartsWithError> {
+		self.as_url().try_starts_with(base)
+	}
+
+	fn try_strip_prefix(&self, base: impl AsUrl) -> Result<PathDyn<'_>, StripPrefixError> {
+		self.as_url().try_strip_prefix(base)
 	}
 
 	fn uri(&self) -> PathDyn<'_> { self.as_url().uri() }

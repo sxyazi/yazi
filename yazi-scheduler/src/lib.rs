@@ -1,4 +1,4 @@
-#![allow(clippy::option_map_unit_fn, clippy::unit_arg)]
+#![allow(clippy::option_map_unit_fn)]
 
 mod macros;
 

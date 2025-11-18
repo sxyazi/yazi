@@ -1,6 +1,6 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
+use std::{borrow::Cow, path::PathBuf};
 
-use yazi_shared::{loc::LocBuf, path::PathLike, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{FromWtf8Vec, loc::LocBuf, path::{AsPath, PathBufDyn, PathCow, PathDyn, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::{CWD, path::clean_url};
 
@@ -10,33 +10,44 @@ pub fn expand_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 }
 
 fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
-	let (o_base, o_rest, o_urn) = url.loc.triple();
+	let (o_base, o_rest, o_urn) = url.triple();
 
 	let n_base = expand_variables(o_base);
 	let n_rest = expand_variables(o_rest);
 	let n_urn = expand_variables(o_urn);
 
-	let rest_diff = n_rest.components().count() as isize - o_rest.components().count() as isize;
-	let urn_diff = n_urn.components().count() as isize - o_urn.components().count() as isize;
+	let rest_diff =
+		n_rest.as_path().components().count() as isize - o_rest.components().count() as isize;
+	let urn_diff =
+		n_urn.as_path().components().count() as isize - o_urn.components().count() as isize;
 
 	let uri_count = url.uri().components().count() as isize;
 	let urn_count = url.urn().components().count() as isize;
 
+	let mut path = PathBufDyn::with_capacity(
+		url.kind(),
+		n_base.as_path().len() + n_rest.as_path().len() + n_urn.as_path().len(),
+	);
+	path.try_extend([n_base, n_rest, n_urn]).expect("extend original parts should not fail");
+
 	let loc = LocBuf::<PathBuf>::with(
-		PathBuf::from_iter([n_base, n_rest, n_urn]),
+		path.into_os().expect("Failed to convert PathBufDyn to PathBuf"),
 		(uri_count + rest_diff + urn_diff) as usize,
 		(urn_count + urn_diff) as usize,
 	)
 	.expect("Failed to create Loc from expanded path");
 
-	let url = UrlBuf { loc, scheme: url.scheme.into() };
-	match absolute_url(url.as_url()) {
-		UrlCow::Borrowed { .. } => url.into(),
-		c @ UrlCow::Owned { .. } => c.into_owned().into(),
-	}
+	let expanded = match url {
+		Url::Regular(_) => UrlBuf::Regular(loc),
+		Url::Search { domain, .. } => UrlBuf::Search { loc, domain: domain.intern() },
+		Url::Archive { domain, .. } => UrlBuf::Archive { loc, domain: domain.intern() },
+		Url::Sftp { domain, .. } => UrlBuf::Sftp { loc, domain: domain.intern() },
+	};
+
+	absolute_url(expanded)
 }
 
-fn expand_variables(p: &Path) -> Cow<'_, Path> {
+fn expand_variables<'a>(p: PathDyn<'a>) -> PathCow<'a> {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
 	let re = regex::bytes::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
@@ -45,7 +56,7 @@ fn expand_variables(p: &Path) -> Cow<'_, Path> {
 	#[cfg(windows)]
 	let re = regex::bytes::Regex::new(r"%([^%]+)%").unwrap();
 
-	let b = p.as_os_str().as_encoded_bytes();
+	let b = p.encoded_bytes();
 	let b = re.replace_all(b, |caps: &regex::bytes::Captures| {
 		let name = caps.get(2).or_else(|| caps.get(1)).unwrap();
 		str::from_utf8(name.as_bytes())
@@ -54,51 +65,58 @@ fn expand_variables(p: &Path) -> Cow<'_, Path> {
 			.map_or_else(|| caps.get(0).unwrap().as_bytes().to_owned(), |s| s.into_encoded_bytes())
 	});
 
-	unsafe {
-		match b {
-			Cow::Borrowed(b) => Path::new(OsStr::from_encoded_bytes_unchecked(b)).into(),
-			Cow::Owned(b) => PathBuf::from(OsString::from_encoded_bytes_unchecked(b)).into(),
+	match (b, p) {
+		(Cow::Borrowed(_), _) => p.into(),
+		(Cow::Owned(b), PathDyn::Os(_)) => {
+			PathBufDyn::Os(std::path::PathBuf::from_wtf8_vec(b).expect("valid WTF-8 path")).into()
 		}
 	}
 }
 
-pub fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
-	if url.scheme.is_virtual() {
+pub fn absolute_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { absolute_url_impl(url.into()) }
+
+fn absolute_url_impl<'a>(url: UrlCow<'a>) -> UrlCow<'a> {
+	if url.kind().is_virtual() {
 		return url.into();
 	}
 
-	let b = url.loc.as_os_str().as_encoded_bytes();
-	if cfg!(windows) && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
-		let loc = LocBuf::<PathBuf>::with(
+	let path = url.loc().as_os().expect("must be a local path");
+	let b = path.as_os_str().as_encoded_bytes();
+
+	let loc = if cfg!(windows) && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
+		LocBuf::<PathBuf>::with(
 			format!(r"{}:\", b[0].to_ascii_uppercase() as char).into(),
 			if url.has_base() { 0 } else { 2 },
 			if url.has_trail() { 0 } else { 2 },
 		)
-		.expect("Failed to create Loc from drive letter");
-		UrlBuf { loc, scheme: url.scheme.into() }.into()
-	} else if let Some(rest) = url.loc.strip_prefix("~/")
+		.expect("Failed to create Loc from drive letter")
+	} else if let Ok(rest) = path.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
 		&& home.is_absolute()
 	{
 		let add = home.components().count() - 1; // Home root ("~") has offset by the absolute root ("/")
-		let loc = LocBuf::<PathBuf>::with(
+		LocBuf::<PathBuf>::with(
 			home.join(rest),
 			url.uri().components().count() + if url.has_base() { 0 } else { add },
 			url.urn().components().count() + if url.has_trail() { 0 } else { add },
 		)
-		.expect("Failed to create Loc from home directory");
-		UrlBuf { loc, scheme: url.scheme.into() }.into()
+		.expect("Failed to create Loc from home directory")
 	} else if !url.is_absolute() {
 		let cwd = CWD.path();
-		let loc = LocBuf::<PathBuf>::with(
-			cwd.join(url.loc),
+		LocBuf::<PathBuf>::with(
+			cwd.join(path),
 			url.uri().components().count(),
 			url.urn().components().count(),
 		)
-		.expect("Failed to create Loc from relative path");
-		UrlBuf { loc, scheme: url.scheme.into() }.into()
+		.expect("Failed to create Loc from relative path")
 	} else {
-		url.into()
+		return url;
+	};
+
+	match url.as_url() {
+		Url::Regular(_) => UrlBuf::Regular(loc).into(),
+		Url::Search { domain, .. } => UrlBuf::Search { loc, domain: domain.intern() }.into(),
+		Url::Archive { .. } | Url::Sftp { .. } => unreachable!(),
 	}
 }
 

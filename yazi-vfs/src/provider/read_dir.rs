@@ -1,12 +1,10 @@
-use std::{io, sync::Arc};
+use std::io;
 
 use yazi_fs::provider::DirReader;
-use yazi_shared::url::UrlBuf;
 
 pub enum ReadDir {
-	Regular(yazi_fs::provider::local::ReadDir),
-	Search((Arc<UrlBuf>, yazi_fs::provider::local::ReadDir)),
-	Sftp((Arc<UrlBuf>, super::sftp::ReadDir)),
+	Local(yazi_fs::provider::local::ReadDir),
+	Sftp(super::sftp::ReadDir),
 }
 
 impl DirReader for ReadDir {
@@ -14,13 +12,8 @@ impl DirReader for ReadDir {
 
 	async fn next(&mut self) -> io::Result<Option<Self::Entry>> {
 		Ok(match self {
-			Self::Regular(reader) => reader.next().await?.map(Self::Entry::Regular),
-			Self::Search((dir, reader)) => {
-				reader.next().await?.map(|ent| Self::Entry::Search((dir.clone(), ent)))
-			}
-			Self::Sftp((dir, reader)) => {
-				reader.next().await?.map(|ent| Self::Entry::Sftp((dir.clone(), ent)))
-			}
+			Self::Local(reader) => reader.next().await?.map(Self::Entry::Local),
+			Self::Sftp(reader) => reader.next().await?.map(Self::Entry::Sftp),
 		})
 	}
 }

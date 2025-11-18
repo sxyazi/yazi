@@ -2,7 +2,7 @@ use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref, path::Path};
 
 use anyhow::{Result, bail};
 
-use crate::{loc::LocBuf, path::{AsPathView, PathBufLike, PathInner, PathLike}};
+use crate::{loc::LocBuf, path::{AsPathDyn, AsPathView, PathBufLike, PathDyn, PathLike, PathUnsafeExt}, scheme::SchemeKind, strand::{AsStrandView, StrandLike}};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Loc<'p, P = &'p Path> {
@@ -26,6 +26,13 @@ where
 	type Target = P;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
+}
+
+impl<'p, P> AsPathDyn for Loc<'p, P>
+where
+	P: PathLike<'p> + AsPathDyn,
+{
+	fn as_path_dyn(&self) -> PathDyn<'_> { self.inner.as_path_dyn() }
 }
 
 // FIXME: remove
@@ -63,16 +70,16 @@ impl<'p, P> Eq for Loc<'p, P> where P: PathLike<'p> + Eq {}
 
 impl<'p, P> Loc<'p, P>
 where
-	P: PathLike<'p>,
+	P: PathLike<'p> + PathUnsafeExt<'p>,
 {
-	pub fn new<'a, T, U>(path: T, base: U, trail: U) -> Self
+	pub fn new<'a, T, S>(path: T, base: S, trail: S) -> Self
 	where
 		T: AsPathView<'p, P>,
-		U: AsPathView<'a, P::View<'a>>,
+		S: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let mut loc = Self::bare(path);
-		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
-		loc.urn = loc.inner.strip_prefix(trail).expect("Loc must start with the given trail").len();
+		loc.uri = loc.inner.try_strip_prefix(base).expect("Loc must start with the given base").len();
+		loc.urn = loc.inner.try_strip_prefix(trail).expect("Loc must start with the given trail").len();
 		loc
 	}
 
@@ -98,10 +105,10 @@ where
 				bail!("URI exceeds the entire URL");
 			}
 			if i == urn {
-				loc.urn = loc.strip_prefix(it.clone()).unwrap().len();
+				loc.urn = loc.try_strip_prefix(it.clone())?.len();
 			}
 			if i == uri {
-				loc.uri = loc.strip_prefix(it).unwrap().len();
+				loc.uri = loc.try_strip_prefix(it)?.len();
 				break;
 			}
 		}
@@ -113,7 +120,7 @@ where
 		T: AsPathView<'p, P>,
 	{
 		let path = path.as_path_view();
-		let Some(name) = path.file_name() else {
+		let Some(name) = path.name() else {
 			let uri = path.len();
 			return Self { inner: path, uri, urn: 0, _phantom: PhantomData };
 		};
@@ -140,14 +147,26 @@ where
 		loc
 	}
 
-	pub fn floated<'a, T, U>(path: T, base: U) -> Self
+	pub fn floated<'a, T, S>(path: T, base: S) -> Self
 	where
 		T: AsPathView<'p, P>,
-		U: AsPathView<'a, P::View<'a>>,
+		S: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let mut loc = Self::bare(path);
-		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
+		loc.uri = loc.inner.try_strip_prefix(base).expect("Loc must start with the given base").len();
 		loc
+	}
+
+	pub fn saturated<'a, T>(path: T, kind: SchemeKind) -> Self
+	where
+		T: AsPathView<'p, P>,
+	{
+		match kind {
+			SchemeKind::Regular => Self::bare(path),
+			SchemeKind::Search => Self::zeroed(path),
+			SchemeKind::Archive => Self::zeroed(path),
+			SchemeKind::Sftp => Self::bare(path),
+		}
 	}
 
 	#[inline]
@@ -155,6 +174,9 @@ where
 
 	#[inline]
 	pub fn as_path(self) -> P { self.inner }
+
+	#[inline]
+	pub fn is_empty(self) -> bool { self.inner.is_empty() }
 
 	#[inline]
 	pub fn uri(self) -> P {
@@ -191,18 +213,6 @@ where
 	pub fn has_trail(self) -> bool { self.inner.len() != self.urn }
 
 	#[inline]
-	pub fn name(self) -> Option<P::Inner> { self.inner.file_name() }
-
-	#[inline]
-	pub fn stem(self) -> Option<P::Inner> { self.inner.file_stem() }
-
-	#[inline]
-	pub fn ext(self) -> Option<P::Inner> { self.inner.extension() }
-
-	#[inline]
-	pub fn parent(self) -> Option<P> { self.inner.parent() }
-
-	#[inline]
 	pub fn triple(self) -> (P, P, P) {
 		let len = self.inner.len();
 
@@ -217,13 +227,5 @@ where
 				P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(urn)),
 			)
 		}
-	}
-
-	#[inline]
-	pub fn strip_prefix<'a, T>(self, base: T) -> Option<P>
-	where
-		T: AsPathView<'a, P::View<'a>>,
-	{
-		self.inner.strip_prefix(base)
 	}
 }

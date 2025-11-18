@@ -1,75 +1,62 @@
-use std::{borrow::Cow, ffi::OsStr, io, path::{Path, PathBuf}};
+use std::io;
 
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlCow}};
+use yazi_shared::{path::{AsPathDyn, PathBufDyn, PathLike}, strand::StrandCow, url::{AsUrl, Url, UrlBuf}};
 
 use crate::{cha::{Cha, ChaType}, provider::Attrs};
 
-pub trait Provider {
+pub trait Provider: Sized {
 	type File: AsyncRead + AsyncWrite + Unpin;
 	type Gate: FileBuilder<File = Self::File>;
-	type ReadDir: DirReader;
+	type ReadDir: DirReader + 'static;
+	type UrlCow;
+	type Me<'a>: Provider;
 
-	fn absolute<'a, U>(&self, url: &'a U) -> impl Future<Output = io::Result<UrlCow<'a>>>
-	where
-		U: AsUrl;
+	fn absolute(&self) -> impl Future<Output = io::Result<Self::UrlCow>>;
 
-	fn canonicalize<P>(&self, path: P) -> impl Future<Output = io::Result<PathBuf>>
-	where
-		P: AsRef<Path>;
+	fn canonicalize(&self) -> impl Future<Output = io::Result<UrlBuf>>;
 
-	fn casefold<P>(&self, path: P) -> impl Future<Output = io::Result<PathBuf>>
-	where
-		P: AsRef<Path>;
+	fn casefold(&self) -> impl Future<Output = io::Result<UrlBuf>>;
 
-	fn copy<P, Q>(&self, from: P, to: Q, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
+	fn copy<P>(&self, to: P, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>;
+		P: AsPathDyn;
 
-	fn create<P>(&self, path: P) -> impl Future<Output = io::Result<Self::File>>
-	where
-		P: AsRef<Path>,
-	{
-		async move { self.gate().await?.write(true).create(true).truncate(true).open(path).await }
+	fn create(&self) -> impl Future<Output = io::Result<Self::File>> {
+		async move { self.gate().write(true).create(true).truncate(true).open(self.url()).await }
 	}
 
-	fn create_dir<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
-	where
-		P: AsRef<Path>;
+	fn create_dir(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn create_dir_all<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
-	where
-		P: AsRef<Path>,
-	{
+	fn create_dir_all(&self) -> impl Future<Output = io::Result<()>> {
 		async move {
-			let mut path = path.as_ref();
-			if path == Path::new("") {
+			let mut url = self.url();
+			if url.loc().is_empty() {
 				return Ok(());
 			}
 
 			let mut stack = Vec::new();
 			loop {
-				match self.create_dir(path).await {
+				match Self::new(url).await?.create_dir().await {
 					Ok(()) => break,
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
-						if let Some(parent) = path.parent() {
-							stack.push(path);
-							path = parent;
+						if let Some(parent) = url.parent() {
+							stack.push(url);
+							url = parent;
 						} else {
 							return Err(io::Error::other("failed to create whole tree"));
 						}
 					}
-					Err(_) if self.metadata(path).await.is_ok_and(|m| m.is_dir()) => break,
+					Err(_) if Self::new(url).await?.metadata().await.is_ok_and(|m| m.is_dir()) => break,
 					Err(e) => return Err(e),
 				}
 			}
 
-			while let Some(p) = stack.pop() {
-				match self.create_dir(p).await {
+			while let Some(u) = stack.pop() {
+				match Self::new(u).await?.create_dir().await {
 					Ok(()) => {}
-					Err(_) if self.metadata(p).await.is_ok_and(|m| m.is_dir()) => {}
+					Err(_) if Self::new(u).await?.metadata().await.is_ok_and(|m| m.is_dir()) => {}
 					Err(e) => return Err(e),
 				}
 			}
@@ -78,87 +65,74 @@ pub trait Provider {
 		}
 	}
 
-	fn gate(&self) -> impl Future<Output = io::Result<Self::Gate>>;
+	fn gate(&self) -> Self::Gate { Self::Gate::default() }
 
-	fn hard_link<P, Q>(&self, original: P, link: Q) -> impl Future<Output = io::Result<()>>
+	fn hard_link<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>;
+		P: AsPathDyn;
 
-	fn metadata<P>(&self, path: P) -> impl Future<Output = io::Result<Cha>>
-	where
-		P: AsRef<Path>;
+	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
-	fn open<P>(&self, path: P) -> impl Future<Output = io::Result<Self::File>>
-	where
-		P: AsRef<Path>,
-	{
-		async move { self.gate().await?.read(true).open(path).await }
+	fn new<'a>(url: Url<'a>) -> impl Future<Output = io::Result<Self::Me<'a>>>;
+
+	fn open(&self) -> impl Future<Output = io::Result<Self::File>> {
+		async move { self.gate().read(true).open(self.url()).await }
 	}
 
-	fn read_dir<P>(&self, path: P) -> impl Future<Output = io::Result<Self::ReadDir>>
-	where
-		P: AsRef<Path>;
+	fn read_dir(self) -> impl Future<Output = io::Result<Self::ReadDir>>;
 
-	fn read_link<P>(&self, path: P) -> impl Future<Output = io::Result<PathBuf>>
-	where
-		P: AsRef<Path>;
+	fn read_link(&self) -> impl Future<Output = io::Result<PathBufDyn>>;
 
-	fn remove_dir<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
-	where
-		P: AsRef<Path>;
+	fn remove_dir(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn remove_dir_all<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
-	where
-		P: AsRef<Path>,
-	{
-		async fn remove_dir_all_impl<P>(me: &P, path: &Path) -> io::Result<()>
+	fn remove_dir_all(&self) -> impl Future<Output = io::Result<()>> {
+		async fn remove_dir_all_impl<P>(url: Url<'_>) -> io::Result<()>
 		where
-			P: Provider + ?Sized,
+			P: Provider,
 		{
-			let mut it = ok_or_not_found!(me.read_dir(path).await, return Ok(()));
+			let mut it = ok_or_not_found!(P::new(url).await?.read_dir().await, return Ok(()));
 			while let Some(child) = it.next().await? {
 				let ft = ok_or_not_found!(child.file_type().await, continue);
 				let result = if ft.is_dir() {
-					Box::pin(remove_dir_all_impl(me, &child.path())).await
+					Box::pin(remove_dir_all_impl::<P>(child.url().as_url())).await
 				} else {
-					me.remove_file(&child.path()).await
+					P::new(child.url().as_url()).await?.remove_file().await
 				};
 
 				() = ok_or_not_found!(result);
 			}
 
-			Ok(ok_or_not_found!(me.remove_dir(path).await))
+			Ok(ok_or_not_found!(P::new(url).await?.remove_dir().await))
 		}
 
 		async move {
-			let path = path.as_ref();
-			let cha = ok_or_not_found!(self.symlink_metadata(path).await, return Ok(()));
+			let cha = ok_or_not_found!(self.symlink_metadata().await, return Ok(()));
 			if cha.is_link() {
-				self.remove_file(path).await
+				self.remove_file().await
 			} else {
-				remove_dir_all_impl(self, path).await
+				remove_dir_all_impl::<Self>(self.url()).await
 			}
 		}
 	}
 
-	fn remove_dir_clean<P>(&self, root: P) -> impl Future<Output = ()>
-	where
-		P: AsRef<Path>,
-	{
-		let root = root.as_ref().to_path_buf();
+	fn remove_dir_clean(&self) -> impl Future<Output = ()> {
+		let root = self.url().to_owned();
 
 		async move {
 			let mut stack = vec![(root, false)];
 
 			while let Some((dir, visited)) = stack.pop() {
+				let Ok(provider) = Self::new(dir.as_url()).await else {
+					continue;
+				};
+
 				if visited {
-					self.remove_dir(&dir).await.ok();
-				} else if let Ok(mut it) = self.read_dir(&dir).await {
+					provider.remove_dir().await.ok();
+				} else if let Ok(mut it) = provider.read_dir().await {
 					stack.push((dir, true));
 					while let Ok(Some(ent)) = it.next().await {
 						if ent.file_type().await.is_ok_and(|t| t.is_dir()) {
-							stack.push((ent.path(), false));
+							stack.push((ent.url(), false));
 						}
 					}
 				}
@@ -166,56 +140,42 @@ pub trait Provider {
 		}
 	}
 
-	fn remove_file<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
-	where
-		P: AsRef<Path>;
+	fn remove_file(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn rename<P, Q>(&self, from: P, to: Q) -> impl Future<Output = io::Result<()>>
+	fn rename<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>;
+		P: AsPathDyn;
 
-	fn symlink<P, Q, F>(
-		&self,
-		original: P,
-		link: Q,
-		_is_dir: F,
-	) -> impl Future<Output = io::Result<()>>
+	fn symlink<P, F>(&self, original: P, _is_dir: F) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPathDyn,
 		F: AsyncFnOnce() -> io::Result<bool>;
 
-	fn symlink_dir<P, Q>(&self, original: P, link: Q) -> impl Future<Output = io::Result<()>>
+	fn symlink_dir<P>(&self, original: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPathDyn,
 	{
-		self.symlink(original, link, async || Ok(true))
+		self.symlink(original, async || Ok(true))
 	}
 
-	fn symlink_file<P, Q>(&self, original: P, link: Q) -> impl Future<Output = io::Result<()>>
+	fn symlink_file<P>(&self, original: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPathDyn,
 	{
-		self.symlink(original, link, async || Ok(false))
+		self.symlink(original, async || Ok(false))
 	}
 
-	fn symlink_metadata<P>(&self, path: P) -> impl Future<Output = io::Result<Cha>>
-	where
-		P: AsRef<Path>;
+	fn symlink_metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
-	fn trash<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
-	where
-		P: AsRef<Path>;
+	fn trash(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn write<P, C>(&self, path: P, contents: C) -> impl Future<Output = io::Result<()>>
+	fn url(&self) -> Url<'_>;
+
+	fn write<C>(&self, contents: C) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsRef<Path>,
 		C: AsRef<[u8]>,
 	{
-		async move { self.create(path).await?.write_all(contents.as_ref()).await }
+		async move { self.create().await?.write_all(contents.as_ref()).await }
 	}
 }
 
@@ -223,24 +183,30 @@ pub trait Provider {
 pub trait DirReader {
 	type Entry: FileHolder;
 
+	#[must_use]
 	fn next(&mut self) -> impl Future<Output = io::Result<Option<Self::Entry>>>;
 }
 
 // --- FileHolder
 pub trait FileHolder {
 	#[must_use]
-	fn path(&self) -> PathBuf;
+	fn file_type(&self) -> impl Future<Output = io::Result<ChaType>>;
 
 	#[must_use]
-	fn name(&self) -> Cow<'_, OsStr>;
-
 	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
-	fn file_type(&self) -> impl Future<Output = io::Result<ChaType>>;
+	#[must_use]
+	fn name(&self) -> StrandCow<'_>;
+
+	#[must_use]
+	fn path(&self) -> PathBufDyn;
+
+	#[must_use]
+	fn url(&self) -> UrlBuf;
 }
 
-// --- FileOpener
-pub trait FileBuilder {
+// --- FileBuilder
+pub trait FileBuilder: Sized + Default {
 	type File: AsyncRead + AsyncWrite + Unpin;
 
 	fn append(&mut self, append: bool) -> &mut Self;
@@ -251,13 +217,9 @@ pub trait FileBuilder {
 
 	fn create_new(&mut self, create_new: bool) -> &mut Self;
 
-	fn new(scheme: SchemeRef) -> impl Future<Output = io::Result<Self>>
+	fn open<U>(&self, url: U) -> impl Future<Output = io::Result<Self::File>>
 	where
-		Self: Sized;
-
-	fn open<P>(&self, path: P) -> impl Future<Output = io::Result<Self::File>>
-	where
-		P: AsRef<Path>;
+		U: AsUrl;
 
 	fn read(&mut self, read: bool) -> &mut Self;
 

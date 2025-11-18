@@ -16,11 +16,8 @@ impl Actor for Follow {
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(file) = cx.hovered() else { succ!() };
 		let Some(link_to) = &file.link_to else { succ!() };
-
-		if let Some(p) = file.url.parent() {
-			act!(mgr:reveal, cx, clean_url(p.join(link_to)))
-		} else {
-			succ!()
-		}
+		let Some(parent) = file.url.parent() else { succ!() };
+		let Ok(joined) = parent.try_join(link_to) else { succ!() };
+		act!(mgr:reveal, cx, clean_url(joined))
 	}
 }

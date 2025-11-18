@@ -91,7 +91,7 @@ impl Utils {
 				CLIPBOARD.set(text).await;
 				Ok(None)
 			} else {
-				Some(lua.create_string(CLIPBOARD.get().await.as_encoded_bytes())).transpose()
+				Some(lua.create_string(CLIPBOARD.get().await)).transpose()
 			}
 		})
 	}

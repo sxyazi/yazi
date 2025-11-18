@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_binding::{Id, UrlRef, cached_field};
-use yazi_shared::url::UrlLike;
+use yazi_shared::{path::PathLike, strand::StrandLike, url::UrlLike};
 
 use super::{Finder, Folder, Lives, Mode, Preference, Preview, PtrCell, Selected};
 
@@ -47,7 +47,7 @@ impl UserData for Tab {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
 		cached_field!(fields, name, |lua, me| {
 			let url = &me.current.url;
-			lua.create_string(url.name().unwrap_or(url.loc.as_os_str()).as_encoded_bytes())
+			lua.create_string(url.name().map_or_else(|| url.loc().encoded_bytes(), |n| n.encoded_bytes()))
 		});
 
 		cached_field!(fields, mode, |_, me| Mode::make(&me.mode));
