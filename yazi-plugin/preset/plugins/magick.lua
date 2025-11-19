@@ -26,10 +26,10 @@ function M:preload(job)
 	end
 
 	local cmd = M.with_limit()
+	cmd:arg { tostring(job.file.url), "-auto-orient", "-strip" }
 	if job.args.flatten then
 		cmd:arg("-flatten")
 	end
-	cmd:arg { tostring(job.file.url), "-auto-orient", "-strip" }
 
 	local size = string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height)
 	if rt.preview.image_filter == "nearest" then
