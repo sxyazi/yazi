@@ -39,7 +39,8 @@ impl Actor for Copy {
 					s.extend_from_slice(&opt.separator.transform(&u.name().unwrap_or_default()));
 				}
 				"name_without_ext" => {
-					s.extend_from_slice(&opt.separator.transform(&u.stem().unwrap_or_default()));
+					let name = if u.as_local().is_some_and(|p| p.is_dir()) { u.name() } else { u.stem() };
+					s.extend_from_slice(&opt.separator.transform(&name.unwrap_or_default()));
 				}
 				_ => bail!("Unknown copy type: {}", opt.r#type),
 			};
