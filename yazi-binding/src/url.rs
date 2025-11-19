@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_fs::{FsHash64, FsHash128};
-use yazi_shared::{path::{PathLike, StripPrefixError}, strand::{StrandCow, StrandLike}, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_shared::{path::StripPrefixError, strand::StrandCow, url::{AsUrl, UrlCow, UrlLike}};
 
 use crate::{Scheme, cached_field, deprecate};
 

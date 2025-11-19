@@ -2,7 +2,7 @@ use std::{borrow::Cow, str::FromStr};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::CmdCow, strand::{AsStrandDyn, StrandLike}};
+use yazi_shared::{SStr, event::CmdCow, strand::AsStrand};
 
 #[derive(Debug)]
 pub struct CopyOpt {
@@ -49,16 +49,16 @@ impl FromStr for CopySeparator {
 impl CopySeparator {
 	pub fn transform<T>(self, s: &T) -> Cow<'_, [u8]>
 	where
-		T: ?Sized + AsStrandDyn,
+		T: ?Sized + AsStrand,
 	{
 		#[cfg(windows)]
 		if self == Self::Unix {
-			use yazi_shared::strand::{StrandBufLike, StrandCow};
-			return match s.as_strand_dyn().backslash_to_slash() {
+			use yazi_shared::strand::StrandCow;
+			return match s.as_strand().backslash_to_slash() {
 				StrandCow::Borrowed(s) => s.encoded_bytes().into(),
 				StrandCow::Owned(s) => s.into_encoded_bytes().into(),
 			};
 		}
-		Cow::Borrowed(s.as_strand_dyn().encoded_bytes())
+		Cow::Borrowed(s.as_strand().encoded_bytes())
 	}
 }

@@ -17,8 +17,7 @@ impl Actor for UpdateFiles {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let revision = cx.current().files.revision;
-		let linked: Vec<_> =
-			LINKED.read().from_dir(opt.op.cwd()).filter_map(|u| opt.op.chdir(u).ok()).collect();
+		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.chdir(u)).collect();
 
 		for op in [opt.op].into_iter().chain(linked) {
 			cx.mgr.yanked.apply_op(&op);

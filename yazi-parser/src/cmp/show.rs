@@ -2,7 +2,7 @@ use std::path::MAIN_SEPARATOR_STR;
 
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, event::CmdCow, path::PathBufDyn, strand::{StrandBuf, StrandBufLike}, url::UrlBuf};
+use yazi_shared::{Id, event::CmdCow, path::PathBufDyn, strand::{StrandBuf, StrandLike}, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct ShowOpt {

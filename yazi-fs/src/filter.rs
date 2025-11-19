@@ -2,7 +2,7 @@ use std::{fmt::Display, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
-use yazi_shared::{event::Cmd, strand::{AsStrand, StrandLike}};
+use yazi_shared::{event::Cmd, strand::AsStrand};
 
 pub struct Filter {
 	raw:   String,

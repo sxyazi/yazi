@@ -1,8 +1,8 @@
-use std::{fmt::{self, Display}, ops::Not};
+use std::fmt::{self, Display};
 
 use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 
-use crate::{path::PathLike, scheme::SchemeKind, url::Url};
+use crate::{scheme::SchemeKind, url::Url};
 
 #[derive(Clone, Copy)]
 pub struct Encode<'a>(pub Url<'a>);
@@ -39,7 +39,7 @@ impl<'a> Encode<'a> {
 					SchemeKind::Regular => Ok(()),
 					SchemeKind::Search | SchemeKind::Archive => w!(0, 0),
 					SchemeKind::Sftp => {
-						w!(self.0.0.loc().is_empty().not() as usize, self.0.0.loc().name().is_some() as usize)
+						w!(self.0.0.loc().components().count(), self.0.0.loc().name().is_some() as usize)
 					}
 				}
 			}

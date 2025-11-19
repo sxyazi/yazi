@@ -8,6 +8,9 @@ description = "Yazi event proxy"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [dependencies]
 yazi-config = { path = "../yazi-config", version = "25.9.15" }
 yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }

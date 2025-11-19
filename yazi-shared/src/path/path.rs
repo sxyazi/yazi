@@ -1,184 +1,250 @@
 use std::{borrow::Cow, ffi::OsStr};
 
 use anyhow::Result;
+use hashbrown::Equivalent;
 
-use crate::{BytesExt, Utf8BytePredictor, path::{AsPathView, EndsWithError, JoinError, PathBufDyn, PathBufLike, PathDyn, PathKind, RsplitOnceError, StartsWithError, StripPrefixError}, strand::{AsStrandView, StrandLike}};
+use super::{RsplitOnceError, StartsWithError};
+use crate::{BytesExt, FromWtf8, Utf8BytePredictor, path::{AsPath, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
 
-pub trait PathLike<'p>
-where
-	Self: Copy + AsPathView<'p, Self::View<'p>> + AsStrandView<'p, Self::Strand<'p>>,
-{
-	type Strand<'a>: StrandLike<'a>;
-	type Owned: PathBufLike + Into<Self::Owned>;
-	type View<'a>;
-	type Components<'a>: Clone
-		+ DoubleEndedIterator
-		+ AsPathView<'a, Self::View<'a>>
-		+ AsStrandView<'a, Self::Strand<'a>>;
-	type Display<'a>: std::fmt::Display;
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum PathDyn<'p> {
+	Os(&'p std::path::Path),
+}
 
-	fn as_dyn(self) -> PathDyn<'p>;
+impl<'a> From<&'a std::path::Path> for PathDyn<'a> {
+	fn from(value: &'a std::path::Path) -> Self { Self::Os(value) }
+}
 
-	fn components(self) -> Self::Components<'p>;
+impl<'a> From<&'a PathBufDyn> for PathDyn<'a> {
+	fn from(value: &'a PathBufDyn) -> Self { value.as_path() }
+}
 
-	fn default() -> Self;
+impl PartialEq<PathBufDyn> for PathDyn<'_> {
+	fn eq(&self, other: &PathBufDyn) -> bool { *self == other.as_path() }
+}
 
-	fn display(self) -> Self::Display<'p>;
+impl PartialEq<PathDyn<'_>> for &std::path::Path {
+	fn eq(&self, other: &PathDyn<'_>) -> bool { matches!(*other, PathDyn::Os(p) if p == *self) }
+}
 
-	fn encoded_bytes(self) -> &'p [u8];
+impl PartialEq<&std::path::Path> for PathDyn<'_> {
+	fn eq(&self, other: &&std::path::Path) -> bool { matches!(*self, PathDyn::Os(p) if p == *other) }
+}
 
-	fn ext(self) -> Option<Self::Strand<'p>>;
+impl PartialEq<&str> for PathDyn<'_> {
+	fn eq(&self, other: &&str) -> bool {
+		match self {
+			PathDyn::Os(p) => p == other,
+		}
+	}
+}
 
-	fn has_root(self) -> bool;
+impl Equivalent<PathBufDyn> for PathDyn<'_> {
+	fn equivalent(&self, key: &PathBufDyn) -> bool { *self == key.as_path() }
+}
 
-	fn is_absolute(self) -> bool;
+impl<'p> PathDyn<'p> {
+	#[inline]
+	pub fn as_os(self) -> Result<&'p std::path::Path, PathDynError> {
+		match self {
+			Self::Os(p) => Ok(p),
+		}
+	}
 
-	fn is_empty(self) -> bool { self.encoded_bytes().is_empty() }
+	pub fn components(self) -> std::path::Components<'p> {
+		match self {
+			Self::Os(p) => p.components(),
+		}
+	}
+
+	pub fn display(self) -> std::path::Display<'p> {
+		match self {
+			Self::Os(p) => p.display(),
+		}
+	}
+
+	pub fn encoded_bytes(self) -> &'p [u8] {
+		match self {
+			Self::Os(p) => p.as_os_str().as_encoded_bytes(),
+		}
+	}
+
+	pub fn ext(self) -> Option<Strand<'p>> {
+		Some(match self {
+			Self::Os(p) => p.extension()?.into(),
+		})
+	}
+
+	#[inline]
+	pub unsafe fn from_encoded_bytes<K>(kind: K, bytes: &'p [u8]) -> Self
+	where
+		K: Into<PathKind>,
+	{
+		match kind.into() {
+			PathKind::Os => Self::Os(unsafe { OsStr::from_encoded_bytes_unchecked(bytes) }.as_ref()),
+		}
+	}
+
+	pub fn has_root(self) -> bool {
+		match self {
+			Self::Os(p) => p.has_root(),
+		}
+	}
+
+	pub fn is_absolute(self) -> bool {
+		match self {
+			Self::Os(p) => p.is_absolute(),
+		}
+	}
+
+	pub fn is_empty(self) -> bool { self.encoded_bytes().is_empty() }
 
 	#[cfg(unix)]
-	fn is_hidden(self) -> bool {
+	pub fn is_hidden(self) -> bool {
 		self.name().is_some_and(|n| n.encoded_bytes().first() == Some(&b'.'))
 	}
 
-	fn kind(self) -> PathKind;
-
-	fn len(self) -> usize { self.encoded_bytes().len() }
-
-	fn name(self) -> Option<Self::Strand<'p>>;
-
-	fn owned(self) -> Self::Owned;
-
-	fn parent(self) -> Option<Self>;
-
-	fn rsplit_pred<T>(self, pred: T) -> Option<(Self, Self)>
-	where
-		T: Utf8BytePredictor;
-
-	fn stem(self) -> Option<Self::Strand<'p>>;
-
-	fn to_str(self) -> Result<&'p str, std::str::Utf8Error> { str::from_utf8(self.encoded_bytes()) }
-
-	fn to_string_lossy(self) -> Cow<'p, str> { String::from_utf8_lossy(self.encoded_bytes()) }
-
-	fn to_buf_dyn(self) -> PathBufDyn { self.as_dyn().owned() }
-
-	fn try_ends_with<'a, T>(self, child: T) -> Result<bool, EndsWithError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-
-	fn try_join<'a, T>(self, path: T) -> Result<Self::Owned, JoinError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-
-	fn try_rsplit_seq<'a, T>(self, pat: T) -> Result<(Self, Self), RsplitOnceError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-
-	fn try_starts_with<'a, T>(self, base: T) -> Result<bool, StartsWithError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-
-	fn try_strip_prefix<'a, T>(self, base: T) -> Result<Self, StripPrefixError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-}
-
-impl<'p> PathLike<'p> for &'p std::path::Path {
-	type Components<'a> = std::path::Components<'a>;
-	type Display<'a> = std::path::Display<'a>;
-	type Owned = std::path::PathBuf;
-	type Strand<'a> = &'a std::ffi::OsStr;
-	type View<'a> = &'a std::path::Path;
-
-	fn as_dyn(self) -> PathDyn<'p> { PathDyn::Os(self) }
-
-	fn components(self) -> Self::Components<'p> { self.components() }
-
-	fn default() -> Self { std::path::Path::new("") }
-
-	fn display(self) -> Self::Display<'p> { self.display() }
-
-	fn encoded_bytes(self) -> &'p [u8] { self.as_os_str().as_encoded_bytes() }
-
-	fn ext(self) -> Option<Self::Strand<'p>> { self.extension() }
-
-	fn has_root(self) -> bool { self.has_root() }
-
-	fn is_absolute(self) -> bool { self.is_absolute() }
-
-	fn kind(self) -> PathKind { PathKind::Os }
-
-	fn name(self) -> Option<Self::Strand<'p>> { self.file_name() }
-
-	fn owned(self) -> Self::Owned { self.to_path_buf() }
-
-	fn parent(self) -> Option<Self> { self.parent() }
-
-	fn stem(self) -> Option<Self::Strand<'p>> { self.file_stem() }
-
-	fn try_ends_with<'a, T>(self, child: T) -> Result<bool, EndsWithError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
-	{
-		Ok(self.ends_with(child.as_strand_view()))
+	pub fn kind(self) -> PathKind {
+		match self {
+			Self::Os(_) => PathKind::Os,
+		}
 	}
 
-	fn try_join<'a, T>(self, path: T) -> Result<Self::Owned, JoinError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
-	{
-		Ok(self.join(path.as_strand_view()))
+	pub fn len(self) -> usize { self.encoded_bytes().len() }
+
+	pub fn name(self) -> Option<Strand<'p>> {
+		Some(match self {
+			Self::Os(p) => p.file_name()?.into(),
+		})
 	}
 
-	fn rsplit_pred<'a, T>(self, pred: T) -> Option<(Self, Self)>
+	#[inline]
+	pub fn os<T>(path: &'p T) -> Self
+	where
+		T: ?Sized + AsRef<std::path::Path>,
+	{
+		Self::Os(path.as_ref())
+	}
+
+	pub fn parent(self) -> Option<Self> {
+		Some(match self {
+			Self::Os(p) => Self::Os(p.parent()?),
+		})
+	}
+
+	pub fn rsplit_pred<T>(self, pred: T) -> Option<(Self, Self)>
 	where
 		T: Utf8BytePredictor,
 	{
-		let b = self.encoded_bytes();
-		let (left, right) = b.rsplit_pred_once(pred)?;
-
+		let (a, b) = self.encoded_bytes().rsplit_pred_once(pred)?;
 		Some(unsafe {
-			(
-				OsStr::from_encoded_bytes_unchecked(left).as_ref(),
-				OsStr::from_encoded_bytes_unchecked(right).as_ref(),
-			)
+			(Self::from_encoded_bytes(self.kind(), a), Self::from_encoded_bytes(self.kind(), b))
 		})
 	}
 
-	fn try_rsplit_seq<'a, T>(self, pat: T) -> Result<(Self, Self), RsplitOnceError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
-	{
-		let b = self.encoded_bytes();
-		let p = pat.as_strand_view().encoded_bytes();
+	pub fn stem(self) -> Option<Strand<'p>> {
+		Some(match self {
+			Self::Os(p) => p.file_stem()?.into(),
+		})
+	}
 
-		let (left, right) = b.rsplit_seq_once(p).ok_or(RsplitOnceError::NotFound)?;
+	#[inline]
+	pub fn to_os_owned(self) -> Result<std::path::PathBuf, PathDynError> {
+		match self {
+			Self::Os(p) => Ok(p.to_owned()),
+		}
+	}
+
+	pub fn to_owned(self) -> PathBufDyn {
+		match self {
+			Self::Os(p) => PathBufDyn::Os(p.to_path_buf()),
+		}
+	}
+
+	pub fn to_str(self) -> Result<&'p str, std::str::Utf8Error> {
+		str::from_utf8(self.encoded_bytes())
+	}
+
+	pub fn to_string_lossy(self) -> Cow<'p, str> { String::from_utf8_lossy(self.encoded_bytes()) }
+
+	pub fn try_ends_with<T>(self, child: T) -> Result<bool, EndsWithError>
+	where
+		T: AsStrand,
+	{
+		Ok(match (self, child.as_strand()) {
+			(Self::Os(p), Strand::Os(q)) => p.ends_with(q),
+			(Self::Os(p), Strand::Utf8(q)) => p.ends_with(q),
+			(Self::Os(p), Strand::Bytes(b)) => {
+				p.ends_with(OsStr::from_wtf8(b).map_err(|_| EndsWithError)?)
+			}
+		})
+	}
+
+	pub fn try_join<T>(self, path: T) -> Result<PathBufDyn, JoinError>
+	where
+		T: AsStrand,
+	{
+		Ok(match (self, path.as_strand()) {
+			(Self::Os(p), Strand::Os(q)) => PathBufDyn::Os(p.join(q)),
+			(Self::Os(p), Strand::Utf8(q)) => PathBufDyn::Os(p.join(q)),
+			(Self::Os(p), Strand::Bytes(b)) => {
+				PathBufDyn::Os(p.join(OsStr::from_wtf8(b).map_err(|_| JoinError::FromWtf8)?))
+			}
+		})
+	}
+
+	pub fn try_rsplit_seq<T>(self, pat: T) -> Result<(Self, Self), RsplitOnceError>
+	where
+		T: AsStrand,
+	{
+		let pat = pat.as_strand();
+
+		let (a, b) = match self {
+			PathDyn::Os(p) => {
+				p.as_os_str().as_encoded_bytes().rsplit_seq_once(pat.as_os()?.as_encoded_bytes())
+			}
+		}
+		.ok_or(RsplitOnceError::NotFound)?;
+
 		Ok(unsafe {
-			(
-				OsStr::from_encoded_bytes_unchecked(left).as_ref(),
-				OsStr::from_encoded_bytes_unchecked(right).as_ref(),
-			)
+			(Self::from_encoded_bytes(self.kind(), a), Self::from_encoded_bytes(self.kind(), b))
 		})
 	}
 
-	fn try_starts_with<'a, T>(self, base: T) -> Result<bool, StartsWithError>
+	pub fn try_starts_with<T>(self, base: T) -> Result<bool, StartsWithError>
 	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
+		T: AsStrand,
 	{
-		Ok(self.starts_with(base.as_strand_view()))
+		Ok(match (self, base.as_strand()) {
+			(Self::Os(p), Strand::Os(q)) => p.starts_with(q),
+			(Self::Os(p), Strand::Utf8(q)) => p.starts_with(q),
+			(Self::Os(p), Strand::Bytes(b)) => {
+				p.starts_with(OsStr::from_wtf8(b).map_err(|_| StartsWithError)?)
+			}
+		})
 	}
 
-	fn try_strip_prefix<'a, T>(self, base: T) -> Result<Self, StripPrefixError>
+	pub fn try_strip_prefix<T>(self, base: T) -> Result<Self, StripPrefixError>
 	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
+		T: AsStrand,
 	{
-		Ok(self.strip_prefix(base.as_strand_view())?)
+		Ok(match (self, base.as_strand()) {
+			(Self::Os(p), Strand::Os(q)) => Self::Os(p.strip_prefix(q)?),
+			(Self::Os(p), Strand::Utf8(q)) => Self::Os(p.strip_prefix(q)?),
+			(Self::Os(p), Strand::Bytes(b)) => {
+				Self::Os(p.strip_prefix(OsStr::from_wtf8(b).map_err(|_| StripPrefixError::WrongEncoding)?)?)
+			}
+		})
 	}
-}
 
-impl<'a, P> From<P> for PathBufDyn
-where
-	P: PathLike<'a>,
-{
-	fn from(value: P) -> Self { value.to_buf_dyn() }
+	pub fn with<K, T>(kind: K, strand: &'p T) -> Result<Self, StrandError>
+	where
+		K: Into<PathKind>,
+		T: ?Sized + AsStrand,
+	{
+		let s = strand.as_strand();
+		Ok(match kind.into() {
+			PathKind::Os => Self::Os(std::path::Path::new(s.as_os()?)),
+		})
+	}
 }

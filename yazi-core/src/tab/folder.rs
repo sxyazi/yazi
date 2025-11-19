@@ -6,7 +6,7 @@ use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
 use yazi_macro::err;
 use yazi_parser::Step;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}, url::UrlBuf};
+use yazi_shared::{Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_widgets::Scrollable;
 
 pub struct Folder {
@@ -101,7 +101,7 @@ impl Folder {
 			self.scroll(step)
 		};
 
-		self.trace = self.hovered().filter(|_| b).map(|h| h.urn().owned()).or(self.trace.take());
+		self.trace = self.hovered().filter(|_| b).map(|h| h.urn().into()).or(self.trace.take());
 		b |= self.squeeze_offset();
 
 		self.sync_page(false);
@@ -121,7 +121,7 @@ impl Folder {
 		if let Some(u) = urn {
 			self.hover(u)
 		} else if let Some(u) = &self.trace {
-			self.hover(u.clone().borrow())
+			self.hover(u.clone().as_path())
 		} else {
 			self.arrow(0)
 		}

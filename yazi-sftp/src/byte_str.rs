@@ -17,7 +17,7 @@ impl<'a> From<&'a str> for ByteStr<'a> {
 	fn from(value: &'a str) -> Self { ByteStr(Cow::Borrowed(value.as_bytes())) }
 }
 
-impl<'a> From<&'a ByteStr<'a>> for ByteStr<'a> {
+impl<'a> From<&'a Self> for ByteStr<'a> {
 	fn from(value: &'a ByteStr) -> Self { ByteStr(Cow::Borrowed(&value.0)) }
 }
 
@@ -67,7 +67,7 @@ impl<'a> ByteStr<'a> {
 		}
 	}
 
-	pub fn join(&self, other: impl Into<ByteStr<'a>>) -> PathBuf {
+	pub fn join(&self, other: impl Into<Self>) -> PathBuf {
 		let other = other.into();
 		match self.to_path() {
 			Cow::Borrowed(p) => p.join(other.to_path()),

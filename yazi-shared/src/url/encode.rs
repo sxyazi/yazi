@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 use percent_encoding::{CONTROLS, percent_encode};
 
-use crate::{path::PathLike, url::Url};
+use crate::url::Url;
 
 // --- Tilded
 #[derive(Clone, Copy)]

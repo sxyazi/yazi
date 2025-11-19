@@ -1,6 +1,6 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
-use yazi_shared::{path::{AsPathDyn, PathBufDyn}, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow}};
 
 use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
 
@@ -31,9 +31,9 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let to = to.as_path_dyn().to_os_owned()?;
+		let to = to.as_path().to_os_owned()?;
 		let from = self.path.to_owned();
 		Self::copy_impl(from, to, attrs).await
 	}
@@ -47,9 +47,9 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let to = to.as_path_dyn().as_os()?;
+		let to = to.as_path().as_os()?;
 
 		tokio::fs::hard_link(self.path, to).await
 	}
@@ -62,7 +62,7 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
 		match url {
-			Url::Regular(loc) | Url::Search { loc, .. } => Ok(Self::Me { url, path: loc.as_path() }),
+			Url::Regular(loc) | Url::Search { loc, .. } => Ok(Self::Me { url, path: loc.as_inner() }),
 			Url::Archive { .. } | Url::Sftp { .. } => {
 				Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url:?}")))
 			}
@@ -101,9 +101,9 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let to = to.as_path_dyn().as_os()?;
+		let to = to.as_path().as_os()?;
 
 		tokio::fs::rename(self.path, to).await
 	}
@@ -111,12 +111,12 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn symlink<P, F>(&self, original: P, _is_dir: F) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
 		#[cfg(unix)]
 		{
-			let original = original.as_path_dyn().as_os()?;
+			let original = original.as_path().as_os()?;
 			tokio::fs::symlink(original, self.path).await
 		}
 		#[cfg(windows)]
@@ -130,9 +130,9 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn symlink_dir<P>(&self, original: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let original = original.as_path_dyn().as_os()?;
+		let original = original.as_path().as_os()?;
 
 		#[cfg(unix)]
 		{
@@ -147,9 +147,9 @@ impl<'a> Provider for Local<'a> {
 	#[inline]
 	async fn symlink_file<P>(&self, original: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let original = original.as_path_dyn().as_os()?;
+		let original = original.as_path().as_os()?;
 
 		#[cfg(unix)]
 		{

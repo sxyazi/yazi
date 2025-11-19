@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
-use yazi_shared::path::{PathBufDyn, PathBufLike};
+use yazi_shared::path::{PathBufDyn, PathLike};
 
 pub struct Path(pub PathBufDyn);
 

@@ -8,6 +8,9 @@ description = "Yazi data distribution service"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [features]
 default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]

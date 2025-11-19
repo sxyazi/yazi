@@ -1,9 +1,8 @@
 use std::path::Path;
 
-use anyhow::Result;
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
-use yazi_shared::{Id, Ids, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, Ids, path::PathBufDyn, url::{UrlBuf, UrlLike}};
 
 use super::File;
 use crate::{cha::Cha, error::Error};
@@ -58,10 +57,10 @@ impl FilesOp {
 			let Some(o_p) = o.parent() else { continue };
 			let Some(n_p) = n.url.parent() else { continue };
 			if o_p == n_p {
-				parents.entry_ref(&o_p).or_default().1.insert(o.urn().owned(), n);
+				parents.entry_ref(&o_p).or_default().1.insert(o.urn().into(), n);
 			} else {
-				parents.entry_ref(&o_p).or_default().0.insert(o.urn().owned());
-				parents.entry_ref(&n_p).or_default().1.insert(n.urn().owned(), n);
+				parents.entry_ref(&o_p).or_default().0.insert(o.urn().into());
+				parents.entry_ref(&n_p).or_default().1.insert(n.urn().into(), n);
 			}
 		}
 		for (p, (o, n)) in parents {
@@ -99,21 +98,16 @@ impl FilesOp {
 		}
 	}
 
-	pub fn chdir(&self, wd: &Path) -> Result<Self> {
+	pub fn chdir(&self, wd: &Path) -> Self {
 		macro_rules! files {
-			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect::<Result<_>>()? }};
+			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect() }};
 		}
 		macro_rules! map {
-			($map:expr) => {{
-				$map
-					.iter()
-					.map(|(urn, file)| file.chdir(wd).map(|file| (urn.clone(), file)))
-					.collect::<Result<_>>()?
-			}};
+			($map:expr) => {{ $map.iter().map(|(urn, file)| (urn.clone(), file.chdir(wd))).collect() }};
 		}
 
 		let w = UrlBuf::from(wd);
-		Ok(match self {
+		match self {
 			Self::Full(_, files, cha) => Self::Full(w, files!(files), *cha),
 			Self::Part(_, files, ticket) => Self::Part(w, files!(files), *ticket),
 			Self::Done(_, cha, ticket) => Self::Done(w, *cha, *ticket),
@@ -124,7 +118,7 @@ impl FilesOp {
 			Self::Deleting(_, urns) => Self::Deleting(w, urns.clone()),
 			Self::Updating(_, map) => Self::Updating(w, map!(map)),
 			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
-		})
+		}
 	}
 
 	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<UrlBuf>) {

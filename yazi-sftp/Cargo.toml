@@ -8,6 +8,9 @@ description = "Yazi SFTP client"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [dependencies]
 bitflags    = { workspace = true }
 parking_lot = { workspace = true }

@@ -5,7 +5,7 @@ use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, err, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{Id, data::Data, path::PathLike, strand::StrandLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
@@ -73,10 +73,11 @@ impl Rename {
 		provider::rename(&old, &new).await?;
 
 		if let Ok(u) = overwritten
+			&& u != new
 			&& let Some((parent, urn)) = u.pair()
 		{
 			ok_or_not_found!(provider::rename(&u, &new).await);
-			FilesOp::Deleting(parent.to_owned(), [urn.owned()].into()).emit();
+			FilesOp::Deleting(parent.to_owned(), [urn.into()].into()).emit();
 		}
 
 		let new = provider::casefold(&new).await?;
@@ -84,10 +85,10 @@ impl Rename {
 
 		let file = File::new(&new).await?;
 		if new_p == old_p {
-			FilesOp::Upserting(old_p.into(), [(old_n.owned(), file)].into()).emit();
+			FilesOp::Upserting(old_p.into(), [(old_n.into(), file)].into()).emit();
 		} else {
-			FilesOp::Deleting(old_p.into(), [old_n.owned()].into()).emit();
-			FilesOp::Upserting(new_p.into(), [(new_n.owned(), file)].into()).emit();
+			FilesOp::Deleting(old_p.into(), [old_n.into()].into()).emit();
+			FilesOp::Upserting(new_p.into(), [(new_n.into(), file)].into()).emit();
 		}
 
 		MgrProxy::reveal(&new);

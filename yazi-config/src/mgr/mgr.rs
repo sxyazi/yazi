@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{CWD, SortBy};
-use yazi_shared::{SyncCell, path::PathLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::{SyncCell, url::{UrlBuf, UrlLike}};
 
 use super::{MgrRatio, MouseEvents};
 

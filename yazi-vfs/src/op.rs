@@ -1,5 +1,5 @@
 use yazi_fs::FilesOp;
-use yazi_shared::{path::PathLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::url::{UrlBuf, UrlLike};
 
 use crate::maybe_exists;
 
@@ -15,7 +15,7 @@ impl VfsFilesOp for FilesOp {
 		} else if maybe_exists(cwd).await {
 			Self::IOErr(cwd.clone(), err).emit();
 		} else if let Some((p, n)) = cwd.pair() {
-			Self::Deleting(p.into(), [n.owned()].into()).emit();
+			Self::Deleting(p.into(), [n.into()].into()).emit();
 		}
 	}
 }

@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{path::{AsPathDyn, PathBufDyn, PathLike}, strand::StrandCow, url::{AsUrl, Url, UrlBuf}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, strand::StrandCow, url::{AsUrl, Url, UrlBuf}};
 
 use crate::{cha::{Cha, ChaType}, provider::Attrs};
 
@@ -21,7 +21,7 @@ pub trait Provider: Sized {
 
 	fn copy<P>(&self, to: P, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
 	where
-		P: AsPathDyn;
+		P: AsPath;
 
 	fn create(&self) -> impl Future<Output = io::Result<Self::File>> {
 		async move { self.gate().write(true).create(true).truncate(true).open(self.url()).await }
@@ -69,7 +69,7 @@ pub trait Provider: Sized {
 
 	fn hard_link<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPathDyn;
+		P: AsPath;
 
 	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
@@ -144,23 +144,23 @@ pub trait Provider: Sized {
 
 	fn rename<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPathDyn;
+		P: AsPath;
 
 	fn symlink<P, F>(&self, original: P, _is_dir: F) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 		F: AsyncFnOnce() -> io::Result<bool>;
 
 	fn symlink_dir<P>(&self, original: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		self.symlink(original, async || Ok(true))
 	}
 
 	fn symlink_file<P>(&self, original: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		self.symlink(original, async || Ok(false))
 	}

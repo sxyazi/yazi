@@ -4,7 +4,7 @@ use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Valu
 use yazi_binding::Style;
 use yazi_config::THEME;
 use yazi_plugin::bindings::Range;
-use yazi_shared::{path::PathLike, url::UrlLike};
+use yazi_shared::url::UrlLike;
 
 use super::Lives;
 use crate::lives::PtrCell;

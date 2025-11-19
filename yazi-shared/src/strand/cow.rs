@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}};
 
 use anyhow::Result;
 
-use crate::{IntoOsStr, scheme::SchemeKind, strand::{Strand, StrandBuf, StrandBufLike, StrandLike}};
+use crate::{IntoOsStr, scheme::SchemeKind, strand::{Strand, StrandBuf}};
 
 // --- StrandCow
 pub enum StrandCow<'a> {
@@ -41,16 +41,6 @@ impl PartialEq<Strand<'_>> for StrandCow<'_> {
 }
 
 impl<'a> StrandCow<'a> {
-	pub fn with<T>(kind: SchemeKind, bytes: T) -> Result<Self>
-	where
-		T: Into<Cow<'a, [u8]>>,
-	{
-		match kind {
-			SchemeKind::Regular | SchemeKind::Search | SchemeKind::Archive => Self::from_os_bytes(bytes),
-			SchemeKind::Sftp => Self::from_os_bytes(bytes), // FIXME
-		}
-	}
-
 	pub fn from_os_bytes(bytes: impl Into<Cow<'a, [u8]>>) -> Result<Self> {
 		Ok(match bytes.into().into_os_str()? {
 			Cow::Borrowed(s) => Strand::Os(s).into(),
@@ -65,11 +55,13 @@ impl<'a> StrandCow<'a> {
 		}
 	}
 
-	// FIXME: remove, instead implement StrandLike for StrandCow
-	pub fn encoded_bytes(&self) -> &[u8] {
-		match self {
-			Self::Borrowed(s) => s.encoded_bytes(),
-			Self::Owned(s) => s.encoded_bytes(),
+	pub fn with<T>(kind: SchemeKind, bytes: T) -> Result<Self>
+	where
+		T: Into<Cow<'a, [u8]>>,
+	{
+		match kind {
+			SchemeKind::Regular | SchemeKind::Search | SchemeKind::Archive => Self::from_os_bytes(bytes),
+			SchemeKind::Sftp => Self::from_os_bytes(bytes), // FIXME
 		}
 	}
 }

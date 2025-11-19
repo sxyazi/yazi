@@ -13,10 +13,10 @@ impl AsScheme for Scheme {
 	#[inline]
 	fn as_scheme(&self) -> SchemeRef<'_> {
 		match *self {
-			Scheme::Regular { uri, urn } => SchemeRef::Regular { uri, urn },
-			Scheme::Search { ref domain, uri, urn } => SchemeRef::Search { domain, uri, urn },
-			Scheme::Archive { ref domain, uri, urn } => SchemeRef::Archive { domain, uri, urn },
-			Scheme::Sftp { ref domain, uri, urn } => SchemeRef::Sftp { domain, uri, urn },
+			Self::Regular { uri, urn } => SchemeRef::Regular { uri, urn },
+			Self::Search { ref domain, uri, urn } => SchemeRef::Search { domain, uri, urn },
+			Self::Archive { ref domain, uri, urn } => SchemeRef::Archive { domain, uri, urn },
+			Self::Sftp { ref domain, uri, urn } => SchemeRef::Sftp { domain, uri, urn },
 		}
 	}
 }

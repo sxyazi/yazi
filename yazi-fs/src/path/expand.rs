@@ -1,6 +1,6 @@
 use std::{borrow::Cow, path::PathBuf};
 
-use yazi_shared::{FromWtf8Vec, loc::LocBuf, path::{AsPath, PathBufDyn, PathCow, PathDyn, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{FromWtf8Vec, loc::LocBuf, path::{PathBufDyn, PathCow, PathDyn, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::{CWD, path::clean_url};
 
@@ -16,18 +16,13 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 	let n_rest = expand_variables(o_rest);
 	let n_urn = expand_variables(o_urn);
 
-	let rest_diff =
-		n_rest.as_path().components().count() as isize - o_rest.components().count() as isize;
-	let urn_diff =
-		n_urn.as_path().components().count() as isize - o_urn.components().count() as isize;
+	let rest_diff = n_rest.components().count() as isize - o_rest.components().count() as isize;
+	let urn_diff = n_urn.components().count() as isize - o_urn.components().count() as isize;
 
 	let uri_count = url.uri().components().count() as isize;
 	let urn_count = url.urn().components().count() as isize;
 
-	let mut path = PathBufDyn::with_capacity(
-		url.kind(),
-		n_base.as_path().len() + n_rest.as_path().len() + n_urn.as_path().len(),
-	);
+	let mut path = PathBufDyn::with_capacity(url.kind(), n_base.len() + n_rest.len() + n_urn.len());
 	path.try_extend([n_base, n_rest, n_urn]).expect("extend original parts should not fail");
 
 	let loc = LocBuf::<PathBuf>::with(
@@ -77,7 +72,7 @@ pub fn absolute_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { absolute_url
 
 fn absolute_url_impl<'a>(url: UrlCow<'a>) -> UrlCow<'a> {
 	if url.kind().is_virtual() {
-		return url.into();
+		return url;
 	}
 
 	let path = url.loc().as_os().expect("must be a local path");

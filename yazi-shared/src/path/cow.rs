@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::{IntoOsStr, path::{AsPathDyn, PathBufDyn, PathBufLike, PathDyn, PathLike}};
+use crate::{IntoOsStr, path::{AsPath, PathBufDyn, PathDyn}};
 
 // --- PathCow
 pub enum PathCow<'a> {
@@ -25,8 +25,8 @@ impl From<PathCow<'_>> for PathBufDyn {
 impl PartialEq<&str> for PathCow<'_> {
 	fn eq(&self, other: &&str) -> bool {
 		match self {
-			Self::Borrowed(s) => s.as_path_dyn() == *other,
-			Self::Owned(s) => s.as_path_dyn() == *other,
+			Self::Borrowed(s) => s.as_path() == *other,
+			Self::Owned(s) => s.as_path() == *other,
 		}
 	}
 }
@@ -41,16 +41,8 @@ impl<'a> PathCow<'a> {
 
 	pub fn into_owned(self) -> PathBufDyn {
 		match self {
-			Self::Borrowed(s) => s.to_buf_dyn(),
+			Self::Borrowed(s) => s.to_owned(),
 			Self::Owned(s) => s,
-		}
-	}
-
-	// FIXME: remove, instead implement PathLike for PathCow
-	pub fn encoded_bytes(&self) -> &[u8] {
-		match self {
-			Self::Borrowed(s) => s.encoded_bytes(),
-			Self::Owned(s) => s.encoded_bytes(),
 		}
 	}
 }

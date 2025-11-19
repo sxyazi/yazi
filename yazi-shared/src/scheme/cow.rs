@@ -1,9 +1,9 @@
-use std::{borrow::Cow, ops::Not};
+use std::borrow::Cow;
 
 use anyhow::{Result, ensure};
 use percent_encoding::percent_decode;
 
-use crate::{path::{AsPath, PathCow, PathLike}, pool::{InternStr, SymbolCow}, scheme::{AsScheme, Scheme, SchemeKind, SchemeRef}, url::Url};
+use crate::{path::{PathCow, PathLike}, pool::{InternStr, SymbolCow}, scheme::{AsScheme, Scheme, SchemeKind, SchemeRef}, url::Url};
 
 #[derive(Clone, Debug)]
 pub enum SchemeCow<'a> {
@@ -144,11 +144,10 @@ impl<'a> SchemeCow<'a> {
 		urn: Option<usize>,
 		path: &PathCow,
 	) -> Result<(usize, usize)> {
-		let path = path.as_path();
 		Ok(match kind {
 			SchemeKind::Regular => {
 				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
-				(path.is_empty().not() as usize, path.name().is_some() as usize)
+				(path.components().count(), path.name().is_some() as usize)
 			}
 			SchemeKind::Search => {
 				let (uri, urn) = (uri.unwrap_or(0), urn.unwrap_or(0));
@@ -157,7 +156,7 @@ impl<'a> SchemeCow<'a> {
 			}
 			SchemeKind::Archive => (uri.unwrap_or(0), urn.unwrap_or(0)),
 			SchemeKind::Sftp => {
-				let uri = uri.unwrap_or(path.is_empty().not() as usize);
+				let uri = uri.unwrap_or_else(|| path.components().count());
 				let urn = urn.unwrap_or(path.name().is_some() as usize);
 				(uri, urn)
 			}
@@ -165,12 +164,7 @@ impl<'a> SchemeCow<'a> {
 	}
 
 	pub fn retrieve_ports(url: Url) -> (usize, usize) {
-		match url {
-			Url::Regular(loc) => (loc.is_empty().not() as usize, loc.file_name().is_some() as usize),
-			Url::Search { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
-			Url::Archive { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
-			Url::Sftp { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
-		}
+		(url.uri().components().count(), url.urn().components().count())
 	}
 }
 

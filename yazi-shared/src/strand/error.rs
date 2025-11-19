@@ -20,5 +20,5 @@ impl From<PathDynError> for StrandError {
 }
 
 impl From<StrandError> for std::io::Error {
-	fn from(err: StrandError) -> Self { std::io::Error::other(err) }
+	fn from(err: StrandError) -> Self { Self::other(err) }
 }

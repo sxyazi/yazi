@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
 use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
-use yazi_shared::{path::{AsPathDyn, PathBufDyn}, url::{AsUrl, UrlBuf, UrlCow}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, url::{AsUrl, UrlBuf, UrlCow}};
 
 use super::{Providers, ReadDir, RwFile};
 
@@ -199,7 +199,7 @@ where
 
 pub async fn symlink_dir<P, U>(original: P, link: U) -> io::Result<()>
 where
-	P: AsPathDyn,
+	P: AsPath,
 	U: AsUrl,
 {
 	Providers::new(link.as_url()).await?.symlink_dir(original).await
@@ -207,7 +207,7 @@ where
 
 pub async fn symlink_file<P, U>(original: P, link: U) -> io::Result<()>
 where
-	P: AsPathDyn,
+	P: AsPath,
 	U: AsUrl,
 {
 	Providers::new(link.as_url()).await?.symlink_file(original).await

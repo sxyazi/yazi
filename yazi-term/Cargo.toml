@@ -8,6 +8,9 @@ description = "Yazi terminal extensions"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [dependencies]
 yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
 yazi-shared = { path = "../yazi-shared", version = "25.9.15" }

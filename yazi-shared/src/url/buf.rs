@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt::{Debug, Formatter}, path::{Path, PathBuf}, str::From
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, path::{PathBufDyn, PathBufDynError, PathDyn, PathDynError, PathLike, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::SchemeKind, strand::AsStrandDyn, url::{AsUrl, Url, UrlCow, UrlLike}};
+use crate::{loc::LocBuf, path::{PathBufDyn, PathBufDynError, PathDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::SchemeKind, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub enum UrlBuf {
@@ -18,8 +18,8 @@ impl Default for UrlBuf {
 	fn default() -> Self { Self::Regular(Default::default()) }
 }
 
-impl From<&UrlBuf> for UrlBuf {
-	fn from(url: &UrlBuf) -> Self { url.clone() }
+impl From<&Self> for UrlBuf {
+	fn from(url: &Self) -> Self { url.clone() }
 }
 
 impl From<Url<'_>> for UrlBuf {
@@ -110,10 +110,10 @@ impl UrlBuf {
 	#[inline]
 	pub fn into_loc(self) -> PathBufDyn {
 		match self {
-			Self::Regular(loc) => loc.into_path().into(),
-			Self::Search { loc, .. } => loc.into_path().into(),
-			Self::Archive { loc, .. } => loc.into_path().into(),
-			Self::Sftp { loc, .. } => loc.into_path().into(),
+			Self::Regular(loc) => loc.into_inner().into(),
+			Self::Search { loc, .. } => loc.into_inner().into(),
+			Self::Archive { loc, .. } => loc.into_inner().into(),
+			Self::Sftp { loc, .. } => loc.into_inner().into(),
 		}
 	}
 
@@ -122,8 +122,8 @@ impl UrlBuf {
 		if self.kind().is_local() { self.into_loc().into_os().ok() } else { None }
 	}
 
-	pub fn try_set_name(&mut self, name: impl AsStrandDyn) -> Result<(), SetNameError> {
-		let name = name.as_strand_dyn();
+	pub fn try_set_name(&mut self, name: impl AsStrand) -> Result<(), SetNameError> {
+		let name = name.as_strand();
 		Ok(match self {
 			Self::Regular(loc) => loc.try_set_name(name.as_os()?)?,
 			Self::Search { loc, .. } => loc.try_set_name(name.as_os()?)?,
@@ -132,19 +132,17 @@ impl UrlBuf {
 		})
 	}
 
-	pub fn rebase(&self, base: &Path) -> Result<Self> {
-		Ok(match self {
-			Self::Regular(loc) => Self::Regular(loc.rebase(base)?),
+	pub fn rebase(&self, base: &Path) -> Self {
+		match self {
+			Self::Regular(loc) => Self::Regular(loc.rebase(base)),
 			Self::Search { loc, domain } => {
-				Self::Search { loc: loc.rebase(base)?, domain: domain.clone() }
+				Self::Search { loc: loc.rebase(base), domain: domain.clone() }
 			}
 			Self::Archive { loc, domain } => {
-				Self::Archive { loc: loc.rebase(base)?, domain: domain.clone() }
+				Self::Archive { loc: loc.rebase(base), domain: domain.clone() }
 			}
-			Self::Sftp { loc, domain } => {
-				Self::Sftp { loc: loc.rebase(base)?, domain: domain.clone() }
-			}
-		})
+			Self::Sftp { loc, domain } => Self::Sftp { loc: loc.rebase(base), domain: domain.clone() },
+		}
 	}
 }
 
@@ -275,8 +273,10 @@ mod tests {
 			("archive://:1:1//a/b.zip/c", Some("archive:////a/b.zip")),
 			("archive:////a/b.zip", Some("/a")),
 			// SFTP
-			("sftp://remote:1:1//a/b", Some("sftp://remote//a")),
+			("sftp://remote:3:1//a/b", Some("sftp://remote//a")),
+			("sftp://remote:2:1//a", Some("sftp://remote//")),
 			("sftp://remote:1:1//a", Some("sftp://remote//")),
+			("sftp://remote//a", Some("sftp://remote//")),
 			("sftp://remote:1//", None),
 			("sftp://remote//", None),
 			// Relative

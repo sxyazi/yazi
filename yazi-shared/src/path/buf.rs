@@ -1,62 +1,128 @@
-use std::{fmt::Debug, hash::Hash};
+use std::ffi::{OsStr, OsString};
 
-use crate::{path::{AsPath, AsPathView, PathBufDyn, PathLike, SetNameError, StartsWithError}, strand::{AsStrandView, StrandLike}};
+use hashbrown::Equivalent;
+use serde::Serialize;
 
-pub trait PathBufLike
-where
-	Self: 'static + AsPath,
-{
-	type Strand<'a>: StrandLike<'a>;
-	type Borrowed<'a>: PathLike<'a> + AsPathView<'a, Self::Borrowed<'a>> + Debug + Hash;
+use crate::{FromWtf8, path::{AsPath, PathBufDynError, PathDyn, PathKind, SetNameError}, strand::{AsStrand, Strand, StrandError}};
 
-	fn borrow(&self) -> Self::Borrowed<'_>;
-
-	fn encoded_bytes(&self) -> &[u8] { self.borrow().encoded_bytes() }
-
-	fn into_dyn(self) -> PathBufDyn;
-
-	fn into_encoded_bytes(self) -> Vec<u8>;
-
-	fn is_empty(&self) -> bool { self.borrow().is_empty() }
-
-	fn len(&self) -> usize { self.borrow().len() }
-
-	fn to_str(&self) -> Result<&str, std::str::Utf8Error> { self.borrow().to_str() }
-
-	fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-
-	fn try_starts_with<'a, T>(&self, base: T) -> Result<bool, StartsWithError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>;
-
-	fn take(&mut self) -> Self;
+// --- PathBufDyn
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(untagged)]
+pub enum PathBufDyn {
+	Os(std::path::PathBuf),
 }
 
-impl PathBufLike for std::path::PathBuf {
-	type Borrowed<'a> = &'a std::path::Path;
-	type Strand<'a> = &'a std::ffi::OsStr;
+impl From<std::path::PathBuf> for PathBufDyn {
+	fn from(value: std::path::PathBuf) -> Self { Self::Os(value) }
+}
 
-	fn borrow(&self) -> Self::Borrowed<'_> { self.as_path() }
+impl From<PathDyn<'_>> for PathBufDyn {
+	fn from(value: PathDyn<'_>) -> Self { value.to_owned() }
+}
 
-	fn into_dyn(self) -> PathBufDyn { PathBufDyn::Os(self) }
+impl TryFrom<PathBufDyn> for std::path::PathBuf {
+	type Error = PathBufDynError;
 
-	fn into_encoded_bytes(self) -> Vec<u8> { self.into_os_string().into_encoded_bytes() }
+	fn try_from(value: PathBufDyn) -> Result<Self, Self::Error> { value.into_os() }
+}
 
-	fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
+impl PartialEq<PathDyn<'_>> for PathBufDyn {
+	fn eq(&self, other: &PathDyn<'_>) -> bool { self.as_path() == *other }
+}
+
+impl PartialEq<PathDyn<'_>> for &PathBufDyn {
+	fn eq(&self, other: &PathDyn<'_>) -> bool { self.as_path() == *other }
+}
+
+impl Equivalent<PathDyn<'_>> for PathBufDyn {
+	fn equivalent(&self, key: &PathDyn<'_>) -> bool { self.as_path() == *key }
+}
+
+impl PathBufDyn {
+	#[inline]
+	pub unsafe fn from_encoded_bytes<K>(kind: K, bytes: Vec<u8>) -> Self
 	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
+		K: Into<PathKind>,
 	{
-		Ok(self.set_file_name(name.as_strand_view()))
+		match kind.into() {
+			PathKind::Os => Self::Os(unsafe { OsString::from_encoded_bytes_unchecked(bytes) }.into()),
+		}
 	}
 
-	fn try_starts_with<'a, T>(&self, base: T) -> Result<bool, StartsWithError>
-	where
-		T: AsStrandView<'a, Self::Strand<'a>>,
-	{
-		Ok(self.starts_with(base.as_strand_view()))
+	pub fn into_encoded_bytes(self) -> Vec<u8> {
+		match self {
+			Self::Os(p) => p.into_os_string().into_encoded_bytes(),
+		}
 	}
 
-	fn take(&mut self) -> Self { std::mem::take(self) }
+	#[inline]
+	pub fn into_os(self) -> Result<std::path::PathBuf, PathBufDynError> {
+		Ok(match self {
+			Self::Os(p) => p,
+		})
+	}
+
+	#[inline]
+	pub fn new(kind: PathKind) -> Self {
+		match kind {
+			PathKind::Os => Self::Os(std::path::PathBuf::new()),
+		}
+	}
+
+	#[inline]
+	pub fn os(path: impl Into<std::path::PathBuf>) -> Self { Self::Os(path.into()) }
+
+	pub fn try_extend<T>(&mut self, paths: T) -> Result<(), StrandError>
+	where
+		T: IntoIterator,
+		T::Item: AsPath,
+	{
+		for p in paths {
+			self.try_push(p)?;
+		}
+		Ok(())
+	}
+
+	pub fn try_push<T>(&mut self, path: T) -> Result<(), StrandError>
+	where
+		T: AsPath,
+	{
+		let path = path.as_path();
+		Ok(match self {
+			Self::Os(p) => p.push(path.as_os()?),
+		})
+	}
+
+	pub fn try_set_name<T>(&mut self, name: T) -> Result<(), SetNameError>
+	where
+		T: AsStrand,
+	{
+		Ok(match (self, name.as_strand()) {
+			(Self::Os(p), Strand::Os(q)) => p.set_file_name(q),
+			(Self::Os(p), Strand::Utf8(q)) => p.set_file_name(q),
+			(Self::Os(p), Strand::Bytes(b)) => {
+				p.set_file_name(OsStr::from_wtf8(b).map_err(|_| SetNameError::FromWtf8)?)
+			}
+		})
+	}
+
+	pub fn with<K, T>(kind: K, strand: T) -> Result<Self, StrandError>
+	where
+		K: Into<PathKind>,
+		T: AsStrand,
+	{
+		let s = strand.as_strand();
+		Ok(match kind.into() {
+			PathKind::Os => Self::Os(std::path::PathBuf::from(s.as_os()?)),
+		})
+	}
+
+	pub fn with_capacity<K>(kind: K, capacity: usize) -> Self
+	where
+		K: Into<PathKind>,
+	{
+		match kind.into() {
+			PathKind::Os => Self::Os(std::path::PathBuf::with_capacity(capacity)),
+		}
+	}
 }

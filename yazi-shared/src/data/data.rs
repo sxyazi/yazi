@@ -15,8 +15,8 @@ pub enum Data {
 	Integer(i64),
 	Number(f64),
 	String(SStr),
-	List(Vec<Data>),
-	Dict(HashMap<DataKey, Data>),
+	List(Vec<Self>),
+	Dict(HashMap<DataKey, Self>),
 	Id(Id),
 	#[serde(skip_deserializing)]
 	Url(UrlBuf),

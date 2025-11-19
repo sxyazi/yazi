@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 
-use crate::{path::PathDyn, strand::{AsStrandDyn, Strand}};
+use crate::{path::PathDyn, strand::Strand};
 
 // --- AsStrandView
 pub trait AsStrandView<'a, T> {
@@ -41,11 +41,4 @@ impl<'a> AsStrandView<'a, Strand<'a>> for PathDyn<'a> {
 			Self::Os(p) => Strand::Os(p.as_os_str()),
 		}
 	}
-}
-
-impl<'a, T> AsStrandView<'a, Strand<'a>> for &'a T
-where
-	T: AsStrandDyn,
-{
-	fn as_strand_view(self) -> Strand<'a> { self.as_strand_dyn() }
 }
