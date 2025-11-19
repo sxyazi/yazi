@@ -7,7 +7,7 @@ use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
 use yazi_fs::{File, FilesOp, provider};
-use yazi_shared::{path::PathLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
 use crate::{Reporter, WATCHER};
@@ -70,18 +70,18 @@ impl Local {
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
 				let Ok(file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.owned()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
 					continue;
 				};
 
 				if let Some(p) = file.url.as_local()
 					&& !provider::local::must_case_match(p).await
 				{
-					ops.push(FilesOp::Deleting(parent.into(), [urn.owned()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.owned(), file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
 			}
 
 			FilesOp::mutate(ops);

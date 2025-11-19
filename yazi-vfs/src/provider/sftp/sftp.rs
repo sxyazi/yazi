@@ -4,7 +4,7 @@ use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
 use yazi_config::vfs::{ProviderSftp, Vfs};
 use yazi_fs::provider::{DirReader, FileHolder, Provider};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{path::{AsPathDyn, PathBufDyn}, pool::InternStr, strand::StrandLike, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, pool::InternStr, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
 use crate::provider::sftp::Conn;
@@ -69,9 +69,9 @@ impl<'a> Provider for Sftp<'a> {
 
 	async fn copy<P>(&self, to: P, attrs: yazi_fs::provider::Attrs) -> io::Result<u64>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let to = to.as_path_dyn().as_os()?;
+		let to = to.as_path().as_os()?;
 		let attrs = Attrs::from(super::Attrs(attrs));
 
 		let op = self.op().await?;
@@ -94,9 +94,9 @@ impl<'a> Provider for Sftp<'a> {
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let to = to.as_path_dyn().as_os()?;
+		let to = to.as_path().as_os()?;
 
 		Ok(self.op().await?.hardlink(self.path, to).await?)
 	}
@@ -113,7 +113,7 @@ impl<'a> Provider for Sftp<'a> {
 			}
 			Url::Sftp { loc, domain } => {
 				let (name, config) = Vfs::provider::<&ProviderSftp>(domain).await?;
-				Ok(Self::Me { url, path: loc.as_path(), name, config })
+				Ok(Self::Me { url, path: loc.as_inner(), name, config })
 			}
 		}
 	}
@@ -135,9 +135,9 @@ impl<'a> Provider for Sftp<'a> {
 
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
-		let to = to.as_path_dyn().as_os()?;
+		let to = to.as_path().as_os()?;
 		let op = self.op().await?;
 
 		match op.rename_posix(self.path, &to).await {
@@ -153,10 +153,10 @@ impl<'a> Provider for Sftp<'a> {
 
 	async fn symlink<P, F>(&self, original: P, _is_dir: F) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		let original = original.as_path_dyn().as_os()?;
+		let original = original.as_path().as_os()?;
 
 		Ok(self.op().await?.symlink(&original, self.path).await?)
 	}

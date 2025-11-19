@@ -1,4 +1,4 @@
-use crate::{path::PathLike, scheme::Encode, url::Url};
+use crate::{scheme::Encode, url::Url};
 
 pub struct Display<'a> {
 	inner: Url<'a>,

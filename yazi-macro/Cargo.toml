@@ -7,3 +7,6 @@ authors     = [ "sxyazi <sxyazi@gmail.com>" ]
 description = "Yazi macros"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
+
+[lints]
+workspace = true

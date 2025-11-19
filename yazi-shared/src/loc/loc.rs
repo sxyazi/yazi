@@ -2,7 +2,8 @@ use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref, path::Path};
 
 use anyhow::{Result, bail};
 
-use crate::{loc::LocBuf, path::{AsPathDyn, AsPathView, PathBufLike, PathDyn, PathLike, PathUnsafeExt}, scheme::SchemeKind, strand::{AsStrandView, StrandLike}};
+use super::LocAbleImpl;
+use crate::{loc::{LocAble, LocBuf, LocBufAble, StrandAbleImpl}, path::{AsPath, AsPathView, PathDyn}, scheme::SchemeKind, strand::AsStrandView};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Loc<'p, P = &'p Path> {
@@ -14,25 +15,25 @@ pub struct Loc<'p, P = &'p Path> {
 
 impl<'p, P> Default for Loc<'p, P>
 where
-	P: PathLike<'p>,
+	P: LocAble<'p> + LocAbleImpl<'p>,
 {
-	fn default() -> Self { Self { inner: P::default(), uri: 0, urn: 0, _phantom: PhantomData } }
+	fn default() -> Self { Self { inner: P::empty(), uri: 0, urn: 0, _phantom: PhantomData } }
 }
 
 impl<'p, P> Deref for Loc<'p, P>
 where
-	P: PathLike<'p>,
+	P: LocAble<'p>,
 {
 	type Target = P;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl<'p, P> AsPathDyn for Loc<'p, P>
+impl<'p, P> AsPath for Loc<'p, P>
 where
-	P: PathLike<'p> + AsPathDyn,
+	P: LocAble<'p> + AsPath,
 {
-	fn as_path_dyn(&self) -> PathDyn<'_> { self.inner.as_path_dyn() }
+	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
 }
 
 // FIXME: remove
@@ -43,34 +44,34 @@ impl AsRef<std::path::Path> for Loc<'_, &std::path::Path> {
 // --- Hash
 impl<'p, P> Hash for Loc<'p, P>
 where
-	P: PathLike<'p> + Hash,
+	P: LocAble<'p> + Hash,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.inner.hash(state) }
 }
 
-impl<'p, P> From<Loc<'p, P>> for LocBuf<<P as PathLike<'p>>::Owned>
+impl<'p, P> From<Loc<'p, P>> for LocBuf<<P as LocAble<'p>>::Owned>
 where
-	P: PathLike<'p>,
-	<P as PathLike<'p>>::Owned: PathBufLike,
+	P: LocAble<'p> + LocAbleImpl<'p>,
+	<P as LocAble<'p>>::Owned: LocBufAble,
 {
 	fn from(value: Loc<'p, P>) -> Self {
-		Self { inner: value.inner.owned(), uri: value.uri, urn: value.urn }
+		Self { inner: value.inner.to_path_buf(), uri: value.uri, urn: value.urn }
 	}
 }
 
 // --- Eq
 impl<'p, P> PartialEq for Loc<'p, P>
 where
-	P: PathLike<'p> + PartialEq,
+	P: LocAble<'p> + PartialEq,
 {
 	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
 }
 
-impl<'p, P> Eq for Loc<'p, P> where P: PathLike<'p> + Eq {}
+impl<'p, P> Eq for Loc<'p, P> where P: LocAble<'p> + Eq {}
 
 impl<'p, P> Loc<'p, P>
 where
-	P: PathLike<'p> + PathUnsafeExt<'p>,
+	P: LocAble<'p> + LocAbleImpl<'p>,
 {
 	pub fn new<'a, T, S>(path: T, base: S, trail: S) -> Self
 	where
@@ -78,8 +79,8 @@ where
 		S: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let mut loc = Self::bare(path);
-		loc.uri = loc.inner.try_strip_prefix(base).expect("Loc must start with the given base").len();
-		loc.urn = loc.inner.try_strip_prefix(trail).expect("Loc must start with the given trail").len();
+		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
+		loc.urn = loc.inner.strip_prefix(trail).expect("Loc must start with the given trail").len();
 		loc
 	}
 
@@ -105,10 +106,10 @@ where
 				bail!("URI exceeds the entire URL");
 			}
 			if i == urn {
-				loc.urn = loc.try_strip_prefix(it.clone())?.len();
+				loc.urn = loc.strip_prefix(it.clone()).unwrap().len();
 			}
 			if i == uri {
-				loc.uri = loc.try_strip_prefix(it)?.len();
+				loc.uri = loc.strip_prefix(it).unwrap().len();
 				break;
 			}
 		}
@@ -120,19 +121,20 @@ where
 		T: AsPathView<'p, P>,
 	{
 		let path = path.as_path_view();
-		let Some(name) = path.name() else {
-			let uri = path.len();
+		let Some(name) = path.file_name() else {
+			let uri = path.strip_prefix(P::empty()).unwrap().len();
 			return Self { inner: path, uri, urn: 0, _phantom: PhantomData };
 		};
 
 		let name_len = name.len();
-		let prefix_len =
-			unsafe { name.encoded_bytes().as_ptr().offset_from_unsigned(path.encoded_bytes().as_ptr()) };
+		let prefix_len = unsafe {
+			name.as_encoded_bytes().as_ptr().offset_from_unsigned(path.as_encoded_bytes().as_ptr())
+		};
 
-		let bytes = path.encoded_bytes();
+		let bytes = &path.as_encoded_bytes()[..prefix_len + name_len];
 		Self {
-			inner:    unsafe { P::from_encoded_bytes(&bytes[..prefix_len + name_len]) },
-			uri:      name_len,
+			inner:    unsafe { P::from_encoded_bytes_unchecked(bytes) },
+			uri:      bytes.len(),
 			urn:      name_len,
 			_phantom: PhantomData,
 		}
@@ -153,7 +155,7 @@ where
 		S: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let mut loc = Self::bare(path);
-		loc.uri = loc.inner.try_strip_prefix(base).expect("Loc must start with the given base").len();
+		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
 		loc
 	}
 
@@ -173,29 +175,35 @@ where
 	pub fn as_loc(self) -> Self { self }
 
 	#[inline]
-	pub fn as_path(self) -> P { self.inner }
+	pub fn as_inner(self) -> P { self.inner }
 
 	#[inline]
-	pub fn is_empty(self) -> bool { self.inner.is_empty() }
+	pub fn is_empty(self) -> bool { self.inner.len() == 0 }
 
 	#[inline]
 	pub fn uri(self) -> P {
 		unsafe {
-			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(self.inner.len() - self.uri..))
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(self.inner.len() - self.uri..),
+			)
 		}
 	}
 
 	#[inline]
 	pub fn urn(self) -> P {
 		unsafe {
-			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(self.inner.len() - self.urn..))
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(self.inner.len() - self.urn..),
+			)
 		}
 	}
 
 	#[inline]
 	pub fn base(self) -> P {
 		unsafe {
-			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(..self.inner.len() - self.uri))
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(..self.inner.len() - self.uri),
+			)
 		}
 	}
 
@@ -205,7 +213,9 @@ where
 	#[inline]
 	pub fn trail(self) -> P {
 		unsafe {
-			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(..self.inner.len() - self.urn))
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(..self.inner.len() - self.urn),
+			)
 		}
 	}
 
@@ -222,9 +232,9 @@ where
 
 		unsafe {
 			(
-				P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(base)),
-				P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(rest)),
-				P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(urn)),
+				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(base)),
+				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(rest)),
+				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(urn)),
 			)
 		}
 	}

@@ -49,7 +49,7 @@ impl Runtime {
 		if let Some(v) = self.blocks.get_mut(&cur.id) {
 			v.push(f);
 		} else {
-			self.blocks.insert(cur.id.to_owned(), vec![f]);
+			self.blocks.insert(cur.id.clone(), vec![f]);
 		}
 		true
 	}

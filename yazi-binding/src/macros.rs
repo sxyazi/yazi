@@ -154,7 +154,6 @@ macro_rules! impl_file_fields {
 		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to_url().map($crate::Url::new)));
 
 		$crate::cached_field!($fields, name, |lua, me| {
-			use yazi_shared::strand::StrandLike;
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
 		$crate::cached_field!($fields, cache, |_, me| {

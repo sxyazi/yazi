@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use yazi_shared::{path::{PathDyn, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::PathDyn, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::{FsHash128, FsScheme, path::PercentEncoding};
 
@@ -48,7 +48,7 @@ impl<'a> FsUrl<'a> for Url<'a> {
 
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } => loc.as_path().into(),
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.as_inner().into(),
 			Self::Archive { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
@@ -63,7 +63,7 @@ impl FsUrl<'_> for UrlBuf {
 
 	fn unified_path(self) -> Cow<'static, Path> {
 		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_path().into(),
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner().into(),
 			Self::Archive { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
@@ -78,8 +78,8 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_path().into(),
-			Self::RegularRef(loc) | Self::SearchRef { loc, .. } => loc.as_path().into(),
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner().into(),
+			Self::RegularRef(loc) | Self::SearchRef { loc, .. } => loc.as_inner().into(),
 			Self::Archive { .. } | Self::ArchiveRef { .. } | Self::Sftp { .. } | Self::SftpRef { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}

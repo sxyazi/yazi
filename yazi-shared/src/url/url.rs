@@ -5,7 +5,7 @@ use hashbrown::Equivalent;
 use serde::Serialize;
 
 use super::Encode as EncodeUrl;
-use crate::{loc::{Loc, LocBuf}, path::{AsPathDyn, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathBufLike, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError}, pool::InternStr, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrandDyn, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
+use crate::{loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError}, pool::InternStr, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Url<'a> {
@@ -58,14 +58,13 @@ impl<'a> Url<'a> {
 		}
 	}
 
-	// FIXME: add to UrlLike trait
 	#[inline]
 	pub fn loc(self) -> PathDyn<'a> {
 		match self {
-			Self::Regular(loc) => loc.as_path_dyn(),
-			Self::Search { loc, .. } => loc.as_path_dyn(),
-			Self::Archive { loc, .. } => loc.as_path_dyn(),
-			Self::Sftp { loc, .. } => loc.as_path_dyn(),
+			Self::Regular(loc) => loc.as_path(),
+			Self::Search { loc, .. } => loc.as_path(),
+			Self::Archive { loc, .. } => loc.as_path(),
+			Self::Sftp { loc, .. } => loc.as_path(),
 		}
 	}
 
@@ -105,8 +104,8 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }
 
-	pub fn try_join(self, path: impl AsStrandDyn) -> Result<UrlBuf, JoinError> {
-		let joined = self.loc().try_join(&path)?;
+	pub fn try_join(self, path: impl AsStrand) -> Result<UrlBuf, JoinError> {
+		let joined = self.loc().try_join(path)?;
 
 		Ok(match self {
 			Self::Regular(_) => UrlBuf::Regular(joined.into_os()?.into()),
@@ -177,7 +176,7 @@ impl<'a> Url<'a> {
 		use Url as U;
 
 		let base = base.as_url();
-		let prefix = self.loc().try_strip_prefix(base.loc())?.into();
+		let prefix = self.loc().try_strip_prefix(base.loc())?;
 
 		match (self, base) {
 			// Same scheme
@@ -221,50 +220,50 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn uri(self) -> PathDyn<'a> {
 		match self {
-			Self::Regular(loc) => loc.uri().as_path_dyn(),
-			Self::Search { loc, .. } => loc.uri().as_path_dyn(),
-			Self::Archive { loc, .. } => loc.uri().as_path_dyn(),
-			Self::Sftp { loc, .. } => loc.uri().as_path_dyn(),
+			Self::Regular(loc) => loc.uri().as_path(),
+			Self::Search { loc, .. } => loc.uri().as_path(),
+			Self::Archive { loc, .. } => loc.uri().as_path(),
+			Self::Sftp { loc, .. } => loc.uri().as_path(),
 		}
 	}
 
 	#[inline]
 	pub fn urn(self) -> PathDyn<'a> {
 		match self {
-			Self::Regular(loc) => loc.urn().as_path_dyn(),
-			Self::Search { loc, .. } => loc.urn().as_path_dyn(),
-			Self::Archive { loc, .. } => loc.urn().as_path_dyn(),
-			Self::Sftp { loc, .. } => loc.urn().as_path_dyn(),
+			Self::Regular(loc) => loc.urn().as_path(),
+			Self::Search { loc, .. } => loc.urn().as_path(),
+			Self::Archive { loc, .. } => loc.urn().as_path(),
+			Self::Sftp { loc, .. } => loc.urn().as_path(),
 		}
 	}
 
 	#[inline]
 	pub fn name(self) -> Option<Strand<'a>> {
 		Some(match self {
-			Self::Regular(loc) => loc.name()?.as_strand_dyn(),
-			Self::Search { loc, .. } => loc.name()?.as_strand_dyn(),
-			Self::Archive { loc, .. } => loc.name()?.as_strand_dyn(),
-			Self::Sftp { loc, .. } => loc.name()?.as_strand_dyn(),
+			Self::Regular(loc) => loc.file_name()?.as_strand(),
+			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Archive { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
 		})
 	}
 
 	#[inline]
 	pub fn stem(self) -> Option<Strand<'a>> {
 		Some(match self {
-			Self::Regular(loc) => loc.stem()?.as_strand_dyn(),
-			Self::Search { loc, .. } => loc.stem()?.as_strand_dyn(),
-			Self::Archive { loc, .. } => loc.stem()?.as_strand_dyn(),
-			Self::Sftp { loc, .. } => loc.stem()?.as_strand_dyn(),
+			Self::Regular(loc) => loc.file_stem()?.as_strand(),
+			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Archive { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
 		})
 	}
 
 	#[inline]
 	pub fn ext(self) -> Option<Strand<'a>> {
 		Some(match self {
-			Self::Regular(loc) => loc.ext()?.as_strand_dyn(),
-			Self::Search { loc, .. } => loc.ext()?.as_strand_dyn(),
-			Self::Archive { loc, .. } => loc.ext()?.as_strand_dyn(),
-			Self::Sftp { loc, .. } => loc.ext()?.as_strand_dyn(),
+			Self::Regular(loc) => loc.extension()?.as_strand(),
+			Self::Search { loc, .. } => loc.extension()?.as_strand(),
+			Self::Archive { loc, .. } => loc.extension()?.as_strand(),
+			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
 		})
 	}
 
@@ -291,11 +290,11 @@ impl<'a> Url<'a> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } | Self::Archive { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
-				(base.as_path_dyn(), rest.as_path_dyn(), urn.as_path_dyn())
+				(base.as_path(), rest.as_path(), urn.as_path())
 			}
 			Self::Sftp { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
-				(base.as_path_dyn(), rest.as_path_dyn(), urn.as_path_dyn())
+				(base.as_path(), rest.as_path(), urn.as_path())
 			}
 		}
 	}

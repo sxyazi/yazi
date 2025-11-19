@@ -114,9 +114,9 @@ impl Serialize for Error {
 		}
 
 		match self {
-			Error::Kind(kind) => Shadow::Kind { kind: kind_to_str(*kind) }.serialize(serializer),
-			Error::Raw(code) => Shadow::Raw { code: *code }.serialize(serializer),
-			Error::Custom { kind, code, message } => {
+			Self::Kind(kind) => Shadow::Kind { kind: kind_to_str(*kind) }.serialize(serializer),
+			Self::Raw(code) => Shadow::Raw { code: *code }.serialize(serializer),
+			Self::Custom { kind, code, message } => {
 				Shadow::Dyn { kind: kind_to_str(*kind), code: *code, message }.serialize(serializer)
 			}
 		}
@@ -138,15 +138,15 @@ impl<'de> Deserialize<'de> for Error {
 
 		let shadow = Shadow::deserialize(deserializer)?;
 		Ok(match shadow {
-			Shadow::Kind { kind } => Error::Kind(kind_from_str(&kind)),
-			Shadow::Raw { code } => Error::Raw(code),
+			Shadow::Kind { kind } => Self::Kind(kind_from_str(&kind)),
+			Shadow::Raw { code } => Self::Raw(code),
 			Shadow::Dyn { kind, code, message } => {
 				if !message.is_empty() {
-					Error::Custom { kind: kind_from_str(&kind), code, message: message.into() }
+					Self::Custom { kind: kind_from_str(&kind), code, message: message.into() }
 				} else if let Some(code) = code {
-					Error::Raw(code)
+					Self::Raw(code)
 				} else {
-					Error::Kind(kind_from_str(&kind))
+					Self::Kind(kind_from_str(&kind))
 				}
 			}
 		})

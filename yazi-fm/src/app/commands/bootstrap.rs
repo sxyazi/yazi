@@ -3,7 +3,7 @@ use yazi_actor::Ctx;
 use yazi_boot::BOOT;
 use yazi_macro::act;
 use yazi_parser::{VoidOpt, mgr::CdSource};
-use yazi_shared::{data::Data, strand::StrandBufLike, url::UrlLike};
+use yazi_shared::{data::Data, strand::StrandLike, url::UrlLike};
 
 use crate::app::App;
 

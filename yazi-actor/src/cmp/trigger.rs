@@ -5,7 +5,7 @@ use yazi_fs::{CWD, path::expand_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::StrandBufLike, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{PathBufDyn, PathDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::StrandLike, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -74,20 +74,17 @@ impl Trigger {
 		}
 
 		let sep = if cfg!(windows) {
-			AnyAsciiChar::new(&[b'/', b'\\']).unwrap()
+			AnyAsciiChar::new(b"/\\").unwrap()
 		} else {
-			AnyAsciiChar::new(&[b'/']).unwrap()
+			AnyAsciiChar::new(b"/").unwrap()
 		};
 
-		Some(match path.as_path().rsplit_pred(sep) {
+		Some(match path.rsplit_pred(sep) {
 			Some((p, c)) if p.is_empty() => {
-				let root = PathBufDyn::with(scheme.kind(), MAIN_SEPARATOR_STR).expect("valid root");
+				let root = PathDyn::with(scheme.kind(), MAIN_SEPARATOR_STR).expect("valid root");
 				(UrlCow::try_from((scheme, root)).ok()?.into_owned(), c.into())
 			}
-			Some((p, c)) => {
-				let parent = PathBufDyn::with(scheme.kind(), p.as_dyn()).expect("valid parent");
-				(expand_url(UrlCow::try_from((scheme, parent)).ok()?), c.into())
-			}
+			Some((p, c)) => (expand_url(UrlCow::try_from((scheme, p)).ok()?), c.into()),
 			None => (CWD.load().as_ref().clone(), path.into()),
 		})
 	}
@@ -95,7 +92,7 @@ impl Trigger {
 
 #[cfg(test)]
 mod tests {
-	use yazi_shared::{path::PathBufLike, url::UrlLike};
+	use yazi_shared::url::UrlLike;
 
 	use super::*;
 
@@ -113,11 +110,19 @@ mod tests {
 		yazi_fs::init();
 		compare("", "", "");
 		compare(" ", "", " ");
+
 		compare("/", "/", "");
-		compare("//", "//", "");
+		compare("//", "/", "");
+		compare("///", "/", "");
+
 		compare("/foo", "/", "foo");
+		compare("//foo", "/", "foo");
+		compare("///foo", "/", "foo");
+
 		compare("/foo/", "/foo/", "");
+		compare("//foo/", "/foo/", "");
 		compare("/foo/bar", "/foo/", "bar");
+		compare("///foo/bar", "/foo/", "bar");
 	}
 
 	#[cfg(windows)]

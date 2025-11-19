@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::RevealOpt;
-use yazi_shared::{data::Data, path::PathLike, url::UrlLike};
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -31,7 +31,7 @@ impl Actor for Reveal {
 		}
 
 		// Now, we can safely hover on the target
-		act!(mgr:hover, cx, Some(child.owned()))?;
+		act!(mgr:hover, cx, Some(child.into()))?;
 
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;

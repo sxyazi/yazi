@@ -23,7 +23,6 @@ impl ChaKind {
 
 		#[cfg(unix)]
 		{
-			use yazi_shared::strand::StrandLike;
 			if _name.as_strand().starts_with(".") {
 				me |= Self::HIDDEN;
 			}

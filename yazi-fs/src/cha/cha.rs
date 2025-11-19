@@ -63,8 +63,6 @@ impl Cha {
 		let mode = r#type.map(ChaMode::from_bare).unwrap_or_default();
 
 		#[cfg(unix)]
-		use yazi_shared::path::PathLike;
-		#[cfg(unix)]
 		if _url.as_url().urn().is_hidden() {
 			kind |= ChaKind::HIDDEN;
 		}

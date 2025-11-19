@@ -8,18 +8,21 @@ description = "Yazi packing"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
-	[package.metadata.deb]
-	name                      = "yazi"
-	license-file              = [ "../LICENSE", "0" ]
-	depends                   = "file, ffmpeg, 7zip, jq, poppler-utils, fd-find|fd, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
-	recommends                = "bash-completion"
-	extended-description-file = "README.md"
-	section                   = "utility"
-	priority                  = "optional"
-	assets                    = [
-		[ "target/release/ya", "usr/bin/", "755" ],
-		[ "target/release/yazi", "usr/bin/", "755" ],
-		[ "../README.md",  "usr/share/doc/yazi/README", "644" ],
-		[ "../yazi-cli/completions/ya.bash", "usr/share/bash-completion/completions/ya", "644" ],
-		[ "../yazi-boot/completions/yazi.bash", "usr/share/bash-completion/completions/yazi", "644" ],
-	]
+[lints]
+workspace = true
+
+[package.metadata.deb]
+name                      = "yazi"
+license-file              = [ "../LICENSE", "0" ]
+depends                   = "file, ffmpeg, 7zip, jq, poppler-utils, fd-find|fd, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
+recommends                = "bash-completion"
+extended-description-file = "README.md"
+section                   = "utility"
+priority                  = "optional"
+assets                    = [
+	[ "target/release/ya", "usr/bin/", "755" ],
+	[ "target/release/yazi", "usr/bin/", "755" ],
+	[ "../README.md",  "usr/share/doc/yazi/README", "644" ],
+	[ "../yazi-cli/completions/ya.bash", "usr/share/bash-completion/completions/ya", "644" ],
+	[ "../yazi-boot/completions/yazi.bash", "usr/share/bash-completion/completions/yazi", "644" ],
+]

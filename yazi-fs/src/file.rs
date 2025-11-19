@@ -1,7 +1,6 @@
 use std::{hash::{Hash, Hasher}, ops::Deref, path::Path};
 
-use anyhow::Result;
-use yazi_shared::{loc::Loc, path::{AsPathDyn, PathBufDyn, PathDyn}, strand::Strand, url::{Url, UrlBuf, UrlLike}};
+use yazi_shared::{loc::Loc, path::{PathBufDyn, PathDyn, PathLike}, strand::Strand, url::{Url, UrlBuf, UrlLike}};
 
 use crate::cha::{Cha, ChaType};
 
@@ -27,15 +26,15 @@ impl File {
 	}
 
 	#[inline]
-	pub fn chdir(&self, wd: &Path) -> Result<Self> {
-		Ok(Self { url: self.url.rebase(wd)?, cha: self.cha, link_to: self.link_to.clone() })
+	pub fn chdir(&self, wd: &Path) -> Self {
+		Self { url: self.url.rebase(wd), cha: self.cha, link_to: self.link_to.clone() }
 	}
 }
 
 impl File {
 	// --- Url
 	#[inline]
-	pub fn url_owned(&self) -> UrlBuf { self.url.to_owned() }
+	pub fn url_owned(&self) -> UrlBuf { self.url.clone() }
 
 	#[inline]
 	pub fn uri(&self) -> PathDyn<'_> { self.url.uri() }
@@ -50,7 +49,7 @@ impl File {
 	pub fn stem(&self) -> Option<Strand<'_>> { self.url.stem() }
 
 	pub fn link_to_url(&self) -> Option<Url<'_>> {
-		let to = self.link_to.as_ref()?.as_path_dyn();
+		let to = self.link_to.as_ref()?;
 		let kind = self.url.kind();
 		Some(match &self.url {
 			UrlBuf::Regular(_) => Url::Regular(Loc::bare(to.as_os().ok()?)),

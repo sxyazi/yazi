@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use yazi_shared::{loc::LocBuf, path::{PathDyn, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, path::PathDyn, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 	let cow: UrlCow = url.into();

@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
 use anyhow::Result;
 
-use crate::{loc::Loc, path::{AsPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, scheme::{SchemeKind, SchemeRef}, strand::{AsStrandDyn, Strand}, url::{Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{loc::Loc, path::{AsPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, scheme::{SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{Components, Display, Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -103,7 +103,7 @@ where
 // UrlLike
 pub trait UrlLike
 where
-	Self: AsUrl + Sized,
+	Self: AsUrl,
 {
 	fn as_local(&self) -> Option<&Path> { self.as_url().as_local() }
 
@@ -147,7 +147,7 @@ where
 		self.as_url().try_ends_with(child)
 	}
 
-	fn try_join(&self, path: impl AsStrandDyn) -> Result<UrlBuf, JoinError> {
+	fn try_join(&self, path: impl AsStrand) -> Result<UrlBuf, JoinError> {
 		self.as_url().try_join(path)
 	}
 

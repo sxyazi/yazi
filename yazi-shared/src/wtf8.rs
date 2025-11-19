@@ -31,12 +31,12 @@ impl FromWtf8 for OsStr {
 		#[cfg(unix)]
 		{
 			use std::os::unix::ffi::OsStrExt;
-			Ok(OsStr::from_bytes(wtf8))
+			Ok(Self::from_bytes(wtf8))
 		}
 		#[cfg(windows)]
 		{
 			// FIXME: validate WTF-8
-			Ok(unsafe { OsStr::from_encoded_bytes_unchecked(wtf8) })
+			Ok(unsafe { Self::from_encoded_bytes_unchecked(wtf8) })
 		}
 	}
 }
@@ -57,12 +57,12 @@ impl FromWtf8Vec for OsString {
 		#[cfg(unix)]
 		{
 			use std::os::unix::ffi::OsStringExt;
-			Ok(OsString::from_vec(wtf8))
+			Ok(Self::from_vec(wtf8))
 		}
 		#[cfg(windows)]
 		{
 			// FIXME: validate WTF-8
-			Ok(unsafe { OsString::from_encoded_bytes_unchecked(wtf8) })
+			Ok(unsafe { Self::from_encoded_bytes_unchecked(wtf8) })
 		}
 	}
 }

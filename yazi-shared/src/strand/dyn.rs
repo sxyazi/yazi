@@ -1,8 +1,6 @@
-use std::ffi::{OsStr, OsString};
+use std::{borrow::Cow, ffi::OsStr, fmt::Display};
 
-use serde::Serialize;
-
-use crate::{FromWtf8, path::PathDyn, scheme::SchemeKind, strand::{AsStrandDyn, StrandBufLike, StrandError, StrandKind, StrandLike}};
+use crate::{BytesExt, FromWtf8, strand::{AsStrand, StrandBuf, StrandError, StrandKind}};
 
 // --- Strand
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -40,16 +38,6 @@ impl PartialEq<&str> for Strand<'_> {
 			Self::Os(s) => s == other,
 			Self::Utf8(s) => s == other,
 			Self::Bytes(b) => *b == other.as_bytes(),
-		}
-	}
-}
-
-impl<'a> Strand<'a> {
-	pub fn to_owned(self) -> StrandBuf {
-		match self {
-			Self::Os(s) => StrandBuf::Os(s.to_owned()),
-			Self::Utf8(s) => StrandBuf::Utf8(s.to_owned()),
-			Self::Bytes(b) => StrandBuf::Bytes(b.to_owned()),
 		}
 	}
 }
@@ -94,6 +82,38 @@ impl<'a> Strand<'a> {
 		unsafe { StrandBuf::from_encoded_bytes(self.kind(), out) }.into()
 	}
 
+	pub fn contains(self, x: impl AsStrand) -> bool {
+		memchr::memmem::find(self.encoded_bytes(), x.as_strand().encoded_bytes()).is_some()
+	}
+
+	pub fn display(self) -> impl Display {
+		struct D<'a>(Strand<'a>);
+
+		impl<'a> Display for D<'a> {
+			fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+				match self.0 {
+					Strand::Os(s) => s.display().fmt(f),
+					Strand::Utf8(s) => s.fmt(f),
+					Strand::Bytes(b) => b.display().fmt(f),
+				}
+			}
+		}
+
+		D(self)
+	}
+
+	pub fn encoded_bytes(self) -> &'a [u8] {
+		match self {
+			Self::Os(s) => s.as_encoded_bytes(),
+			Self::Utf8(s) => s.as_bytes(),
+			Self::Bytes(b) => b,
+		}
+	}
+
+	pub fn eq_ignore_ascii_case(self, other: impl AsStrand) -> bool {
+		self.encoded_bytes().eq_ignore_ascii_case(other.as_strand().encoded_bytes())
+	}
+
 	#[inline]
 	pub unsafe fn from_encoded_bytes(kind: impl Into<StrandKind>, bytes: &'a [u8]) -> Self {
 		match kind.into() {
@@ -102,76 +122,34 @@ impl<'a> Strand<'a> {
 			StrandKind::Bytes => Self::Bytes(bytes),
 		}
 	}
-}
 
-// --- StrandBuf
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-#[serde(untagged)]
-pub enum StrandBuf {
-	Os(OsString),
-	Utf8(String),
-	Bytes(Vec<u8>),
-}
+	pub fn is_empty(self) -> bool { self.encoded_bytes().is_empty() }
 
-impl Default for StrandBuf {
-	fn default() -> Self { Self::Utf8(String::new()) }
-}
-
-impl From<OsString> for StrandBuf {
-	fn from(value: OsString) -> Self { Self::Os(value) }
-}
-
-impl From<String> for StrandBuf {
-	fn from(value: String) -> Self { Self::Utf8(value) }
-}
-
-impl From<PathDyn<'_>> for StrandBuf {
-	fn from(value: PathDyn) -> Self {
-		match value {
-			PathDyn::Os(p) => Self::Os(p.as_os_str().to_owned()),
-		}
-	}
-}
-
-impl PartialEq<Strand<'_>> for StrandBuf {
-	fn eq(&self, other: &Strand<'_>) -> bool { self.borrow() == *other }
-}
-
-impl StrandBuf {
-	pub fn clear(&mut self) {
+	pub fn kind(self) -> StrandKind {
 		match self {
-			Self::Os(buf) => buf.clear(),
-			Self::Utf8(buf) => buf.clear(),
-			Self::Bytes(buf) => buf.clear(),
+			Self::Os(_) => StrandKind::Os,
+			Self::Utf8(_) => StrandKind::Utf8,
+			Self::Bytes(_) => StrandKind::Bytes,
 		}
 	}
 
-	pub fn try_push<T>(&mut self, s: T) -> Result<(), StrandError>
-	where
-		T: AsStrandDyn,
-	{
-		let s = s.as_strand_dyn();
-		Ok(match self {
-			Self::Os(buf) => buf.push(s.as_os()?),
-			Self::Utf8(buf) => buf.push_str(s.as_utf8()?),
-			Self::Bytes(buf) => buf.extend(s.encoded_bytes()),
-		})
+	pub fn len(self) -> usize { self.encoded_bytes().len() }
+
+	pub fn starts_with(self, needle: impl AsStrand) -> bool {
+		self.encoded_bytes().starts_with(needle.as_strand().encoded_bytes())
 	}
 
-	pub fn with_capacity(kind: SchemeKind, capacity: usize) -> Self {
-		use SchemeKind as K;
-		match kind {
-			K::Regular | K::Search | K::Archive => Self::Os(OsString::with_capacity(capacity)),
-			K::Sftp => Self::Os(OsString::with_capacity(capacity)), // FIXME
+	pub fn to_owned(self) -> StrandBuf {
+		match self {
+			Self::Os(s) => StrandBuf::Os(s.to_owned()),
+			Self::Utf8(s) => StrandBuf::Utf8(s.to_owned()),
+			Self::Bytes(b) => StrandBuf::Bytes(b.to_owned()),
 		}
 	}
 
-	#[inline]
-	pub unsafe fn from_encoded_bytes(kind: impl Into<StrandKind>, bytes: Vec<u8>) -> Self {
-		match kind.into() {
-			StrandKind::Os => Self::Os(unsafe { OsString::from_encoded_bytes_unchecked(bytes) }),
-			StrandKind::Utf8 => Self::Utf8(unsafe { String::from_utf8_unchecked(bytes) }),
-			StrandKind::Bytes => Self::Bytes(bytes),
-		}
+	pub fn to_str(self) -> Result<&'a str, std::str::Utf8Error> {
+		str::from_utf8(self.encoded_bytes())
 	}
+
+	pub fn to_string_lossy(self) -> Cow<'a, str> { String::from_utf8_lossy(self.encoded_bytes()) }
 }

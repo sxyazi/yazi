@@ -39,7 +39,7 @@ impl TryFrom<(&OsStr, &yazi_sftp::fs::Attrs)> for Cha {
 		let kind =
 			if name.as_encoded_bytes().starts_with(b".") { ChaKind::HIDDEN } else { ChaKind::empty() };
 
-		Ok(Cha(yazi_fs::cha::Cha {
+		Ok(Self(yazi_fs::cha::Cha {
 			kind,
 			mode: ChaMode::try_from(attrs)?.0,
 			len: attrs.size.unwrap_or(0),

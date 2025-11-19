@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use yazi_shared::{path::PathLike, scheme::SchemeKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{scheme::SchemeKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::{WATCHED, local::LINKED};
 

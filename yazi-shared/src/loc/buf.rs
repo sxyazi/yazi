@@ -1,11 +1,11 @@
-use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, marker::PhantomData, ops::Deref, path::PathBuf};
+use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, marker::PhantomData, mem, ops::Deref, path::PathBuf};
 
 use anyhow::Result;
 
-use crate::{loc::Loc, path::{AsPathDyn, AsPathView, PathBufLike, PathBufUnsafeExt, PathDyn, PathLike, PathUnsafeExt, SetNameError}, scheme::SchemeKind, strand::AsStrandView};
+use crate::{loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{AsPath, AsPathView, PathDyn, SetNameError}, scheme::SchemeKind, strand::AsStrandView};
 
-#[derive(Clone, Default, Eq)]
-pub struct LocBuf<P: PathBufLike = PathBuf> {
+#[derive(Clone, Default, Eq, PartialEq)]
+pub struct LocBuf<P = PathBuf> {
 	pub(super) inner: P,
 	pub(super) uri:   usize,
 	pub(super) urn:   usize,
@@ -13,7 +13,7 @@ pub struct LocBuf<P: PathBufLike = PathBuf> {
 
 impl<P> Deref for LocBuf<P>
 where
-	P: PathBufLike,
+	P: LocBufAble,
 {
 	type Target = P;
 
@@ -25,37 +25,30 @@ impl AsRef<std::path::Path> for LocBuf<PathBuf> {
 	fn as_ref(&self) -> &std::path::Path { self.inner.as_ref() }
 }
 
-impl<T> AsPathDyn for LocBuf<T>
+impl<T> AsPath for LocBuf<T>
 where
-	T: PathBufLike + AsPathDyn,
+	T: LocBufAble + AsPath,
 {
-	fn as_path_dyn(&self) -> PathDyn<'_> { self.inner.as_path_dyn() }
+	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
 }
 
-impl<T> AsPathDyn for &LocBuf<T>
+impl<T> AsPath for &LocBuf<T>
 where
-	T: PathBufLike + AsPathDyn,
+	T: LocBufAble + AsPath,
 {
-	fn as_path_dyn(&self) -> PathDyn<'_> { self.inner.as_path_dyn() }
-}
-
-impl<P> PartialEq for LocBuf<P>
-where
-	P: PathBufLike + PartialEq,
-{
-	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
+	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
 }
 
 impl<P> Ord for LocBuf<P>
 where
-	P: PathBufLike + Ord,
+	P: LocBufAble + Ord,
 {
 	fn cmp(&self, other: &Self) -> cmp::Ordering { self.inner.cmp(&other.inner) }
 }
 
 impl<P> PartialOrd for LocBuf<P>
 where
-	P: PathBufLike + PartialOrd,
+	P: LocBufAble + PartialOrd,
 {
 	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
 		self.inner.partial_cmp(&other.inner)
@@ -65,8 +58,7 @@ where
 // --- Hash
 impl<P> Hash for LocBuf<P>
 where
-	P: PathBufLike + PathBufUnsafeExt,
-	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
+	P: LocBufAble + LocBufAbleImpl,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
@@ -74,8 +66,7 @@ where
 
 impl<P> Debug for LocBuf<P>
 where
-	P: PathBufLike + PathBufUnsafeExt + Debug,
-	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
+	P: LocBufAble + LocBufAbleImpl + Debug,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -89,8 +80,7 @@ where
 
 impl<P> From<P> for LocBuf<P>
 where
-	P: PathBufLike + PathBufUnsafeExt,
-	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
+	P: LocBufAble + LocBufAbleImpl,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn from(path: P) -> Self {
@@ -99,7 +89,7 @@ where
 
 		let mut bytes = path.into_encoded_bytes();
 		bytes.truncate(len);
-		Self { inner: unsafe { P::from_encoded_bytes(bytes) }, uri, urn }
+		Self { inner: unsafe { P::from_encoded_bytes_unchecked(bytes) }, uri, urn }
 	}
 }
 
@@ -109,29 +99,28 @@ impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<PathBuf> {
 
 impl<P> LocBuf<P>
 where
-	P: PathBufLike + PathBufUnsafeExt,
-	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
+	P: LocBufAble + LocBufAbleImpl,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	pub fn new<'a, S>(path: P, base: S, trail: S) -> Self
 	where
-		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as PathLike<'b>>::Strand<'a>>,
+		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as LocAble<'b>>::Strand<'a>>,
 	{
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::new(&loc.inner, base, trail);
 
-		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
+		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
 	}
 
 	pub fn with(path: P, uri: usize, urn: usize) -> Result<Self>
 	where
-		for<'a> P::Borrowed<'a>: PathLike<'a>,
+		for<'a> P::Borrowed<'a>: LocAble<'a>,
 	{
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::with(&loc.inner, uri, urn)?;
 
-		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
+		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Ok(Self { inner: loc.inner, uri, urn })
 	}
 
@@ -142,18 +131,18 @@ where
 		let loc = Self::from(path.into());
 		let Loc { inner, uri, urn, _phantom } = Loc::zeroed(&loc.inner);
 
-		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
+		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
 	}
 
 	pub fn floated<'a, S>(path: P, base: S) -> Self
 	where
-		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as PathLike<'b>>::Strand<'a>>,
+		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as LocAble<'b>>::Strand<'a>>,
 	{
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::floated(&loc.inner, base);
 
-		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
+		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
 	}
 
@@ -161,7 +150,7 @@ where
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::saturated(&loc.inner, kind);
 
-		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
+		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
 	}
 
@@ -176,7 +165,7 @@ where
 	}
 
 	#[inline]
-	pub fn to_path(&self) -> P
+	pub fn to_inner(&self) -> P
 	where
 		P: Clone,
 	{
@@ -184,14 +173,14 @@ where
 	}
 
 	#[inline]
-	pub fn into_path(self) -> P { self.inner }
+	pub fn into_inner(self) -> P { self.inner }
 
 	pub fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
 	where
 		T: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let old = self.inner.len();
-		self.mutate(|path| path.try_set_name(name))?;
+		self.mutate(|path| path.set_file_name(name));
 
 		let new = self.len();
 		if new == old {
@@ -216,19 +205,19 @@ where
 	}
 
 	#[inline]
-	pub fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Result<Self>
+	pub fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Self
 	where
 		'a: 'b,
-		for<'c> <P::Borrowed<'c> as PathLike<'c>>::Owned: Into<Self>,
+		for<'c> <P::Borrowed<'c> as LocAble<'c>>::Owned: Into<Self>,
 	{
-		let mut loc: Self = base.try_join(self.uri())?.into();
+		let mut loc: Self = base.join(self.uri()).into();
 		(loc.uri, loc.urn) = (self.uri, self.urn);
-		Ok(loc)
+		loc
 	}
 
 	#[inline]
 	fn mutate<T, F: FnOnce(&mut P) -> T>(&mut self, f: F) -> T {
-		let mut inner = self.inner.take();
+		let mut inner = mem::take(&mut self.inner);
 		let result = f(&mut inner);
 		self.inner = Self::from(inner).inner;
 		result
@@ -238,8 +227,7 @@ where
 // FIXME: macro
 impl<P> LocBuf<P>
 where
-	P: PathBufLike + PathBufUnsafeExt,
-	for<'a> P::Borrowed<'a>: PathUnsafeExt<'a>,
+	P: LocBufAble + LocBufAbleImpl,
 	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	#[inline]
@@ -259,19 +247,6 @@ where
 
 	#[inline]
 	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
-
-	#[inline]
-	pub fn name(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Strand<'_>> {
-		self.as_loc().name()
-	}
-
-	#[inline]
-	pub fn stem(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Strand<'_>> {
-		self.as_loc().stem()
-	}
-
-	#[inline]
-	pub fn ext(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Strand<'_>> { self.as_loc().ext() }
 }
 
 impl LocBuf<PathBuf> {
@@ -290,22 +265,22 @@ mod tests {
 		let loc: LocBuf = Path::new("/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
-		assert_eq!(loc.name(), None);
+		assert_eq!(loc.file_name(), None);
 		assert_eq!(loc.base().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
 		let loc: LocBuf = Path::new("/root").into();
-		assert_eq!(loc.uri().as_os_str(), OsStr::new("root"));
+		assert_eq!(loc.uri().as_os_str(), OsStr::new("/root"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("root"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("root"));
-		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("root"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
 		let loc: LocBuf = Path::new("/root/code/foo/").into();
-		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo"));
+		assert_eq!(loc.uri().as_os_str(), OsStr::new("/root/code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("foo"));
-		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/code/"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("foo"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 	}
 
@@ -314,42 +289,42 @@ mod tests {
 		let loc = LocBuf::<PathBuf>::with("/".into(), 0, 0)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
-		assert_eq!(loc.name(), None);
+		assert_eq!(loc.file_name(), None);
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
 		let loc = LocBuf::<PathBuf>::with("/root/code/".into(), 1, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("code"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("code"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
 		let loc = LocBuf::<PathBuf>::with("/root/code/foo//".into(), 2, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("foo"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
 		let loc = LocBuf::<PathBuf>::with("/root/code/foo//".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("foo"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
 		let loc = LocBuf::<PathBuf>::with("/root/code/foo//bar/".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("bar"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("bar"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/code/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
 		let loc = LocBuf::<PathBuf>::with("/root/code/foo//bar/".into(), 3, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
-		assert_eq!(loc.name().unwrap(), OsStr::new("bar"));
+		assert_eq!(loc.file_name().unwrap(), OsStr::new("bar"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 		Ok(())

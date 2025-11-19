@@ -3,7 +3,7 @@ use std::{mem, ops::ControlFlow};
 use anyhow::Result;
 use yazi_macro::{render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt};
-use yazi_shared::{data::Data, path::{AsPathDyn, PathDyn, PathLike}, strand::{AsStrand, StrandLike}};
+use yazi_shared::{data::Data, path::{AsPath, PathDyn}, strand::StrandLike};
 
 use crate::{Actor, Ctx};
 
@@ -30,7 +30,7 @@ impl Actor for Show {
 		};
 
 		cmp.ticket = opt.ticket;
-		cmp.cands = Self::match_candidates(opt.word.as_path_dyn(), cache);
+		cmp.cands = Self::match_candidates(opt.word.as_path(), cache);
 		if cmp.cands.is_empty() {
 			succ!(render!(mem::replace(&mut cmp.visible, false)));
 		}
@@ -47,16 +47,15 @@ impl Show {
 		let smart = !word.encoded_bytes().iter().any(|&b| b.is_ascii_uppercase());
 
 		let flow = cache.iter().try_fold((Vec::new(), Vec::new()), |(mut exact, mut fuzzy), item| {
-			let name = item.name.as_strand();
 			let starts_with =
-				if smart { name.eq_ignore_ascii_case(word) } else { name.starts_with(word) };
+				if smart { item.name.eq_ignore_ascii_case(word) } else { item.name.starts_with(word) };
 
 			if starts_with {
 				exact.push(item);
 				if exact.len() >= LIMIT {
 					return ControlFlow::Break((exact, fuzzy));
 				}
-			} else if fuzzy.len() < LIMIT - exact.len() && name.contains(word) {
+			} else if fuzzy.len() < LIMIT - exact.len() && item.name.contains(word) {
 				// Here we don't break the control flow, since we want more exact matching.
 				fuzzy.push(item)
 			}

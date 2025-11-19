@@ -59,8 +59,11 @@ unicode-width       = { version = "0.2.0", default-features = false }
 uzers               = "0.12.1"
 
 [workspace.lints.clippy]
-format_push_string = "warn"
-implicit_clone     = "warn"
-module_inception   = "allow"
-unit_arg           = "allow"
-use_self           = "warn"
+format_push_string   = "warn"
+if_same_then_else    = "allow"
+implicit_clone       = "warn"
+len_without_is_empty = "allow"
+missing_safety_doc   = "allow"
+module_inception     = "allow"
+unit_arg             = "allow"
+use_self             = "warn"

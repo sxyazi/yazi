@@ -33,7 +33,7 @@ pub struct ConfirmCfg {
 impl InputCfg {
 	pub fn cd() -> Self {
 		Self {
-			title: YAZI.input.cd_title.to_owned(),
+			title: YAZI.input.cd_title.clone(),
 			position: Position::new(YAZI.input.cd_origin, YAZI.input.cd_offset),
 			completion: true,
 			..Default::default()
@@ -42,7 +42,7 @@ impl InputCfg {
 
 	pub fn create(dir: bool) -> Self {
 		Self {
-			title: YAZI.input.create_title[dir as usize].to_owned(),
+			title: YAZI.input.create_title[dir as usize].clone(),
 			position: Position::new(YAZI.input.create_origin, YAZI.input.create_offset),
 			..Default::default()
 		}
@@ -50,7 +50,7 @@ impl InputCfg {
 
 	pub fn rename() -> Self {
 		Self {
-			title: YAZI.input.rename_title.to_owned(),
+			title: YAZI.input.rename_title.clone(),
 			position: Position::new(YAZI.input.rename_origin, YAZI.input.rename_offset),
 			..Default::default()
 		}
@@ -58,7 +58,7 @@ impl InputCfg {
 
 	pub fn filter() -> Self {
 		Self {
-			title: YAZI.input.filter_title.to_owned(),
+			title: YAZI.input.filter_title.clone(),
 			position: Position::new(YAZI.input.filter_origin, YAZI.input.filter_offset),
 			realtime: true,
 			..Default::default()
@@ -67,7 +67,7 @@ impl InputCfg {
 
 	pub fn find(prev: bool) -> Self {
 		Self {
-			title: YAZI.input.find_title[prev as usize].to_owned(),
+			title: YAZI.input.find_title[prev as usize].clone(),
 			position: Position::new(YAZI.input.find_origin, YAZI.input.find_offset),
 			realtime: true,
 			..Default::default()
@@ -84,7 +84,7 @@ impl InputCfg {
 
 	pub fn shell(block: bool) -> Self {
 		Self {
-			title: YAZI.input.shell_title[block as usize].to_owned(),
+			title: YAZI.input.shell_title[block as usize].clone(),
 			position: Position::new(YAZI.input.shell_origin, YAZI.input.shell_offset),
 			..Default::default()
 		}
@@ -138,7 +138,7 @@ impl ConfirmCfg {
 
 	pub fn overwrite(url: &UrlBuf) -> Self {
 		Self::new(
-			YAZI.confirm.overwrite_title.to_owned(),
+			YAZI.confirm.overwrite_title.clone(),
 			YAZI.confirm.overwrite_position(),
 			Some(Text::raw(&YAZI.confirm.overwrite_body)),
 			Some(url.into_string_lossy().into()),
@@ -183,7 +183,7 @@ impl PickCfg {
 	pub fn open(items: Vec<String>) -> Self {
 		let max_height = Self::max_height(items.len());
 		Self {
-			title: YAZI.pick.open_title.to_owned(),
+			title: YAZI.pick.open_title.clone(),
 			items,
 			position: Position::new(YAZI.pick.open_origin, Offset {
 				height: max_height,

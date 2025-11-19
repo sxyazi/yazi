@@ -12,24 +12,24 @@ pub struct Gate(crate::provider::Gate);
 
 impl From<Gate> for Flags {
 	fn from(Gate(g): Gate) -> Self {
-		let mut flags = Flags::empty();
+		let mut flags = Self::empty();
 		if g.append {
-			flags |= Flags::APPEND;
+			flags |= Self::APPEND;
 		}
 		if g.create {
-			flags |= Flags::CREATE;
+			flags |= Self::CREATE;
 		}
 		if g.create_new {
-			flags |= Flags::CREATE | Flags::EXCLUDE;
+			flags |= Self::CREATE | Self::EXCLUDE;
 		}
 		if g.read {
-			flags |= Flags::READ;
+			flags |= Self::READ;
 		}
 		if g.truncate {
-			flags |= Flags::TRUNCATE;
+			flags |= Self::TRUNCATE;
 		}
 		if g.write {
-			flags |= Flags::WRITE;
+			flags |= Self::WRITE;
 		}
 		flags
 	}

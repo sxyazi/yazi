@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(conversion cow error kind r#dyn strand view);
+yazi_macro::mod_flat!(buf conversion cow error kind like r#dyn view);

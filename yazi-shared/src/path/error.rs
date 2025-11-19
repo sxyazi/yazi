@@ -16,7 +16,7 @@ pub enum JoinError {
 }
 
 impl From<JoinError> for std::io::Error {
-	fn from(err: JoinError) -> Self { std::io::Error::other(err) }
+	fn from(err: JoinError) -> Self { Self::other(err) }
 }
 
 // --- PathDynError
@@ -27,7 +27,7 @@ pub enum PathDynError {
 }
 
 impl From<PathDynError> for std::io::Error {
-	fn from(err: PathDynError) -> Self { std::io::Error::other(err) }
+	fn from(err: PathDynError) -> Self { Self::other(err) }
 }
 
 // --- PathBufDynError
@@ -46,7 +46,7 @@ pub enum SetNameError {
 }
 
 impl From<SetNameError> for std::io::Error {
-	fn from(err: SetNameError) -> Self { std::io::Error::other(err) }
+	fn from(err: SetNameError) -> Self { Self::other(err) }
 }
 
 // --- RsplitOnce
@@ -59,6 +59,15 @@ pub enum RsplitOnceError {
 	AsUtf8,
 	#[error("the pattern was not found")]
 	NotFound,
+}
+
+impl From<StrandError> for RsplitOnceError {
+	fn from(err: StrandError) -> Self {
+		match err {
+			StrandError::AsOs => Self::AsOs,
+			StrandError::AsUtf8 => Self::AsUtf8,
+		}
+	}
 }
 
 // --- StartsWithError

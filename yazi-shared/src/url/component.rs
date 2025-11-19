@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, pa
 
 use anyhow::Result;
 
-use crate::{path::{PathBufDyn, PathCow, PathLike}, scheme::SchemeRef, url::{Encode, Url, UrlBuf, UrlCow}};
+use crate::{path::{PathBufDyn, PathCow}, scheme::SchemeRef, url::{Encode, Url, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Component<'a> {

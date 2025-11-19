@@ -3,7 +3,7 @@ use std::io;
 use tokio::{select, sync::{mpsc, oneshot}};
 use yazi_fs::provider::Attrs;
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{strand::{StrandBuf, StrandBufLike, StrandLike}, url::{AsUrl, Url, UrlBuf, UrlLike}};
+use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
 use crate::provider;
 
@@ -91,7 +91,7 @@ fn _copy_with_progress(from: Url, to: Url, attrs: Attrs) -> mpsc::Receiver<Resul
 	});
 
 	tokio::spawn({
-		let (prog_tx, to) = (prog_tx.to_owned(), to.to_owned());
+		let (prog_tx, to) = (prog_tx.clone(), to.to_owned());
 		async move {
 			let mut last = 0;
 			let mut done = None;

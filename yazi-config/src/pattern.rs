@@ -3,7 +3,7 @@ use std::{fmt::Debug, str::FromStr};
 use anyhow::{Result, bail};
 use globset::{Candidate, GlobBuilder};
 use serde::Deserialize;
-use yazi_shared::{path::PathLike, scheme::SchemeKind, url::AsUrl};
+use yazi_shared::{scheme::SchemeKind, url::AsUrl};
 
 #[derive(Deserialize)]
 #[serde(try_from = "String")]
@@ -28,7 +28,6 @@ impl Debug for Pattern {
 }
 
 impl Pattern {
-	// FIXME: simplify conditional compilation
 	pub fn match_url(&self, url: impl AsUrl, is_dir: bool) -> bool {
 		let url = url.as_url();
 
@@ -47,9 +46,9 @@ impl Pattern {
 
 		#[cfg(windows)]
 		if self.sep_lit {
-			use yazi_shared::strand::AsStrandDyn;
+			use yazi_shared::strand::{AsStrand, StrandLike};
 			self.inner.is_match_candidate(&Candidate::from_bytes(
-				url.loc().as_strand_dyn().backslash_to_slash().encoded_bytes(),
+				url.loc().as_strand().backslash_to_slash().encoded_bytes(),
 			))
 		} else {
 			self.inner.is_match_candidate(&Candidate::from_bytes(url.loc().encoded_bytes()))

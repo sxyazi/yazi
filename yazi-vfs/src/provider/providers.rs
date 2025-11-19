@@ -1,7 +1,7 @@
 use std::io;
 
 use yazi_fs::{cha::Cha, provider::{Attrs, Provider}};
-use yazi_shared::{path::{AsPathDyn, PathBufDyn}, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, url::{Url, UrlBuf, UrlCow}};
 
 #[derive(Clone)]
 pub(super) enum Providers<'a> {
@@ -39,7 +39,7 @@ impl<'a> Provider for Providers<'a> {
 
 	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		match self {
 			Self::Local(p) => p.copy(to, attrs).await,
@@ -70,7 +70,7 @@ impl<'a> Provider for Providers<'a> {
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		match self {
 			Self::Local(p) => p.hard_link(to).await,
@@ -141,7 +141,7 @@ impl<'a> Provider for Providers<'a> {
 
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		match self {
 			Self::Local(p) => p.rename(to).await,
@@ -151,7 +151,7 @@ impl<'a> Provider for Providers<'a> {
 
 	async fn symlink<P, F>(&self, original: P, is_dir: F) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
 		match self {
@@ -162,7 +162,7 @@ impl<'a> Provider for Providers<'a> {
 
 	async fn symlink_dir<P>(&self, original: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		match self {
 			Self::Local(p) => p.symlink_dir(original).await,
@@ -172,7 +172,7 @@ impl<'a> Provider for Providers<'a> {
 
 	async fn symlink_file<P>(&self, original: P) -> io::Result<()>
 	where
-		P: AsPathDyn,
+		P: AsPath,
 	{
 		match self {
 			Self::Local(p) => p.symlink_file(original).await,
