@@ -4,12 +4,17 @@ use anyhow::{Result, bail};
 use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
-use quantette::{ColorSlice, PaletteSize, QuantizeOutput, wu::UIntBinner};
+use quantette::{PaletteSize, color_map::IndexedColorMap, wu::{BinnerU8x3, WuU8x3}};
 use ratatui::layout::Rect;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
 pub(crate) struct Sixel;
+
+struct QuantizeOutput<T> {
+	indices: Vec<u8>,
+	palette: Vec<T>,
+}
 
 impl Sixel {
 	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
@@ -110,12 +115,14 @@ impl Sixel {
 
 	fn quantify(rgb: &RgbImage, alpha: bool) -> Result<QuantizeOutput<Srgb<u8>>> {
 		let buf = &rgb.as_raw()[..(rgb.pixels().len() * 3)];
-		let slice: ColorSlice<Srgb<u8>> = buf.components_as().try_into()?;
+		let colors: &[Srgb<u8>] = buf.components_as();
 
-		Ok(quantette::wu::indexed_palette(
-			&slice,
-			PaletteSize::try_from(256u16 - alpha as u16)?,
-			&UIntBinner::<32>,
-		))
+		let wu = WuU8x3::run_slice(colors, BinnerU8x3::rgb())?;
+		let color_map = wu.color_map(PaletteSize::try_from(256u16 - alpha as u16)?);
+
+		Ok(QuantizeOutput {
+			indices: color_map.map_to_indices(colors),
+			palette: color_map.into_palette().into_vec(),
+		})
 	}
 }
