@@ -28,6 +28,27 @@ image_quality   = 75
 ueberzug_scale  = 1
 ueberzug_offset = [ 0, 0, 0, 0 ]
 
+
+# [files]
+# Context-specific exclude patterns
+# Patterns are compiled into glob matchers for efficient matching
+# Patterns starting with '!' negate (whitelist) previous matches
+# Note: To match directories, use patterns like ".git/" or "**/.git/**"
+# excludes = [
+#   # SFTP temporary files
+#   { urn = "*.tmp", in = "sftp://**" },
+#   # Python cache in search results
+#   { urn = "/root/**/*.pyc", in = "search://**" },
+#   # Multiple patterns for /code directory (supports arrays)
+#   { urn = [".git", ".DS_Store", "__pycache__"], in = "*" },
+#   # Exclude release and debug directories inside target/
+#   { urn = "release", in = "**/target" },
+#   # Exclude all json files from all contexts
+#   { urn = "*.json", in = "*" },
+#   # Negation: Show cspell.* even if it's excluded by a previous rule
+#   { urn = "!cspell*", in = "search://**" },
+# ]
+
 [opener]
 edit = [
 	{ run = "${EDITOR:-vi} %s", desc = "$EDITOR",      for = "unix", block = true },

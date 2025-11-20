@@ -111,6 +111,8 @@ impl<'a> Executor<'a> {
 		on!(copy);
 		on!(shell);
 		on!(hidden);
+		on!(excluded);
+		on!(ignore);
 		on!(linemode);
 		on!(search);
 		on!(search_do);
@@ -119,6 +121,9 @@ impl<'a> Executor<'a> {
 		// Filter
 		on!(filter);
 		on!(filter_do);
+
+		// Exclude
+		on!(exclude_add);
 
 		// Find
 		on!(find);
