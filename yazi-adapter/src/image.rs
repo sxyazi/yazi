@@ -1,7 +1,13 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
-use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
+use anyhow::{Context, Result};
+use image::{
+	DynamicImage, ImageBuffer, ImageDecoder, ImageError, ImageReader, Limits, RgbImage, RgbaImage,
+	codecs::{jpeg::JpegEncoder, png::PngEncoder},
+	imageops::FilterType,
+	metadata::{Cicp, Orientation},
+};
+use qcms::{Profile, Transform};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
 use yazi_fs::provider::{Provider, local::Local};
@@ -12,7 +18,7 @@ pub struct Image;
 
 impl Image {
 	pub async fn precache(src: PathBuf, cache: &Path) -> Result<()> {
-		let (mut img, orientation, icc) = Self::decode_from(src).await?;
+		let (mut img, orientation) = Self::decode_from(src).await?;
 		let (w, h) = Self::flip_size(orientation, (YAZI.preview.max_width, YAZI.preview.max_height));
 
 		let buf = tokio::task::spawn_blocking(move || {
@@ -25,14 +31,11 @@ impl Image {
 
 			let mut buf = Vec::new();
 			if img.color().has_alpha() {
-				let rgba = img.into_rgba8();
-				let mut encoder = PngEncoder::new(&mut buf);
-				icc.map(|b| encoder.set_icc_profile(b));
-				encoder.write_image(&rgba, rgba.width(), rgba.height(), ExtendedColorType::Rgba8)?;
+				let encoder = PngEncoder::new(&mut buf);
+				img.write_with_encoder(encoder)?
 			} else {
-				let mut encoder = JpegEncoder::new_with_quality(&mut buf, YAZI.preview.image_quality);
-				icc.map(|b| encoder.set_icc_profile(b));
-				encoder.encode_image(&img.into_rgb8())?;
+				let encoder = JpegEncoder::new_with_quality(&mut buf, YAZI.preview.image_quality);
+				img.write_with_encoder(encoder)?
 			}
 
 			Ok::<_, ImageError>(buf)
@@ -43,7 +46,7 @@ impl Image {
 	}
 
 	pub(super) async fn downscale(path: PathBuf, rect: Rect) -> Result<DynamicImage> {
-		let (mut img, orientation, _) = Self::decode_from(path).await?;
+		let (mut img, orientation) = Self::decode_from(path).await?;
 		let (w, h) = Self::flip_size(orientation, Self::max_pixel(rect));
 
 		// Fast path.
@@ -77,9 +80,9 @@ impl Image {
 	pub(super) fn pixel_area(size: (u32, u32), rect: Rect) -> Rect {
 		Dimension::cell_size()
 			.map(|(cw, ch)| Rect {
-				x:      rect.x,
-				y:      rect.y,
-				width:  (size.0 as f64 / cw).ceil() as u16,
+				x: rect.x,
+				y: rect.y,
+				width: (size.0 as f64 / cw).ceil() as u16,
 				height: (size.1 as f64 / ch).ceil() as u16,
 			})
 			.unwrap_or(rect)
@@ -96,7 +99,52 @@ impl Image {
 		}
 	}
 
-	async fn decode_from(path: PathBuf) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
+	fn _decode(mut decoder: impl ImageDecoder) -> Result<DynamicImage> {
+		let data_type = match decoder.color_type() {
+			image::ColorType::L8 => Some(qcms::DataType::Gray8),
+			image::ColorType::La8 => Some(qcms::DataType::GrayA8),
+			image::ColorType::Rgb8 => Some(qcms::DataType::RGB8),
+			image::ColorType::Rgba8 => Some(qcms::DataType::RGBA8),
+			_ => None,
+		};
+		let icc = decoder.icc_profile().unwrap_or_default();
+
+		if let Some(dt) = data_type
+			&& let Some(icc_profile) = icc
+			&& let Some(input) = Profile::new_from_slice(&icc_profile, false)
+			&& !input.is_sRGB()
+		{
+			let mut data = vec![0u8; decoder.total_bytes() as usize];
+			let (w, h) = decoder.dimensions();
+			let has_alpha = decoder.color_type().has_alpha();
+			let mut output = Profile::new_sRGB();
+			output.precache_output_transform();
+			decoder.read_image(&mut data)?;
+
+			let xfm = Transform::new(&input, &output, dt, qcms::Intent::default())
+				.context("Couldn't make a profile transformer")?;
+
+			xfm.apply(&mut data);
+
+			let mut image = if has_alpha {
+				let buf =
+					RgbaImage::from_raw(w, h, data).context("Couldn't read the transformed image data")?;
+				DynamicImage::ImageRgba8(buf)
+			} else {
+				let buf =
+					RgbImage::from_raw(w, h, data).context("Couldn't read the transformed image data")?;
+				DynamicImage::ImageRgb8(buf)
+			};
+
+			image.set_rgb_primaries(Cicp::SRGB.primaries);
+			image.set_transfer_function(Cicp::SRGB.transfer);
+			Ok(image)
+		} else {
+			Ok(DynamicImage::from_decoder(decoder)?)
+		}
+	}
+
+	async fn decode_from(path: PathBuf) -> Result<(DynamicImage, Orientation)> {
 		let mut limits = Limits::no_limits();
 		if YAZI.tasks.image_alloc > 0 {
 			limits.max_alloc = Some(YAZI.tasks.image_alloc as u64);
@@ -114,9 +162,7 @@ impl Image {
 
 			let mut decoder = reader.with_guessed_format()?.into_decoder()?;
 			let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
-			let icc = decoder.icc_profile().unwrap_or_default();
-
-			Ok((DynamicImage::from_decoder(decoder)?, orientation, icc))
+			Ok((Self::_decode(decoder)?, orientation))
 		})
 		.await
 		.map_err(|e| ImageError::IoError(e.into()))?
