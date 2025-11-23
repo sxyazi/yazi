@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Added
 
 - Support VFS for preset previewers that rely on external commands ([#3477])
+- Support 8-bit images in CMYK, CIELAB, and GRAY color spaces ([#3358])
 
 ### Fixed
 
@@ -1559,6 +1560,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3290]: https://github.com/sxyazi/yazi/pull/3290
 [#3313]: https://github.com/sxyazi/yazi/pull/3313
 [#3317]: https://github.com/sxyazi/yazi/pull/3317
+[#3358]: https://github.com/sxyazi/yazi/pull/3358
 [#3360]: https://github.com/sxyazi/yazi/pull/3360
 [#3361]: https://github.com/sxyazi/yazi/pull/3361
 [#3364]: https://github.com/sxyazi/yazi/pull/3364
