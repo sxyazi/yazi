@@ -66,7 +66,7 @@ impl UserData for Error {
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 			Ok(match me {
 				Self::Io(_) | Self::Fs(_) | Self::Serde(_) => lua.create_string(me.to_string()),
-				Self::Custom(s) => lua.create_string(s.as_ref()),
+				Self::Custom(s) => lua.create_string(&**s),
 			})
 		});
 		methods.add_meta_function(MetaMethod::Concat, |lua, (lhs, rhs): (Value, Value)| {

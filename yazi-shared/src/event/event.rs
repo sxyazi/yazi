@@ -1,10 +1,8 @@
-use std::ffi::OsString;
-
 use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 
 use super::CmdCow;
-use crate::RoCell;
+use crate::{RoCell, strand::StrandBuf};
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
@@ -25,7 +23,7 @@ pub enum Event {
 pub struct EventQuit {
 	pub code:        i32,
 	pub no_cwd_file: bool,
-	pub selected:    Option<OsString>,
+	pub selected:    Option<StrandBuf>,
 }
 
 impl Event {

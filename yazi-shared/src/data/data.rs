@@ -20,7 +20,7 @@ pub enum Data {
 	Id(Id),
 	#[serde(skip_deserializing)]
 	Url(UrlBuf),
-	#[serde(skip_deserializing)]
+	#[serde(skip)]
 	Path(PathBufDyn),
 	#[serde(skip)]
 	Bytes(Vec<u8>),
@@ -150,7 +150,7 @@ impl<'a> TryFrom<&'a Data> for Cow<'a, str> {
 
 	fn try_from(value: &'a Data) -> Result<Self, Self::Error> {
 		match value {
-			Data::String(s) => Ok(s.as_ref().into()),
+			Data::String(s) => Ok(Cow::Borrowed(s)),
 			_ => bail!("not a string"),
 		}
 	}
@@ -193,7 +193,7 @@ impl<'a> TryFrom<&'a Data> for UrlCow<'a> {
 
 	fn try_from(value: &'a Data) -> Result<Self, Self::Error> {
 		match value {
-			Data::String(s) => s.as_ref().try_into(),
+			Data::String(s) => Self::try_from(&**s),
 			Data::Url(u) => Ok(u.into()),
 			Data::Bytes(b) => b.as_slice().try_into(),
 			_ => bail!("not a URL"),

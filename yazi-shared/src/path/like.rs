@@ -2,14 +2,14 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::{Utf8BytePredictor, path::{AsPath, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError}, strand::{AsStrand, Strand}};
+use crate::{Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError}, strand::{AsStrand, Strand}};
 
 pub trait PathLike: AsPath {
 	fn as_os(&self) -> Result<&std::path::Path, PathDynError> { self.as_path().as_os() }
 
-	fn components(&self) -> std::path::Components<'_> { self.as_path().components() }
+	fn components(&self) -> Components<'_> { self.as_path().components() }
 
-	fn display(&self) -> std::path::Display<'_> { self.as_path().display() }
+	fn display(&self) -> Display<'_> { self.as_path().display() }
 
 	fn encoded_bytes(&self) -> &[u8] { self.as_path().encoded_bytes() }
 

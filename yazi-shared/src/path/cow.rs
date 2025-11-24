@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::{IntoOsStr, path::{AsPath, PathBufDyn, PathDyn}};
+use crate::path::{AsPath, PathBufDyn, PathDyn, PathKind};
 
 // --- PathCow
 pub enum PathCow<'a> {
@@ -32,17 +32,21 @@ impl PartialEq<&str> for PathCow<'_> {
 }
 
 impl<'a> PathCow<'a> {
-	pub fn from_os_bytes(bytes: impl Into<Cow<'a, [u8]>>) -> Result<Self> {
-		Ok(match bytes.into().into_os_str()? {
-			Cow::Borrowed(s) => PathDyn::os(s).into(),
-			Cow::Owned(s) => PathBufDyn::os(s).into(),
-		})
-	}
-
 	pub fn into_owned(self) -> PathBufDyn {
 		match self {
 			Self::Borrowed(s) => s.to_owned(),
 			Self::Owned(s) => s,
 		}
+	}
+
+	pub fn with<K, T>(kind: K, bytes: T) -> Result<Self>
+	where
+		K: Into<PathKind>,
+		T: Into<Cow<'a, [u8]>>,
+	{
+		Ok(match bytes.into() {
+			Cow::Borrowed(b) => PathDyn::with(kind, b)?.into(),
+			Cow::Owned(b) => PathBufDyn::with(kind, b)?.into(),
+		})
 	}
 }

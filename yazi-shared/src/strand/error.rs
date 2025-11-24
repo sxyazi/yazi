@@ -1,22 +1,12 @@
 use thiserror::Error;
 
-use crate::path::PathDynError;
-
-// --- StrandDynError
+// --- StrandError
 #[derive(Debug, Error)]
 pub enum StrandError {
-	#[error("conversion to OsStr failed")]
+	#[error("conversion to OS string failed")]
 	AsOs,
-	#[error("conversion to UTF-8 str failed")]
+	#[error("conversion to UTF-8 string failed")]
 	AsUtf8,
-}
-
-impl From<PathDynError> for StrandError {
-	fn from(err: PathDynError) -> Self {
-		match err {
-			PathDynError::AsOs => Self::AsOs,
-		}
-	}
 }
 
 impl From<StrandError> for std::io::Error {

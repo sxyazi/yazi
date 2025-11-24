@@ -28,6 +28,7 @@ percent-encoding = { workspace = true }
 serde            = { workspace = true }
 thiserror        = { workspace = true }
 tokio            = { workspace = true }
+typed-path       = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }

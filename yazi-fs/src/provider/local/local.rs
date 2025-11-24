@@ -4,7 +4,7 @@ use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, url::{Url, Url
 
 use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Local<'a> {
 	url:  Url<'a>,
 	path: &'a Path,

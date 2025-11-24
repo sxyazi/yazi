@@ -39,15 +39,85 @@ impl Debug for Url<'_> {
 impl Serialize for Url<'_> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		let (kind, loc) = (self.kind(), self.loc());
-		match (kind.is_virtual(), loc.to_str()) {
-			(false, Ok(s)) => serializer.serialize_str(s),
-			(true, Ok(s)) => serializer.serialize_str(&format!("{}{s}", EncodeScheme(*self))),
+		match (kind == SchemeKind::Regular, loc.to_str()) {
+			(true, Ok(s)) => serializer.serialize_str(s),
+			(false, Ok(s)) => serializer.serialize_str(&format!("{}{s}", EncodeScheme(*self))),
 			(_, Err(_)) => serializer.collect_str(&EncodeUrl(*self)),
 		}
 	}
 }
 
 impl<'a> Url<'a> {
+	#[inline]
+	pub fn as_local(self) -> Option<&'a Path> {
+		self.loc().as_os().ok().filter(|_| self.kind().is_local())
+	}
+
+	#[inline]
+	pub fn as_regular(self) -> Result<Self, PathDynError> {
+		Ok(Self::Regular(Loc::bare(self.loc().as_os()?)))
+	}
+
+	pub fn base(self) -> Self {
+		match self {
+			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
+			Self::Search { loc, domain } => Self::Search { loc: Loc::bare(loc.base()), domain },
+			Self::Archive { loc, domain } => Self::Archive { loc: Loc::bare(loc.base()), domain },
+			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.base()), domain },
+		}
+	}
+
+	#[inline]
+	pub fn components(self) -> Components<'a> { Components::from(self) }
+
+	#[inline]
+	pub fn covariant(self, other: impl AsUrl) -> bool {
+		let other = other.as_url();
+		self.loc() == other.loc() && self.scheme().covariant(other.scheme())
+	}
+
+	#[inline]
+	pub fn ext(self) -> Option<Strand<'a>> {
+		Some(match self {
+			Self::Regular(loc) => loc.extension()?.as_strand(),
+			Self::Search { loc, .. } => loc.extension()?.as_strand(),
+			Self::Archive { loc, .. } => loc.extension()?.as_strand(),
+			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
+		})
+	}
+
+	#[inline]
+	pub fn has_base(self) -> bool {
+		match self {
+			Self::Regular(loc) => loc.has_base(),
+			Self::Search { loc, .. } => loc.has_base(),
+			Self::Archive { loc, .. } => loc.has_base(),
+			Self::Sftp { loc, .. } => loc.has_base(),
+		}
+	}
+
+	#[inline]
+	pub fn has_root(self) -> bool { self.loc().has_root() }
+
+	#[inline]
+	pub fn has_trail(self) -> bool {
+		match self {
+			Self::Regular(loc) => loc.has_trail(),
+			Self::Search { loc, .. } => loc.has_trail(),
+			Self::Archive { loc, .. } => loc.has_trail(),
+			Self::Sftp { loc, .. } => loc.has_trail(),
+		}
+	}
+
+	#[inline]
+	pub fn is_absolute(self) -> bool { self.loc().is_absolute() }
+
+	#[inline]
+	pub fn is_regular(self) -> bool { matches!(self, Self::Regular(_)) }
+
+	#[inline]
+	pub fn is_search(self) -> bool { matches!(self, Self::Search { .. }) }
+
 	#[inline]
 	pub fn kind(&self) -> SchemeKind {
 		match self {
@@ -69,6 +139,54 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
+	pub fn name(self) -> Option<Strand<'a>> {
+		Some(match self {
+			Self::Regular(loc) => loc.file_name()?.as_strand(),
+			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Archive { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
+		})
+	}
+
+	#[inline]
+	pub fn os_str(self) -> Cow<'a, OsStr> { self.components().os_str() }
+
+	#[inline]
+	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> { Some((self.parent()?, self.urn())) }
+
+	pub fn parent(self) -> Option<Self> {
+		let uri = self.uri();
+
+		Some(match self {
+			// Regular
+			Self::Regular(loc) => Self::regular(loc.parent()?),
+
+			// Search
+			Self::Search { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
+			Self::Search { loc, domain } => {
+				Self::Search { loc: Loc::new(loc.parent()?, loc.base(), loc.base()), domain }
+			}
+
+			// Archive
+			Self::Archive { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
+			Self::Archive { loc, domain } if uri.components().nth(1).is_none() => {
+				Self::Archive { loc: Loc::zeroed(loc.parent()?), domain }
+			}
+			Self::Archive { loc, domain } => {
+				Self::Archive { loc: Loc::floated(loc.parent()?, loc.base()), domain }
+			}
+
+			// SFTP
+			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.parent()?), domain },
+		})
+	}
+
+	#[inline]
+	pub fn regular<T: AsRef<Path> + ?Sized>(path: &'a T) -> Self {
+		Self::Regular(Loc::bare(path.as_ref()))
+	}
+
+	#[inline]
 	pub fn scheme(self) -> SchemeRef<'a> {
 		let (uri, urn) = SchemeCow::retrieve_ports(self);
 		match self {
@@ -80,29 +198,46 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn regular<T: AsRef<Path> + ?Sized>(path: &'a T) -> Self {
-		Self::Regular(Loc::bare(path.as_ref()))
+	pub fn stem(self) -> Option<Strand<'a>> {
+		Some(match self {
+			Self::Regular(loc) => loc.file_stem()?.as_strand(),
+			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Archive { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
+		})
 	}
-
-	#[inline]
-	pub fn is_regular(self) -> bool { matches!(self, Self::Regular(_)) }
-
-	#[inline]
-	pub fn as_regular(self) -> Result<Self, PathDynError> {
-		Ok(Self::Regular(Loc::bare(self.loc().as_os()?)))
-	}
-
-	#[inline]
-	pub fn is_search(self) -> bool { matches!(self, Self::Search { .. }) }
-
-	#[inline]
-	pub fn is_absolute(self) -> bool { self.loc().is_absolute() }
-
-	#[inline]
-	pub fn has_root(self) -> bool { self.loc().has_root() }
 
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }
+
+	#[inline]
+	pub fn trail(self) -> Self {
+		match self {
+			Self::Regular(loc) => Self::Regular(Loc::bare(loc.trail())),
+			Self::Search { loc, domain } => Self::Search { loc: Loc::bare(loc.trail()), domain },
+			Self::Archive { loc, domain } => Self::Archive { loc: Loc::bare(loc.trail()), domain },
+			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.trail()), domain },
+		}
+	}
+
+	pub fn triple(self) -> (PathDyn<'a>, PathDyn<'a>, PathDyn<'a>) {
+		match self {
+			Self::Regular(loc) | Self::Search { loc, .. } | Self::Archive { loc, .. } => {
+				let (base, rest, urn) = loc.triple();
+				(base.as_path(), rest.as_path(), urn.as_path())
+			}
+			Self::Sftp { loc, .. } => {
+				let (base, rest, urn) = loc.triple();
+				(base.as_path(), rest.as_path(), urn.as_path())
+			}
+		}
+	}
+
+	#[inline]
+	pub fn try_ends_with(self, child: impl AsUrl) -> Result<bool, EndsWithError> {
+		let child = child.as_url();
+		Ok(self.loc().try_ends_with(child.loc())? && self.scheme().covariant(child.scheme()))
+	}
 
 	pub fn try_join(self, path: impl AsStrand) -> Result<UrlBuf, JoinError> {
 		let joined = self.loc().try_join(path)?;
@@ -135,7 +270,8 @@ impl<'a> Url<'a> {
 			return UrlCow::try_from(b);
 		}
 
-		let mut path = PathBufDyn::Os(self.loc().components().take(take - 1).collect()); // FIXME
+		let loc = self.loc();
+		let mut path = PathBufDyn::from_components(loc.kind(), loc.components().take(take - 1))?;
 		path.try_push(rep)?;
 
 		let url = match self {
@@ -169,6 +305,12 @@ impl<'a> Url<'a> {
 		};
 
 		Ok(url.into())
+	}
+
+	#[inline]
+	pub fn try_starts_with(self, base: impl AsUrl) -> Result<bool, StartsWithError> {
+		let base = base.as_url();
+		Ok(self.loc().try_starts_with(base.loc())? && self.scheme().covariant(base.scheme()))
 	}
 
 	pub fn try_strip_prefix(self, base: impl AsUrl) -> Result<PathDyn<'a>, StripPrefixError> {
@@ -234,147 +376,6 @@ impl<'a> Url<'a> {
 			Self::Search { loc, .. } => loc.urn().as_path(),
 			Self::Archive { loc, .. } => loc.urn().as_path(),
 			Self::Sftp { loc, .. } => loc.urn().as_path(),
-		}
-	}
-
-	#[inline]
-	pub fn name(self) -> Option<Strand<'a>> {
-		Some(match self {
-			Self::Regular(loc) => loc.file_name()?.as_strand(),
-			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
-			Self::Archive { loc, .. } => loc.file_name()?.as_strand(),
-			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
-		})
-	}
-
-	#[inline]
-	pub fn stem(self) -> Option<Strand<'a>> {
-		Some(match self {
-			Self::Regular(loc) => loc.file_stem()?.as_strand(),
-			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
-			Self::Archive { loc, .. } => loc.file_stem()?.as_strand(),
-			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
-		})
-	}
-
-	#[inline]
-	pub fn ext(self) -> Option<Strand<'a>> {
-		Some(match self {
-			Self::Regular(loc) => loc.extension()?.as_strand(),
-			Self::Search { loc, .. } => loc.extension()?.as_strand(),
-			Self::Archive { loc, .. } => loc.extension()?.as_strand(),
-			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
-		})
-	}
-
-	pub fn base(self) -> Self {
-		match self {
-			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
-			Self::Search { loc, domain } => Self::Search { loc: Loc::bare(loc.base()), domain },
-			Self::Archive { loc, domain } => Self::Archive { loc: Loc::bare(loc.base()), domain },
-			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.base()), domain },
-		}
-	}
-
-	#[inline]
-	pub fn trail(self) -> Self {
-		match self {
-			Self::Regular(loc) => Self::Regular(Loc::bare(loc.trail())),
-			Self::Search { loc, domain } => Self::Search { loc: Loc::bare(loc.trail()), domain },
-			Self::Archive { loc, domain } => Self::Archive { loc: Loc::bare(loc.trail()), domain },
-			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.trail()), domain },
-		}
-	}
-
-	pub fn triple(self) -> (PathDyn<'a>, PathDyn<'a>, PathDyn<'a>) {
-		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } | Self::Archive { loc, .. } => {
-				let (base, rest, urn) = loc.triple();
-				(base.as_path(), rest.as_path(), urn.as_path())
-			}
-			Self::Sftp { loc, .. } => {
-				let (base, rest, urn) = loc.triple();
-				(base.as_path(), rest.as_path(), urn.as_path())
-			}
-		}
-	}
-
-	pub fn parent(self) -> Option<Self> {
-		let uri = self.uri();
-
-		Some(match self {
-			// Regular
-			Self::Regular(loc) => Self::regular(loc.parent()?),
-
-			// Search
-			Self::Search { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
-			Self::Search { loc, domain } => {
-				Self::Search { loc: Loc::new(loc.parent()?, loc.base(), loc.base()), domain }
-			}
-
-			// Archive
-			Self::Archive { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
-			Self::Archive { loc, domain } if uri.components().nth(1).is_none() => {
-				Self::Archive { loc: Loc::zeroed(loc.parent()?), domain }
-			}
-			Self::Archive { loc, domain } => {
-				Self::Archive { loc: Loc::floated(loc.parent()?, loc.base()), domain }
-			}
-
-			// SFTP
-			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.parent()?), domain },
-		})
-	}
-
-	#[inline]
-	pub fn try_starts_with(self, base: impl AsUrl) -> Result<bool, StartsWithError> {
-		let base = base.as_url();
-		Ok(self.loc().try_starts_with(base.loc())? && self.scheme().covariant(base.scheme()))
-	}
-
-	#[inline]
-	pub fn try_ends_with(self, child: impl AsUrl) -> Result<bool, EndsWithError> {
-		let child = child.as_url();
-		Ok(self.loc().try_ends_with(child.loc())? && self.scheme().covariant(child.scheme()))
-	}
-
-	#[inline]
-	pub fn components(self) -> Components<'a> { Components::from(self) }
-
-	#[inline]
-	pub fn os_str(self) -> Cow<'a, OsStr> { self.components().os_str() }
-
-	#[inline]
-	pub fn covariant(self, other: impl AsUrl) -> bool {
-		let other = other.as_url();
-		self.loc() == other.loc() && self.scheme().covariant(other.scheme())
-	}
-
-	#[inline]
-	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> { Some((self.parent()?, self.urn())) }
-
-	#[inline]
-	pub fn as_local(self) -> Option<&'a Path> {
-		self.loc().as_os().ok().filter(|_| self.kind().is_local())
-	}
-
-	#[inline]
-	pub fn has_base(self) -> bool {
-		match self {
-			Self::Regular(loc) => loc.has_base(),
-			Self::Search { loc, .. } => loc.has_base(),
-			Self::Archive { loc, .. } => loc.has_base(),
-			Self::Sftp { loc, .. } => loc.has_base(),
-		}
-	}
-
-	#[inline]
-	pub fn has_trail(self) -> bool {
-		match self {
-			Self::Regular(loc) => loc.has_trail(),
-			Self::Search { loc, .. } => loc.has_trail(),
-			Self::Archive { loc, .. } => loc.has_trail(),
-			Self::Sftp { loc, .. } => loc.has_trail(),
 		}
 	}
 }

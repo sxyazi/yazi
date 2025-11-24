@@ -26,6 +26,7 @@ foldhash         = { workspace = true }
 hashbrown        = { workspace = true }
 parking_lot      = { workspace = true }
 percent-encoding = { workspace = true }
+rand             = { workspace = true }
 regex            = { workspace = true }
 scopeguard       = { workspace = true }
 serde            = { workspace = true }

@@ -2,6 +2,7 @@ use crate::scheme::SchemeKind;
 
 pub enum PathKind {
 	Os,
+	Unix,
 }
 
 impl From<SchemeKind> for PathKind {

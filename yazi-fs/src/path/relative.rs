@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use anyhow::{Result, bail};
 use yazi_shared::{path::PathBufDyn, url::{UrlCow, UrlLike}};
 
@@ -23,7 +21,10 @@ fn url_relative_to_<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<UrlCow<'a>> 
 	}
 
 	if from.covariant(&to) {
-		return UrlCow::try_from((to.scheme().zeroed().to_owned(), PathBufDyn::with(to.kind(), ".")?));
+		return UrlCow::try_from((
+			to.scheme().zeroed().to_owned(),
+			PathBufDyn::with_str(to.kind(), "."),
+		));
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -44,7 +45,8 @@ fn url_relative_to_<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<UrlCow<'a>> 
 	let dots = f_head.into_iter().chain(f_it).map(|_| ParentDir);
 	let rest = t_head.into_iter().chain(t_it);
 
-	let buf: PathBuf = dots.chain(rest).collect(); // FIXME: remove PathBuf
-	let buf = PathBufDyn::from(buf);
+	let iter = dots.chain(rest).map(|c| c.downgrade().expect("path component from dot or normal"));
+	let buf = PathBufDyn::from_components(to.kind(), iter)?;
+
 	UrlCow::try_from((to.scheme().zeroed().to_owned(), buf))
 }

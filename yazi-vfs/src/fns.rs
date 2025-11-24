@@ -39,7 +39,7 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 	let dot_ext = match url.ext() {
 		Some(e) => {
 			let mut s = StrandBuf::with_capacity(url.kind(), e.len() + 1);
-			s.try_push(".")?;
+			s.push_str(".");
 			s.try_push(e)?;
 			s
 		}
@@ -53,9 +53,9 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 
 		if append {
 			name.try_push(&dot_ext)?;
-			name.try_push(format!("_{i}"))?;
+			name.push_str(format!("_{i}"));
 		} else {
-			name.try_push(format!("_{i}"))?;
+			name.push_str(format!("_{i}"));
 			name.try_push(&dot_ext)?;
 		}
 

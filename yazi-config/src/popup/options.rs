@@ -1,5 +1,5 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
-use yazi_shared::{IntoStringLossy, url::UrlBuf};
+use yazi_shared::{strand::ToStrand, url::UrlBuf};
 
 use super::{Offset, Position};
 use crate::YAZI;
@@ -123,7 +123,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.trash_title, urls.len()),
 			YAZI.confirm.trash_position(),
 			None,
-			Self::truncate_list(urls.iter(), urls.len(), 100),
+			Self::truncate_list(urls, urls.len(), 100),
 		)
 	}
 
@@ -132,7 +132,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.delete_title, urls.len()),
 			YAZI.confirm.delete_position(),
 			None,
-			Self::truncate_list(urls.iter(), urls.len(), 100),
+			Self::truncate_list(urls, urls.len(), 100),
 		)
 	}
 
@@ -141,7 +141,7 @@ impl ConfirmCfg {
 			YAZI.confirm.overwrite_title.clone(),
 			YAZI.confirm.overwrite_position(),
 			Some(Text::raw(&YAZI.confirm.overwrite_body)),
-			Some(url.into_string_lossy().into()),
+			Some(url.to_strand().into_string_lossy().into()),
 		)
 	}
 
@@ -150,7 +150,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.quit_title, len),
 			YAZI.confirm.quit_position(),
 			Some(Text::raw(&YAZI.confirm.quit_body)),
-			Self::truncate_list(names.into_iter(), len, 10),
+			Self::truncate_list(names, len, 10),
 		)
 	}
 
@@ -158,18 +158,18 @@ impl ConfirmCfg {
 		tpl.replace("{n}", &n.to_string()).replace("{s}", if n > 1 { "s" } else { "" })
 	}
 
-	fn truncate_list(
-		it: impl Iterator<Item = impl IntoStringLossy>,
-		len: usize,
-		max: usize,
-	) -> Option<Text<'static>> {
+	fn truncate_list<I>(it: I, len: usize, max: usize) -> Option<Text<'static>>
+	where
+		I: IntoIterator,
+		I::Item: ToStrand,
+	{
 		let mut lines = Vec::with_capacity(len.min(max + 1));
-		for (i, s) in it.enumerate() {
+		for (i, s) in it.into_iter().enumerate() {
 			if i >= max {
 				lines.push(format!("... and {} more", len - max));
 				break;
 			}
-			lines.push(s.into_string_lossy());
+			lines.push(s.to_strand().into_string_lossy());
 		}
 		Some(Text::from_iter(lines))
 	}

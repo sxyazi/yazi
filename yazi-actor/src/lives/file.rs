@@ -4,7 +4,7 @@ use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Valu
 use yazi_binding::Style;
 use yazi_config::THEME;
 use yazi_plugin::bindings::Range;
-use yazi_shared::url::UrlLike;
+use yazi_shared::{path::AsPath, url::UrlLike};
 
 use super::Lives;
 use crate::lives::PtrCell;
@@ -91,7 +91,7 @@ impl UserData for File {
 
 			let mut comp = me.url.try_strip_prefix(me.url.trail()).unwrap_or(me.url.loc()).components();
 			comp.next_back();
-			Some(lua.create_string(comp.as_path().as_os_str().as_encoded_bytes())).transpose()
+			Some(lua.create_string(comp.as_path().encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {

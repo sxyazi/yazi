@@ -1,9 +1,11 @@
 use std::{borrow::Cow, ffi::OsStr, fmt::Display};
 
+use anyhow::Result;
+
 use crate::{BytesExt, FromWtf8, strand::{AsStrand, StrandBuf, StrandError, StrandKind}};
 
 // --- Strand
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialOrd)]
 pub enum Strand<'p> {
 	Os(&'p OsStr),
 	Utf8(&'p str),
@@ -22,6 +24,10 @@ impl<'a> From<&'a str> for Strand<'a> {
 	fn from(value: &'a str) -> Self { Self::Utf8(value) }
 }
 
+impl<'a> From<&'a [u8]> for Strand<'a> {
+	fn from(value: &'a [u8]) -> Self { Self::Bytes(value) }
+}
+
 impl<'a> From<&'a StrandBuf> for Strand<'a> {
 	fn from(value: &'a StrandBuf) -> Self {
 		match value {
@@ -32,12 +38,42 @@ impl<'a> From<&'a StrandBuf> for Strand<'a> {
 	}
 }
 
+impl PartialEq for Strand<'_> {
+	fn eq(&self, other: &Self) -> bool {
+		match *other {
+			Self::Os(s) => *self == s,
+			Self::Utf8(s) => *self == s,
+			Self::Bytes(b) => *self == b,
+		}
+	}
+}
+
+impl PartialEq<&OsStr> for Strand<'_> {
+	fn eq(&self, other: &&OsStr) -> bool {
+		match *self {
+			Self::Os(s) => s == *other,
+			Self::Utf8(s) => s == *other,
+			Self::Bytes(b) => b == other.as_encoded_bytes(),
+		}
+	}
+}
+
 impl PartialEq<&str> for Strand<'_> {
 	fn eq(&self, other: &&str) -> bool {
-		match self {
-			Self::Os(s) => s == other,
-			Self::Utf8(s) => s == other,
-			Self::Bytes(b) => *b == other.as_bytes(),
+		match *self {
+			Self::Os(s) => s == *other,
+			Self::Utf8(s) => s == *other,
+			Self::Bytes(b) => b == other.as_bytes(),
+		}
+	}
+}
+
+impl PartialEq<&[u8]> for Strand<'_> {
+	fn eq(&self, other: &&[u8]) -> bool {
+		match *self {
+			Self::Os(s) => s.as_encoded_bytes() == *other,
+			Self::Utf8(s) => s.as_bytes() == *other,
+			Self::Bytes(b) => b == *other,
 		}
 	}
 }
@@ -102,6 +138,7 @@ impl<'a> Strand<'a> {
 		D(self)
 	}
 
+	#[inline]
 	pub fn encoded_bytes(self) -> &'a [u8] {
 		match self {
 			Self::Os(s) => s.as_encoded_bytes(),
@@ -117,8 +154,8 @@ impl<'a> Strand<'a> {
 	#[inline]
 	pub unsafe fn from_encoded_bytes(kind: impl Into<StrandKind>, bytes: &'a [u8]) -> Self {
 		match kind.into() {
-			StrandKind::Os => Self::Os(unsafe { OsStr::from_encoded_bytes_unchecked(bytes) }),
 			StrandKind::Utf8 => Self::Utf8(unsafe { str::from_utf8_unchecked(bytes) }),
+			StrandKind::Os => Self::Os(unsafe { OsStr::from_encoded_bytes_unchecked(bytes) }),
 			StrandKind::Bytes => Self::Bytes(bytes),
 		}
 	}
@@ -127,8 +164,8 @@ impl<'a> Strand<'a> {
 
 	pub fn kind(self) -> StrandKind {
 		match self {
-			Self::Os(_) => StrandKind::Os,
 			Self::Utf8(_) => StrandKind::Utf8,
+			Self::Os(_) => StrandKind::Os,
 			Self::Bytes(_) => StrandKind::Bytes,
 		}
 	}
@@ -152,4 +189,17 @@ impl<'a> Strand<'a> {
 	}
 
 	pub fn to_string_lossy(self) -> Cow<'a, str> { String::from_utf8_lossy(self.encoded_bytes()) }
+
+	pub fn with<K, S>(kind: K, strand: &'a S) -> Result<Self>
+	where
+		K: Into<StrandKind>,
+		S: ?Sized + AsStrand,
+	{
+		let strand = strand.as_strand();
+		Ok(match kind.into() {
+			StrandKind::Utf8 => Self::Utf8(strand.as_utf8()?),
+			StrandKind::Os => Self::Os(strand.as_os()?),
+			StrandKind::Bytes => Self::Bytes(strand.encoded_bytes()),
+		})
+	}
 }

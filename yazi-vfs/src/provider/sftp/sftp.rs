@@ -9,7 +9,7 @@ use yazi_shared::{path::{AsPath, PathBufDyn}, pool::InternStr, url::{Url, UrlBuf
 use super::Cha;
 use crate::provider::sftp::Conn;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Sftp<'a> {
 	url:  Url<'a>,
 	path: &'a Path,

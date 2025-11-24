@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
 use yazi_shared::{path::PathDyn, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
-use crate::{FsHash128, FsScheme, path::PercentEncoding};
+use crate::{FsHash128, FsScheme};
 
 pub trait FsUrl<'a> {
 	fn cache(&self) -> Option<PathBuf>;
@@ -26,12 +26,13 @@ impl<'a> FsUrl<'a> for Url<'a> {
 	fn cache(&self) -> Option<PathBuf> {
 		fn with_loc(loc: PathDyn, mut root: PathBuf) -> PathBuf {
 			let mut it = loc.components();
-			if it.next() == Some(std::path::Component::RootDir) {
-				root.push(it.as_path().percent_encode());
-			} else {
-				root.push(".%2F");
-				root.push(loc.percent_encode());
-			}
+			todo!();
+			// if it.next() == Some(std::path::Component::RootDir) {
+			// 	root.push(it.as_path().percent_encode());
+			// } else {
+			// 	root.push(".%2F");
+			// 	root.push(loc.percent_encode());
+			// }
 			root
 		}
 

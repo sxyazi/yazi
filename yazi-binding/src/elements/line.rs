@@ -227,7 +227,7 @@ mod tests {
 			.call(())
 			.unwrap();
 
-		line.spans.iter().map(|s| s.content.as_ref()).collect()
+		line.spans.iter().map(|s| &*s.content).collect()
 	}
 
 	#[test]

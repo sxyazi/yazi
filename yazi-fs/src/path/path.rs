@@ -1,15 +1,13 @@
-use std::{borrow::Cow, ffi::OsStr};
+use yazi_shared::{strand::StrandCow, url::{UrlBuf, UrlLike}};
 
-use yazi_shared::url::{UrlBuf, UrlLike};
-
-pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
+pub fn skip_url(url: &UrlBuf, n: usize) -> StrandCow<'_> {
 	let mut it = url.components();
 	for _ in 0..n {
 		if it.next().is_none() {
-			return OsStr::new("").into();
+			return StrandCow::default();
 		}
 	}
-	it.os_str()
+	it.strand()
 }
 
 #[cfg(test)]

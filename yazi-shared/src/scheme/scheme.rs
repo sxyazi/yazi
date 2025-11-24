@@ -28,4 +28,14 @@ impl Scheme {
 			}
 		}
 	}
+
+	#[inline]
+	pub fn with_ports(self, uri: usize, urn: usize) -> Self {
+		match self {
+			Self::Regular { .. } => Self::Regular { uri, urn },
+			Self::Search { domain, .. } => Self::Search { domain, uri, urn },
+			Self::Archive { domain, .. } => Self::Archive { domain, uri, urn },
+			Self::Sftp { domain, .. } => Self::Sftp { domain, uri, urn },
+		}
+	}
 }

@@ -30,6 +30,10 @@ impl From<SchemeCow<'_>> for Scheme {
 	fn from(value: SchemeCow<'_>) -> Self { value.into_owned() }
 }
 
+impl PartialEq<SchemeRef<'_>> for SchemeCow<'_> {
+	fn eq(&self, other: &SchemeRef) -> bool { self.as_scheme() == *other }
+}
+
 impl<'a> SchemeCow<'a> {
 	pub fn regular(uri: usize, urn: usize) -> Self { SchemeRef::Regular { uri, urn }.into() }
 
@@ -130,12 +134,7 @@ impl<'a> SchemeCow<'a> {
 
 	fn decode_path(kind: SchemeKind, tilde: bool, bytes: &'a [u8]) -> Result<PathCow<'a>> {
 		let bytes: Cow<_> = if tilde { percent_decode(bytes).into() } else { bytes.into() };
-		Ok(match kind {
-			SchemeKind::Regular => PathCow::from_os_bytes(bytes)?,
-			SchemeKind::Search => PathCow::from_os_bytes(bytes)?,
-			SchemeKind::Archive => PathCow::from_os_bytes(bytes)?,
-			SchemeKind::Sftp => PathCow::from_os_bytes(bytes)?,
-		})
+		PathCow::with(kind, bytes)
 	}
 
 	fn normalize_ports(
