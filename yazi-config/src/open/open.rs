@@ -34,10 +34,11 @@ impl Open {
 		self
 			.rules
 			.iter()
-			.filter(move |&r| {
+			.find(move |&r| {
 				r.mime.as_ref().is_some_and(|p| p.match_mime(&mime))
 					|| r.url.as_ref().is_some_and(|p| p.match_url(url.as_url(), is_dir))
 			})
+			.into_iter()
 			.flat_map(|r| &r.r#use)
 			.map(String::as_str)
 	}

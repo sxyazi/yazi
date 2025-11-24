@@ -40,9 +40,8 @@ pub(crate) async fn shell(opt: ShellOpt) -> Result<Child> {
 				.stderr(opt.stdio())
 				.arg("-c")
 				.arg(opt.cmd)
-				// .arg("--")
 				// TODO: remove
-				.args(opt.args.iter().skip(1).map(|u| u.as_url().unified_path_str()))
+				.args(opt.args.iter().map(|u| u.as_url().unified_path_str()))
 				.current_dir(cwd)
 				.kill_on_drop(!opt.orphan)
 				.pre_exec(move || {
