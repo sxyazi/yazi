@@ -115,6 +115,9 @@ impl UserData for Path {
 		cached_field!(fields, stem, |lua, me| {
 			me.stem().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
+
+		fields.add_field_method_get("is_absolute", |_, me| Ok(me.is_absolute()));
+		fields.add_field_method_get("has_root", |_, me| Ok(me.has_root()));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
