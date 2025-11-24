@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Rename `name` to `url` for open, fetchers, spotters, preloaders, previewers, filetype, and `globs` icon rules to support virtual file system ([#3034])
 - Rename `mime` fetcher to `mime.local`, and introduce `mime.dir` fetcher to support folder MIME types ([#3222])
 - Remove `$0` parameter in opener rules to make the `open` command work under empty directories ([#3226])
+- Return `Path` instead of `Url` from `Url:strip_prefix()` to enforce type safety ([#3361])
 - Use `body` instead of the term `content` in confirmations ([#2921])
 - Use `u16` instead of `u32` as the type of `max_width` and `max_height` options to avoid memory exhaustion ([#3313])
 - Implement `__pairs` metamethod instead of `__index` for the callback argument of the `@yank` DDS event ([#2997])
