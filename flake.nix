@@ -52,10 +52,13 @@
         };
 
         devShells = {
-          default = pkgs.callPackage ./nix/shell.nix { };
+          default = pkgs.callPackage ./nix/shell.nix {
+            inherit toolchain;
+            inherit (self.packages.${system}) yazi yazi-unwrapped;
+          };
         };
 
-        formatter = pkgs.nixfmt-rfc-style;
+        formatter = pkgs.nixfmt-tree;
       }
     )
     // {
