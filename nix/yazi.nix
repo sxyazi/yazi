@@ -96,6 +96,8 @@ runCommand yazi-unwrapped.name
     inherit (yazi-unwrapped) pname version meta;
 
     nativeBuildInputs = [ makeWrapper ];
+
+    passthru.runtimePaths = runtimePaths;
   }
   ''
     mkdir -p $out/bin
