@@ -2,12 +2,11 @@ use std::path::PathBuf;
 
 use futures::executor::block_on;
 use hashbrown::HashSet;
-use serde::Serialize;
 use yazi_fs::{CWD, Xdg, path::expand_url};
 use yazi_shared::{strand::StrandBuf, url::{UrlBuf, UrlLike}};
 use yazi_vfs::provider;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default)]
 pub struct Boot {
 	pub cwds:  Vec<UrlBuf>,
 	pub files: Vec<StrandBuf>,

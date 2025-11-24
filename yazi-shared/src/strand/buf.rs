@@ -1,13 +1,11 @@
-use std::{borrow::Cow, ffi::OsString};
+use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use anyhow::Result;
-use serde::Serialize;
 
 use crate::{FromWtf8Vec, path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}};
 
 // --- StrandBuf
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-#[serde(untagged)]
+#[derive(Clone, Debug, Eq)]
 pub enum StrandBuf {
 	Os(OsString),
 	Utf8(String),
@@ -43,8 +41,16 @@ impl From<StrandCow<'_>> for StrandBuf {
 	fn from(value: StrandCow<'_>) -> Self { value.into_owned() }
 }
 
+impl PartialEq for StrandBuf {
+	fn eq(&self, other: &Self) -> bool { self.as_strand() == other.as_strand() }
+}
+
 impl PartialEq<Strand<'_>> for StrandBuf {
 	fn eq(&self, other: &Strand<'_>) -> bool { self.as_strand() == *other }
+}
+
+impl Hash for StrandBuf {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.as_strand().hash(state); }
 }
 
 impl StrandBuf {

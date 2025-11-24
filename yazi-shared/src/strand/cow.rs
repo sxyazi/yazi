@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}};
 
 use anyhow::Result;
 
-use crate::strand::{Strand, StrandBuf, StrandKind};
+use crate::strand::{AsStrand, Strand, StrandBuf, StrandKind};
 
 pub enum StrandCow<'a> {
 	Borrowed(Strand<'a>),
@@ -35,12 +35,7 @@ impl From<StrandBuf> for StrandCow<'_> {
 }
 
 impl PartialEq<Strand<'_>> for StrandCow<'_> {
-	fn eq(&self, other: &Strand) -> bool {
-		match self {
-			Self::Borrowed(s) => s == other,
-			Self::Owned(s) => s == other,
-		}
-	}
+	fn eq(&self, other: &Strand) -> bool { self.as_strand() == *other }
 }
 
 impl<'a> StrandCow<'a> {
