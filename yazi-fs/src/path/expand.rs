@@ -1,6 +1,6 @@
 use std::{borrow::Cow, path::PathBuf};
 
-use yazi_shared::{FromWtf8Vec, loc::LocBuf, path::{PathBufDyn, PathCow, PathDyn, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{FromWtf8Vec, loc::LocBuf, path::{PathBufDyn, PathCow, PathDyn, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::{CWD, path::clean_url};
 
@@ -60,11 +60,12 @@ fn expand_variables<'a>(p: PathDyn<'a>) -> PathCow<'a> {
 			.map_or_else(|| caps.get(0).unwrap().as_bytes().to_owned(), |s| s.into_encoded_bytes())
 	});
 
-	match (b, p) {
+	match (b, p.kind()) {
 		(Cow::Borrowed(_), _) => p.into(),
-		(Cow::Owned(b), PathDyn::Os(_)) => {
+		(Cow::Owned(b), PathKind::Os) => {
 			PathBufDyn::Os(std::path::PathBuf::from_wtf8_vec(b).expect("valid WTF-8 path")).into()
 		}
+		(Cow::Owned(b), PathKind::Unix) => PathBufDyn::Unix(b.into()).into(),
 	}
 }
 

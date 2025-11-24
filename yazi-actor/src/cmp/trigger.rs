@@ -81,7 +81,7 @@ impl Trigger {
 
 		Some(match path.rsplit_pred(sep) {
 			Some((p, c)) if p.is_empty() => {
-				let root = PathDyn::with(scheme.kind(), MAIN_SEPARATOR_STR).expect("valid root");
+				let root = PathDyn::with_str(scheme.kind(), MAIN_SEPARATOR_STR);
 				(UrlCow::try_from((scheme, root)).ok()?.into_owned(), c.into())
 			}
 			Some((p, c)) => (expand_url(UrlCow::try_from((scheme, p)).ok()?), c.into()),
@@ -99,7 +99,7 @@ mod tests {
 	fn compare(s: &str, parent: &str, child: &str) {
 		let (mut p, c) = Trigger::split_url(s).unwrap();
 		if let Ok(u) = p.try_strip_prefix(yazi_fs::CWD.load().as_ref()) {
-			p = UrlBuf::from(u);
+			p = UrlBuf::Regular(u.as_os().unwrap().into());
 		}
 		assert_eq!((p, c.to_str().unwrap()), (parent.parse().unwrap(), child));
 	}

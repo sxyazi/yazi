@@ -2,12 +2,15 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}};
 
 use anyhow::Result;
 
-use crate::{IntoOsStr, scheme::SchemeKind, strand::{Strand, StrandBuf}};
+use crate::strand::{Strand, StrandBuf, StrandKind};
 
-// --- StrandCow
 pub enum StrandCow<'a> {
 	Borrowed(Strand<'a>),
 	Owned(StrandBuf),
+}
+
+impl Default for StrandCow<'_> {
+	fn default() -> Self { Self::Borrowed(Strand::default()) }
 }
 
 impl From<OsString> for StrandCow<'_> {
@@ -41,13 +44,6 @@ impl PartialEq<Strand<'_>> for StrandCow<'_> {
 }
 
 impl<'a> StrandCow<'a> {
-	pub fn from_os_bytes(bytes: impl Into<Cow<'a, [u8]>>) -> Result<Self> {
-		Ok(match bytes.into().into_os_str()? {
-			Cow::Borrowed(s) => Strand::Os(s).into(),
-			Cow::Owned(s) => StrandBuf::Os(s).into(),
-		})
-	}
-
 	pub fn into_owned(self) -> StrandBuf {
 		match self {
 			Self::Borrowed(s) => s.to_owned(),
@@ -55,13 +51,21 @@ impl<'a> StrandCow<'a> {
 		}
 	}
 
-	pub fn with<T>(kind: SchemeKind, bytes: T) -> Result<Self>
+	pub fn into_string_lossy(self) -> String {
+		match self {
+			Self::Borrowed(s) => s.to_string_lossy().into_owned(),
+			Self::Owned(s) => s.into_string_lossy(),
+		}
+	}
+
+	pub fn with<K, T>(kind: K, bytes: T) -> Result<Self>
 	where
+		K: Into<StrandKind>,
 		T: Into<Cow<'a, [u8]>>,
 	{
-		match kind {
-			SchemeKind::Regular | SchemeKind::Search | SchemeKind::Archive => Self::from_os_bytes(bytes),
-			SchemeKind::Sftp => Self::from_os_bytes(bytes), // FIXME
-		}
+		Ok(match bytes.into() {
+			Cow::Borrowed(b) => Strand::with(kind, b)?.into(),
+			Cow::Owned(b) => StrandBuf::with(kind, b)?.into(),
+		})
 	}
 }

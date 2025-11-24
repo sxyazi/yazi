@@ -1,6 +1,4 @@
-use std::path::PathBuf;
-
-use yazi_shared::{loc::LocBuf, path::PathDyn, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{path::{PathBufDyn, PathDyn}, url::{UrlBuf, UrlCow, UrlLike}};
 
 pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 	let cow: UrlCow = url.into();
@@ -10,25 +8,12 @@ pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 		cow.trail().components().count() - 1,
 	);
 
-	match cow.as_url() {
-		Url::Regular(_) => UrlBuf::Regular(path.into()),
-		Url::Search { domain, .. } => UrlBuf::Search {
-			loc:    LocBuf::<PathBuf>::with(path, uri, urn).expect("create Loc from cleaned path"),
-			domain: domain.intern(),
-		},
-		Url::Archive { domain, .. } => UrlBuf::Archive {
-			loc:    LocBuf::<PathBuf>::with(path, uri, urn).expect("create Loc from cleaned path"),
-			domain: domain.intern(),
-		},
-		Url::Sftp { domain, .. } => UrlBuf::Sftp {
-			loc:    LocBuf::<PathBuf>::with(path, uri, urn).expect("create Loc from cleaned path"),
-			domain: domain.intern(),
-		},
-	}
+	let scheme = cow.scheme().to_owned().with_ports(uri, urn);
+	(scheme, path).try_into().expect("UrlBuf from cleaned path")
 }
 
-fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBuf, usize, usize) {
-	use std::path::Component::*;
+fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBufDyn, usize, usize) {
+	use yazi_shared::path::Component::*;
 
 	let mut out = vec![];
 	let mut uri_count = 0;
@@ -58,7 +43,14 @@ fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBuf, usize,
 		}
 	}
 
-	(if out.is_empty() { PathBuf::from(".") } else { out.iter().collect() }, uri_count, urn_count)
+	let kind = path.kind();
+	let path = if out.is_empty() {
+		PathBufDyn::with_str(kind, ".")
+	} else {
+		PathBufDyn::from_components(kind, out).expect("components with same kind")
+	};
+
+	(path, uri_count, urn_count)
 }
 
 #[cfg(test)]

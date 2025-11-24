@@ -52,7 +52,7 @@ impl Actor for SearchDo {
 			handle.abort();
 		}
 
-		let cwd = tab.cwd().to_search(opt.subject.as_ref())?;
+		let cwd = tab.cwd().to_search(&opt.subject)?;
 		let hidden = tab.pref.show_hidden;
 
 		tab.search = Some(tokio::spawn(async move {

@@ -55,7 +55,7 @@ impl Sixel {
 
 		tokio::task::spawn_blocking(move || {
 			let mut buf = vec![];
-			write!(buf, "{START}P0;1;8q\"1;1;{};{}", img.width(), img.height())?;
+			write!(buf, "{START}P9;1q\"1;1;{};{}", img.width(), img.height())?;
 
 			// Palette
 			for (i, c) in qo.palette.iter().enumerate() {

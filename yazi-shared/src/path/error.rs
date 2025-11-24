@@ -12,7 +12,7 @@ pub struct EndsWithError;
 #[error("calling join on paths with different encodings")]
 pub enum JoinError {
 	FromWtf8,
-	FromPathBufDyn(#[from] PathBufDynError),
+	FromPathDyn(#[from] PathDynError),
 }
 
 impl From<JoinError> for std::io::Error {
@@ -22,19 +22,25 @@ impl From<JoinError> for std::io::Error {
 // --- PathDynError
 #[derive(Debug, Error)]
 pub enum PathDynError {
-	#[error("conversion to OsStr failed")]
+	#[error("conversion to OS path failed")]
 	AsOs,
+	#[error("conversion to Unix path failed")]
+	AsUnix,
+	#[error("conversion to UTF-8 path failed")]
+	AsUtf8,
+}
+
+impl From<StrandError> for PathDynError {
+	fn from(err: StrandError) -> Self {
+		match err {
+			StrandError::AsOs => Self::AsOs,
+			StrandError::AsUtf8 => Self::AsUtf8,
+		}
+	}
 }
 
 impl From<PathDynError> for std::io::Error {
 	fn from(err: PathDynError) -> Self { Self::other(err) }
-}
-
-// --- PathBufDynError
-#[derive(Debug, Error)]
-pub enum PathBufDynError {
-	#[error("conversion to OsString failed")]
-	IntoOs,
 }
 
 // --- SetNameError
@@ -42,7 +48,7 @@ pub enum PathBufDynError {
 #[error("calling set_name on paths with different encodings")]
 pub enum SetNameError {
 	FromWtf8,
-	FromStrandDyn(#[from] StrandError),
+	FromStrand(#[from] StrandError),
 }
 
 impl From<SetNameError> for std::io::Error {
@@ -88,4 +94,8 @@ pub enum StripPrefixError {
 
 impl From<std::path::StripPrefixError> for StripPrefixError {
 	fn from(_: std::path::StripPrefixError) -> Self { Self::NotPrefix }
+}
+
+impl From<typed_path::StripPrefixError> for StripPrefixError {
+	fn from(_: typed_path::StripPrefixError) -> Self { Self::NotPrefix }
 }

@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt::{Debug, Formatter}, path::{Path, PathBuf}, str::From
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, path::{PathBufDyn, PathBufDynError, PathDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::SchemeKind, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
+use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::{Scheme, SchemeKind}, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub enum UrlBuf {
@@ -53,14 +53,6 @@ impl From<&Path> for UrlBuf {
 	fn from(path: &Path) -> Self { path.to_path_buf().into() }
 }
 
-impl From<PathDyn<'_>> for UrlBuf {
-	fn from(path: PathDyn) -> Self {
-		match path {
-			PathDyn::Os(p) => p.to_path_buf().into(),
-		}
-	}
-}
-
 impl FromStr for UrlBuf {
 	type Err = anyhow::Error;
 
@@ -71,6 +63,14 @@ impl TryFrom<String> for UrlBuf {
 	type Error = anyhow::Error;
 
 	fn try_from(value: String) -> Result<Self, Self::Error> {
+		Ok(UrlCow::try_from(value)?.into_owned())
+	}
+}
+
+impl TryFrom<(Scheme, PathBufDyn)> for UrlBuf {
+	type Error = anyhow::Error;
+
+	fn try_from(value: (Scheme, PathBufDyn)) -> Result<Self, Self::Error> {
 		Ok(UrlCow::try_from(value)?.into_owned())
 	}
 }
@@ -155,7 +155,7 @@ impl UrlBuf {
 	pub fn to_regular(&self) -> Result<Self, PathDynError> { Ok(self.as_url().as_regular()?.into()) }
 
 	#[inline]
-	pub fn into_regular(self) -> Result<Self, PathBufDynError> {
+	pub fn into_regular(self) -> Result<Self, PathDynError> {
 		Ok(Self::Regular(self.into_loc().into_os()?.into()))
 	}
 
@@ -172,7 +172,7 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn into_search(self, domain: impl AsRef<str>) -> Result<Self, PathBufDynError> {
+	pub fn into_search(self, domain: impl AsRef<str>) -> Result<Self, PathDynError> {
 		Ok(Self::Search {
 			loc:    LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
 			domain: Pool::<str>::intern(domain),

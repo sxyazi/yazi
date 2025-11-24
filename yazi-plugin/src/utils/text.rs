@@ -21,7 +21,7 @@ impl Utils {
 				Some(false) => yazi_shared::shell::escape_windows(s.as_ref()),
 				None => yazi_shared::shell::escape_native(s.as_ref()),
 			};
-			lua.create_string(s.as_ref())
+			lua.create_string(&*s)
 		})
 	}
 

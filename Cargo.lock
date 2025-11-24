@@ -505,9 +505,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.46"
+version = "1.2.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b97463e1064cb1b1c1384ad0a0b9c8abd0988e2a91f52606c80ef14aadb63e36"
+checksum = "cd405d82c84ff7f35739f175f67d8b9fb7687a0e84ccdc78bd3568839827cf07"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1544,14 +1544,15 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.16.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
+checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 dependencies = [
  "allocator-api2",
  "equivalent",
  "foldhash 0.2.0",
  "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -1712,12 +1713,12 @@ checksum = "e7c5cedc30da3a610cac6b4ba17597bdf7152cf974e8aab3afb3d54455e371c8"
 
 [[package]]
 name = "indexmap"
-version = "2.12.0"
+version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6717a8d2a5a929a1a2eb43a12812498ed141a0bcfb7e8f7844fbdbe4303bba9f"
+checksum = "0ad4bb2b565bca0645f4d68c5c9af97fba094e9791da685bf83cb5f3ce74acf2"
 dependencies = [
  "equivalent",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "serde",
  "serde_core",
 ]
@@ -2040,7 +2041,7 @@ version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96051b46fc183dc9cd4a223960ef37b9af631b55191852a8274bfef064cda20f"
 dependencies = [
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
 ]
 
 [[package]]
@@ -3468,9 +3469,9 @@ dependencies = [
 
 [[package]]
 name = "signal-hook-registry"
-version = "1.4.6"
+version = "1.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2a4719bff48cee6b39d12c020eeb490953ad2443b7055bd0b21fca26bd8c28b"
+checksum = "7664a098b8e616bdfcc2dc0e9ac44eb231eedf41db4e9fe95d8d32ec728dedad"
 dependencies = [
  "libc",
 ]
@@ -3633,9 +3634,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.110"
+version = "2.0.111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a99801b5bd34ede4cf3fc688c5919368fea4e4814a4664359503e6015b280aea"
+checksum = "390cc9a294ab71bdb1aa2e99d13be9c753cd2d7bd6560c77118597410c4d2e87"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3960,6 +3961,12 @@ checksum = "9ea3136b675547379c4bd395ca6b938e5ad3c3d20fad76e7fe85f9e0d011419c"
 dependencies = [
  "rand 0.9.2",
 ]
+
+[[package]]
+name = "typed-path"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7922f2cdc51280d47b491af9eafc41eb0cdab85eabcb390c854412fcbf26dbe8"
 
 [[package]]
 name = "typeid"
@@ -4645,7 +4652,7 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "futures",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "libc",
  "mlua",
  "paste",
@@ -4698,7 +4705,7 @@ name = "yazi-binding"
 version = "25.9.15"
 dependencies = [
  "ansi-to-tui",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "mlua",
  "paste",
  "ratatui",
@@ -4722,7 +4729,7 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "futures",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "regex",
  "serde",
  "vergen-gitcl",
@@ -4781,7 +4788,7 @@ dependencies = [
  "crossterm 0.29.0",
  "dirs",
  "globset",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "indexmap",
  "ratatui",
  "regex",
@@ -4802,7 +4809,7 @@ version = "25.9.15"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "indexmap",
  "parking_lot",
  "ratatui",
@@ -4831,7 +4838,7 @@ name = "yazi-dds"
 version = "25.9.15"
 dependencies = [
  "anyhow",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "mlua",
  "ordered-float 5.1.0",
  "parking_lot",
@@ -4913,11 +4920,12 @@ dependencies = [
  "core-foundation-sys",
  "dirs",
  "foldhash 0.2.0",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "libc",
  "objc2",
  "parking_lot",
  "percent-encoding",
+ "rand 0.9.2",
  "regex",
  "scopeguard",
  "serde",
@@ -4947,7 +4955,7 @@ dependencies = [
  "anyhow",
  "bitflags 2.10.0",
  "crossterm 0.29.0",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "mlua",
  "ordered-float 5.1.0",
  "serde",
@@ -4967,7 +4975,7 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "futures",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "libc",
  "mlua",
  "parking_lot",
@@ -5025,7 +5033,7 @@ dependencies = [
  "async-priority-channel",
  "foldhash 0.2.0",
  "futures",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "libc",
  "lru 0.16.2",
  "mlua",
@@ -5066,7 +5074,7 @@ dependencies = [
  "crossterm 0.29.0",
  "foldhash 0.2.0",
  "futures",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "libc",
  "memchr",
  "ordered-float 5.1.0",
@@ -5075,6 +5083,7 @@ dependencies = [
  "serde",
  "thiserror 2.0.17",
  "tokio",
+ "typed-path",
  "uzers",
  "windows-sys 0.61.2",
  "yazi-macro",
@@ -5108,7 +5117,7 @@ dependencies = [
  "anyhow",
  "deadpool",
  "futures",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "parking_lot",
  "russh",
  "tokio",
@@ -5125,7 +5134,7 @@ name = "yazi-watcher"
 version = "25.9.15"
 dependencies = [
  "anyhow",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
  "notify",
  "parking_lot",
  "percent-encoding",
@@ -5164,18 +5173,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.27"
+version = "0.8.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0894878a5fa3edfd6da3f88c4805f4c8558e2b996227a3d864f47fe11e38282c"
+checksum = "43fa6694ed34d6e57407afbccdeecfa268c470a7d2a5b0cf49ce9fcc345afb90"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.27"
+version = "0.8.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88d2b8d9c68ad2b9e4340d7832716a4d21a22a1154777ad56ea55c51a9cf3831"
+checksum = "c640b22cd9817fae95be82f0d2f90b11f7605f6c319d16705c459b27ac2cbc26"
 dependencies = [
  "proc-macro2",
  "quote",

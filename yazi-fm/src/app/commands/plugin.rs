@@ -16,7 +16,7 @@ use crate::app::App;
 impl App {
 	pub(crate) fn plugin(&mut self, mut opt: PluginOpt) -> Result<Data> {
 		let mut hits = false;
-		if let Some(chunk) = LOADER.read().get(opt.id.as_ref()) {
+		if let Some(chunk) = LOADER.read().get(&*opt.id) {
 			hits = true;
 			opt.mode = opt.mode.auto_then(chunk.sync_entry);
 		}
@@ -38,7 +38,7 @@ impl App {
 
 	pub(crate) fn plugin_do(&mut self, opt: PluginOpt) -> Result<Data> {
 		let loader = LOADER.read();
-		let Some(chunk) = loader.get(opt.id.as_ref()) else {
+		let Some(chunk) = loader.get(&*opt.id) else {
 			succ!(warn!("plugin `{}` not found", opt.id));
 		};
 

@@ -17,7 +17,7 @@ pub enum DataKey {
 	Id(Id),
 	#[serde(skip_deserializing)]
 	Url(UrlBuf),
-	#[serde(skip_deserializing)]
+	#[serde(skip)]
 	Path(PathBufDyn),
 	#[serde(skip)]
 	Bytes(Vec<u8>),

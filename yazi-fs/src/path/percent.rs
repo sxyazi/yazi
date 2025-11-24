@@ -32,12 +32,14 @@ impl PercentEncoding for PathDyn<'_> {
 	fn percent_encode(&self) -> Cow<'_, Path> {
 		match self {
 			PathDyn::Os(p) => p.percent_encode(),
+			PathDyn::Unix(_) => todo!(),
 		}
 	}
 
 	fn percent_decode(&self) -> Cow<'_, [u8]> {
 		match self {
 			PathDyn::Os(p) => p.percent_decode(),
+			PathDyn::Unix(_) => todo!(),
 		}
 	}
 }

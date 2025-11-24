@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::CopyOpt;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::{data::Data, strand::ToStrand, url::UrlLike};
 use yazi_widgets::CLIPBOARD;
 
 use crate::{Actor, Ctx};
@@ -28,11 +28,11 @@ impl Actor for Copy {
 			match opt.r#type.as_ref() {
 				// TODO: rename to "url"
 				"path" => {
-					s.extend_from_slice(&opt.separator.transform(&u.os_str()));
+					s.extend_from_slice(&opt.separator.transform(&u.to_strand()));
 				}
 				"dirname" => {
 					if let Some(p) = u.parent() {
-						s.extend_from_slice(&opt.separator.transform(&p.os_str()));
+						s.extend_from_slice(&opt.separator.transform(&p.to_strand()));
 					}
 				}
 				"filename" => {
@@ -50,7 +50,7 @@ impl Actor for Copy {
 
 		// Copy the CWD path regardless even if the directory is empty
 		if s.is_empty() && opt.r#type == "dirname" {
-			s.extend_from_slice(&opt.separator.transform(&cx.cwd().os_str()));
+			s.extend_from_slice(&opt.separator.transform(&cx.cwd().to_strand()));
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));

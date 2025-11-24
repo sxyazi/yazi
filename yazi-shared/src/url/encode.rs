@@ -4,7 +4,6 @@ use percent_encoding::{CONTROLS, percent_encode};
 
 use crate::url::Url;
 
-// --- Tilded
 #[derive(Clone, Copy)]
 pub struct Encode<'a>(pub Url<'a>);
 

@@ -1,19 +1,9 @@
-use std::ffi::OsStr;
-
 use super::{PathBufDyn, PathDyn};
 use crate::path::PathCow;
 
 // --- AsPath
 pub trait AsPath {
 	fn as_path(&self) -> PathDyn<'_>;
-}
-
-impl AsPath for OsStr {
-	fn as_path(&self) -> PathDyn<'_> { PathDyn::Os(self.as_ref()) }
-}
-
-impl AsPath for &OsStr {
-	fn as_path(&self) -> PathDyn<'_> { PathDyn::Os(self.as_ref()) }
 }
 
 impl AsPath for std::path::Path {
@@ -32,12 +22,9 @@ impl AsPath for PathBufDyn {
 	fn as_path(&self) -> PathDyn<'_> {
 		match self {
 			Self::Os(p) => PathDyn::Os(p),
+			Self::Unix(p) => PathDyn::Unix(p),
 		}
 	}
-}
-
-impl AsPath for &PathBufDyn {
-	fn as_path(&self) -> PathDyn<'_> { (*self).as_path() }
 }
 
 impl AsPath for PathCow<'_> {
@@ -47,6 +34,10 @@ impl AsPath for PathCow<'_> {
 			PathCow::Owned(p) => p.as_path(),
 		}
 	}
+}
+
+impl AsPath for super::Components<'_> {
+	fn as_path(&self) -> PathDyn<'_> { self.path() }
 }
 
 // --- AsPathRef

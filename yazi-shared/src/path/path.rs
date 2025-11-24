@@ -4,15 +4,20 @@ use anyhow::Result;
 use hashbrown::Equivalent;
 
 use super::{RsplitOnceError, StartsWithError};
-use crate::{BytesExt, FromWtf8, Utf8BytePredictor, path::{AsPath, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
+use crate::{BytesExt, FromWtf8, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum PathDyn<'p> {
 	Os(&'p std::path::Path),
+	Unix(&'p typed_path::UnixPath),
 }
 
 impl<'a> From<&'a std::path::Path> for PathDyn<'a> {
 	fn from(value: &'a std::path::Path) -> Self { Self::Os(value) }
+}
+
+impl<'a> From<&'a typed_path::UnixPath> for PathDyn<'a> {
+	fn from(value: &'a typed_path::UnixPath) -> Self { Self::Unix(value) }
 }
 
 impl<'a> From<&'a PathBufDyn> for PathDyn<'a> {
@@ -33,8 +38,9 @@ impl PartialEq<&std::path::Path> for PathDyn<'_> {
 
 impl PartialEq<&str> for PathDyn<'_> {
 	fn eq(&self, other: &&str) -> bool {
-		match self {
-			PathDyn::Os(p) => p == other,
+		match *self {
+			PathDyn::Os(p) => p == *other,
+			PathDyn::Unix(p) => p == typed_path::UnixPath::new(other),
 		}
 	}
 }
@@ -48,30 +54,30 @@ impl<'p> PathDyn<'p> {
 	pub fn as_os(self) -> Result<&'p std::path::Path, PathDynError> {
 		match self {
 			Self::Os(p) => Ok(p),
+			Self::Unix(_) => Err(PathDynError::AsOs),
 		}
 	}
 
-	pub fn components(self) -> std::path::Components<'p> {
+	pub fn components(self) -> Components<'p> {
 		match self {
-			Self::Os(p) => p.components(),
+			Self::Os(p) => Components::Os(p.components()),
+			Self::Unix(p) => Components::Unix(p.components()),
 		}
 	}
 
-	pub fn display(self) -> std::path::Display<'p> {
-		match self {
-			Self::Os(p) => p.display(),
-		}
-	}
+	pub fn display(self) -> Display<'p> { Display(self) }
 
 	pub fn encoded_bytes(self) -> &'p [u8] {
 		match self {
 			Self::Os(p) => p.as_os_str().as_encoded_bytes(),
+			Self::Unix(p) => p.as_bytes(),
 		}
 	}
 
 	pub fn ext(self) -> Option<Strand<'p>> {
 		Some(match self {
 			Self::Os(p) => p.extension()?.into(),
+			Self::Unix(p) => p.extension()?.into(),
 		})
 	}
 
@@ -82,18 +88,21 @@ impl<'p> PathDyn<'p> {
 	{
 		match kind.into() {
 			PathKind::Os => Self::Os(unsafe { OsStr::from_encoded_bytes_unchecked(bytes) }.as_ref()),
+			PathKind::Unix => Self::Unix(typed_path::UnixPath::new(bytes)),
 		}
 	}
 
 	pub fn has_root(self) -> bool {
 		match self {
 			Self::Os(p) => p.has_root(),
+			Self::Unix(p) => p.has_root(),
 		}
 	}
 
 	pub fn is_absolute(self) -> bool {
 		match self {
 			Self::Os(p) => p.is_absolute(),
+			Self::Unix(p) => p.is_absolute(),
 		}
 	}
 
@@ -107,6 +116,7 @@ impl<'p> PathDyn<'p> {
 	pub fn kind(self) -> PathKind {
 		match self {
 			Self::Os(_) => PathKind::Os,
+			Self::Unix(_) => PathKind::Unix,
 		}
 	}
 
@@ -115,20 +125,14 @@ impl<'p> PathDyn<'p> {
 	pub fn name(self) -> Option<Strand<'p>> {
 		Some(match self {
 			Self::Os(p) => p.file_name()?.into(),
+			Self::Unix(p) => p.file_name()?.into(),
 		})
-	}
-
-	#[inline]
-	pub fn os<T>(path: &'p T) -> Self
-	where
-		T: ?Sized + AsRef<std::path::Path>,
-	{
-		Self::Os(path.as_ref())
 	}
 
 	pub fn parent(self) -> Option<Self> {
 		Some(match self {
 			Self::Os(p) => Self::Os(p.parent()?),
+			Self::Unix(p) => Self::Unix(p.parent()?),
 		})
 	}
 
@@ -145,6 +149,7 @@ impl<'p> PathDyn<'p> {
 	pub fn stem(self) -> Option<Strand<'p>> {
 		Some(match self {
 			Self::Os(p) => p.file_stem()?.into(),
+			Self::Unix(p) => p.file_stem()?.into(),
 		})
 	}
 
@@ -152,12 +157,14 @@ impl<'p> PathDyn<'p> {
 	pub fn to_os_owned(self) -> Result<std::path::PathBuf, PathDynError> {
 		match self {
 			Self::Os(p) => Ok(p.to_owned()),
+			Self::Unix(_) => Err(PathDynError::AsOs),
 		}
 	}
 
 	pub fn to_owned(self) -> PathBufDyn {
 		match self {
-			Self::Os(p) => PathBufDyn::Os(p.to_path_buf()),
+			Self::Os(p) => PathBufDyn::Os(p.to_owned()),
+			Self::Unix(p) => PathBufDyn::Unix(p.to_owned()),
 		}
 	}
 
@@ -177,6 +184,8 @@ impl<'p> PathDyn<'p> {
 			(Self::Os(p), Strand::Bytes(b)) => {
 				p.ends_with(OsStr::from_wtf8(b).map_err(|_| EndsWithError)?)
 			}
+
+			(Self::Unix(p), s) => p.ends_with(s.encoded_bytes()),
 		})
 	}
 
@@ -190,6 +199,8 @@ impl<'p> PathDyn<'p> {
 			(Self::Os(p), Strand::Bytes(b)) => {
 				PathBufDyn::Os(p.join(OsStr::from_wtf8(b).map_err(|_| JoinError::FromWtf8)?))
 			}
+
+			(Self::Unix(p), s) => PathBufDyn::Unix(p.join(s.encoded_bytes())),
 		})
 	}
 
@@ -203,6 +214,7 @@ impl<'p> PathDyn<'p> {
 			PathDyn::Os(p) => {
 				p.as_os_str().as_encoded_bytes().rsplit_seq_once(pat.as_os()?.as_encoded_bytes())
 			}
+			PathDyn::Unix(p) => p.as_bytes().rsplit_seq_once(pat.encoded_bytes()),
 		}
 		.ok_or(RsplitOnceError::NotFound)?;
 
@@ -216,11 +228,13 @@ impl<'p> PathDyn<'p> {
 		T: AsStrand,
 	{
 		Ok(match (self, base.as_strand()) {
-			(Self::Os(p), Strand::Os(q)) => p.starts_with(q),
-			(Self::Os(p), Strand::Utf8(q)) => p.starts_with(q),
+			(Self::Os(p), Strand::Os(s)) => p.starts_with(s),
+			(Self::Os(p), Strand::Utf8(s)) => p.starts_with(s),
 			(Self::Os(p), Strand::Bytes(b)) => {
 				p.starts_with(OsStr::from_wtf8(b).map_err(|_| StartsWithError)?)
 			}
+
+			(Self::Unix(p), s) => p.starts_with(s.encoded_bytes()),
 		})
 	}
 
@@ -229,22 +243,37 @@ impl<'p> PathDyn<'p> {
 		T: AsStrand,
 	{
 		Ok(match (self, base.as_strand()) {
-			(Self::Os(p), Strand::Os(q)) => Self::Os(p.strip_prefix(q)?),
-			(Self::Os(p), Strand::Utf8(q)) => Self::Os(p.strip_prefix(q)?),
+			(Self::Os(p), Strand::Os(s)) => Self::Os(p.strip_prefix(s)?),
+			(Self::Os(p), Strand::Utf8(s)) => Self::Os(p.strip_prefix(s)?),
 			(Self::Os(p), Strand::Bytes(b)) => {
 				Self::Os(p.strip_prefix(OsStr::from_wtf8(b).map_err(|_| StripPrefixError::WrongEncoding)?)?)
 			}
+
+			(Self::Unix(p), s) => Self::Unix(p.strip_prefix(s.encoded_bytes())?),
 		})
 	}
 
-	pub fn with<K, T>(kind: K, strand: &'p T) -> Result<Self, StrandError>
+	pub fn with<K, S>(kind: K, strand: &'p S) -> Result<Self, StrandError>
 	where
 		K: Into<PathKind>,
-		T: ?Sized + AsStrand,
+		S: ?Sized + AsStrand,
 	{
 		let s = strand.as_strand();
 		Ok(match kind.into() {
 			PathKind::Os => Self::Os(std::path::Path::new(s.as_os()?)),
+			PathKind::Unix => Self::Unix(typed_path::UnixPath::new(s.encoded_bytes())),
 		})
+	}
+
+	pub fn with_str<K, S>(kind: K, s: &'p S) -> Self
+	where
+		K: Into<PathKind>,
+		S: ?Sized + AsRef<str>,
+	{
+		let s = s.as_ref();
+		match kind.into() {
+			PathKind::Os => Self::Os(s.as_ref()),
+			PathKind::Unix => Self::Unix(s.as_ref()),
+		}
 	}
 }
