@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
+- User-prepended open rules do not override presets ([#3360])
 - Respect user's system media opener instead of hardcoding `mpv` ([#2959])
 - Incorrect `$0` and `$@` parameters in `shell` command under empty directories ([#3225])
 - Avoid appending a newline when reading clipboard contents ([#3059])
@@ -1537,3 +1538,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3290]: https://github.com/sxyazi/yazi/pull/3290
 [#3313]: https://github.com/sxyazi/yazi/pull/3313
 [#3317]: https://github.com/sxyazi/yazi/pull/3317
+[#3360]: https://github.com/sxyazi/yazi/pull/3360
