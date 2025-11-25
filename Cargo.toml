@@ -35,7 +35,7 @@ hashbrown           = { version = "0.16.1", features = [ "serde" ] }
 indexmap            = { version = "2.12.1", features = [ "serde" ] }
 libc                = "0.2.177"
 lru                 = "0.16.2"
-mlua                = { version = "0.11.4", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
+mlua                = { version = "0.11.5", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
 objc2               = "0.6.3"
 ordered-float       = { version = "5.1.0", features = [ "serde" ] }
 parking_lot         = "0.12.5"

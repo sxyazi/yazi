@@ -15,6 +15,29 @@ local function match_mimetype(line)
 	end
 end
 
+local function spawn_file1(paths)
+	local bin = os.getenv("YAZI_FILE_ONE") or "file"
+	local windows = ya.target_family() == "windows"
+
+	local cmd = Command(bin):arg({ "-bL", "--mime-type" }):stdout(Command.PIPED)
+	if windows then
+		cmd:arg({ "-f", "-" }):stdin(Command.PIPED)
+	else
+		cmd:arg("--"):arg(paths)
+	end
+
+	local child, err = cmd:spawn()
+	if not child then
+		return nil, Err("Failed to start `%s`, error: %s", bin, err)
+	elseif windows then
+		child:write_all(table.concat(paths, "\n"))
+		child:flush()
+		ya.drop(child:take_stdin())
+	end
+
+	return child
+end
+
 function M:fetch(job)
 	local urls, paths = {}, {}
 	for i, file in ipairs(job.files) do
@@ -25,10 +48,9 @@ function M:fetch(job)
 		end
 	end
 
-	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local child, err = Command(cmd):arg({ "-bL", "--mime-type", "--" }):arg(paths):stdout(Command.PIPED):spawn()
+	local child, err = spawn_file1(paths)
 	if not child then
-		return true, Err("Failed to start `%s`, error: %s", cmd, err)
+		return true, err
 	end
 
 	local updates, last = {}, ya.time()

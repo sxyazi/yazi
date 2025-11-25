@@ -73,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Force Git checkout for plugin cache repositories ([#3169])
 - Check compatibility when reusing previewer bytecode cache ([#3190])
 - Disable kitty keyboard protocol on Windows due to `crossterm` inability to handle it ([#3250])
+- Prevent quotes in file(1) arguments from being stripped under MSYS2 ([#3364])
 - Expose `ya` CLI in the Snap build ([#2904])
 - Fallback to `PollWatcher` for file changes watching on NetBSD ([#2941])
 - Generate unique image IDs for Kgp to tolerate tmux ([#3038])
@@ -1540,3 +1541,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3313]: https://github.com/sxyazi/yazi/pull/3313
 [#3317]: https://github.com/sxyazi/yazi/pull/3317
 [#3360]: https://github.com/sxyazi/yazi/pull/3360
+[#3364]: https://github.com/sxyazi/yazi/pull/3364
