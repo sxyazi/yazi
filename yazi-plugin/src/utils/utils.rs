@@ -10,6 +10,7 @@ pub fn compose(
 		match key {
 			// App
 			b"id" => Utils::id(lua)?,
+			b"drop" => Utils::drop(lua)?,
 			b"hide" => Utils::hide(lua)?,
 
 			// Cache
