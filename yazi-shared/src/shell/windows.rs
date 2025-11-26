@@ -17,7 +17,7 @@ pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
 		} else {
 			if c == b'"' {
 				buf.extend((0..backslashes).map(|_| b'\\'));
-				buf.push(b'"')
+				buf.push(b'"');
 			} else if c == b'%' {
 				buf.extend_from_slice(b"%%cd:~,");
 			} else if c == b'\r' || c == b'\n' {
@@ -120,6 +120,8 @@ mod tests {
 			(br#""--features=\"default\"""#, br#""""--features=\\""default\\""""""#),
 			// Complex command
 			(b"linker=gcc -L/foo -Wl,bar", br#""linker=gcc -L/foo -Wl,bar""#),
+			// Variable expansion
+			(b"%APPDATA%.txt", br#""%%cd:~,%APPDATA%%cd:~,%.txt""#),
 			// Unicode characters
 			("이것은 테스트".as_bytes(), r#""이것은 테스트""#.as_bytes()),
 		];
