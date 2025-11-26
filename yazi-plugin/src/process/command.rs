@@ -144,11 +144,11 @@ impl UserData for Command {
 				let mut me = ud.borrow_mut::<Self>()?;
 				match arg {
 					Value::String(s) => {
-						me.inner.arg(OsStr::from_wtf8(&*s.as_bytes())?);
+						me.inner.arg(OsStr::from_wtf8(&s.as_bytes())?);
 					}
 					Value::Table(t) => {
 						for s in t.sequence_values::<mlua::String>() {
-							me.inner.arg(OsStr::from_wtf8(&*s?.as_bytes())?);
+							me.inner.arg(OsStr::from_wtf8(&s?.as_bytes())?);
 						}
 					}
 					_ => return Err("arg must be a string or table of strings".into_lua_err()),
@@ -165,7 +165,7 @@ impl UserData for Command {
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
 				ud.borrow_mut::<Self>()?
 					.inner
-					.env(OsStr::from_wtf8(&*key.as_bytes())?, OsStr::from_wtf8(&*value.as_bytes())?);
+					.env(OsStr::from_wtf8(&key.as_bytes())?, OsStr::from_wtf8(&value.as_bytes())?);
 				Ok(ud)
 			},
 		);

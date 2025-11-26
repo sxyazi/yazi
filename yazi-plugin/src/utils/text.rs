@@ -15,11 +15,11 @@ impl Utils {
 
 	pub(super) fn quote(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (s, unix): (mlua::String, Option<bool>)| {
-			let s = s.to_str()?;
+			let b = s.as_bytes();
 			let s = match unix {
-				Some(true) => yazi_shared::shell::escape_unix(s.as_ref()),
-				Some(false) => yazi_shared::shell::escape_windows(s.as_ref()),
-				None => yazi_shared::shell::escape_native(s.as_ref()),
+				Some(true) => yazi_shared::shell::unix::escape_os_bytes(&b),
+				Some(false) => yazi_shared::shell::windows::escape_os_bytes(&b),
+				None => yazi_shared::shell::escape_os_bytes(&b),
 			};
 			lua.create_string(&*s)
 		})

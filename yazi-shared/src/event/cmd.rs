@@ -231,7 +231,7 @@ impl FromStr for Cmd {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let (mut words, last) = crate::shell::split_unix(s, true)?;
+		let (mut words, last) = crate::shell::unix::split(s, true)?;
 		if words.is_empty() || words[0].is_empty() {
 			bail!("command name cannot be empty");
 		}

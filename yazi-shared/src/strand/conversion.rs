@@ -63,8 +63,8 @@ impl AsStrand for PathDyn<'_> {
 impl AsStrand for PathBufDyn {
 	fn as_strand(&self) -> Strand<'_> {
 		match self {
-			PathBufDyn::Os(p) => Strand::Os(p.as_os_str()),
-			PathBufDyn::Unix(p) => Strand::Bytes(p.as_bytes()),
+			Self::Os(p) => Strand::Os(p.as_os_str()),
+			Self::Unix(p) => Strand::Bytes(p.as_bytes()),
 		}
 	}
 }
