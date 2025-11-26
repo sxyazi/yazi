@@ -5065,6 +5065,7 @@ dependencies = [
  "russh",
  "serde",
  "tokio",
+ "typed-path",
 ]
 
 [[package]]
@@ -5123,6 +5124,7 @@ dependencies = [
  "russh",
  "tokio",
  "tracing",
+ "typed-path",
  "yazi-config",
  "yazi-fs",
  "yazi-macro",

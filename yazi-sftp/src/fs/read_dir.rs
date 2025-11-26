@@ -1,10 +1,10 @@
 use std::{mem, sync::Arc};
 
-use crate::{ByteStr, Error, Session, fs::DirEntry, requests, responses};
+use crate::{Error, Session, SftpPath, fs::DirEntry, requests, responses};
 
 pub struct ReadDir {
 	session: Arc<Session>,
-	dir:     Arc<ByteStr<'static>>,
+	dir:     Arc<typed_path::UnixPathBuf>,
 	handle:  String,
 
 	name:   responses::Name<'static>,
@@ -13,7 +13,7 @@ pub struct ReadDir {
 }
 
 impl ReadDir {
-	pub(crate) fn new(session: &Arc<Session>, dir: ByteStr, handle: String) -> Self {
+	pub(crate) fn new(session: &Arc<Session>, dir: SftpPath, handle: String) -> Self {
 		Self {
 			session: session.clone(),
 			dir: Arc::new(dir.into_owned()),
@@ -33,11 +33,11 @@ impl ReadDir {
 			};
 
 			self.cursor += 1;
-			if item.name != "." && item.name != ".." {
+			if &*item.name != b"." && &*item.name != b".." {
 				return Ok(Some(DirEntry {
 					dir:       self.dir.clone(),
-					name:      item.name,
-					long_name: item.long_name,
+					name:      item.name.into_owned(),
+					long_name: item.long_name.into_owned(),
 					attrs:     item.attrs,
 				}));
 			}

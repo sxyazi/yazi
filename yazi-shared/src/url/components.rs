@@ -87,7 +87,7 @@ impl<'a> Components<'a> {
 				Url::Archive { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), domain }
 			}
 			Url::Sftp { domain, .. } => {
-				Url::Sftp { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), domain }
+				Url::Sftp { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), domain }
 			}
 		}
 	}

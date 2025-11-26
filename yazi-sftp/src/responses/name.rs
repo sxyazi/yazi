@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, fs::Attrs};
+use crate::fs::Attrs;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Name<'a> {
@@ -10,8 +12,8 @@ pub struct Name<'a> {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct NameItem<'a> {
-	pub name:      ByteStr<'a>,
-	pub long_name: ByteStr<'a>,
+	pub name:      Cow<'a, [u8]>,
+	pub long_name: Cow<'a, [u8]>,
 	pub attrs:     Attrs,
 }
 

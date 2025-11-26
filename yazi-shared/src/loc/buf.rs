@@ -1,11 +1,11 @@
-use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, marker::PhantomData, mem, ops::Deref, path::PathBuf};
+use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, marker::PhantomData, mem, ops::Deref};
 
 use anyhow::Result;
 
 use crate::{loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{AsPath, AsPathView, PathDyn, SetNameError}, scheme::SchemeKind, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
-pub struct LocBuf<P = PathBuf> {
+pub struct LocBuf<P = std::path::PathBuf> {
 	pub(super) inner: P,
 	pub(super) uri:   usize,
 	pub(super) urn:   usize,
@@ -21,7 +21,7 @@ where
 }
 
 // FIXME: remove
-impl AsRef<std::path::Path> for LocBuf<PathBuf> {
+impl AsRef<std::path::Path> for LocBuf<std::path::PathBuf> {
 	fn as_ref(&self) -> &std::path::Path { self.inner.as_ref() }
 }
 
@@ -93,8 +93,8 @@ where
 	}
 }
 
-impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<PathBuf> {
-	fn from(value: &T) -> Self { Self::from(PathBuf::from(value)) }
+impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<std::path::PathBuf> {
+	fn from(value: &T) -> Self { Self::from(std::path::PathBuf::from(value)) }
 }
 
 impl<P> LocBuf<P>
@@ -249,13 +249,13 @@ where
 	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
 }
 
-impl LocBuf<PathBuf> {
-	pub const fn empty() -> Self { Self { inner: PathBuf::new(), uri: 0, urn: 0 } }
+impl LocBuf<std::path::PathBuf> {
+	pub const fn empty() -> Self { Self { inner: std::path::PathBuf::new(), uri: 0, urn: 0 } }
 }
 
 #[cfg(test)]
 mod tests {
-	use std::path::Path;
+	use std::path::{Path, PathBuf};
 
 	use super::*;
 	use crate::url::{UrlBuf, UrlLike};

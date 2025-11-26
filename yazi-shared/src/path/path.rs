@@ -58,6 +58,14 @@ impl<'p> PathDyn<'p> {
 		}
 	}
 
+	#[inline]
+	pub fn as_unix(self) -> Result<&'p typed_path::UnixPath, PathDynError> {
+		match self {
+			Self::Os(_) => Err(PathDynError::AsUnix),
+			Self::Unix(p) => Ok(p),
+		}
+	}
+
 	pub fn components(self) -> Components<'p> {
 		match self {
 			Self::Os(p) => Components::Os(p.components()),

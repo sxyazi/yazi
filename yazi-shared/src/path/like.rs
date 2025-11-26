@@ -7,6 +7,8 @@ use crate::{Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError
 pub trait PathLike: AsPath {
 	fn as_os(&self) -> Result<&std::path::Path, PathDynError> { self.as_path().as_os() }
 
+	fn as_unix(&self) -> Result<&typed_path::UnixPath, PathDynError> { self.as_path().as_unix() }
+
 	fn components(&self) -> Components<'_> { self.as_path().components() }
 
 	fn display(&self) -> Display<'_> { self.as_path().display() }

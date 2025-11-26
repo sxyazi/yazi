@@ -12,7 +12,7 @@ use crate::provider::sftp::Conn;
 #[derive(Clone)]
 pub struct Sftp<'a> {
 	url:  Url<'a>,
-	path: &'a Path,
+	path: &'a typed_path::UnixPath,
 
 	name:   &'static str,
 	config: &'static ProviderSftp,
@@ -71,7 +71,7 @@ impl<'a> Provider for Sftp<'a> {
 	where
 		P: AsPath,
 	{
-		let to = to.as_path().as_os()?;
+		let to = to.as_path().as_unix()?;
 		let attrs = Attrs::from(super::Attrs(attrs));
 
 		let op = self.op().await?;
@@ -96,7 +96,7 @@ impl<'a> Provider for Sftp<'a> {
 	where
 		P: AsPath,
 	{
-		let to = to.as_path().as_os()?;
+		let to = to.as_path().as_unix()?;
 
 		Ok(self.op().await?.hardlink(self.path, to).await?)
 	}
@@ -137,7 +137,7 @@ impl<'a> Provider for Sftp<'a> {
 	where
 		P: AsPath,
 	{
-		let to = to.as_path().as_os()?;
+		let to = to.as_path().as_unix()?;
 		let op = self.op().await?;
 
 		match op.rename_posix(self.path, &to).await {
@@ -156,7 +156,7 @@ impl<'a> Provider for Sftp<'a> {
 		P: AsPath,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		let original = original.as_path().as_os()?;
+		let original = original.as_path().as_unix()?;
 
 		Ok(self.op().await?.symlink(&original, self.path).await?)
 	}

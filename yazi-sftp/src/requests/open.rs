@@ -2,22 +2,22 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, Error, ToByteStr, fs::{Attrs, Flags}};
+use crate::{AsSftpPath, SftpPath, fs::{Attrs, Flags}};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Open<'a> {
 	pub id:    u32,
-	pub path:  ByteStr<'a>,
+	pub path:  SftpPath<'a>,
 	pub flags: Flags,
 	pub attrs: Cow<'a, Attrs>,
 }
 
 impl<'a> Open<'a> {
-	pub fn new<P>(path: P, flags: Flags, attrs: &'a Attrs) -> Result<Self, Error>
+	pub fn new<P>(path: P, flags: Flags, attrs: &'a Attrs) -> Self
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		Ok(Self { id: 0, path: path.to_byte_str()?, flags, attrs: Cow::Borrowed(attrs) })
+		Self { id: 0, path: path.as_sftp_path(), flags, attrs: Cow::Borrowed(attrs) }
 	}
 
 	pub fn len(&self) -> usize {
