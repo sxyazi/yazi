@@ -36,7 +36,10 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 		Url::Regular(_) => UrlBuf::Regular(loc),
 		Url::Search { domain, .. } => UrlBuf::Search { loc, domain: domain.intern() },
 		Url::Archive { domain, .. } => UrlBuf::Archive { loc, domain: domain.intern() },
-		Url::Sftp { domain, .. } => UrlBuf::Sftp { loc, domain: domain.intern() },
+		Url::Sftp { domain, .. } => {
+			todo!();
+			// UrlBuf::Sftp { loc, domain: domain.intern() }
+		}
 	};
 
 	absolute_url(expanded)

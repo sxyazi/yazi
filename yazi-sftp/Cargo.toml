@@ -17,3 +17,4 @@ parking_lot = { workspace = true }
 russh       = { workspace = true }
 serde       = { workspace = true }
 tokio       = { workspace = true }
+typed-path  = { workspace = true }

@@ -14,6 +14,14 @@ impl AsPath for std::path::PathBuf {
 	fn as_path(&self) -> PathDyn<'_> { PathDyn::Os(self) }
 }
 
+impl AsPath for typed_path::UnixPath {
+	fn as_path(&self) -> PathDyn<'_> { PathDyn::Unix(self) }
+}
+
+impl AsPath for typed_path::UnixPathBuf {
+	fn as_path(&self) -> PathDyn<'_> { PathDyn::Unix(self) }
+}
+
 impl AsPath for PathDyn<'_> {
 	fn as_path(&self) -> PathDyn<'_> { *self }
 }

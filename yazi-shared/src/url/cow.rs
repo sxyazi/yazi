@@ -10,12 +10,12 @@ pub enum UrlCow<'a> {
 	Regular(LocBuf),
 	Search { loc: LocBuf, domain: SymbolCow<'a, str> },
 	Archive { loc: LocBuf, domain: SymbolCow<'a, str> },
-	Sftp { loc: LocBuf, domain: SymbolCow<'a, str> },
+	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, domain: SymbolCow<'a, str> },
 
 	RegularRef(Loc<'a>),
 	SearchRef { loc: Loc<'a>, domain: SymbolCow<'a, str> },
 	ArchiveRef { loc: Loc<'a>, domain: SymbolCow<'a, str> },
-	SftpRef { loc: Loc<'a>, domain: SymbolCow<'a, str> },
+	SftpRef { loc: Loc<'a, &'a typed_path::UnixPath>, domain: SymbolCow<'a, str> },
 }
 
 // FIXME: remove
@@ -148,7 +148,7 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathDyn<'a>)> for UrlCow<'a> {
 				domain: domain.ok_or_else(|| anyhow!("missing domain for archive scheme"))?,
 			},
 			SchemeKind::Sftp => Self::SftpRef {
-				loc:    Loc::with(path.as_os()?, uri, urn)?,
+				loc:    Loc::with(path.as_unix()?, uri, urn)?,
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
 			},
 		})
@@ -165,15 +165,15 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathBufDyn)> for UrlCow<'a> {
 		Ok(match kind {
 			SchemeKind::Regular => Self::Regular(path.into_os()?.into()),
 			SchemeKind::Search => Self::Search {
-				loc:    LocBuf::<PathBuf>::with(path.try_into()?, uri, urn)?,
+				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?,
 				domain: domain.ok_or_else(|| anyhow!("missing domain for search scheme"))?,
 			},
 			SchemeKind::Archive => Self::Archive {
-				loc:    LocBuf::<PathBuf>::with(path.try_into()?, uri, urn)?,
+				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?,
 				domain: domain.ok_or_else(|| anyhow!("missing domain for archive scheme"))?,
 			},
 			SchemeKind::Sftp => Self::Sftp {
-				loc:    LocBuf::<PathBuf>::with(path.try_into()?, uri, urn)?,
+				loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.try_into()?, uri, urn)?,
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
 			},
 		})

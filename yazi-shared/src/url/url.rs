@@ -12,7 +12,7 @@ pub enum Url<'a> {
 	Regular(Loc<'a>),
 	Search { loc: Loc<'a>, domain: &'a str },
 	Archive { loc: Loc<'a>, domain: &'a str },
-	Sftp { loc: Loc<'a>, domain: &'a str },
+	Sftp { loc: Loc<'a, &'a typed_path::UnixPath>, domain: &'a str },
 }
 
 // --- Eq
@@ -253,7 +253,7 @@ impl<'a> Url<'a> {
 				domain: domain.intern(),
 			},
 			Self::Sftp { domain, .. } => {
-				UrlBuf::Sftp { loc: joined.into_os()?.into(), domain: domain.intern() }
+				UrlBuf::Sftp { loc: joined.into_unix()?.into(), domain: domain.intern() }
 			}
 		})
 	}
@@ -282,24 +282,24 @@ impl<'a> Url<'a> {
 				domain: domain.intern(),
 			},
 			Self::Archive { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Archive {
-				loc:    LocBuf::<PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
+				loc:    LocBuf::<std::path::PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
 				domain: domain.intern(),
 			},
 			Self::Sftp { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Sftp {
-				loc:    LocBuf::<PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
+				loc:    LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
 				domain: domain.intern(),
 			},
 
 			Self::Search { domain, .. } => UrlBuf::Search {
-				loc:    LocBuf::<PathBuf>::saturated(path.into_os()?, self.kind()),
+				loc:    LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
 				domain: domain.intern(),
 			},
 			Self::Archive { domain, .. } => UrlBuf::Archive {
-				loc:    LocBuf::<PathBuf>::saturated(path.into_os()?, self.kind()),
+				loc:    LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
 				domain: domain.intern(),
 			},
 			Self::Sftp { domain, .. } => UrlBuf::Sftp {
-				loc:    LocBuf::<PathBuf>::saturated(path.into_os()?, self.kind()),
+				loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
 				domain: domain.intern(),
 			},
 		};

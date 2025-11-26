@@ -1,4 +1,4 @@
-use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref, path::Path};
+use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref};
 
 use anyhow::{Result, bail};
 
@@ -6,7 +6,7 @@ use super::LocAbleImpl;
 use crate::{loc::{LocAble, LocBuf, LocBufAble, StrandAbleImpl}, path::{AsPath, AsPathView, PathDyn}, scheme::SchemeKind, strand::AsStrandView};
 
 #[derive(Clone, Copy, Debug)]
-pub struct Loc<'p, P = &'p Path> {
+pub struct Loc<'p, P = &'p std::path::Path> {
 	pub(super) inner:    P,
 	pub(super) uri:      usize,
 	pub(super) urn:      usize,

@@ -10,7 +10,7 @@ pub enum UrlBuf {
 	Regular(LocBuf),
 	Search { loc: LocBuf, domain: Symbol<str> },
 	Archive { loc: LocBuf, domain: Symbol<str> },
-	Sftp { loc: LocBuf, domain: Symbol<str> },
+	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, domain: Symbol<str> },
 }
 
 // FIXME: remove
@@ -128,7 +128,7 @@ impl UrlBuf {
 			Self::Regular(loc) => loc.try_set_name(name.as_os()?)?,
 			Self::Search { loc, .. } => loc.try_set_name(name.as_os()?)?,
 			Self::Archive { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Sftp { loc, .. } => loc.try_set_name(name.as_os()?)?,
+			Self::Sftp { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
 		})
 	}
 
@@ -141,7 +141,10 @@ impl UrlBuf {
 			Self::Archive { loc, domain } => {
 				Self::Archive { loc: loc.rebase(base), domain: domain.clone() }
 			}
-			Self::Sftp { loc, domain } => Self::Sftp { loc: loc.rebase(base), domain: domain.clone() },
+			Self::Sftp { loc, domain } => {
+				todo!();
+				// Self::Sftp { loc: loc.rebase(base), domain: domain.clone() }
+			}
 		}
 	}
 }

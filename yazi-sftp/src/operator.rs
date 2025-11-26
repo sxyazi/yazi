@@ -1,9 +1,10 @@
-use std::{ops::Deref, path::PathBuf, sync::Arc};
+use std::{ops::Deref, sync::Arc};
 
 use russh::{ChannelStream, client::Msg};
 use tokio::sync::oneshot;
+use typed_path::UnixPathBuf;
 
-use crate::{ByteStr, Error, Packet, Session, ToByteStr, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
+use crate::{AsSftpPath, Error, Packet, Session, SftpPath, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
 
 pub struct Operator(Arc<Session>);
 
@@ -28,9 +29,9 @@ impl Operator {
 
 	pub async fn open<'a, P>(&self, path: P, flags: Flags, attrs: &'a Attrs) -> Result<File, Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let handle: responses::Handle = self.send(requests::Open::new(path, flags, attrs)?).await?;
+		let handle: responses::Handle = self.send(requests::Open::new(path, flags, attrs)).await?;
 
 		Ok(File::new(&self.0, handle.handle))
 	}
@@ -59,9 +60,9 @@ impl Operator {
 
 	pub async fn lstat<'a, P>(&self, path: P) -> Result<Attrs, Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let attrs: responses::Attrs = self.send(requests::Lstat::new(path)?).await?;
+		let attrs: responses::Attrs = self.send(requests::Lstat::new(path)).await?;
 		Ok(attrs.attrs)
 	}
 
@@ -72,9 +73,9 @@ impl Operator {
 
 	pub async fn setstat<'a, P>(&self, path: P, attrs: Attrs) -> Result<(), Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let status: responses::Status = self.send(requests::SetStat::new(path, attrs)?).await?;
+		let status: responses::Status = self.send(requests::SetStat::new(path, attrs)).await?;
 		status.into()
 	}
 
@@ -85,100 +86,100 @@ impl Operator {
 
 	pub async fn read_dir<'a, P>(&'a self, dir: P) -> Result<ReadDir, Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let dir: ByteStr = dir.to_byte_str()?;
-		let handle: responses::Handle = self.send(requests::OpenDir::new(&dir)?).await?;
+		let dir: SftpPath = dir.as_sftp_path();
+		let handle: responses::Handle = self.send(requests::OpenDir::new(&dir)).await?;
 
 		Ok(ReadDir::new(&self.0, dir, handle.handle))
 	}
 
 	pub async fn remove<'a, P>(&self, path: P) -> Result<(), Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let status: responses::Status = self.send(requests::Remove::new(path)?).await?;
+		let status: responses::Status = self.send(requests::Remove::new(path)).await?;
 		status.into()
 	}
 
 	pub async fn mkdir<'a, P>(&self, path: P, attrs: Attrs) -> Result<(), Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let status: responses::Status = self.send(requests::Mkdir::new(path, attrs)?).await?;
+		let status: responses::Status = self.send(requests::Mkdir::new(path, attrs)).await?;
 		status.into()
 	}
 
 	pub async fn rmdir<'a, P>(&self, path: P) -> Result<(), Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let status: responses::Status = self.send(requests::Rmdir::new(path)?).await?;
+		let status: responses::Status = self.send(requests::Rmdir::new(path)).await?;
 		status.into()
 	}
 
-	pub async fn realpath<'a, P>(&self, path: P) -> Result<PathBuf, Error>
+	pub async fn realpath<'a, P>(&self, path: P) -> Result<UnixPathBuf, Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let mut name: responses::Name = self.send(requests::Realpath::new(path)?).await?;
+		let mut name: responses::Name = self.send(requests::Realpath::new(path)).await?;
 		if name.items.is_empty() {
 			Err(Error::custom("realpath returned no names"))
 		} else {
-			Ok(name.items.swap_remove(0).name.into_path())
+			Ok(name.items.swap_remove(0).name.into_owned().into())
 		}
 	}
 
 	pub async fn stat<'a, P>(&self, path: P) -> Result<Attrs, Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let attrs: responses::Attrs = self.send(requests::Stat::new(path)?).await?;
+		let attrs: responses::Attrs = self.send(requests::Stat::new(path)).await?;
 		Ok(attrs.attrs)
 	}
 
 	pub async fn rename<'a, F, T>(&self, from: F, to: T) -> Result<(), Error>
 	where
-		F: ToByteStr<'a>,
-		T: ToByteStr<'a>,
+		F: AsSftpPath<'a>,
+		T: AsSftpPath<'a>,
 	{
-		let status: responses::Status = self.send(requests::Rename::new(from, to)?).await?;
+		let status: responses::Status = self.send(requests::Rename::new(from, to)).await?;
 		status.into()
 	}
 
 	pub async fn rename_posix<'a, F, T>(&self, from: F, to: T) -> Result<(), Error>
 	where
-		F: ToByteStr<'a>,
-		T: ToByteStr<'a>,
+		F: AsSftpPath<'a>,
+		T: AsSftpPath<'a>,
 	{
 		if self.extensions.lock().get("posix-rename@openssh.com").is_none_or(|s| s != "1") {
 			return Err(Error::Unsupported);
 		}
 
-		let data = requests::ExtendedRename::new(from, to)?;
+		let data = requests::ExtendedRename::new(from, to);
 		let status: responses::Status =
 			self.send(requests::Extended::new("posix-rename@openssh.com", data)).await?;
 		status.into()
 	}
 
-	pub async fn readlink<'a, P>(&self, path: P) -> Result<PathBuf, Error>
+	pub async fn readlink<'a, P>(&self, path: P) -> Result<UnixPathBuf, Error>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		let mut name: responses::Name = self.send(requests::Readlink::new(path)?).await?;
+		let mut name: responses::Name = self.send(requests::Readlink::new(path)).await?;
 		if name.items.is_empty() {
 			Err(Error::custom("readlink returned no names"))
 		} else {
-			Ok(name.items.swap_remove(0).name.into_path())
+			Ok(name.items.swap_remove(0).name.into_owned().into())
 		}
 	}
 
 	pub async fn symlink<'a, L, O>(&self, original: O, link: L) -> Result<(), Error>
 	where
-		O: ToByteStr<'a>,
-		L: ToByteStr<'a>,
+		O: AsSftpPath<'a>,
+		L: AsSftpPath<'a>,
 	{
-		let status: responses::Status = self.send(requests::Symlink::new(original, link)?).await?;
+		let status: responses::Status = self.send(requests::Symlink::new(original, link)).await?;
 		status.into()
 	}
 
@@ -193,14 +194,14 @@ impl Operator {
 
 	pub async fn hardlink<'a, O, L>(&self, original: O, link: L) -> Result<(), Error>
 	where
-		O: ToByteStr<'a>,
-		L: ToByteStr<'a>,
+		O: AsSftpPath<'a>,
+		L: AsSftpPath<'a>,
 	{
 		if self.extensions.lock().get("hardlink@openssh.com").is_none_or(|s| s != "1") {
 			return Err(Error::Unsupported);
 		}
 
-		let data = requests::ExtendedHardlink::new(original, link)?;
+		let data = requests::ExtendedHardlink::new(original, link);
 		let status: responses::Status =
 			self.send(requests::Extended::new("hardlink@openssh.com", data)).await?;
 		status.into()

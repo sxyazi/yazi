@@ -34,6 +34,13 @@ impl From<StrandBuf> for StrandCow<'_> {
 	fn from(value: StrandBuf) -> Self { Self::Owned(value) }
 }
 
+impl<'a, T> From<&'a T> for StrandCow<'a>
+where
+	T: ?Sized + AsStrand,
+{
+	fn from(value: &'a T) -> Self { Self::Borrowed(value.as_strand()) }
+}
+
 impl PartialEq<Strand<'_>> for StrandCow<'_> {
 	fn eq(&self, other: &Strand) -> bool { self.as_strand() == *other }
 }

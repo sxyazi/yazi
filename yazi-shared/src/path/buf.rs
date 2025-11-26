@@ -15,6 +15,10 @@ impl From<std::path::PathBuf> for PathBufDyn {
 	fn from(value: std::path::PathBuf) -> Self { Self::Os(value) }
 }
 
+impl From<typed_path::UnixPathBuf> for PathBufDyn {
+	fn from(value: typed_path::UnixPathBuf) -> Self { Self::Unix(value) }
+}
+
 impl From<PathDyn<'_>> for PathBufDyn {
 	fn from(value: PathDyn<'_>) -> Self { value.to_owned() }
 }
@@ -23,6 +27,12 @@ impl TryFrom<PathBufDyn> for std::path::PathBuf {
 	type Error = PathDynError;
 
 	fn try_from(value: PathBufDyn) -> Result<Self, Self::Error> { value.into_os() }
+}
+
+impl TryFrom<PathBufDyn> for typed_path::UnixPathBuf {
+	type Error = PathDynError;
+
+	fn try_from(value: PathBufDyn) -> Result<Self, Self::Error> { value.into_unix() }
 }
 
 impl PartialEq<PathDyn<'_>> for PathBufDyn {
@@ -73,6 +83,14 @@ impl PathBufDyn {
 		Ok(match self {
 			Self::Os(p) => p,
 			Self::Unix(_) => Err(PathDynError::AsOs)?,
+		})
+	}
+
+	#[inline]
+	pub fn into_unix(self) -> Result<typed_path::UnixPathBuf, PathDynError> {
+		Ok(match self {
+			Self::Os(_) => Err(PathDynError::AsUnix)?,
+			Self::Unix(p) => p,
 		})
 	}
 

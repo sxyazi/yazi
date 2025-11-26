@@ -60,7 +60,7 @@ impl File {
 				Url::Archive { loc: Loc::saturated(to.as_os().ok()?, kind), domain }
 			}
 			UrlBuf::Sftp { domain, .. } => {
-				Url::Sftp { loc: Loc::saturated(to.as_os().ok()?, kind), domain }
+				Url::Sftp { loc: Loc::saturated(to.as_unix().ok()?, kind), domain }
 			}
 		})
 	}

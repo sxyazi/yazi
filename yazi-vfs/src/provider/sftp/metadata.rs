@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, io, time::{Duration, UNIX_EPOCH}};
+use std::{io, time::{Duration, UNIX_EPOCH}};
 
 use yazi_fs::cha::ChaKind;
 
@@ -26,18 +26,17 @@ impl TryFrom<&yazi_sftp::fs::DirEntry> for Cha {
 	type Error = io::Error;
 
 	fn try_from(ent: &yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
-		let mut cha = Self::try_from((ent.name().as_ref(), ent.attrs()))?;
+		let mut cha = Self::try_from((ent.name(), ent.attrs()))?;
 		cha.0.nlink = ent.nlink().unwrap_or_default();
 		Ok(cha)
 	}
 }
 
-impl TryFrom<(&OsStr, &yazi_sftp::fs::Attrs)> for Cha {
+impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Cha {
 	type Error = io::Error;
 
-	fn try_from((name, attrs): (&OsStr, &yazi_sftp::fs::Attrs)) -> Result<Self, Self::Error> {
-		let kind =
-			if name.as_encoded_bytes().starts_with(b".") { ChaKind::HIDDEN } else { ChaKind::empty() };
+	fn try_from((name, attrs): (&[u8], &yazi_sftp::fs::Attrs)) -> Result<Self, Self::Error> {
+		let kind = if name.starts_with(b".") { ChaKind::HIDDEN } else { ChaKind::empty() };
 
 		Ok(Self(yazi_fs::cha::Cha {
 			kind,

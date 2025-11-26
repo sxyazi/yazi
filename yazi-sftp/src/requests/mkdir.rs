@@ -1,20 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, Error, ToByteStr, fs::Attrs};
+use crate::{AsSftpPath, SftpPath, fs::Attrs};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Mkdir<'a> {
 	pub id:    u32,
-	pub path:  ByteStr<'a>,
+	pub path:  SftpPath<'a>,
 	pub attrs: Attrs,
 }
 
 impl<'a> Mkdir<'a> {
-	pub fn new<P>(path: P, attrs: Attrs) -> Result<Self, Error>
+	pub fn new<P>(path: P, attrs: Attrs) -> Self
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		Ok(Self { id: 0, path: path.to_byte_str()?, attrs })
+		Self { id: 0, path: path.as_sftp_path(), attrs }
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() + self.attrs.len() }
