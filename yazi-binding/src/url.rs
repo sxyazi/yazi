@@ -108,7 +108,7 @@ impl Url {
 		match other {
 			Value::String(s) => {
 				let b = s.as_bytes();
-				let (scheme, path) = SchemeCow::parse(&*b)?;
+				let (scheme, path) = SchemeCow::parse(&b)?;
 				if scheme == self.scheme() {
 					Self::new(self.try_join(path).into_lua_err()?).into_lua(lua)
 				} else {

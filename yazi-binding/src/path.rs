@@ -79,7 +79,7 @@ impl Path {
 		}
 	}
 
-	fn strip_prefix(&self, base: Value) -> mlua::Result<Option<Path>> {
+	fn strip_prefix(&self, base: Value) -> mlua::Result<Option<Self>> {
 		let strip = match base {
 			Value::String(s) => self.try_strip_prefix(StrandCow::with(self.kind(), &*s.as_bytes())?),
 			Value::UserData(ud) => self.try_strip_prefix(&*ud.borrow::<Self>()?),
@@ -87,7 +87,7 @@ impl Path {
 		};
 
 		Ok(match strip {
-			Ok(p) => Some(Path::new(p)),
+			Ok(p) => Some(Self::new(p)),
 			Err(StripPrefixError::Exotic | StripPrefixError::NotPrefix) => None,
 			Err(e @ StripPrefixError::WrongEncoding) => Err(e.into_lua_err())?,
 		})

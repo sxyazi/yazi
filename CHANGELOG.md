@@ -30,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Allow dynamic adjustment of layout ratio via `rt.mgr.ratio` ([#2964])
 - Support `.deb` packages ([#2807], [#3128], [#3209])
 - Port several widespread GUI keys to the input component ([#2849])
-- Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290])
+- Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290], [#3369])
 - Allow upgrading only specific packages with `ya pkg` ([#2841])
 - Respect the user's `image_filter` setting in the preset ImageMagick previewer ([#3286])
 - Allow custom mouse click behavior for individual files ([#2925])
@@ -1542,3 +1542,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3317]: https://github.com/sxyazi/yazi/pull/3317
 [#3360]: https://github.com/sxyazi/yazi/pull/3360
 [#3364]: https://github.com/sxyazi/yazi/pull/3364
+[#3369]: https://github.com/sxyazi/yazi/pull/3369

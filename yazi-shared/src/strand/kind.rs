@@ -10,8 +10,8 @@ pub enum StrandKind {
 impl From<PathKind> for StrandKind {
 	fn from(value: PathKind) -> Self {
 		match value {
-			PathKind::Os => StrandKind::Os,
-			PathKind::Unix => StrandKind::Bytes,
+			PathKind::Os => Self::Os,
+			PathKind::Unix => Self::Bytes,
 		}
 	}
 }
