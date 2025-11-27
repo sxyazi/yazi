@@ -1,4 +1,4 @@
-use std::{io, path::Path, sync::Arc};
+use std::{io, sync::Arc};
 
 use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
 use yazi_config::vfs::{ProviderSftp, Vfs};

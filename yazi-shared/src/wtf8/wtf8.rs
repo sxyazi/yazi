@@ -35,8 +35,11 @@ impl FromWtf8 for OsStr {
 		}
 		#[cfg(windows)]
 		{
-			// FIXME: validate WTF-8
-			Ok(unsafe { Self::from_encoded_bytes_unchecked(wtf8) })
+			if super::valid_wtf8(wtf8) {
+				Ok(unsafe { Self::from_encoded_bytes_unchecked(wtf8) })
+			} else {
+				Err(anyhow::anyhow!("Invalid WTF-8 sequence"))
+			}
 		}
 	}
 }
@@ -61,8 +64,11 @@ impl FromWtf8Vec for OsString {
 		}
 		#[cfg(windows)]
 		{
-			// FIXME: validate WTF-8
-			Ok(unsafe { Self::from_encoded_bytes_unchecked(wtf8) })
+			if super::valid_wtf8(&wtf8) {
+				Ok(unsafe { Self::from_encoded_bytes_unchecked(wtf8) })
+			} else {
+				Err(anyhow::anyhow!("Invalid WTF-8 sequence"))
+			}
 		}
 	}
 }

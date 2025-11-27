@@ -40,7 +40,7 @@ pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
 
 #[cfg(windows)]
 pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
-	use crate::FromWtf8Vec;
+	use crate::wtf8::FromWtf8Vec;
 
 	match escape_os_bytes(s.as_encoded_bytes()) {
 		Cow::Borrowed(_) => Cow::Borrowed(s),

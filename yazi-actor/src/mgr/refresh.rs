@@ -48,12 +48,12 @@ impl Refresh {
 
 	// TODO: performance improvement
 	fn trigger_dirs(folders: &[&Folder]) {
-		async fn go(cwd: UrlBuf, cha: Cha) {
-			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
+		async fn go(dir: UrlBuf, cha: Cha) {
+			let Some(cha) = Files::assert_stale(&dir, cha).await else { return };
 
-			match Files::from_dir_bulk(&cwd).await {
-				Ok(files) => FilesOp::Full(cwd, files, cha).emit(),
-				Err(e) => FilesOp::issue_error(&cwd, e).await,
+			match Files::from_dir_bulk(&dir).await {
+				Ok(files) => FilesOp::Full(dir, files, cha).emit(),
+				Err(e) => FilesOp::issue_error(&dir, e).await,
 			}
 		}
 

@@ -1,11 +1,11 @@
-use std::{borrow::Cow, fmt::{Debug, Formatter}, path::{Path, PathBuf}, str::FromStr};
+use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::{Scheme, SchemeKind}, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Eq)]
 pub enum UrlBuf {
 	Regular(LocBuf),
 	Search { loc: LocBuf, domain: Symbol<str> },
@@ -92,12 +92,21 @@ impl From<Cow<'_, Self>> for UrlBuf {
 }
 
 // --- Eq
+impl PartialEq for UrlBuf {
+	fn eq(&self, other: &Self) -> bool { self.as_url() == other.as_url() }
+}
+
 impl PartialEq<Url<'_>> for UrlBuf {
 	fn eq(&self, other: &Url) -> bool { self.as_url() == *other }
 }
 
 impl PartialEq<Url<'_>> for &UrlBuf {
 	fn eq(&self, other: &Url) -> bool { self.as_url() == *other }
+}
+
+// --- Hash
+impl Hash for UrlBuf {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.as_url().hash(state) }
 }
 
 impl UrlBuf {

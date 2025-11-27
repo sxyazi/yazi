@@ -21,7 +21,6 @@ clap      = { workspace = true }
 futures   = { workspace = true }
 hashbrown = { workspace = true }
 regex     = { workspace = true }
-serde     = { workspace = true }
 
 [build-dependencies]
 yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
