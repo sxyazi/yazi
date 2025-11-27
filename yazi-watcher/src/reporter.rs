@@ -24,8 +24,8 @@ impl Reporter {
 		}
 	}
 
-	fn report_local<'a>(&self, url: UrlCow<'a>) {
-		let Some((parent, name)) = url.pair() else { return };
+	fn report_local(&self, url: UrlCow) {
+		let Some((parent, urn)) = url.pair() else { return };
 
 		// FIXME: LINKED should return Url instead of Path
 		let linked = LINKED.read();
@@ -37,19 +37,21 @@ impl Reporter {
 				self.local_tx.send(url.to_owned()).ok();
 				self.local_tx.send(parent.to_owned()).ok();
 			}
-			if name.ext().is_some_and(|e| e == "%tmp") {
+
+			if urn.ext().is_some_and(|e| e == "%tmp") {
 				continue;
 			}
-			// SFTP caches
-			// todo!();
-			// if let Some(dir) = watched.find_by_cache(&parent.loc()) {
-			// 	self.remote_tx.send(dir.join(name)).ok();
-			// 	self.remote_tx.send(dir.to_owned()).ok();
-			// }
+
+			// Virtual caches
+			let Some(dir) = watched.find_by_cache(parent.loc()) else { continue };
+			if let Some(Ok(u)) = url.name().map(|n| dir.try_join(n)) {
+				self.remote_tx.send(u).ok();
+			}
+			self.remote_tx.send(dir).ok();
 		}
 	}
 
-	fn report_remote<'a>(&self, url: UrlCow<'a>) {
+	fn report_remote(&self, url: UrlCow) {
 		let Some(parent) = url.parent() else { return };
 		if !WATCHED.read().contains(parent) {
 			return;

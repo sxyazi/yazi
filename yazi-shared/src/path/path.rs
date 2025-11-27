@@ -4,9 +4,9 @@ use anyhow::Result;
 use hashbrown::Equivalent;
 
 use super::{RsplitOnceError, StartsWithError};
-use crate::{BytesExt, FromWtf8, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
+use crate::{BytesExt, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}, wtf8::FromWtf8};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PathDyn<'p> {
 	Os(&'p std::path::Path),
 	Unix(&'p typed_path::UnixPath),

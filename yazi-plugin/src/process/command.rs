@@ -3,7 +3,7 @@ use std::{any::TypeId, ffi::OsStr, io, process::Stdio};
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use yazi_binding::Error;
-use yazi_shared::FromWtf8;
+use yazi_shared::wtf8::FromWtf8;
 
 use super::{Child, output::Output};
 use crate::process::Status;
