@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::Display};
 
 use anyhow::Result;
 
-use crate::{BytesExt, FromWtf8, strand::{AsStrand, StrandBuf, StrandError, StrandKind}};
+use crate::{BytesExt, strand::{AsStrand, StrandBuf, StrandError, StrandKind}, wtf8::FromWtf8};
 
 // --- Strand
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialOrd)]

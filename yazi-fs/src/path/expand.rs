@@ -1,6 +1,6 @@
 use std::{borrow::Cow, path::PathBuf};
 
-use yazi_shared::{FromWtf8Vec, loc::LocBuf, path::{PathBufDyn, PathCow, PathDyn, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathDyn, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}, wtf8::FromWtf8Vec};
 
 use crate::{CWD, path::clean_url};
 
@@ -25,21 +25,25 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 	let mut path = PathBufDyn::with_capacity(url.kind(), n_base.len() + n_rest.len() + n_urn.len());
 	path.try_extend([n_base, n_rest, n_urn]).expect("extend original parts should not fail");
 
-	let loc = LocBuf::<PathBuf>::with(
-		path.into_os().expect("Failed to convert PathBufDyn to PathBuf"),
-		(uri_count + rest_diff + urn_diff) as usize,
-		(urn_count + urn_diff) as usize,
-	)
-	.expect("Failed to create Loc from expanded path");
+	let uri = (uri_count + rest_diff + urn_diff) as usize;
+	let urn = (urn_count + urn_diff) as usize;
 
 	let expanded = match url {
-		Url::Regular(_) => UrlBuf::Regular(loc),
-		Url::Search { domain, .. } => UrlBuf::Search { loc, domain: domain.intern() },
-		Url::Archive { domain, .. } => UrlBuf::Archive { loc, domain: domain.intern() },
-		Url::Sftp { domain, .. } => {
-			todo!();
-			// UrlBuf::Sftp { loc, domain: domain.intern() }
-		}
+		Url::Regular(_) => UrlBuf::Regular(
+			LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+		),
+		Url::Search { domain, .. } => UrlBuf::Search {
+			loc:    LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+			domain: domain.intern(),
+		},
+		Url::Archive { domain, .. } => UrlBuf::Archive {
+			loc:    LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+			domain: domain.intern(),
+		},
+		Url::Sftp { domain, .. } => UrlBuf::Sftp {
+			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+			domain: domain.intern(),
+		},
 	};
 
 	absolute_url(expanded)

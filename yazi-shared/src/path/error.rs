@@ -5,13 +5,15 @@ use crate::strand::StrandError;
 // --- EndsWithError
 #[derive(Debug, Error)]
 #[error("calling ends_with on paths with different encodings")]
-pub struct EndsWithError;
+pub enum EndsWithError {
+	FromStrand(#[from] StrandError),
+}
 
 // --- JoinError
 #[derive(Debug, Error)]
 #[error("calling join on paths with different encodings")]
 pub enum JoinError {
-	FromWtf8,
+	FromStrand(#[from] StrandError),
 	FromPathDyn(#[from] PathDynError),
 }
 
@@ -47,7 +49,6 @@ impl From<PathDynError> for std::io::Error {
 #[derive(Debug, Error)]
 #[error("calling set_name on paths with different encodings")]
 pub enum SetNameError {
-	FromWtf8,
 	FromStrand(#[from] StrandError),
 }
 
@@ -79,7 +80,9 @@ impl From<StrandError> for RsplitOnceError {
 // --- StartsWithError
 #[derive(Error, Debug)]
 #[error("calling starts_with on paths with different encodings")]
-pub struct StartsWithError;
+pub enum StartsWithError {
+	FromStrand(#[from] StrandError),
+}
 
 // --- StripPrefixError
 #[derive(Debug, Error)]
@@ -90,6 +93,14 @@ pub enum StripPrefixError {
 	NotPrefix,
 	#[error("calling strip_prefix on paths with different encodings")]
 	WrongEncoding,
+}
+
+impl From<StrandError> for StripPrefixError {
+	fn from(err: StrandError) -> Self {
+		match err {
+			StrandError::AsOs | StrandError::AsUtf8 => Self::WrongEncoding,
+		}
+	}
 }
 
 impl From<std::path::StripPrefixError> for StripPrefixError {

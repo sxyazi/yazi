@@ -11,6 +11,15 @@ pub enum Component<'a> {
 	Normal(Strand<'a>),
 }
 
+impl<'a> Component<'a> {
+	pub fn as_normal(&self) -> Option<Strand<'a>> {
+		match self {
+			Self::Normal(s) => Some(*s),
+			_ => None,
+		}
+	}
+}
+
 impl<'a> From<std::path::Component<'a>> for Component<'a> {
 	fn from(value: std::path::Component<'a>) -> Self {
 		match value {

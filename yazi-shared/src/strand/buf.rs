@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use anyhow::Result;
 
-use crate::{FromWtf8Vec, path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}};
+use crate::{path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}, wtf8::FromWtf8Vec};
 
 // --- StrandBuf
 #[derive(Clone, Debug, Eq)]

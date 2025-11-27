@@ -1,11 +1,11 @@
-use std::ffi::{OsStr, OsString};
+use std::{ffi::OsString, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
 
-use crate::{FromWtf8, FromWtf8Vec, path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::{AsStrand, Strand}};
+use crate::{path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand, wtf8::FromWtf8Vec};
 
 // --- PathBufDyn
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq)]
 pub enum PathBufDyn {
 	Os(std::path::PathBuf),
 	Unix(typed_path::UnixPathBuf),
@@ -33,6 +33,16 @@ impl TryFrom<PathBufDyn> for typed_path::UnixPathBuf {
 	type Error = PathDynError;
 
 	fn try_from(value: PathBufDyn) -> Result<Self, Self::Error> { value.into_unix() }
+}
+
+// --- Hash
+impl Hash for PathBufDyn {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.as_path().hash(state) }
+}
+
+// --- PartialEq
+impl PartialEq for PathBufDyn {
+	fn eq(&self, other: &PathBufDyn) -> bool { self.as_path() == other.as_path() }
 }
 
 impl PartialEq<PathDyn<'_>> for PathBufDyn {
@@ -128,14 +138,10 @@ impl PathBufDyn {
 	where
 		T: AsStrand,
 	{
-		Ok(match (self, name.as_strand()) {
-			(Self::Os(p), Strand::Os(s)) => p.set_file_name(s),
-			(Self::Os(p), Strand::Utf8(s)) => p.set_file_name(s),
-			(Self::Os(p), Strand::Bytes(b)) => {
-				p.set_file_name(OsStr::from_wtf8(b).map_err(|_| SetNameError::FromWtf8)?)
-			}
-
-			(Self::Unix(p), s) => p.set_file_name(s.encoded_bytes()),
+		let s = name.as_strand();
+		Ok(match self {
+			Self::Os(p) => p.set_file_name(s.as_os()?),
+			Self::Unix(p) => p.set_file_name(s.encoded_bytes()),
 		})
 	}
 

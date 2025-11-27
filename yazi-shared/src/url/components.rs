@@ -32,17 +32,17 @@ impl<'a> Components<'a> {
 	}
 
 	pub fn os_str(&self) -> Cow<'a, OsStr> {
-		let Ok(path) = self.inner.path().as_os() else {
+		let Ok(os) = self.inner.strand().as_os() else {
 			return OsString::from(EncodeUrl(self.url()).to_string()).into();
 		};
 
 		if self.url.is_regular() || self.scheme_yielded {
-			return path.as_os_str().into();
+			return os.into();
 		}
 
 		let mut s = OsString::from(EncodeScheme(self.url()).to_string());
-		s.reserve_exact(path.as_os_str().len());
-		s.push(path);
+		s.reserve_exact(os.len());
+		s.push(os);
 		s.into()
 	}
 

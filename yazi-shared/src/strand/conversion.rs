@@ -47,12 +47,20 @@ impl AsStrand for &std::path::Path {
 	fn as_strand(&self) -> Strand<'_> { Strand::Os(self.as_os_str()) }
 }
 
+impl AsStrand for &std::path::PathBuf {
+	fn as_strand(&self) -> Strand<'_> { Strand::Os(self.as_os_str()) }
+}
+
 impl AsStrand for &typed_path::UnixPath {
 	fn as_strand(&self) -> Strand<'_> { Strand::Bytes(self.as_bytes()) }
 }
 
 impl AsStrand for crate::path::Components<'_> {
 	fn as_strand(&self) -> Strand<'_> { self.strand() }
+}
+
+impl AsStrand for Cow<'_, [u8]> {
+	fn as_strand(&self) -> Strand<'_> { Strand::Bytes(self) }
 }
 
 impl AsStrand for Cow<'_, OsStr> {

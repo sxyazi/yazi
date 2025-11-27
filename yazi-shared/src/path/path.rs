@@ -4,9 +4,9 @@ use anyhow::Result;
 use hashbrown::Equivalent;
 
 use super::{RsplitOnceError, StartsWithError};
-use crate::{BytesExt, FromWtf8, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
+use crate::{BytesExt, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PathDyn<'p> {
 	Os(&'p std::path::Path),
 	Unix(&'p typed_path::UnixPath),
@@ -186,14 +186,10 @@ impl<'p> PathDyn<'p> {
 	where
 		T: AsStrand,
 	{
-		Ok(match (self, child.as_strand()) {
-			(Self::Os(p), Strand::Os(q)) => p.ends_with(q),
-			(Self::Os(p), Strand::Utf8(q)) => p.ends_with(q),
-			(Self::Os(p), Strand::Bytes(b)) => {
-				p.ends_with(OsStr::from_wtf8(b).map_err(|_| EndsWithError)?)
-			}
-
-			(Self::Unix(p), s) => p.ends_with(s.encoded_bytes()),
+		let s = child.as_strand();
+		Ok(match self {
+			Self::Os(p) => p.ends_with(s.as_os()?),
+			Self::Unix(p) => p.ends_with(s.encoded_bytes()),
 		})
 	}
 
@@ -201,14 +197,10 @@ impl<'p> PathDyn<'p> {
 	where
 		T: AsStrand,
 	{
-		Ok(match (self, path.as_strand()) {
-			(Self::Os(p), Strand::Os(q)) => PathBufDyn::Os(p.join(q)),
-			(Self::Os(p), Strand::Utf8(q)) => PathBufDyn::Os(p.join(q)),
-			(Self::Os(p), Strand::Bytes(b)) => {
-				PathBufDyn::Os(p.join(OsStr::from_wtf8(b).map_err(|_| JoinError::FromWtf8)?))
-			}
-
-			(Self::Unix(p), s) => PathBufDyn::Unix(p.join(s.encoded_bytes())),
+		let s = path.as_strand();
+		Ok(match self {
+			Self::Os(p) => PathBufDyn::Os(p.join(s.as_os()?)),
+			Self::Unix(p) => PathBufDyn::Unix(p.join(s.encoded_bytes())),
 		})
 	}
 
@@ -235,14 +227,10 @@ impl<'p> PathDyn<'p> {
 	where
 		T: AsStrand,
 	{
-		Ok(match (self, base.as_strand()) {
-			(Self::Os(p), Strand::Os(s)) => p.starts_with(s),
-			(Self::Os(p), Strand::Utf8(s)) => p.starts_with(s),
-			(Self::Os(p), Strand::Bytes(b)) => {
-				p.starts_with(OsStr::from_wtf8(b).map_err(|_| StartsWithError)?)
-			}
-
-			(Self::Unix(p), s) => p.starts_with(s.encoded_bytes()),
+		let s = base.as_strand();
+		Ok(match self {
+			Self::Os(p) => p.starts_with(s.as_os()?),
+			Self::Unix(p) => p.starts_with(s.encoded_bytes()),
 		})
 	}
 
@@ -250,14 +238,10 @@ impl<'p> PathDyn<'p> {
 	where
 		T: AsStrand,
 	{
-		Ok(match (self, base.as_strand()) {
-			(Self::Os(p), Strand::Os(s)) => Self::Os(p.strip_prefix(s)?),
-			(Self::Os(p), Strand::Utf8(s)) => Self::Os(p.strip_prefix(s)?),
-			(Self::Os(p), Strand::Bytes(b)) => {
-				Self::Os(p.strip_prefix(OsStr::from_wtf8(b).map_err(|_| StripPrefixError::WrongEncoding)?)?)
-			}
-
-			(Self::Unix(p), s) => Self::Unix(p.strip_prefix(s.encoded_bytes())?),
+		let s = base.as_strand();
+		Ok(match self {
+			Self::Os(p) => Self::Os(p.strip_prefix(s.as_os()?)?),
+			Self::Unix(p) => Self::Unix(p.strip_prefix(s.encoded_bytes())?),
 		})
 	}
 
