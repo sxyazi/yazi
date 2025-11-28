@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem, time::Duration};
+use std::{borrow::Cow, time::Duration};
 
 use anyhow::Result;
 use tokio::pin;
@@ -6,7 +6,7 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::{SearchOpt, SearchOptVia}};
+use yazi_parser::{VoidOpt, mgr::{CdSource, SearchOpt, SearchOptVia}};
 use yazi_plugin::external;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::data::Data;
@@ -107,15 +107,10 @@ impl Actor for SearchStop {
 			handle.abort();
 		}
 
-		if !tab.cwd().is_search() {
-			succ!();
+		if tab.cwd().is_search() {
+			act!(mgr:cd, cx, (tab.cwd().to_regular()?, CdSource::Escape))?;
 		}
 
-		let rep = tab.history.remove_or(tab.cwd().to_regular()?);
-		drop(mem::replace(&mut tab.current, rep));
-
-		act!(mgr:hidden, cx)?;
-		act!(mgr:sort, cx)?;
-		act!(mgr:refresh, cx)
+		succ!();
 	}
 }

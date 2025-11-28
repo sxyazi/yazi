@@ -67,12 +67,10 @@ impl Ember<'static> {
 				| "trash"
 				| "delete"
 				| "mount"
-		) || kind.starts_with("emit-")
-			|| kind.starts_with("emit-ind-")
+		) || kind.starts_with("key-")
 			|| kind.starts_with("ind-")
-			|| kind.starts_with("key-")
+			|| kind.starts_with("emit-")
 			|| kind.starts_with("relay-")
-			|| kind.starts_with("relay-ind-")
 		{
 			bail!("Cannot construct system event");
 		}

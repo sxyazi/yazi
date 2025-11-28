@@ -73,6 +73,64 @@ impl<'p, P> Loc<'p, P>
 where
 	P: LocAble<'p> + LocAbleImpl<'p>,
 {
+	#[inline]
+	pub fn as_inner(self) -> P { self.inner }
+
+	#[inline]
+	pub fn as_loc(self) -> Self { self }
+
+	pub fn bare<T>(path: T) -> Self
+	where
+		T: AsPathView<'p, P>,
+	{
+		let path = path.as_path_view();
+		let Some(name) = path.file_name() else {
+			let uri = path.strip_prefix(P::empty()).unwrap().len();
+			return Self { inner: path, uri, urn: 0, _phantom: PhantomData };
+		};
+
+		let name_len = name.len();
+		let prefix_len = unsafe {
+			name.as_encoded_bytes().as_ptr().offset_from_unsigned(path.as_encoded_bytes().as_ptr())
+		};
+
+		let bytes = &path.as_encoded_bytes()[..prefix_len + name_len];
+		Self {
+			inner:    unsafe { P::from_encoded_bytes_unchecked(bytes) },
+			uri:      bytes.len(),
+			urn:      name_len,
+			_phantom: PhantomData,
+		}
+	}
+
+	#[inline]
+	pub fn base(self) -> P {
+		unsafe {
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(..self.inner.len() - self.uri),
+			)
+		}
+	}
+
+	pub fn floated<'a, T, S>(path: T, base: S) -> Self
+	where
+		T: AsPathView<'p, P>,
+		S: AsStrandView<'a, P::Strand<'a>>,
+	{
+		let mut loc = Self::bare(path);
+		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
+		loc
+	}
+
+	#[inline]
+	pub fn has_base(self) -> bool { self.inner.len() != self.uri }
+
+	#[inline]
+	pub fn has_trail(self) -> bool { self.inner.len() != self.urn }
+
+	#[inline]
+	pub fn is_empty(self) -> bool { self.inner.len() == 0 }
+
 	pub fn new<'a, T, S>(path: T, base: S, trail: S) -> Self
 	where
 		T: AsPathView<'p, P>,
@@ -82,6 +140,67 @@ where
 		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
 		loc.urn = loc.inner.strip_prefix(trail).expect("Loc must start with the given trail").len();
 		loc
+	}
+
+	#[inline]
+	pub fn parent(self) -> Option<P> {
+		self.inner.parent().filter(|p| !p.as_encoded_bytes().is_empty())
+	}
+
+	pub fn saturated<'a, T>(path: T, kind: SchemeKind) -> Self
+	where
+		T: AsPathView<'p, P>,
+	{
+		match kind {
+			SchemeKind::Regular => Self::bare(path),
+			SchemeKind::Search => Self::zeroed(path),
+			SchemeKind::Archive => Self::zeroed(path),
+			SchemeKind::Sftp => Self::bare(path),
+		}
+	}
+
+	#[inline]
+	pub fn trail(self) -> P {
+		unsafe {
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(..self.inner.len() - self.urn),
+			)
+		}
+	}
+
+	#[inline]
+	pub fn triple(self) -> (P, P, P) {
+		let len = self.inner.len();
+
+		let base = ..len - self.uri;
+		let rest = len - self.uri..len - self.urn;
+		let urn = len - self.urn..;
+
+		unsafe {
+			(
+				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(base)),
+				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(rest)),
+				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(urn)),
+			)
+		}
+	}
+
+	#[inline]
+	pub fn uri(self) -> P {
+		unsafe {
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(self.inner.len() - self.uri..),
+			)
+		}
+	}
+
+	#[inline]
+	pub fn urn(self) -> P {
+		unsafe {
+			P::from_encoded_bytes_unchecked(
+				self.inner.as_encoded_bytes().get_unchecked(self.inner.len() - self.urn..),
+			)
+		}
 	}
 
 	pub fn with<T>(path: T, uri: usize, urn: usize) -> Result<Self>
@@ -116,30 +235,6 @@ where
 		Ok(loc)
 	}
 
-	pub fn bare<T>(path: T) -> Self
-	where
-		T: AsPathView<'p, P>,
-	{
-		let path = path.as_path_view();
-		let Some(name) = path.file_name() else {
-			let uri = path.strip_prefix(P::empty()).unwrap().len();
-			return Self { inner: path, uri, urn: 0, _phantom: PhantomData };
-		};
-
-		let name_len = name.len();
-		let prefix_len = unsafe {
-			name.as_encoded_bytes().as_ptr().offset_from_unsigned(path.as_encoded_bytes().as_ptr())
-		};
-
-		let bytes = &path.as_encoded_bytes()[..prefix_len + name_len];
-		Self {
-			inner:    unsafe { P::from_encoded_bytes_unchecked(bytes) },
-			uri:      bytes.len(),
-			urn:      name_len,
-			_phantom: PhantomData,
-		}
-	}
-
 	pub fn zeroed<T>(path: T) -> Self
 	where
 		T: AsPathView<'p, P>,
@@ -147,95 +242,5 @@ where
 		let mut loc = Self::bare(path);
 		(loc.uri, loc.urn) = (0, 0);
 		loc
-	}
-
-	pub fn floated<'a, T, S>(path: T, base: S) -> Self
-	where
-		T: AsPathView<'p, P>,
-		S: AsStrandView<'a, P::Strand<'a>>,
-	{
-		let mut loc = Self::bare(path);
-		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
-		loc
-	}
-
-	pub fn saturated<'a, T>(path: T, kind: SchemeKind) -> Self
-	where
-		T: AsPathView<'p, P>,
-	{
-		match kind {
-			SchemeKind::Regular => Self::bare(path),
-			SchemeKind::Search => Self::zeroed(path),
-			SchemeKind::Archive => Self::zeroed(path),
-			SchemeKind::Sftp => Self::bare(path),
-		}
-	}
-
-	#[inline]
-	pub fn as_loc(self) -> Self { self }
-
-	#[inline]
-	pub fn as_inner(self) -> P { self.inner }
-
-	#[inline]
-	pub fn is_empty(self) -> bool { self.inner.len() == 0 }
-
-	#[inline]
-	pub fn uri(self) -> P {
-		unsafe {
-			P::from_encoded_bytes_unchecked(
-				self.inner.as_encoded_bytes().get_unchecked(self.inner.len() - self.uri..),
-			)
-		}
-	}
-
-	#[inline]
-	pub fn urn(self) -> P {
-		unsafe {
-			P::from_encoded_bytes_unchecked(
-				self.inner.as_encoded_bytes().get_unchecked(self.inner.len() - self.urn..),
-			)
-		}
-	}
-
-	#[inline]
-	pub fn base(self) -> P {
-		unsafe {
-			P::from_encoded_bytes_unchecked(
-				self.inner.as_encoded_bytes().get_unchecked(..self.inner.len() - self.uri),
-			)
-		}
-	}
-
-	#[inline]
-	pub fn has_base(self) -> bool { self.inner.len() != self.uri }
-
-	#[inline]
-	pub fn trail(self) -> P {
-		unsafe {
-			P::from_encoded_bytes_unchecked(
-				self.inner.as_encoded_bytes().get_unchecked(..self.inner.len() - self.urn),
-			)
-		}
-	}
-
-	#[inline]
-	pub fn has_trail(self) -> bool { self.inner.len() != self.urn }
-
-	#[inline]
-	pub fn triple(self) -> (P, P, P) {
-		let len = self.inner.len();
-
-		let base = ..len - self.uri;
-		let rest = len - self.uri..len - self.urn;
-		let urn = len - self.urn..;
-
-		unsafe {
-			(
-				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(base)),
-				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(rest)),
-				P::from_encoded_bytes_unchecked(self.inner.as_encoded_bytes().get_unchecked(urn)),
-			)
-		}
 	}
 }

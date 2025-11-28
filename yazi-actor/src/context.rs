@@ -118,13 +118,5 @@ impl<'a> Ctx<'a> {
 	pub fn tasks(&self) -> &Tasks { &self.tasks }
 
 	#[inline]
-	pub fn source(&self) -> Source {
-		use Source::*;
-		match self.source {
-			Key if self.level != 1 => Ind,
-			Emit if self.level != 1 => EmitInd,
-			Relay if self.level != 1 => RelayInd,
-			s => s,
-		}
-	}
+	pub fn source(&self) -> Source { if self.level != 1 { Source::Ind } else { self.source } }
 }

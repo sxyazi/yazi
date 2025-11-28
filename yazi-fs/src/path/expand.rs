@@ -92,7 +92,7 @@ fn absolute_url_impl<'a>(url: UrlCow<'a>) -> UrlCow<'a> {
 			if url.has_base() { 0 } else { 2 },
 			if url.has_trail() { 0 } else { 2 },
 		)
-		.expect("Failed to create Loc from drive letter")
+		.expect("Loc from drive letter")
 	} else if let Ok(rest) = path.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
 		&& home.is_absolute()
@@ -103,7 +103,7 @@ fn absolute_url_impl<'a>(url: UrlCow<'a>) -> UrlCow<'a> {
 			url.uri().components().count() + if url.has_base() { 0 } else { add },
 			url.urn().components().count() + if url.has_trail() { 0 } else { add },
 		)
-		.expect("Failed to create Loc from home directory")
+		.expect("Loc from home directory")
 	} else if !url.is_absolute() {
 		let cwd = CWD.path();
 		LocBuf::<PathBuf>::with(
@@ -111,7 +111,7 @@ fn absolute_url_impl<'a>(url: UrlCow<'a>) -> UrlCow<'a> {
 			url.uri().components().count(),
 			url.urn().components().count(),
 		)
-		.expect("Failed to create Loc from relative path")
+		.expect("Loc from relative path")
 	} else {
 		return url;
 	};

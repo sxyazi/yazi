@@ -5,6 +5,7 @@ use anyhow::Result;
 use crate::path::{AsPath, PathBufDyn, PathDyn, PathKind};
 
 // --- PathCow
+#[derive(Debug)]
 pub enum PathCow<'a> {
 	Borrowed(PathDyn<'a>),
 	Owned(PathBufDyn),

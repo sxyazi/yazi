@@ -6,6 +6,7 @@ yazi_macro::mod_flat!(
 	close
 	copy
 	create
+	displace
 	download
 	enter
 	escape
@@ -36,6 +37,7 @@ yazi_macro::mod_flat!(
 	shell
 	sort
 	spot
+	stash
 	suspend
 	tab_close
 	tab_create

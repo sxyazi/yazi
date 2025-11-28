@@ -1,4 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::{Deserialize, Serialize};
 use yazi_fs::path::expand_url;
 use yazi_shared::{event::CmdCow, url::{Url, UrlBuf, UrlCow}};
 
@@ -46,7 +47,8 @@ impl IntoLua for CdOpt {
 }
 
 // --- Source
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum CdSource {
 	Tab,
 	Cd,
@@ -55,9 +57,6 @@ pub enum CdSource {
 	Leave,
 	Forward,
 	Back,
-}
-
-impl CdSource {
-	#[inline]
-	pub fn big_jump(self) -> bool { self == Self::Cd || self == Self::Reveal }
+	Escape,
+	Displace,
 }

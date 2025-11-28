@@ -9,7 +9,7 @@ use yazi_fs::{File, FilesOp, path::expand_url};
 use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
-use yazi_shared::{Debounce, data::Data, errors::InputError, url::{AsUrl, UrlBuf, UrlLike}};
+use yazi_shared::{Debounce, data::Data, errors::InputError, url::{UrlBuf, UrlLike}};
 use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx};
@@ -33,18 +33,8 @@ impl Actor for Cd {
 		}
 
 		// Take parent to history
-		if let Some(rep) = tab.parent.take() {
-			tab.history.insert(rep.url.to_owned(), rep);
-		}
-
-		// Backstack
-		if opt.source.big_jump() {
-			if tab.current.url.is_regular() {
-				tab.backstack.push(tab.current.url.as_url());
-			}
-			if opt.target.is_regular() {
-				tab.backstack.push(opt.target.as_url());
-			}
+		if let Some(t) = tab.parent.take() {
+			tab.history.insert(t.url.to_owned(), t);
 		}
 
 		// Current
@@ -58,10 +48,12 @@ impl Actor for Cd {
 		}
 
 		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
+		act!(mgr:displace, cx)?;
 		act!(mgr:hidden, cx)?;
 		act!(mgr:sort, cx)?;
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
+		act!(mgr:stash, cx, opt).ok();
 		succ!(render!());
 	}
 }

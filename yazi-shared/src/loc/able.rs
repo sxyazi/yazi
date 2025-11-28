@@ -72,6 +72,8 @@ pub(super) trait LocAbleImpl<'p>: LocAble<'p> {
 
 	fn len(self) -> usize { self.as_encoded_bytes().len() }
 
+	fn parent(self) -> Option<Self>;
+
 	fn strip_prefix<'a, T>(self, base: T) -> Option<Self>
 	where
 		T: AsStrandView<'a, Self::Strand<'a>>;
@@ -98,6 +100,8 @@ impl<'p> LocAbleImpl<'p> for &'p std::path::Path {
 	{
 		self.join(path.as_strand_view())
 	}
+
+	fn parent(self) -> Option<Self> { self.parent() }
 
 	fn strip_prefix<'a, T>(self, base: T) -> Option<Self>
 	where
@@ -128,6 +132,8 @@ impl<'p> LocAbleImpl<'p> for &'p typed_path::UnixPath {
 	{
 		self.join(path.as_strand_view())
 	}
+
+	fn parent(self) -> Option<Self> { self.parent() }
 
 	fn strip_prefix<'a, T>(self, base: T) -> Option<Self>
 	where

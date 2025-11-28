@@ -13,9 +13,9 @@ impl Actor for Forward {
 	const NAME: &str = "forward";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
-		match cx.tab_mut().backstack.shift_forward().cloned() {
-			Some(u) => act!(mgr:cd, cx, (u, CdSource::Forward)),
-			None => succ!(),
+		if let Some(u) = cx.tab_mut().backstack.shift_forward().cloned() {
+			act!(mgr:cd, cx, (u, CdSource::Forward))?;
 		}
+		succ!()
 	}
 }
