@@ -1,4 +1,4 @@
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, Value};
 use yazi_shared::event::CmdCow;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -13,9 +13,9 @@ impl From<()> for VoidOpt {
 }
 
 impl FromLua for VoidOpt {
-	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Ok(Self) }
 }
 
 impl IntoLua for VoidOpt {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_table()?.into_lua(lua) }
 }

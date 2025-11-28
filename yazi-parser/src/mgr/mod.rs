@@ -3,6 +3,7 @@ yazi_macro::mod_flat!(
 	close
 	copy
 	create
+	displace_do
 	download
 	escape
 	filter
@@ -27,6 +28,7 @@ yazi_macro::mod_flat!(
 	shell
 	sort
 	spot
+	stash
 	tab_close
 	tab_create
 	tab_switch

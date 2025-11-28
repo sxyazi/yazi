@@ -96,12 +96,24 @@ impl PartialEq for UrlBuf {
 	fn eq(&self, other: &Self) -> bool { self.as_url() == other.as_url() }
 }
 
+impl PartialEq<UrlBuf> for &UrlBuf {
+	fn eq(&self, other: &UrlBuf) -> bool { self.as_url() == other.as_url() }
+}
+
 impl PartialEq<Url<'_>> for UrlBuf {
 	fn eq(&self, other: &Url) -> bool { self.as_url() == *other }
 }
 
 impl PartialEq<Url<'_>> for &UrlBuf {
 	fn eq(&self, other: &Url) -> bool { self.as_url() == *other }
+}
+
+impl PartialEq<UrlCow<'_>> for UrlBuf {
+	fn eq(&self, other: &UrlCow) -> bool { self.as_url() == other.as_url() }
+}
+
+impl PartialEq<UrlCow<'_>> for &UrlBuf {
+	fn eq(&self, other: &UrlCow) -> bool { self.as_url() == other.as_url() }
 }
 
 // --- Hash
@@ -293,7 +305,7 @@ mod tests {
 			("sftp://remote//", None),
 			// Relative
 			("search://kw:2:2/a/b", Some("search://kw:1:1/a")),
-			("search://kw:1:1/a", Some("search://kw/")),
+			("search://kw:1:1/a", None),
 			("search://kw/", None),
 		];
 

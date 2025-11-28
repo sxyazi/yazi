@@ -15,6 +15,8 @@ pub enum Spark<'a> {
 	Close(yazi_parser::mgr::CloseOpt),
 	Copy(yazi_parser::mgr::CopyOpt),
 	Create(yazi_parser::mgr::CreateOpt),
+	Displace(yazi_parser::VoidOpt),
+	DisplaceDo(yazi_parser::mgr::DisplaceDoOpt),
 	Download(yazi_parser::mgr::DownloadOpt),
 	Enter(yazi_parser::VoidOpt),
 	Escape(yazi_parser::mgr::EscapeOpt),
@@ -53,6 +55,7 @@ pub enum Spark<'a> {
 	Shell(yazi_parser::mgr::ShellOpt),
 	Sort(yazi_parser::mgr::SortOpt),
 	Spot(yazi_parser::mgr::SpotOpt),
+	Stash(yazi_parser::mgr::StashOpt),
 	Suspend(yazi_parser::VoidOpt),
 	TabClose(yazi_parser::mgr::TabCloseOpt),
 	TabCreate(yazi_parser::mgr::TabCreateOpt),
@@ -119,7 +122,9 @@ pub enum Spark<'a> {
 impl<'a> Spark<'a> {
 	pub fn from_lua(lua: &Lua, kind: SparkKind, value: Value) -> mlua::Result<Self> {
 		Ok(match kind {
+			SparkKind::IndStash => Self::Stash(<_>::from_lua(value, lua)?),
 			SparkKind::KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
+			SparkKind::RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
 		})
 	}
 }
@@ -138,6 +143,8 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Close(b) => b.into_lua(lua),
 			Self::Copy(b) => b.into_lua(lua),
 			Self::Create(b) => b.into_lua(lua),
+			Self::Displace(b) => b.into_lua(lua),
+			Self::DisplaceDo(b) => b.into_lua(lua),
 			Self::Download(b) => b.into_lua(lua),
 			Self::Enter(b) => b.into_lua(lua),
 			Self::Escape(b) => b.into_lua(lua),
@@ -176,6 +183,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Shell(b) => b.into_lua(lua),
 			Self::Sort(b) => b.into_lua(lua),
 			Self::Spot(b) => b.into_lua(lua),
+			Self::Stash(b) => b.into_lua(lua),
 			Self::Suspend(b) => b.into_lua(lua),
 			Self::TabClose(b) => b.into_lua(lua),
 			Self::TabCreate(b) => b.into_lua(lua),
@@ -282,6 +290,7 @@ try_from_spark!(mgr::CdOpt, mgr:cd);
 try_from_spark!(mgr::CloseOpt, mgr:close);
 try_from_spark!(mgr::CopyOpt, mgr:copy);
 try_from_spark!(mgr::CreateOpt, mgr:create);
+try_from_spark!(mgr::DisplaceDoOpt, mgr:displace_do);
 try_from_spark!(mgr::DownloadOpt, mgr:download);
 try_from_spark!(mgr::EscapeOpt, mgr:escape);
 try_from_spark!(mgr::FilterOpt, mgr:filter, mgr:filter_do);
@@ -306,6 +315,7 @@ try_from_spark!(mgr::SeekOpt, mgr:seek);
 try_from_spark!(mgr::ShellOpt, mgr:shell);
 try_from_spark!(mgr::SortOpt, mgr:sort);
 try_from_spark!(mgr::SpotOpt, mgr:spot);
+try_from_spark!(mgr::StashOpt, mgr:stash);
 try_from_spark!(mgr::TabCloseOpt, mgr:tab_close);
 try_from_spark!(mgr::TabCreateOpt, mgr:tab_create);
 try_from_spark!(mgr::TabSwitchOpt, mgr:tab_switch);

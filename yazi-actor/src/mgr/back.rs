@@ -14,7 +14,7 @@ impl Actor for Back {
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		if let Some(u) = cx.tab_mut().backstack.shift_backward().cloned() {
-			return act!(mgr:cd, cx, (u, CdSource::Back));
+			act!(mgr:cd, cx, (u, CdSource::Back))?;
 		}
 		succ!();
 	}

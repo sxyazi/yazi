@@ -49,6 +49,10 @@ impl From<Url> for yazi_shared::url::UrlBufCov {
 	fn from(value: Url) -> Self { Self(value.inner) }
 }
 
+impl From<Url> for yazi_shared::url::UrlCow<'_> {
+	fn from(value: Url) -> Self { value.inner.into() }
+}
+
 impl TryFrom<&[u8]> for Url {
 	type Error = mlua::Error;
 

@@ -182,7 +182,7 @@ where
 		let old = self.inner.len();
 		self.mutate(|path| path.set_file_name(name));
 
-		let new = self.len();
+		let new = self.inner.len();
 		if new == old {
 			return Ok(());
 		}
@@ -214,6 +214,9 @@ where
 		(loc.uri, loc.urn) = (self.uri, self.urn);
 		loc
 	}
+
+	#[inline]
+	pub fn parent(&self) -> Option<P::Borrowed<'_>> { self.as_loc().parent() }
 
 	#[inline]
 	fn mutate<T, F: FnOnce(&mut P) -> T>(&mut self, f: F) -> T {

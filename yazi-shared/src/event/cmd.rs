@@ -152,6 +152,14 @@ impl Cmd {
 		self.take(0)
 	}
 
+	pub fn take_second<T>(&mut self) -> Result<T>
+	where
+		T: TryFrom<Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		self.take(1)
+	}
+
 	pub fn take_seq<T>(&mut self) -> Vec<T>
 	where
 		T: TryFrom<Data>,

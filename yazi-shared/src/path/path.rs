@@ -139,8 +139,8 @@ impl<'p> PathDyn<'p> {
 
 	pub fn parent(self) -> Option<Self> {
 		Some(match self {
-			Self::Os(p) => Self::Os(p.parent()?),
-			Self::Unix(p) => Self::Unix(p.parent()?),
+			Self::Os(p) => Self::Os(p.parent().filter(|p| !p.as_os_str().is_empty())?),
+			Self::Unix(p) => Self::Unix(p.parent().filter(|p| !p.as_bytes().is_empty())?),
 		})
 	}
 
