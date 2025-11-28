@@ -30,7 +30,7 @@ impl Actor for Hover {
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of the file regardless.
-			tab.current.trace = Some(u.to_owned());
+			tab.current.trace = Some(u.clone());
 		}
 
 		// Publish through DDS

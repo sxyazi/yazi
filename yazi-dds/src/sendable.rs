@@ -120,7 +120,7 @@ impl Sendable {
 				Value::Table(tbl)
 			}
 			Data::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
-			Data::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
+			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			Data::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
 			Data::Any(a) => {
@@ -243,7 +243,7 @@ impl Sendable {
 			DataKey::Number(n) => Value::Number(n.0),
 			DataKey::String(s) => Value::String(lua.create_string(&**s)?),
 			DataKey::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
-			DataKey::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
+			DataKey::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			DataKey::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			DataKey::Bytes(b) => Value::String(lua.create_string(b)?),
 		})

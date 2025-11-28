@@ -8,6 +8,9 @@ description = "Yazi code generator"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [lib]
 proc-macro = true
 

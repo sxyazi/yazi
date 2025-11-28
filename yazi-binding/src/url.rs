@@ -56,9 +56,7 @@ impl From<Url> for yazi_shared::url::UrlCow<'_> {
 impl TryFrom<&[u8]> for Url {
 	type Error = mlua::Error;
 
-	fn try_from(value: &[u8]) -> mlua::Result<Self> {
-		Ok(Self::new(UrlCow::try_from(value)?.into_owned()))
-	}
+	fn try_from(value: &[u8]) -> mlua::Result<Self> { Ok(Self::new(UrlCow::try_from(value)?)) }
 }
 
 impl Url {

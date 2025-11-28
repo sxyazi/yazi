@@ -1,5 +1,3 @@
-#![allow(clippy::len_without_is_empty)]
-
 pub mod fs;
 pub mod requests;
 pub mod responses;

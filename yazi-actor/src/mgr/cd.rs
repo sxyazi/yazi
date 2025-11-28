@@ -34,13 +34,13 @@ impl Actor for Cd {
 
 		// Take parent to history
 		if let Some(t) = tab.parent.take() {
-			tab.history.insert(t.url.to_owned(), t);
+			tab.history.insert(t.url.clone(), t);
 		}
 
 		// Current
 		let rep = tab.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut tab.current, rep);
-		tab.history.insert(rep.url.to_owned(), rep);
+		tab.history.insert(rep.url.clone(), rep);
 
 		// Parent
 		if let Some(parent) = opt.target.parent() {

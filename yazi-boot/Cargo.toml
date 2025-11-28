@@ -8,6 +8,9 @@ description = "Yazi bootstrapper"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [dependencies]
 yazi-adapter = { path = "../yazi-adapter", version = "25.9.15" }
 yazi-config  = { path = "../yazi-config", version = "25.9.15" }

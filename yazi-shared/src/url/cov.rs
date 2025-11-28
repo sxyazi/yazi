@@ -54,6 +54,10 @@ impl From<UrlBufCov> for UrlBuf {
 	fn from(value: UrlBufCov) -> Self { value.0 }
 }
 
+impl From<&UrlBufCov> for UrlBuf {
+	fn from(value: &UrlBufCov) -> Self { value.0.clone() }
+}
+
 impl From<UrlBuf> for UrlBufCov {
 	fn from(value: UrlBuf) -> Self { Self(value) }
 }

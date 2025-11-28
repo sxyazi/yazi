@@ -42,7 +42,7 @@ impl Hash for PathBufDyn {
 
 // --- PartialEq
 impl PartialEq for PathBufDyn {
-	fn eq(&self, other: &PathBufDyn) -> bool { self.as_path() == other.as_path() }
+	fn eq(&self, other: &Self) -> bool { self.as_path() == other.as_path() }
 }
 
 impl PartialEq<PathDyn<'_>> for PathBufDyn {

@@ -1,5 +1,3 @@
-#![allow(clippy::if_same_then_else)]
-
 #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;

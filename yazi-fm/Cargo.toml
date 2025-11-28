@@ -60,7 +60,7 @@ tokio-stream = { workspace = true }
 # Logging
 tracing            = { workspace = true }
 tracing-appender   = "0.2.4"
-tracing-subscriber = { version = "0.3.20", features = [ "env-filter" ] }
+tracing-subscriber = { version = "0.3.22", features = [ "env-filter" ] }
 
 [target."cfg(unix)".dependencies]
 libc              = { workspace = true }

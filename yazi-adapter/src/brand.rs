@@ -44,42 +44,40 @@ impl Brand {
 	}
 
 	pub fn from_env() -> Option<Self> {
-		use Brand as B;
-
-		let (term, program) = B::env();
+		let (term, program) = Self::env();
 		let vars = [
-			("KITTY_WINDOW_ID", B::Kitty),
-			("KONSOLE_VERSION", B::Konsole),
-			("ITERM_SESSION_ID", B::Iterm2),
-			("WEZTERM_EXECUTABLE", B::WezTerm),
-			("GHOSTTY_RESOURCES_DIR", B::Ghostty),
-			("WT_Session", B::Microsoft),
-			("WARP_HONOR_PS1", B::Warp),
-			("VSCODE_INJECTION", B::VSCode),
-			("TABBY_CONFIG_DIRECTORY", B::Tabby),
+			("KITTY_WINDOW_ID", Self::Kitty),
+			("KONSOLE_VERSION", Self::Konsole),
+			("ITERM_SESSION_ID", Self::Iterm2),
+			("WEZTERM_EXECUTABLE", Self::WezTerm),
+			("GHOSTTY_RESOURCES_DIR", Self::Ghostty),
+			("WT_Session", Self::Microsoft),
+			("WARP_HONOR_PS1", Self::Warp),
+			("VSCODE_INJECTION", Self::VSCode),
+			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
 		];
 
 		match term.as_str() {
-			"xterm-kitty" => return Some(B::Kitty),
-			"foot" => return Some(B::Foot),
-			"foot-extra" => return Some(B::Foot),
-			"xterm-ghostty" => return Some(B::Ghostty),
-			"rio" => return Some(B::Rio),
-			"rxvt-unicode-256color" => return Some(B::Urxvt),
+			"xterm-kitty" => return Some(Self::Kitty),
+			"foot" => return Some(Self::Foot),
+			"foot-extra" => return Some(Self::Foot),
+			"xterm-ghostty" => return Some(Self::Ghostty),
+			"rio" => return Some(Self::Rio),
+			"rxvt-unicode-256color" => return Some(Self::Urxvt),
 			_ => {}
 		}
 		match program.as_str() {
-			"iTerm.app" => return Some(B::Iterm2),
-			"WezTerm" => return Some(B::WezTerm),
-			"ghostty" => return Some(B::Ghostty),
-			"WarpTerminal" => return Some(B::Warp),
-			"rio" => return Some(B::Rio),
-			"BlackBox" => return Some(B::BlackBox),
-			"vscode" => return Some(B::VSCode),
-			"Tabby" => return Some(B::Tabby),
-			"Hyper" => return Some(B::Hyper),
-			"mintty" => return Some(B::Mintty),
-			"Apple_Terminal" => return Some(B::Apple),
+			"iTerm.app" => return Some(Self::Iterm2),
+			"WezTerm" => return Some(Self::WezTerm),
+			"ghostty" => return Some(Self::Ghostty),
+			"WarpTerminal" => return Some(Self::Warp),
+			"rio" => return Some(Self::Rio),
+			"BlackBox" => return Some(Self::BlackBox),
+			"vscode" => return Some(Self::VSCode),
+			"Tabby" => return Some(Self::Tabby),
+			"Hyper" => return Some(Self::Hyper),
+			"mintty" => return Some(Self::Mintty),
+			"Apple_Terminal" => return Some(Self::Apple),
 			_ => {}
 		}
 		if let Some((var, brand)) = vars.into_iter().find(|&(s, _)| env_exists(s)) {
@@ -91,30 +89,28 @@ impl Brand {
 	}
 
 	pub(super) fn adapters(self) -> &'static [crate::Adapter] {
-		use Brand as B;
-
 		use crate::Adapter as A;
 
 		match self {
-			B::Kitty => &[A::Kgp],
-			B::Konsole => &[A::KgpOld],
-			B::Iterm2 => &[A::Iip, A::Sixel],
-			B::WezTerm => &[A::Iip, A::Sixel],
-			B::Foot => &[A::Sixel],
-			B::Ghostty => &[A::Kgp],
-			B::Microsoft => &[A::Sixel],
-			B::Warp => &[A::Iip, A::KgpOld],
-			B::Rio => &[A::Iip, A::Sixel],
-			B::BlackBox => &[A::Sixel],
-			B::VSCode => &[A::Iip, A::Sixel],
-			B::Tabby => &[A::Iip, A::Sixel],
-			B::Hyper => &[A::Iip, A::Sixel],
-			B::Mintty => &[A::Iip],
-			B::Tmux => &[],
-			B::VTerm => &[],
-			B::Apple => &[],
-			B::Urxvt => &[],
-			B::Bobcat => &[A::Iip, A::Sixel],
+			Self::Kitty => &[A::Kgp],
+			Self::Konsole => &[A::KgpOld],
+			Self::Iterm2 => &[A::Iip, A::Sixel],
+			Self::WezTerm => &[A::Iip, A::Sixel],
+			Self::Foot => &[A::Sixel],
+			Self::Ghostty => &[A::Kgp],
+			Self::Microsoft => &[A::Sixel],
+			Self::Warp => &[A::Iip, A::KgpOld],
+			Self::Rio => &[A::Iip, A::Sixel],
+			Self::BlackBox => &[A::Sixel],
+			Self::VSCode => &[A::Iip, A::Sixel],
+			Self::Tabby => &[A::Iip, A::Sixel],
+			Self::Hyper => &[A::Iip, A::Sixel],
+			Self::Mintty => &[A::Iip],
+			Self::Tmux => &[],
+			Self::VTerm => &[],
+			Self::Apple => &[],
+			Self::Urxvt => &[],
+			Self::Bobcat => &[A::Iip, A::Sixel],
 		}
 	}
 
