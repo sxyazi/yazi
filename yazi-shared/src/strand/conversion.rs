@@ -59,6 +59,10 @@ impl AsStrand for crate::path::Components<'_> {
 	fn as_strand(&self) -> Strand<'_> { self.strand() }
 }
 
+impl AsStrand for Cow<'_, [u8]> {
+	fn as_strand(&self) -> Strand<'_> { Strand::Bytes(self) }
+}
+
 impl AsStrand for Cow<'_, OsStr> {
 	fn as_strand(&self) -> Strand<'_> { Strand::Os(self) }
 }

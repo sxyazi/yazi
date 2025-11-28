@@ -1,8 +1,8 @@
-use std::{ffi::{OsStr, OsString}, hash::{Hash, Hasher}};
+use std::{ffi::OsString, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
 
-use crate::{path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::{AsStrand, Strand}, wtf8::{FromWtf8, FromWtf8Vec}};
+use crate::{path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand, wtf8::FromWtf8Vec};
 
 // --- PathBufDyn
 #[derive(Clone, Debug, Eq)]
@@ -138,14 +138,10 @@ impl PathBufDyn {
 	where
 		T: AsStrand,
 	{
-		Ok(match (self, name.as_strand()) {
-			(Self::Os(p), Strand::Os(s)) => p.set_file_name(s),
-			(Self::Os(p), Strand::Utf8(s)) => p.set_file_name(s),
-			(Self::Os(p), Strand::Bytes(b)) => {
-				p.set_file_name(OsStr::from_wtf8(b).map_err(|_| SetNameError::FromWtf8)?)
-			}
-
-			(Self::Unix(p), s) => p.set_file_name(s.encoded_bytes()),
+		let s = name.as_strand();
+		Ok(match self {
+			Self::Os(p) => p.set_file_name(s.as_os()?),
+			Self::Unix(p) => p.set_file_name(s.encoded_bytes()),
 		})
 	}
 

@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+
+use percent_encoding::percent_decode;
 use tokio::sync::mpsc;
 use yazi_shared::{scheme::SchemeKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -44,7 +47,8 @@ impl Reporter {
 
 			// Virtual caches
 			let Some(dir) = watched.find_by_cache(parent.loc()) else { continue };
-			if let Some(Ok(u)) = url.name().map(|n| dir.try_join(n)) {
+			let Some(name) = url.name() else { continue };
+			if let Ok(u) = dir.try_join(Cow::from(percent_decode(name.encoded_bytes()))) {
 				self.remote_tx.send(u).ok();
 			}
 			self.remote_tx.send(dir).ok();
