@@ -12,3 +12,6 @@ result-*
 .vscode/
 
 *.snap
+
+platform/built/
+MacOSX*.sdk*
