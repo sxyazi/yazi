@@ -1,6 +1,6 @@
 use std::{any::TypeId, ffi::OsStr, io, process::Stdio};
 
-use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use yazi_binding::Error;
 use yazi_shared::wtf8::FromWtf8;
@@ -139,10 +139,13 @@ impl UserData for Command {
 			)
 		}
 
-		methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, Value)| {
+		methods.add_function_mut("arg", |lua, (ud, arg): (AnyUserData, Value)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				match arg {
+					Value::Nil => {
+						return lua.create_sequence_from(me.inner.as_std().get_args())?.into_lua(lua);
+					}
 					Value::String(s) => {
 						me.inner.arg(OsStr::from_wtf8(&s.as_bytes())?);
 					}
@@ -154,7 +157,7 @@ impl UserData for Command {
 					_ => return Err("arg must be a string or table of strings".into_lua_err()),
 				}
 			}
-			Ok(ud)
+			ud.into_lua(lua)
 		});
 		methods.add_function_mut("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?.as_ref());
