@@ -1,16 +1,16 @@
-use std::{any::TypeId, collections::HashMap, io::{self, ErrorKind}, sync::Arc};
+use std::{any::TypeId, collections::HashMap, io::{self, ErrorKind}, sync::Arc, time::Duration};
 
 use parking_lot::Mutex;
 use russh::{ChannelStream, client::Msg};
 use serde::Serialize;
-use tokio::{io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf}, select, sync::{mpsc, oneshot}};
+use tokio::{io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf}, select, sync::{mpsc, oneshot}, time::timeout};
 
-use crate::{Error, Id, Packet, responses};
+use crate::{Error, Id, Packet, Receiver, responses};
 
 pub struct Session {
 	tx:                    mpsc::UnboundedSender<Vec<u8>>,
 	id:                    Id,
-	callback:              Mutex<HashMap<u32, oneshot::Sender<Packet<'static>>>>,
+	pub(super) callback:   Mutex<HashMap<u32, oneshot::Sender<Packet<'static>>>>,
 	pub(super) extensions: Mutex<HashMap<String, String>>,
 }
 
@@ -43,6 +43,7 @@ impl Session {
 			}
 		}
 
+		let me_ = me.clone();
 		let (mut reader, mut writer) = tokio::io::split(stream);
 		tokio::spawn(async move {
 			while let Some(data) = rx.recv().await {
@@ -51,6 +52,9 @@ impl Session {
 				{
 					rx.close();
 					writer.shutdown().await.ok();
+					for (id, cb) in me_.callback.lock().drain() {
+						cb.send(responses::Status::connection_lost(id).into()).ok();
+					}
 					break;
 				}
 			}
@@ -84,12 +88,12 @@ impl Session {
 		me
 	}
 
-	pub async fn send<'a, I, O>(&self, input: I) -> Result<O, Error>
+	pub async fn send<'a, I, O>(self: &Arc<Self>, input: I) -> Result<O, Error>
 	where
 		I: Into<Packet<'a>> + Serialize,
 		O: TryFrom<Packet<'static>, Error = Error> + 'static,
 	{
-		match self.send_sync(input)?.await? {
+		match timeout(Duration::from_secs(30), self.send_sync(input)?).await?? {
 			Packet::Status(status) if TypeId::of::<O>() != TypeId::of::<responses::Status>() => {
 				Err(Error::Status(status))
 			}
@@ -97,7 +101,7 @@ impl Session {
 		}
 	}
 
-	pub fn send_sync<'a, I>(&self, input: I) -> Result<oneshot::Receiver<Packet<'static>>, Error>
+	pub fn send_sync<'a, I>(self: &Arc<Self>, input: I) -> Result<Receiver, Error>
 	where
 		I: Into<Packet<'a>> + Serialize,
 	{
@@ -106,12 +110,13 @@ impl Session {
 			request = request.with_id(self.id.next());
 		}
 
+		let id = request.id();
 		let (tx, rx) = oneshot::channel();
-		self.callback.lock().insert(request.id(), tx);
-		self.tx.send(crate::to_bytes(request)?)?;
 
-		Ok(rx)
+		self.callback.lock().insert(id, tx);
+		self.tx.send(crate::to_bytes(request)?)?;
+		Ok(Receiver::new(self, id, rx))
 	}
 
-	pub fn is_closed(&self) -> bool { self.tx.is_closed() }
+	pub fn is_closed(self: &Arc<Self>) -> bool { self.tx.is_closed() }
 }

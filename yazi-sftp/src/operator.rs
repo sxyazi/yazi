@@ -1,15 +1,14 @@
 use std::{ops::Deref, sync::Arc};
 
 use russh::{ChannelStream, client::Msg};
-use tokio::sync::oneshot;
 use typed_path::UnixPathBuf;
 
-use crate::{AsSftpPath, Error, Packet, Session, SftpPath, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
+use crate::{AsSftpPath, Error, Receiver, Session, SftpPath, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
 
 pub struct Operator(Arc<Session>);
 
 impl Deref for Operator {
-	type Target = Session;
+	type Target = Arc<Session>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -36,25 +35,15 @@ impl Operator {
 		Ok(File::new(&self.0, handle.handle))
 	}
 
-	pub fn close(&self, handle: &str) -> Result<oneshot::Receiver<Packet<'static>>, Error> {
+	pub fn close(&self, handle: &str) -> Result<Receiver, Error> {
 		self.send_sync(requests::Close::new(handle))
 	}
 
-	pub fn read(
-		&self,
-		handle: &str,
-		offset: u64,
-		len: u32,
-	) -> Result<oneshot::Receiver<Packet<'static>>, Error> {
+	pub fn read(&self, handle: &str, offset: u64, len: u32) -> Result<Receiver, Error> {
 		self.send_sync(requests::Read::new(handle, offset, len))
 	}
 
-	pub fn write(
-		&self,
-		handle: &str,
-		offset: u64,
-		data: &[u8],
-	) -> Result<oneshot::Receiver<Packet<'static>>, Error> {
+	pub fn write(&self, handle: &str, offset: u64, data: &[u8]) -> Result<Receiver, Error> {
 		self.send_sync(requests::Write::new(handle, offset, data))
 	}
 
@@ -183,7 +172,7 @@ impl Operator {
 		status.into()
 	}
 
-	pub fn fsync(&self, handle: &str) -> Result<oneshot::Receiver<Packet<'static>>, Error> {
+	pub fn fsync(&self, handle: &str) -> Result<Receiver, Error> {
 		if self.extensions.lock().get("fsync@openssh.com").is_none_or(|s| s != "1") {
 			return Err(Error::Unsupported);
 		}
