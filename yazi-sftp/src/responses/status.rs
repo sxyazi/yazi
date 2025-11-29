@@ -27,6 +27,15 @@ impl Status {
 	pub fn is_ok(&self) -> bool { self.code == StatusCode::Ok }
 
 	pub fn is_eof(&self) -> bool { self.code == StatusCode::Eof }
+
+	pub(crate) fn connection_lost(id: u32) -> Self {
+		Self {
+			id,
+			code: StatusCode::ConnectionLost,
+			message: "connection lost".to_owned(),
+			language: "en".to_owned(),
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]

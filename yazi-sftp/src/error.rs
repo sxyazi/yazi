@@ -59,6 +59,10 @@ impl From<tokio::sync::oneshot::error::RecvError> for Error {
 	fn from(_: tokio::sync::oneshot::error::RecvError) -> Self { Self::custom("channel closed") }
 }
 
+impl From<tokio::time::error::Elapsed> for Error {
+	fn from(_: tokio::time::error::Elapsed) -> Self { Self::Timeout }
+}
+
 impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {

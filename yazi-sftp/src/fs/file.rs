@@ -1,8 +1,8 @@
 use std::{io, pin::Pin, sync::Arc, task::{Context, Poll, ready}, time::Duration};
 
-use tokio::{io::{AsyncRead, AsyncWrite, ReadBuf}, sync::oneshot, time::{Timeout, timeout}};
+use tokio::{io::{AsyncRead, AsyncWrite, ReadBuf}, time::{Timeout, timeout}};
 
-use crate::{Error, Operator, Packet, Session, fs::Attrs};
+use crate::{Error, Operator, Packet, Receiver, Session, fs::Attrs};
 
 pub struct File {
 	session: Arc<Session>,
@@ -10,10 +10,10 @@ pub struct File {
 
 	closed:   bool,
 	cursor:   u64,
-	close_rx: Option<Timeout<oneshot::Receiver<Packet<'static>>>>,
-	read_rx:  Option<oneshot::Receiver<Packet<'static>>>,
-	write_rx: Option<(oneshot::Receiver<Packet<'static>>, usize)>,
-	flush_rx: Option<Timeout<oneshot::Receiver<Packet<'static>>>>,
+	close_rx: Option<Timeout<Receiver>>,
+	read_rx:  Option<Receiver>,
+	write_rx: Option<(Receiver, usize)>,
+	flush_rx: Option<Timeout<Receiver>>,
 }
 
 impl Unpin for File {}
