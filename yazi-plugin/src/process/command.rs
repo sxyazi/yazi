@@ -140,22 +140,18 @@ impl UserData for Command {
 		}
 
 		methods.add_function_mut("arg", |lua, (ud, arg): (AnyUserData, Value)| {
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				match arg {
-					Value::Nil => {
-						return lua.create_sequence_from(me.inner.as_std().get_args())?.into_lua(lua);
-					}
-					Value::String(s) => {
-						me.inner.arg(OsStr::from_wtf8(&s.as_bytes())?);
-					}
-					Value::Table(t) => {
-						for s in t.sequence_values::<mlua::String>() {
-							me.inner.arg(OsStr::from_wtf8(&s?.as_bytes())?);
-						}
-					}
-					_ => return Err("arg must be a string or table of strings".into_lua_err()),
+			let mut me = ud.borrow_mut::<Self>()?;
+			match arg {
+				Value::Nil => return lua.create_sequence_from(me.inner.as_std().get_args())?.into_lua(lua),
+				Value::String(s) => {
+					me.inner.arg(OsStr::from_wtf8(&s.as_bytes())?);
 				}
+				Value::Table(t) => {
+					for s in t.sequence_values::<mlua::String>() {
+						me.inner.arg(OsStr::from_wtf8(&s?.as_bytes())?);
+					}
+				}
+				_ => Err("arg must be a string or table of strings".into_lua_err())?,
 			}
 			ud.into_lua(lua)
 		});
