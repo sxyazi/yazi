@@ -102,7 +102,7 @@ function M.placeholder(err, urls, paths)
 	end
 
 	local updates = {}
-	for i = 1, math.max(#urls, #paths) do
+	for i = 1, #paths do
 		updates[urls[i] or paths[i]] = "null/file1-not-found"
 	end
 
