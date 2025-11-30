@@ -1,5 +1,9 @@
 use std::{fmt, io, sync::Arc};
 
+use anyhow::Result;
+
+use crate::error::{kind_from_str, kind_to_str};
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Error {
 	Kind(io::ErrorKind),
@@ -38,6 +42,10 @@ impl fmt::Display for Error {
 }
 
 impl Error {
+	pub fn custom(kind: &str, code: Option<i32>, message: &str) -> Result<Self> {
+		Ok(Self::Custom { kind: kind_from_str(kind)?, code, message: message.into() })
+	}
+
 	pub fn kind(&self) -> io::ErrorKind {
 		match self {
 			Self::Kind(kind) => *kind,
@@ -45,6 +53,8 @@ impl Error {
 			Self::Custom { kind, .. } => *kind,
 		}
 	}
+
+	pub fn kind_str(&self) -> &'static str { kind_to_str(self.kind()) }
 
 	pub fn raw_os_error(&self) -> Option<i32> {
 		match self {

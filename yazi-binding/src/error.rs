@@ -14,9 +14,20 @@ pub enum Error {
 
 impl Error {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		let new = lua.create_function(|_, msg: String| Ok(Self::custom(msg)))?;
+		let custom = lua.create_function(|_, msg: String| Ok(Self::custom(msg)))?;
 
-		lua.globals().raw_set("Error", lua.create_table_from([("custom", new)])?)
+		let fs = lua.create_function(|_, value: Value| {
+			Ok(Self::Fs(match value {
+				Value::Table(t) => yazi_fs::error::Error::custom(
+					&t.raw_get::<mlua::String>("kind")?.to_str()?,
+					t.raw_get("code")?,
+					&t.raw_get::<mlua::String>("message")?.to_str()?,
+				)?,
+				_ => Err("expected a table".into_lua_err())?,
+			}))
+		})?;
+
+		lua.globals().raw_set("Error", lua.create_table_from([("custom", custom), ("fs", fs)])?)
 	}
 
 	pub fn custom(msg: impl Into<SStr>) -> Self { Self::Custom(msg.into()) }
@@ -57,6 +68,13 @@ impl UserData for Error {
 			Ok(match me {
 				Self::Io(e) => e.raw_os_error(),
 				Self::Fs(e) => e.raw_os_error(),
+				_ => None,
+			})
+		});
+		fields.add_field_method_get("kind", |_, me| {
+			Ok(match me {
+				Self::Io(e) => Some(yazi_fs::error::Error::from(e.kind()).kind_str()),
+				Self::Fs(e) => Some(e.kind_str()),
 				_ => None,
 			})
 		});

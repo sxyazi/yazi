@@ -114,6 +114,8 @@ spotters = [
 	{ mime = "video/*", run = "video" },
 	# Virtual file system
 	{ mime = "vfs/*", run = "vfs" },
+	# Error
+	{ mime = "null/*", run = "null" },
 	# Fallback
 	{ url = "*", run = "file" },
 ]
@@ -160,6 +162,8 @@ previewers = [
 	{ mime = "inode/empty", run = "empty" },
 	# Virtual file system
 	{ mime = "vfs/*", run = "vfs" },
+	# Error
+	{ mime = "null/*", run = "null" },
 	# Fallback
 	{ url = "*", run = "file" },
 ]
