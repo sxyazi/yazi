@@ -113,13 +113,25 @@ impl<'a> Url<'a> {
 	pub fn is_absolute(self) -> bool { self.loc().is_absolute() }
 
 	#[inline]
+	pub fn is_archive(self) -> bool { matches!(self, Self::Archive { .. }) }
+
+	#[inline]
+	pub fn is_internal(self) -> bool {
+		match self {
+			Self::Regular(_) | Self::Sftp { .. } => true,
+			Self::Search { .. } => !self.uri().is_empty(),
+			Self::Archive { .. } => false,
+		}
+	}
+
+	#[inline]
 	pub fn is_regular(self) -> bool { matches!(self, Self::Regular(_)) }
 
 	#[inline]
 	pub fn is_search(self) -> bool { matches!(self, Self::Search { .. }) }
 
 	#[inline]
-	pub fn kind(&self) -> SchemeKind {
+	pub fn kind(self) -> SchemeKind {
 		match self {
 			Self::Regular(_) => SchemeKind::Regular,
 			Self::Search { .. } => SchemeKind::Search,

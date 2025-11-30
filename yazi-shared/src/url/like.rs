@@ -28,6 +28,14 @@ where
 
 	fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
 
+	fn is_archive(&self) -> bool { self.as_url().is_archive() }
+
+	fn is_internal(&self) -> bool { self.as_url().is_internal() }
+
+	fn is_regular(&self) -> bool { self.as_url().is_regular() }
+
+	fn is_search(&self) -> bool { self.as_url().is_search() }
+
 	fn kind(&self) -> SchemeKind { self.as_url().kind() }
 
 	fn loc(&self) -> PathDyn<'_> { self.as_url().loc() }

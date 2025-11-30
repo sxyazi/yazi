@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Pat
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::{Scheme, SchemeKind}, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
+use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::Scheme, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
 
 #[derive(Clone, Eq)]
 pub enum UrlBuf {
@@ -171,10 +171,6 @@ impl UrlBuf {
 }
 
 impl UrlBuf {
-	// --- Regular
-	#[inline]
-	pub fn is_regular(&self) -> bool { self.as_url().is_regular() }
-
 	#[inline]
 	pub fn to_regular(&self) -> Result<Self, PathDynError> { Ok(self.as_url().as_regular()?.into()) }
 
@@ -182,10 +178,6 @@ impl UrlBuf {
 	pub fn into_regular(self) -> Result<Self, PathDynError> {
 		Ok(Self::Regular(self.into_loc().into_os()?.into()))
 	}
-
-	// --- Search
-	#[inline]
-	pub fn is_search(&self) -> bool { self.kind() == SchemeKind::Search }
 
 	#[inline]
 	pub fn to_search(&self, domain: impl AsRef<str>) -> Result<Self, PathDynError> {
@@ -201,20 +193,6 @@ impl UrlBuf {
 			loc:    LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
 			domain: Pool::<str>::intern(domain),
 		})
-	}
-
-	// --- Archive
-	#[inline]
-	pub fn is_archive(&self) -> bool { self.kind() == SchemeKind::Archive }
-
-	// --- Internal
-	#[inline]
-	pub fn is_internal(&self) -> bool {
-		match self.kind() {
-			SchemeKind::Regular | SchemeKind::Sftp => true,
-			SchemeKind::Search => !self.uri().is_empty(),
-			SchemeKind::Archive => false,
-		}
 	}
 }
 

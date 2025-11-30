@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_dds::spark::SparkKind;
 use yazi_macro::succ;
 use yazi_parser::mgr::StashOpt;
-use yazi_shared::{Source, data::Data, url::AsUrl};
+use yazi_shared::{Source, data::Data, url::{AsUrl, UrlLike}};
 
 use crate::{Actor, Ctx};
 
@@ -14,7 +14,7 @@ impl Actor for Stash {
 	const NAME: &str = "stash";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		if opt.target.is_regular() {
+		if opt.target.is_internal() {
 			cx.tab_mut().backstack.push(opt.target.as_url());
 		}
 

@@ -55,6 +55,7 @@ pub enum CdSource {
 	Reveal,
 	Enter,
 	Leave,
+	Follow,
 	Forward,
 	Back,
 	Escape,

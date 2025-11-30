@@ -1,6 +1,6 @@
 use std::{hash::{Hash, Hasher}, ops::Deref, path::Path};
 
-use yazi_shared::{loc::Loc, path::{PathBufDyn, PathDyn, PathLike}, strand::Strand, url::{Url, UrlBuf, UrlLike}};
+use yazi_shared::{path::{PathBufDyn, PathDyn}, strand::Strand, url::{UrlBuf, UrlLike}};
 
 use crate::cha::{Cha, ChaType};
 
@@ -47,23 +47,6 @@ impl File {
 
 	#[inline]
 	pub fn stem(&self) -> Option<Strand<'_>> { self.url.stem() }
-
-	pub fn link_to_url(&self) -> Option<Url<'_>> {
-		let to = self.link_to.as_ref()?;
-		let kind = self.url.kind();
-		Some(match &self.url {
-			UrlBuf::Regular(_) => Url::Regular(Loc::bare(to.as_os().ok()?)),
-			UrlBuf::Search { domain, .. } => {
-				Url::Search { loc: Loc::saturated(to.as_os().ok()?, kind), domain }
-			}
-			UrlBuf::Archive { domain, .. } => {
-				Url::Archive { loc: Loc::saturated(to.as_os().ok()?, kind), domain }
-			}
-			UrlBuf::Sftp { domain, .. } => {
-				Url::Sftp { loc: Loc::saturated(to.as_unix().ok()?, kind), domain }
-			}
-		})
-	}
 }
 
 impl Hash for File {
