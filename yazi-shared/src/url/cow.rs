@@ -249,11 +249,6 @@ impl<'a> UrlCow<'a> {
 	pub fn to_owned(&self) -> UrlBuf { self.as_url().into() }
 }
 
-impl UrlCow<'_> {
-	#[inline]
-	pub fn is_regular(&self) -> bool { self.as_url().is_regular() }
-}
-
 impl Serialize for UrlCow<'_> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where

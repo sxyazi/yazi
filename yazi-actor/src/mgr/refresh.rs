@@ -57,8 +57,11 @@ impl Refresh {
 			}
 		}
 
-		let futs: Vec<_> =
-			folders.iter().filter(|&f| f.url.is_internal()).map(|&f| go(f.url.clone(), f.cha)).collect();
+		let futs: Vec<_> = folders
+			.iter()
+			.filter(|&f| f.url.is_absolute() && f.url.is_internal())
+			.map(|&f| go(f.url.clone(), f.cha))
+			.collect();
 
 		if !futs.is_empty() {
 			tokio::spawn(futures::future::join_all(futs));

@@ -9,7 +9,7 @@ use yazi_macro::{act, succ};
 use yazi_parser::{VoidOpt, mgr::{CdSource, SearchOpt, SearchOptVia}};
 use yazi_plugin::external;
 use yazi_proxy::{InputProxy, MgrProxy};
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 

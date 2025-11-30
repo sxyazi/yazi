@@ -38,7 +38,7 @@ impl VfsFiles for Files {
 
 	async fn from_dir_bulk(dir: &UrlBuf) -> std::io::Result<Vec<File>> {
 		let mut it = provider::read_dir(dir).await?;
-		let mut entries = Vec::with_capacity(5000);
+		let mut entries = Vec::new();
 		while let Ok(Some(entry)) = it.next().await {
 			entries.push(entry);
 		}
