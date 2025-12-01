@@ -1,6 +1,6 @@
 use std::io;
 
-use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
+use tokio::sync::mpsc;
 use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
 use yazi_shared::{path::{AsPath, PathBufDyn}, url::{AsUrl, UrlBuf, UrlCow}};
 
@@ -51,18 +51,29 @@ where
 		(false, false) if from.scheme().covariant(to.scheme()) => {
 			Providers::new(from).await?.copy(to.loc(), attrs).await
 		}
+		(true, false) | (false, true) | (false, false) => super::copy_impl(from, to, attrs).await,
+	}
+}
+
+pub async fn copy_with_progress<U, V, A>(
+	from: U,
+	to: V,
+	attrs: A,
+) -> io::Result<mpsc::Receiver<Result<u64, io::Error>>>
+where
+	U: AsUrl,
+	V: AsUrl,
+	A: Into<Attrs>,
+{
+	let (from, to) = (from.as_url(), to.as_url());
+
+	match (from.kind().is_local(), to.kind().is_local()) {
+		(true, true) => Local::new(from).await?.copy_with_progress(to.loc(), attrs),
+		(false, false) if from.scheme().covariant(to.scheme()) => {
+			Providers::new(from).await?.copy_with_progress(to.loc(), attrs)
+		}
 		(true, false) | (false, true) | (false, false) => {
-			let src = Providers::new(from).await?.open().await?;
-			let dist = Providers::new(to).await?.create().await?;
-
-			let mut reader = BufReader::with_capacity(524288, src);
-			let mut writer = BufWriter::with_capacity(524288, dist);
-			let written = tokio::io::copy(&mut reader, &mut writer).await?;
-
-			writer.flush().await?;
-			writer.get_ref().set_attrs(attrs).await.ok();
-			writer.shutdown().await.ok();
-			Ok(written)
+			Ok(super::copy_with_progress_impl(from.to_owned(), to.to_owned(), attrs.into()))
 		}
 	}
 }
@@ -126,6 +137,13 @@ where
 	V: AsUrl,
 {
 	identical(a, b).await.unwrap_or(false)
+}
+
+pub async fn open<U>(url: U) -> io::Result<RwFile>
+where
+	U: AsUrl,
+{
+	Providers::new(url.as_url()).await?.open().await
 }
 
 pub async fn read_dir<U>(url: U) -> io::Result<ReadDir>

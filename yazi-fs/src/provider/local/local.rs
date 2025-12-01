@@ -1,5 +1,6 @@
-use std::{io, path::{Path, PathBuf}, sync::Arc};
+use std::{io, path::Path, sync::Arc};
 
+use tokio::sync::mpsc;
 use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow}};
 
 use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
@@ -35,7 +36,17 @@ impl<'a> Provider for Local<'a> {
 	{
 		let to = to.as_path().to_os_owned()?;
 		let from = self.path.to_owned();
-		Self::copy_impl(from, to, attrs).await
+		super::copy_impl(from, to, attrs).await
+	}
+
+	fn copy_with_progress<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
+	where
+		P: AsPath,
+		A: Into<Attrs>,
+	{
+		let to = to.as_path().to_os_owned()?;
+		let from = self.path.to_owned();
+		Ok(super::copy_with_progress_impl(from, to, attrs.into()))
 	}
 
 	#[inline]
@@ -204,46 +215,6 @@ impl<'a> Provider for Local<'a> {
 }
 
 impl<'a> Local<'a> {
-	async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::Result<u64> {
-		#[cfg(any(target_os = "linux", target_os = "android"))]
-		{
-			use std::os::unix::fs::OpenOptionsExt;
-
-			tokio::task::spawn_blocking(move || {
-				let mut opts = std::fs::OpenOptions::new();
-				if let Some(mode) = attrs.mode {
-					opts.mode(mode.bits() as _);
-				}
-
-				let mut reader = std::fs::File::open(from)?;
-				let mut writer = opts.write(true).create(true).truncate(true).open(to)?;
-				let written = std::io::copy(&mut reader, &mut writer)?;
-
-				if let Some(mode) = attrs.mode {
-					writer.set_permissions(mode.into()).ok();
-				}
-				writer.set_times(attrs.into()).ok();
-
-				Ok(written)
-			})
-			.await?
-		}
-
-		#[cfg(not(any(target_os = "linux", target_os = "android")))]
-		{
-			tokio::task::spawn_blocking(move || {
-				let written = std::fs::copy(from, &to)?;
-
-				if let Ok(file) = std::fs::File::options().write(true).open(to) {
-					file.set_times(attrs.into()).ok();
-				}
-
-				Ok(written)
-			})
-			.await?
-		}
-	}
-
 	#[inline]
 	pub async fn read(&self) -> io::Result<Vec<u8>> { tokio::fs::read(self.path).await }
 

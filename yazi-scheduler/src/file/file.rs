@@ -7,7 +7,7 @@ use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{skip_url, url_relative_to}, provider::{Attrs, DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::PathCow, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
-use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
+use yazi_vfs::{VfsCha, maybe_exists, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
 use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, file::{FileInDownload, FileInUpload, FileInUploadDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash, FileOutUpload, FileOutUploadDo}};
@@ -96,7 +96,7 @@ impl File {
 
 	pub(crate) async fn paste_do(&self, mut task: FileInPaste) -> Result<(), FileOutPasteDo> {
 		ok_or_not_found!(provider::remove_file(&task.to).await);
-		let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
+		let mut it = provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await?;
 
 		while let Some(res) = it.recv().await {
 			match res {
@@ -350,7 +350,7 @@ impl File {
 		let cache = task.url.cache().context("Cannot determine cache path")?;
 		let cache_tmp = Self::tmp(&cache).await.context("Cannot determine temporary download cache")?;
 
-		let mut it = copy_with_progress(&task.url, &cache_tmp, cha);
+		let mut it = provider::copy_with_progress(&task.url, &cache_tmp, cha).await?;
 		while let Some(res) = it.recv().await {
 			match res {
 				Ok(0) => {
@@ -456,12 +456,13 @@ impl File {
 		}
 
 		let tmp = Self::tmp(&task.url).await.context("Cannot determine temporary upload path")?;
-		let mut it = copy_with_progress(&task.cache, &tmp, Attrs {
+		let mut it = provider::copy_with_progress(&task.cache, &tmp, Attrs {
 			mode:  Some(task.cha.mode),
 			atime: None,
 			btime: None,
 			mtime: None,
-		});
+		})
+		.await?;
 
 		while let Some(res) = it.recv().await {
 			match res {

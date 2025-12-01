@@ -1,6 +1,6 @@
 use std::{io, pin::Pin};
 
-use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite};
 use yazi_fs::provider::Attrs;
 
 pub enum RwFile {
@@ -17,6 +17,14 @@ impl From<yazi_sftp::fs::File> for RwFile {
 }
 
 impl RwFile {
+	// FIXME: path
+	pub async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+		Ok(match self {
+			Self::Tokio(f) => yazi_fs::cha::Cha::new("// FIXME", f.metadata().await?),
+			Self::Sftp(f) => super::sftp::Cha::try_from(("// FIXME".as_bytes(), &f.fstat().await?))?.0,
+		})
+	}
+
 	pub async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
 		match self {
 			Self::Tokio(f) => {
@@ -37,6 +45,15 @@ impl RwFile {
 
 		Ok(())
 	}
+
+	pub async fn set_len(&self, size: u64) -> io::Result<()> {
+		Ok(match self {
+			Self::Tokio(f) => f.set_len(size).await?,
+			Self::Sftp(f) => {
+				f.fsetstat(&yazi_sftp::fs::Attrs { size: Some(size), ..Default::default() }).await?
+			}
+		})
+	}
 }
 
 impl AsyncRead for RwFile {
@@ -49,6 +66,27 @@ impl AsyncRead for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_read(cx, buf),
 			Self::Sftp(f) => Pin::new(f).poll_read(cx, buf),
+		}
+	}
+}
+
+impl AsyncSeek for RwFile {
+	#[inline]
+	fn start_seek(mut self: Pin<&mut Self>, position: io::SeekFrom) -> io::Result<()> {
+		match &mut *self {
+			Self::Tokio(f) => Pin::new(f).start_seek(position),
+			Self::Sftp(f) => Pin::new(f).start_seek(position),
+		}
+	}
+
+	#[inline]
+	fn poll_complete(
+		mut self: Pin<&mut Self>,
+		cx: &mut std::task::Context<'_>,
+	) -> std::task::Poll<io::Result<u64>> {
+		match &mut *self {
+			Self::Tokio(f) => Pin::new(f).poll_complete(cx),
+			Self::Sftp(f) => Pin::new(f).poll_complete(cx),
 		}
 	}
 }

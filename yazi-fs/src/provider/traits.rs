@@ -1,13 +1,13 @@
 use std::io;
 
-use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
+use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{AsPath, PathBufDyn}, strand::StrandCow, url::{AsUrl, Url, UrlBuf}};
 
 use crate::{cha::{Cha, ChaType}, provider::Attrs};
 
 pub trait Provider: Sized {
-	type File: AsyncRead + AsyncWrite + Unpin;
+	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
 	type Gate: FileBuilder<File = Self::File>;
 	type ReadDir: DirReader + 'static;
 	type UrlCow;
@@ -22,6 +22,15 @@ pub trait Provider: Sized {
 	fn copy<P>(&self, to: P, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
 	where
 		P: AsPath;
+
+	fn copy_with_progress<P, A>(
+		&self,
+		to: P,
+		attrs: A,
+	) -> io::Result<mpsc::Receiver<io::Result<u64>>>
+	where
+		P: AsPath,
+		A: Into<Attrs>;
 
 	fn create(&self) -> impl Future<Output = io::Result<Self::File>> {
 		async move { self.gate().write(true).create(true).truncate(true).open(self.url()).await }
@@ -207,7 +216,7 @@ pub trait FileHolder {
 
 // --- FileBuilder
 pub trait FileBuilder: Sized + Default {
-	type File: AsyncRead + AsyncWrite + Unpin;
+	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
 
 	fn append(&mut self, append: bool) -> &mut Self;
 
