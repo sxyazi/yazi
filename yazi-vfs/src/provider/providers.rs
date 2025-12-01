@@ -1,5 +1,6 @@
 use std::io;
 
+use tokio::sync::mpsc;
 use yazi_fs::{cha::Cha, provider::{Attrs, Provider}};
 use yazi_shared::{path::{AsPath, PathBufDyn}, url::{Url, UrlBuf, UrlCow}};
 
@@ -44,6 +45,17 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.copy(to, attrs).await,
 			Self::Sftp(p) => p.copy(to, attrs).await,
+		}
+	}
+
+	fn copy_with_progress<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
+	where
+		P: AsPath,
+		A: Into<Attrs>,
+	{
+		match self {
+			Self::Local(p) => p.copy_with_progress(to, attrs),
+			Self::Sftp(p) => p.copy_with_progress(to, attrs),
 		}
 	}
 

@@ -182,6 +182,13 @@ impl<'p> PathDyn<'p> {
 
 	pub fn to_string_lossy(self) -> Cow<'p, str> { String::from_utf8_lossy(self.encoded_bytes()) }
 
+	pub fn to_unix_owned(self) -> Result<typed_path::UnixPathBuf, PathDynError> {
+		match self {
+			Self::Os(_) => Err(PathDynError::AsUnix),
+			Self::Unix(p) => Ok(p.to_owned()),
+		}
+	}
+
 	pub fn try_ends_with<T>(self, child: T) -> Result<bool, EndsWithError>
 	where
 		T: AsStrand,

@@ -1,9 +1,7 @@
-use std::io;
+use std::io::{self};
 
-use tokio::{select, sync::{mpsc, oneshot}};
-use yazi_fs::provider::Attrs;
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, Url, UrlBuf, UrlLike}};
+use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 
 use crate::provider;
 
@@ -64,67 +62,4 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 	}
 
 	Ok(url)
-}
-
-pub fn copy_with_progress<U, V, A>(
-	from: U,
-	to: V,
-	attrs: A,
-) -> mpsc::Receiver<Result<u64, io::Error>>
-where
-	U: AsUrl,
-	V: AsUrl,
-	A: Into<Attrs>,
-{
-	_copy_with_progress(from.as_url(), to.as_url(), attrs.into())
-}
-
-fn _copy_with_progress(from: Url, to: Url, attrs: Attrs) -> mpsc::Receiver<Result<u64, io::Error>> {
-	let (prog_tx, prog_rx) = mpsc::channel(1);
-	let (done_tx, mut done_rx) = oneshot::channel();
-
-	tokio::spawn({
-		let (from, to) = (from.to_owned(), to.to_owned());
-		async move {
-			done_tx.send(provider::copy(from, to, attrs).await).ok();
-		}
-	});
-
-	tokio::spawn({
-		let (prog_tx, to) = (prog_tx.clone(), to.to_owned());
-		async move {
-			let mut last = 0;
-			let mut done = None;
-			loop {
-				select! {
-					res = &mut done_rx => done = Some(res.unwrap()),
-					_ = prog_tx.closed() => break,
-					_ = tokio::time::sleep(std::time::Duration::from_secs(3)) => {},
-				}
-
-				match done {
-					Some(Ok(len)) => {
-						if len > last {
-							prog_tx.send(Ok(len - last)).await.ok();
-						}
-						prog_tx.send(Ok(0)).await.ok();
-						break;
-					}
-					Some(Err(e)) => {
-						prog_tx.send(Err(e)).await.ok();
-						break;
-					}
-					None => {}
-				}
-
-				let len = provider::symlink_metadata(&to).await.map(|m| m.len).unwrap_or(0);
-				if len > last {
-					prog_tx.send(Ok(len - last)).await.ok();
-					last = len;
-				}
-			}
-		}
-	});
-
-	prog_rx
 }

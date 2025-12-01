@@ -1,10 +1,10 @@
 use std::{io, sync::Arc};
 
-use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
+use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ProviderSftp, Vfs};
 use yazi_fs::provider::{DirReader, FileHolder, Provider};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{path::{AsPath, PathBufDyn}, pool::InternStr, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
 use crate::provider::sftp::Conn;
@@ -86,6 +86,23 @@ impl<'a> Provider for Sftp<'a> {
 		writer.get_ref().fsetstat(&attrs).await.ok();
 		writer.shutdown().await.ok();
 		Ok(written)
+	}
+
+	fn copy_with_progress<P, A>(&self, to: P, attrs: A) -> io::Result<Receiver<io::Result<u64>>>
+	where
+		P: AsPath,
+		A: Into<yazi_fs::provider::Attrs>,
+	{
+		let to = UrlBuf::Sftp {
+			loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(
+				to.as_path().to_unix_owned()?,
+				SchemeKind::Sftp,
+			),
+			domain: self.name.intern(),
+		};
+		let from = self.url.to_owned();
+
+		Ok(crate::provider::copy_with_progress_impl(from, to, attrs.into()))
 	}
 
 	async fn create_dir(&self) -> io::Result<()> {
