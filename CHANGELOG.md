@@ -780,7 +780,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Show keywords when in search mode ([#152])
 - Tab switch wraparound ([#160])
 - Highlight matched keywords in find mode ([#211])
-- Customable main UI border styles ([#278])
+- Customizable main UI border styles ([#278])
 - `<BackTab>` key notion ([#209])
 - Use of environment variables in `cd` paths ([#241])
 - Nix Flakes package ([#205])
