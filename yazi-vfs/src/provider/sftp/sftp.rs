@@ -93,7 +93,6 @@ impl<'a> Provider for Sftp<'a> {
 		P: AsPath,
 		A: Into<yazi_fs::provider::Attrs>,
 	{
-		let from = self.url.to_owned();
 		let to = UrlBuf::Sftp {
 			loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(
 				to.as_path().to_unix_owned()?,
@@ -101,6 +100,7 @@ impl<'a> Provider for Sftp<'a> {
 			),
 			domain: self.name.intern(),
 		};
+		let from = self.url.to_owned();
 
 		Ok(crate::provider::copy_with_progress_impl(from, to, attrs.into()))
 	}
