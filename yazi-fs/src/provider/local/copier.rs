@@ -53,14 +53,14 @@ pub(super) fn copy_with_progress_impl(
 	let (done_tx, mut done_rx) = oneshot::channel();
 
 	tokio::spawn({
-		let (from, to) = (from.to_owned(), to.to_owned());
+		let to = to.to_owned();
 		async move {
 			done_tx.send(copy_impl(from, to, attrs).await).ok();
 		}
 	});
 
 	tokio::spawn({
-		let (prog_tx, to) = (prog_tx.clone(), to.to_owned());
+		let prog_tx = prog_tx.clone();
 		async move {
 			let mut last = 0;
 			let mut done = None;

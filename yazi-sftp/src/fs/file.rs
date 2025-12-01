@@ -100,11 +100,11 @@ impl AsyncSeek for File {
 
 		self.seek_rx = Some(match position {
 			SeekFrom::Start(n) => SeekState::NonBlocking(n),
-			SeekFrom::Current(n) => {
-				self.cursor.checked_add_signed(n).map(SeekState::NonBlocking).ok_or_else(|| {
-					io::Error::other("seeking to a negative position or overflowed position")
-				})?
-			}
+			SeekFrom::Current(n) => self
+				.cursor
+				.checked_add_signed(n)
+				.map(SeekState::NonBlocking)
+				.ok_or_else(|| io::Error::other("seeking to a negative or overflowed position"))?,
 			SeekFrom::End(n) => SeekState::Blocking(
 				n,
 				timeout(
@@ -148,7 +148,7 @@ impl AsyncSeek for File {
 			Ready(
 				size
 					.checked_add_signed(*n)
-					.ok_or_else(|| io::Error::other("seeking to a negative position or overflowed position")),
+					.ok_or_else(|| io::Error::other("seeking to a negative or overflowed position")),
 			)
 		}
 
