@@ -33,9 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290], [#3369])
 - Allow upgrading only specific packages with `ya pkg` ([#2841])
 - Respect the user's `image_filter` setting in the preset ImageMagick previewer ([#3286])
+- New `ind-sort` and `key-sort` DDS events to change sorting in Lua ([#3391])
 - Allow custom mouse click behavior for individual files ([#2925])
 - Display newlines in input as spaces to improve readability ([#2932])
-- Fill in error messages if preview fails ([#2917])
+- Fill in error messages if preview fails ([#2917], [#3383], [#3387])
 - Search view shares file selection and yank state ([#2855])
 - Offload mimetype fetching on opening files to the task scheduler ([#3141])
 - Increase terminal response timeout to better tolerate slow SSH network environments ([#2843])
@@ -1543,4 +1544,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3360]: https://github.com/sxyazi/yazi/pull/3360
 [#3364]: https://github.com/sxyazi/yazi/pull/3364
 [#3369]: https://github.com/sxyazi/yazi/pull/3369
+[#3383]: https://github.com/sxyazi/yazi/pull/3383
 [#3385]: https://github.com/sxyazi/yazi/pull/3385
+[#3387]: https://github.com/sxyazi/yazi/pull/3387
+[#3391]: https://github.com/sxyazi/yazi/pull/3391

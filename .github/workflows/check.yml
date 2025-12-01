@@ -10,6 +10,9 @@ env:
   SCCACHE_GHA_ENABLED: true
   RUSTC_WRAPPER: sccache
 
+permissions:
+  contents: read
+
 jobs:
   clippy:
     runs-on: ubuntu-latest

@@ -26,7 +26,7 @@ impl Actor for UpdateFiles {
 
 		render!(cx.mgr.yanked.catchup_revision(false));
 		act!(mgr:hidden, cx)?;
-		act!(mgr:sort, cx)?;
+		act!(mgr:sort, cx).ok();
 
 		if revision != cx.current().files.revision {
 			act!(mgr:hover, cx)?;

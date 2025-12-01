@@ -9,6 +9,9 @@ on:
 env:
   SCCACHE_GHA_ENABLED: true
 
+permissions:
+  contents: read
+
 jobs:
   build-unix:
     strategy:
