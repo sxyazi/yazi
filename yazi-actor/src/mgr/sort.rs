@@ -1,9 +1,10 @@
 use anyhow::Result;
 use yazi_core::tab::Folder;
+use yazi_dds::spark::SparkKind;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::SortOpt;
-use yazi_shared::data::Data;
+use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
 
@@ -55,5 +56,13 @@ impl Actor for Sort {
 		}
 
 		succ!();
+	}
+
+	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+		match cx.source() {
+			Source::Ind => Some(SparkKind::IndSort),
+			Source::Key => Some(SparkKind::KeySort),
+			_ => None,
+		}
 	}
 }

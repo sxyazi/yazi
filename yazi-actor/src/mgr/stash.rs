@@ -23,8 +23,8 @@ impl Actor for Stash {
 
 	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<SparkKind> {
 		match cx.source() {
-			Source::Relay => Some(SparkKind::RelayStash),
 			Source::Ind => Some(SparkKind::IndStash),
+			Source::Relay => Some(SparkKind::RelayStash),
 			_ => None,
 		}
 	}
