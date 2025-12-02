@@ -164,9 +164,11 @@ impl Conn {
 			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
 
 		for key in keys {
-			match session.authenticate_publickey_with(&self.config.user, key, None, &mut agent).await {
+			let hash_alg = session.best_supported_rsa_hash().await?.flatten();
+			match session.authenticate_publickey_with(&self.config.user, key, hash_alg, &mut agent).await
+			{
 				Ok(result) if result.success() => return Ok(session),
-				Ok(_) => {}
+				Ok(result) => tracing::debug!("Identity agent authentication failed: {result:?}"),
 				Err(e) => tracing::error!("Identity agent authentication error: {e}"),
 			}
 		}

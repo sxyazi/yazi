@@ -5,7 +5,7 @@ use yazi_binding::{Composer, ComposerGet, ComposerSet};
 pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"light" => EMULATOR.get().light.into_lua(lua),
+			b"light" => EMULATOR.light.into_lua(lua),
 			b"cell_size" => cell_size(lua)?.into_lua(lua),
 			_ => Ok(Value::Nil),
 		}

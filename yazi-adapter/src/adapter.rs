@@ -84,7 +84,7 @@ impl Adapter {
 }
 
 impl Adapter {
-	pub fn matches(emulator: Emulator) -> Self {
+	pub fn matches(emulator: &Emulator) -> Self {
 		let mut protocols = emulator.adapters().to_owned();
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);

@@ -2,7 +2,8 @@ use std::{env, ffi::OsStr, fmt::Write, path::Path};
 
 use regex::Regex;
 use yazi_adapter::Mux;
-use yazi_config::YAZI;
+use yazi_config::{THEME, YAZI};
+use yazi_fs::Xdg;
 use yazi_shared::timestamp_us;
 
 use super::Actions;
@@ -19,12 +20,20 @@ impl Actions {
 		writeln!(s, "\nYa")?;
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
 
+		writeln!(s, "\nConfig")?;
+		writeln!(s, "    Yazi             : {}", Self::config_state("yazi"))?;
+		writeln!(s, "    Keymap           : {}", Self::config_state("keymap"))?;
+		writeln!(s, "    Theme            : {}", Self::config_state("theme"))?;
+		writeln!(s, "    VFS              : {}", Self::config_state("vfs"))?;
+		writeln!(s, "    Package          : {}", Self::config_state("package"))?;
+		writeln!(s, "    Dark/light flavor: {:?} / {:?}", THEME.flavor.dark, THEME.flavor.light)?;
+
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    TERM                : {:?}", env::var_os("TERM"))?;
 		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
 		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
 		writeln!(s, "    Brand.from_env      : {:?}", yazi_adapter::Brand::from_env())?;
-		writeln!(s, "    Emulator.detect     : {:?}", yazi_adapter::EMULATOR)?;
+		writeln!(s, "    Emulator.detect     : {:?}", &*yazi_adapter::EMULATOR)?;
 
 		writeln!(s, "\nAdapter")?;
 		writeln!(s, "    Adapter.matches    : {:?}", yazi_adapter::ADAPTOR)?;
@@ -113,6 +122,16 @@ impl Actions {
 		)?;
 
 		Ok(s)
+	}
+
+	fn config_state(name: &str) -> String {
+		let p = Xdg::config_dir().join(format!("{name}.toml"));
+		match std::fs::read_to_string(&p) {
+			Ok(s) if s.is_empty() => format!("{} (empty)", p.display()),
+			Ok(s) if s.trim().is_empty() => format!("{} (whitespaces)", p.display()),
+			Ok(s) => format!("{} ({} chars)", p.display(), s.chars().count()),
+			Err(e) => format!("{} ({e})", p.display()),
+		}
 	}
 
 	fn process_output(name: impl AsRef<OsStr>, arg: impl AsRef<OsStr>) -> String {

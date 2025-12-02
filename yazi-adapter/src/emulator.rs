@@ -10,16 +10,25 @@ use yazi_term::tty::{Handle, TTY};
 
 use crate::{Adapter, Brand, Dimension, Mux, TMUX, Unknown};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Emulator {
 	pub kind:      Either<Brand, Unknown>,
+	pub version:   String,
 	pub light:     bool,
 	pub csi_16t:   (u16, u16),
 	pub force_16t: bool,
 }
 
 impl Default for Emulator {
-	fn default() -> Self { Self::unknown() }
+	fn default() -> Self {
+		Self {
+			kind:      Either::Right(Unknown::default()),
+			version:   String::new(),
+			light:     false,
+			csi_16t:   (0, 0),
+			force_16t: false,
+		}
+	}
 }
 
 impl Emulator {
@@ -60,22 +69,14 @@ impl Emulator {
 		let csi_16t = Self::csi_16t(&resp).unwrap_or_default();
 		Ok(Self {
 			kind,
+			version: Self::csi_gt_q(&resp).unwrap_or_default(),
 			light: Self::light_bg(&resp).unwrap_or_default(),
 			csi_16t,
 			force_16t: Self::force_16t(csi_16t),
 		})
 	}
 
-	pub const fn unknown() -> Self {
-		Self {
-			kind:      Either::Right(Unknown::default()),
-			light:     false,
-			csi_16t:   (0, 0),
-			force_16t: false,
-		}
-	}
-
-	pub fn adapters(self) -> &'static [Adapter] {
+	pub fn adapters(&self) -> &'static [Adapter] {
 		match self.kind {
 			Either::Left(brand) => brand.adapters(),
 			Either::Right(unknown) => unknown.adapters(),
@@ -180,6 +181,11 @@ impl Emulator {
 
 		let (w, h) = unsafe { (String::from_utf8_unchecked(w), String::from_utf8_unchecked(h)) };
 		Some((w.parse().ok()?, h.parse().ok()?))
+	}
+
+	fn csi_gt_q(resp: &str) -> Option<String> {
+		let (_, s) = resp.split_once("\x1bP>|")?;
+		Some(s[..s.find("\x1b\\")?].to_owned())
 	}
 
 	fn light_bg(resp: &str) -> Result<bool> {

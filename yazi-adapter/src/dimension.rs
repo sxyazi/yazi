@@ -50,7 +50,7 @@ impl Dimension {
 	}
 
 	pub fn cell_size() -> Option<(f64, f64)> {
-		let emu = EMULATOR.get();
+		let emu = &*EMULATOR;
 		Some(if emu.force_16t {
 			(emu.csi_16t.0 as f64, emu.csi_16t.1 as f64)
 		} else if let Some(r) = Self::available().ratio() {

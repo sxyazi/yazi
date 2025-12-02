@@ -4,7 +4,7 @@ use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct DisplaceDoOpt {
-	pub to:   UrlBuf,
+	pub to:   std::io::Result<UrlBuf>,
 	pub from: UrlBuf,
 }
 

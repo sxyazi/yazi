@@ -50,6 +50,7 @@ end
 
 function M:spot(job)
 	self.size, self.last = 0, 0
+	self:spot_multi(job, false)
 
 	local url = job.file.url
 	local it = fs.calc_size(url)
@@ -69,15 +70,15 @@ function M:spot(job)
 	self:spot_multi(job, true)
 end
 
-function M:spot_multi(job, force)
+function M:spot_multi(job, comp)
 	local now = ya.time()
-	if not force and now < self.last + 0.1 then
+	if not comp and now < self.last + 0.1 then
 		return
 	end
 
 	local rows = {
 		ui.Row({ "Folder" }):style(ui.Style():fg("green")),
-		ui.Row { "  Size:", ya.readable_size(self.size) .. (force and "" or " (?)") },
+		ui.Row { "  Size:", ya.readable_size(self.size) .. (comp and "" or " (?)") },
 		ui.Row {},
 	}
 

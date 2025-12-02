@@ -20,6 +20,10 @@ impl TryFrom<CmdCow> for UpdateFilesOpt {
 	}
 }
 
+impl From<FilesOp> for UpdateFilesOpt {
+	fn from(op: FilesOp) -> Self { Self { op } }
+}
+
 impl FromLua for UpdateFilesOpt {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
