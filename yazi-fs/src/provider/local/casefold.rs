@@ -1,8 +1,8 @@
 use std::{io, path::{Path, PathBuf}};
 
-pub async fn must_case_match(path: impl AsRef<Path>) -> bool {
+pub async fn match_name_case(path: impl AsRef<Path>) -> bool {
 	let path = path.as_ref();
-	casefold(path).await.is_ok_and(|p| p == path)
+	casefold(path).await.is_ok_and(|p| p.file_name() == path.file_name())
 }
 
 pub(super) async fn casefold(path: impl AsRef<Path>) -> io::Result<PathBuf> {

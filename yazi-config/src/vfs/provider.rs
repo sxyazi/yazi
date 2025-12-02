@@ -28,7 +28,7 @@ impl Provider {
 }
 
 // --- SFTP
-#[derive(Deserialize, Hash, Serialize, Eq, PartialEq)]
+#[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ProviderSftp {
 	pub host:           String,
 	pub user:           String,

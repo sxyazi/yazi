@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use yazi_fs::FilesOp;
 use yazi_macro::{act, succ};
 use yazi_parser::{VoidOpt, mgr::{CdSource, DisplaceDoOpt}};
 use yazi_proxy::MgrProxy;
@@ -22,11 +23,10 @@ impl Actor for Displace {
 		let tab = cx.tab().id;
 		let from = cx.cwd().to_owned();
 		tokio::spawn(async move {
-			if let Ok(to) = provider::absolute(&from).await
-				&& to.is_owned()
-			{
-				MgrProxy::displace_do(tab, DisplaceDoOpt { to: to.into(), from });
-			}
+			MgrProxy::displace_do(tab, DisplaceDoOpt {
+				to: provider::absolute(&from).await.map(|u| u.into_owned()),
+				from,
+			});
 		});
 
 		succ!();
@@ -42,18 +42,23 @@ impl Actor for DisplaceDo {
 	const NAME: &str = "displace_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		if !opt.to.is_absolute() {
-			bail!("Target URL must be absolute");
-		}
-
 		if cx.cwd() != opt.from {
 			succ!()
+		}
+
+		let to = match opt.to {
+			Ok(url) => url,
+			Err(e) => return act!(mgr:update_files, cx, FilesOp::IOErr(opt.from, e.into())),
+		};
+
+		if !to.is_absolute() {
+			bail!("Target URL must be absolute");
 		} else if let Some(hovered) = cx.hovered()
-			&& let Ok(url) = opt.to.try_join(hovered.urn())
+			&& let Ok(url) = to.try_join(hovered.urn())
 		{
 			act!(mgr:reveal, cx, (url, CdSource::Displace))
 		} else {
-			act!(mgr:cd, cx, (opt.to, CdSource::Displace))
+			act!(mgr:cd, cx, (to, CdSource::Displace))
 		}
 	}
 }

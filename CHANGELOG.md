@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
-- Remote file management ([#3166], [#3170], [#3172], [#3198], [#3201], [#3243], [#3264], [#3268])
+- Remote file management ([#3396])
 - Virtual file system ([#3034], [#3035], [#3094], [#3108], [#3187], [#3203])
 - Shell formatting ([#3232])
 - Multi-entry support for plugin system ([#3154])
@@ -83,6 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Make preload tasks discardable ([#2875])
 - Reduce file change event frequency ([#2820])
+- Upload and download of a single file over SFTP in chunks concurrently ([#3393])
 - Do not listen for file changes in inactive tabs ([#2958])
 - Switch to a higher-performance hash algorithm ([#3083])
 - Sequence-based rendering merge strategy ([#2861])
@@ -1548,3 +1549,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3385]: https://github.com/sxyazi/yazi/pull/3385
 [#3387]: https://github.com/sxyazi/yazi/pull/3387
 [#3391]: https://github.com/sxyazi/yazi/pull/3391
+[#3393]: https://github.com/sxyazi/yazi/pull/3393
+[#3396]: https://github.com/sxyazi/yazi/pull/3396

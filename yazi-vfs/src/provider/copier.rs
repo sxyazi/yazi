@@ -45,7 +45,7 @@ pub(super) fn copy_with_progress_impl(
 		};
 
 		let chunks = (cha.len + 10485760 - 1) / 10485760;
-		let result = futures::stream::iter(0..chunks)
+		let mut result = futures::stream::iter(0..chunks)
 			.map(|i| {
 				let acc_ = acc_.clone();
 				let (from, to) = (from.clone(), to.clone());
@@ -79,29 +79,32 @@ pub(super) fn copy_with_progress_impl(
 						copied += n as u64;
 						acc_.fetch_add(n as u64, Ordering::SeqCst);
 					}
-
 					dist.flush().await?;
-					if i == chunks - 1 {
-						dist.get_ref().set_attrs(attrs).await.ok();
-					}
-					dist.shutdown().await.ok();
 
-					if copied == take {
-						Ok(())
-					} else {
+					if copied != take {
 						Err(io::Error::other(format!(
 							"short copy for chunk {i}: copied {copied} bytes, expected {take}"
 						)))
+					} else if i == chunks - 1 {
+						Ok(Some(dist.into_inner()))
+					} else {
+						dist.shutdown().await.ok();
+						Ok(None)
 					}
 				}
 			})
 			.buffer_unordered(3)
-			.try_for_each(|_| async { Ok(()) })
+			.try_fold(None, |first, file| async { Ok(first.or(file)) })
 			.await;
 
 		let n = acc_.swap(0, Ordering::SeqCst);
 		if n > 0 {
 			prog_tx_.send(Ok(n)).await.ok();
+		}
+
+		if let Ok(Some(file)) = &mut result {
+			file.set_attrs(attrs).await.ok();
+			file.shutdown().await.ok();
 		}
 
 		if let Err(e) = result {

@@ -1,14 +1,12 @@
 use crate::Adapter;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Unknown {
 	pub kgp:   bool,
 	pub sixel: bool,
 }
 
 impl Unknown {
-	pub(super) const fn default() -> Self { Self { kgp: false, sixel: false } }
-
 	pub(super) fn adapters(self) -> &'static [Adapter] {
 		use Adapter as A;
 
