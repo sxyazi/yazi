@@ -8,7 +8,7 @@ use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
 use yazi_parser::{VoidOpt, mgr::{CdSource, SearchOpt, SearchOptVia}};
 use yazi_plugin::external;
-use yazi_proxy::{InputProxy, MgrProxy};
+use yazi_proxy::{AppProxy, InputProxy, MgrProxy};
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -52,8 +52,10 @@ impl Actor for SearchDo {
 			handle.abort();
 		}
 
-		let cwd = tab.cwd().to_search(&opt.subject)?;
 		let hidden = tab.pref.show_hidden;
+		let Ok(cwd) = tab.cwd().to_search(&opt.subject) else {
+			succ!(AppProxy::notify_warn("Search", "Only local filesystem searches are supported"));
+		};
 
 		tab.search = Some(tokio::spawn(async move {
 			let rx = match opt.via {

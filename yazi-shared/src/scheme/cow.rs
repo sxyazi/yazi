@@ -169,6 +169,14 @@ impl<'a> SchemeCow<'a> {
 
 impl<'a> SchemeCow<'a> {
 	#[inline]
+	pub fn into_domain(self) -> Option<SymbolCow<'a, str>> {
+		Some(match self {
+			SchemeCow::Borrowed(s) => s.domain()?.into(),
+			SchemeCow::Owned(s) => s.into_domain()?.into(),
+		})
+	}
+
+	#[inline]
 	pub fn into_owned(self) -> Scheme {
 		match self {
 			Self::Borrowed(s) => s.to_owned(),
@@ -176,13 +184,15 @@ impl<'a> SchemeCow<'a> {
 		}
 	}
 
-	#[inline]
-	pub fn into_domain(self) -> Option<SymbolCow<'a, str>> {
-		Some(match self {
-			SchemeCow::Borrowed(s) => s.domain()?.into(),
-			SchemeCow::Owned(s) => s.into_domain()?.into(),
-		})
+	pub fn with_ports(self, uri: usize, urn: usize) -> Self {
+		match self {
+			Self::Borrowed(s) => s.with_ports(uri, urn).into(),
+			Self::Owned(s) => s.with_ports(uri, urn).into(),
+		}
 	}
+
+	#[inline]
+	pub fn zeroed(self) -> Self { self.with_ports(0, 0) }
 }
 
 #[cfg(test)]

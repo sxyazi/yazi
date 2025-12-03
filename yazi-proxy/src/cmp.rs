@@ -9,7 +9,7 @@ impl CmpProxy {
 		emit!(Call(relay!(cmp:show).with_any("opt", opt)));
 	}
 
-	pub fn trigger(word: &str, ticket: Id) {
-		emit!(Call(relay!(cmp:trigger, [word]).with("ticket", ticket)));
+	pub fn trigger(word: impl Into<String>, ticket: Id) {
+		emit!(Call(relay!(cmp:trigger, [word.into()]).with("ticket", ticket)));
 	}
 }

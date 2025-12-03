@@ -1,5 +1,5 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
-use yazi_shared::{strand::ToStrand, url::UrlBuf};
+use yazi_shared::{scheme::Encode as EncodeScheme, strand::ToStrand, url::{Url, UrlBuf}};
 
 use super::{Offset, Position};
 use crate::YAZI;
@@ -31,9 +31,10 @@ pub struct ConfirmCfg {
 }
 
 impl InputCfg {
-	pub fn cd() -> Self {
+	pub fn cd(cwd: Url) -> Self {
 		Self {
 			title: YAZI.input.cd_title.clone(),
+			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
 			position: Position::new(YAZI.input.cd_origin, YAZI.input.cd_offset),
 			completion: true,
 			..Default::default()

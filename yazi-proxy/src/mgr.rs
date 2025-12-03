@@ -11,8 +11,8 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:arrow, [step.into()])));
 	}
 
-	pub fn cd(target: &UrlBuf) {
-		emit!(Call(relay!(mgr:cd, [target]).with("raw", true)));
+	pub fn cd(target: impl Into<UrlBuf>) {
+		emit!(Call(relay!(mgr:cd, [target.into()]).with("raw", true)));
 	}
 
 	pub fn displace_do(tab: Id, opt: DisplaceDoOpt) {
@@ -41,8 +41,8 @@ impl MgrProxy {
 		));
 	}
 
-	pub fn reveal(target: &UrlBuf) {
-		emit!(Call(relay!(mgr:reveal, [target]).with("raw", true).with("no-dummy", true)));
+	pub fn reveal(target: impl Into<UrlBuf>) {
+		emit!(Call(relay!(mgr:reveal, [target.into()]).with("raw", true).with("no-dummy", true)));
 	}
 
 	pub fn search_do(opt: SearchOpt) {
