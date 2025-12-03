@@ -43,13 +43,9 @@ impl From<SchemeRef<'_>> for Scheme {
 
 impl<'a> SchemeRef<'a> {
 	#[inline]
-	pub const fn kind(self) -> SchemeKind {
-		match self {
-			Self::Regular { .. } => SchemeKind::Regular,
-			Self::Search { .. } => SchemeKind::Search,
-			Self::Archive { .. } => SchemeKind::Archive,
-			Self::Sftp { .. } => SchemeKind::Sftp,
-		}
+	pub fn covariant(self, other: impl AsScheme) -> bool {
+		let other = other.as_scheme();
+		if self.is_virtual() || other.is_virtual() { self == other } else { true }
 	}
 
 	#[inline]
@@ -63,6 +59,16 @@ impl<'a> SchemeRef<'a> {
 	}
 
 	#[inline]
+	pub const fn kind(self) -> SchemeKind {
+		match self {
+			Self::Regular { .. } => SchemeKind::Regular,
+			Self::Search { .. } => SchemeKind::Search,
+			Self::Archive { .. } => SchemeKind::Archive,
+			Self::Sftp { .. } => SchemeKind::Sftp,
+		}
+	}
+
+	#[inline]
 	pub const fn ports(self) -> (usize, usize) {
 		match self {
 			Self::Regular { uri, urn } => (uri, urn),
@@ -70,22 +76,6 @@ impl<'a> SchemeRef<'a> {
 			Self::Archive { uri, urn, .. } => (uri, urn),
 			Self::Sftp { uri, urn, .. } => (uri, urn),
 		}
-	}
-
-	#[inline]
-	pub const fn zeroed(self) -> Self {
-		match self {
-			Self::Regular { .. } => Self::Regular { uri: 0, urn: 0 },
-			Self::Search { domain, .. } => Self::Search { domain, uri: 0, urn: 0 },
-			Self::Archive { domain, .. } => Self::Archive { domain, uri: 0, urn: 0 },
-			Self::Sftp { domain, .. } => Self::Sftp { domain, uri: 0, urn: 0 },
-		}
-	}
-
-	#[inline]
-	pub fn covariant(self, other: impl AsScheme) -> bool {
-		let other = other.as_scheme();
-		if self.is_virtual() || other.is_virtual() { self == other } else { true }
 	}
 
 	pub fn to_owned(self) -> Scheme {
@@ -96,4 +86,16 @@ impl<'a> SchemeRef<'a> {
 			Self::Sftp { domain, uri, urn } => Scheme::Sftp { domain: domain.intern(), uri, urn },
 		}
 	}
+
+	pub const fn with_ports(self, uri: usize, urn: usize) -> Self {
+		match self {
+			Self::Regular { .. } => Self::Regular { uri, urn },
+			Self::Search { domain, .. } => Self::Search { domain, uri, urn },
+			Self::Archive { domain, .. } => Self::Archive { domain, uri, urn },
+			Self::Sftp { domain, .. } => Self::Sftp { domain, uri, urn },
+		}
+	}
+
+	#[inline]
+	pub const fn zeroed(self) -> Self { self.with_ports(0, 0) }
 }

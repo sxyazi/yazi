@@ -38,4 +38,7 @@ impl Scheme {
 			Self::Sftp { domain, .. } => Self::Sftp { domain, uri, urn },
 		}
 	}
+
+	#[inline]
+	pub fn zeroed(self) -> Self { self.with_ports(0, 0) }
 }

@@ -2,8 +2,8 @@ use std::process::Stdio;
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_fs::File;
-use yazi_shared::url::{UrlBuf, UrlLike};
+use yazi_fs::{File, FsUrl};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
 pub struct FdOpt {
@@ -34,16 +34,9 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 }
 
 fn spawn(program: &str, opt: &FdOpt) -> std::io::Result<Child> {
-	let Some(path) = opt.cwd.as_local() else {
-		return Err(std::io::Error::new(
-			std::io::ErrorKind::InvalidInput,
-			"fd can only search local filesystem",
-		));
-	};
-
 	Command::new(program)
 		.arg("--base-directory")
-		.arg(path)
+		.arg(&*opt.cwd.as_url().unified_path())
 		.arg("--regex")
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(&opt.args)

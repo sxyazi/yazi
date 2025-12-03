@@ -2,7 +2,7 @@ use std::{io, sync::Arc};
 
 use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ProviderSftp, Vfs};
-use yazi_fs::provider::{DirReader, FileHolder, Provider};
+use yazi_fs::{CWD, provider::{DirReader, FileHolder, Provider}};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -26,7 +26,14 @@ impl<'a> Provider for Sftp<'a> {
 	type UrlCow = UrlCow<'a>;
 
 	async fn absolute(&self) -> io::Result<Self::UrlCow> {
-		Ok(if self.url.is_absolute() { self.url.into() } else { self.canonicalize().await?.into() })
+		let cwd = CWD.load();
+		Ok(if self.url.is_absolute() {
+			self.url.into()
+		} else if cwd.scheme().covariant(self.url.scheme()) {
+			cwd.try_join(self.path)?.into()
+		} else {
+			self.canonicalize().await?.into()
+		})
 	}
 
 	async fn canonicalize(&self) -> io::Result<UrlBuf> {

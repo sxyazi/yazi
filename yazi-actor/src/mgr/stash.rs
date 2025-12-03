@@ -14,7 +14,7 @@ impl Actor for Stash {
 	const NAME: &str = "stash";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		if opt.target.is_internal() {
+		if opt.target.is_absolute() && opt.target.is_internal() {
 			cx.tab_mut().backstack.push(opt.target.as_url());
 		}
 

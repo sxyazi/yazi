@@ -56,9 +56,7 @@ impl Watcher {
 
 			if !to_unwatch.is_empty() || !to_watch.is_empty() {
 				backend = Self::sync(backend, to_unwatch, to_watch).await;
-				if !rx.has_changed().unwrap_or(false) {
-					backend = backend.sync().await;
-				}
+				backend = backend.sync().await;
 			}
 
 			if rx.changed().await.is_err() {

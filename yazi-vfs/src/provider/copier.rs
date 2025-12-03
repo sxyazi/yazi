@@ -44,15 +44,15 @@ pub(super) fn copy_with_progress_impl(
 			Some(f)
 		};
 
-		let chunks = (cha.len + 10485760 - 1) / 10485760;
+		let chunks = (cha.len + 5242880 - 1) / 5242880;
 		let mut result = futures::stream::iter(0..chunks)
 			.map(|i| {
 				let acc_ = acc_.clone();
 				let (from, to) = (from.clone(), to.clone());
 				let (src, dist) = (src.take(), dist.take());
 				async move {
-					let offset = i * 10485760;
-					let take = cha.len.saturating_sub(offset).min(10485760);
+					let offset = i * 5242880;
+					let take = cha.len.saturating_sub(offset).min(5242880);
 
 					let mut src = BufReader::with_capacity(524288, match src {
 						Some(f) => f,
@@ -93,7 +93,7 @@ pub(super) fn copy_with_progress_impl(
 					}
 				}
 			})
-			.buffer_unordered(3)
+			.buffer_unordered(4)
 			.try_fold(None, |first, file| async { Ok(first.or(file)) })
 			.await;
 

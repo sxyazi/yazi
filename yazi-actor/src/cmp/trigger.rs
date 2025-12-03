@@ -68,8 +68,8 @@ impl Actor for Trigger {
 impl Trigger {
 	fn split_url(s: &str) -> Option<(UrlBuf, PathBufDyn)> {
 		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
+		let scheme = scheme.zeroed();
 
-		tracing::debug!(?scheme, ?path);
 		if scheme.is_local() && path.as_strand() == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
 		}
@@ -86,7 +86,11 @@ impl Trigger {
 				(UrlCow::try_from((scheme, root)).ok()?.into_owned(), c.into())
 			}
 			Some((p, c)) => (expand_url(UrlCow::try_from((scheme, p)).ok()?), c.into()),
-			None => (CWD.load().as_ref().clone(), path.into()),
+			None if CWD.load().scheme().covariant(&scheme) => (CWD.load().as_ref().clone(), path.into()),
+			None => {
+				let empty = PathDyn::with_str(scheme.kind(), "");
+				(UrlCow::try_from((scheme, empty)).ok()?.into_owned(), path.into())
+			}
 		})
 	}
 }
@@ -108,6 +112,7 @@ mod tests {
 	#[cfg(unix)]
 	#[test]
 	fn test_split() {
+		yazi_shared::init_tests();
 		yazi_fs::init();
 		compare("", "", "");
 		compare(" ", "", " ");
@@ -124,6 +129,12 @@ mod tests {
 		compare("//foo/", "/foo/", "");
 		compare("/foo/bar", "/foo/", "bar");
 		compare("///foo/bar", "/foo/", "bar");
+
+		CWD.set(&"sftp://test/".parse::<UrlBuf>().unwrap(), || {});
+		compare("sftp://test/a", "sftp://test/", "a");
+		compare("sftp://test//a", "sftp://test:0//", "a");
+		compare("sftp://test2/a", "sftp://test2/", "a");
+		compare("sftp://test2//a", "sftp://test2:0//", "a");
 	}
 
 	#[cfg(windows)]
@@ -131,9 +142,11 @@ mod tests {
 	fn test_split() {
 		yazi_fs::init();
 		compare("foo", "", "foo");
+
 		compare(r"foo\", r"foo\", "");
 		compare(r"foo\bar", r"foo\", "bar");
 		compare(r"foo\bar\", r"foo\bar\", "");
+
 		compare(r"C:\", r"C:\", "");
 		compare(r"C:\foo", r"C:\", "foo");
 		compare(r"C:\foo\", r"C:\foo\", "");

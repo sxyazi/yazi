@@ -7,6 +7,7 @@ yazi_macro::mod_flat!(
 	copy
 	create
 	displace
+	displace_do
 	download
 	enter
 	escape

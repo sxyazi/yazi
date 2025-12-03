@@ -59,7 +59,7 @@ impl Linked {
 					Ok(to) if to != *from => _ = linked.write().entry_ref(from).insert(to),
 					Ok(_) => _ = linked.write().remove(from),
 					Err(e) if e.kind() == std::io::ErrorKind::NotFound => _ = linked.write().remove(from),
-					Err(_) => {}
+					Err(e) => tracing::error!("Failed to canonicalize watched path {from:?}: {e:?}"),
 				}
 			}
 		})
