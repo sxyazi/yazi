@@ -1,19 +1,23 @@
+use std::borrow::Cow;
+
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}};
 use yazi_config::LAYOUT;
 use yazi_proxy::{AppProxy, HIDER};
+use yazi_shared::replace_to_printable;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"area" => area(lua)?,
 			b"hide" => hide(lua)?,
-			b"width" => width(lua)?,
+			b"printable" => printable(lua)?,
 			b"redraw" => redraw(lua)?,
 			b"render" => render(lua)?,
 			b"truncate" => truncate(lua)?,
+			b"width" => width(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
@@ -54,28 +58,12 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 	f.into_lua(lua)
 }
 
-pub(super) fn width(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|_, v: Value| match v {
-		Value::String(s) => {
-			let (mut acc, b) = (0, s.as_bytes());
-			for c in b.utf8_chunks() {
-				acc += c.valid().width();
-				if !c.invalid().is_empty() {
-					acc += 1;
-				}
-			}
-			Ok(acc)
+pub(super) fn printable(lua: &Lua) -> mlua::Result<Value> {
+	let f = lua.create_function(|lua, s: mlua::String| {
+		match replace_to_printable(&*s.as_bytes(), false, 1, true) {
+			Cow::Borrowed(_) => s.into_lua(lua),
+			Cow::Owned(new) => new.into_lua(lua),
 		}
-		Value::UserData(ud) => {
-			if let Ok(line) = ud.borrow::<Line>() {
-				Ok(line.width())
-			} else if let Ok(span) = ud.borrow::<Span>() {
-				Ok(span.width())
-			} else {
-				Err("expected a string, Line, or Span".into_lua_err())?
-			}
-		}
-		_ => Err("expected a string, Line, or Span".into_lua_err())?,
 	})?;
 
 	f.into_lua(lua)
@@ -171,6 +159,33 @@ pub(super) fn truncate(lua: &Lua) -> mlua::Result<Value> {
 			}
 		};
 		lua.create_string(result)
+	})?;
+
+	f.into_lua(lua)
+}
+
+pub(super) fn width(lua: &Lua) -> mlua::Result<Value> {
+	let f = lua.create_function(|_, v: Value| match v {
+		Value::String(s) => {
+			let (mut acc, b) = (0, s.as_bytes());
+			for c in b.utf8_chunks() {
+				acc += c.valid().width();
+				if !c.invalid().is_empty() {
+					acc += 1;
+				}
+			}
+			Ok(acc)
+		}
+		Value::UserData(ud) => {
+			if let Ok(line) = ud.borrow::<Line>() {
+				Ok(line.width())
+			} else if let Ok(span) = ud.borrow::<Span>() {
+				Ok(span.width())
+			} else {
+				Err("expected a string, Line, or Span".into_lua_err())?
+			}
+		}
+		_ => Err("expected a string, Line, or Span".into_lua_err())?,
 	})?;
 
 	f.into_lua(lua)

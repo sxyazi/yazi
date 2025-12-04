@@ -107,7 +107,22 @@ impl<'p> LocAbleImpl<'p> for &'p std::path::Path {
 	where
 		T: AsStrandView<'a, Self::Strand<'a>>,
 	{
-		self.strip_prefix(base.as_strand_view()).ok()
+		use std::path::is_separator;
+
+		let p = self.strip_prefix(base.as_strand_view()).ok()?;
+		let mut b = p.as_encoded_bytes();
+
+		if b.last().is_none_or(|&c| !is_separator(c as char)) || p.parent().is_none() {
+			return Some(p);
+		}
+
+		while let [head @ .., last] = b
+			&& is_separator(*last as char)
+		{
+			b = head;
+		}
+
+		Some(unsafe { Self::from_encoded_bytes_unchecked(b) })
 	}
 
 	fn to_path_buf(self) -> Self::Owned { self.to_path_buf() }
@@ -139,7 +154,18 @@ impl<'p> LocAbleImpl<'p> for &'p typed_path::UnixPath {
 	where
 		T: AsStrandView<'a, Self::Strand<'a>>,
 	{
-		self.strip_prefix(base.as_strand_view()).ok()
+		let p = self.strip_prefix(base.as_strand_view()).ok()?;
+		let mut b = p.as_bytes();
+
+		if b.last().is_none_or(|&c| c != b'/') || p.parent().is_none() {
+			return Some(p);
+		}
+
+		while let [head @ .., b'/'] = b {
+			b = head;
+		}
+
+		Some(typed_path::UnixPath::new(b))
 	}
 
 	fn to_path_buf(self) -> Self::Owned { self.to_path_buf() }

@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, path::expand_url};
+use yazi_fs::{File, FilesOp, path::{clean_url, expand_url}};
 use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
@@ -71,6 +71,7 @@ impl Cd {
 					Ok(s) => {
 						let Ok(url) = UrlBuf::try_from(s).map(expand_url) else { return };
 						let Ok(url) = provider::absolute(&url).await else { return };
+						let url = clean_url(url);
 
 						let Ok(file) = File::new(&url).await else { return };
 						if file.is_dir() {

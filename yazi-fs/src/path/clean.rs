@@ -21,7 +21,7 @@ fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBufDyn, usi
 
 	macro_rules! push {
 		($i:ident, $c:ident) => {{
-			out.push($c);
+			out.push(($i, $c));
 			if $i >= base {
 				uri_count += 1;
 			}
@@ -31,12 +31,25 @@ fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBufDyn, usi
 		}};
 	}
 
+	macro_rules! pop {
+		() => {{
+			if let Some((i, _)) = out.pop() {
+				if i >= base {
+					uri_count -= 1;
+				}
+				if i >= trail {
+					urn_count -= 1;
+				}
+			}
+		}};
+	}
+
 	for (i, c) in path.components().enumerate() {
 		match c {
 			CurDir => {}
-			ParentDir => match out.last() {
+			ParentDir => match out.last().map(|(_, c)| c) {
 				Some(RootDir) => {}
-				Some(Normal(_)) => _ = out.pop(),
+				Some(Normal(_)) => pop!(),
 				None | Some(CurDir) | Some(ParentDir) | Some(Prefix(_)) => push!(i, c),
 			},
 			c => push!(i, c),
@@ -47,7 +60,8 @@ fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBufDyn, usi
 	let path = if out.is_empty() {
 		PathBufDyn::with_str(kind, ".")
 	} else {
-		PathBufDyn::from_components(kind, out).expect("components with same kind")
+		PathBufDyn::from_components(kind, out.into_iter().map(|(_, c)| c))
+			.expect("components with same kind")
 	};
 
 	(path, uri_count, urn_count)
@@ -70,10 +84,11 @@ mod tests {
 			("archive://:3:2//../../tmp/test.zip/foo/bar", "archive://:3:2//tmp/test.zip/foo/bar"),
 			("archive://:3:2//tmp/../../test.zip/foo/bar", "archive://:3:2//test.zip/foo/bar"),
 			("archive://:4:2//tmp/test.zip/../../foo/bar", "archive://:2:2//foo/bar"),
-			("archive://:5:2//tmp/test.zip/../../foo/bar", "archive://:3:2//foo/bar"),
-			("archive://:4:4//tmp/test.zip/foo/bar/../../", "archive://:1:1//tmp/test.zip"),
-			("archive://:5:4//tmp/test.zip/foo/bar/../../", "archive://:2:1//tmp/test.zip"),
+			("archive://:5:2//tmp/test.zip/../../foo/bar", "archive://:2:2//foo/bar"),
+			("archive://:4:4//tmp/test.zip/foo/bar/../../", "archive:////tmp/test.zip"),
+			("archive://:5:4//tmp/test.zip/foo/bar/../../", "archive://:1//tmp/test.zip"),
 			("archive://:4:4//tmp/test.zip/foo/bar/../../../", "archive:////tmp"),
+			("sftp://test//root/.config/yazi/../../Downloads", "sftp://test//root/Downloads"),
 		];
 
 		for (input, expected) in cases {

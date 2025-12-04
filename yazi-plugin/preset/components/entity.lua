@@ -31,7 +31,7 @@ function Entity:prefix()
 end
 
 function Entity:highlights()
-	local name = self._file.name:gsub("\r", "?", 1)
+	local name = ui.printable(self._file.name)
 	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
 		return name
