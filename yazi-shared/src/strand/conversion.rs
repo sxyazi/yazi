@@ -98,6 +98,10 @@ impl AsStrand for PathCow<'_> {
 	}
 }
 
+impl AsStrand for &PathCow<'_> {
+	fn as_strand(&self) -> Strand<'_> { (**self).as_strand() }
+}
+
 impl AsStrand for Strand<'_> {
 	fn as_strand(&self) -> Strand<'_> { *self }
 }

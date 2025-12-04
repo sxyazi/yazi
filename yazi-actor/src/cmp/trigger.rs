@@ -1,11 +1,11 @@
-use std::{mem, path::MAIN_SEPARATOR_STR};
+use std::mem;
 
 use anyhow::Result;
-use yazi_fs::{CWD, path::expand_url, provider::{DirReader, FileHolder}};
+use yazi_fs::{CWD, path::clean_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{PathBufDyn, PathDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{AsPath, PathBufDyn, PathCow, PathDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -74,24 +74,25 @@ impl Trigger {
 			return None; // We don't autocomplete a `~`, but `~/`
 		}
 
+		let cwd = CWD.load();
+		let abs = if !path.is_absolute() && cwd.scheme().covariant(&scheme) {
+			cwd.loc().try_join(&path).ok()?.into()
+		} else {
+			PathCow::from(&path)
+		};
+
 		let sep = if cfg!(windows) {
 			AnyAsciiChar::new(b"/\\").unwrap()
 		} else {
 			AnyAsciiChar::new(b"/").unwrap()
 		};
 
-		Some(match path.rsplit_pred(sep) {
-			Some((p, c)) if p.is_empty() => {
-				let root = PathDyn::with_str(scheme.kind(), MAIN_SEPARATOR_STR);
-				(UrlCow::try_from((scheme, root)).ok()?.into_owned(), c.into())
-			}
-			Some((p, c)) => (expand_url(UrlCow::try_from((scheme, p)).ok()?), c.into()),
-			None if CWD.load().scheme().covariant(&scheme) => (CWD.load().as_ref().clone(), path.into()),
-			None => {
-				let empty = PathDyn::with_str(scheme.kind(), "");
-				(UrlCow::try_from((scheme, empty)).ok()?.into_owned(), path.into())
-			}
-		})
+		let child = path.rsplit_pred(sep).map_or(path.as_path(), |(_, c)| c);
+		let parent =
+			PathDyn::with(scheme.kind(), abs.encoded_bytes().strip_suffix(child.encoded_bytes())?)
+				.ok()?;
+
+		Some((clean_url(UrlCow::try_from((scheme, parent)).ok()?), child.into()))
 	}
 }
 
@@ -130,11 +131,11 @@ mod tests {
 		compare("/foo/bar", "/foo/", "bar");
 		compare("///foo/bar", "/foo/", "bar");
 
-		CWD.set(&"sftp://test/".parse::<UrlBuf>().unwrap(), || {});
-		compare("sftp://test/a", "sftp://test/", "a");
-		compare("sftp://test//a", "sftp://test:0//", "a");
-		compare("sftp://test2/a", "sftp://test2/", "a");
-		compare("sftp://test2//a", "sftp://test2:0//", "a");
+		CWD.set(&"sftp://test".parse::<UrlBuf>().unwrap(), || {});
+		compare("sftp://test/a", "sftp://test/.", "a");
+		compare("sftp://test//a", "sftp://test//", "a");
+		compare("sftp://test2/a", "sftp://test2/.", "a");
+		compare("sftp://test2//a", "sftp://test2//", "a");
 	}
 
 	#[cfg(windows)]

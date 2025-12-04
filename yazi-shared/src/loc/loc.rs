@@ -85,8 +85,8 @@ where
 	{
 		let path = path.as_path_view();
 		let Some(name) = path.file_name() else {
-			let uri = path.strip_prefix(P::empty()).unwrap().len();
-			return Self { inner: path, uri, urn: 0, _phantom: PhantomData };
+			let p = path.strip_prefix(P::empty()).unwrap();
+			return Self { inner: p, uri: p.len(), urn: 0, _phantom: PhantomData };
 		};
 
 		let name_len = name.len();
@@ -242,5 +242,40 @@ where
 		let mut loc = Self::bare(path);
 		(loc.uri, loc.urn) = (0, 0);
 		loc
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_with() -> Result<()> {
+		let cases = [
+			// Relative paths
+			("tmp/test.zip/foo/bar", 3, 2, "test.zip/foo/bar", "foo/bar"),
+			("tmp/test.zip/foo/bar/", 3, 2, "test.zip/foo/bar", "foo/bar"),
+			// Absolute paths
+			("/tmp/test.zip/foo/bar", 3, 2, "test.zip/foo/bar", "foo/bar"),
+			("/tmp/test.zip/foo/bar/", 3, 2, "test.zip/foo/bar", "foo/bar"),
+			// Relative path with parent components
+			("tmp/test.zip/foo/bar/../..", 5, 4, "test.zip/foo/bar/../..", "foo/bar/../.."),
+			("tmp/test.zip/foo/bar/../../", 5, 4, "test.zip/foo/bar/../..", "foo/bar/../.."),
+			// Absolute path with parent components
+			("/tmp/test.zip/foo/bar/../..", 5, 4, "test.zip/foo/bar/../..", "foo/bar/../.."),
+			("/tmp/test.zip/foo/bar/../../", 5, 4, "test.zip/foo/bar/../..", "foo/bar/../.."),
+		];
+
+		for (path, uri, urn, expect_uri, expect_urn) in cases {
+			let loc = Loc::with(std::path::Path::new(path), uri, urn)?;
+			assert_eq!(loc.uri().to_str().unwrap(), expect_uri);
+			assert_eq!(loc.urn().to_str().unwrap(), expect_urn);
+
+			let loc = Loc::with(typed_path::UnixPath::new(path), uri, urn)?;
+			assert_eq!(loc.uri().to_str().unwrap(), expect_uri);
+			assert_eq!(loc.urn().to_str().unwrap(), expect_urn);
+		}
+
+		Ok(())
 	}
 }

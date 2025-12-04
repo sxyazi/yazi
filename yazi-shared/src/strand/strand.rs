@@ -109,7 +109,7 @@ impl<'a> Strand<'a> {
 
 		let (skip, rest) = bytes.split_at(skip_len);
 		let mut out = Vec::new();
-		out.try_reserve_exact(bytes.len()).unwrap_or_else(|_| panic!());
+		out.reserve_exact(bytes.len());
 		out.extend(skip);
 
 		for &b in rest {

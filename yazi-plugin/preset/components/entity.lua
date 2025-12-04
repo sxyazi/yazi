@@ -31,22 +31,22 @@ function Entity:prefix()
 end
 
 function Entity:highlights()
-	local name = self._file.name:gsub("\r", "?", 1)
+	local name, p = self._file.name, ui.printable
 	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
-		return name
+		return p(name)
 	end
 
 	local spans, last = {}, 0
 	for _, h in ipairs(highlights) do
 		if h[1] > last then
-			spans[#spans + 1] = name:sub(last + 1, h[1])
+			spans[#spans + 1] = p(name:sub(last + 1, h[1]))
 		end
-		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(th.mgr.find_keyword)
+		spans[#spans + 1] = ui.Span(p(name:sub(h[1] + 1, h[2]))):style(th.mgr.find_keyword)
 		last = h[2]
 	end
 	if last < #name then
-		spans[#spans + 1] = name:sub(last + 1)
+		spans[#spans + 1] = p(name:sub(last + 1))
 	end
 	return ui.Line(spans)
 end

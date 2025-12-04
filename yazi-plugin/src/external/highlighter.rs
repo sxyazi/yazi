@@ -6,7 +6,7 @@ use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Th
 use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 use yazi_config::{THEME, YAZI, preview::PreviewWrap};
 use yazi_fs::provider::{Provider, local::Local};
-use yazi_shared::{Ids, errors::PeekError, replace_to_printable};
+use yazi_shared::{Ids, errors::PeekError, push_printable_char};
 
 static INCR: Ids = Ids::new();
 static SYNTECT: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
@@ -95,7 +95,7 @@ impl Highlighter {
 		}
 
 		Ok(if plain {
-			Text::from(replace_to_printable(&after, YAZI.preview.tab_size))
+			Text::from(Self::merge_highlight_lines(&after, YAZI.preview.tab_size))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await?
 		})
@@ -202,6 +202,16 @@ impl Highlighter {
 		if *b == b'\r' {
 			*b = b'\n';
 		}
+	}
+
+	fn merge_highlight_lines(s: &[String], tab_size: u8) -> String {
+		let mut buf = Vec::new();
+		buf.reserve_exact(s.iter().map(|s| s.len()).sum::<usize>() | 15);
+
+		for &b in s.iter().flat_map(|s| s.as_bytes()) {
+			push_printable_char(&mut buf, b, true, tab_size, false);
+		}
+		unsafe { String::from_utf8_unchecked(buf) }
 	}
 }
 

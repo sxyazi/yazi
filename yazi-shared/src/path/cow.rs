@@ -19,6 +19,10 @@ impl From<PathBufDyn> for PathCow<'_> {
 	fn from(value: PathBufDyn) -> Self { Self::Owned(value) }
 }
 
+impl<'a> From<&'a PathCow<'_>> for PathCow<'a> {
+	fn from(value: &'a PathCow<'_>) -> Self { Self::Borrowed(value.as_path()) }
+}
+
 impl From<PathCow<'_>> for PathBufDyn {
 	fn from(value: PathCow<'_>) -> Self { value.into_owned() }
 }
