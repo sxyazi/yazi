@@ -79,13 +79,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add::<FileProgPaste>(format!("Cut {} to {}", from.display(), to.display()));
 
-		let Ok(prefixed) = to.try_starts_with(&from) else {
-			return self
-				.ops
-				.out(id, FileOutPaste::Fail("Path being cut has a different encoding".to_owned()));
-		};
-
-		if prefixed && !to.covariant(&from) {
+		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
 			return self.ops.out(id, FileOutPaste::Fail("Cannot cut directory into itself".to_owned()));
 		}
 
@@ -103,11 +97,12 @@ impl Scheduler {
 		});
 
 		let file = self.file.clone();
+		let follow1 = !from.scheme().covariant(to.scheme());
 		self.send_micro(id, LOW, async move {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
+			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow1, retry: 0 }).await
 		});
 	}
 
@@ -118,22 +113,17 @@ impl Scheduler {
 			to.display()
 		));
 
-		let Ok(prefixed) = to.try_starts_with(&from) else {
-			return self
-				.ops
-				.out(id, FileOutPaste::Fail("Path being copied has a different encoding".to_owned()));
-		};
-
-		if prefixed && !to.covariant(&from) {
+		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
 			return self.ops.out(id, FileOutPaste::Fail("Cannot copy directory into itself".to_owned()));
 		}
 
 		let file = self.file.clone();
+		let follow1 = follow || !from.scheme().covariant(to.scheme());
 		self.send_micro(id, LOW, async move {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
+			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow1, retry: 0 }).await
 		});
 	}
 
@@ -160,14 +150,13 @@ impl Scheduler {
 			to.display()
 		));
 
-		let Ok(prefixed) = to.try_starts_with(&from) else {
-			return self.ops.out(
-				id,
-				FileOutHardlink::Fail("Path being hardlinked has a different encoding".to_owned()),
-			);
-		};
+		if !from.scheme().covariant(to.scheme()) {
+			return self
+				.ops
+				.out(id, FileOutHardlink::Fail("Cannot hardlink cross filesystem".to_owned()));
+		}
 
-		if prefixed && !to.covariant(&from) {
+		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
 			return self
 				.ops
 				.out(id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));

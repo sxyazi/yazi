@@ -21,7 +21,7 @@ fn path_relative_to_impl<'a>(from: PathCow<'_>, to: PathCow<'a>) -> Result<PathC
 	}
 
 	if from == to {
-		return Ok(PathDyn::with_str(to.kind(), ".").into());
+		return Ok(PathDyn::with_str(from.kind(), ".").into());
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -41,7 +41,7 @@ fn path_relative_to_impl<'a>(from: PathCow<'_>, to: PathCow<'a>) -> Result<PathC
 	let dots = f_head.into_iter().chain(f_it).map(|_| ParentDir);
 	let rest = t_head.into_iter().chain(t_it);
 
-	let buf = PathBufDyn::from_components(to.kind(), dots.chain(rest))?;
+	let buf = PathBufDyn::from_components(from.kind(), dots.chain(rest))?;
 	Ok(buf.into())
 }
 

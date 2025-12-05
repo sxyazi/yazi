@@ -4,7 +4,7 @@ use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::{CWD, provider::{DirReader, FileHolder, Provider}};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
 use crate::provider::sftp::Conn;
@@ -175,14 +175,14 @@ impl<'a> Provider for Sftp<'a> {
 		Ok(())
 	}
 
-	async fn symlink<P, F>(&self, original: P, _is_dir: F) -> io::Result<()>
+	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		let original = original.as_path().as_unix()?;
+		let original = original.as_strand().encoded_bytes();
 
-		Ok(self.op().await?.symlink(&original, self.path).await?)
+		Ok(self.op().await?.symlink(original, self.path).await?)
 	}
 
 	async fn symlink_metadata(&self) -> io::Result<yazi_fs::cha::Cha> {

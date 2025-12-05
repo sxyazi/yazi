@@ -6,13 +6,13 @@ use yazi_shared::{Id, url::UrlBuf};
 // --- Paste
 #[derive(Clone, Debug)]
 pub(crate) struct FileInPaste {
-	pub(crate) id:     Id,
-	pub(crate) from:   UrlBuf,
-	pub(crate) to:     UrlBuf,
-	pub(crate) cha:    Option<Cha>,
-	pub(crate) cut:    bool,
-	pub(crate) follow: bool,
-	pub(crate) retry:  u8,
+	pub(crate) id:      Id,
+	pub(crate) from:    UrlBuf,
+	pub(crate) to:      UrlBuf,
+	pub(crate) cha:     Option<Cha>,
+	pub(crate) cut:     bool,
+	pub(crate) follow1: bool,
+	pub(crate) retry:   u8,
 }
 
 impl FileInPaste {
@@ -23,7 +23,7 @@ impl FileInPaste {
 			to,
 			cha: Some(cha),
 			cut: self.cut,
-			follow: self.follow,
+			follow1: self.follow1,
 			retry: self.retry,
 		}
 	}

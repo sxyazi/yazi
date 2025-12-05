@@ -7,12 +7,15 @@ use yazi_shared::url::{Url, UrlBuf};
 
 use crate::provider::{self, Gate};
 
+const BUF_SIZE: usize = 512 * 1024;
+const PER_CHUNK: u64 = 8 * 1024 * 1024;
+
 pub(super) async fn copy_impl(from: Url<'_>, to: Url<'_>, attrs: Attrs) -> io::Result<u64> {
 	let src = provider::open(from).await?;
 	let dist = provider::create(to).await?;
 
-	let mut reader = BufReader::with_capacity(524288, src);
-	let mut writer = BufWriter::with_capacity(524288, dist);
+	let mut reader = BufReader::with_capacity(BUF_SIZE, src);
+	let mut writer = BufWriter::with_capacity(BUF_SIZE, dist);
 	let written = tokio::io::copy(&mut reader, &mut writer).await?;
 
 	writer.flush().await?;
@@ -33,32 +36,39 @@ pub(super) fn copy_with_progress_impl(
 
 	let (acc_, prog_tx_) = (acc.clone(), prog_tx.clone());
 	tokio::spawn(async move {
-		let (cha, mut src) = {
-			let f = provider::open(&*from).await?;
-			(f.metadata().await?, Some(f))
+		let init = async {
+			let src = provider::open(&*from).await?;
+			let cha = src.metadata().await?;
+
+			let dist = provider::create(&*to).await?;
+			dist.set_len(cha.len).await?;
+			Ok((cha, Some(src), Some(dist)))
 		};
 
-		let mut dist = {
-			let f = provider::create(&*to).await?;
-			f.set_len(cha.len).await?;
-			Some(f)
+		let (cha, mut src, mut dist) = match init.await {
+			Ok(r) => r,
+			Err(e) => {
+				prog_tx_.send(Err(e)).await.ok();
+				done_tx.send(()).ok();
+				return;
+			}
 		};
 
-		let chunks = (cha.len + 5242880 - 1) / 5242880;
+		let chunks = (cha.len + PER_CHUNK - 1) / PER_CHUNK;
 		let mut result = futures::stream::iter(0..chunks)
 			.map(|i| {
 				let acc_ = acc_.clone();
 				let (from, to) = (from.clone(), to.clone());
 				let (src, dist) = (src.take(), dist.take());
 				async move {
-					let offset = i * 5242880;
-					let take = cha.len.saturating_sub(offset).min(5242880);
+					let offset = i * PER_CHUNK;
+					let take = cha.len.saturating_sub(offset).min(PER_CHUNK);
 
-					let mut src = BufReader::with_capacity(524288, match src {
+					let mut src = BufReader::with_capacity(BUF_SIZE, match src {
 						Some(f) => f,
 						None => provider::open(&*from).await?,
 					});
-					let mut dist = BufWriter::with_capacity(524288, match dist {
+					let mut dist = BufWriter::with_capacity(BUF_SIZE, match dist {
 						Some(f) => f,
 						None => Gate::default().write(true).open(&*to).await?,
 					});
@@ -114,7 +124,6 @@ pub(super) fn copy_with_progress_impl(
 		}
 
 		done_tx.send(()).ok();
-		Ok::<_, io::Error>(())
 	});
 
 	tokio::spawn(async move {

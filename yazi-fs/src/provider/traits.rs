@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{path::{AsPath, PathBufDyn}, strand::StrandCow, url::{AsUrl, Url, UrlBuf}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
 use crate::{cha::{Cha, ChaType}, provider::Attrs};
 
@@ -155,21 +155,21 @@ pub trait Provider: Sized {
 	where
 		P: AsPath;
 
-	fn symlink<P, F>(&self, original: P, _is_dir: F) -> impl Future<Output = io::Result<()>>
+	fn symlink<S, F>(&self, original: S, _is_dir: F) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPath,
+		S: AsStrand,
 		F: AsyncFnOnce() -> io::Result<bool>;
 
-	fn symlink_dir<P>(&self, original: P) -> impl Future<Output = io::Result<()>>
+	fn symlink_dir<S>(&self, original: S) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPath,
+		S: AsStrand,
 	{
 		self.symlink(original, async || Ok(true))
 	}
 
-	fn symlink_file<P>(&self, original: P) -> impl Future<Output = io::Result<()>>
+	fn symlink_file<S>(&self, original: S) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPath,
+		S: AsStrand,
 	{
 		self.symlink(original, async || Ok(false))
 	}
