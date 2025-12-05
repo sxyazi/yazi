@@ -27,6 +27,10 @@ impl From<PathCow<'_>> for PathBufDyn {
 	fn from(value: PathCow<'_>) -> Self { value.into_owned() }
 }
 
+impl PartialEq for PathCow<'_> {
+	fn eq(&self, other: &Self) -> bool { self.as_path() == other.as_path() }
+}
+
 impl PartialEq<&str> for PathCow<'_> {
 	fn eq(&self, other: &&str) -> bool {
 		match self {

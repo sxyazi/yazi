@@ -5,21 +5,21 @@ use yazi_fs::path::expand_url;
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
-pub enum Provider {
-	Sftp(ProviderSftp),
+pub enum Service {
+	Sftp(ServiceSftp),
 }
 
-impl TryFrom<&'static Provider> for &'static ProviderSftp {
+impl TryFrom<&'static Service> for &'static ServiceSftp {
 	type Error = &'static str;
 
-	fn try_from(value: &'static Provider) -> Result<Self, Self::Error> {
+	fn try_from(value: &'static Service) -> Result<Self, Self::Error> {
 		match value {
-			Provider::Sftp(p) => Ok(p),
+			Service::Sftp(p) => Ok(p),
 		}
 	}
 }
 
-impl Provider {
+impl Service {
 	pub(super) fn reshape(&mut self) -> io::Result<()> {
 		match self {
 			Self::Sftp(p) => p.reshape(),
@@ -29,7 +29,7 @@ impl Provider {
 
 // --- SFTP
 #[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct ProviderSftp {
+pub struct ServiceSftp {
 	pub host:           String,
 	pub user:           String,
 	pub port:           u16,
@@ -41,7 +41,7 @@ pub struct ProviderSftp {
 	pub identity_agent: PathBuf,
 }
 
-impl ProviderSftp {
+impl ServiceSftp {
 	fn reshape(&mut self) -> io::Result<()> {
 		if !self.key_file.as_os_str().is_empty() {
 			self.key_file = expand_url(&self.key_file)

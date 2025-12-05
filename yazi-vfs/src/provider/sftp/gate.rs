@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_config::vfs::{ProviderSftp, Vfs};
+use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::provider::{Attrs, FileBuilder};
 use yazi_sftp::fs::Flags;
 use yazi_shared::url::{AsUrl, Url};
@@ -64,7 +64,7 @@ impl FileBuilder for Gate {
 	{
 		let url = url.as_url();
 		let (path, (name, config)) = match url {
-			Url::Sftp { loc, domain } => (*loc, Vfs::provider::<&ProviderSftp>(domain).await?),
+			Url::Sftp { loc, domain } => (*loc, Vfs::service::<&ServiceSftp>(domain).await?),
 			_ => Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not an SFTP URL: {url:?}")))?,
 		};
 

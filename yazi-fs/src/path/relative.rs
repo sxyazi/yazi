@@ -1,39 +1,35 @@
 use anyhow::{Result, bail};
-use yazi_shared::{path::PathBufDyn, url::{UrlCow, UrlLike}};
+use yazi_shared::path::{PathBufDyn, PathCow, PathDyn, PathLike};
 
-pub fn url_relative_to<'a, 'b, U, V>(from: U, to: V) -> Result<UrlCow<'b>>
+pub fn path_relative_to<'a, 'b, P, Q>(from: P, to: Q) -> Result<PathCow<'b>>
 where
-	U: Into<UrlCow<'a>>,
-	V: Into<UrlCow<'b>>,
+	P: Into<PathCow<'a>>,
+	Q: Into<PathCow<'b>>,
 {
-	url_relative_to_(from.into(), to.into())
+	path_relative_to_impl(from.into(), to.into())
 }
 
-fn url_relative_to_<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<UrlCow<'a>> {
-	use yazi_shared::url::Component::*;
+fn path_relative_to_impl<'a>(from: PathCow<'_>, to: PathCow<'a>) -> Result<PathCow<'a>> {
+	use yazi_shared::path::Component::*;
 
 	if from.is_absolute() != to.is_absolute() {
 		return if to.is_absolute() {
 			Ok(to)
 		} else {
-			bail!("Urls must be both absolute or both relative: {from:?} and {to:?}");
+			bail!("Paths must be both absolute or both relative: {from:?} and {to:?}");
 		};
 	}
 
-	if from.covariant(&to) {
-		return UrlCow::try_from((
-			to.scheme().zeroed().to_owned(),
-			PathBufDyn::with_str(to.kind(), "."),
-		));
+	if from == to {
+		return Ok(PathDyn::with_str(to.kind(), ".").into());
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
 	let (f_head, t_head) = loop {
 		match (f_it.next(), t_it.next()) {
-			(Some(Scheme(a)), Some(Scheme(b))) if a.covariant(b) => {}
 			(Some(RootDir), Some(RootDir)) => {}
 			(Some(Prefix(a)), Some(Prefix(b))) if a == b => {}
-			(Some(Scheme(_) | Prefix(_) | RootDir), _) | (_, Some(Scheme(_) | Prefix(_) | RootDir)) => {
+			(Some(Prefix(_) | RootDir), _) | (_, Some(Prefix(_) | RootDir)) => {
 				return Ok(to);
 			}
 			(None, None) => break (None, None),
@@ -45,8 +41,51 @@ fn url_relative_to_<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<UrlCow<'a>> 
 	let dots = f_head.into_iter().chain(f_it).map(|_| ParentDir);
 	let rest = t_head.into_iter().chain(t_it);
 
-	let iter = dots.chain(rest).map(|c| c.downgrade().expect("path component from dot or normal"));
-	let buf = PathBufDyn::from_components(to.kind(), iter)?;
+	let buf = PathBufDyn::from_components(to.kind(), dots.chain(rest))?;
+	Ok(buf.into())
+}
 
-	UrlCow::try_from((to.scheme().zeroed().to_owned(), buf))
+#[cfg(test)]
+mod tests {
+	use yazi_shared::path::PathDyn;
+
+	use super::*;
+
+	#[test]
+	fn test_path_relative_to() {
+		yazi_shared::init_tests();
+
+		#[cfg(unix)]
+		let cases = [
+			// Same paths
+			("", "", "."),
+			(".", ".", "."),
+			("/", "/", "."),
+			("/a", "/a", "."),
+			// Relative paths
+			("foo", "bar", "../bar"),
+			// Absolute paths
+			("/a/b", "/a/b/c", "c"),
+			("/a/b/c", "/a/b", ".."),
+			("/a/b/d", "/a/b/c", "../c"),
+			("/a/b/c", "/a", "../.."),
+			("/a/b/c/", "/a/d/", "../../d"),
+			("/a/b/b", "/a/a/b", "../../a/b"),
+		];
+
+		#[cfg(windows)]
+		let cases = [
+			(r"C:\a\b", r"C:\a\b\c", "c"),
+			(r"C:\a\b\c", r"C:\a\b", r".."),
+			(r"C:\a\b\d", r"C:\a\b\c", r"..\c"),
+			(r"C:\a\b\c", r"C:\a", r"..\.."),
+			(r"C:\a\b\b", r"C:\a\a\b", r"..\..\a\b"),
+		];
+
+		for (from, to, expected) in cases {
+			let from = PathDyn::Os(from.as_ref());
+			let to = PathDyn::Os(to.as_ref());
+			assert_eq!(path_relative_to(from, to).unwrap().to_str().unwrap(), expected);
+		}
+	}
 }
