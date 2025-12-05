@@ -1,6 +1,6 @@
-use std::{mem, sync::Arc};
+use std::{mem, sync::Arc, time::Duration};
 
-use crate::{Error, Session, SftpPath, fs::DirEntry, requests, responses};
+use crate::{Error, Operator, Session, SftpPath, fs::DirEntry, requests, responses};
 
 pub struct ReadDir {
 	session: Arc<Session>,
@@ -10,6 +10,10 @@ pub struct ReadDir {
 	name:   responses::Name<'static>,
 	cursor: usize,
 	done:   bool,
+}
+
+impl Drop for ReadDir {
+	fn drop(&mut self) { Operator::from(&self.session).close(&self.handle).ok(); }
 }
 
 impl ReadDir {
@@ -49,7 +53,12 @@ impl ReadDir {
 			return Ok(());
 		}
 
-		self.name = match self.session.send(requests::ReadDir::new(&self.handle)).await {
+		let result = self
+			.session
+			.send_with_timeout(requests::ReadDir::new(&self.handle), Duration::from_mins(5))
+			.await;
+
+		self.name = match result {
 			Ok(resp) => resp,
 			Err(Error::Status(status)) if status.is_eof() => {
 				self.done = true;

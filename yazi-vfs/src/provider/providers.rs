@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::sync::mpsc;
 use yazi_fs::{cha::Cha, provider::{Attrs, Provider}};
-use yazi_shared::{path::{AsPath, PathBufDyn}, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 #[derive(Clone)]
 pub(super) enum Providers<'a> {
@@ -161,9 +161,9 @@ impl<'a> Provider for Providers<'a> {
 		}
 	}
 
-	async fn symlink<P, F>(&self, original: P, is_dir: F) -> io::Result<()>
+	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
 		match self {
@@ -172,9 +172,9 @@ impl<'a> Provider for Providers<'a> {
 		}
 	}
 
-	async fn symlink_dir<P>(&self, original: P) -> io::Result<()>
+	async fn symlink_dir<S>(&self, original: S) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 	{
 		match self {
 			Self::Local(p) => p.symlink_dir(original).await,
@@ -182,9 +182,9 @@ impl<'a> Provider for Providers<'a> {
 		}
 	}
 
-	async fn symlink_file<P>(&self, original: P) -> io::Result<()>
+	async fn symlink_file<S>(&self, original: S) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 	{
 		match self {
 			Self::Local(p) => p.symlink_file(original).await,

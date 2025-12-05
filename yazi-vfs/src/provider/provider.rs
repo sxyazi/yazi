@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::sync::mpsc;
 use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
-use yazi_shared::{path::{AsPath, PathBufDyn}, url::{AsUrl, UrlBuf, UrlCow}};
+use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow}};
 
 use super::{Providers, ReadDir, RwFile};
 
@@ -201,27 +201,27 @@ where
 	}
 }
 
-pub async fn symlink<U, P, F>(link: U, original: P, is_dir: F) -> io::Result<()>
+pub async fn symlink<U, S, F>(link: U, original: S, is_dir: F) -> io::Result<()>
 where
 	U: AsUrl,
-	P: AsPath,
+	S: AsStrand,
 	F: AsyncFnOnce() -> io::Result<bool>,
 {
 	Providers::new(link.as_url()).await?.symlink(original, is_dir).await
 }
 
-pub async fn symlink_dir<U, P>(link: U, original: P) -> io::Result<()>
+pub async fn symlink_dir<U, S>(link: U, original: S) -> io::Result<()>
 where
 	U: AsUrl,
-	P: AsPath,
+	S: AsStrand,
 {
 	Providers::new(link.as_url()).await?.symlink_dir(original).await
 }
 
-pub async fn symlink_file<U, P>(link: U, original: P) -> io::Result<()>
+pub async fn symlink_file<U, S>(link: U, original: S) -> io::Result<()>
 where
 	U: AsUrl,
-	P: AsPath,
+	S: AsStrand,
 {
 	Providers::new(link.as_url()).await?.symlink_file(original).await
 }

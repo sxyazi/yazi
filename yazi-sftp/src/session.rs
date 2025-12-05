@@ -3,7 +3,7 @@ use std::{any::TypeId, collections::HashMap, io::{self, ErrorKind}, sync::Arc, t
 use parking_lot::Mutex;
 use russh::{ChannelStream, client::Msg};
 use serde::Serialize;
-use tokio::{io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf}, select, sync::{mpsc, oneshot}, time::timeout};
+use tokio::{io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf}, select, sync::{mpsc, oneshot}};
 
 use crate::{Error, Id, Packet, Receiver, responses};
 
@@ -93,12 +93,7 @@ impl Session {
 		I: Into<Packet<'a>> + Serialize,
 		O: TryFrom<Packet<'static>, Error = Error> + 'static,
 	{
-		match timeout(Duration::from_secs(30), self.send_sync(input)?).await?? {
-			Packet::Status(status) if TypeId::of::<O>() != TypeId::of::<responses::Status>() => {
-				Err(Error::Status(status))
-			}
-			response => response.try_into(),
-		}
+		self.send_with_timeout(input, Duration::from_secs(45)).await
 	}
 
 	pub fn send_sync<'a, I>(self: &Arc<Self>, input: I) -> Result<Receiver, Error>
@@ -116,6 +111,23 @@ impl Session {
 		self.callback.lock().insert(id, tx);
 		self.tx.send(crate::to_bytes(request)?)?;
 		Ok(Receiver::new(self, id, rx))
+	}
+
+	pub async fn send_with_timeout<'a, I, O>(
+		self: &Arc<Self>,
+		input: I,
+		timeout: Duration,
+	) -> Result<O, Error>
+	where
+		I: Into<Packet<'a>> + Serialize,
+		O: TryFrom<Packet<'static>, Error = Error> + 'static,
+	{
+		match tokio::time::timeout(timeout, self.send_sync(input)?).await?? {
+			Packet::Status(status) if TypeId::of::<O>() != TypeId::of::<responses::Status>() => {
+				Err(Error::Status(status))
+			}
+			response => response.try_into(),
+		}
 	}
 
 	pub fn is_closed(self: &Arc<Self>) -> bool { self.tx.is_closed() }

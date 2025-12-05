@@ -1,7 +1,7 @@
 use std::{io, path::Path, sync::Arc};
 
 use tokio::sync::mpsc;
-use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
 
@@ -120,14 +120,14 @@ impl<'a> Provider for Local<'a> {
 	}
 
 	#[inline]
-	async fn symlink<P, F>(&self, original: P, _is_dir: F) -> io::Result<()>
+	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
 		#[cfg(unix)]
 		{
-			let original = original.as_path().as_os()?;
+			let original = original.as_strand().as_os()?;
 			tokio::fs::symlink(original, self.path).await
 		}
 		#[cfg(windows)]
@@ -139,11 +139,11 @@ impl<'a> Provider for Local<'a> {
 	}
 
 	#[inline]
-	async fn symlink_dir<P>(&self, original: P) -> io::Result<()>
+	async fn symlink_dir<S>(&self, original: S) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 	{
-		let original = original.as_path().as_os()?;
+		let original = original.as_strand().as_os()?;
 
 		#[cfg(unix)]
 		{
@@ -156,11 +156,11 @@ impl<'a> Provider for Local<'a> {
 	}
 
 	#[inline]
-	async fn symlink_file<P>(&self, original: P) -> io::Result<()>
+	async fn symlink_file<S>(&self, original: S) -> io::Result<()>
 	where
-		P: AsPath,
+		S: AsStrand,
 	{
-		let original = original.as_path().as_os()?;
+		let original = original.as_strand().as_os()?;
 
 		#[cfg(unix)]
 		{

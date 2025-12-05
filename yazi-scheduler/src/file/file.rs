@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, hash::{BuildHasher, Hash, Hasher}, time::Duration};
+use std::{collections::VecDeque, hash::{BuildHasher, Hash, Hasher}};
 
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
@@ -26,7 +26,10 @@ impl File {
 	}
 
 	pub(crate) async fn paste(&self, mut task: FileInPaste) -> Result<(), FileOutPaste> {
-		if task.cut && ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok() {
+		if task.cut
+			&& !task.follow
+			&& ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok()
+		{
 			return Ok(self.ops.out(task.id, FileOutPaste::Succ));
 		}
 
@@ -108,8 +111,17 @@ impl File {
 				}
 				Ok(n) => self.ops.out(task.id, FileOutPasteDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
-					warn!("Paste task partially done: {task:?}");
-					break;
+					let Ok(cha) = Self::cha(&task.from, task.follow, None).await else {
+						warn!("Paste task partially done: {task:?}");
+						break;
+					};
+
+					if cha.is_orphan() || (cha.is_link() && !task.follow) {
+						task.cha = Some(cha);
+						return Ok(self.queue(task.into_link(), NORMAL));
+					}
+
+					Err(e)?
 				}
 				// Operation not permitted (os error 1)
 				// Attribute not found (os error 93)
@@ -132,10 +144,6 @@ impl File {
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
-		if !task.from.scheme().covariant(task.to.scheme()) {
-			Err(anyhow!("Source and target must be on the same filesystem: {task:?}"))?
-		}
-
 		let mut src: PathCow = if task.resolve {
 			ok_or_not_found!(
 				provider::read_link(&task.from).await,
