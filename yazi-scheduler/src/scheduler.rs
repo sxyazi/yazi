@@ -97,12 +97,12 @@ impl Scheduler {
 		});
 
 		let file = self.file.clone();
-		let follow1 = !from.scheme().covariant(to.scheme());
+		let follow = !from.scheme().covariant(to.scheme());
 		self.send_micro(id, LOW, async move {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow1, retry: 0 }).await
+			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow, retry: 0 }).await
 		});
 	}
 
@@ -118,12 +118,12 @@ impl Scheduler {
 		}
 
 		let file = self.file.clone();
-		let follow1 = follow || !from.scheme().covariant(to.scheme());
+		let follow = follow || !from.scheme().covariant(to.scheme());
 		self.send_micro(id, LOW, async move {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow1, retry: 0 }).await
+			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
 		});
 	}
 

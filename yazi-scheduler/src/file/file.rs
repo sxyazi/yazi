@@ -27,20 +27,20 @@ impl File {
 
 	pub(crate) async fn paste(&self, mut task: FileInPaste) -> Result<(), FileOutPaste> {
 		if task.cut
-			&& !task.follow1
+			&& !task.follow
 			&& ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok()
 		{
 			return Ok(self.ops.out(task.id, FileOutPaste::Succ));
 		}
 
 		if task.cha.is_none() {
-			task.cha = Some(Self::cha(&task.from, task.follow1, None).await?);
+			task.cha = Some(Self::cha(&task.from, task.follow, None).await?);
 		}
 
 		let cha = task.cha.unwrap();
 		if !cha.is_dir() {
 			let id = task.id;
-			if cha.is_orphan() || (cha.is_link() && !task.follow1) {
+			if cha.is_orphan() || (cha.is_link() && !task.follow) {
 				self.ops.out(id, FileOutPaste::New(0));
 				self.queue(task.into_link(), NORMAL);
 			} else {
@@ -76,7 +76,7 @@ impl File {
 			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next().await {
 				let from = entry.url();
-				let cha = continue_unless_ok!(Self::cha(&from, task.follow1, Some(entry)).await);
+				let cha = continue_unless_ok!(Self::cha(&from, task.follow, Some(entry)).await);
 
 				if cha.is_dir() {
 					dirs.push_back(from);
@@ -84,7 +84,7 @@ impl File {
 				}
 
 				let to = continue_unless_ok!(dest.try_join(from.name().unwrap()));
-				if cha.is_orphan() || (cha.is_link() && !task.follow1) {
+				if cha.is_orphan() || (cha.is_link() && !task.follow) {
 					self.ops.out(task.id, FileOutPaste::New(0));
 					self.queue(task.spawn(from, to, cha).into_link(), NORMAL);
 				} else {
@@ -111,12 +111,12 @@ impl File {
 				}
 				Ok(n) => self.ops.out(task.id, FileOutPasteDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
-					let Ok(cha) = Self::cha(&task.from, task.follow1, None).await else {
+					let Ok(cha) = Self::cha(&task.from, task.follow, None).await else {
 						warn!("Paste task partially done: {task:?}");
 						break;
 					};
 
-					if cha.is_orphan() || (cha.is_link() && !task.follow1) {
+					if cha.is_orphan() || (cha.is_link() && !task.follow) {
 						task.cha = Some(cha);
 						return Ok(self.queue(task.into_link(), NORMAL));
 					}
