@@ -201,32 +201,27 @@ where
 	}
 }
 
-pub async fn symlink<U, V, F>(original: U, link: V, is_dir: F) -> io::Result<()>
+pub async fn symlink<U, P, F>(link: U, original: P, is_dir: F) -> io::Result<()>
 where
 	U: AsUrl,
-	V: AsUrl,
+	P: AsPath,
 	F: AsyncFnOnce() -> io::Result<bool>,
 {
-	let (original, link) = (original.as_url(), link.as_url());
-	if original.scheme().covariant(link.scheme()) {
-		Providers::new(link).await?.symlink(original.loc(), is_dir).await
-	} else {
-		Err(io::Error::from(io::ErrorKind::CrossesDevices))
-	}
+	Providers::new(link.as_url()).await?.symlink(original, is_dir).await
 }
 
-pub async fn symlink_dir<P, U>(original: P, link: U) -> io::Result<()>
+pub async fn symlink_dir<U, P>(link: U, original: P) -> io::Result<()>
 where
-	P: AsPath,
 	U: AsUrl,
+	P: AsPath,
 {
 	Providers::new(link.as_url()).await?.symlink_dir(original).await
 }
 
-pub async fn symlink_file<P, U>(original: P, link: U) -> io::Result<()>
+pub async fn symlink_file<U, P>(link: U, original: P) -> io::Result<()>
 where
-	P: AsPath,
 	U: AsUrl,
+	P: AsPath,
 {
 	Providers::new(link.as_url()).await?.symlink_file(original).await
 }

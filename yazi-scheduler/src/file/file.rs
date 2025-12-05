@@ -1,10 +1,10 @@
-use std::{collections::VecDeque, hash::{BuildHasher, Hash, Hasher}};
+use std::{collections::VecDeque, hash::{BuildHasher, Hash, Hasher}, time::Duration};
 
 use anyhow::{Context, Result, anyhow};
-use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
+use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc, time::sleep};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{skip_url, url_relative_to}, provider::{Attrs, DirReader, FileHolder, Provider, local::Local}};
+use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{Attrs, DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::PathCow, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, maybe_exists, provider::{self, DirEntry}, unique_name};
@@ -132,7 +132,7 @@ impl File {
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
-		let src: PathCow = if task.resolve {
+		let mut src: PathCow = if task.resolve {
 			ok_or_not_found!(
 				provider::read_link(&task.from).await,
 				return Ok(self.ops.out(task.id, FileOutLink::Succ))
@@ -144,15 +144,13 @@ impl File {
 			Err(anyhow!("Source and target must be on the same filesystem: {task:?}"))?
 		};
 
-		let src = UrlCow::try_from((task.from.scheme(), src))?;
-		let src = if task.relative {
-			url_relative_to(provider::canonicalize(task.to.parent().unwrap()).await?, &src)?
-		} else {
-			src
-		};
+		if task.relative {
+			let canon = provider::canonicalize(task.to.parent().unwrap()).await?;
+			src = path_relative_to(canon.loc(), src)?;
+		}
 
 		ok_or_not_found!(provider::remove_file(&task.to).await);
-		provider::symlink(&src, &task.to, async || {
+		provider::symlink(task.to, src, async || {
 			Ok(match task.cha {
 				Some(cha) => cha.is_dir(),
 				None => Self::cha(&task.from, task.resolve, None).await?.is_dir(),

@@ -1,13 +1,13 @@
 use std::{io, sync::Arc};
 
 use russh::keys::PrivateKeyWithHashAlg;
-use yazi_config::vfs::ProviderSftp;
+use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
 
 #[derive(Clone, Copy)]
 pub(super) struct Conn {
 	pub(super) name:   &'static str,
-	pub(super) config: &'static ProviderSftp,
+	pub(super) config: &'static ServiceSftp,
 }
 
 impl russh::client::Handler for Conn {

@@ -6,11 +6,11 @@ use tokio::sync::OnceCell;
 use yazi_fs::Xdg;
 use yazi_macro::ok_or_not_found;
 
-use super::Provider;
+use super::Service;
 
 #[derive(Deserialize, Serialize)]
 pub struct Vfs {
-	pub providers: HashMap<String, Provider>,
+	pub services: HashMap<String, Service>,
 }
 
 impl Vfs {
@@ -27,16 +27,16 @@ impl Vfs {
 		LOADED.get_or_try_init(init).await
 	}
 
-	pub async fn provider<'a, P>(name: &str) -> io::Result<(&'a str, P)>
+	pub async fn service<'a, P>(name: &str) -> io::Result<(&'a str, P)>
 	where
-		P: TryFrom<&'a Provider, Error = &'static str>,
+		P: TryFrom<&'a Service, Error = &'static str>,
 	{
-		let Some((key, value)) = Self::load().await?.providers.get_key_value(name) else {
-			return Err(io::Error::other(format!("No such VFS provider: {name}")));
+		let Some((key, value)) = Self::load().await?.services.get_key_value(name) else {
+			return Err(io::Error::other(format!("No such VFS service: {name}")));
 		};
 		match value.try_into() {
 			Ok(p) => Ok((key.as_str(), p)),
-			Err(e) => Err(io::Error::other(format!("VFS provider `{key}` has wrong type: {e}"))),
+			Err(e) => Err(io::Error::other(format!("VFS service `{key}` has wrong type: {e}"))),
 		}
 	}
 
@@ -48,14 +48,14 @@ impl Vfs {
 	}
 
 	fn reshape(mut self) -> io::Result<Self> {
-		for (name, provider) in &mut self.providers {
+		for (name, service) in &mut self.services {
 			if name.is_empty() || name.len() > 20 {
 				Err(io::Error::other(format!("VFS name `{name}` must be between 1 and 20 characters")))?;
 			} else if !name.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'-')) {
 				Err(io::Error::other(format!("VFS name `{name}` must be in kebab-case")))?;
 			}
 
-			provider.reshape()?;
+			service.reshape()?;
 		}
 
 		Ok(self)

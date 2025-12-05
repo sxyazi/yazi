@@ -17,7 +17,9 @@ end
 function M:fetch(job)
 	local updates, unknown, state = {}, {}, {}
 	for i, file in ipairs(job.files) do
-		if not file.cache then
+		if file.cha.is_dummy then
+			-- Skip dummy files
+		elseif not file.cache then
 			unknown[#unknown + 1] = file
 		elseif not fs.cha(file.cache) then
 			updates[file.url], state[i] = "vfs/absent", true

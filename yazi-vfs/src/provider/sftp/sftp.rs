@@ -1,7 +1,7 @@
 use std::{io, sync::Arc};
 
 use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
-use yazi_config::vfs::{ProviderSftp, Vfs};
+use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::{CWD, provider::{DirReader, FileHolder, Provider}};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, url::{Url, UrlBuf, UrlCow, UrlLike}};
@@ -15,7 +15,7 @@ pub struct Sftp<'a> {
 	path: &'a typed_path::UnixPath,
 
 	name:   &'static str,
-	config: &'static ProviderSftp,
+	config: &'static ServiceSftp,
 }
 
 impl<'a> Provider for Sftp<'a> {
@@ -136,7 +136,7 @@ impl<'a> Provider for Sftp<'a> {
 				Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url:?}")))
 			}
 			Url::Sftp { loc, domain } => {
-				let (name, config) = Vfs::provider::<&ProviderSftp>(domain).await?;
+				let (name, config) = Vfs::service::<&ServiceSftp>(domain).await?;
 				Ok(Self::Me { url, path: loc.as_inner(), name, config })
 			}
 		}

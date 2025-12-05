@@ -11,9 +11,12 @@ end)
 function M:entry()
 	ya.emit("escape", { visual = true })
 
-	local _permit = ui.hide()
 	local cwd, selected = state()
+	if cwd.scheme.is_virtual then
+		return ya.notify { title = "Fzf", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" }
+	end
 
+	local _permit = ui.hide()
 	local output, err = M.run_with(cwd, selected)
 	if not output then
 		return ya.notify { title = "Fzf", content = tostring(err), timeout = 5, level = "error" }
