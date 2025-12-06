@@ -62,8 +62,10 @@ function Tasks:redraw()
 end
 
 function Tasks:icon(snap)
-	if snap.prog.kind == "FilePaste" then
-		return snap.name:find("Copy ", 1, true) == 1 and "  " or "  "
+	if snap.prog.kind == "FileCopy" then
+		return "  "
+	elseif snap.prog.kind == "FileCut" then
+		return "  "
 	elseif snap.prog.kind == "FileDelete" then
 		return "  "
 	elseif snap.prog.kind == "FileDownload" then
@@ -77,7 +79,13 @@ end
 
 function Tasks:progress_redraw(snap, y)
 	local kind = snap.prog.kind
-	if kind == "FilePaste" or kind == "FileDelete" or kind == "FileDownload" or kind == "FileUpload" then
+	if
+		kind == "FileCopy"
+		or kind == "FileCut"
+		or kind == "FileDelete"
+		or kind == "FileDownload"
+		or kind == "FileUpload"
+	then
 		local percent
 		if snap.success then
 			percent = "Cleaning…"

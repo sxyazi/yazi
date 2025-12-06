@@ -1,20 +1,19 @@
 use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
-// --- Paste
+// --- Copy
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
-pub struct FileProgPaste {
+pub struct FileProgCopy {
 	pub total_files:     u32,
 	pub success_files:   u32,
 	pub failed_files:    u32,
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       Option<bool>,
-	pub cleaned:         bool,
 }
 
-impl From<FileProgPaste> for TaskSummary {
-	fn from(value: FileProgPaste) -> Self {
+impl From<FileProgCopy> for TaskSummary {
+	fn from(value: FileProgCopy) -> Self {
 		Self {
 			total:   value.total_files,
 			success: value.success_files,
@@ -24,7 +23,56 @@ impl From<FileProgPaste> for TaskSummary {
 	}
 }
 
-impl FileProgPaste {
+impl FileProgCopy {
+	pub fn running(self) -> bool {
+		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
+	}
+
+	pub fn success(self) -> bool {
+		self.collected == Some(true) && self.success_files == self.total_files
+	}
+
+	pub fn failed(self) -> bool { self.collected == Some(false) }
+
+	pub fn cleaned(self) -> bool { false }
+
+	pub fn percent(self) -> Option<f32> {
+		Some(if self.success() {
+			100.0
+		} else if self.failed() {
+			0.0
+		} else if self.total_bytes != 0 {
+			99.99f32.min(self.processed_bytes as f32 / self.total_bytes as f32 * 100.0)
+		} else {
+			99.99
+		})
+	}
+}
+
+// --- Cut
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct FileProgCut {
+	pub total_files:     u32,
+	pub success_files:   u32,
+	pub failed_files:    u32,
+	pub total_bytes:     u64,
+	pub processed_bytes: u64,
+	pub collected:       Option<bool>,
+	pub cleaned:         bool,
+}
+
+impl From<FileProgCut> for TaskSummary {
+	fn from(value: FileProgCut) -> Self {
+		Self {
+			total:   value.total_files,
+			success: value.success_files,
+			failed:  value.failed_files,
+			percent: value.percent().map(Into::into),
+		}
+	}
+}
+
+impl FileProgCut {
 	pub fn running(self) -> bool {
 		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
 	}

@@ -167,7 +167,11 @@ impl<'a> Provider for Sftp<'a> {
 		match op.rename_posix(self.path, &to).await {
 			Ok(()) => {}
 			Err(yazi_sftp::Error::Unsupported) => {
-				op.remove(&to).await?;
+				match op.remove(&to).await.map_err(io::Error::from) {
+					Ok(()) => {}
+					Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+					Err(e) => Err(e)?,
+				}
 				op.rename(self.path, &to).await?;
 			}
 			Err(e) => Err(e)?,

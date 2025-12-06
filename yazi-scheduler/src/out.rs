@@ -1,10 +1,12 @@
-use crate::{Task, file::{FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash, FileOutUpload, FileOutUploadDo}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
+use crate::{Task, file::{FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
 
 #[derive(Debug)]
 pub(super) enum TaskOut {
 	// File
-	FilePaste(FileOutPaste),
-	FilePasteDo(FileOutPasteDo),
+	FileCopy(FileOutCopy),
+	FileCopyDo(FileOutCopyDo),
+	FileCut(FileOutCut),
+	FileCutDo(FileOutCutDo),
 	FileLink(FileOutLink),
 	FileHardlink(FileOutHardlink),
 	FileHardlinkDo(FileOutHardlinkDo),
@@ -32,7 +34,7 @@ pub(super) enum TaskOut {
 
 impl_from_out! {
 	// File
-	FilePaste(FileOutPaste), FilePasteDo(FileOutPasteDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
+	FileCopy(FileOutCopy), FileCopyDo(FileOutCopyDo), FileCut(FileOutCut), FileCutDo(FileOutCutDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
 	// Plugin
 	PluginEntry(PluginOutEntry),
 	// Prework
@@ -45,8 +47,10 @@ impl TaskOut {
 	pub(crate) fn reduce(self, task: &mut Task) {
 		match self {
 			// File
-			Self::FilePaste(out) => out.reduce(task),
-			Self::FilePasteDo(out) => out.reduce(task),
+			Self::FileCopy(out) => out.reduce(task),
+			Self::FileCopyDo(out) => out.reduce(task),
+			Self::FileCut(out) => out.reduce(task),
+			Self::FileCutDo(out) => out.reduce(task),
 			Self::FileLink(out) => out.reduce(task),
 			Self::FileHardlink(out) => out.reduce(task),
 			Self::FileHardlinkDo(out) => out.reduce(task),
