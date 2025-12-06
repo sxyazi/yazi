@@ -1,13 +1,14 @@
 use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
-use crate::{file::{FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, prework::{PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, prework::{PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(tag = "kind")]
 pub enum TaskProg {
 	// File
-	FilePaste(FileProgPaste),
+	FileCopy(FileProgCopy),
+	FileCut(FileProgCut),
 	FileLink(FileProgLink),
 	FileHardlink(FileProgHardlink),
 	FileDelete(FileProgDelete),
@@ -28,7 +29,7 @@ pub enum TaskProg {
 
 impl_from_prog! {
 	// File
-	FilePaste(FileProgPaste), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash), FileDownload(FileProgDownload), FileUpload(FileProgUpload),
+	FileCopy(FileProgCopy), FileCut(FileProgCut), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash), FileDownload(FileProgDownload), FileUpload(FileProgUpload),
 	// Plugin
 	PluginEntry(PluginProgEntry),
 	// Prework
@@ -41,7 +42,8 @@ impl From<TaskProg> for TaskSummary {
 	fn from(value: TaskProg) -> Self {
 		match value {
 			// File
-			TaskProg::FilePaste(p) => p.into(),
+			TaskProg::FileCopy(p) => p.into(),
+			TaskProg::FileCut(p) => p.into(),
 			TaskProg::FileLink(p) => p.into(),
 			TaskProg::FileHardlink(p) => p.into(),
 			TaskProg::FileDelete(p) => p.into(),
@@ -66,7 +68,8 @@ impl TaskProg {
 	pub fn running(self) -> bool {
 		match self {
 			// File
-			Self::FilePaste(p) => p.running(),
+			Self::FileCopy(p) => p.running(),
+			Self::FileCut(p) => p.running(),
 			Self::FileLink(p) => p.running(),
 			Self::FileHardlink(p) => p.running(),
 			Self::FileDelete(p) => p.running(),
@@ -89,7 +92,8 @@ impl TaskProg {
 	pub fn success(self) -> bool {
 		match self {
 			// File
-			Self::FilePaste(p) => p.success(),
+			Self::FileCopy(p) => p.success(),
+			Self::FileCut(p) => p.success(),
 			Self::FileLink(p) => p.success(),
 			Self::FileHardlink(p) => p.success(),
 			Self::FileDelete(p) => p.success(),
@@ -112,7 +116,8 @@ impl TaskProg {
 	pub fn failed(self) -> bool {
 		match self {
 			// File
-			Self::FilePaste(p) => p.failed(),
+			Self::FileCopy(p) => p.failed(),
+			Self::FileCut(p) => p.failed(),
 			Self::FileLink(p) => p.failed(),
 			Self::FileHardlink(p) => p.failed(),
 			Self::FileDelete(p) => p.failed(),
@@ -135,7 +140,8 @@ impl TaskProg {
 	pub fn cleaned(self) -> bool {
 		match self {
 			// File
-			Self::FilePaste(p) => p.cleaned(),
+			Self::FileCopy(p) => p.cleaned(),
+			Self::FileCut(p) => p.cleaned(),
 			Self::FileLink(p) => p.cleaned(),
 			Self::FileHardlink(p) => p.cleaned(),
 			Self::FileDelete(p) => p.cleaned(),
@@ -158,7 +164,8 @@ impl TaskProg {
 	pub fn percent(self) -> Option<f32> {
 		match self {
 			// File
-			Self::FilePaste(p) => p.percent(),
+			Self::FileCopy(p) => p.percent(),
+			Self::FileCut(p) => p.percent(),
 			Self::FileLink(p) => p.percent(),
 			Self::FileHardlink(p) => p.percent(),
 			Self::FileDelete(p) => p.percent(),
@@ -181,7 +188,8 @@ impl TaskProg {
 	pub(crate) fn is_user(self) -> bool {
 		match self {
 			// File
-			Self::FilePaste(_) => true,
+			Self::FileCopy(_) => true,
+			Self::FileCut(_) => true,
 			Self::FileLink(_) => true,
 			Self::FileHardlink(_) => true,
 			Self::FileDelete(_) => true,

@@ -12,7 +12,7 @@ use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{must_be_dir, provider, unique_name};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileInUpload, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutPaste, FileOutUpload, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash, FileProgUpload}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
 	file:        Arc<File>,
@@ -77,10 +77,10 @@ impl Scheduler {
 
 	pub fn file_cut(&self, from: UrlBuf, mut to: UrlBuf, force: bool) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgPaste>(format!("Cut {} to {}", from.display(), to.display()));
+		let id = ongoing.add::<FileProgCut>(format!("Cut {} to {}", from.display(), to.display()));
 
 		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutPaste::Fail("Cannot cut directory into itself".to_owned()));
+			return self.ops.out(id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
 		}
 
 		ongoing.hooks.add_async(id, {
@@ -92,7 +92,7 @@ impl Scheduler {
 					provider::remove_dir_clean(&from).await.ok();
 					Pump::push_move(from, to);
 				}
-				ops.out(id, FileOutPaste::Clean);
+				ops.out(id, FileOutCut::Clean);
 			}
 		});
 
@@ -102,19 +102,19 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow, retry: 0 }).await
+			file.cut(FileInCut { id, from, to, cha: None, follow, retry: 0 }).await
 		});
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
-		let id = self.ongoing.lock().add::<FileProgPaste>(format!(
+		let id = self.ongoing.lock().add::<FileProgCopy>(format!(
 			"Copy {} to {}",
 			from.display(),
 			to.display()
 		));
 
 		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutPaste::Fail("Cannot copy directory into itself".to_owned()));
+			return self.ops.out(id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
 		}
 
 		let file = self.file.clone();
@@ -123,7 +123,7 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
+			file.copy(FileInCopy { id, from, to, cha: None, follow, retry: 0 }).await
 		});
 	}
 
@@ -193,7 +193,7 @@ impl Scheduler {
 		self.send_micro(
 			id,
 			LOW,
-			async move { file.delete(FileInDelete { id, target, length: 0 }).await },
+			async move { file.delete(FileInDelete { id, target, cha: None }).await },
 		);
 	}
 
@@ -242,7 +242,9 @@ impl Scheduler {
 		};
 
 		let file = self.file.clone();
-		self.send_micro(id, LOW, async move { file.upload(FileInUpload { id, url }).await });
+		self.send_micro(id, LOW, async move {
+			file.upload(FileInUpload { id, url, cha: None, cache: None }).await
+		});
 	}
 
 	pub fn plugin_micro(&self, opt: PluginOpt) {
@@ -411,13 +413,14 @@ impl Scheduler {
 
 						let result: Result<_, TaskOut> = match r#in {
 							// File
-							TaskIn::FilePaste(r#in) => file.paste_do(r#in).await.map_err(Into::into),
+							TaskIn::FileCopy(r#in) => file.copy_do(r#in).await.map_err(Into::into),
+							TaskIn::FileCut(r#in) => file.cut_do(r#in).await.map_err(Into::into),
 							TaskIn::FileLink(r#in) => file.link_do(r#in).await.map_err(Into::into),
 							TaskIn::FileHardlink(r#in) => file.hardlink_do(r#in).await.map_err(Into::into),
 							TaskIn::FileDelete(r#in) => file.delete_do(r#in).await.map_err(Into::into),
 							TaskIn::FileTrash(r#in) => file.trash_do(r#in).await.map_err(Into::into),
 							TaskIn::FileDownload(r#in) => file.download_do(r#in).await.map_err(Into::into),
-							TaskIn::FileUploadDo(r#in) => file.upload_do(r#in).await.map_err(Into::into),
+							TaskIn::FileUpload(r#in) => file.upload_do(r#in).await.map_err(Into::into),
 							// Plugin
 							TaskIn::PluginEntry(r#in) => plugin.macro_do(r#in).await.map_err(Into::into),
 							// Prework

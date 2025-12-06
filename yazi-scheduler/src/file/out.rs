@@ -1,8 +1,79 @@
 use crate::{Task, TaskProg};
 
-// --- Paste
+// --- Copy
 #[derive(Debug)]
-pub(crate) enum FileOutPaste {
+pub(crate) enum FileOutCopy {
+	New(u64),
+	Deform(String),
+	Succ,
+	Fail(String),
+}
+
+impl From<std::io::Error> for FileOutCopy {
+	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+}
+
+impl FileOutCopy {
+	pub(crate) fn reduce(self, task: &mut Task) {
+		let TaskProg::FileCopy(prog) = &mut task.prog else { return };
+		match self {
+			Self::New(bytes) => {
+				prog.total_files += 1;
+				prog.total_bytes += bytes;
+			}
+			Self::Deform(reason) => {
+				prog.total_files += 1;
+				prog.failed_files += 1;
+				task.log(reason);
+			}
+			Self::Succ => {
+				prog.collected = Some(true);
+			}
+			Self::Fail(reason) => {
+				prog.collected = Some(false);
+				task.log(reason);
+			}
+		}
+	}
+}
+
+// --- CopyDo
+#[derive(Debug)]
+pub(crate) enum FileOutCopyDo {
+	Adv(u64),
+	Log(String),
+	Succ,
+	Fail(String),
+}
+
+impl From<std::io::Error> for FileOutCopyDo {
+	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+}
+
+impl FileOutCopyDo {
+	pub(crate) fn reduce(self, task: &mut Task) {
+		let TaskProg::FileCopy(prog) = &mut task.prog else { return };
+		match self {
+			Self::Adv(size) => {
+				prog.processed_bytes += size;
+			}
+			Self::Log(line) => {
+				task.log(line);
+			}
+			Self::Succ => {
+				prog.success_files += 1;
+			}
+			Self::Fail(reason) => {
+				prog.failed_files += 1;
+				task.log(reason);
+			}
+		}
+	}
+}
+
+// --- Cut
+#[derive(Debug)]
+pub(crate) enum FileOutCut {
 	New(u64),
 	Deform(String),
 	Succ,
@@ -10,13 +81,13 @@ pub(crate) enum FileOutPaste {
 	Clean,
 }
 
-impl From<std::io::Error> for FileOutPaste {
+impl From<std::io::Error> for FileOutCut {
 	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
-impl FileOutPaste {
+impl FileOutCut {
 	pub(crate) fn reduce(self, task: &mut Task) {
-		let TaskProg::FilePaste(prog) = &mut task.prog else { return };
+		let TaskProg::FileCut(prog) = &mut task.prog else { return };
 		match self {
 			Self::New(bytes) => {
 				prog.total_files += 1;
@@ -41,22 +112,22 @@ impl FileOutPaste {
 	}
 }
 
-// --- PasteDo
+// --- CutDo
 #[derive(Debug)]
-pub(crate) enum FileOutPasteDo {
+pub(crate) enum FileOutCutDo {
 	Adv(u64),
 	Log(String),
 	Succ,
 	Fail(String),
 }
 
-impl From<std::io::Error> for FileOutPasteDo {
+impl From<std::io::Error> for FileOutCutDo {
 	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
-impl FileOutPasteDo {
+impl FileOutCutDo {
 	pub(crate) fn reduce(self, task: &mut Task) {
-		let TaskProg::FilePaste(prog) = &mut task.prog else { return };
+		let TaskProg::FileCut(prog) = &mut task.prog else { return };
 		match self {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
@@ -102,7 +173,17 @@ impl FileOutLink {
 					task.log(reason);
 				}
 			}
-		} else if let TaskProg::FilePaste(prog) = &mut task.prog {
+		} else if let TaskProg::FileCopy(prog) = &mut task.prog {
+			match self {
+				Self::Succ => {
+					prog.success_files += 1;
+				}
+				Self::Fail(reason) => {
+					prog.failed_files += 1;
+					task.log(reason);
+				}
+			}
+		} else if let TaskProg::FileCut(prog) = &mut task.prog {
 			match self {
 				Self::Succ => {
 					prog.success_files += 1;
