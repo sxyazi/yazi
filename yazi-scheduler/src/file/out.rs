@@ -183,6 +183,16 @@ impl FileOutLink {
 					task.log(reason);
 				}
 			}
+		} else if let TaskProg::FileCut(prog) = &mut task.prog {
+			match self {
+				Self::Succ => {
+					prog.success_files += 1;
+				}
+				Self::Fail(reason) => {
+					prog.failed_files += 1;
+					task.log(reason);
+				}
+			}
 		}
 	}
 }

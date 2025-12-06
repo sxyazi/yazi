@@ -13,7 +13,7 @@ trait Traverse {
 
 	fn from(&self) -> Url<'_>;
 
-	async fn get_or_init_cha(&mut self) -> io::Result<Cha> {
+	async fn init(&mut self) -> io::Result<Cha> {
 		if self.cha().is_none() {
 			*self.cha() = Some(super::File::cha(self.from(), self.follow(), None).await?)
 		}
@@ -116,6 +116,16 @@ impl Traverse for FileInUpload {
 
 	fn from(&self) -> Url<'_> { self.url.as_url() }
 
+	async fn init(&mut self) -> io::Result<Cha> {
+		if self.cha.is_none() {
+			self.cha = Some(super::File::cha(self.from(), self.follow(), None).await?)
+		}
+		if self.cache.is_none() {
+			self.cache = self.url.cache();
+		}
+		Ok(self.cha.unwrap())
+	}
+
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
 		Self { id: self.id, cha: Some(cha), cache: from.cache(), url: from }
 	}
@@ -138,7 +148,7 @@ where
 	FR: Future<Output = Result<(), R>>,
 	E: Fn(String),
 {
-	let cha = task.get_or_init_cha().await?;
+	let cha = task.init().await?;
 	if !cha.is_dir() {
 		return on_file(task, cha).await;
 	}
