@@ -102,7 +102,7 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.cut(FileInCut { id, from, to, cha: None, follow, retry: 0 }).await
+			file.cut(FileInCut { id, from, to, cha: None, follow, retry: 0, drop: None }).await
 		});
 	}
 

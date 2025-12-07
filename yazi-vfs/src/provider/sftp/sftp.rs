@@ -2,7 +2,7 @@ use std::{io, sync::Arc};
 
 use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ServiceSftp, Vfs};
-use yazi_fs::{CWD, provider::{DirReader, FileHolder, Provider}};
+use yazi_fs::{CWD, provider::{Capabilities, DirReader, FileHolder, Provider}};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -42,6 +42,8 @@ impl<'a> Provider for Sftp<'a> {
 			domain: self.name.intern(),
 		})
 	}
+
+	fn capabilities(&self) -> Capabilities { Capabilities { symlink: true } }
 
 	async fn casefold(&self) -> io::Result<UrlBuf> {
 		let Some((parent, name)) = self.url.parent().zip(self.url.name()) else {
