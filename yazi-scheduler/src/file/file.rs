@@ -53,7 +53,7 @@ impl File {
 	}
 
 	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ok_or_not_found!(provider::remove_file(&task.to).await); // FIXME: integrate into copy_with_progress
+		ok_or_not_found!(provider::remove_file(&task.to).await);
 		let mut it = provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await?;
 
 		while let Some(res) = it.recv().await {
@@ -87,20 +87,30 @@ impl File {
 			return Ok(self.ops.out(id, FileOutCut::Succ));
 		}
 
+		let (mut links, mut files) = (vec![], vec![]);
+		let reorder = task.follow && provider::capabilities(&task.from).await?.symlink;
+
 		super::traverse::<FileOutCut, _, _, _, _, _>(
 			task,
 			async |dir| match provider::create_dir(dir).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e)?,
 				_ => Ok(()),
 			},
-			async |task, cha| {
-				Ok(if cha.is_orphan() || (cha.is_link() && !task.follow) {
-					self.ops.out(id, FileOutCut::New(0));
+			|task, cha| {
+				let nofollow = cha.is_orphan() || (cha.is_link() && !task.follow);
+				self.ops.out(id, FileOutCut::New(if nofollow { 0 } else { cha.len }));
+
+				if nofollow {
 					self.queue(task.into_link(), NORMAL);
 				} else {
-					self.ops.out(id, FileOutCut::New(cha.len));
-					self.queue(task, LOW);
-				})
+					match (cha.is_link(), reorder) {
+						(_, false) => self.queue(task, LOW),
+						(true, true) => links.push(task),
+						(false, true) => files.push(task),
+					}
+				};
+
+				async { Ok(()) }
 			},
 			|err| {
 				self.ops.out(id, FileOutCut::Deform(err));
@@ -108,11 +118,26 @@ impl File {
 		)
 		.await?;
 
+		if !links.is_empty() {
+			let len = links.len();
+			let (tx, mut rx) = mpsc::channel(len);
+			for task in links {
+				self.queue(task.with_drop(&tx), LOW);
+			}
+			for _ in 0..len {
+				rx.recv().await;
+			}
+		}
+
+		for task in files {
+			self.queue(task, LOW);
+		}
+
 		Ok(self.ops.out(id, FileOutCut::Succ))
 	}
 
 	pub(crate) async fn cut_do(&self, mut task: FileInCut) -> Result<(), FileOutCutDo> {
-		ok_or_not_found!(provider::remove_file(&task.to).await); // FIXME: integrate into copy_with_progress
+		ok_or_not_found!(provider::remove_file(&task.to).await);
 		let mut it = provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await?;
 
 		while let Some(res) = it.recv().await {

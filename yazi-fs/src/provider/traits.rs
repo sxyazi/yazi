@@ -4,7 +4,7 @@ use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{AsPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
-use crate::{cha::{Cha, ChaType}, provider::Attrs};
+use crate::{cha::{Cha, ChaType}, provider::{Attrs, Capabilities}};
 
 pub trait Provider: Sized {
 	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
@@ -16,6 +16,8 @@ pub trait Provider: Sized {
 	fn absolute(&self) -> impl Future<Output = io::Result<Self::UrlCow>>;
 
 	fn canonicalize(&self) -> impl Future<Output = io::Result<UrlBuf>>;
+
+	fn capabilities(&self) -> Capabilities;
 
 	fn casefold(&self) -> impl Future<Output = io::Result<UrlBuf>>;
 

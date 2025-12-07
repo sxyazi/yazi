@@ -1,7 +1,7 @@
 use std::io;
 
 use tokio::sync::mpsc;
-use yazi_fs::{cha::Cha, provider::{Attrs, Provider}};
+use yazi_fs::{cha::Cha, provider::{Attrs, Capabilities, Provider}};
 use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 #[derive(Clone)]
@@ -28,6 +28,13 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.canonicalize().await,
 			Self::Sftp(p) => p.canonicalize().await,
+		}
+	}
+
+	fn capabilities(&self) -> Capabilities {
+		match self {
+			Self::Local(p) => p.capabilities(),
+			Self::Sftp(p) => p.capabilities(),
 		}
 	}
 

@@ -3,7 +3,7 @@ use std::{io, path::Path, sync::Arc};
 use tokio::sync::mpsc;
 use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
-use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
+use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Capabilities, Provider}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -24,6 +24,9 @@ impl<'a> Provider for Local<'a> {
 	async fn canonicalize(&self) -> io::Result<UrlBuf> {
 		tokio::fs::canonicalize(self.path).await.map(Into::into)
 	}
+
+	#[inline]
+	fn capabilities(&self) -> Capabilities { Capabilities { symlink: true } }
 
 	async fn casefold(&self) -> io::Result<UrlBuf> {
 		super::casefold(self.path).await.map(Into::into)

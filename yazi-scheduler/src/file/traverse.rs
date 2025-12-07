@@ -61,6 +61,7 @@ impl Traverse for FileInCut {
 			cha: Some(cha),
 			follow: self.follow,
 			retry: self.retry,
+			drop: self.drop.clone(),
 		}
 	}
 
@@ -137,14 +138,14 @@ impl Traverse for FileInUpload {
 pub(super) async fn traverse<R, T, D, FC, FR, E>(
 	mut task: T,
 	on_dir: D,
-	on_file: FC,
+	mut on_file: FC,
 	on_error: E,
 ) -> Result<(), R>
 where
 	R: Debug + From<io::Error>,
 	T: Traverse,
 	D: AsyncFn(Url) -> Result<(), R>,
-	FC: Fn(T, Cha) -> FR,
+	FC: FnMut(T, Cha) -> FR,
 	FR: Future<Output = Result<(), R>>,
 	E: Fn(String),
 {

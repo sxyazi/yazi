@@ -1,7 +1,7 @@
 use std::io;
 
 use tokio::sync::mpsc;
-use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
+use yazi_fs::{cha::Cha, provider::{Attrs, Capabilities, Provider, local::Local}};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow}};
 
 use super::{Providers, ReadDir, RwFile};
@@ -30,6 +30,13 @@ where
 	U: AsUrl,
 {
 	Providers::new(url.as_url()).await?.canonicalize().await
+}
+
+pub async fn capabilities<U>(url: U) -> io::Result<Capabilities>
+where
+	U: AsUrl,
+{
+	Ok(Providers::new(url.as_url()).await?.capabilities())
 }
 
 pub async fn casefold<U>(url: U) -> io::Result<UrlBuf>

@@ -1,5 +1,6 @@
-use std::path::PathBuf;
+use std::{mem, path::PathBuf};
 
+use tokio::sync::mpsc;
 use yazi_fs::cha::Cha;
 use yazi_shared::{Id, url::UrlBuf};
 
@@ -37,19 +38,33 @@ pub(crate) struct FileInCut {
 	pub(crate) cha:    Option<Cha>,
 	pub(crate) follow: bool,
 	pub(crate) retry:  u8,
+	pub(crate) drop:   Option<mpsc::Sender<()>>,
+}
+
+impl Drop for FileInCut {
+	fn drop(&mut self) {
+		if let Some(tx) = self.drop.take() {
+			tx.try_send(()).ok();
+		}
+	}
 }
 
 impl FileInCut {
-	pub(super) fn into_link(self) -> FileInLink {
+	pub(super) fn into_link(mut self) -> FileInLink {
 		FileInLink {
 			id:       self.id,
-			from:     self.from,
-			to:       self.to,
+			from:     mem::take(&mut self.from),
+			to:       mem::take(&mut self.to),
 			cha:      self.cha,
 			resolve:  true,
 			relative: false,
 			delete:   true,
 		}
+	}
+
+	pub(super) fn with_drop(mut self, drop: &mpsc::Sender<()>) -> Self {
+		self.drop = Some(drop.clone());
+		self
 	}
 }
 
