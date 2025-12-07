@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Smart-case in interactive `cd` broken due to a typo ([#3540])
 - Fix shell formatting for non-spread opener rules ([#3532])
 - Account for URL covariance in `Url:join()` ([#3514])
+- `sort extension` excludes directories since only files have extensions ([#3582])
 
 ## [v26.1.4]
 
