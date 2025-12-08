@@ -146,7 +146,7 @@ impl<'a> SchemeCow<'a> {
 		Ok(match kind {
 			SchemeKind::Regular => {
 				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
-				(path.components().count(), path.name().is_some() as usize)
+				(path.name().is_some() as usize, path.name().is_some() as usize)
 			}
 			SchemeKind::Search => {
 				let (uri, urn) = (uri.unwrap_or(0), urn.unwrap_or(0));
@@ -155,7 +155,7 @@ impl<'a> SchemeCow<'a> {
 			}
 			SchemeKind::Archive => (uri.unwrap_or(0), urn.unwrap_or(0)),
 			SchemeKind::Sftp => {
-				let uri = uri.unwrap_or_else(|| path.components().count());
+				let uri = uri.unwrap_or(path.name().is_some() as usize);
 				let urn = urn.unwrap_or(path.name().is_some() as usize);
 				(uri, urn)
 			}
@@ -163,7 +163,12 @@ impl<'a> SchemeCow<'a> {
 	}
 
 	pub fn retrieve_ports(url: Url) -> (usize, usize) {
-		(url.uri().components().count(), url.urn().components().count())
+		match url {
+			Url::Regular(loc) => (loc.file_name().is_some() as usize, loc.file_name().is_some() as usize),
+			Url::Search { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::Archive { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::Sftp { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+		}
 	}
 }
 

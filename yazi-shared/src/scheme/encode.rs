@@ -39,7 +39,7 @@ impl<'a> Encode<'a> {
 					SchemeKind::Regular => Ok(()),
 					SchemeKind::Search | SchemeKind::Archive => w!(0, 0),
 					SchemeKind::Sftp => {
-						w!(self.0.0.loc().components().count(), self.0.0.loc().name().is_some() as usize)
+						w!(self.0.0.loc().name().is_some() as usize, self.0.0.loc().name().is_some() as usize)
 					}
 				}
 			}

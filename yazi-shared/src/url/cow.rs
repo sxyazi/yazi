@@ -266,3 +266,87 @@ impl<'de> Deserialize<'de> for UrlCow<'_> {
 		UrlBuf::deserialize(deserializer).map(UrlCow::from)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::url::UrlLike;
+
+	#[test]
+	fn test_parse() -> Result<()> {
+		struct Case {
+			url:   &'static str,
+			urn:   &'static str,
+			uri:   &'static str,
+			trail: &'static str,
+			base:  &'static str,
+		}
+
+		let cases = [
+			// Regular
+			Case {
+				url:   "/root/music/rock/song.mp3",
+				urn:   "song.mp3",
+				uri:   "song.mp3",
+				trail: "/root/music/rock/",
+				base:  "/root/music/rock/",
+			},
+			// Search portal
+			Case {
+				url:   "search://keyword//root/Documents/reports",
+				urn:   "",
+				uri:   "",
+				trail: "search://keyword//root/Documents/reports",
+				base:  "search://keyword//root/Documents/reports",
+			},
+			// Search item
+			Case {
+				url:   "search://keyword:2:2//root/Documents/reports/2023/summary.docx",
+				urn:   "2023/summary.docx",
+				uri:   "2023/summary.docx",
+				trail: "search://keyword//root/Documents/reports/",
+				base:  "search://keyword//root/Documents/reports/",
+			},
+			// Archive portal
+			Case {
+				url:   "archive://domain//root/Downloads/images.zip",
+				urn:   "",
+				uri:   "",
+				trail: "archive://domain//root/Downloads/images.zip",
+				base:  "archive://domain//root/Downloads/images.zip",
+			},
+			// Archive item
+			Case {
+				url:   "archive://domain:2:1//root/Downloads/images.zip/2025/city.jpg",
+				urn:   "city.jpg",
+				uri:   "2025/city.jpg",
+				trail: "archive://domain:1:1//root/Downloads/images.zip/2025/",
+				base:  "archive://domain//root/Downloads/images.zip/",
+			},
+			// SFTP
+			Case {
+				url:   "sftp://my-server//root/docs/report.pdf",
+				urn:   "report.pdf",
+				uri:   "report.pdf",
+				trail: "sftp://my-server//root/docs/",
+				base:  "sftp://my-server//root/docs/",
+			},
+		];
+
+		for case in cases {
+			let url = UrlCow::try_from(case.url)?;
+			assert_eq!(url.urn().to_str()?, case.urn);
+			assert_eq!(url.uri().to_str()?, case.uri);
+			assert_eq!(
+				format!("{:?}", url.trail()),
+				format!("{:?}", UrlCow::try_from(case.trail)?.as_url())
+			);
+			assert_eq!(
+				format!("{:?}", url.base()),
+				format!("{:?}", UrlCow::try_from(case.base)?.as_url())
+			);
+		}
+
+		Ok(())
+	}
+}

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(service vfs);
+yazi_macro::mod_flat!(service services vfs);
