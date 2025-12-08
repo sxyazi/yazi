@@ -42,11 +42,7 @@ pub(crate) struct FileInCut {
 }
 
 impl Drop for FileInCut {
-	fn drop(&mut self) {
-		if let Some(tx) = self.drop.take() {
-			tx.try_send(()).ok();
-		}
-	}
+	fn drop(&mut self) { _ = self.drop.take(); }
 }
 
 impl FileInCut {

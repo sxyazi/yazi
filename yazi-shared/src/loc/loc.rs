@@ -86,7 +86,7 @@ where
 		let path = path.as_path_view();
 		let Some(name) = path.file_name() else {
 			let p = path.strip_prefix(P::empty()).unwrap();
-			return Self { inner: p, uri: p.len(), urn: 0, _phantom: PhantomData };
+			return Self { inner: p, uri: 0, urn: 0, _phantom: PhantomData };
 		};
 
 		let name_len = name.len();
@@ -97,7 +97,7 @@ where
 		let bytes = &path.as_encoded_bytes()[..prefix_len + name_len];
 		Self {
 			inner:    unsafe { P::from_encoded_bytes_unchecked(bytes) },
-			uri:      bytes.len(),
+			uri:      name_len,
 			urn:      name_len,
 			_phantom: PhantomData,
 		}

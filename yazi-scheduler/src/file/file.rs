@@ -119,14 +119,12 @@ impl File {
 		.await?;
 
 		if !links.is_empty() {
-			let len = links.len();
-			let (tx, mut rx) = mpsc::channel(len);
+			let (tx, mut rx) = mpsc::channel(1);
 			for task in links {
 				self.queue(task.with_drop(&tx), LOW);
 			}
-			for _ in 0..len {
-				rx.recv().await;
-			}
+			drop(tx);
+			while rx.recv().await.is_some() {}
 		}
 
 		for task in files {

@@ -61,8 +61,8 @@ impl<'a> Url<'a> {
 	pub fn base(self) -> Self {
 		match self {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
-			Self::Search { loc, domain } => Self::Search { loc: Loc::bare(loc.base()), domain },
-			Self::Archive { loc, domain } => Self::Archive { loc: Loc::bare(loc.base()), domain },
+			Self::Search { loc, domain } => Self::Search { loc: Loc::zeroed(loc.base()), domain },
+			Self::Archive { loc, domain } => Self::Archive { loc: Loc::zeroed(loc.base()), domain },
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.base()), domain },
 		}
 	}
@@ -222,12 +222,25 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }
 
-	#[inline]
 	pub fn trail(self) -> Self {
+		let uri = self.uri();
 		match self {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.trail())),
-			Self::Search { loc, domain } => Self::Search { loc: Loc::bare(loc.trail()), domain },
-			Self::Archive { loc, domain } => Self::Archive { loc: Loc::bare(loc.trail()), domain },
+
+			Self::Search { loc, domain } if uri.is_empty() => {
+				Self::Search { loc: Loc::zeroed(loc.trail()), domain }
+			}
+			Self::Search { loc, domain } => {
+				Self::Search { loc: Loc::new(loc.trail(), loc.base(), loc.base()), domain }
+			}
+
+			Self::Archive { loc, domain } if uri.is_empty() => {
+				Self::Archive { loc: Loc::zeroed(loc.trail()), domain }
+			}
+			Self::Archive { loc, domain } => {
+				Self::Archive { loc: Loc::new(loc.trail(), loc.base(), loc.base()), domain }
+			}
+
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.trail()), domain },
 		}
 	}
