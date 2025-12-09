@@ -25,7 +25,7 @@ impl App {
 				};
 
 				let id: mlua::String = t.get("_id")?;
-				match id.as_bytes().as_ref() {
+				match &*id.as_bytes() {
 					b"current" => layout.current = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 					b"preview" => layout.preview = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 					b"progress" => layout.progress = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,

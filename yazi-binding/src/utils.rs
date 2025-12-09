@@ -1,4 +1,7 @@
-use mlua::{IntoLua, Lua, Table, Value};
+use mlua::{IntoLua, Lua, SerializeOptions, Table, Value};
+
+pub const SER_OPT: SerializeOptions =
+	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
 pub fn get_metatable(lua: &Lua, value: impl IntoLua) -> mlua::Result<Table> {
 	let (_, mt): (Value, Table) = unsafe {

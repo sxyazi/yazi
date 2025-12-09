@@ -1,7 +1,7 @@
 Entity = {
 	_inc = 1000,
 	_children = {
-		{ "spacer", id = 1, order = 1000 },
+		{ "padding", id = 1, order = 1000 },
 		{ "icon", id = 2, order = 2000 },
 		{ "prefix", id = 3, order = 3000 },
 		{ "highlights", id = 4, order = 4000 },
@@ -12,7 +12,18 @@ Entity = {
 
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Entity:spacer() return " " end
+function Entity:padding()
+	if not self._file.is_hovered or self._file.in_preview then
+		return " "
+	end
+
+	local style = self:style_rev()
+	if style then
+		return ui.Span(th.indicator.padding.open):style(style)
+	else
+		return " "
+	end
+end
 
 function Entity:icon()
 	local icon = self._file:icon()
@@ -86,13 +97,25 @@ function Entity:redraw()
 end
 
 function Entity:style()
-	local s = self._file:style()
+	local s = self._file:style() or ui.Style()
 	if not self._file.is_hovered then
 		return s
+	elseif self._file.in_current then
+		return s:patch(th.indicator.current)
 	elseif self._file.in_preview then
-		return s and s:patch(th.mgr.preview_hovered) or th.mgr.preview_hovered
+		return s:patch(th.indicator.preview)
 	else
-		return s and s:patch(th.mgr.hovered) or th.mgr.hovered
+		return s:patch(th.indicator.parent)
+	end
+end
+
+function Entity:style_rev()
+	local s = self:style()
+	local bg = s:bg(true)
+	if bg then
+		return ui.Style():fg(bg):bg("reset"):reverse(true)
+	elseif s:raw().reversed then
+		return ui.Style():bg("reset"):reverse(true)
 	end
 end
 

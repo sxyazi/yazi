@@ -10,7 +10,7 @@ use super::Utils;
 impl Utils {
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, r#type: mlua::String| {
-			Ok(Id(match r#type.as_bytes().as_ref() {
+			Ok(Id(match &*r#type.as_bytes() {
 				b"app" => *yazi_dds::ID,
 				b"ft" => yazi_fs::FILES_TICKET.next(),
 				_ => Err("Invalid id type".into_lua_err())?,
