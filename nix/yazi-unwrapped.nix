@@ -6,7 +6,7 @@
   lib,
 
   installShellFiles,
-  stdenv,
+  fetchFromGitHub,
   rust-jemalloc-sys,
 
   imagemagick,
@@ -22,7 +22,7 @@ let
     ];
   };
 in
-rustPlatform.buildRustPackage rec {
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = "yazi";
   inherit version src;
 
@@ -60,9 +60,22 @@ rustPlatform.buildRustPackage rec {
       magick assets/logo.png -resize "$RES"x"$RES" $out/share/icons/hicolor/"$RES"x"$RES"/apps/yazi.png
     done
 
+    installManPage ${finalAttrs.passthru.srcs.man_src}/yazi{.1,-config.5}
+
     mkdir -p $out/share/applications
     install -m644 assets/yazi.desktop $out/share/applications/
   '';
+
+  passthru.srcs = {
+    man_src = fetchFromGitHub {
+      name = "manpages"; # needed to ensure name is unique
+      owner = "yazi-rs";
+      repo = "manpages";
+      rev = "8950e968f4a1ad0b83d5836ec54a070855068dbf";
+      hash = "sha256-kEVXejDg4ChFoMNBvKlwdFEyUuTcY2VuK9j0PdafKus=";
+    };
+  };
+  
 
   meta = {
     description = "Blazing fast terminal file manager written in Rust, based on async I/O";
@@ -70,4 +83,4 @@ rustPlatform.buildRustPackage rec {
     license = lib.licenses.mit;
     mainProgram = "yazi";
   };
-}
+})
