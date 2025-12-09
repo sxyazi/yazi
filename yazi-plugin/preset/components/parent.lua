@@ -17,16 +17,19 @@ function Parent:redraw()
 		return {}
 	end
 
-	local items = {}
+	local left, right = {}, {}
 	for _, f in ipairs(self._folder.window) do
 		local entity = Entity:new(f)
-		items[#items + 1] = entity:redraw():truncate {
-			max = self._area.w,
-			ellipsis = entity:ellipsis(self._area.w),
-		}
+		left[#left + 1], right[#right + 1] = entity:redraw(), Linemode:new(f):redraw()
+
+		local max = math.max(0, self._area.w - right[#right]:width())
+		left[#left]:truncate { max = max, ellipsis = entity:ellipsis(max) }
 	end
 
-	return ui.List(items):area(self._area)
+	return {
+		ui.List(left):area(self._area),
+		ui.Text(right):area(self._area):align(ui.Align.RIGHT),
+	}
 end
 
 -- Mouse events

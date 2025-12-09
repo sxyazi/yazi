@@ -31,7 +31,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_function(|_, s: mlua::String| {
 		let layout = LAYOUT.get();
-		Ok(match s.as_bytes().as_ref() {
+		Ok(match &*s.as_bytes() {
 			b"current" => Rect(layout.current),
 			b"preview" => Rect(layout.preview),
 			b"progress" => Rect(layout.progress),
@@ -74,7 +74,7 @@ pub(super) fn redraw(lua: &Lua) -> mlua::Result<Value> {
 		let id: mlua::String = c.get("_id")?;
 
 		let mut layout = LAYOUT.get();
-		match id.as_bytes().as_ref() {
+		match &*id.as_bytes() {
 			b"current" => layout.current = *c.raw_get::<Rect>("_area")?,
 			b"preview" => layout.preview = *c.raw_get::<Rect>("_area")?,
 			b"progress" => layout.progress = *c.raw_get::<Rect>("_area")?,

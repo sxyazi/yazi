@@ -68,8 +68,11 @@ impl UserData for File {
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.idx == me.folder.cursor));
+		fields.add_field_method_get("in_current", |_, me| {
+			Ok(&*me.folder as *const _ == &me.tab.current as *const _)
+		});
 		fields.add_field_method_get("in_preview", |_, me| {
-			Ok(me.tab.hovered().is_some_and(|f| f.url == me.folder.url))
+			Ok(me.idx == me.folder.cursor && me.tab.hovered().is_some_and(|f| f.url == me.folder.url))
 		});
 	}
 

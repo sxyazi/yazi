@@ -1,8 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields, Value};
-use yazi_binding::cached_field;
-use yazi_plugin::runtime::SER_OPT;
+use yazi_binding::{SER_OPT, cached_field};
 
 use super::{Lives, PtrCell};
 

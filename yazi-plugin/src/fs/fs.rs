@@ -34,7 +34,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 }
 
 fn op(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|lua, (name, t): (mlua::String, Table)| match name.as_bytes().as_ref() {
+	lua.create_function(|lua, (name, t): (mlua::String, Table)| match &*name.as_bytes() {
 		b"part" => super::FilesOp::part(lua, t),
 		b"done" => super::FilesOp::done(lua, t),
 		b"size" => super::FilesOp::size(lua, t),
@@ -75,7 +75,7 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 
 fn create(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
-		let result = match r#type.as_bytes().as_ref() {
+		let result = match &*r#type.as_bytes() {
 			b"dir" => provider::create_dir(&*url).await,
 			b"dir_all" => provider::create_dir_all(&*url).await,
 			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
@@ -90,7 +90,7 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 
 fn remove(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
-		let result = match r#type.as_bytes().as_ref() {
+		let result = match &*r#type.as_bytes() {
 			b"file" => provider::remove_file(&*url).await,
 			b"dir" => provider::remove_dir(&*url).await,
 			b"dir_all" => provider::remove_dir_all(&*url).await,
@@ -165,7 +165,7 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|_, value: Value| {
 		use yazi_fs::path::expand_url;
 		Ok(Url::new(match value {
-			Value::String(s) => expand_url(UrlCow::try_from(s.as_bytes().as_ref())?),
+			Value::String(s) => expand_url(UrlCow::try_from(&*s.as_bytes())?),
 			Value::UserData(ud) => expand_url(&*ud.borrow::<yazi_binding::Url>()?),
 			_ => Err("must be a string or a Url".into_lua_err())?,
 		}))

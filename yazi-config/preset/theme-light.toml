@@ -29,10 +29,6 @@ overall = {}
 [mgr]
 cwd = { fg = "cyan" }
 
-# Hovered
-hovered         = { reversed = true }
-preview_hovered = { underline = true }
-
 # Find
 find_keyword  = { fg = "yellow", bold = true, italic = true, underline = true }
 find_position = { fg = "magenta", bg = "reset", bold = true, italic = true }
@@ -87,6 +83,17 @@ select_alt  = { fg = "red", bg = "gray" }
 # Unset mode
 unset_main = { bg = "red", bold = true }
 unset_alt  = { fg = "red", bg = "gray" }
+
+# : }}}
+
+
+# : Indicator of hovered file {{{
+
+[indicator]
+parent  = { reversed = true }
+current = { reversed = true }
+preview = { underline = true }
+padding = { open = "", close = "" }
 
 # : }}}
 

@@ -1,10 +1,7 @@
-use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Url};
+use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, SER_OPT, Url};
 use yazi_boot::ARGS;
 use yazi_config::YAZI;
-
-pub const SER_OPT: SerializeOptions =
-	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {

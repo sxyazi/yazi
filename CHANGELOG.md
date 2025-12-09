@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Improve the UX of the pick and input components ([#2906], [#2935])
 - Show progress of each task in task manager ([#3121], [#3131], [#3134])
 - New `overall` option to set the overall background color ([#3317])
+- Rounded corners for indicator bar ([#3419])
 - New `bulk_rename` command always renames files with the editor ([#2984])
 - `key-*` DDS events to allow changing or canceling user key events ([#3005], [#3037])
 - New `--bg` specifying image background color in the preset SVG and ImageMagick previewers ([#3189])
@@ -45,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rename `name` to `url` for open, fetchers, spotters, preloaders, previewers, filetype, and `globs` icon rules to support virtual file system ([#3034])
 - Rename `mime` fetcher to `mime.local`, and introduce `mime.dir` fetcher to support folder MIME types ([#3222])
+- Reclassify `hovered` and `preview_hovered` under `[mgr]` of `theme.toml` into `[indicator]` as `current` and `preview`, respectively ([#3419])
 - Remove `$0` parameter in opener rules to make the `open` command work under empty directories ([#3226])
 - Return `Path` instead of `Url` from `Url:strip_prefix()` and `File.link_to` to enforce type safety ([#3361], [#3385])
 - Use `body` instead of the term `content` in confirmations ([#2921])
@@ -1551,3 +1553,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3391]: https://github.com/sxyazi/yazi/pull/3391
 [#3393]: https://github.com/sxyazi/yazi/pull/3393
 [#3396]: https://github.com/sxyazi/yazi/pull/3396
+[#3419]: https://github.com/sxyazi/yazi/pull/3419

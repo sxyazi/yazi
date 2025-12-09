@@ -2,12 +2,13 @@ use std::ops::Deref;
 
 use anyhow::Result;
 use hashbrown::HashMap;
+use ratatui::style::Color;
 use serde::{Deserialize, Deserializer};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
 use yazi_shared::{Condition, url::UrlLike};
 
-use crate::{Color, Icon as I, Pattern, Style};
+use crate::{Icon as I, Pattern, Style};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Icon {

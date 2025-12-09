@@ -11,21 +11,22 @@ use crate::Style;
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Theme {
-	pub flavor:  Flavor,
-	pub app:     App,
-	pub mgr:     Mgr,
-	pub tabs:    Tabs,
-	pub mode:    Mode,
-	pub status:  Status,
-	pub which:   Which,
-	pub confirm: Confirm,
-	pub spot:    Spot,
-	pub notify:  Notify,
-	pub pick:    Pick,
-	pub input:   Input,
-	pub cmp:     Cmp,
-	pub tasks:   Tasks,
-	pub help:    Help,
+	pub flavor:    Flavor,
+	pub app:       App,
+	pub mgr:       Mgr,
+	pub tabs:      Tabs,
+	pub mode:      Mode,
+	pub indicator: Indicator,
+	pub status:    Status,
+	pub which:     Which,
+	pub confirm:   Confirm,
+	pub spot:      Spot,
+	pub notify:    Notify,
+	pub pick:      Pick,
+	pub input:     Input,
+	pub cmp:       Cmp,
+	pub tasks:     Tasks,
+	pub help:      Help,
 
 	// File-specific styles
 	#[serde(skip_serializing)]
@@ -42,10 +43,6 @@ pub struct App {
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Mgr {
 	pub cwd: Style,
-
-	// Hovered
-	pub hovered:         Style,
-	pub preview_hovered: Style,
 
 	// Find
 	pub find_keyword:  Style,
@@ -98,6 +95,20 @@ pub struct Mode {
 
 	pub unset_main: Style,
 	pub unset_alt:  Style,
+}
+
+#[derive(Deserialize, DeserializeOver2)]
+pub struct Indicator {
+	pub parent:  Style,
+	pub current: Style,
+	pub preview: Style,
+	pub padding: IndicatorPadding,
+}
+
+#[derive(Deserialize, DeserializeOver2)]
+pub struct IndicatorPadding {
+	pub open:  String,
+	pub close: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
