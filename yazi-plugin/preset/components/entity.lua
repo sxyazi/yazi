@@ -13,7 +13,7 @@ Entity = {
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
 function Entity:padding()
-	if not self._file.is_hovered or self._file.in_preview then
+	if not self._file.is_hovered then
 		return " "
 	end
 

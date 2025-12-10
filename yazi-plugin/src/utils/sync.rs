@@ -2,11 +2,11 @@ use anyhow::Context;
 use futures::future::join_all;
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Value, Variadic};
 use tokio::sync::oneshot;
-use yazi_binding::{runtime, runtime_mut};
+use yazi_binding::{Handle, runtime, runtime_mut};
 use yazi_dds::Sendable;
 use yazi_parser::app::{PluginCallback, PluginOpt};
 use yazi_proxy::AppProxy;
-use yazi_shared::data::Data;
+use yazi_shared::{LOCAL_SET, data::Data};
 
 use super::Utils;
 use crate::{bindings::{MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx}, loader::LOADER};
@@ -43,6 +43,29 @@ impl Utils {
 					args.push_front(Value::Table(LOADER.try_load(lua, &cur)?));
 					f.call::<MultiValue>(args)
 				})
+			})
+		}
+	}
+
+	pub(super) fn r#async(lua: &Lua, isolate: bool) -> mlua::Result<Function> {
+		if isolate {
+			lua.create_function(|_, _: Function| {
+				Err::<(), _>("`ya.async()` can only be used in sync context at the moment".into_lua_err())
+			})
+		} else {
+			lua.create_function(|lua, (f, args): (Function, MultiValue)| {
+				let name = runtime!(lua)?.current_owned();
+
+				Ok(Handle::AsyncFn(LOCAL_SET.spawn_local(async move {
+					let result = f.call_async::<MultiValue>(args).await;
+					if let Err(ref e) = result {
+						match name {
+							Some(s) => tracing::error!("Failed to execute async block in `{s}` plugin: {e}"),
+							None => tracing::error!("Failed to execute async block in `init.lua`: {e}"),
+						}
+					}
+					result
+				})))
 			})
 		}
 	}

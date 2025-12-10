@@ -21,17 +21,18 @@ function M:peek(job)
 		return ya.preview_widget(job, ui.Text(s):area(job.area):align(ui.Align.CENTER):wrap(ui.Wrap.YES))
 	end
 
-	local items = {}
+	local left, right = {}, {}
 	for _, f in ipairs(folder.window) do
 		local entity = Entity:new(f)
-		items[#items + 1] = entity:redraw():truncate {
-			max = job.area.w,
-			ellipsis = entity:ellipsis(job.area.w),
-		}
+		left[#left + 1], right[#right + 1] = entity:redraw(), Linemode:new(f):redraw()
+
+		local max = math.max(0, job.area.w - right[#right]:width())
+		left[#left]:truncate { max = max, ellipsis = entity:ellipsis(max) }
 	end
 
 	ya.preview_widget(job, {
-		ui.List(items):area(job.area),
+		ui.List(left):area(job.area),
+		ui.Text(right):area(job.area):align(ui.Align.RIGHT),
 		table.unpack(Marker:new(job.area, folder):redraw()),
 	})
 end

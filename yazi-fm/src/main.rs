@@ -37,5 +37,6 @@ async fn main() -> anyhow::Result<()> {
 	yazi_plugin::init()?;
 
 	yazi_dds::serve();
-	app::App::serve().await
+
+	yazi_shared::LOCAL_SET.run_until(app::App::serve()).await
 }

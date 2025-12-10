@@ -19,7 +19,7 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	yazi_binding::Url::install(&lua)?;
 
 	yazi_binding::Error::install(&lua)?;
-	crate::loader::install_isolate(&lua)?;
+	crate::loader::install(&lua)?;
 	crate::process::install(&lua)?;
 
 	// Addons

@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use futures::executor::block_on;
 use mlua::Lua;
 use yazi_binding::Runtime;
 use yazi_boot::BOOT;
@@ -30,6 +31,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	yazi_binding::Error::install(lua)?;
 	yazi_binding::Cha::install(lua)?;
 	crate::loader::install(lua)?;
+	crate::process::install(lua)?;
 	yazi_binding::File::install(lua)?;
 	yazi_binding::Url::install(lua)?;
 
@@ -62,7 +64,7 @@ fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
 	if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
-		lua.load(b).set_name("init.lua").exec()?;
+		block_on(lua.load(b).set_name("init.lua").exec_async())?;
 	}
 
 	Ok(())

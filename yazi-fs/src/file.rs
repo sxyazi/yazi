@@ -17,6 +17,10 @@ impl Deref for File {
 	fn deref(&self) -> &Self::Target { &self.cha }
 }
 
+impl From<&File> for File {
+	fn from(value: &File) -> Self { value.clone() }
+}
+
 impl File {
 	#[inline]
 	pub fn from_dummy(url: impl Into<UrlBuf>, r#type: Option<ChaType>) -> Self {
