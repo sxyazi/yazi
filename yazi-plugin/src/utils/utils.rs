@@ -53,6 +53,7 @@ pub fn compose(
 
 			// Sync
 			b"sync" => Utils::sync(lua, isolate)?,
+			b"async" => Utils::r#async(lua, isolate)?,
 			b"chan" => Utils::chan(lua)?,
 			b"join" => Utils::join(lua)?,
 			b"select" => Utils::select(lua)?,

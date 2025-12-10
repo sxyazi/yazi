@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::Style;
+use yazi_binding::{Style, cached_field};
 use yazi_config::THEME;
 use yazi_plugin::bindings::Range;
 use yazi_shared::{path::AsPath, url::UrlLike};
@@ -20,6 +20,8 @@ pub(super) struct File {
 
 	v_name:  Option<Value>,
 	v_cache: Option<Value>,
+
+	v_bare: Option<Value>,
 }
 
 impl Deref for File {
@@ -54,6 +56,8 @@ impl File {
 
 					v_name: None,
 					v_cache: None,
+
+					v_bare: None,
 				})?;
 				ve.insert(ud.clone());
 				ud
@@ -65,6 +69,7 @@ impl File {
 impl UserData for File {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		yazi_binding::impl_file_fields!(fields);
+		cached_field!(fields, bare, |_, me| Ok(yazi_binding::File::new(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.idx == me.folder.cursor));

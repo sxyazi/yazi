@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Zoom in or out of the preview image ([#2864])
 - Improve the UX of the pick and input components ([#2906], [#2935])
 - Show progress of each task in task manager ([#3121], [#3131], [#3134])
+- New experimental `ya.async()` API ([#3422])
 - New `overall` option to set the overall background color ([#3317])
 - Rounded corners for indicator bar ([#3419])
 - New `bulk_rename` command always renames files with the editor ([#2984])
@@ -1554,3 +1555,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3393]: https://github.com/sxyazi/yazi/pull/3393
 [#3396]: https://github.com/sxyazi/yazi/pull/3396
 [#3419]: https://github.com/sxyazi/yazi/pull/3419
+[#3422]: https://github.com/sxyazi/yazi/pull/3422
