@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(close show);
+yazi_macro::mod_flat!(close show select);
