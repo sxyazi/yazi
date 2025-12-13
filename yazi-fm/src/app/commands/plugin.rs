@@ -22,7 +22,7 @@ impl App {
 		}
 
 		if opt.mode == PluginMode::Async {
-			succ!(self.core.tasks.plugin_micro(opt));
+			succ!(self.core.tasks.plugin_entry(opt));
 		} else if opt.mode == PluginMode::Sync && hits {
 			return self.plugin_do(opt);
 		}
@@ -47,7 +47,7 @@ impl App {
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			succ!(self.core.tasks.plugin_micro(opt));
+			succ!(self.core.tasks.plugin_entry(opt));
 		}
 
 		runtime_mut!(LUA)?.push(&opt.id);

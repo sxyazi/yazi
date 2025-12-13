@@ -213,7 +213,8 @@ impl FileProgDelete {
 // --- Trash
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgTrash {
-	pub state: Option<bool>,
+	pub state:   Option<bool>,
+	pub cleaned: bool,
 }
 
 impl From<FileProgTrash> for TaskSummary {
@@ -234,7 +235,7 @@ impl FileProgTrash {
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> bool { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -248,6 +249,7 @@ pub struct FileProgDownload {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       Option<bool>,
+	pub cleaned:         bool,
 }
 
 impl From<FileProgDownload> for TaskSummary {
@@ -272,7 +274,7 @@ impl FileProgDownload {
 
 	pub fn failed(self) -> bool { self.collected == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> bool { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {

@@ -31,7 +31,7 @@ impl Actor for Download {
 			for url in opt.urls {
 				let (tx, rx) = oneshot::channel();
 				scheduler.file_download(url.to_owned(), Some(tx));
-				wg1.push(async move { (rx.await == Ok(false), url) });
+				wg1.push(async move { (rx.await == Ok(true), url) });
 			}
 
 			let mut wg2 = vec![];
