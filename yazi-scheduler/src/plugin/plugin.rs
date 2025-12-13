@@ -12,23 +12,17 @@ pub(crate) struct Plugin {
 
 impl Plugin {
 	pub(crate) fn new(
-		tx: &mpsc::UnboundedSender<TaskOp>,
+		ops: &mpsc::UnboundedSender<TaskOp>,
 		r#macro: &async_priority_channel::Sender<TaskIn, u8>,
 	) -> Self {
-		Self { ops: tx.into(), r#macro: r#macro.clone() }
+		Self { ops: ops.into(), r#macro: r#macro.clone() }
 	}
 
-	pub(crate) async fn micro(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
-		isolate::entry(task.opt).await?;
-		self.ops.out(task.id, PluginOutEntry::Succ);
-		Ok(())
-	}
-
-	pub(crate) fn r#macro(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
+	pub(crate) async fn entry(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
 		Ok(self.queue(task, HIGH))
 	}
 
-	pub(crate) async fn macro_do(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
+	pub(crate) async fn entry_do(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
 		isolate::entry(task.opt).await?;
 		Ok(self.ops.out(task.id, PluginOutEntry::Succ))
 	}

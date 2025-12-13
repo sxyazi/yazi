@@ -9,6 +9,10 @@ pub(crate) enum FileOutCopy {
 	Fail(String),
 }
 
+impl From<anyhow::Error> for FileOutCopy {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
+}
+
 impl From<std::io::Error> for FileOutCopy {
 	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
@@ -46,8 +50,8 @@ pub(crate) enum FileOutCopyDo {
 	Fail(String),
 }
 
-impl From<std::io::Error> for FileOutCopyDo {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutCopyDo {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutCopyDo {
@@ -79,6 +83,10 @@ pub(crate) enum FileOutCut {
 	Succ,
 	Fail(String),
 	Clean,
+}
+
+impl From<anyhow::Error> for FileOutCut {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl From<std::io::Error> for FileOutCut {
@@ -121,8 +129,8 @@ pub(crate) enum FileOutCutDo {
 	Fail(String),
 }
 
-impl From<std::io::Error> for FileOutCutDo {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutCutDo {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutCutDo {
@@ -155,10 +163,6 @@ pub(crate) enum FileOutLink {
 
 impl From<anyhow::Error> for FileOutLink {
 	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
-}
-
-impl From<std::io::Error> for FileOutLink {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutLink {
@@ -206,6 +210,10 @@ pub(crate) enum FileOutHardlink {
 	Fail(String),
 }
 
+impl From<anyhow::Error> for FileOutHardlink {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
+}
+
 impl From<std::io::Error> for FileOutHardlink {
 	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
@@ -240,8 +248,8 @@ pub(crate) enum FileOutHardlinkDo {
 	Fail(String),
 }
 
-impl From<std::io::Error> for FileOutHardlinkDo {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutHardlinkDo {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutHardlinkDo {
@@ -268,8 +276,8 @@ pub(crate) enum FileOutDelete {
 	Clean,
 }
 
-impl From<std::io::Error> for FileOutDelete {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutDelete {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutDelete {
@@ -301,8 +309,8 @@ pub(crate) enum FileOutDeleteDo {
 	Fail(String),
 }
 
-impl From<std::io::Error> for FileOutDeleteDo {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutDeleteDo {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutDeleteDo {
@@ -326,10 +334,11 @@ impl FileOutDeleteDo {
 pub(crate) enum FileOutTrash {
 	Succ,
 	Fail(String),
+	Clean,
 }
 
-impl From<std::io::Error> for FileOutTrash {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutTrash {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutTrash {
@@ -343,6 +352,9 @@ impl FileOutTrash {
 				prog.state = Some(false);
 				task.log(reason);
 			}
+			Self::Clean => {
+				prog.cleaned = true;
+			}
 		}
 	}
 }
@@ -354,10 +366,11 @@ pub(crate) enum FileOutDownload {
 	Deform(String),
 	Succ,
 	Fail(String),
+	Clean,
 }
 
-impl From<std::io::Error> for FileOutDownload {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
+impl From<anyhow::Error> for FileOutDownload {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl FileOutDownload {
@@ -380,6 +393,9 @@ impl FileOutDownload {
 				prog.collected = Some(false);
 				task.log(reason);
 			}
+			Self::Clean => {
+				prog.cleaned = true;
+			}
 		}
 	}
 }
@@ -391,10 +407,6 @@ pub(crate) enum FileOutDownloadDo {
 	Log(String),
 	Succ,
 	Fail(String),
-}
-
-impl From<std::io::Error> for FileOutDownloadDo {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl From<anyhow::Error> for FileOutDownloadDo {
@@ -431,10 +443,6 @@ pub(crate) enum FileOutUpload {
 	Fail(String),
 }
 
-impl From<std::io::Error> for FileOutUpload {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
-}
-
 impl From<anyhow::Error> for FileOutUpload {
 	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
@@ -469,10 +477,6 @@ pub(crate) enum FileOutUploadDo {
 	Adv(u64),
 	Succ,
 	Fail(String),
-}
-
-impl From<std::io::Error> for FileOutUploadDo {
-	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
 impl From<anyhow::Error> for FileOutUploadDo {

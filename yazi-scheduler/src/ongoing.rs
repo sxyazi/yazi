@@ -5,47 +5,48 @@ use yazi_parser::app::TaskSummary;
 use yazi_shared::{Id, Ids};
 
 use super::Task;
-use crate::{Hooks, TaskProg};
+use crate::TaskProg;
 
 #[derive(Default)]
 pub struct Ongoing {
-	pub(super) hooks: Hooks,
-	pub(super) all:   HashMap<Id, Task>,
+	pub(super) inner: HashMap<Id, Task>,
 }
 
 impl Ongoing {
-	pub(super) fn add<T>(&mut self, name: String) -> Id
+	pub(super) fn add<T>(&mut self, name: String) -> &mut Task
 	where
 		T: Into<TaskProg> + Default,
 	{
 		static IDS: Ids = Ids::new();
 
 		let id = IDS.next();
-		self.all.insert(id, Task::new::<T>(id, name));
-		id
+		self.inner.entry(id).insert(Task::new::<T>(id, name)).into_mut()
 	}
 
 	#[inline]
-	pub fn get_mut(&mut self, id: Id) -> Option<&mut Task> { self.all.get_mut(&id) }
+	pub fn get_mut(&mut self, id: Id) -> Option<&mut Task> { self.inner.get_mut(&id) }
 
 	pub fn get_id(&self, idx: usize) -> Option<Id> { self.values().nth(idx).map(|t| t.id) }
 
 	pub fn len(&self) -> usize {
 		if YAZI.tasks.suppress_preload {
-			self.all.values().filter(|&t| t.prog.is_user()).count()
+			self.inner.values().filter(|&t| t.prog.is_user()).count()
 		} else {
-			self.all.len()
+			self.inner.len()
 		}
 	}
 
 	#[inline]
-	pub fn exists(&self, id: Id) -> bool { self.all.contains_key(&id) }
+	pub fn exists(&self, id: Id) -> bool { self.inner.contains_key(&id) }
+
+	#[inline]
+	pub fn intact(&self, id: Id) -> bool { self.inner.get(&id).is_some_and(|t| !t.canceled) }
 
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
 		if YAZI.tasks.suppress_preload {
-			Box::new(self.all.values().filter(|&t| t.prog.is_user()))
+			Box::new(self.inner.values().filter(|&t| t.prog.is_user()))
 		} else {
-			Box::new(self.all.values())
+			Box::new(self.inner.values())
 		}
 	}
 

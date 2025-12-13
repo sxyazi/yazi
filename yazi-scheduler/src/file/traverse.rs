@@ -1,10 +1,10 @@
-use std::{collections::VecDeque, fmt::Debug, io};
+use std::{collections::VecDeque, fmt::Debug};
 
 use yazi_fs::{FsUrl, cha::Cha, path::skip_url, provider::{DirReader, FileHolder}};
 use yazi_shared::{strand::StrandLike, url::{AsUrl, Url, UrlBuf, UrlLike}};
 use yazi_vfs::provider::{self};
 
-use crate::file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInUpload};
+use crate::{ctx, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInUpload}};
 
 trait Traverse {
 	fn cha(&mut self) -> &mut Option<Cha>;
@@ -13,7 +13,7 @@ trait Traverse {
 
 	fn from(&self) -> Url<'_>;
 
-	async fn init(&mut self) -> io::Result<Cha> {
+	async fn init(&mut self) -> anyhow::Result<Cha> {
 		if self.cha().is_none() {
 			*self.cha() = Some(super::File::cha(self.from(), self.follow(), None).await?)
 		}
@@ -37,6 +37,7 @@ impl Traverse for FileInCopy {
 			id: self.id,
 			from,
 			to: to.unwrap(),
+			force: self.force,
 			cha: Some(cha),
 			follow: self.follow,
 			retry: self.retry,
@@ -58,6 +59,7 @@ impl Traverse for FileInCut {
 			id: self.id,
 			from,
 			to: to.unwrap(),
+			force: self.force,
 			cha: Some(cha),
 			follow: self.follow,
 			retry: self.retry,
@@ -76,7 +78,14 @@ impl Traverse for FileInHardlink {
 	fn from(&self) -> Url<'_> { self.from.as_url() }
 
 	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, cha: Cha) -> Self {
-		Self { id: self.id, from, to: to.unwrap(), cha: Some(cha), follow: self.follow }
+		Self {
+			id: self.id,
+			from,
+			to: to.unwrap(),
+			force: self.force,
+			cha: Some(cha),
+			follow: self.follow,
+		}
 	}
 
 	fn to(&self) -> Option<Url<'_>> { Some(self.to.as_url()) }
@@ -117,7 +126,7 @@ impl Traverse for FileInUpload {
 
 	fn from(&self) -> Url<'_> { self.url.as_url() }
 
-	async fn init(&mut self) -> io::Result<Cha> {
+	async fn init(&mut self) -> anyhow::Result<Cha> {
 		if self.cha.is_none() {
 			self.cha = Some(super::File::cha(self.from(), self.follow(), None).await?)
 		}
@@ -135,21 +144,21 @@ impl Traverse for FileInUpload {
 }
 
 #[allow(private_bounds)]
-pub(super) async fn traverse<R, T, D, FC, FR, E>(
-	mut task: T,
+pub(super) async fn traverse<O, I, D, FC, FR, E>(
+	mut task: I,
 	on_dir: D,
 	mut on_file: FC,
 	on_error: E,
-) -> Result<(), R>
+) -> Result<(), O>
 where
-	R: Debug + From<io::Error>,
-	T: Traverse,
-	D: AsyncFn(Url) -> Result<(), R>,
-	FC: FnMut(T, Cha) -> FR,
-	FR: Future<Output = Result<(), R>>,
+	O: Debug + From<anyhow::Error>,
+	I: Debug + Traverse,
+	D: AsyncFn(Url) -> Result<(), O>,
+	FC: FnMut(I, Cha) -> FR,
+	FR: Future<Output = Result<(), O>>,
 	E: Fn(String),
 {
-	let cha = task.init().await?;
+	let cha = ctx!(task, task.init().await)?;
 	if !cha.is_dir() {
 		return on_file(task, cha).await;
 	}

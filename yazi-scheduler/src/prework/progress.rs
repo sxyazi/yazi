@@ -4,7 +4,8 @@ use yazi_parser::app::TaskSummary;
 // --- Fetch
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct PreworkProgFetch {
-	pub state: Option<bool>,
+	pub state:   Option<bool>,
+	pub cleaned: bool,
 }
 
 impl From<PreworkProgFetch> for TaskSummary {
@@ -25,7 +26,7 @@ impl PreworkProgFetch {
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> bool { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

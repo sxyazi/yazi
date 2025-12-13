@@ -11,7 +11,7 @@ pub(crate) struct Process {
 }
 
 impl Process {
-	pub(crate) fn new(tx: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: tx.into() } }
+	pub(crate) fn new(ops: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: ops.into() } }
 
 	pub(crate) async fn block(&self, task: ProcessInBlock) -> Result<(), ProcessOutBlock> {
 		let _permit = HIDER.acquire().await.unwrap();

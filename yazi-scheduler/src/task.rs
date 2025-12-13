@@ -1,13 +1,15 @@
 use tokio::sync::mpsc;
 use yazi_shared::Id;
 
-use crate::TaskProg;
+use crate::{TaskIn, TaskProg};
 
 #[derive(Debug)]
 pub struct Task {
 	pub id:          Id,
 	pub name:        String,
 	pub(crate) prog: TaskProg,
+	pub(crate) hook: Option<TaskIn>,
+	pub canceled:    bool,
 
 	pub logs:   String,
 	pub logger: Option<mpsc::UnboundedSender<String>>,
@@ -22,6 +24,9 @@ impl Task {
 			id,
 			name,
 			prog: T::default().into(),
+			hook: None,
+			canceled: false,
+
 			logs: Default::default(),
 			logger: Default::default(),
 		}
@@ -35,4 +40,6 @@ impl Task {
 			logger.send(line).ok();
 		}
 	}
+
+	pub(super) fn set_hook(&mut self, hook: impl Into<TaskIn>) { self.hook = Some(hook.into()); }
 }

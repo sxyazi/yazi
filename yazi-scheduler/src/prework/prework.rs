@@ -27,11 +27,11 @@ pub struct Prework {
 
 impl Prework {
 	pub(crate) fn new(
-		tx: &mpsc::UnboundedSender<TaskOp>,
+		ops: &mpsc::UnboundedSender<TaskOp>,
 		r#macro: &async_priority_channel::Sender<TaskIn, u8>,
 	) -> Self {
 		Self {
-			ops:     tx.into(),
+			ops:     ops.into(),
 			r#macro: r#macro.clone(),
 			loaded:  Mutex::new(LruCache::new(NonZeroUsize::new(4096).unwrap())),
 			loading: Mutex::new(LruCache::new(NonZeroUsize::new(256).unwrap())),
