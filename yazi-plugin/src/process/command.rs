@@ -38,13 +38,33 @@ impl Command {
 		lua.globals().raw_set("Command", command)
 	}
 
-	#[cfg(unix)]
+	#[cfg(any(
+		target_os = "macos",
+		target_os = "netbsd",
+		target_os = "linux",
+		target_os = "freebsd"
+	))]
 	fn spawn(&mut self) -> io::Result<Child> {
 		if let Some(max) = self.memory {
 			unsafe {
 				self.inner.pre_exec(move || {
 					let rlp = libc::rlimit { rlim_cur: max as _, rlim_max: max as _ };
 					libc::setrlimit(libc::RLIMIT_AS, &rlp);
+					Ok(())
+				});
+			}
+		}
+		self.inner.spawn().map(Child::new)
+	}
+	
+	#[cfg(target_os = "openbsd")]
+	fn spawn(&mut self) -> io::Result<Child> {
+		if let Some(max) = self.memory {
+			unsafe {
+				self.inner.pre_exec(move || {
+					let rlp = libc::rlimit { rlim_cur: max as _, rlim_max: max as _ };
+					#[cfg(target_os = "openbsd")]
+					libc::setrlimit(libc::RLIMIT_DATA, &rlp);
 					Ok(())
 				});
 			}
