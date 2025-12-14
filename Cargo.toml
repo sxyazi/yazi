@@ -5,7 +5,7 @@ default-members = [ "yazi-fm", "yazi-cli" ]
 
 [profile.release]
 codegen-units = 1
-lto           = false
+lto           = true
 panic         = "abort"
 strip         = true
 
