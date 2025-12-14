@@ -1,4 +1,3 @@
-use tokio::sync::{mpsc, oneshot};
 use yazi_shared::{Id, url::UrlBuf};
 
 use crate::{Task, TaskProg, file::FileInCut};
@@ -58,74 +57,12 @@ impl HookInOutTrash {
 // --- Download
 #[derive(Debug)]
 pub(crate) struct HookInOutDownload {
-	pub(crate) id:   Id,
-	pub(crate) done: oneshot::Sender<bool>,
+	pub(crate) id: Id,
 }
 
 impl HookInOutDownload {
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileDownload(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
-}
-
-// --- Fetch
-#[derive(Debug)]
-pub(crate) struct HookInOutFetch {
-	pub(crate) id:   Id,
-	pub(crate) done: oneshot::Sender<bool>,
-}
-
-impl HookInOutFetch {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::PreworkFetch(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
-}
-
-// --- Block
-#[derive(Debug)]
-pub(crate) struct HookInOutBlock {
-	pub(crate) id:   Id,
-	pub(crate) done: Option<oneshot::Sender<()>>,
-}
-
-impl HookInOutBlock {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::ProcessBlock(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
-}
-
-// --- Orphan
-#[derive(Debug)]
-pub(crate) struct HookInOutOrphan {
-	pub(crate) id:   Id,
-	pub(crate) done: Option<oneshot::Sender<()>>,
-}
-
-impl HookInOutOrphan {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::ProcessOrphan(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
-}
-
-// --- Bg
-#[derive(Debug)]
-pub(crate) struct HookInOutBg {
-	pub(crate) id:     Id,
-	pub(crate) cancel: mpsc::Sender<()>,
-	pub(crate) done:   Option<oneshot::Sender<()>>,
-}
-
-impl HookInOutBg {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::ProcessBg(_) = &task.prog {
 			task.hook = Some(self.into());
 		}
 	}

@@ -5,7 +5,6 @@ use crate::{Task, TaskProg};
 pub(crate) enum PreworkOutFetch {
 	Succ,
 	Fail(String),
-	Clean,
 }
 
 impl From<mlua::Error> for PreworkOutFetch {
@@ -22,9 +21,6 @@ impl PreworkOutFetch {
 			Self::Fail(reason) => {
 				prog.state = Some(false);
 				task.log(reason);
-			}
-			Self::Clean => {
-				prog.cleaned = true;
 			}
 		}
 	}

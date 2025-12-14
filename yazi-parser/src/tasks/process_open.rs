@@ -2,8 +2,7 @@ use std::ffi::OsString;
 
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use tokio::sync::oneshot;
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{CompletionToken, event::CmdCow, url::UrlCow};
 
 // --- Exec
 #[derive(Debug)]
@@ -13,7 +12,7 @@ pub struct ProcessOpenOpt {
 	pub args:   Vec<UrlCow<'static>>,
 	pub block:  bool,
 	pub orphan: bool,
-	pub done:   Option<oneshot::Sender<()>>,
+	pub done:   Option<CompletionToken>,
 
 	pub spread: bool, // TODO: remove
 }

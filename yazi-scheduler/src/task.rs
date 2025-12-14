@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use yazi_shared::Id;
+use yazi_shared::{CompletionToken, Id};
 
 use crate::{TaskIn, TaskProg};
 
@@ -9,7 +9,7 @@ pub struct Task {
 	pub name:        String,
 	pub(crate) prog: TaskProg,
 	pub(crate) hook: Option<TaskIn>,
-	pub canceled:    bool,
+	pub done:        CompletionToken,
 
 	pub logs:   String,
 	pub logger: Option<mpsc::UnboundedSender<String>>,
@@ -25,7 +25,7 @@ impl Task {
 			name,
 			prog: T::default().into(),
 			hook: None,
-			canceled: false,
+			done: CompletionToken::new(),
 
 			logs: Default::default(),
 			logger: Default::default(),

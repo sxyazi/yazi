@@ -2,7 +2,7 @@ use std::{mem, path::PathBuf};
 
 use tokio::sync::mpsc;
 use yazi_fs::cha::Cha;
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{CompletionToken, Id, url::UrlBuf};
 
 // --- Copy
 #[derive(Clone, Debug)]
@@ -14,6 +14,7 @@ pub(crate) struct FileInCopy {
 	pub(crate) cha:    Option<Cha>,
 	pub(crate) follow: bool,
 	pub(crate) retry:  u8,
+	pub(crate) done:   CompletionToken,
 }
 
 impl FileInCopy {
@@ -41,6 +42,7 @@ pub(crate) struct FileInCut {
 	pub(crate) cha:    Option<Cha>,
 	pub(crate) follow: bool,
 	pub(crate) retry:  u8,
+	pub(crate) done:   CompletionToken,
 	pub(crate) drop:   Option<mpsc::Sender<()>>,
 }
 
@@ -114,6 +116,7 @@ pub(crate) struct FileInDownload {
 	pub(crate) url:   UrlBuf,
 	pub(crate) cha:   Option<Cha>,
 	pub(crate) retry: u8,
+	pub(crate) done:  CompletionToken,
 }
 
 // --- Upload
@@ -123,4 +126,5 @@ pub(crate) struct FileInUpload {
 	pub(crate) url:   UrlBuf,
 	pub(crate) cha:   Option<Cha>,
 	pub(crate) cache: Option<PathBuf>,
+	pub(crate) done:  CompletionToken,
 }

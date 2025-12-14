@@ -38,10 +38,6 @@ impl Runner {
 			TaskIn::HookDelete(r#in) => Ok(self.hook.delete(r#in).await),
 			TaskIn::HookTrash(r#in) => Ok(self.hook.trash(r#in).await),
 			TaskIn::HookDownload(r#in) => Ok(self.hook.download(r#in).await),
-			TaskIn::HookBlock(r#in) => Ok(self.hook.block(r#in).await),
-			TaskIn::HookOrphan(r#in) => Ok(self.hook.orphan(r#in).await),
-			TaskIn::HookBg(r#in) => Ok(self.hook.bg(r#in).await),
-			TaskIn::HookFetch(r#in) => Ok(self.hook.fetch(r#in).await),
 		}
 	}
 
@@ -71,10 +67,6 @@ impl Runner {
 			TaskIn::HookDelete(_in) => unreachable!(),
 			TaskIn::HookTrash(_in) => unreachable!(),
 			TaskIn::HookDownload(_in) => unreachable!(),
-			TaskIn::HookBlock(_in) => unreachable!(),
-			TaskIn::HookOrphan(_in) => unreachable!(),
-			TaskIn::HookBg(_in) => unreachable!(),
-			TaskIn::HookFetch(_in) => unreachable!(),
 		}
 	}
 }

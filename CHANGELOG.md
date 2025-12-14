@@ -84,6 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Improved
 
+- Make copy, cut, delete, link, hardlink, download, and upload tasks immediately cancellable ([#3429])
 - Make preload tasks discardable ([#2875])
 - Reduce file change event frequency ([#2820])
 - Upload and download of a single file over SFTP in chunks concurrently ([#3393])
@@ -1556,3 +1557,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3396]: https://github.com/sxyazi/yazi/pull/3396
 [#3419]: https://github.com/sxyazi/yazi/pull/3419
 [#3422]: https://github.com/sxyazi/yazi/pull/3422
+[#3429]: https://github.com/sxyazi/yazi/pull/3429
