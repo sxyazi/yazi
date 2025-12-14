@@ -1,6 +1,6 @@
 use yazi_shared::Id;
 
-use crate::{file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload}, hook::{HookInOutBg, HookInOutBlock, HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutFetch, HookInOutOrphan, HookInOutTrash}, impl_from_in, plugin::PluginInEntry, prework::{PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan}};
+use crate::{file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload}, hook::{HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}, impl_from_in, plugin::PluginInEntry, prework::{PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan}};
 
 #[derive(Debug)]
 pub(crate) enum TaskIn {
@@ -28,10 +28,6 @@ pub(crate) enum TaskIn {
 	HookDelete(HookInOutDelete),
 	HookTrash(HookInOutTrash),
 	HookDownload(HookInOutDownload),
-	HookBlock(HookInOutBlock),
-	HookOrphan(HookInOutOrphan),
-	HookBg(HookInOutBg),
-	HookFetch(HookInOutFetch),
 }
 
 impl_from_in! {
@@ -44,7 +40,7 @@ impl_from_in! {
 	// Process
 	ProcessBlock(ProcessInBlock), ProcessOrphan(ProcessInOrphan), ProcessBg(ProcessInBg),
 	// Hook
-	HookCut(HookInOutCut), HookDelete(HookInOutDelete), HookTrash(HookInOutTrash), HookDownload(HookInOutDownload), HookBlock(HookInOutBlock), HookOrphan(HookInOutOrphan), HookBg(HookInOutBg), HookFetch(HookInOutFetch),
+	HookCut(HookInOutCut), HookDelete(HookInOutDelete), HookTrash(HookInOutTrash), HookDownload(HookInOutDownload),
 }
 
 impl TaskIn {
@@ -74,10 +70,35 @@ impl TaskIn {
 			Self::HookDelete(r#in) => r#in.id,
 			Self::HookTrash(r#in) => r#in.id,
 			Self::HookDownload(r#in) => r#in.id,
-			Self::HookBlock(r#in) => r#in.id,
-			Self::HookOrphan(r#in) => r#in.id,
-			Self::HookBg(r#in) => r#in.id,
-			Self::HookFetch(r#in) => r#in.id,
+		}
+	}
+
+	pub fn is_hook(&self) -> bool {
+		match self {
+			// File
+			Self::FileCopy(_) => false,
+			Self::FileCut(_) => false,
+			Self::FileLink(_) => false,
+			Self::FileHardlink(_) => false,
+			Self::FileDelete(_) => false,
+			Self::FileTrash(_) => false,
+			Self::FileDownload(_) => false,
+			Self::FileUpload(_) => false,
+			// Plugin
+			Self::PluginEntry(_) => false,
+			// Prework
+			Self::PreworkFetch(_) => false,
+			Self::PreworkLoad(_) => false,
+			Self::PreworkSize(_) => false,
+			// Process
+			Self::ProcessBlock(_) => false,
+			Self::ProcessOrphan(_) => false,
+			Self::ProcessBg(_) => false,
+			// Hook
+			Self::HookCut(_) => true,
+			Self::HookDelete(_) => true,
+			Self::HookTrash(_) => true,
+			Self::HookDownload(_) => true,
 		}
 	}
 }

@@ -55,7 +55,7 @@ pub(super) fn copy_with_progress_impl(
 		};
 
 		let chunks = (cha.len + PER_CHUNK - 1) / PER_CHUNK;
-		let mut result = futures::stream::iter(0..chunks)
+		let it = futures::stream::iter(0..chunks)
 			.map(|i| {
 				let acc_ = acc_.clone();
 				let (from, to) = (from.clone(), to.clone());
@@ -104,8 +104,13 @@ pub(super) fn copy_with_progress_impl(
 				}
 			})
 			.buffer_unordered(4)
-			.try_fold(None, |first, file| async { Ok(first.or(file)) })
-			.await;
+			.try_fold(None, |first, file| async { Ok(first.or(file)) });
+
+		let mut result = select! {
+			r = it => r,
+			_ = prog_tx_.closed() => return,
+		};
+		done_tx.send(()).ok();
 
 		let n = acc_.swap(0, Ordering::SeqCst);
 		if n > 0 {
@@ -122,8 +127,6 @@ pub(super) fn copy_with_progress_impl(
 		} else {
 			prog_tx_.send(Ok(0)).await.ok();
 		}
-
-		done_tx.send(()).ok();
 	});
 
 	tokio::spawn(async move {

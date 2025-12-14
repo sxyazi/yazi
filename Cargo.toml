@@ -3,6 +3,9 @@ resolver        = "2"
 members         = [ "yazi-*" ]
 default-members = [ "yazi-fm", "yazi-cli" ]
 
+[profile.dev]
+debug = "line-tables-only"
+
 [profile.release]
 codegen-units = 1
 lto           = true
@@ -18,6 +21,9 @@ inherits      = "release"
 codegen-units = 256
 incremental   = true
 lto           = false
+
+[profile.dev.package."*"]
+debug = false
 
 [workspace.dependencies]
 ansi-to-tui         = "7.0.0"

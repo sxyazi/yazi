@@ -6,7 +6,7 @@ use yazi_dds::Pump;
 use yazi_proxy::TasksProxy;
 use yazi_vfs::provider;
 
-use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash}, hook::{HookInOutBg, HookInOutBlock, HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutFetch, HookInOutOrphan, HookInOutTrash}, prework::PreworkOutFetch, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
+use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash}, hook::{HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
@@ -48,42 +48,6 @@ impl Hook {
 	}
 
 	pub(crate) async fn download(&self, task: HookInOutDownload) {
-		let intact = self.ongoing.lock().intact(task.id);
-		task.done.send(intact).ok();
 		self.ops.out(task.id, FileOutDownload::Clean);
-	}
-
-	// --- Process
-	pub(crate) async fn block(&self, task: HookInOutBlock) {
-		if let Some(tx) = task.done {
-			tx.send(()).ok();
-		}
-		self.ops.out(task.id, ProcessOutBlock::Clean);
-	}
-
-	pub(crate) async fn orphan(&self, task: HookInOutOrphan) {
-		if let Some(tx) = task.done {
-			tx.send(()).ok();
-		}
-		self.ops.out(task.id, ProcessOutOrphan::Clean);
-	}
-
-	pub(crate) async fn bg(&self, task: HookInOutBg) {
-		let intact = self.ongoing.lock().intact(task.id);
-		if !intact {
-			task.cancel.send(()).await.ok();
-			task.cancel.closed().await;
-		}
-		if let Some(tx) = task.done {
-			tx.send(()).ok();
-		}
-		self.ops.out(task.id, ProcessOutBg::Clean);
-	}
-
-	// --- Prework
-	pub(crate) async fn fetch(&self, task: HookInOutFetch) {
-		let intact = self.ongoing.lock().intact(task.id);
-		task.done.send(intact).ok();
-		self.ops.out(task.id, PreworkOutFetch::Clean);
 	}
 }

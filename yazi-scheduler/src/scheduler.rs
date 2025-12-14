@@ -1,14 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
-use hashbrown::hash_map::RawEntryMut;
 use parking_lot::Mutex;
-use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
+use tokio::{select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
-use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
+use yazi_shared::{CompletionToken, Id, Throttle, url::{UrlBuf, UrlLike}};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, Runner, TaskIn, TaskOps, file::{File, FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{Hook, HookInOutBg, HookInOutBlock, HookInOutDelete, HookInOutDownload, HookInOutFetch, HookInOutOrphan, HookInOutTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, Runner, TaskIn, TaskOps, file::{File, FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{Hook, HookInOutDelete, HookInOutDownload, HookInOutTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
 	ops:         TaskOps,
@@ -54,22 +53,12 @@ impl Scheduler {
 	}
 
 	pub fn cancel(&self, id: Id) -> bool {
-		let mut ongoing = self.ongoing.lock();
-
-		match ongoing.inner.raw_entry_mut().from_key(&id) {
-			RawEntryMut::Occupied(mut oe) => {
-				let task = oe.get_mut();
-				if let Some(hook) = task.hook.take() {
-					task.canceled = true;
-					self.micro.try_send(hook, HIGH).ok();
-					false
-				} else {
-					oe.remove();
-					true
-				}
-			}
-			RawEntryMut::Vacant(_) => false,
+		if let Some(hook) = self.ongoing.lock().cancel(id) {
+			self.micro.try_send(hook, HIGH).ok();
+			return false;
 		}
+
+		true
 	}
 
 	pub fn shutdown(&self) {
@@ -90,7 +79,17 @@ impl Scheduler {
 
 		let follow = !from.scheme().covariant(to.scheme());
 		self.queue(
-			FileInCut { id: task.id, from, to, force, cha: None, follow, retry: 0, drop: None },
+			FileInCut {
+				id: task.id,
+				from,
+				to,
+				force,
+				cha: None,
+				follow,
+				retry: 0,
+				drop: None,
+				done: task.done.clone(),
+			},
 			LOW,
 		);
 	}
@@ -106,7 +105,19 @@ impl Scheduler {
 		}
 
 		let follow = follow || !from.scheme().covariant(to.scheme());
-		self.queue(FileInCopy { id: task.id, from, to, force, cha: None, follow, retry: 0 }, LOW);
+		self.queue(
+			FileInCopy {
+				id: task.id,
+				from,
+				to,
+				force,
+				cha: None,
+				follow,
+				retry: 0,
+				done: task.done.clone(),
+			},
+			LOW,
+		);
 	}
 
 	pub fn file_link(&self, from: UrlBuf, to: UrlBuf, relative: bool, force: bool) {
@@ -164,21 +175,21 @@ impl Scheduler {
 		self.queue(FileInTrash { id: task.id, target }, LOW);
 	}
 
-	pub fn file_download(&self, url: UrlBuf, done: Option<oneshot::Sender<bool>>) {
+	pub fn file_download(&self, url: UrlBuf) -> CompletionToken {
 		let mut ongoing = self.ongoing.lock();
 		let task = ongoing.add::<FileProgDownload>(format!("Download {}", url.display()));
 
-		if !url.kind().is_remote() {
-			return self
-				.ops
-				.out(task.id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
-		};
-
-		if let Some(done) = done {
-			task.set_hook(HookInOutDownload { id: task.id, done });
+		task.set_hook(HookInOutDownload { id: task.id });
+		if url.kind().is_remote() {
+			self.queue(
+				FileInDownload { id: task.id, url, cha: None, retry: 0, done: task.done.clone() },
+				LOW,
+			);
+		} else {
+			self.ops.out(task.id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		}
 
-		self.queue(FileInDownload { id: task.id, url, cha: None, retry: 0 }, LOW);
+		task.done.clone()
 	}
 
 	pub fn file_upload(&self, url: UrlBuf) {
@@ -191,7 +202,10 @@ impl Scheduler {
 				.out(task.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 
-		self.queue(FileInUpload { id: task.id, url, cha: None, cache: None }, LOW);
+		self.queue(
+			FileInUpload { id: task.id, url, cha: None, cache: None, done: task.done.clone() },
+			LOW,
+		);
 	}
 
 	pub fn plugin_entry(&self, opt: PluginOpt) {
@@ -205,8 +219,7 @@ impl Scheduler {
 		&self,
 		fetcher: &'static Fetcher,
 		targets: Vec<yazi_fs::File>,
-		done: Option<oneshot::Sender<bool>>,
-	) {
+	) -> CompletionToken {
 		let mut ongoing = self.ongoing.lock();
 		let task = ongoing.add::<PreworkProgFetch>(format!(
 			"Run fetcher `{}` with {} target(s)",
@@ -214,24 +227,19 @@ impl Scheduler {
 			targets.len()
 		));
 
-		if let Some(done) = done {
-			task.set_hook(HookInOutFetch { id: task.id, done });
-		}
-
 		self.queue(PreworkInFetch { id: task.id, plugin: fetcher, targets }, NORMAL);
+		task.done.clone()
 	}
 
 	pub async fn fetch_mimetype(&self, targets: Vec<yazi_fs::File>) -> bool {
 		let mut wg = vec![];
 		for (fetcher, targets) in YAZI.plugin.mime_fetchers(targets) {
-			let (tx, rx) = oneshot::channel();
-			self.fetch_paged(fetcher, targets, Some(tx));
-			wg.push(rx);
+			wg.push(self.fetch_paged(fetcher, targets));
 		}
 
-		for rx in wg {
-			if rx.await != Ok(true) {
-				return false; // Canceled or error
+		for done in wg {
+			if !done.future().await {
+				return false; // Canceled
 			}
 		}
 		true
@@ -278,24 +286,24 @@ impl Scheduler {
 			ongoing.add::<ProcessProgBg>(name)
 		};
 
+		if let Some(done) = opt.done {
+			task.done = done;
+		}
+
 		if opt.block {
-			task.set_hook(HookInOutBlock { id: task.id, done: opt.done });
 			self
 				.queue(ProcessInBlock { id: task.id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }, NORMAL);
 		} else if opt.orphan {
-			task.set_hook(HookInOutOrphan { id: task.id, done: opt.done });
 			self
 				.queue(ProcessInOrphan { id: task.id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }, NORMAL);
 		} else {
-			let (cancel_tx, cancel_rx) = mpsc::channel(1);
-			task.set_hook(HookInOutBg { id: task.id, cancel: cancel_tx, done: opt.done });
 			self.queue(
 				ProcessInBg {
-					id:     task.id,
-					cwd:    opt.cwd,
-					cmd:    opt.cmd,
-					args:   opt.args,
-					cancel: cancel_rx,
+					id:   task.id,
+					cwd:  opt.cwd,
+					cmd:  opt.cmd,
+					args: opt.args,
+					done: task.done.clone(),
 				},
 				NORMAL,
 			);
@@ -311,11 +319,19 @@ impl Scheduler {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
 					let id = r#in.id();
-					if !ongoing.lock().exists(id) {
+					let Some(token) = ongoing.lock().get_token(id) else {
 						continue;
-					}
+					};
 
-					let result = runner.micro(r#in).await;
+					let result = if r#in.is_hook() {
+						runner.micro(r#in).await
+					} else {
+						select! {
+							r = runner.micro(r#in) => r,
+							false = token.future() => Ok(())
+						}
+					};
+
 					if let Err(out) = result {
 						ops.out(id, out);
 					}
@@ -341,11 +357,24 @@ impl Scheduler {
 				};
 
 				let id = r#in.id();
-				if !ongoing.lock().exists(id) {
+				let Some(token) = ongoing.lock().get_token(id) else {
 					continue;
-				}
+				};
 
-				let result = if micro { runner.micro(r#in).await } else { runner.r#macro(r#in).await };
+				let result = if r#in.is_hook() {
+					if micro { runner.micro(r#in).await } else { runner.r#macro(r#in).await }
+				} else if micro {
+					select! {
+						r = runner.micro(r#in) => r,
+						false = token.future() => Ok(()),
+					}
+				} else {
+					select! {
+						r = runner.r#macro(r#in) => r,
+						false = token.future() => Ok(()),
+					}
+				};
+
 				if let Err(out) = result {
 					ops.out(id, out);
 				}
@@ -368,7 +397,7 @@ impl Scheduler {
 				} else if let Some(hook) = task.hook.take() {
 					micro.try_send(hook, LOW).ok();
 				} else {
-					ongoing.inner.remove(&op.id);
+					ongoing.fulfill(op.id);
 				}
 			}
 		})

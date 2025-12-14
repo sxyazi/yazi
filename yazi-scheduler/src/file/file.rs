@@ -9,7 +9,7 @@ use yazi_shared::{path::PathCow, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlL
 use yazi_vfs::{VfsCha, maybe_exists, must_be_dir, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::HookInOutCut, ok_or_not_found};
+use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::HookInOutCut, ok_or_not_found, progress_or_break};
 
 pub(crate) struct File {
 	ops:     TaskOps,
@@ -62,8 +62,8 @@ impl File {
 		let mut it =
 			ctx!(task, provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await)?;
 
-		while let Some(res) = it.recv().await {
-			match res {
+		loop {
+			match progress_or_break!(it, task.done) {
 				Ok(0) => break,
 				Ok(n) => self.ops.out(task.id, FileOutCopyDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
@@ -152,8 +152,8 @@ impl File {
 		let mut it =
 			ctx!(task, provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await)?;
 
-		while let Some(res) = it.recv().await {
-			match res {
+		loop {
+			match progress_or_break!(it, task.done) {
 				Ok(0) => {
 					provider::remove_file(&task.from).await.ok();
 					break;
@@ -340,8 +340,8 @@ impl File {
 		let cache_tmp = ctx!(task, Self::tmp(&cache).await, "Cannot determine download cache")?;
 
 		let mut it = ctx!(task, provider::copy_with_progress(&task.url, &cache_tmp, cha).await)?;
-		while let Some(res) = it.recv().await {
-			match res {
+		loop {
+			match progress_or_break!(it, task.done) {
 				Ok(0) => {
 					Local::regular(&cache).remove_dir_all().await.ok();
 					ctx!(task, provider::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
@@ -424,8 +424,8 @@ impl File {
 			.await
 		)?;
 
-		while let Some(res) = it.recv().await {
-			match res {
+		loop {
+			match progress_or_break!(it, task.done) {
 				Ok(0) => {
 					let cha =
 						ctx!(task, Self::cha(&task.url, true, None).await, "Cannot stat original file")?;

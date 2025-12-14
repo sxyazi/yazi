@@ -25,6 +25,21 @@ macro_rules! ok_or_not_found {
 }
 
 #[macro_export]
+macro_rules! progress_or_break {
+	($rx:ident, $done:expr) => {
+		tokio::select! {
+			r = $rx.recv() => {
+				match r {
+					Some(prog) => prog,
+					None => break,
+				}
+			},
+			false = $done.future() => break,
+		}
+	};
+}
+
+#[macro_export]
 macro_rules! impl_from_in {
 	($($variant:ident($type:ty)),* $(,)?) => {
 		$(

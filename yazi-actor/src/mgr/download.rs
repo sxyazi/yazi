@@ -3,7 +3,6 @@ use std::{mem, time::{Duration, Instant}};
 use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
 use hashbrown::HashSet;
-use tokio::sync::oneshot;
 use yazi_fs::{File, FsScheme, provider::{Provider, local::Local}};
 use yazi_macro::succ;
 use yazi_parser::mgr::{DownloadOpt, OpenOpt};
@@ -29,9 +28,8 @@ impl Actor for Download {
 
 			let mut wg1 = FuturesUnordered::new();
 			for url in opt.urls {
-				let (tx, rx) = oneshot::channel();
-				scheduler.file_download(url.to_owned(), Some(tx));
-				wg1.push(async move { (rx.await == Ok(true), url) });
+				let done = scheduler.file_download(url.to_owned());
+				wg1.push(async move { (done.future().await, url) });
 			}
 
 			let mut wg2 = vec![];
