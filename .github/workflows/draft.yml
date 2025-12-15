@@ -59,7 +59,7 @@ jobs:
         run: ./scripts/build.sh ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target }}
           path: |
@@ -105,7 +105,7 @@ jobs:
           Compress-Archive -Path ${env:TARGET_NAME} -DestinationPath "${env:TARGET_NAME}.zip"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target }}
           path: yazi-${{ matrix.target }}.zip
@@ -133,7 +133,7 @@ jobs:
         run: ./scripts/build.sh ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target }}
           path: |
@@ -167,7 +167,7 @@ jobs:
         run: mv yazi_*.snap yazi-${{ matrix.arch }}.snap
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: snap-${{ matrix.arch }}
           path: yazi-${{ matrix.arch }}.snap
