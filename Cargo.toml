@@ -64,7 +64,7 @@ tracing             = { version = "0.1.43", features = [ "max_level_debug", "rel
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 typed-path          = "0.12.0"
 unicode-width       = { version = "0.2.0", default-features = false }
-uzers               = "0.12.1"
+uzers               = "0.12.2"
 
 [workspace.lints.clippy]
 format_push_string   = "warn"

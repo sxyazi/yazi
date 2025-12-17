@@ -79,18 +79,18 @@ pub trait PathLike: AsPath {
 		self.as_path().try_starts_with(base)
 	}
 
-	fn try_strip_prefix<T>(&self, suffix: T) -> Result<PathDyn<'_>, StripPrefixError>
+	fn try_strip_prefix<T>(&self, base: T) -> Result<PathDyn<'_>, StripPrefixError>
 	where
 		T: AsStrand,
 	{
-		self.as_path().try_strip_prefix(suffix)
+		self.as_path().try_strip_prefix(base)
 	}
 
-	fn try_strip_suffix<T>(&self, base: T) -> Result<PathDyn<'_>, StripSuffixError>
+	fn try_strip_suffix<T>(&self, suffix: T) -> Result<PathDyn<'_>, StripSuffixError>
 	where
 		T: AsStrand,
 	{
-		self.as_path().try_strip_suffix(base)
+		self.as_path().try_strip_suffix(suffix)
 	}
 }
 
