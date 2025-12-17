@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::{Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError}, strand::{AsStrand, Strand}};
+use crate::{Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand}};
 
 pub trait PathLike: AsPath {
 	fn as_os(&self) -> Result<&std::path::Path, PathDynError> { self.as_path().as_os() }
@@ -79,11 +79,18 @@ pub trait PathLike: AsPath {
 		self.as_path().try_starts_with(base)
 	}
 
-	fn try_strip_prefix<T>(&self, base: T) -> Result<PathDyn<'_>, StripPrefixError>
+	fn try_strip_prefix<T>(&self, suffix: T) -> Result<PathDyn<'_>, StripPrefixError>
 	where
 		T: AsStrand,
 	{
-		self.as_path().try_strip_prefix(base)
+		self.as_path().try_strip_prefix(suffix)
+	}
+
+	fn try_strip_suffix<T>(&self, base: T) -> Result<PathDyn<'_>, StripSuffixError>
+	where
+		T: AsStrand,
+	{
+		self.as_path().try_strip_suffix(base)
 	}
 }
 

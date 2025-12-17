@@ -103,6 +103,14 @@ impl<'a> TryFrom<Cow<'a, str>> for UrlCow<'a> {
 	}
 }
 
+impl<'a> TryFrom<(SchemeRef<'a>, PathDyn<'a>)> for UrlCow<'a> {
+	type Error = anyhow::Error;
+
+	fn try_from((scheme, path): (SchemeRef<'a>, PathDyn<'a>)) -> Result<Self, Self::Error> {
+		(SchemeCow::Borrowed(scheme), path).try_into()
+	}
+}
+
 impl<'a> TryFrom<(SchemeRef<'a>, PathCow<'a>)> for UrlCow<'a> {
 	type Error = anyhow::Error;
 
@@ -242,6 +250,28 @@ impl<'a> UrlCow<'a> {
 				SymbolCow::Borrowed(domain) => SchemeRef::Sftp { domain, uri, urn }.into(),
 				SymbolCow::Owned(domain) => Scheme::Sftp { domain, uri, urn }.into(),
 			},
+		}
+	}
+
+	pub fn into_static(self) -> UrlCow<'static> {
+		match self {
+			UrlCow::Regular(loc) => UrlCow::Regular(loc),
+			UrlCow::Search { loc, domain } => UrlCow::Search { loc, domain: domain.into_owned().into() },
+			UrlCow::Archive { loc, domain } => {
+				UrlCow::Archive { loc, domain: domain.into_owned().into() }
+			}
+			UrlCow::Sftp { loc, domain } => UrlCow::Sftp { loc, domain: domain.into_owned().into() },
+
+			UrlCow::RegularRef(loc) => UrlCow::Regular(loc.into()),
+			UrlCow::SearchRef { loc, domain } => {
+				UrlCow::Search { loc: loc.into(), domain: domain.into_owned().into() }
+			}
+			UrlCow::ArchiveRef { loc, domain } => {
+				UrlCow::Archive { loc: loc.into(), domain: domain.into_owned().into() }
+			}
+			UrlCow::SftpRef { loc, domain } => {
+				UrlCow::Sftp { loc: loc.into(), domain: domain.into_owned().into() }
+			}
 		}
 	}
 

@@ -21,7 +21,7 @@ impl Process {
 		let (id, cmd) = (task.id, task.cmd.clone());
 		let result = super::shell(task.into()).await;
 		if let Err(e) = result {
-			AppProxy::notify_warn(&cmd.to_string_lossy(), format!("Failed to start process: {e}"));
+			AppProxy::notify_warn(cmd.to_string_lossy(), format!("Failed to start process: {e}"));
 			return Ok(self.ops.out(id, ProcessOutBlock::Succ));
 		}
 
@@ -32,7 +32,7 @@ impl Process {
 				Some(code) => format!("Process exited with status code: {code}"),
 				None => "Process terminated by signal".to_string(),
 			};
-			AppProxy::notify_warn(&cmd.to_string_lossy(), &content);
+			AppProxy::notify_warn(cmd.to_string_lossy(), content);
 		}
 
 		Ok(self.ops.out(id, ProcessOutBlock::Succ))

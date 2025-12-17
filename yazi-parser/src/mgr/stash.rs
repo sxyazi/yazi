@@ -2,13 +2,13 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::Url;
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 use crate::mgr::{CdOpt, CdSource};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct StashOpt {
-	pub target: UrlCow<'static>,
+	pub target: UrlBuf,
 	pub source: CdSource,
 }
 

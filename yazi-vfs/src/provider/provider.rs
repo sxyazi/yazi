@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::sync::mpsc;
 use yazi_fs::{cha::Cha, provider::{Attrs, Capabilities, Provider, local::Local}};
-use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow}};
+use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use super::{Providers, ReadDir, RwFile};
 
@@ -245,6 +245,18 @@ where
 	U: AsUrl,
 {
 	Providers::new(url.as_url()).await?.trash().await
+}
+
+pub fn try_absolute<'a, U>(url: U) -> Option<UrlCow<'a>>
+where
+	U: Into<UrlCow<'a>>,
+{
+	let url = url.into();
+	match url.as_url() {
+		Url::Regular(_) | Url::Search { .. } => yazi_fs::provider::local::try_absolute(url),
+		Url::Archive { .. } => None, // TODO
+		Url::Sftp { .. } => crate::provider::sftp::try_absolute(url),
+	}
 }
 
 pub async fn write<U, C>(url: U, contents: C) -> io::Result<()>

@@ -8,7 +8,7 @@ pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 		cow.trail().components().count() - 1,
 	);
 
-	let scheme = cow.scheme().to_owned().with_ports(uri, urn);
+	let scheme = cow.into_scheme().into_owned().with_ports(uri, urn);
 	(scheme, path).try_into().expect("UrlBuf from cleaned path")
 }
 

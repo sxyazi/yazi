@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::path::{AsPath, PathBufDyn, PathDyn, PathKind};
+use crate::path::{AsPath, PathBufDyn, PathDyn, PathDynError, PathKind};
 
 // --- PathCow
 #[derive(Debug)]
@@ -17,6 +17,10 @@ impl<'a> From<PathDyn<'a>> for PathCow<'a> {
 
 impl From<PathBufDyn> for PathCow<'_> {
 	fn from(value: PathBufDyn) -> Self { Self::Owned(value) }
+}
+
+impl<'a> From<std::path::PathBuf> for PathCow<'a> {
+	fn from(value: std::path::PathBuf) -> Self { Self::Owned(value.into()) }
 }
 
 impl<'a> From<&'a PathCow<'_>> for PathCow<'a> {
@@ -43,10 +47,19 @@ impl PartialEq<&str> for PathCow<'_> {
 impl<'a> PathCow<'a> {
 	pub fn into_owned(self) -> PathBufDyn {
 		match self {
-			Self::Borrowed(s) => s.to_owned(),
-			Self::Owned(s) => s,
+			Self::Borrowed(p) => p.to_owned(),
+			Self::Owned(p) => p,
 		}
 	}
+
+	pub fn into_os(self) -> Result<std::path::PathBuf, PathDynError> {
+		match self {
+			PathCow::Borrowed(p) => p.to_os_owned(),
+			PathCow::Owned(p) => p.into_os(),
+		}
+	}
+
+	pub fn is_borrowed(&self) -> bool { matches!(self, Self::Borrowed(_)) }
 
 	pub fn with<K, T>(kind: K, bytes: T) -> Result<Self>
 	where

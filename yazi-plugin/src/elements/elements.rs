@@ -60,7 +60,7 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 
 pub(super) fn printable(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_function(|lua, s: mlua::String| {
-		Ok(match replace_to_printable(&*s.as_bytes(), false, 1, true) {
+		Ok(match replace_to_printable(&s.as_bytes(), false, 1, true) {
 			Cow::Borrowed(_) => s,
 			Cow::Owned(new) => lua.create_string(&new)?,
 		})

@@ -2,14 +2,12 @@ use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
 
 use tokio::sync::Notify;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct CompletionToken {
 	inner: Arc<(AtomicU8, Notify)>,
 }
 
 impl CompletionToken {
-	pub fn new() -> Self { Self { inner: Arc::new((AtomicU8::new(0), Notify::new())) } }
-
 	pub fn complete(&self, success: bool) {
 		let new = if success { 1 } else { 2 };
 		self.inner.0.compare_exchange(0, new, Ordering::Relaxed, Ordering::Relaxed).ok();

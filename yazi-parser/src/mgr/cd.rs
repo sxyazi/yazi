@@ -1,11 +1,12 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_fs::path::expand_url;
-use yazi_shared::{event::CmdCow, url::{Url, UrlBuf, UrlCow}};
+use yazi_fs::path::{clean_url, expand_url};
+use yazi_shared::{event::CmdCow, url::{Url, UrlBuf}};
+use yazi_vfs::provider;
 
 #[derive(Debug)]
 pub struct CdOpt {
-	pub target:      UrlCow<'static>,
+	pub target:      UrlBuf,
 	pub interactive: bool,
 	pub source:      CdSource,
 }
@@ -18,19 +19,23 @@ impl From<CmdCow> for CdOpt {
 			target = expand_url(target).into();
 		}
 
-		Self { target, interactive: c.bool("interactive"), source: CdSource::Cd }
-	}
-}
+		if let Some(u) = provider::try_absolute(&target)
+			&& u.is_owned()
+		{
+			target = u.into_static();
+		}
 
-impl From<(UrlCow<'static>, CdSource)> for CdOpt {
-	fn from((target, source): (UrlCow<'static>, CdSource)) -> Self {
-		Self { target, interactive: false, source }
+		Self {
+			target:      clean_url(target),
+			interactive: c.bool("interactive"),
+			source:      CdSource::Cd,
+		}
 	}
 }
 
 impl From<(UrlBuf, CdSource)> for CdOpt {
 	fn from((target, source): (UrlBuf, CdSource)) -> Self {
-		Self::from((UrlCow::from(target), source))
+		Self { target, interactive: false, source }
 	}
 }
 

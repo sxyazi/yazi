@@ -4,7 +4,7 @@ use anyhow::Result;
 use hashbrown::Equivalent;
 
 use super::{RsplitOnceError, StartsWithError};
-use crate::{BytesExt, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError}, strand::{AsStrand, Strand, StrandError}};
+use crate::{BytesExt, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand, StrandError}};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PathDyn<'p> {
@@ -250,6 +250,26 @@ impl<'p> PathDyn<'p> {
 			Self::Os(p) => Self::Os(p.strip_prefix(s.as_os()?)?),
 			Self::Unix(p) => Self::Unix(p.strip_prefix(s.encoded_bytes())?),
 		})
+	}
+
+	pub fn try_strip_suffix<T>(self, suffix: T) -> Result<Self, StripSuffixError>
+	where
+		T: AsStrand,
+	{
+		let s = suffix.as_strand();
+		let mut me_comps = self.components();
+		let mut suf_comps = match self.kind() {
+			PathKind::Os => Components::Os(std::path::Path::new(s.as_os()?).components()),
+			PathKind::Unix => Components::Unix(typed_path::UnixPath::new(s.encoded_bytes()).components()),
+		};
+
+		while let Some(next) = suf_comps.next_back() {
+			if me_comps.next_back() != Some(next) {
+				return Err(StripSuffixError::NotSuffix);
+			}
+		}
+
+		Ok(me_comps.path())
 	}
 
 	pub fn with<K, S>(kind: K, strand: &'p S) -> Result<Self, StrandError>

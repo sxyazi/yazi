@@ -25,7 +25,7 @@ impl Actor for TabCreate {
 		}
 
 		let mut tab = Tab::default();
-		let (cd, url) = if let Some(wd) = opt.wd {
+		let (cd, url) = if let Some(wd) = opt.url {
 			(true, wd.into_owned())
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();

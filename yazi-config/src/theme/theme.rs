@@ -3,11 +3,10 @@ use std::path::PathBuf;
 use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
-use yazi_fs::{Xdg, ok_or_not_found, path::expand_url};
-use yazi_shared::url::UrlBuf;
+use yazi_fs::{Xdg, ok_or_not_found};
 
 use super::{Filetype, Flavor, Icon};
-use crate::Style;
+use crate::{Style, normalize_path};
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Theme {
@@ -240,8 +239,8 @@ impl Theme {
 		self.mgr.syntect_theme = self
 			.flavor
 			.syntect_path(light)
-			.or_else(|| expand_url(UrlBuf::from(&self.mgr.syntect_theme)).into_local())
-			.ok_or(anyhow!("[mgr].syntect_theme must be a path within local filesystem"))?;
+			.or_else(|| normalize_path(self.mgr.syntect_theme))
+			.ok_or(anyhow!("[mgr].syntect_theme must be either empty or an absolute path."))?;
 
 		Ok(self)
 	}

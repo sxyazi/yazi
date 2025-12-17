@@ -110,3 +110,22 @@ impl From<std::path::StripPrefixError> for StripPrefixError {
 impl From<typed_path::StripPrefixError> for StripPrefixError {
 	fn from(_: typed_path::StripPrefixError) -> Self { Self::NotPrefix }
 }
+
+// --- StripSuffixError
+#[derive(Debug, Error)]
+pub enum StripSuffixError {
+	#[error("calling strip_suffix on URLs with different schemes")]
+	Exotic,
+	#[error("the base is not a suffix of the path")]
+	NotSuffix,
+	#[error("calling strip_suffix on paths with different encodings")]
+	WrongEncoding,
+}
+
+impl From<StrandError> for StripSuffixError {
+	fn from(err: StrandError) -> Self {
+		match err {
+			StrandError::AsOs | StrandError::AsUtf8 => Self::WrongEncoding,
+		}
+	}
+}

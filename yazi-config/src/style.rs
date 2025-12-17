@@ -25,8 +25,8 @@ impl From<ratatui::style::Style> for Style {
 		let all = value.add_modifier - sub;
 
 		Self {
-			fg:          value.fg.map(Into::into),
-			bg:          value.bg.map(Into::into),
+			fg:          value.fg,
+			bg:          value.bg,
 			bold:        if all.contains(M::BOLD) { Some(true) } else if sub.contains(M::BOLD) { Some(false) } else { None },
 			dim:         if all.contains(M::DIM) { Some(true) } else if sub.contains(M::DIM) { Some(false) } else { None },
 			italic:      if all.contains(M::ITALIC) { Some(true) } else if sub.contains(M::ITALIC) { Some(false) } else { None },
@@ -75,8 +75,8 @@ impl From<Style> for ratatui::style::Style {
 		}
 
 		Self {
-			fg:              value.fg.map(Into::into),
-			bg:              value.bg.map(Into::into),
+			fg:              value.fg,
+			bg:              value.bg,
 			underline_color: None,
 			add_modifier:    add,
 			sub_modifier:    sub,
