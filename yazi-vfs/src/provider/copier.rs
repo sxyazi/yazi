@@ -54,7 +54,7 @@ pub(super) fn copy_with_progress_impl(
 			}
 		};
 
-		let chunks = (cha.len + PER_CHUNK - 1) / PER_CHUNK;
+		let chunks = cha.len.div_ceil(PER_CHUNK);
 		let it = futures::stream::iter(0..chunks)
 			.map(|i| {
 				let acc_ = acc_.clone();

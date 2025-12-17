@@ -5,7 +5,7 @@ use hashbrown::Equivalent;
 use serde::Serialize;
 
 use super::Encode as EncodeUrl;
-use crate::{loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError}, pool::InternStr, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
+use crate::{loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, pool::InternStr, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Url<'a> {
@@ -372,6 +372,52 @@ impl<'a> Url<'a> {
 			}
 			(U::Archive { .. }, U::Search { .. }) => {
 				Some(prefix).filter(|_| self.uri().is_empty()).ok_or(NotPrefix)
+			}
+
+			// Independent virtual file space
+			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
+			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
+			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
+			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
+			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
+			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+		}
+	}
+
+	pub fn try_strip_suffix(self, other: impl AsUrl) -> Result<PathDyn<'a>, StripSuffixError> {
+		use StripSuffixError::{Exotic, NotSuffix};
+		use Url as U;
+
+		let other = other.as_url();
+		let suffix = self.loc().try_strip_suffix(other.loc())?;
+
+		match (self, other) {
+			// Same scheme
+			(U::Regular(_), U::Regular(_)) => Ok(suffix),
+			(U::Search { .. }, U::Search { .. }) => Ok(suffix),
+			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
+				Some(suffix).filter(|_| a == b).ok_or(Exotic)
+			}
+			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
+				Some(suffix).filter(|_| a == b).ok_or(Exotic)
+			}
+
+			// Both are local files
+			(U::Regular(_), U::Search { .. }) => Ok(suffix),
+			(U::Search { .. }, U::Regular(_)) => Ok(suffix),
+
+			// Only the entry of archives is a local file
+			(U::Regular(_), U::Archive { .. }) => {
+				Some(suffix).filter(|_| other.uri().is_empty()).ok_or(NotSuffix)
+			}
+			(U::Search { .. }, U::Archive { .. }) => {
+				Some(suffix).filter(|_| other.uri().is_empty()).ok_or(NotSuffix)
+			}
+			(U::Archive { .. }, U::Regular(_)) => {
+				Some(suffix).filter(|_| self.uri().is_empty()).ok_or(NotSuffix)
+			}
+			(U::Archive { .. }, U::Search { .. }) => {
+				Some(suffix).filter(|_| self.uri().is_empty()).ok_or(NotSuffix)
 			}
 
 			// Independent virtual file space

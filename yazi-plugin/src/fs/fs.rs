@@ -161,14 +161,23 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
+#[allow(irrefutable_let_patterns)]
 fn expand_url(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, value: Value| {
+	lua.create_function(|lua, value: Value| {
 		use yazi_fs::path::expand_url;
-		Ok(Url::new(match value {
-			Value::String(s) => expand_url(UrlCow::try_from(&*s.as_bytes())?),
-			Value::UserData(ud) => expand_url(&*ud.borrow::<yazi_binding::Url>()?),
+		match &value {
+			Value::String(s) => Url::new(expand_url(UrlCow::try_from(&*s.as_bytes())?)).into_lua(lua),
+			Value::UserData(ud) => {
+				if let u = expand_url(&*ud.borrow::<yazi_binding::Url>()?)
+					&& u.is_owned()
+				{
+					Url::new(u.into_owned()).into_lua(lua)
+				} else {
+					Ok(value)
+				}
+			}
 			_ => Err("must be a string or a Url".into_lua_err())?,
-		}))
+		}
 	})
 }
 

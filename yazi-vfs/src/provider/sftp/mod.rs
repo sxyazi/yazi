@@ -1,4 +1,4 @@
-yazi_macro::mod_flat!(conn gate metadata read_dir sftp);
+yazi_macro::mod_flat!(absolute conn gate metadata read_dir sftp);
 
 static CONN: yazi_shared::RoCell<
 	parking_lot::Mutex<

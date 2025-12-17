@@ -3,7 +3,7 @@ use std::{io, path::Path, sync::Arc};
 use tokio::sync::mpsc;
 use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
-use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Capabilities, Provider}};
+use crate::{cha::Cha, provider::{Attrs, Capabilities, Provider}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -18,7 +18,10 @@ impl<'a> Provider for Local<'a> {
 	type ReadDir = super::ReadDir;
 	type UrlCow = UrlCow<'a>;
 
-	async fn absolute(&self) -> io::Result<Self::UrlCow> { Ok(absolute_url(self.url)) }
+	async fn absolute(&self) -> io::Result<Self::UrlCow> {
+		super::try_absolute(self.url)
+			.ok_or_else(|| io::Error::other("Cannot get absolute path for local URL"))
+	}
 
 	#[inline]
 	async fn canonicalize(&self) -> io::Result<UrlBuf> {

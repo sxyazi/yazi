@@ -1,11 +1,11 @@
 use std::mem;
 
 use anyhow::Result;
-use yazi_fs::{CWD, path::clean_url, provider::{DirReader, FileHolder}};
+use yazi_fs::{path::clean_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{AsPath, PathBufDyn, PathCow, PathDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -67,37 +67,35 @@ impl Actor for Trigger {
 
 impl Trigger {
 	fn split_url(s: &str) -> Option<(UrlBuf, PathBufDyn)> {
-		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
-		let scheme = scheme.zeroed();
-
-		if scheme.is_local() && path.as_strand() == "~" {
-			return None; // We don't autocomplete a `~`, but `~/`
-		}
-
-		let cwd = CWD.load();
-		let abs = if !path.is_absolute() && cwd.scheme().covariant(&scheme) {
-			cwd.loc().try_join(&path).ok()?.into()
-		} else {
-			PathCow::from(&path)
-		};
-
 		let sep = if cfg!(windows) {
 			AnyAsciiChar::new(b"/\\").unwrap()
 		} else {
 			AnyAsciiChar::new(b"/").unwrap()
 		};
 
-		let child = path.rsplit_pred(sep).map_or(path.as_path(), |(_, c)| c);
-		let parent =
-			PathDyn::with(scheme.kind(), abs.encoded_bytes().strip_suffix(child.encoded_bytes())?)
-				.ok()?;
+		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
+		let scheme = scheme.zeroed();
 
-		Some((clean_url(UrlCow::try_from((scheme, parent)).ok()?), child.into()))
+		// We don't complete a `~`, but `~/`
+		if scheme.is_local() && path.as_strand() == "~" {
+			return None;
+		}
+
+		// Child
+		let child = path.rsplit_pred(sep).map_or(path.as_path(), |(_, c)| c).to_owned();
+
+		// Parent
+		let url = UrlCow::try_from((scheme.clone().zeroed(), path)).ok()?;
+		let abs = if let Some(u) = provider::try_absolute(&url) { u } else { url };
+		let parent = abs.loc().try_strip_suffix(&child).ok()?;
+
+		Some((clean_url(UrlCow::try_from((scheme, parent)).ok()?), child))
 	}
 }
 
 #[cfg(test)]
 mod tests {
+	use yazi_fs::CWD;
 	use yazi_shared::url::UrlLike;
 
 	use super::*;

@@ -1,25 +1,35 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_boot::BOOT;
-use yazi_fs::path::expand_url;
+use yazi_fs::path::{clean_url, expand_url};
 use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_vfs::provider;
 
 #[derive(Debug)]
 pub struct TabCreateOpt {
-	pub wd: Option<UrlCow<'static>>,
+	pub url: Option<UrlCow<'static>>,
 }
 
 impl From<CmdCow> for TabCreateOpt {
 	fn from(mut c: CmdCow) -> Self {
 		if c.bool("current") {
-			return Self { wd: None };
+			return Self { url: None };
 		}
-		let Ok(mut wd) = c.take_first() else {
-			return Self { wd: Some(UrlCow::from(&BOOT.cwds[0])) };
+
+		let Ok(mut url) = c.take_first() else {
+			return Self { url: Some(UrlCow::from(&BOOT.cwds[0])) };
 		};
+
 		if !c.bool("raw") {
-			wd = expand_url(wd).into();
+			url = expand_url(url).into();
 		}
-		Self { wd: Some(wd) }
+
+		if let Some(u) = provider::try_absolute(&url)
+			&& u.is_owned()
+		{
+			url = u.into_static();
+		}
+
+		Self { url: Some(clean_url(url).into()) }
 	}
 }
 

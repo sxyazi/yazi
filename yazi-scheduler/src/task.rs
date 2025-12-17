@@ -25,7 +25,7 @@ impl Task {
 			name,
 			prog: T::default().into(),
 			hook: None,
-			done: CompletionToken::new(),
+			done: Default::default(),
 
 			logs: Default::default(),
 			logger: Default::default(),

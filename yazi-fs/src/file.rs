@@ -17,8 +17,8 @@ impl Deref for File {
 	fn deref(&self) -> &Self::Target { &self.cha }
 }
 
-impl From<&File> for File {
-	fn from(value: &File) -> Self { value.clone() }
+impl From<&Self> for File {
+	fn from(value: &Self) -> Self { value.clone() }
 }
 
 impl File {

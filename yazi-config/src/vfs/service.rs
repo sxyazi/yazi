@@ -1,7 +1,8 @@
-use std::{io, path::PathBuf};
+use std::{io, mem, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
-use yazi_fs::path::expand_url;
+
+use crate::normalize_path;
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
@@ -44,9 +45,8 @@ pub struct ServiceSftp {
 impl ServiceSftp {
 	fn reshape(&mut self) -> io::Result<()> {
 		if !self.key_file.as_os_str().is_empty() {
-			self.key_file = expand_url(&self.key_file)
-				.into_local()
-				.ok_or_else(|| io::Error::other("key_file must be a path within local filesystem"))?;
+			self.key_file = normalize_path(mem::take(&mut self.key_file))
+				.ok_or_else(|| io::Error::other("key_file must be either empty or an absolute path"))?;
 		}
 
 		self.identity_agent = if self.identity_agent.as_os_str().is_empty() {
@@ -55,9 +55,9 @@ impl ServiceSftp {
 				.filter(|p| p.is_absolute())
 				.unwrap_or_default()
 		} else {
-			expand_url(&self.identity_agent)
-				.into_local()
-				.ok_or_else(|| io::Error::other("identity_agent must be a path within local filesystem"))?
+			normalize_path(mem::take(&mut self.identity_agent)).ok_or_else(|| {
+				io::Error::other("identity_agent must be either empty or an absolute path")
+			})?
 		};
 
 		Ok(())

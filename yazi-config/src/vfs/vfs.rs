@@ -23,7 +23,7 @@ impl Vfs {
 				Preset::vfs()?.deserialize_over(toml::Deserializer::parse(&Vfs::read()?)?)?.reshape()
 			})
 			.await?
-			.map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+			.map_err(io::Error::other)
 		}
 
 		LOADED.get_or_try_init(init).await

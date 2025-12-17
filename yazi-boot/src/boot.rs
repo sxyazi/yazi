@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use futures::executor::block_on;
 use hashbrown::HashSet;
-use yazi_fs::{CWD, Xdg, path::expand_url};
+use yazi_fs::{CWD, Xdg, path::clean_url};
 use yazi_shared::{strand::StrandBuf, url::{UrlBuf, UrlLike}};
 use yazi_vfs::provider;
 
@@ -27,7 +27,7 @@ impl Boot {
 		}
 
 		async fn go(entry: &UrlBuf) -> (UrlBuf, StrandBuf) {
-			let mut entry = expand_url(entry);
+			let mut entry = clean_url(entry);
 
 			if let Ok(u) = provider::absolute(&entry).await
 				&& u.is_owned()

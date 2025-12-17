@@ -19,7 +19,7 @@ impl TasksProxy {
 		block: bool,
 		orphan: bool,
 	) {
-		let done = CompletionToken::new();
+		let done = CompletionToken::default();
 		emit!(Call(relay!(tasks:process_open).with_any("opt", ProcessOpenOpt {
 			cwd,
 			cmd,

@@ -1,20 +1,19 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::borrow::Cow;
 
-use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathDyn, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}, wtf8::FromWtf8Vec};
-
-use crate::{CWD, path::clean_url};
+use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}, wtf8::FromWtf8Vec};
 
 #[inline]
-pub fn expand_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
-	clean_url(expand_url_impl(url.into().as_url()))
-}
+pub fn expand_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { expand_url_impl(url.into()) }
 
-fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
+fn expand_url_impl(url: UrlCow) -> UrlCow {
 	let (o_base, o_rest, o_urn) = url.triple();
 
-	let n_base = expand_variables(o_base);
-	let n_rest = expand_variables(o_rest);
-	let n_urn = expand_variables(o_urn);
+	let n_base = expand_variables(o_base.into());
+	let n_rest = expand_variables(o_rest.into());
+	let n_urn = expand_variables(o_urn.into());
+	if n_base.is_borrowed() && n_rest.is_borrowed() && n_urn.is_borrowed() {
+		return url;
+	}
 
 	let rest_diff = n_rest.components().count() as isize - o_rest.components().count() as isize;
 	let urn_diff = n_urn.components().count() as isize - o_urn.components().count() as isize;
@@ -28,7 +27,7 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 	let uri = (uri_count + rest_diff + urn_diff) as usize;
 	let urn = (urn_count + urn_diff) as usize;
 
-	let expanded = match url {
+	match url.as_url() {
 		Url::Regular(_) => UrlBuf::Regular(
 			LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
 		),
@@ -44,12 +43,11 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
 			domain: domain.intern(),
 		},
-	};
-
-	absolute_url(expanded)
+	}
+	.into()
 }
 
-fn expand_variables<'a>(p: PathDyn<'a>) -> PathCow<'a> {
+fn expand_variables(p: PathCow) -> PathCow {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
 	let re = regex::bytes::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
@@ -73,53 +71,6 @@ fn expand_variables<'a>(p: PathDyn<'a>) -> PathCow<'a> {
 			PathBufDyn::Os(std::path::PathBuf::from_wtf8_vec(b).expect("valid WTF-8 path")).into()
 		}
 		(Cow::Owned(b), PathKind::Unix) => PathBufDyn::Unix(b.into()).into(),
-	}
-}
-
-pub fn absolute_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { absolute_url_impl(url.into()) }
-
-fn absolute_url_impl<'a>(url: UrlCow<'a>) -> UrlCow<'a> {
-	if url.kind().is_virtual() {
-		return url;
-	}
-
-	let path = url.loc().as_os().expect("must be a local path");
-	let b = path.as_os_str().as_encoded_bytes();
-
-	let loc = if cfg!(windows) && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
-		LocBuf::<PathBuf>::with(
-			format!(r"{}:\", b[0].to_ascii_uppercase() as char).into(),
-			if url.has_base() { 0 } else { 2 },
-			if url.has_trail() { 0 } else { 2 },
-		)
-		.expect("Loc from drive letter")
-	} else if let Ok(rest) = path.strip_prefix("~/")
-		&& let Some(home) = dirs::home_dir()
-		&& home.is_absolute()
-	{
-		let add = home.components().count() - 1; // Home root ("~") has offset by the absolute root ("/")
-		LocBuf::<PathBuf>::with(
-			home.join(rest),
-			url.uri().components().count() + if url.has_base() { 0 } else { add },
-			url.urn().components().count() + if url.has_trail() { 0 } else { add },
-		)
-		.expect("Loc from home directory")
-	} else if !url.is_absolute() {
-		let cwd = CWD.path();
-		LocBuf::<PathBuf>::with(
-			cwd.join(path),
-			url.uri().components().count(),
-			url.urn().components().count(),
-		)
-		.expect("Loc from relative path")
-	} else {
-		return url;
-	};
-
-	match url.as_url() {
-		Url::Regular(_) => UrlBuf::Regular(loc).into(),
-		Url::Search { domain, .. } => UrlBuf::Search { loc, domain: domain.intern() }.into(),
-		Url::Archive { .. } | Url::Sftp { .. } => unreachable!(),
 	}
 }
 
@@ -179,7 +130,7 @@ mod tests {
 
 		for (input, expected) in cases {
 			let u: UrlBuf = input.parse()?;
-			assert_eq!(format!("{:?}", expand_url(u)), expected);
+			assert_eq!(format!("{:?}", expand_url(u).as_url()), expected);
 		}
 
 		Ok(())

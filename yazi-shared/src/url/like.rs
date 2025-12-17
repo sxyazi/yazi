@@ -54,6 +54,8 @@ where
 
 	fn trail(&self) -> Url<'_> { self.as_url().trail() }
 
+	fn triple(&self) -> (PathDyn<'_>, PathDyn<'_>, PathDyn<'_>) { self.as_url().triple() }
+
 	fn try_ends_with(&self, child: impl AsUrl) -> Result<bool, EndsWithError> {
 		self.as_url().try_ends_with(child)
 	}
