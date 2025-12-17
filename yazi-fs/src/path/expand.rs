@@ -130,7 +130,7 @@ mod tests {
 
 		for (input, expected) in cases {
 			let u: UrlBuf = input.parse()?;
-			assert_eq!(format!("{:?}", expand_url(u)), expected);
+			assert_eq!(format!("{:?}", expand_url(u).as_url()), expected);
 		}
 
 		Ok(())
