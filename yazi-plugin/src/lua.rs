@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use futures::executor::block_on;
 use mlua::Lua;
-use yazi_binding::Runtime;
+use yazi_binding::{Runtime, runtime_mut};
 use yazi_boot::BOOT;
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::RoCell;
@@ -17,7 +17,7 @@ pub(super) fn init_lua() -> Result<()> {
 }
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
-	lua.set_app_data(Runtime::default());
+	lua.set_app_data(Runtime::new());
 
 	// Base
 	let globals = lua.globals();
@@ -67,5 +67,6 @@ fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
 		block_on(lua.load(b).set_name("init.lua").exec_async())?;
 	}
 
+	runtime_mut!(lua)?.initing = false;
 	Ok(())
 }

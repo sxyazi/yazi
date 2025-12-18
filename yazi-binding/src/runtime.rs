@@ -3,10 +3,11 @@ use std::collections::VecDeque;
 use hashbrown::HashMap;
 use mlua::Function;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Runtime {
-	frames: VecDeque<RuntimeFrame>,
-	blocks: HashMap<String, Vec<Function>>,
+	frames:      VecDeque<RuntimeFrame>,
+	blocks:      HashMap<String, Vec<Function>>,
+	pub initing: bool,
 }
 
 #[derive(Debug)]
@@ -16,10 +17,13 @@ struct RuntimeFrame {
 }
 
 impl Runtime {
-	pub fn new(id: &str) -> Self {
+	pub fn new() -> Self { Self { frames: <_>::default(), blocks: <_>::default(), initing: true } }
+
+	pub fn new_isolate(id: &str) -> Self {
 		Self {
-			frames: VecDeque::from([RuntimeFrame { id: id.to_owned(), calls: 0 }]),
-			..Default::default()
+			frames:  VecDeque::from([RuntimeFrame { id: id.to_owned(), calls: 0 }]),
+			blocks:  <_>::default(),
+			initing: false,
 		}
 	}
 
