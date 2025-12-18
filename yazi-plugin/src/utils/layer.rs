@@ -21,17 +21,20 @@ impl Utils {
 			}
 
 			let (tx, mut rx) = mpsc::channel::<usize>(1);
-			let mut cands = Vec::with_capacity(t.raw_len());
-
-			for (i, cand) in t.raw_get::<Table>("cands")?.sequence_values::<Table>().enumerate() {
-				let cand = cand?;
-				cands.push(Chord {
-					on:    Self::parse_keys(cand.raw_get("on")?)?,
-					run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
-					desc:  cand.raw_get("desc").ok(),
-					r#for: None,
-				});
-			}
+			let cands: Vec<_> = t
+				.raw_get::<Table>("cands")?
+				.sequence_values::<Table>()
+				.enumerate()
+				.map(|(i, cand)| {
+					let cand = cand?;
+					Ok(Chord {
+						on:    Self::parse_keys(cand.raw_get("on")?)?,
+						run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
+						desc:  cand.raw_get("desc").ok(),
+						r#for: None,
+					})
+				})
+				.collect::<mlua::Result<_>>()?;
 
 			drop(tx);
 			WhichProxy::show(ShowOpt { cands, silent: t.raw_get("silent").unwrap_or_default() });
