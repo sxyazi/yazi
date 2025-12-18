@@ -4,7 +4,7 @@ use yazi_macro::plugin_preset as preset;
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
-	lua.set_app_data(Runtime::new(name));
+	lua.set_app_data(Runtime::new_isolate(name));
 
 	// Base
 	let globals = lua.globals();

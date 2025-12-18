@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}, runtime};
 use yazi_config::LAYOUT;
 use yazi_proxy::{AppProxy, HIDER};
 use yazi_shared::replace_to_printable;
@@ -44,6 +44,10 @@ pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 
 pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_async_function(|lua, ()| async move {
+		if runtime!(lua)?.initing {
+			return Err("Cannot call `ui.hide()` during app initialization".into_lua_err());
+		}
+
 		if lua.named_registry_value::<PermitRef<fn()>>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
 			return Err("Cannot hide while already hidden".into_lua_err());
 		}
