@@ -4747,6 +4747,7 @@ name = "yazi-binding"
 version = "25.9.15"
 dependencies = [
  "ansi-to-tui",
+ "futures",
  "hashbrown 0.16.1",
  "mlua",
  "paste",
@@ -5087,6 +5088,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+ "yazi-binding",
  "yazi-config",
  "yazi-dds",
  "yazi-fs",

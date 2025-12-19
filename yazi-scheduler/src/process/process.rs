@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
-use scopeguard::defer;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
+use yazi_binding::Permit;
 use yazi_proxy::{AppProxy, HIDER};
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
@@ -14,8 +14,7 @@ impl Process {
 	pub(crate) fn new(ops: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: ops.into() } }
 
 	pub(crate) async fn block(&self, task: ProcessInBlock) -> Result<(), ProcessOutBlock> {
-		let _permit = HIDER.acquire().await.unwrap();
-		defer!(AppProxy::resume());
+		let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());

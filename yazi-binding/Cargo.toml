@@ -24,6 +24,7 @@ yazi-shared  = { path = "../yazi-shared", version = "25.9.15" }
 
 # External dependencies
 ansi-to-tui   = { workspace = true }
+futures       = { workspace = true }
 hashbrown     = { workspace = true }
 mlua          = { workspace = true }
 paste         = { workspace = true }

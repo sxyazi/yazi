@@ -35,14 +35,14 @@ impl Utils {
 		lua.create_async_function(|lua, ()| async move {
 			deprecate!(lua, "`ya.hide()` is deprecated, use `ui.hide()` instead, in your {}\nSee #2939 for more details: https://github.com/sxyazi/yazi/pull/2939");
 
-			if lua.named_registry_value::<PermitRef<fn()>>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
+			if lua.named_registry_value::<PermitRef>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
 				return Err("Cannot hide while already hidden".into_lua_err());
 			}
 
 			let permit = HIDER.acquire().await.unwrap();
 			AppProxy::stop().await;
 
-			lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume as fn()))?;
+			lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume()))?;
 			lua.named_registry_value::<AnyUserData>("HIDE_PERMIT")
 		})
 	}

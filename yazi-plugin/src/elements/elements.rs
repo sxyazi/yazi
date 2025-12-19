@@ -48,14 +48,14 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 			return Err("Cannot call `ui.hide()` during app initialization".into_lua_err());
 		}
 
-		if lua.named_registry_value::<PermitRef<fn()>>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
+		if lua.named_registry_value::<PermitRef>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
 			return Err("Cannot hide while already hidden".into_lua_err());
 		}
 
 		let permit = HIDER.acquire().await.unwrap();
 		AppProxy::stop().await;
 
-		lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume as fn()))?;
+		lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume()))?;
 		lua.named_registry_value::<AnyUserData>("HIDE_PERMIT")
 	})?;
 
