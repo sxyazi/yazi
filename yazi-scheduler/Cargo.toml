@@ -27,13 +27,11 @@ yazi-vfs     = { path = "../yazi-vfs", version = "25.9.15" }
 anyhow                 = { workspace = true }
 async-priority-channel = "0.2.0"
 foldhash               = { workspace = true }
-futures                = { workspace = true }
 hashbrown              = { workspace = true }
 lru                    = { workspace = true }
 mlua                   = { workspace = true }
 ordered-float          = { workspace = true }
 parking_lot            = { workspace = true }
-scopeguard             = { workspace = true }
 serde                  = { workspace = true }
 tokio                  = { workspace = true }
 tokio-util             = { workspace = true }
