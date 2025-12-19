@@ -5,6 +5,7 @@ use crossterm::{execute, style::Print};
 use hashbrown::HashMap;
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
+use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
@@ -65,8 +66,7 @@ impl Actor for BulkRename {
 			)
 			.await;
 
-			let _permit = HIDER.acquire().await.unwrap();
-			defer!(AppProxy::resume());
+			let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
 			AppProxy::stop().await;
 
 			let new: Vec<_> = Local::regular(&tmp)

@@ -13,8 +13,10 @@ impl AppProxy {
 		rx.await.ok();
 	}
 
-	pub fn resume() {
-		emit!(Call(relay!(app:resume)));
+	pub async fn resume() {
+		let (tx, rx) = oneshot::channel::<()>();
+		emit!(Call(relay!(app:resume).with_any("tx", tx)));
+		rx.await.ok();
 	}
 
 	pub fn notify(opt: NotifyOpt) {

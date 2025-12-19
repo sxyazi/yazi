@@ -59,8 +59,8 @@ thiserror           = "2.0.17"
 tokio               = { version = "1.48.0", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.17"
-toml                = { version = "0.9.8" }
-tracing             = { version = "0.1.43", features = [ "max_level_debug", "release_max_level_debug" ] }
+toml                = { version = "0.9.10" }
+tracing             = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 typed-path          = "0.12.0"
 unicode-width       = { version = "0.2.0", default-features = false }
