@@ -74,7 +74,7 @@ rules = [
 	# Media
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
 	# Archive
-	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract", "reveal" ] },
+	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,*lzip,*lz4,lzma,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract", "reveal" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
@@ -148,7 +148,7 @@ previewers = [
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
 	# Archive
-	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", run = "archive" },
+	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,*lzip,*lz4,lzma,compress,archive,cpio,arj,xar,ms-cab*}", run = "archive" },
 	{ mime = "application/{debian*-package,redhat-package-manager,rpm,android.package-archive}", run = "archive" },
 	{ url = "*.{AppImage,appimage}", run = "archive" },
 	# Virtual Disk / Disk Image
