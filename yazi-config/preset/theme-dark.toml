@@ -243,7 +243,7 @@ rules = [
 	# Media
 	{ mime = "{audio,video}/*", fg = "magenta" },
 	# Archive
-	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,*lzip,*lz4,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "red" },
+	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzip,lz4,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "red" },
 	# Document
 	{ mime = "application/{pdf,doc,rtf}", fg = "cyan" },
 	# Virtual file system
