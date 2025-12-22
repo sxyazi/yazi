@@ -87,7 +87,7 @@ function Tasks:progress_redraw(snap, y)
 		or kind == "FileUpload"
 	then
 		local percent
-		if snap.success then
+		if snap.cooked then
 			percent = "Cleaning…"
 		else
 			percent = string.format("%3d%%", math.floor(snap.percent))
@@ -101,7 +101,7 @@ function Tasks:progress_redraw(snap, y)
 		)
 
 		local style = th.status.progress_normal
-		if snap.prog.failed_files > 0 then
+		if snap.failed or snap.prog.failed_files > 0 then
 			style = th.status.progress_error
 		end
 
@@ -119,10 +119,10 @@ function Tasks:progress_redraw(snap, y)
 		}
 	else
 		local text
-		if snap.running then
-			text = "Running…"
-		elseif snap.success then
+		if snap.cooked then
 			text = "Cleaning…"
+		elseif snap.running then
+			text = "Running…"
 		else
 			text = "Failed, press Enter to view log…"
 		end

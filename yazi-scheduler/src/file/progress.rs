@@ -24,17 +24,19 @@ impl From<FileProgCopy> for TaskSummary {
 }
 
 impl FileProgCopy {
+	pub fn cooked(self) -> bool {
+		self.collected == Some(true) && self.success_files == self.total_files
+	}
+
 	pub fn running(self) -> bool {
 		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
 	}
 
-	pub fn success(self) -> bool {
-		self.collected == Some(true) && self.success_files == self.total_files
-	}
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.collected == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
@@ -58,7 +60,7 @@ pub struct FileProgCut {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       Option<bool>,
-	pub cleaned:         bool,
+	pub cleaned:         Option<bool>,
 }
 
 impl From<FileProgCut> for TaskSummary {
@@ -73,17 +75,21 @@ impl From<FileProgCut> for TaskSummary {
 }
 
 impl FileProgCut {
-	pub fn running(self) -> bool {
-		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
-	}
-
-	pub fn success(self) -> bool {
+	pub fn cooked(self) -> bool {
 		self.collected == Some(true) && self.success_files == self.total_files
 	}
 
-	pub fn failed(self) -> bool { self.collected == Some(false) }
+	pub fn running(self) -> bool {
+		self.collected.is_none()
+			|| self.success_files + self.failed_files != self.total_files
+			|| (self.cleaned.is_none() && self.cooked())
+	}
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
+
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.collected == Some(false) }
+
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
@@ -116,13 +122,15 @@ impl From<FileProgLink> for TaskSummary {
 }
 
 impl FileProgLink {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -148,15 +156,17 @@ impl From<FileProgHardlink> for TaskSummary {
 }
 
 impl FileProgHardlink {
+	pub fn cooked(self) -> bool { self.collected == Some(true) && self.success == self.total }
+
 	pub fn running(self) -> bool {
 		self.collected.is_none() || self.success + self.failed != self.total
 	}
 
-	pub fn success(self) -> bool { self.collected == Some(true) && self.success == self.total }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.collected == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -170,7 +180,7 @@ pub struct FileProgDelete {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       Option<bool>,
-	pub cleaned:         bool,
+	pub cleaned:         Option<bool>,
 }
 
 impl From<FileProgDelete> for TaskSummary {
@@ -185,17 +195,21 @@ impl From<FileProgDelete> for TaskSummary {
 }
 
 impl FileProgDelete {
-	pub fn running(self) -> bool {
-		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
-	}
-
-	pub fn success(self) -> bool {
+	pub fn cooked(self) -> bool {
 		self.collected == Some(true) && self.success_files == self.total_files
 	}
 
-	pub fn failed(self) -> bool { self.collected == Some(false) }
+	pub fn running(self) -> bool {
+		self.collected.is_none()
+			|| self.success_files + self.failed_files != self.total_files
+			|| (self.cleaned.is_none() && self.cooked())
+	}
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
+
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.collected == Some(false) }
+
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
@@ -214,7 +228,7 @@ impl FileProgDelete {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgTrash {
 	pub state:   Option<bool>,
-	pub cleaned: bool,
+	pub cleaned: Option<bool>,
 }
 
 impl From<FileProgTrash> for TaskSummary {
@@ -229,13 +243,15 @@ impl From<FileProgTrash> for TaskSummary {
 }
 
 impl FileProgTrash {
-	pub fn running(self) -> bool { self.state.is_none() }
+	pub fn cooked(self) -> bool { self.state == Some(true) }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn running(self) -> bool { self.state.is_none() || (self.cleaned.is_none() && self.cooked()) }
 
-	pub fn failed(self) -> bool { self.state == Some(false) }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.state == Some(false) }
+
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -249,7 +265,7 @@ pub struct FileProgDownload {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       Option<bool>,
-	pub cleaned:         bool,
+	pub cleaned:         Option<bool>,
 }
 
 impl From<FileProgDownload> for TaskSummary {
@@ -264,17 +280,21 @@ impl From<FileProgDownload> for TaskSummary {
 }
 
 impl FileProgDownload {
-	pub fn running(self) -> bool {
-		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
-	}
-
-	pub fn success(self) -> bool {
+	pub fn cooked(self) -> bool {
 		self.collected == Some(true) && self.success_files == self.total_files
 	}
 
-	pub fn failed(self) -> bool { self.collected == Some(false) }
+	pub fn running(self) -> bool {
+		self.collected.is_none()
+			|| self.success_files + self.failed_files != self.total_files
+			|| (self.cleaned.is_none() && self.cooked())
+	}
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
+
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.collected == Some(false) }
+
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
@@ -312,17 +332,19 @@ impl From<FileProgUpload> for TaskSummary {
 }
 
 impl FileProgUpload {
+	pub fn cooked(self) -> bool {
+		self.collected == Some(true) && self.success_files == self.total_files
+	}
+
 	pub fn running(self) -> bool {
 		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
 	}
 
-	pub fn success(self) -> bool {
-		self.collected == Some(true) && self.success_files == self.total_files
-	}
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.collected == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {

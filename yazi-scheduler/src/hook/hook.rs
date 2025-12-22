@@ -3,6 +3,7 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use yazi_dds::Pump;
+use yazi_fs::ok_or_not_found;
 use yazi_proxy::TasksProxy;
 use yazi_vfs::provider;
 
@@ -20,22 +21,26 @@ impl Hook {
 
 	// --- File
 	pub(crate) async fn cut(&self, task: HookInOutCut) {
-		let intact = self.ongoing.lock().intact(task.id);
-		if intact {
-			provider::remove_dir_clean(&task.from).await.ok();
-			Pump::push_move(&task.from, &task.to);
+		if !self.ongoing.lock().intact(task.id) {
+			return;
 		}
-		self.ops.out(task.id, FileOutCut::Clean);
+
+		let result = ok_or_not_found(provider::remove_dir_clean(&task.from).await);
+		Pump::push_move(&task.from, &task.to);
+
+		self.ops.out(task.id, FileOutCut::Clean(result));
 	}
 
 	pub(crate) async fn delete(&self, task: HookInOutDelete) {
-		let intact = self.ongoing.lock().intact(task.id);
-		if intact {
-			provider::remove_dir_all(&task.target).await.ok();
-			TasksProxy::update_succeed(&task.target);
-			Pump::push_delete(&task.target);
+		if !self.ongoing.lock().intact(task.id) {
+			return;
 		}
-		self.ops.out(task.id, FileOutDelete::Clean);
+
+		let result = ok_or_not_found(provider::remove_dir_all(&task.target).await);
+		TasksProxy::update_succeed(&task.target);
+		Pump::push_delete(&task.target);
+
+		self.ops.out(task.id, FileOutDelete::Clean(result));
 	}
 
 	pub(crate) async fn trash(&self, task: HookInOutTrash) {

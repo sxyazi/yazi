@@ -185,7 +185,7 @@ pub async fn remove_dir_clean<U>(url: U) -> io::Result<()>
 where
 	U: AsUrl,
 {
-	Ok(Providers::new(url.as_url()).await?.remove_dir_clean().await)
+	Providers::new(url.as_url()).await?.remove_dir_clean().await
 }
 
 pub async fn remove_file<U>(url: U) -> io::Result<()>
