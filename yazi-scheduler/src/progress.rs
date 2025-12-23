@@ -65,6 +65,30 @@ impl From<TaskProg> for TaskSummary {
 }
 
 impl TaskProg {
+	pub fn cooked(self) -> bool {
+		match self {
+			// File
+			Self::FileCopy(p) => p.cooked(),
+			Self::FileCut(p) => p.cooked(),
+			Self::FileLink(p) => p.cooked(),
+			Self::FileHardlink(p) => p.cooked(),
+			Self::FileDelete(p) => p.cooked(),
+			Self::FileTrash(p) => p.cooked(),
+			Self::FileDownload(p) => p.cooked(),
+			Self::FileUpload(p) => p.cooked(),
+			// Plugin
+			Self::PluginEntry(p) => p.cooked(),
+			// Prework
+			Self::PreworkFetch(p) => p.cooked(),
+			Self::PreworkLoad(p) => p.cooked(),
+			Self::PreworkSize(p) => p.cooked(),
+			// Process
+			Self::ProcessBlock(p) => p.cooked(),
+			Self::ProcessOrphan(p) => p.cooked(),
+			Self::ProcessBg(p) => p.cooked(),
+		}
+	}
+
 	pub fn running(self) -> bool {
 		match self {
 			// File
@@ -137,7 +161,7 @@ impl TaskProg {
 		}
 	}
 
-	pub fn cleaned(self) -> bool {
+	pub fn cleaned(self) -> Option<bool> {
 		match self {
 			// File
 			Self::FileCopy(p) => p.cleaned(),

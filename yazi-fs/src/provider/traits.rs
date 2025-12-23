@@ -126,11 +126,12 @@ pub trait Provider: Sized {
 		}
 	}
 
-	fn remove_dir_clean(&self) -> impl Future<Output = ()> {
+	fn remove_dir_clean(&self) -> impl Future<Output = io::Result<()>> {
 		let root = self.url().to_owned();
 
 		async move {
 			let mut stack = vec![(root, false)];
+			let mut result = Ok(());
 
 			while let Some((dir, visited)) = stack.pop() {
 				let Ok(provider) = Self::new(dir.as_url()).await else {
@@ -138,7 +139,7 @@ pub trait Provider: Sized {
 				};
 
 				if visited {
-					provider.remove_dir().await.ok();
+					result = provider.remove_dir().await;
 				} else if let Ok(mut it) = provider.read_dir().await {
 					stack.push((dir, true));
 					while let Ok(Some(ent)) = it.next().await {
@@ -148,6 +149,7 @@ pub trait Provider: Sized {
 					}
 				}
 			}
+			result
 		}
 	}
 

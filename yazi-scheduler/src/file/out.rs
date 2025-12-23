@@ -1,3 +1,5 @@
+use std::io;
+
 use crate::{Task, TaskProg};
 
 // --- Copy
@@ -82,7 +84,7 @@ pub(crate) enum FileOutCut {
 	Deform(String),
 	Succ,
 	Fail(String),
-	Clean,
+	Clean(io::Result<()>),
 }
 
 impl From<anyhow::Error> for FileOutCut {
@@ -113,8 +115,12 @@ impl FileOutCut {
 				prog.collected = Some(false);
 				task.log(reason);
 			}
-			Self::Clean => {
-				prog.cleaned = true;
+			Self::Clean(Ok(())) => {
+				prog.cleaned = Some(true);
+			}
+			Self::Clean(Err(reason)) => {
+				prog.cleaned = Some(false);
+				task.log(format!("Failed cleaning up cut file: {reason:?}"));
 			}
 		}
 	}
@@ -273,7 +279,7 @@ pub(crate) enum FileOutDelete {
 	New(u64),
 	Succ,
 	Fail(String),
-	Clean,
+	Clean(io::Result<()>),
 }
 
 impl From<anyhow::Error> for FileOutDelete {
@@ -295,8 +301,12 @@ impl FileOutDelete {
 				prog.collected = Some(false);
 				task.log(reason);
 			}
-			Self::Clean => {
-				prog.cleaned = true;
+			Self::Clean(Ok(())) => {
+				prog.cleaned = Some(true);
+			}
+			Self::Clean(Err(reason)) => {
+				prog.cleaned = Some(false);
+				task.log(format!("Failed cleaning up deleted file: {reason:?}"));
 			}
 		}
 	}
@@ -353,7 +363,7 @@ impl FileOutTrash {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = true;
+				prog.cleaned = Some(true);
 			}
 		}
 	}
@@ -394,7 +404,7 @@ impl FileOutDownload {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = true;
+				prog.cleaned = Some(true);
 			}
 		}
 	}

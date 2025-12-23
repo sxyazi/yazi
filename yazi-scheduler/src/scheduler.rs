@@ -392,8 +392,10 @@ impl Scheduler {
 				let Some(task) = ongoing.get_mut(op.id) else { continue };
 
 				op.out.reduce(task);
-				if !task.prog.success() && !task.prog.cleaned() {
-					continue;
+				if !task.prog.cooked() {
+					continue; // Not cooked yet
+				} else if task.prog.cleaned() == Some(false) {
+					continue; // Failed to clean up
 				} else if let Some(hook) = task.hook.take() {
 					micro.try_send(hook, LOW).ok();
 				} else {
