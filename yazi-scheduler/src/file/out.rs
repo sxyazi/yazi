@@ -9,6 +9,7 @@ pub(crate) enum FileOutCopy {
 	Deform(String),
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<anyhow::Error> for FileOutCopy {
@@ -38,6 +39,9 @@ impl FileOutCopy {
 			Self::Fail(reason) => {
 				prog.collected = Some(false);
 				task.log(reason);
+			}
+			Self::Clean => {
+				prog.cleaned = Some(true);
 			}
 		}
 	}

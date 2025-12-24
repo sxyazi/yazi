@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290], [#3369])
 - Allow upgrading only specific packages with `ya pkg` ([#2841])
 - Respect the user's `image_filter` setting in the preset ImageMagick previewer ([#3286])
+- New `duplicate` DDS event for copying files ([#3456])
 - New `ind-sort` and `key-sort` DDS events to change sorting in Lua ([#3391])
 - Allow custom mouse click behavior for individual files ([#2925])
 - Display newlines in input as spaces to improve readability ([#2932])
@@ -1558,3 +1559,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3419]: https://github.com/sxyazi/yazi/pull/3419
 [#3422]: https://github.com/sxyazi/yazi/pull/3422
 [#3429]: https://github.com/sxyazi/yazi/pull/3429
+[#3456]: https://github.com/sxyazi/yazi/pull/3456

@@ -66,7 +66,7 @@ fn expand_variables(p: PathCow) -> PathCow {
 	});
 
 	match (b, p.kind()) {
-		(Cow::Borrowed(_), _) => p.into(),
+		(Cow::Borrowed(_), _) => p,
 		(Cow::Owned(b), PathKind::Os) => {
 			PathBufDyn::Os(std::path::PathBuf::from_wtf8_vec(b).expect("valid WTF-8 path")).into()
 		}
