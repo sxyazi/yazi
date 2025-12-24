@@ -6,7 +6,7 @@ use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
 use yazi_shared::{Id, RoCell, url::{Url, UrlBuf, UrlBufCov}};
 
-use crate::{Client, ID, PEERS, ember::{BodyMoveItem, Ember, EmberBulk, EmberHi}};
+use crate::{Client, ID, PEERS, ember::{BodyDuplicateItem, BodyMoveItem, Ember, EmberBulk, EmberHi}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -156,6 +156,8 @@ impl Pubsub {
 	pub_after!(rename(tab: Id, from: &UrlBuf, to: &UrlBuf), (tab, from, to));
 
 	pub_after!(@yank(cut: bool, urls: &HashSet<UrlBufCov>), (cut, urls));
+
+	pub_after!(duplicate(items: Vec<BodyDuplicateItem>), (&items), (items));
 
 	pub_after!(move(items: Vec<BodyMoveItem>), (&items), (items));
 

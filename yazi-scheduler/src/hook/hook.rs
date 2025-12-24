@@ -7,7 +7,7 @@ use yazi_fs::ok_or_not_found;
 use yazi_proxy::TasksProxy;
 use yazi_vfs::provider;
 
-use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash}, hook::{HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}};
+use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash}, hook::{HookInOutCopy, HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
@@ -26,9 +26,19 @@ impl Hook {
 		}
 
 		let result = ok_or_not_found(provider::remove_dir_clean(&task.from).await);
-		Pump::push_move(&task.from, &task.to);
+		TasksProxy::update_succeed([&task.to, &task.from]);
+		Pump::push_move(task.from, task.to);
 
 		self.ops.out(task.id, FileOutCut::Clean(result));
+	}
+
+	pub(crate) async fn copy(&self, task: HookInOutCopy) {
+		if self.ongoing.lock().intact(task.id) {
+			TasksProxy::update_succeed([&task.to]);
+			Pump::push_duplicate(task.from, task.to);
+		}
+
+		self.ops.out(task.id, FileOutCopy::Clean);
 	}
 
 	pub(crate) async fn delete(&self, task: HookInOutDelete) {
@@ -37,8 +47,8 @@ impl Hook {
 		}
 
 		let result = ok_or_not_found(provider::remove_dir_all(&task.target).await);
-		TasksProxy::update_succeed(&task.target);
-		Pump::push_delete(&task.target);
+		TasksProxy::update_succeed([&task.target]);
+		Pump::push_delete(task.target);
 
 		self.ops.out(task.id, FileOutDelete::Clean(result));
 	}
@@ -46,8 +56,8 @@ impl Hook {
 	pub(crate) async fn trash(&self, task: HookInOutTrash) {
 		let intact = self.ongoing.lock().intact(task.id);
 		if intact {
-			TasksProxy::update_succeed(&task.target);
-			Pump::push_trash(&task.target);
+			TasksProxy::update_succeed([&task.target]);
+			Pump::push_trash(task.target);
 		}
 		self.ops.out(task.id, FileOutTrash::Clean);
 	}

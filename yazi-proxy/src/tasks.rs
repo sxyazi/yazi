@@ -32,7 +32,12 @@ impl TasksProxy {
 		done.future().await;
 	}
 
-	pub fn update_succeed(url: impl Into<UrlBuf>) {
-		emit!(Call(relay!(tasks:update_succeed).with_any("urls", vec![url.into()])));
+	pub fn update_succeed<I>(url: I)
+	where
+		I: IntoIterator,
+		I::Item: Into<UrlBuf>,
+	{
+		let urls: Vec<_> = url.into_iter().map(Into::into).collect();
+		emit!(Call(relay!(tasks:update_succeed).with_any("urls", urls)));
 	}
 }

@@ -34,6 +34,7 @@ impl Runner {
 			TaskIn::ProcessOrphan(r#in) => self.process.orphan(r#in).await.map_err(Into::into),
 			TaskIn::ProcessBg(r#in) => self.process.bg(r#in).await.map_err(Into::into),
 			// Hook
+			TaskIn::HookCopy(r#in) => Ok(self.hook.copy(r#in).await),
 			TaskIn::HookCut(r#in) => Ok(self.hook.cut(r#in).await),
 			TaskIn::HookDelete(r#in) => Ok(self.hook.delete(r#in).await),
 			TaskIn::HookTrash(r#in) => Ok(self.hook.trash(r#in).await),
@@ -63,6 +64,7 @@ impl Runner {
 			TaskIn::ProcessOrphan(_in) => unreachable!(),
 			TaskIn::ProcessBg(_in) => unreachable!(),
 			// Hook
+			TaskIn::HookCopy(_in) => unreachable!(),
 			TaskIn::HookCut(_in) => unreachable!(),
 			TaskIn::HookDelete(_in) => unreachable!(),
 			TaskIn::HookTrash(_in) => unreachable!(),

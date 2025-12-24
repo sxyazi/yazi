@@ -9,7 +9,7 @@ use yazi_shared::{path::PathCow, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlL
 use yazi_vfs::{VfsCha, maybe_exists, must_be_dir, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::HookInOutCut, ok_or_not_found, progress_or_break};
+use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutCut}, ok_or_not_found, progress_or_break};
 
 pub(crate) struct File {
 	ops:     TaskOps,
@@ -33,6 +33,7 @@ impl File {
 				.context("Cannot determine unique destination name")?;
 		}
 
+		self.ops.out(id, HookInOutCopy::from(&task));
 		super::traverse::<FileOutCopy, _, _, _, _, _>(
 			task,
 			async |dir| match provider::create_dir(dir).await {

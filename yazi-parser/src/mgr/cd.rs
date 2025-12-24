@@ -16,7 +16,7 @@ impl From<CmdCow> for CdOpt {
 		let mut target = c.take_first().unwrap_or_default();
 
 		if !c.bool("raw") {
-			target = expand_url(target).into();
+			target = expand_url(target);
 		}
 
 		if let Some(u) = provider::try_absolute(&target)

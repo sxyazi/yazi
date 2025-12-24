@@ -1,4 +1,4 @@
-use crate::{Task, file::{FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
+use crate::{Task, file::{FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
 
 #[derive(Debug)]
 pub(super) enum TaskOut {
@@ -28,6 +28,7 @@ pub(super) enum TaskOut {
 	ProcessOrphan(ProcessOutOrphan),
 	ProcessBg(ProcessOutBg),
 	// Hook
+	HookCopy(HookInOutCopy),
 	HookCut(HookInOutCut),
 	HookDelete(HookInOutDelete),
 	HookTrash(HookInOutTrash),
@@ -44,7 +45,7 @@ impl_from_out! {
 	// Process
 	ProcessBlock(ProcessOutBlock), ProcessOrphan(ProcessOutOrphan), ProcessBg(ProcessOutBg),
 	// Hook
-	HookCut(HookInOutCut), HookDelete(HookInOutDelete), HookTrash(HookInOutTrash), HookDownload(HookInOutDownload),
+	HookCopy(HookInOutCopy), HookCut(HookInOutCut), HookDelete(HookInOutDelete), HookTrash(HookInOutTrash), HookDownload(HookInOutDownload),
 }
 
 impl TaskOut {
@@ -76,6 +77,7 @@ impl TaskOut {
 			Self::ProcessOrphan(out) => out.reduce(task),
 			Self::ProcessBg(out) => out.reduce(task),
 			// Hook
+			Self::HookCopy(out) => out.reduce(task),
 			Self::HookCut(out) => out.reduce(task),
 			Self::HookDelete(out) => out.reduce(task),
 			Self::HookTrash(out) => out.reduce(task),

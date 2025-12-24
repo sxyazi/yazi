@@ -1,6 +1,6 @@
 use yazi_shared::Id;
 
-use crate::{file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload}, hook::{HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}, impl_from_in, plugin::PluginInEntry, prework::{PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan}};
+use crate::{file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload}, hook::{HookInOutCopy, HookInOutCut, HookInOutDelete, HookInOutDownload, HookInOutTrash}, impl_from_in, plugin::PluginInEntry, prework::{PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan}};
 
 #[derive(Debug)]
 pub(crate) enum TaskIn {
@@ -24,6 +24,7 @@ pub(crate) enum TaskIn {
 	ProcessOrphan(ProcessInOrphan),
 	ProcessBg(ProcessInBg),
 	// Hook
+	HookCopy(HookInOutCopy),
 	HookCut(HookInOutCut),
 	HookDelete(HookInOutDelete),
 	HookTrash(HookInOutTrash),
@@ -40,7 +41,7 @@ impl_from_in! {
 	// Process
 	ProcessBlock(ProcessInBlock), ProcessOrphan(ProcessInOrphan), ProcessBg(ProcessInBg),
 	// Hook
-	HookCut(HookInOutCut), HookDelete(HookInOutDelete), HookTrash(HookInOutTrash), HookDownload(HookInOutDownload),
+	HookCopy(HookInOutCopy), HookCut(HookInOutCut), HookDelete(HookInOutDelete), HookTrash(HookInOutTrash), HookDownload(HookInOutDownload),
 }
 
 impl TaskIn {
@@ -66,6 +67,7 @@ impl TaskIn {
 			Self::ProcessOrphan(r#in) => r#in.id,
 			Self::ProcessBg(r#in) => r#in.id,
 			// Hook
+			Self::HookCopy(r#in) => r#in.id,
 			Self::HookCut(r#in) => r#in.id,
 			Self::HookDelete(r#in) => r#in.id,
 			Self::HookTrash(r#in) => r#in.id,
@@ -95,6 +97,7 @@ impl TaskIn {
 			Self::ProcessOrphan(_) => false,
 			Self::ProcessBg(_) => false,
 			// Hook
+			Self::HookCopy(_) => true,
 			Self::HookCut(_) => true,
 			Self::HookDelete(_) => true,
 			Self::HookTrash(_) => true,

@@ -20,7 +20,7 @@ impl From<CmdCow> for TabCreateOpt {
 		};
 
 		if !c.bool("raw") {
-			url = expand_url(url).into();
+			url = expand_url(url);
 		}
 
 		if let Some(u) = provider::try_absolute(&url)
