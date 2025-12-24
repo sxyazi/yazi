@@ -3,7 +3,7 @@ local M = {}
 function M:peek(job)
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
 	local path = tostring(job.file.cache or job.file.url)
-	local output, err = Command(cmd):arg({ "-bL", "--", path }):stdout(Command.PIPED):output()
+	local output, err = Command(cmd):arg({ "-bL", "--", path }):output()
 
 	local text
 	if output then

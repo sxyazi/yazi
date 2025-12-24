@@ -42,7 +42,6 @@ function M:preload(job)
 			"-jpeg", "-jpegopt", "quality=" .. rt.preview.image_quality,
 			tostring(job.file.url), tostring(cache),
 		})
-		:stderr(Command.PIPED)
 		:output()
 
 	if not output then
