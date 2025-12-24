@@ -97,8 +97,8 @@ impl Command {
 	}
 
 	async fn output(&mut self) -> io::Result<std::process::Output> {
-		self.inner.stdin(Stdio::piped());
 		self.inner.stdout(Stdio::piped());
+		self.inner.stderr(Stdio::piped());
 		self.spawn()?.wait_with_output().await
 	}
 
