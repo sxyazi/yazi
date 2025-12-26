@@ -49,8 +49,8 @@ function M:spot_base(job)
 
 	return {
 		ui.Row({ "Base" }):style(ui.Style():fg("green")),
-		ui.Row { "  Created:", cha.btime and os.date("%Y-%m-%d %H:%M", math.floor(cha.btime)) or "-" },
-		ui.Row { "  Modified:", cha.mtime and os.date("%Y-%m-%d %H:%M", math.floor(cha.mtime)) or "-" },
+		ui.Row { "  Created:", cha.btime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.btime)) or "-" },
+		ui.Row { "  Modified:", cha.mtime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.mtime)) or "-" },
 		ui.Row { "  Mimetype:", job.mime },
 		ui.Row {},
 
