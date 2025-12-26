@@ -55,7 +55,7 @@ impl ReadDir {
 
 		let result = self
 			.session
-			.send_with_timeout(requests::ReadDir::new(&self.handle), Duration::from_mins(5))
+			.send_with_timeout(requests::ReadDir::new(&self.handle), Duration::from_mins(45))
 			.await;
 
 		self.name = match result {

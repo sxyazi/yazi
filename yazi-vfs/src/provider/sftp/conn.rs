@@ -1,4 +1,4 @@
-use std::{io, sync::Arc};
+use std::{io, sync::Arc, time::Duration};
 
 use russh::keys::PrivateKeyWithHashAlg;
 use yazi_config::vfs::ServiceSftp;
@@ -53,7 +53,14 @@ impl Conn {
 		use deadpool::managed::PoolError;
 
 		let pool = *super::CONN.lock().entry(self.config).or_insert_with(|| {
-			Box::leak(Box::new(deadpool::managed::Pool::builder(self).max_size(5).build().unwrap()))
+			Box::leak(Box::new(
+				deadpool::managed::Pool::builder(self)
+					.runtime(deadpool::Runtime::Tokio1)
+					.max_size(8)
+					.create_timeout(Some(Duration::from_secs(45)))
+					.build()
+					.unwrap(),
+			))
 		});
 
 		pool.get().await.map_err(|e| match e {
@@ -67,9 +74,8 @@ impl Conn {
 
 	async fn connect(self) -> Result<russh::Channel<russh::client::Msg>, russh::Error> {
 		let pref = Arc::new(russh::client::Config {
-			inactivity_timeout: Some(std::time::Duration::from_secs(30)),
+			inactivity_timeout: Some(std::time::Duration::from_secs(60)),
 			keepalive_interval: Some(std::time::Duration::from_secs(10)),
-			nodelay: true,
 			..Default::default()
 		});
 
