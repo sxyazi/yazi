@@ -6,8 +6,8 @@ use crate::cmp::CmpItem;
 
 #[derive(Debug)]
 pub struct CompleteOpt {
-	pub item:    CmpItem,
-	pub _ticket: Id, // FIXME: not used
+	pub item:   CmpItem,
+	pub ticket: Id,
 }
 
 impl TryFrom<CmdCow> for CompleteOpt {
@@ -18,7 +18,7 @@ impl TryFrom<CmdCow> for CompleteOpt {
 			bail!("Invalid 'item' in CompleteOpt");
 		};
 
-		Ok(Self { item, _ticket: c.get("ticket").unwrap_or_default() })
+		Ok(Self { item, ticket: c.get("ticket").unwrap_or_default() })
 	}
 }
 

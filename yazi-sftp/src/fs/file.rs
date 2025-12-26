@@ -108,7 +108,7 @@ impl AsyncSeek for File {
 			SeekFrom::End(n) => SeekState::Blocking(
 				n,
 				timeout(
-					Duration::from_secs(10),
+					Duration::from_secs(45),
 					self.session.send_sync(requests::Fstat::new(&self.handle))?,
 				),
 			),
@@ -198,7 +198,7 @@ impl AsyncWrite for File {
 
 		if me.flush_rx.is_none() {
 			match Operator::from(&me.session).fsync(&me.handle) {
-				Ok(rx) => me.flush_rx = Some(timeout(Duration::from_secs(10), rx)),
+				Ok(rx) => me.flush_rx = Some(timeout(Duration::from_secs(45), rx)),
 				Err(Error::Unsupported) => return Poll::Ready(Ok(())),
 				Err(e) => Err(e)?,
 			}

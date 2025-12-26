@@ -253,7 +253,10 @@ impl<'a> Executor<'a> {
 					_ => {}
 				}
 			}
-			InputMode::Insert | InputMode::Replace => {}
+			InputMode::Insert => {
+				on!(complete);
+			}
+			InputMode::Replace => {}
 		};
 
 		self.app.core.input.execute(cmd)

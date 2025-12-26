@@ -5,7 +5,7 @@ use yazi_fs::{path::clean_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -74,11 +74,14 @@ impl Trigger {
 		};
 
 		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
-		let scheme = scheme.zeroed();
+		if path.is_empty() && !sep.predicate(s.bytes().last()?) {
+			return None; // We don't complete a `sftp://test`, but `sftp://test/`
+		}
 
-		// We don't complete a `~`, but `~/`
+		// Scheme
+		let scheme = scheme.zeroed();
 		if scheme.is_local() && path.as_strand() == "~" {
-			return None;
+			return None; // We don't complete a `~`, but `~/`
 		}
 
 		// Child
@@ -113,7 +116,9 @@ mod tests {
 	fn test_split() {
 		yazi_shared::init_tests();
 		yazi_fs::init();
-		compare("", "", "");
+
+		assert_eq!(Trigger::split_url(""), None);
+		assert_eq!(Trigger::split_url("sftp://test"), None);
 		compare(" ", "", " ");
 
 		compare("/", "/", "");

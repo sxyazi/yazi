@@ -43,8 +43,6 @@ impl Input {
 
 				on!(backspace);
 				on!(kill);
-
-				on!(complete);
 			}
 			InputMode::Replace => {}
 		}

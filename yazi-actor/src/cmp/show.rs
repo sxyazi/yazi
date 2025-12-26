@@ -29,7 +29,6 @@ impl Actor for Show {
 			succ!();
 		};
 
-		cmp.ticket = opt.ticket;
 		cmp.cands = Self::match_candidates(opt.word.as_path(), cache);
 		if cmp.cands.is_empty() {
 			succ!(render!(mem::replace(&mut cmp.visible, false)));
