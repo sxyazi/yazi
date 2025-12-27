@@ -22,7 +22,9 @@ pub(super) async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::R
 			if let Some(mode) = attrs.mode {
 				writer.set_permissions(mode.into()).ok();
 			}
-			writer.set_times(attrs.into()).ok();
+			if let Ok(times) = attrs.try_into() {
+				writer.set_times(times).ok();
+			}
 
 			Ok(written)
 		})
@@ -34,8 +36,10 @@ pub(super) async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::R
 		tokio::task::spawn_blocking(move || {
 			let written = std::fs::copy(from, &to)?;
 
-			if let Ok(file) = std::fs::File::options().write(true).open(to) {
-				file.set_times(attrs.into()).ok();
+			if let Ok(times) = attrs.try_into()
+				&& let Ok(file) = std::fs::File::options().write(true).open(to)
+			{
+				file.set_times(times).ok();
 			}
 
 			Ok(written)

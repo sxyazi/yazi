@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Zoom in or out of the preview image ([#2864])
 - Improve the UX of the pick and input components ([#2906], [#2935])
 - Show progress of each task in task manager ([#3121], [#3131], [#3134])
+- New `fs.copy()` and `fs.rename()` APIs ([#3467])
 - New experimental `ya.async()` API ([#3422])
 - New `overall` option to set the overall background color ([#3317])
 - Rounded corners for indicator bar ([#3419])
@@ -1560,3 +1561,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3422]: https://github.com/sxyazi/yazi/pull/3422
 [#3429]: https://github.com/sxyazi/yazi/pull/3429
 [#3456]: https://github.com/sxyazi/yazi/pull/3456
+[#3467]: https://github.com/sxyazi/yazi/pull/3467

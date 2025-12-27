@@ -69,7 +69,7 @@ impl FileBuilder for Gate {
 		};
 
 		let flags = Flags::from(*self);
-		let attrs = super::Attrs(self.0.attrs).into();
+		let attrs = super::Attrs(self.0.attrs).try_into().unwrap_or_default();
 		Ok(Conn { name, config }.roll().await?.open(path, flags, &attrs).await?)
 	}
 
