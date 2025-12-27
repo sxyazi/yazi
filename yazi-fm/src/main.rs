@@ -1,4 +1,4 @@
-#[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+#[cfg(all(not(target_os = "macos"), not(target_os = "windows"), not(target_os = "openbsd")))]
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
