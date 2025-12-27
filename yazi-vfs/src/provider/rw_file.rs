@@ -28,18 +28,22 @@ impl RwFile {
 	pub async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
 		match self {
 			Self::Tokio(f) => {
+				let (perm, times) = (attrs.try_into(), attrs.try_into());
+				if perm.is_err() && times.is_err() {
+					return Ok(());
+				}
+
 				let std = f.try_clone().await?.into_std().await;
 				tokio::task::spawn_blocking(move || {
-					#[cfg(unix)]
-					if let Some(mode) = attrs.mode {
-						std.set_permissions(mode.into()).ok();
-					}
-					std.set_times(attrs.into()).ok();
+					perm.map(|p| std.set_permissions(p)).ok();
+					times.map(|t| std.set_times(t)).ok();
 				})
 				.await?;
 			}
 			Self::Sftp(f) => {
-				f.fsetstat(&super::sftp::Attrs(attrs).into()).await?;
+				if let Ok(attrs) = super::sftp::Attrs(attrs).try_into() {
+					f.fsetstat(&attrs).await?;
+				}
 			}
 		}
 

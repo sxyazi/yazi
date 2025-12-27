@@ -3,7 +3,7 @@ use std::str::FromStr;
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_config::Pattern;
-use yazi_fs::{mounts::PARTITIONS, provider::{DirReader, FileHolder}};
+use yazi_fs::{mounts::PARTITIONS, provider::{Attrs, DirReader, FileHolder}};
 use yazi_shared::url::{UrlCow, UrlLike};
 use yazi_vfs::{VfsFile, provider};
 
@@ -15,9 +15,11 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"op" => op(lua)?,
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
+			b"copy" => copy(lua)?,
 			b"write" => write(lua)?,
 			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
+			b"rename" => rename(lua)?,
 			b"read_dir" => read_dir(lua)?,
 			b"calc_size" => calc_size(lua)?,
 			b"expand_url" => expand_url(lua)?,
@@ -64,6 +66,15 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
+fn copy(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
+		match provider::copy(&*from, &*to, Attrs::default()).await {
+			Ok(len) => len.into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
 fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match provider::write(&*url, data.as_bytes()).await {
@@ -99,6 +110,15 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
+			Ok(()) => true.into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
+fn rename(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
+		match provider::rename(&*from, &*to).await {
 			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}

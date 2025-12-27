@@ -5,17 +5,21 @@ use yazi_fs::cha::ChaKind;
 // --- Attrs
 pub(crate) struct Attrs(pub(crate) yazi_fs::provider::Attrs);
 
-impl From<Attrs> for yazi_sftp::fs::Attrs {
-	fn from(attrs: Attrs) -> Self {
-		Self {
+impl TryFrom<Attrs> for yazi_sftp::fs::Attrs {
+	type Error = ();
+
+	fn try_from(value: Attrs) -> Result<Self, Self::Error> {
+		let attrs = Self {
 			size:     None,
 			uid:      None,
 			gid:      None,
-			perm:     attrs.0.mode.map(|m| m.bits() as u32),
-			atime:    attrs.0.atime_dur().map(|d| d.as_secs() as u32),
-			mtime:    attrs.0.mtime_dur().map(|d| d.as_secs() as u32),
+			perm:     value.0.mode.map(|m| m.bits() as u32),
+			atime:    value.0.atime_dur().map(|d| d.as_secs() as u32),
+			mtime:    value.0.mtime_dur().map(|d| d.as_secs() as u32),
 			extended: Default::default(),
-		}
+		};
+
+		if attrs.is_empty() { Err(()) } else { Ok(attrs) }
 	}
 }
 

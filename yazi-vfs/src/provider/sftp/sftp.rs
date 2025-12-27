@@ -78,7 +78,7 @@ impl<'a> Provider for Sftp<'a> {
 		P: AsPath,
 	{
 		let to = to.as_path().as_unix()?;
-		let attrs = Attrs::from(super::Attrs(attrs));
+		let attrs = super::Attrs(attrs).try_into().unwrap_or_default();
 
 		let op = self.op().await?;
 		let from = op.open(self.path, Flags::READ, &Attrs::default()).await?;
@@ -89,7 +89,10 @@ impl<'a> Provider for Sftp<'a> {
 		let written = tokio::io::copy(&mut reader, &mut writer).await?;
 
 		writer.flush().await?;
-		writer.get_ref().fsetstat(&attrs).await.ok();
+		if !attrs.is_empty() {
+			writer.get_ref().fsetstat(&attrs).await.ok();
+		}
+
 		writer.shutdown().await.ok();
 		Ok(written)
 	}
