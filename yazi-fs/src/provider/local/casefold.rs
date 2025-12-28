@@ -47,6 +47,7 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
+#[allow(irrefutable_let_patterns)]
 fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	use std::{ffi::{CString, OsStr, OsString}, fs::File, os::{fd::{AsRawFd, FromRawFd}, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}};
 
@@ -94,18 +95,18 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 		}
 	}
 
-	if let Some(i) = names.iter().position(|n| n == name) {
+	if names.iter().find(|&n| n == name).is_some() {
 		// Exact match
 		Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())))
 	} else if names.len() == 1 {
 		// No hardlink that shares the same inode
-		Ok(parent.join(names[0]))
+		Ok(parent.join(&names[0]))
 	} else if let mut it = names.iter().enumerate().filter(|&(_, n)| n.eq_ignore_ascii_case(name))
 		&& let Some((i, _)) = it.next()
 		&& it.next().is_none()
 	{
 		// Case-insensitive match
-		Ok(parent.join(names[i]))
+		Ok(parent.join(&names[i]))
 	} else {
 		Err(io::Error::from(io::ErrorKind::NotFound))
 	}
