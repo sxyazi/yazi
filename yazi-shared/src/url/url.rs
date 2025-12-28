@@ -269,14 +269,25 @@ impl<'a> Url<'a> {
 
 		Ok(match self {
 			Self::Regular(_) => UrlBuf::Regular(joined.into_os()?.into()),
-			Self::Search { loc, domain } => UrlBuf::Search {
+
+			Self::Search { loc, domain } if joined.try_starts_with(loc.base())? => UrlBuf::Search {
 				loc:    LocBuf::<PathBuf>::new(joined.try_into()?, loc.base(), loc.base()),
 				domain: domain.intern(),
 			},
-			Self::Archive { loc, domain } => UrlBuf::Archive {
+			Self::Search { domain, .. } => UrlBuf::Search {
+				loc:    LocBuf::<PathBuf>::zeroed(joined.into_os()?),
+				domain: domain.intern(),
+			},
+
+			Self::Archive { loc, domain } if joined.try_starts_with(loc.base())? => UrlBuf::Archive {
 				loc:    LocBuf::<PathBuf>::floated(joined.try_into()?, loc.base()),
 				domain: domain.intern(),
 			},
+			Self::Archive { domain, .. } => UrlBuf::Archive {
+				loc:    LocBuf::<PathBuf>::zeroed(joined.into_os()?),
+				domain: domain.intern(),
+			},
+
 			Self::Sftp { domain, .. } => {
 				UrlBuf::Sftp { loc: joined.into_unix()?.into(), domain: domain.intern() }
 			}

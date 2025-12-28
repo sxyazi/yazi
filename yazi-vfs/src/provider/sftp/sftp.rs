@@ -64,6 +64,8 @@ impl<'a> Provider for Sftp<'a> {
 				return Ok(entry.url());
 			} else if similar.is_none() {
 				similar = Some(s.into_owned());
+			} else {
+				return Err(io::Error::from(io::ErrorKind::NotFound));
 			}
 		}
 

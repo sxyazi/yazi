@@ -42,5 +42,8 @@ function Progress:redraw()
 	end
 
 	label = label .. string.format("%d left", summary.total - summary.success)
-	return gauge:percent(percent):label(ui.Span(label):style(th.status.progress_label))
+	return {
+		ui.Clear(self._area),
+		gauge:percent(percent):label(ui.Span(label):style(th.status.progress_label)),
+	}
 end

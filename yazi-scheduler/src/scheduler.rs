@@ -392,8 +392,8 @@ impl Scheduler {
 				let Some(task) = ongoing.get_mut(op.id) else { continue };
 
 				op.out.reduce(task);
-				if !task.prog.cooked() {
-					continue; // Not cooked yet
+				if !task.prog.cooked() && task.done.completed() != Some(false) {
+					continue; // Not cooked yet, also not canceled
 				} else if task.prog.cleaned() == Some(false) {
 					continue; // Failed to clean up
 				} else if let Some(hook) = task.hook.take() {
