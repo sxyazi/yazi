@@ -54,7 +54,7 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 
 	let cstr = CString::new(path.into_os_string().into_vec())?;
 	let path = Path::new(OsStr::from_bytes(cstr.as_bytes()));
-	let Some(parent) = path.parent() else {
+	let Some((parent, name)) = path.parent().zip(path.file_name()) else {
 		return Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())));
 	};
 
@@ -64,34 +64,48 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	};
 
 	// Fast path: if the `/proc/self/fd/N` matches
-	let oss = path.as_os_str();
 	if let Ok(p) = std::fs::read_link(format!("/proc/self/fd/{}", file.as_raw_fd()))
-		&& let Some(b) = p.as_os_str().as_bytes().get(..oss.len())
-		&& b.eq_ignore_ascii_case(oss.as_bytes())
+		&& let path = path.as_os_str()
+		&& let Some(b) = p.as_os_str().as_bytes().get(..path.len())
+		&& b.eq_ignore_ascii_case(path.as_bytes())
 	{
 		let mut b = p.into_os_string().into_vec();
-		b.truncate(oss.len());
+		b.truncate(path.len());
 		return Ok(PathBuf::from(OsString::from_vec(b)));
 	}
 
-	// Fallback: scan the directory for matching inodes
+	// Fast path: if the file isn't a symlink
 	let meta = file.metadata()?;
-	let mut entries: Vec<_> = std::fs::read_dir(parent)?
-		.filter_map(Result::ok)
-		.filter_map(|e| e.metadata().ok().map(|m| (e, m)))
-		.filter(|(_, m)| m.dev() == meta.dev() && m.ino() == meta.ino())
-		.map(|(e, _)| e.path())
-		.collect();
+	if !meta.is_symlink()
+		&& let Some(n) = path.canonicalize()?.file_name()
+	{
+		return Ok(parent.join(n));
+	}
 
-	if entries.len() == 1 {
-		// No hardlink that shares the same inode
-		Ok(entries.remove(0))
-	} else if let Some(i) = entries.iter().position(|p| p == path) {
+	// Fallback: scan the directory for matching inodes
+	let mut names = vec![];
+	for entry in std::fs::read_dir(parent)? {
+		let entry = entry?;
+		if let m = entry.metadata()?
+			&& m.ino() == meta.ino()
+			&& m.dev() == meta.dev()
+		{
+			names.push(entry.file_name());
+		}
+	}
+
+	if let Some(i) = names.iter().position(|n| n == name) {
 		// Exact match
-		Ok(entries.swap_remove(i))
-	} else if let Some(i) = entries.iter().position(|p| p.as_os_str().eq_ignore_ascii_case(oss)) {
+		Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())))
+	} else if names.len() == 1 {
+		// No hardlink that shares the same inode
+		Ok(parent.join(names[0]))
+	} else if let mut it = names.iter().enumerate().filter(|&(_, n)| n.eq_ignore_ascii_case(name))
+		&& let Some((i, _)) = it.next()
+		&& it.next().is_none()
+	{
 		// Case-insensitive match
-		Ok(entries.swap_remove(i))
+		Ok(parent.join(names[i]))
 	} else {
 		Err(io::Error::from(io::ErrorKind::NotFound))
 	}

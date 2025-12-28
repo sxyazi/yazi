@@ -17,6 +17,14 @@ pub enum JoinError {
 	FromPathDyn(#[from] PathDynError),
 }
 
+impl From<StartsWithError> for JoinError {
+	fn from(err: StartsWithError) -> Self {
+		match err {
+			StartsWithError::FromStrand(e) => Self::FromStrand(e),
+		}
+	}
+}
+
 impl From<JoinError> for std::io::Error {
 	fn from(err: JoinError) -> Self { Self::other(err) }
 }
