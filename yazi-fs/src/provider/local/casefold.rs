@@ -87,18 +87,19 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	let mut names = vec![];
 	for entry in std::fs::read_dir(parent)? {
 		let entry = entry?;
-		if let m = entry.metadata()?
+		let n = entry.file_name(); // TODO: use `file_name_ref()` when stabilized
+
+		if n == name {
+			return Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())));
+		} else if let m = entry.metadata()?
 			&& m.ino() == meta.ino()
 			&& m.dev() == meta.dev()
 		{
-			names.push(entry.file_name());
+			names.push(n);
 		}
 	}
 
-	if names.iter().find(|&n| n == name).is_some() {
-		// Exact match
-		Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())))
-	} else if names.len() == 1 {
+	if names.len() == 1 {
 		// No hardlink that shares the same inode
 		Ok(parent.join(&names[0]))
 	} else if let mut it = names.iter().enumerate().filter(|&(_, n)| n.eq_ignore_ascii_case(name))
