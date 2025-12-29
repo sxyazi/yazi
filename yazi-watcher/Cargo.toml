@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-watcher"
-version     = "25.9.15"
+version     = "25.12.29"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -12,13 +12,13 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "25.9.15" }
-yazi-dds     = { path = "../yazi-dds", version = "25.9.15" }
-yazi-fs      = { path = "../yazi-fs", version = "25.9.15" }
-yazi-macro   = { path = "../yazi-macro", version = "25.9.15" }
-yazi-proxy   = { path = "../yazi-proxy", version = "25.9.15" }
-yazi-shared  = { path = "../yazi-shared", version = "25.9.15" }
-yazi-vfs     = { path = "../yazi-vfs", version = "25.9.15" }
+yazi-adapter = { path = "../yazi-adapter", version = "25.12.29" }
+yazi-dds     = { path = "../yazi-dds", version = "25.12.29" }
+yazi-fs      = { path = "../yazi-fs", version = "25.12.29" }
+yazi-macro   = { path = "../yazi-macro", version = "25.12.29" }
+yazi-proxy   = { path = "../yazi-proxy", version = "25.12.29" }
+yazi-shared  = { path = "../yazi-shared", version = "25.12.29" }
+yazi-vfs     = { path = "../yazi-vfs", version = "25.12.29" }
 
 # Logging
 tracing = { workspace = true }

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-cli"
-version     = "25.9.15"
+version     = "25.12.29"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -22,11 +22,11 @@ inherits = "release"
 panic    = "unwind"
 
 [dependencies]
-yazi-boot   = { path = "../yazi-boot", version = "25.9.15" }
-yazi-dds    = { path = "../yazi-dds", version = "25.9.15" }
-yazi-fs     = { path = "../yazi-fs", version = "25.9.15" }
-yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
-yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
+yazi-boot   = { path = "../yazi-boot", version = "25.12.29" }
+yazi-dds    = { path = "../yazi-dds", version = "25.12.29" }
+yazi-fs     = { path = "../yazi-fs", version = "25.12.29" }
+yazi-macro  = { path = "../yazi-macro", version = "25.12.29" }
+yazi-shared = { path = "../yazi-shared", version = "25.12.29" }
 
 # External dependencies
 anyhow     = { workspace = true }
@@ -39,7 +39,7 @@ toml       = { workspace = true }
 twox-hash  = { workspace = true }
 
 [build-dependencies]
-yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
+yazi-shared = { path = "../yazi-shared", version = "25.12.29" }
 
 # External build dependencies
 anyhow                = { workspace = true }
