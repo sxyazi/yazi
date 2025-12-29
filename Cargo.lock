@@ -5320,7 +5320,7 @@ checksum = "7a5a4b21e1a62b67a2970e6831bc091d7b87e119e7f9791aef9702e3bef04448"
 
 [[package]]
 name = "yazi-actor"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
@@ -5353,7 +5353,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adapter"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5375,7 +5375,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-binding"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "ansi-to-tui",
  "futures",
@@ -5396,7 +5396,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "clap",
  "clap_complete",
@@ -5416,14 +5416,14 @@ dependencies = [
 
 [[package]]
 name = "yazi-build"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "yazi-term",
 ]
 
 [[package]]
 name = "yazi-cli"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "clap",
@@ -5446,7 +5446,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "quote",
  "syn 2.0.111",
@@ -5454,7 +5454,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "bitflags 2.10.0",
@@ -5478,7 +5478,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
@@ -5508,7 +5508,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "hashbrown",
@@ -5533,7 +5533,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -5544,7 +5544,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -5584,7 +5584,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5615,15 +5615,15 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "25.9.15"
+version = "25.12.29"
 
 [[package]]
 name = "yazi-packing"
-version = "25.9.15"
+version = "25.12.29"
 
 [[package]]
 name = "yazi-parser"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "bitflags 2.10.0",
@@ -5644,7 +5644,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
@@ -5689,7 +5689,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "tokio",
@@ -5701,7 +5701,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -5730,7 +5730,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-sftp"
-version = "0.1.0"
+version = "25.12.29"
 dependencies = [
  "bitflags 2.10.0",
  "parking_lot",
@@ -5742,7 +5742,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
@@ -5765,7 +5765,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shim"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "twox-hash",
  "yazi-macro",
@@ -5773,7 +5773,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-term"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "crossterm 0.29.0",
  "libc",
@@ -5786,7 +5786,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-vfs"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "deadpool",
@@ -5806,7 +5806,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-watcher"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "hashbrown",
@@ -5827,7 +5827,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-widgets"
-version = "25.9.15"
+version = "25.12.29"
 dependencies = [
  "anyhow",
  "base64",
@@ -5888,9 +5888,9 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "1.0.0"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6d6085d62852e35540689d1f97ad663e3971fc19cf5eceab364d62c646ea167"
+checksum = "0f4a4e8e9dc5c62d159f04fcdbe07f4c3fb710415aab4754bf11505501e3251d"
 
 [[package]]
 name = "zune-core"
