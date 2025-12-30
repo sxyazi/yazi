@@ -63,7 +63,7 @@ impl Clipboard {
 		let all = [
 			("pbcopy", &[][..]),
 			("termux-clipboard-set", &[]),
-			("wl-copy", &["-t", "text/plain; charset=utf-8"]),
+			("wl-copy", &["-t", "text/plain"]),
 			("xclip", &["-selection", "clipboard"]),
 			("xsel", &["-ib"]),
 		];
