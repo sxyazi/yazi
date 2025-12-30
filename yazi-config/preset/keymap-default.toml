@@ -43,9 +43,9 @@ keymap = [
 	{ on = "L", run = "forward", desc = "Forward to next directory" },
 
 	# Toggle
-	{ on = "<Space>", run = [ "toggle", "arrow next" ], desc = "Toggle the current selection state" },
-	{ on = "<C-a>",   run = "toggle_all --state=on",    desc = "Select all files" },
-	{ on = "<C-r>",   run = "toggle_all",               desc = "Invert selection of all files" },
+	{ on = "<Space>", run = [ "toggle", "arrow 1" ], desc = "Toggle the current selection state" },
+	{ on = "<C-a>",   run = "toggle_all --state=on", desc = "Select all files" },
+	{ on = "<C-r>",   run = "toggle_all",            desc = "Invert selection of all files" },
 
 	# Visual mode
 	{ on = "v", run = "visual_mode",         desc = "Enter visual mode (selection mode)" },

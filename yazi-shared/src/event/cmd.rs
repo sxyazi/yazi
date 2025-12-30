@@ -214,23 +214,22 @@ impl Cmd {
 impl Display for Cmd {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name)?;
+
+		for i in 0..self.args.len() {
+			let Ok(s) = self.get::<&str>(i) else { break };
+			write!(f, " {s}")?;
+		}
+
 		for (k, v) in &self.args {
-			match k {
-				DataKey::Integer(_) => {
-					if let Some(s) = v.as_str() {
-						write!(f, " {s}")?;
-					}
+			if let DataKey::String(k) = k {
+				if v.try_into().is_ok_and(|b| b) {
+					write!(f, " --{k}")?;
+				} else if let Some(s) = v.as_str() {
+					write!(f, " --{k}={s}")?;
 				}
-				DataKey::String(k) => {
-					if v.try_into().is_ok_and(|b| b) {
-						write!(f, " --{k}")?;
-					} else if let Some(s) = v.as_str() {
-						write!(f, " --{k}={s}")?;
-					}
-				}
-				_ => {}
 			}
 		}
+
 		Ok(())
 	}
 }

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-sftp"
-version     = "0.1.0"
+version     = "25.12.29"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "AspectUnk", "sxyazi <sxyazi@gmail.com>" ]

@@ -19,7 +19,7 @@ impl Actor for Reveal {
 		// Cd to the parent directory
 		act!(mgr:cd, cx, (parent, opt.source))?;
 
-		// Try to hover on the child file
+		// Try to hover over the child file
 		let tab = cx.tab_mut();
 		render!(tab.current.hover(child));
 
@@ -30,7 +30,7 @@ impl Actor for Reveal {
 			tab.current.update_pub(tab.id, op);
 		}
 
-		// Now, we can safely hover on the target
+		// Now, we can safely hover over the target
 		act!(mgr:hover, cx, Some(child.into()))?;
 
 		act!(mgr:peek, cx)?;
