@@ -1,12 +1,14 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_fs::{FsHash64, FsHash128};
-use yazi_shared::{path::StripPrefixError, scheme::SchemeCow, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_fs::{FsHash64, FsHash128, FsUrl};
+use yazi_shared::{path::{PathLike, StripPrefixError}, scheme::SchemeCow, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlCow, UrlLike}};
 
 use crate::{Path, Scheme, cached_field, deprecate};
 
 pub type UrlRef = UserDataRef<Url>;
+
+const EXPECTED: &str = "expected a string, Url, or Path";
 
 pub struct Url {
 	inner: yazi_shared::url::UrlBuf,
@@ -21,16 +23,14 @@ pub struct Url {
 
 	v_scheme: Option<Value>,
 	v_domain: Option<Value>,
+
+	v_cache: Option<Value>,
 }
 
 impl Deref for Url {
 	type Target = yazi_shared::url::UrlBuf;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
-}
-
-impl AsRef<yazi_shared::url::UrlBuf> for Url {
-	fn as_ref(&self) -> &yazi_shared::url::UrlBuf { &self.inner }
 }
 
 impl AsUrl for Url {
@@ -74,6 +74,8 @@ impl Url {
 
 			v_scheme: None,
 			v_domain: None,
+
+			v_cache: None,
 		}
 	}
 
@@ -83,8 +85,16 @@ impl Url {
 			lua.create_function(|_, value: Value| {
 				Ok(match value {
 					Value::String(s) => Self::try_from(&*s.as_bytes())?,
-					Value::UserData(ud) => Self::new(&ud.borrow::<Self>()?.inner),
-					_ => Err("Expected a string or a Url".into_lua_err())?,
+					Value::UserData(ud) => {
+						if let Ok(url) = ud.borrow::<Self>() {
+							Self::new(&url.inner)
+						} else if let Ok(path) = ud.borrow::<Path>() {
+							Self::new(path.as_os().into_lua_err()?)
+						} else {
+							Err(EXPECTED.into_lua_err())?
+						}
+					}
+					_ => Err(EXPECTED.into_lua_err())?,
 				})
 			})?,
 		)
@@ -173,16 +183,18 @@ impl UserData for Url {
 		cached_field!(fields, ext, |lua, me| {
 			me.ext().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
 		cached_field!(fields, urn, |_, me| Ok(Path::new(me.urn())));
 		cached_field!(fields, base, |_, me| {
 			Ok(Some(me.base()).filter(|u| !u.loc().is_empty()).map(Self::new))
 		});
+		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
 
 		cached_field!(fields, scheme, |_, me| Ok(Scheme::new(me.scheme())));
 		cached_field!(fields, domain, |lua, me| {
 			me.scheme().domain().map(|s| lua.create_string(s)).transpose()
 		});
+
+		cached_field!(fields, cache, |_, me| Ok(me.cache().map(Path::new)));
 
 		fields.add_field_method_get("frag", |lua, me| {
 			deprecate!(lua, "`frag` property of Url is deprecated and renamed to `domain`, please use the new name instead, in your {}");

@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Added
+
+- Support VFS for preset previewers that rely on external commands ([#3477])
+
 ## [v25.12.29]
 
 ### Added
@@ -1552,6 +1556,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3313]: https://github.com/sxyazi/yazi/pull/3313
 [#3317]: https://github.com/sxyazi/yazi/pull/3317
 [#3360]: https://github.com/sxyazi/yazi/pull/3360
+[#3361]: https://github.com/sxyazi/yazi/pull/3361
 [#3364]: https://github.com/sxyazi/yazi/pull/3364
 [#3369]: https://github.com/sxyazi/yazi/pull/3369
 [#3383]: https://github.com/sxyazi/yazi/pull/3383
@@ -1565,3 +1570,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3429]: https://github.com/sxyazi/yazi/pull/3429
 [#3456]: https://github.com/sxyazi/yazi/pull/3456
 [#3467]: https://github.com/sxyazi/yazi/pull/3467
+[#3477]: https://github.com/sxyazi/yazi/pull/3477

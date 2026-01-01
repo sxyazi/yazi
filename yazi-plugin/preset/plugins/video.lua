@@ -38,7 +38,7 @@ function M:preload(job)
 		return true
 	end
 
-	local meta, err = self.list_meta(job.file.url, "format=duration:stream_disposition=attached_pic")
+	local meta, err = self.list_meta(job.file.path, "format=duration:stream_disposition=attached_pic")
 	if not meta then
 		return true, err
 	elseif not meta.format.duration then
@@ -59,7 +59,7 @@ function M:preload(job)
 	if percent ~= 0 then
 		cmd:arg { "-ss", math.floor(meta.format.duration * percent / 100) }
 	end
-	cmd:arg { "-skip_frame", "nokey", "-i", tostring(job.file.url) }
+	cmd:arg { "-skip_frame", "nokey", "-i", tostring(job.file.path) }
 	if percent == 0 then
 		cmd:arg { "-map", "disp:attached_pic" }
 	end
@@ -101,7 +101,7 @@ function M:spot(job)
 end
 
 function M:spot_base(job)
-	local meta, err = self.list_meta(job.file.url, "format=duration:stream=codec_name,codec_type,width,height")
+	local meta, err = self.list_meta(job.file.path, "format=duration:stream=codec_name,codec_type,width,height")
 	if not meta then
 		ya.err(tostring(err))
 		return {}
@@ -126,13 +126,13 @@ function M:spot_base(job)
 	return rows
 end
 
-function M.list_meta(url, entries)
+function M.list_meta(path, entries)
 	local cmd = Command("ffprobe"):arg { "-v", "quiet" }
 	if not entries:find("attached_pic", 1, true) then
 		cmd:arg { "-select_streams", "v" }
 	end
 
-	local output, err = cmd:arg({ "-show_entries", entries, "-of", "json=c=1", tostring(url) }):output()
+	local output, err = cmd:arg({ "-show_entries", entries, "-of", "json=c=1", tostring(path) }):output()
 	if not output then
 		return nil, Err("Failed to start `ffprobe`, error: %s", err)
 	end

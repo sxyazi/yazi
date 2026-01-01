@@ -25,7 +25,7 @@ function M:preload(job)
 		return true
 	end
 
-	local cmd = M.with_limit():arg(tostring(job.file.url))
+	local cmd = M.with_limit():arg(tostring(job.file.path))
 	if job.args.flatten then
 		cmd:arg("-flatten")
 	end

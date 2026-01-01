@@ -19,6 +19,7 @@ pub(super) struct File {
 	v_link_to: Option<Value>,
 
 	v_name:  Option<Value>,
+	v_path:  Option<Value>,
 	v_cache: Option<Value>,
 
 	v_bare: Option<Value>,
@@ -55,6 +56,7 @@ impl File {
 					v_link_to: None,
 
 					v_name: None,
+					v_path: None,
 					v_cache: None,
 
 					v_bare: None,

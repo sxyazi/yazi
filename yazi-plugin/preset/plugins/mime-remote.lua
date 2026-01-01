@@ -21,7 +21,7 @@ function M:fetch(job)
 			-- Skip dummy files
 		elseif not file.cache then
 			unknown[#unknown + 1] = file
-		elseif not fs.cha(file.cache) then
+		elseif not fs.cha(Url(file.cache)) then
 			updates[file.url], state[i] = "vfs/absent", true
 		elseif stale_cache(file) then
 			updates[file.url], state[i] = "vfs/stale", true
