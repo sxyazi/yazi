@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Support VFS for preset previewers that rely on external commands ([#3477])
 
+### Fixed
+
+- `ya pkg` fails to write `package.toml` when the config directory does not exist ([#3482])
+
 ## [v25.12.29]
 
 ### Added
@@ -1571,3 +1575,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3456]: https://github.com/sxyazi/yazi/pull/3456
 [#3467]: https://github.com/sxyazi/yazi/pull/3467
 [#3477]: https://github.com/sxyazi/yazi/pull/3477
+[#3482]: https://github.com/sxyazi/yazi/pull/3482
