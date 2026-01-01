@@ -213,9 +213,14 @@ macro_rules! impl_file_fields {
 		$crate::cached_field!($fields, name, |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
+		$crate::cached_field!($fields, path, |_, me| {
+			use yazi_fs::FsUrl;
+			use yazi_shared::url::AsUrl;
+			Ok($crate::Path::new(me.url.as_url().unified_path()))
+		});
 		$crate::cached_field!($fields, cache, |_, me| {
 			use yazi_fs::FsUrl;
-			Ok(me.url.cache().map($crate::Url::new))
+			Ok(me.url.cache().map($crate::Path::new))
 		});
 	};
 }

@@ -17,6 +17,7 @@ pub struct File {
 	v_link_to: Option<Value>,
 
 	v_name:  Option<Value>,
+	v_path:  Option<Value>,
 	v_cache: Option<Value>,
 }
 
@@ -37,8 +38,10 @@ impl File {
 			v_cha:     None,
 			v_url:     None,
 			v_link_to: None,
-			v_name:    None,
-			v_cache:   None,
+
+			v_name:  None,
+			v_path:  None,
+			v_cache: None,
 		}
 	}
 

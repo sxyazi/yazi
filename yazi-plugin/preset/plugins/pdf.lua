@@ -40,7 +40,7 @@ function M:preload(job)
 			"-l", job.skip + 1,
 			"-singlefile",
 			"-jpeg", "-jpegopt", "quality=" .. rt.preview.image_quality,
-			tostring(job.file.url), tostring(cache),
+			tostring(job.file.path), tostring(cache),
 		})
 		:output()
 

@@ -9,7 +9,7 @@ function M:fetch(job)
 		if file.cache then
 			urls[i], paths[i] = tostring(file.url), tostring(file.cache)
 		else
-			paths[i] = tostring(file.url.path)
+			paths[i] = tostring(file.path)
 		end
 	end
 

@@ -37,7 +37,7 @@ function M:preload(job)
 		cmd = cmd:memory(rt.tasks.image_alloc)
 	end
 
-	local child, err = cmd:arg({ tostring(job.file.url), tostring(cache) }):spawn()
+	local child, err = cmd:arg({ tostring(job.file.path), tostring(cache) }):spawn()
 	if not child then
 		return true, Err("Failed to start `resvg`, error: %s", err)
 	end

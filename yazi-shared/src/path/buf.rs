@@ -1,4 +1,4 @@
-use std::{ffi::OsString, hash::{Hash, Hasher}};
+use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
 
@@ -21,6 +21,10 @@ impl From<typed_path::UnixPathBuf> for PathBufDyn {
 
 impl From<PathDyn<'_>> for PathBufDyn {
 	fn from(value: PathDyn<'_>) -> Self { value.to_owned() }
+}
+
+impl From<Cow<'_, std::path::Path>> for PathBufDyn {
+	fn from(value: Cow<'_, std::path::Path>) -> Self { Self::Os(value.into_owned()) }
 }
 
 impl TryFrom<PathBufDyn> for std::path::PathBuf {

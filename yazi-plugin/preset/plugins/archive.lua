@@ -2,7 +2,7 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local files, bound, err = self.list_files({ "-p", tostring(job.file.url) }, job.skip, limit)
+	local files, bound, err = self.list_files({ "-p", tostring(job.file.path) }, job.skip, limit)
 
 	if err then
 		return ya.preview_widget(job, err)
@@ -168,6 +168,6 @@ end
 
 function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
-function M.is_tar(url) return M.list_meta { "-p", tostring(url) } == "tar" end
+function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
 return M
