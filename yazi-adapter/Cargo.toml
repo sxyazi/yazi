@@ -24,6 +24,7 @@ anyhow      = { workspace = true }
 base64      = { workspace = true }
 crossterm   = { workspace = true }
 image       = { version = "0.25.9", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
+moxcms      = "0.7.11"
 palette     = { version = "0.7.6", default-features = false }
 quantette   = { version = "0.5.1", default-features = false }
 ratatui     = { workspace = true }

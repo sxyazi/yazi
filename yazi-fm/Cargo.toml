@@ -64,7 +64,7 @@ tracing-subscriber = { version = "0.3.22", features = [ "env-filter" ] }
 
 [target."cfg(unix)".dependencies]
 libc              = { workspace = true }
-signal-hook-tokio = { version = "0.3.1", features = [ "futures-v0_3" ] }
+signal-hook-tokio = { version = "0.4.0", features = [ "futures-v0_3" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

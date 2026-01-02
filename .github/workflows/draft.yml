@@ -230,6 +230,7 @@ jobs:
           echo 'NIGHTLY_BODY<<EOF' >> $GITHUB_ENV
           echo "From commit: ${GITHUB_SHA:0:8}" >> $GITHUB_ENV
           echo "Generated on: $(date -u +"%Y-%m-%d %H:%M") UTC" >> $GITHUB_ENV
+          echo "Nightly changelog: https://github.com/sxyazi/yazi/blob/main/CHANGELOG.md#unreleased" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - uses: actions/checkout@v6
