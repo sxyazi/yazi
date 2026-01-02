@@ -1,15 +1,20 @@
 use anyhow::Context;
-use image::{ColorType, DynamicImage, GrayAlphaImage, GrayImage, ImageDecoder, RgbImage, RgbaImage, metadata::Cicp};
-use moxcms::{CicpColorPrimaries, ColorProfile, Layout, TransferCharacteristics, TransformOptions};
+use image::{
+	ColorType, DynamicImage, GrayAlphaImage, GrayImage, ImageDecoder, RgbImage, RgbaImage,
+	metadata::Cicp,
+};
+use moxcms::{
+	CicpColorPrimaries, ColorProfile, DataColorSpace, Layout, TransferCharacteristics,
+	TransformOptions,
+};
 
 pub(super) struct Icc;
-
 impl Icc {
 	pub(super) fn transform(mut decoder: impl ImageDecoder) -> anyhow::Result<DynamicImage> {
 		if let Some(layout) = Self::color_type_to_layout(decoder.color_type())
 			&& let Some(icc) = decoder.icc_profile().unwrap_or_default()
 			&& let Ok(profile) = ColorProfile::new_from_slice(&icc)
-			&& !Self::is_srgb(&profile)
+			&& Self::requires_transform(&profile)
 		{
 			let mut buf = vec![0u8; decoder.total_bytes() as usize];
 			let (w, h) = decoder.dimensions();
@@ -57,10 +62,11 @@ impl Icc {
 		}
 	}
 
-	fn is_srgb(profile: &ColorProfile) -> bool {
-		profile.cicp.is_some_and(|c| {
-			c.color_primaries == CicpColorPrimaries::Bt709
-				&& c.transfer_characteristics == TransferCharacteristics::Srgb
-		})
+	fn requires_transform(profile: &ColorProfile) -> bool {
+		!(profile.color_space == DataColorSpace::Cmyk
+			|| profile.cicp.is_some_and(|c| {
+				c.color_primaries == CicpColorPrimaries::Bt709
+					&& c.transfer_characteristics == TransferCharacteristics::Srgb
+			}))
 	}
 }
