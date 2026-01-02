@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Added
 
 - Support VFS for preset previewers that rely on external commands ([#3477])
-- Support 8-bit images in CMYK, CIELAB, and GRAY color spaces ([#3358])
+- Support 8-bit images in RGB, CIELAB, and GRAY color spaces ([#3358])
 
 ### Fixed
 

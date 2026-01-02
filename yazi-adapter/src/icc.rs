@@ -1,12 +1,6 @@
 use anyhow::Context;
-use image::{
-	ColorType, DynamicImage, GrayAlphaImage, GrayImage, ImageDecoder, RgbImage, RgbaImage,
-	metadata::Cicp,
-};
-use moxcms::{
-	CicpColorPrimaries, ColorProfile, DataColorSpace, Layout, TransferCharacteristics,
-	TransformOptions,
-};
+use image::{ColorType, DynamicImage, GrayAlphaImage, GrayImage, ImageDecoder, RgbImage, RgbaImage, metadata::Cicp};
+use moxcms::{CicpColorPrimaries, ColorProfile, DataColorSpace, Layout, TransferCharacteristics, TransformOptions};
 
 pub(super) struct Icc;
 impl Icc {
@@ -63,10 +57,13 @@ impl Icc {
 	}
 
 	fn requires_transform(profile: &ColorProfile) -> bool {
-		!(profile.color_space == DataColorSpace::Cmyk
-			|| profile.cicp.is_some_and(|c| {
-				c.color_primaries == CicpColorPrimaries::Bt709
-					&& c.transfer_characteristics == TransferCharacteristics::Srgb
-			}))
+		if profile.color_space == DataColorSpace::Cmyk {
+			return false;
+		}
+
+		profile.cicp.is_none_or(|c| {
+			c.color_primaries != CicpColorPrimaries::Bt709
+				|| c.transfer_characteristics != TransferCharacteristics::Srgb
+		})
 	}
 }
