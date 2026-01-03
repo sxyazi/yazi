@@ -6,7 +6,7 @@ use yazi_vfs::provider::{self};
 
 use crate::{ctx, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInUpload}};
 
-trait Traverse {
+pub(super) trait Traverse {
 	fn cha(&mut self) -> &mut Option<Cha>;
 
 	fn follow(&self) -> bool;

@@ -106,6 +106,13 @@ where
 	Providers::new(url.as_url()).await?.create_dir_all().await
 }
 
+pub async fn create_new<U>(url: U) -> io::Result<RwFile>
+where
+	U: AsUrl,
+{
+	Providers::new(url.as_url()).await?.create_new().await
+}
+
 pub async fn hard_link<U, V>(original: U, link: V) -> io::Result<()>
 where
 	U: AsUrl,

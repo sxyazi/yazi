@@ -16,7 +16,7 @@ macro_rules! ok_or_not_found {
 		match $result {
 			Ok(v) => v,
 			Err(e) if e.kind() == std::io::ErrorKind::NotFound => $not_found,
-			Err(e) => ctx!($task, Err(e))?,
+			Err(e) => $crate::ctx!($task, Err(e))?,
 		}
 	};
 	($task:ident, $result:expr) => {

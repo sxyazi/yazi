@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - `ya pkg` fails to write `package.toml` when the config directory does not exist ([#3482])
+- A race condition generating unique filenames for concurrent file operations ([#3494])
 
 ## [v25.12.29]
 
@@ -1578,3 +1579,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3467]: https://github.com/sxyazi/yazi/pull/3467
 [#3477]: https://github.com/sxyazi/yazi/pull/3477
 [#3482]: https://github.com/sxyazi/yazi/pull/3482
+[#3494]: https://github.com/sxyazi/yazi/pull/3494

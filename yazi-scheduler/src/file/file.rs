@@ -1,15 +1,15 @@
-use std::{hash::{BuildHasher, Hash, Hasher}, mem};
+use std::mem;
 
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::path_relative_to, provider::{Attrs, FileHolder, Provider, local::Local}};
-use yazi_shared::{path::PathCow, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
-use yazi_vfs::{VfsCha, maybe_exists, must_be_dir, provider::{self, DirEntry}, unique_name};
+use yazi_shared::{path::PathCow, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_vfs::{VfsCha, maybe_exists, provider::{self, DirEntry}, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutCut}, ok_or_not_found, progress_or_break};
+use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut}, ok_or_not_found, progress_or_break};
 
 pub(crate) struct File {
 	ops:     TaskOps,
@@ -28,7 +28,7 @@ impl File {
 		let id = task.id;
 
 		if !task.force {
-			task.to = unique_name(task.to, must_be_dir(&task.from))
+			task.to = unique_file(mem::take(&mut task.to), task.init().await?.is_dir())
 				.await
 				.context("Cannot determine unique destination name")?;
 		}
@@ -59,7 +59,7 @@ impl File {
 	}
 
 	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ok_or_not_found!(task, provider::remove_file(&task.to).await);
+		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut it =
 			ctx!(task, provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await)?;
 
@@ -91,7 +91,7 @@ impl File {
 		let id = task.id;
 
 		if !task.force {
-			task.to = unique_name(mem::take(&mut task.to), must_be_dir(&task.from))
+			task.to = unique_file(mem::take(&mut task.to), task.init().await?.is_dir())
 				.await
 				.context("Cannot determine unique destination name")?;
 		}
@@ -149,7 +149,7 @@ impl File {
 	}
 
 	pub(crate) async fn cut_do(&self, mut task: FileInCut) -> Result<(), FileOutCutDo> {
-		ok_or_not_found!(task, provider::remove_file(&task.to).await);
+		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut it =
 			ctx!(task, provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await)?;
 
@@ -182,9 +182,8 @@ impl File {
 
 	pub(crate) async fn link(&self, mut task: FileInLink) -> Result<(), FileOutLink> {
 		if !task.force {
-			task.to = unique_name(task.to, must_be_dir(&task.from))
-				.await
-				.context("Cannot determine unique destination name")?;
+			task.to =
+				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
 		Ok(self.queue(task, NORMAL))
@@ -229,9 +228,8 @@ impl File {
 		let id = task.id;
 
 		if !task.force {
-			task.to = unique_name(task.to, must_be_dir(&task.from))
-				.await
-				.context("Cannot determine unique destination name")?;
+			task.to =
+				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
 		super::traverse::<FileOutHardlink, _, _, _, _, _>(
@@ -338,7 +336,7 @@ impl File {
 		let cha = task.cha.unwrap();
 
 		let cache = ctx!(task, task.url.cache(), "Cannot determine cache path")?;
-		let cache_tmp = ctx!(task, Self::tmp(&cache).await, "Cannot determine download cache")?;
+		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
 		let mut it = ctx!(task, provider::copy_with_progress(&task.url, &cache_tmp, cha).await)?;
 		loop {
@@ -413,7 +411,8 @@ impl File {
 			Err(anyhow!("Failed to work on: {task:?}: remote file has changed since last download"))?;
 		}
 
-		let tmp = ctx!(task, Self::tmp(&task.url).await, "Cannot determine temporary upload path")?;
+		let tmp =
+			ctx!(task, Transaction::tmp(&task.url).await, "Cannot determine temporary upload path")?;
 		let mut it = ctx!(
 			task,
 			provider::copy_with_progress(cache, &tmp, Attrs {
@@ -460,22 +459,6 @@ impl File {
 			provider::symlink_metadata(url.as_url()).await?
 		};
 		Ok(if follow { Cha::from_follow(url, cha).await } else { cha })
-	}
-
-	async fn tmp<U>(url: U) -> io::Result<UrlBuf>
-	where
-		U: AsUrl,
-	{
-		let url = url.as_url();
-		let Some(parent) = url.parent() else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Url has no parent"))?
-		};
-
-		let mut h = foldhash::fast::FixedState::default().build_hasher();
-		url.hash(&mut h);
-		timestamp_us().hash(&mut h);
-
-		unique_name(parent.try_join(format!(".{:x}.%tmp", h.finish()))?, async { false }).await
 	}
 }
 

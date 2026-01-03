@@ -76,6 +76,10 @@ pub trait Provider: Sized {
 		}
 	}
 
+	fn create_new(&self) -> impl Future<Output = io::Result<Self::File>> {
+		async move { self.gate().write(true).create_new(true).open(self.url()).await }
+	}
+
 	fn gate(&self) -> Self::Gate { Self::Gate::default() }
 
 	fn hard_link<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
