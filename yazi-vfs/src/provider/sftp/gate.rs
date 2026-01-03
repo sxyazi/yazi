@@ -68,9 +68,20 @@ impl FileBuilder for Gate {
 			_ => Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not an SFTP URL: {url:?}")))?,
 		};
 
+		let conn = Conn { name, config }.roll().await?;
 		let flags = Flags::from(*self);
 		let attrs = super::Attrs(self.0.attrs).try_into().unwrap_or_default();
-		Ok(Conn { name, config }.roll().await?.open(path, flags, &attrs).await?)
+
+		let result = conn.open(path, flags, &attrs).await;
+		if self.0.create_new
+			&& let Err(yazi_sftp::Error::Status(status)) = &result
+			&& status.is_failure()
+			&& conn.lstat(path).await.is_ok()
+		{
+			return Err(io::Error::from(io::ErrorKind::AlreadyExists));
+		}
+
+		Ok(result?)
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {
