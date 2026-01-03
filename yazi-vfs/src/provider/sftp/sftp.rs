@@ -117,7 +117,17 @@ impl<'a> Provider for Sftp<'a> {
 	}
 
 	async fn create_dir(&self) -> io::Result<()> {
-		Ok(self.op().await?.mkdir(self.path, Attrs::default()).await?)
+		let op = self.op().await?;
+		let result = op.mkdir(self.path, Attrs::default()).await;
+
+		if let Err(yazi_sftp::Error::Status(status)) = &result
+			&& status.is_failure()
+			&& op.lstat(self.path).await.is_ok()
+		{
+			return Err(io::Error::from(io::ErrorKind::AlreadyExists));
+		}
+
+		Ok(result?)
 	}
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
