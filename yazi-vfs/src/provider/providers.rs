@@ -87,6 +87,13 @@ impl<'a> Provider for Providers<'a> {
 		}
 	}
 
+	async fn create_new(&self) -> io::Result<Self::File> {
+		Ok(match self {
+			Self::Local(p) => p.create_new().await?.into(),
+			Self::Sftp(p) => p.create_new().await?.into(),
+		})
+	}
+
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
 		P: AsPath,
