@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-plugin"
-version     = "25.12.29"
+version     = "26.1.4"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -16,19 +16,19 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "25.12.29" }
-yazi-binding = { path = "../yazi-binding", version = "25.12.29" }
-yazi-boot    = { path = "../yazi-boot", version = "25.12.29" }
-yazi-config  = { path = "../yazi-config", version = "25.12.29" }
-yazi-dds     = { path = "../yazi-dds", version = "25.12.29" }
-yazi-fs      = { path = "../yazi-fs", version = "25.12.29" }
-yazi-macro   = { path = "../yazi-macro", version = "25.12.29" }
-yazi-parser  = { path = "../yazi-parser", version = "25.12.29" }
-yazi-proxy   = { path = "../yazi-proxy", version = "25.12.29" }
-yazi-shared  = { path = "../yazi-shared", version = "25.12.29" }
-yazi-shim    = { path = "../yazi-shim", version = "25.12.29" }
-yazi-vfs     = { path = "../yazi-vfs", version = "25.12.29" }
-yazi-widgets = { path = "../yazi-widgets", version = "25.12.29" }
+yazi-adapter = { path = "../yazi-adapter", version = "26.1.4" }
+yazi-binding = { path = "../yazi-binding", version = "26.1.4" }
+yazi-boot    = { path = "../yazi-boot", version = "26.1.4" }
+yazi-config  = { path = "../yazi-config", version = "26.1.4" }
+yazi-dds     = { path = "../yazi-dds", version = "26.1.4" }
+yazi-fs      = { path = "../yazi-fs", version = "26.1.4" }
+yazi-macro   = { path = "../yazi-macro", version = "26.1.4" }
+yazi-parser  = { path = "../yazi-parser", version = "26.1.4" }
+yazi-proxy   = { path = "../yazi-proxy", version = "26.1.4" }
+yazi-shared  = { path = "../yazi-shared", version = "26.1.4" }
+yazi-shim    = { path = "../yazi-shim", version = "26.1.4" }
+yazi-vfs     = { path = "../yazi-vfs", version = "26.1.4" }
+yazi-widgets = { path = "../yazi-widgets", version = "26.1.4" }
 
 # External dependencies
 anyhow        = { workspace = true }
