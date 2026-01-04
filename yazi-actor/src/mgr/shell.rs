@@ -40,7 +40,7 @@ impl Actor for Shell {
 
 			TasksProxy::open_shell_compat(ProcessOpenOpt {
 				cwd:    cwd.into(),
-				cmd:    Splatter::new(&selected).splat(opt.run.as_ref()),
+				cmd:    Splatter::new(&selected).splat(&*opt.run),
 				args:   selected,
 				block:  opt.block,
 				orphan: opt.orphan,

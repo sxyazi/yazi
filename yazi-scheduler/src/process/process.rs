@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
-use scopeguard::defer;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
+use yazi_binding::Permit;
 use yazi_proxy::{AppProxy, HIDER};
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
@@ -11,17 +11,16 @@ pub(crate) struct Process {
 }
 
 impl Process {
-	pub(crate) fn new(tx: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: tx.into() } }
+	pub(crate) fn new(ops: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: ops.into() } }
 
 	pub(crate) async fn block(&self, task: ProcessInBlock) -> Result<(), ProcessOutBlock> {
-		let _permit = HIDER.acquire().await.unwrap();
-		defer!(AppProxy::resume());
+		let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());
 		let result = super::shell(task.into()).await;
 		if let Err(e) = result {
-			AppProxy::notify_warn(&cmd.to_string_lossy(), format!("Failed to start process: {e}"));
+			AppProxy::notify_warn(cmd.to_string_lossy(), format!("Failed to start process: {e}"));
 			return Ok(self.ops.out(id, ProcessOutBlock::Succ));
 		}
 
@@ -32,7 +31,7 @@ impl Process {
 				Some(code) => format!("Process exited with status code: {code}"),
 				None => "Process terminated by signal".to_string(),
 			};
-			AppProxy::notify_warn(&cmd.to_string_lossy(), &content);
+			AppProxy::notify_warn(cmd.to_string_lossy(), content);
 		}
 
 		Ok(self.ops.out(id, ProcessOutBlock::Succ))
@@ -55,14 +54,13 @@ impl Process {
 		})
 		.await?;
 
+		let done = task.done;
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
-		let mut cancel = task.cancel;
 		loop {
 			select! {
-				_ = cancel.recv() => {
+				false = done.future() => {
 					child.start_kill().ok();
-					cancel.close();
 					break;
 				}
 				Ok(Some(line)) = stdout.next_line() => {

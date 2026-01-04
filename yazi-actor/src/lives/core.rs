@@ -50,7 +50,7 @@ impl UserData for Core {
 					}
 				};
 			}
-			Ok(match key.as_bytes().as_ref() {
+			Ok(match &*key.as_bytes() {
 				b"active" => reuse!(active, super::Tab::make(me.active())),
 				b"tabs" => reuse!(tabs, super::Tabs::make(&me.mgr.tabs)),
 				b"tasks" => reuse!(tasks, super::Tasks::make(&me.tasks)),

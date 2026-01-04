@@ -1,7 +1,7 @@
 use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_fs::{Files, Filter, FilterCase};
-use yazi_shared::{path::{AsPathDyn, PathBufDyn, PathLike}, url::UrlBuf};
+use yazi_shared::{path::{AsPath, PathBufDyn}, url::UrlBuf};
 
 use crate::tab::Folder;
 
@@ -62,7 +62,7 @@ impl Finder {
 				continue;
 			}
 
-			self.matched.insert(file.urn().owned(), i);
+			self.matched.insert(file.urn().into(), i);
 			if self.matched.len() > 99 {
 				break;
 			}
@@ -78,9 +78,9 @@ impl Finder {
 impl Finder {
 	pub fn matched_idx<T>(&self, folder: &Folder, urn: T) -> Option<u8>
 	where
-		T: AsPathDyn,
+		T: AsPath,
 	{
-		if self.lock == *folder { self.matched.get(&urn.as_path_dyn()).copied() } else { None }
+		if self.lock == *folder { self.matched.get(&urn.as_path()).copied() } else { None }
 	}
 }
 

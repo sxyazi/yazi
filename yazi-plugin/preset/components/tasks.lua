@@ -62,10 +62,16 @@ function Tasks:redraw()
 end
 
 function Tasks:icon(snap)
-	if snap.prog.kind == "FilePaste" then
-		return "  "
+	if snap.prog.kind == "FileCopy" then
+		return "  "
+	elseif snap.prog.kind == "FileCut" then
+		return "  "
 	elseif snap.prog.kind == "FileDelete" then
 		return "  "
+	elseif snap.prog.kind == "FileDownload" then
+		return "  "
+	elseif snap.prog.kind == "FileUpload" then
+		return "  "
 	else
 		return "  "
 	end
@@ -73,9 +79,15 @@ end
 
 function Tasks:progress_redraw(snap, y)
 	local kind = snap.prog.kind
-	if kind == "FilePaste" or kind == "FileDelete" then
+	if
+		kind == "FileCopy"
+		or kind == "FileCut"
+		or kind == "FileDelete"
+		or kind == "FileDownload"
+		or kind == "FileUpload"
+	then
 		local percent
-		if snap.success then
+		if snap.cooked then
 			percent = "Cleaning…"
 		else
 			percent = string.format("%3d%%", math.floor(snap.percent))
@@ -89,7 +101,7 @@ function Tasks:progress_redraw(snap, y)
 		)
 
 		local style = th.status.progress_normal
-		if snap.prog.failed_files > 0 then
+		if snap.failed or snap.prog.failed_files > 0 then
 			style = th.status.progress_error
 		end
 
@@ -107,10 +119,10 @@ function Tasks:progress_redraw(snap, y)
 		}
 	else
 		local text
-		if snap.running then
-			text = "Running…"
-		elseif snap.success then
+		if snap.cooked then
 			text = "Cleaning…"
+		elseif snap.running then
+			text = "Running…"
 		else
 			text = "Failed, press Enter to view log…"
 		end

@@ -4,6 +4,7 @@ use anyhow::Result;
 use crossterm::{execute, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
+use yazi_binding::Permit;
 use yazi_macro::succ;
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER};
@@ -26,7 +27,7 @@ impl Actor for Inspect {
 		};
 
 		tokio::spawn(async move {
-			let _permit = HIDER.acquire().await.unwrap();
+			let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
 			let (tx, mut rx) = mpsc::unbounded_channel();
 
 			let buffered = {
@@ -37,9 +38,7 @@ impl Actor for Inspect {
 				task.logs.clone()
 			};
 
-			defer!(AppProxy::resume());
 			AppProxy::stop().await;
-
 			terminal_clear(TTY.writer()).ok();
 			TTY.writer().write_all(buffered.as_bytes()).ok();
 			TTY.writer().flush().ok();

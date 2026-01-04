@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url, deprecate};
 use yazi_config::THEME;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
@@ -9,6 +9,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"mgr" => mgr(),
 			b"tabs" => tabs(),
 			b"mode" => mode(),
+			b"indicator" => indicator(),
 			b"status" => status(),
 			b"which" => which(),
 			b"confirm" => confirm(),
@@ -50,8 +51,20 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 		match key {
 			b"cwd" => Style::from(m.cwd).into_lua(lua),
 
-			b"hovered" => Style::from(m.hovered).into_lua(lua),
-			b"preview_hovered" => Style::from(m.preview_hovered).into_lua(lua),
+			b"hovered" => {
+				deprecate!(
+					lua,
+					"`th.mgr.hovered` is deprecated, use `th.indicator.current` instead, in your {}\nSee #3419 for more details: https://github.com/sxyazi/yazi/pull/3419"
+				);
+				Style::from(THEME.indicator.current).into_lua(lua)
+			}
+			b"preview_hovered" => {
+				deprecate!(
+					lua,
+					"`th.mgr.preview_hovered` is deprecated, use `th.indicator.preview` instead, in your {}\nSee #3419 for more details: https://github.com/sxyazi/yazi/pull/3419"
+				);
+				Style::from(THEME.indicator.preview).into_lua(lua)
+			}
 
 			b"find_keyword" => Style::from(m.find_keyword).into_lua(lua),
 			b"find_position" => Style::from(m.find_position).into_lua(lua),
@@ -121,6 +134,29 @@ fn mode() -> Composer<ComposerGet, ComposerSet> {
 
 			b"unset_main" => Style::from(t.unset_main).into_lua(lua),
 			b"unset_alt" => Style::from(t.unset_alt).into_lua(lua),
+
+			_ => Ok(Value::Nil),
+		}
+	}
+
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+
+	Composer::new(get, set)
+}
+
+fn indicator() -> Composer<ComposerGet, ComposerSet> {
+	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
+		let t = &THEME.indicator;
+		match key {
+			b"parent" => Style::from(t.parent).into_lua(lua),
+			b"current" => Style::from(t.current).into_lua(lua),
+			b"preview" => Style::from(t.preview).into_lua(lua),
+			b"padding" => lua
+				.create_table_from([
+					("open", lua.create_string(&t.padding.open)?),
+					("close", lua.create_string(&t.padding.close)?),
+				])?
+				.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}

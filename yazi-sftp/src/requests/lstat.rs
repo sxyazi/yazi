@@ -1,19 +1,19 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, Error, ToByteStr};
+use crate::{AsSftpPath, SftpPath};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Lstat<'a> {
 	pub id:   u32,
-	pub path: ByteStr<'a>,
+	pub path: SftpPath<'a>,
 }
 
 impl Lstat<'_> {
-	pub fn new<'a, P>(path: P) -> Result<Lstat<'a>, Error>
+	pub fn new<'a, P>(path: P) -> Lstat<'a>
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		Ok(Lstat { id: 0, path: path.to_byte_str()? })
+		Lstat { id: 0, path: path.as_sftp_path() }
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() }

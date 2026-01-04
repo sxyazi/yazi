@@ -1,10 +1,10 @@
-use std::{mem, sync::Arc};
+use std::{mem, sync::Arc, time::Duration};
 
-use crate::{ByteStr, Error, Session, fs::DirEntry, requests, responses};
+use crate::{Error, Operator, Session, SftpPath, fs::DirEntry, requests, responses};
 
 pub struct ReadDir {
 	session: Arc<Session>,
-	dir:     Arc<ByteStr<'static>>,
+	dir:     Arc<typed_path::UnixPathBuf>,
 	handle:  String,
 
 	name:   responses::Name<'static>,
@@ -12,8 +12,12 @@ pub struct ReadDir {
 	done:   bool,
 }
 
+impl Drop for ReadDir {
+	fn drop(&mut self) { Operator::from(&self.session).close(&self.handle).ok(); }
+}
+
 impl ReadDir {
-	pub(crate) fn new(session: &Arc<Session>, dir: ByteStr, handle: String) -> Self {
+	pub(crate) fn new(session: &Arc<Session>, dir: SftpPath, handle: String) -> Self {
 		Self {
 			session: session.clone(),
 			dir: Arc::new(dir.into_owned()),
@@ -33,11 +37,11 @@ impl ReadDir {
 			};
 
 			self.cursor += 1;
-			if item.name != "." && item.name != ".." {
+			if &*item.name != b"." && &*item.name != b".." {
 				return Ok(Some(DirEntry {
 					dir:       self.dir.clone(),
-					name:      item.name,
-					long_name: item.long_name,
+					name:      item.name.into_owned(),
+					long_name: item.long_name.into_owned(),
 					attrs:     item.attrs,
 				}));
 			}
@@ -49,7 +53,12 @@ impl ReadDir {
 			return Ok(());
 		}
 
-		self.name = match self.session.send(requests::ReadDir::new(&self.handle)).await {
+		let result = self
+			.session
+			.send_with_timeout(requests::ReadDir::new(&self.handle), Duration::from_mins(45))
+			.await;
+
+		self.name = match result {
 			Ok(resp) => resp,
 			Err(Error::Status(status)) if status.is_eof() => {
 				self.done = true;

@@ -9,7 +9,7 @@ use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
 use yazi_parser::mgr::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
-use yazi_shared::{pool::Symbol, url::UrlBuf};
+use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 #[derive(Default)]

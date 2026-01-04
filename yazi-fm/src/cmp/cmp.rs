@@ -4,6 +4,7 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, L
 use yazi_adapter::Dimension;
 use yazi_config::{THEME, popup::{Offset, Position}};
 use yazi_core::Core;
+use yazi_shared::strand::StrandLike;
 
 pub(crate) struct Cmp<'a> {
 	core: &'a Core,

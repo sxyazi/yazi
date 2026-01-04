@@ -1,7 +1,7 @@
 use std::{mem, ops::{Deref, DerefMut, Not}};
 
 use hashbrown::{HashMap, HashSet};
-use yazi_shared::{Id, path::{PathBufDyn, PathBufLike, PathDyn, PathLike}};
+use yazi_shared::{Id, path::{PathBufDyn, PathDyn}};
 
 use super::{FilesSorter, Filter, IgnoreFilter};
 use crate::{FILES_TICKET, File, SortBy};
@@ -99,7 +99,7 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn().owned(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn().to_owned(), f)).collect();
 				for f in &$dist {
 					if todo.remove(&f.urn()).is_some() && todo.is_empty() {
 						break;
@@ -123,18 +123,17 @@ impl Files {
 
 	#[cfg(unix)]
 	pub fn update_deleting(&mut self, urns: HashSet<PathBufDyn>) -> Vec<usize> {
+		use yazi_shared::path::PathLike;
 		if urns.is_empty() {
 			return vec![];
 		}
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
-			urns
-				.into_iter()
-				.partition(|u| (!self.show_hidden && u.borrow().is_hidden()) || !filter.matches(u))
+			urns.into_iter().partition(|u| (!self.show_hidden && u.is_hidden()) || !filter.matches(u))
 		} else if self.show_hidden {
 			(HashSet::new(), urns)
 		} else {
-			urns.into_iter().partition(|u| u.borrow().is_hidden())
+			urns.into_iter().partition(|u| u.is_hidden())
 		};
 
 		let mut deleted = Vec::with_capacity(items.len());
@@ -230,7 +229,7 @@ impl Files {
 		}
 
 		self.update_deleting(
-			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn().owned()).collect(),
+			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn().into()).collect(),
 		);
 
 		let (hidden, items) = self.update_updating(files);

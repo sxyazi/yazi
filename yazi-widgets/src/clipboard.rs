@@ -1,5 +1,3 @@
-use std::ffi::OsString;
-
 use parking_lot::Mutex;
 use yazi_shared::RoCell;
 
@@ -7,14 +5,12 @@ pub static CLIPBOARD: RoCell<Clipboard> = RoCell::new();
 
 #[derive(Default)]
 pub struct Clipboard {
-	content: Mutex<OsString>,
+	content: Mutex<Vec<u8>>,
 }
 
 impl Clipboard {
 	#[cfg(unix)]
-	pub async fn get(&self) -> OsString {
-		use std::os::unix::prelude::OsStringExt;
-
+	pub async fn get(&self) -> Vec<u8> {
 		use tokio::process::Command;
 		use yazi_shared::in_ssh_connection;
 
@@ -35,26 +31,26 @@ impl Clipboard {
 				continue;
 			};
 			if output.status.success() {
-				return OsString::from_vec(output.stdout);
+				return output.stdout;
 			}
 		}
 		self.content.lock().clone()
 	}
 
 	#[cfg(windows)]
-	pub async fn get(&self) -> OsString {
-		use clipboard_win::{formats, get_clipboard};
+	pub async fn get(&self) -> Vec<u8> {
+		use clipboard_win::get_clipboard_string;
 
-		let result = tokio::task::spawn_blocking(|| get_clipboard::<String, _>(formats::Unicode));
+		let result = tokio::task::spawn_blocking(get_clipboard_string);
 		if let Ok(Ok(s)) = result.await {
-			return s.into();
+			return s.into_bytes();
 		}
 
 		self.content.lock().clone()
 	}
 
 	#[cfg(unix)]
-	pub async fn set(&self, s: impl AsRef<std::ffi::OsStr>) {
+	pub async fn set(&self, s: impl AsRef<[u8]>) {
 		use std::process::Stdio;
 
 		use crossterm::execute;
@@ -84,7 +80,7 @@ impl Clipboard {
 			let Ok(mut child) = cmd else { continue };
 
 			let mut stdin = child.stdin.take().unwrap();
-			if stdin.write_all(s.as_ref().as_encoded_bytes()).await.is_err() {
+			if stdin.write_all(s.as_ref()).await.is_err() {
 				continue;
 			}
 			drop(stdin);
@@ -96,13 +92,13 @@ impl Clipboard {
 	}
 
 	#[cfg(windows)]
-	pub async fn set(&self, s: impl AsRef<std::ffi::OsStr>) {
-		use clipboard_win::{formats, set_clipboard};
+	pub async fn set(&self, s: impl AsRef<[u8]>) {
+		use clipboard_win::set_clipboard_string;
 
-		let s = s.as_ref().to_owned();
-		*self.content.lock() = s.clone();
+		let b = s.as_ref().to_owned();
+		*self.content.lock() = b.clone();
 
-		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()))
+		tokio::task::spawn_blocking(move || set_clipboard_string(&String::from_utf8_lossy(&b)))
 			.await
 			.ok();
 	}
@@ -110,8 +106,6 @@ impl Clipboard {
 
 #[cfg(unix)]
 mod osc52 {
-	use std::ffi::OsStr;
-
 	use base64::{Engine, engine::general_purpose};
 
 	#[derive(Debug)]
@@ -120,8 +114,8 @@ mod osc52 {
 	}
 
 	impl SetClipboard {
-		pub fn new(content: &OsStr) -> Self {
-			Self { content: general_purpose::STANDARD.encode(content.as_encoded_bytes()) }
+		pub fn new(content: &[u8]) -> Self {
+			Self { content: general_purpose::STANDARD.encode(content) }
 		}
 	}
 

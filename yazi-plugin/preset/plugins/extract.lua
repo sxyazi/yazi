@@ -66,7 +66,7 @@ function M:try_with(from, pwd, to)
 	if not output then
 		fail("7zip failed to output when extracting '%s', error: %s", from, err)
 	elseif output.status.code ~= 0 then
-		fail("7zip exited when extracting '%s', error code %s", from, output.status.code)
+		fail("7zip exited with error code %s when extracting '%s':\n%s", output.status.code, from, output.stderr)
 	end
 end
 

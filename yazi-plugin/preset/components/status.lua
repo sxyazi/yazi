@@ -64,7 +64,7 @@ function Status:name()
 		return ""
 	end
 
-	return " " .. h.name:gsub("\r", "?", 1)
+	return " " .. ui.printable(h.name)
 end
 
 function Status:perm()

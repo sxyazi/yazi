@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-term"
-version     = "25.9.15"
+version     = "26.1.4"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -8,9 +8,12 @@ description = "Yazi terminal extensions"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [dependencies]
-yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
-yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
+yazi-macro  = { path = "../yazi-macro", version = "26.1.4" }
+yazi-shared = { path = "../yazi-shared", version = "26.1.4" }
 
 # Logging
 tracing = { workspace = true }

@@ -1,5 +1,3 @@
-#![allow(clippy::if_same_then_else, clippy::unit_arg)]
-
 #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
@@ -39,5 +37,6 @@ async fn main() -> anyhow::Result<()> {
 	yazi_plugin::init()?;
 
 	yazi_dds::serve();
-	app::App::serve().await
+
+	yazi_shared::LOCAL_SET.run_until(app::App::serve()).await
 }

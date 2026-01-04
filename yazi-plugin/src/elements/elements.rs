@@ -1,19 +1,23 @@
+use std::borrow::Cow;
+
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}, runtime};
 use yazi_config::LAYOUT;
 use yazi_proxy::{AppProxy, HIDER};
+use yazi_shared::replace_to_printable;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"area" => area(lua)?,
 			b"hide" => hide(lua)?,
-			b"width" => width(lua)?,
+			b"printable" => printable(lua)?,
 			b"redraw" => redraw(lua)?,
 			b"render" => render(lua)?,
 			b"truncate" => truncate(lua)?,
+			b"width" => width(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
@@ -27,7 +31,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_function(|_, s: mlua::String| {
 		let layout = LAYOUT.get();
-		Ok(match s.as_bytes().as_ref() {
+		Ok(match &*s.as_bytes() {
 			b"current" => Rect(layout.current),
 			b"preview" => Rect(layout.preview),
 			b"progress" => Rect(layout.progress),
@@ -40,42 +44,30 @@ pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 
 pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_async_function(|lua, ()| async move {
-		if lua.named_registry_value::<PermitRef<fn()>>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
+		if runtime!(lua)?.initing {
+			return Err("Cannot call `ui.hide()` during app initialization".into_lua_err());
+		}
+
+		if lua.named_registry_value::<PermitRef>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
 			return Err("Cannot hide while already hidden".into_lua_err());
 		}
 
 		let permit = HIDER.acquire().await.unwrap();
 		AppProxy::stop().await;
 
-		lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume as fn()))?;
+		lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume()))?;
 		lua.named_registry_value::<AnyUserData>("HIDE_PERMIT")
 	})?;
 
 	f.into_lua(lua)
 }
 
-pub(super) fn width(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|_, v: Value| match v {
-		Value::String(s) => {
-			let (mut acc, b) = (0, s.as_bytes());
-			for c in b.utf8_chunks() {
-				acc += c.valid().width();
-				if !c.invalid().is_empty() {
-					acc += 1;
-				}
-			}
-			Ok(acc)
-		}
-		Value::UserData(ud) => {
-			if let Ok(line) = ud.borrow::<Line>() {
-				Ok(line.width())
-			} else if let Ok(span) = ud.borrow::<Span>() {
-				Ok(span.width())
-			} else {
-				Err("expected a string, Line, or Span".into_lua_err())?
-			}
-		}
-		_ => Err("expected a string, Line, or Span".into_lua_err())?,
+pub(super) fn printable(lua: &Lua) -> mlua::Result<Value> {
+	let f = lua.create_function(|lua, s: mlua::String| {
+		Ok(match replace_to_printable(&s.as_bytes(), false, 1, true) {
+			Cow::Borrowed(_) => s,
+			Cow::Owned(new) => lua.create_string(&new)?,
+		})
 	})?;
 
 	f.into_lua(lua)
@@ -86,7 +78,7 @@ pub(super) fn redraw(lua: &Lua) -> mlua::Result<Value> {
 		let id: mlua::String = c.get("_id")?;
 
 		let mut layout = LAYOUT.get();
-		match id.as_bytes().as_ref() {
+		match &*id.as_bytes() {
 			b"current" => layout.current = *c.raw_get::<Rect>("_area")?,
 			b"preview" => layout.preview = *c.raw_get::<Rect>("_area")?,
 			b"progress" => layout.progress = *c.raw_get::<Rect>("_area")?,
@@ -171,6 +163,33 @@ pub(super) fn truncate(lua: &Lua) -> mlua::Result<Value> {
 			}
 		};
 		lua.create_string(result)
+	})?;
+
+	f.into_lua(lua)
+}
+
+pub(super) fn width(lua: &Lua) -> mlua::Result<Value> {
+	let f = lua.create_function(|_, v: Value| match v {
+		Value::String(s) => {
+			let (mut acc, b) = (0, s.as_bytes());
+			for c in b.utf8_chunks() {
+				acc += c.valid().width();
+				if !c.invalid().is_empty() {
+					acc += 1;
+				}
+			}
+			Ok(acc)
+		}
+		Value::UserData(ud) => {
+			if let Ok(line) = ud.borrow::<Line>() {
+				Ok(line.width())
+			} else if let Ok(span) = ud.borrow::<Span>() {
+				Ok(span.width())
+			} else {
+				Err("expected a string, Line, or Span".into_lua_err())?
+			}
+		}
+		_ => Err("expected a string, Line, or Span".into_lua_err())?,
 	})?;
 
 	f.into_lua(lua)

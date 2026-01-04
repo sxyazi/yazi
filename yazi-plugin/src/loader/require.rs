@@ -11,23 +11,6 @@ impl Require {
 	pub(super) fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
 			"require",
-			lua.create_function(|lua, id: mlua::String| {
-				let id = id.to_str()?;
-				let id = Self::absolute_id(lua, &id)?;
-				futures::executor::block_on(LOADER.ensure(&id, |_| ())).into_lua_err()?;
-
-				runtime_mut!(lua)?.push(&id);
-				let mod_ = LOADER.load(lua, &id);
-				runtime_mut!(lua)?.pop();
-
-				Self::create_mt(lua, id.into_owned(), mod_?, true)
-			})?,
-		)
-	}
-
-	pub(super) fn install_isolate(lua: &Lua) -> mlua::Result<()> {
-		lua.globals().raw_set(
-			"require",
 			lua.create_async_function(|lua, id: mlua::String| async move {
 				let id = id.to_str()?;
 				let id = Self::absolute_id(&lua, &id)?;
@@ -37,12 +20,12 @@ impl Require {
 				let mod_ = LOADER.load(&lua, &id);
 				runtime_mut!(lua)?.pop();
 
-				Self::create_mt(&lua, id.into_owned(), mod_?, false)
+				Self::create_mt(&lua, id.into_owned(), mod_?)
 			})?,
 		)
 	}
 
-	fn create_mt(lua: &Lua, id: String, r#mod: Table, sync: bool) -> mlua::Result<Table> {
+	fn create_mt(lua: &Lua, id: String, r#mod: Table) -> mlua::Result<Table> {
 		let id: Arc<str> = Arc::from(id);
 		let mt = lua.create_table_from([
 			(
@@ -50,7 +33,7 @@ impl Require {
 				lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
 					match ts.raw_get::<Table>("__mod")?.raw_get::<Value>(&key)? {
 						Value::Function(_) => {
-							Self::create_wrapper(lua, id.clone(), &key.to_str()?, sync)?.into_lua(lua)
+							Self::create_wrapper(lua, id.clone(), &key.to_str()?)?.into_lua(lua)
 						}
 						v => Ok(v),
 					}
@@ -69,29 +52,19 @@ impl Require {
 		Ok(ts)
 	}
 
-	fn create_wrapper(lua: &Lua, id: Arc<str>, f: &str, sync: bool) -> mlua::Result<Function> {
+	fn create_wrapper(lua: &Lua, id: Arc<str>, f: &str) -> mlua::Result<Function> {
 		let f: Arc<str> = Arc::from(f);
 
-		if sync {
-			lua.create_function(move |lua, args: MultiValue| {
-				let (r#mod, args) = Self::split_mod_and_args(lua, &id, args)?;
+		lua.create_async_function(move |lua, args: MultiValue| {
+			let (id, f) = (id.clone(), f.clone());
+			async move {
+				let (r#mod, args) = Self::split_mod_and_args(&lua, &id, args)?;
 				runtime_mut!(lua)?.push(&id);
-				let result = r#mod.call_function::<MultiValue>(&f, args);
+				let result = r#mod.call_async_function::<MultiValue>(&f, args).await;
 				runtime_mut!(lua)?.pop();
 				result
-			})
-		} else {
-			lua.create_async_function(move |lua, args: MultiValue| {
-				let (id, f) = (id.clone(), f.clone());
-				async move {
-					let (r#mod, args) = Self::split_mod_and_args(&lua, &id, args)?;
-					runtime_mut!(lua)?.push(&id);
-					let result = r#mod.call_async_function::<MultiValue>(&f, args).await;
-					runtime_mut!(lua)?.pop();
-					result
-				}
-			})
-		}
+			}
+		})
 	}
 
 	fn split_mod_and_args(

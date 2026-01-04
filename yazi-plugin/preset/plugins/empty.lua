@@ -3,7 +3,7 @@ local M = {}
 function M.msg(job, s) ya.preview_widget(job, ui.Text(ui.Line(s):reverse()):area(job.area):wrap(ui.Wrap.YES)) end
 
 function M:peek(job)
-	local path = tostring(job.file.url)
+	local path = tostring(job.file.path)
 	if path:sub(1, 6) ~= "/proc/" then
 		return self.msg(job, "Empty file")
 	end

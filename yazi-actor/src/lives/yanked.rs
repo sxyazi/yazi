@@ -23,7 +23,7 @@ impl Yanked {
 		Lives::scoped_userdata(Self {
 			inner,
 			iter: Lives::scoped_userdata(Iter::new(
-				inner.as_static().iter().cloned().map(yazi_binding::Url::new),
+				inner.as_static().iter().map(yazi_binding::Url::new),
 				Some(inner.len()),
 			))?,
 		})

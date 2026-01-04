@@ -1,31 +1,27 @@
 //! Escape characters that may have special meaning in a shell, including
-//! spaces. This is a modified version of the [`shell-escape`], [`shell-words`]
-//! and [`this PR`].
+//! spaces. This is a modified version of the [`shell-escape`], [`shell-words`],
+//! [Rust std] and [this PR].
 //!
 //! [`shell-escape`]: https://crates.io/crates/shell-escape
 //! [`shell-words`]: https://crates.io/crates/shell-words
-//! [`this PR`]: https://github.com/sfackler/shell-escape/pull/9
+//! [Rust std]: https://github.com/rust-lang/rust/blob/main/library/std/src/sys/args/windows.rs#L220
+//! [this PR]: https://github.com/sfackler/shell-escape/pull/9
 
 use std::{borrow::Cow, ffi::OsStr};
 
-mod unix;
-mod windows;
+yazi_macro::mod_pub!(unix, windows);
+
+yazi_macro::mod_flat!(error);
 
 #[inline]
-pub fn escape_unix(s: &str) -> Cow<'_, str> { unix::escape_str(s) }
-
-#[inline]
-pub fn escape_windows(s: &str) -> Cow<'_, str> { windows::escape_str(s) }
-
-#[inline]
-pub fn escape_native(s: &str) -> Cow<'_, str> {
+pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
 	#[cfg(unix)]
 	{
-		escape_unix(s)
+		unix::escape_os_bytes(b)
 	}
 	#[cfg(windows)]
 	{
-		escape_windows(s)
+		windows::escape_os_bytes(b)
 	}
 }
 
@@ -38,24 +34,5 @@ pub fn escape_os_str(s: &OsStr) -> Cow<'_, OsStr> {
 	#[cfg(windows)]
 	{
 		windows::escape_os_str(s)
-	}
-}
-
-#[inline]
-pub fn split_unix(s: &str, eoo: bool) -> anyhow::Result<(Vec<String>, Option<String>)> {
-	unix::split(s, eoo).map_err(|()| anyhow::anyhow!("missing closing quote"))
-}
-
-#[cfg(windows)]
-pub fn split_windows(s: &str) -> anyhow::Result<Vec<String>> { Ok(windows::split(s)?) }
-
-pub fn split_native(s: &str) -> anyhow::Result<Vec<String>> {
-	#[cfg(unix)]
-	{
-		Ok(split_unix(s, false)?.0)
-	}
-	#[cfg(windows)]
-	{
-		split_windows(s)
 	}
 }

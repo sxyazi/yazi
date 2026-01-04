@@ -44,7 +44,7 @@ impl Signals {
 					}
 				});
 			}
-			SIGCONT if HIDER.try_acquire().is_ok() => AppProxy::resume(),
+			SIGCONT if HIDER.try_acquire().is_ok() => _ = tokio::spawn(AppProxy::resume()),
 			_ => {}
 		}
 		true

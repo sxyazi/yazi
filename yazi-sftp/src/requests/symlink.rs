@@ -1,21 +1,21 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, Error, ToByteStr};
+use crate::{AsSftpPath, SftpPath};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Symlink<'a> {
 	pub id:       u32,
-	pub link:     ByteStr<'a>,
-	pub original: ByteStr<'a>,
+	pub link:     SftpPath<'a>,
+	pub original: SftpPath<'a>,
 }
 
 impl<'a> Symlink<'a> {
-	pub fn new<L, O>(link: L, original: O) -> Result<Self, Error>
+	pub fn new<L, O>(link: L, original: O) -> Self
 	where
-		L: ToByteStr<'a>,
-		O: ToByteStr<'a>,
+		L: AsSftpPath<'a>,
+		O: AsSftpPath<'a>,
 	{
-		Ok(Self { id: 0, link: link.to_byte_str()?, original: original.to_byte_str()? })
+		Self { id: 0, link: link.as_sftp_path(), original: original.as_sftp_path() }
 	}
 
 	pub fn len(&self) -> usize {

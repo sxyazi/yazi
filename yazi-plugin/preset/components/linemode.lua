@@ -2,15 +2,17 @@ Linemode = {
 	_inc = 1000,
 	_children = {
 		{ "solo", id = 1, order = 1000 },
-		{ "spacer", id = 2, order = 2000 },
+		{ "padding", id = 2, order = 2000 },
 	},
 }
 
 function Linemode:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Linemode:spacer() return " " end
-
 function Linemode:solo()
+	if not self._file.in_current then
+		return ""
+	end
+
 	local mode = cx.active.pref.linemode
 	if mode == "none" or mode == "solo" then
 		return ""
@@ -60,6 +62,19 @@ function Linemode:owner()
 	local user = ya.user_name and ya.user_name(self._file.cha.uid) or self._file.cha.uid
 	local group = ya.group_name and ya.group_name(self._file.cha.gid) or self._file.cha.gid
 	return string.format("%s:%s", user, group)
+end
+
+function Linemode:padding()
+	if not self._file.is_hovered then
+		return " "
+	end
+
+	local style = Entity:new(self._file):style_rev()
+	if style then
+		return ui.Span(th.indicator.padding.close):style(style)
+	else
+		return " "
+	end
 end
 
 function Linemode:redraw()

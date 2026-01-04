@@ -35,7 +35,7 @@ impl FilesOp {
 			url.into(),
 			sizes
 				.pairs::<Path, u64>()
-				.map(|r| r.map(|(urn, size)| (urn.0, size)))
+				.map(|r| r.map(|(urn, size)| (urn.into(), size)))
 				.collect::<mlua::Result<_>>()?,
 		)))
 	}

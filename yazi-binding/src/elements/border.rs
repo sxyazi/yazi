@@ -20,7 +20,7 @@ pub struct Border {
 	pub r#type: ratatui::widgets::BorderType,
 	pub style:  ratatui::style::Style,
 
-	pub titles: Vec<(ratatui::widgets::block::Position, ratatui::text::Line<'static>)>,
+	pub titles: Vec<(ratatui::widgets::TitlePosition, ratatui::text::Line<'static>)>,
 }
 
 impl Border {
@@ -51,8 +51,8 @@ impl Border {
 
 		for title in self.titles {
 			block = match title {
-				(ratatui::widgets::block::Position::Top, line) => block.title(line),
-				(ratatui::widgets::block::Position::Bottom, line) => block.title(line),
+				(ratatui::widgets::TitlePosition::Top, line) => block.title(line),
+				(ratatui::widgets::TitlePosition::Bottom, line) => block.title(line),
 			};
 		}
 
@@ -80,9 +80,9 @@ impl UserData for Border {
 			"title",
 			|_, (ud, line, position): (AnyUserData, Value, Option<u8>)| {
 				let position = if position == Some(Borders::BOTTOM.bits()) {
-					ratatui::widgets::block::Position::Bottom
+					ratatui::widgets::TitlePosition::Bottom
 				} else {
-					ratatui::widgets::block::Position::Top
+					ratatui::widgets::TitlePosition::Top
 				};
 
 				ud.borrow_mut::<Self>()?.titles.push((position, Line::try_from(line)?.inner));

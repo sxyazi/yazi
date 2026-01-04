@@ -142,6 +142,7 @@ impl<'a> Executor<'a> {
 		// VFS
 		on!(download);
 		on!(upload);
+		on!(displace_do);
 
 		match cmd.name.as_ref() {
 			// Help
@@ -257,7 +258,10 @@ impl<'a> Executor<'a> {
 					_ => {}
 				}
 			}
-			InputMode::Insert | InputMode::Replace => {}
+			InputMode::Insert => {
+				on!(complete);
+			}
+			InputMode::Replace => {}
 		};
 
 		self.app.core.input.execute(cmd)

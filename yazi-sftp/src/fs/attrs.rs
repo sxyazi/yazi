@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt};
 
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeStruct};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Attrs {
 	pub size:     Option<u64>,
 	pub uid:      Option<u32>,
@@ -14,6 +14,8 @@ pub struct Attrs {
 }
 
 impl Attrs {
+	pub fn is_empty(&self) -> bool { *self == Self::default() }
+
 	pub fn len(&self) -> usize {
 		let mut len = 4;
 		if let Some(size) = self.size {

@@ -1,27 +1,18 @@
-use std::{future::Future, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
-use anyhow::Result;
-use futures::{FutureExt, future::BoxFuture};
 use parking_lot::Mutex;
-use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
+use tokio::{select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
-use yazi_dds::Pump;
 use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
-use yazi_proxy::TasksProxy;
-use yazi_shared::{Id, Throttle, scheme::SchemeLike, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{must_be_dir, provider, unique_name};
+use yazi_shared::{CompletionToken, Id, Throttle, url::{UrlBuf, UrlLike}};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileInUpload, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutPaste, FileOutUpload, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash, FileProgUpload}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, Runner, TaskIn, TaskOps, file::{File, FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{Hook, HookInOutDelete, HookInOutDownload, HookInOutTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
-	file:        Arc<File>,
-	plugin:      Arc<Plugin>,
-	pub prework: Arc<Prework>,
-	process:     Arc<Process>,
-
 	ops:         TaskOps,
-	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
+	pub runner:  Runner,
+	micro:       async_priority_channel::Sender<TaskIn, u8>,
 	handles:     Vec<JoinHandle<()>>,
 	pub ongoing: Arc<Mutex<Ongoing>>,
 }
@@ -31,19 +22,24 @@ impl Scheduler {
 		let (op_tx, op_rx) = mpsc::unbounded_channel();
 		let (micro_tx, micro_rx) = async_priority_channel::unbounded();
 		let (macro_tx, macro_rx) = async_priority_channel::unbounded();
+		let ongoing = Arc::new(Mutex::new(Ongoing::default()));
 
-		let mut scheduler = Self {
+		let runner = Runner {
 			file:    Arc::new(File::new(&op_tx, &macro_tx)),
 			plugin:  Arc::new(Plugin::new(&op_tx, &macro_tx)),
 			prework: Arc::new(Prework::new(&op_tx, &macro_tx)),
 			process: Arc::new(Process::new(&op_tx)),
+			hook:    Arc::new(Hook::new(&op_tx, &ongoing)),
+		};
 
-			ops:     TaskOps(op_tx),
-			micro:   micro_tx,
+		let mut scheduler = Self {
+			ops: TaskOps(op_tx),
+			runner,
+			micro: micro_tx,
 			handles: Vec::with_capacity(
 				YAZI.tasks.micro_workers as usize + YAZI.tasks.macro_workers as usize + 1,
 			),
-			ongoing: Default::default(),
+			ongoing,
 		};
 
 		for _ in 0..YAZI.tasks.micro_workers {
@@ -57,16 +53,12 @@ impl Scheduler {
 	}
 
 	pub fn cancel(&self, id: Id) -> bool {
-		let mut ongoing = self.ongoing.lock();
-
-		if let Some(hook) = ongoing.hooks.pop(id)
-			&& let Some(fut) = hook.call(true)
-		{
-			self.micro.try_send(fut, HIGH).ok();
+		if let Some(hook) = self.ongoing.lock().cancel(id) {
+			self.micro.try_send(hook, HIGH).ok();
 			return false;
 		}
 
-		ongoing.all.remove(&id).is_some()
+		true
 	}
 
 	pub fn shutdown(&self) {
@@ -75,229 +67,190 @@ impl Scheduler {
 		}
 	}
 
-	pub fn file_cut(&self, from: UrlBuf, mut to: UrlBuf, force: bool) {
+	pub fn file_cut(&self, from: UrlBuf, to: UrlBuf, force: bool) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgPaste>(format!("Cut {} to {}", from.display(), to.display()));
+		let task = ongoing.add::<FileProgCut>(format!("Cut {} to {}", from.display(), to.display()));
 
-		if to.starts_with(&from) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutPaste::Fail("Cannot cut directory into itself".to_owned()));
-		}
-
-		ongoing.hooks.add_async(id, {
-			let ops = self.ops.clone();
-			let (from, to) = (from.clone(), to.clone());
-
-			move |canceled| async move {
-				if !canceled {
-					provider::remove_dir_clean(&from).await.ok();
-					Pump::push_move(from, to);
-				}
-				ops.out(id, FileOutPaste::Clean);
-			}
-		});
-
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move {
-			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
-			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
-		});
-	}
-
-	pub fn file_copy(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
-		let id = self.ongoing.lock().add::<FileProgPaste>(format!(
-			"Copy {} to {}",
-			from.display(),
-			to.display()
-		));
-
-		if to.starts_with(&from) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutPaste::Fail("Cannot copy directory into itself".to_owned()));
-		}
-
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move {
-			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
-			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
-		});
-	}
-
-	pub fn file_link(&self, from: UrlBuf, mut to: UrlBuf, relative: bool, force: bool) {
-		let id = self.ongoing.lock().add::<FileProgLink>(format!(
-			"Link {} to {}",
-			from.display(),
-			to.display()
-		));
-
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move {
-			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
-			}
-			file.link(FileInLink { id, from, to, cha: None, resolve: false, relative, delete: false })
-		});
-	}
-
-	pub fn file_hardlink(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
-		let id = self.ongoing.lock().add::<FileProgHardlink>(format!(
-			"Hardlink {} to {}",
-			from.display(),
-			to.display()
-		));
-
-		if to.starts_with(&from) && !to.covariant(&from) {
+		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
 			return self
 				.ops
-				.out(id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));
+				.out(task.id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
 		}
 
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move {
-			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
-			}
-			file.hardlink(FileInHardlink { id, from, to, cha: None, follow }).await
-		});
+		let follow = !from.scheme().covariant(to.scheme());
+		self.queue(
+			FileInCut {
+				id: task.id,
+				from,
+				to,
+				force,
+				cha: None,
+				follow,
+				retry: 0,
+				drop: None,
+				done: task.done.clone(),
+			},
+			LOW,
+		);
+	}
+
+	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
+		let mut ongoing = self.ongoing.lock();
+		let task = ongoing.add::<FileProgCopy>(format!("Copy {} to {}", from.display(), to.display()));
+
+		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
+			return self
+				.ops
+				.out(task.id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
+		}
+
+		let follow = follow || !from.scheme().covariant(to.scheme());
+		self.queue(
+			FileInCopy {
+				id: task.id,
+				from,
+				to,
+				force,
+				cha: None,
+				follow,
+				retry: 0,
+				done: task.done.clone(),
+			},
+			LOW,
+		);
+	}
+
+	pub fn file_link(&self, from: UrlBuf, to: UrlBuf, relative: bool, force: bool) {
+		let mut ongoing = self.ongoing.lock();
+		let task = ongoing.add::<FileProgLink>(format!("Link {} to {}", from.display(), to.display()));
+
+		self.queue(
+			FileInLink {
+				id: task.id,
+				from,
+				to,
+				force,
+				cha: None,
+				resolve: false,
+				relative,
+				delete: false,
+			},
+			LOW,
+		);
+	}
+
+	pub fn file_hardlink(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
+		let mut ongoing = self.ongoing.lock();
+		let task =
+			ongoing.add::<FileProgHardlink>(format!("Hardlink {} to {}", from.display(), to.display()));
+
+		if !from.scheme().covariant(to.scheme()) {
+			return self
+				.ops
+				.out(task.id, FileOutHardlink::Fail("Cannot hardlink cross filesystem".to_owned()));
+		}
+
+		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
+			return self
+				.ops
+				.out(task.id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));
+		}
+
+		self.queue(FileInHardlink { id: task.id, from, to, force, cha: None, follow }, LOW);
 	}
 
 	pub fn file_delete(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgDelete>(format!("Delete {}", target.display()));
+		let task = ongoing.add::<FileProgDelete>(format!("Delete {}", target.display()));
 
-		ongoing.hooks.add_async(id, {
-			let ops = self.ops.clone();
-			let target = target.clone();
-
-			move |canceled| async move {
-				if !canceled {
-					provider::remove_dir_all(&target).await.ok();
-					TasksProxy::update_succeed(&target);
-					Pump::push_delete(target);
-				}
-				ops.out(id, FileOutDelete::Clean);
-			}
-		});
-
-		let file = self.file.clone();
-		self.send_micro(
-			id,
-			LOW,
-			async move { file.delete(FileInDelete { id, target, length: 0 }).await },
-		);
+		task.set_hook(HookInOutDelete { id: task.id, target: target.clone() });
+		self.queue(FileInDelete { id: task.id, target, cha: None }, LOW);
 	}
 
 	pub fn file_trash(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgTrash>(format!("Trash {}", target.display()));
+		let task = ongoing.add::<FileProgTrash>(format!("Trash {}", target.display()));
 
-		ongoing.hooks.add_sync(id, {
-			let target = target.clone();
-			move |canceled| {
-				if !canceled {
-					TasksProxy::update_succeed(&target);
-					Pump::push_trash(target);
-				}
-			}
-		});
-
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move { file.trash(FileInTrash { id, target }) })
+		task.set_hook(HookInOutTrash { id: task.id, target: target.clone() });
+		self.queue(FileInTrash { id: task.id, target }, LOW);
 	}
 
-	pub fn file_download(&self, url: UrlBuf, done: Option<oneshot::Sender<bool>>) {
+	pub fn file_download(&self, url: UrlBuf) -> CompletionToken {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgDownload>(format!("Download {}", url.display()));
+		let task = ongoing.add::<FileProgDownload>(format!("Download {}", url.display()));
 
-		if let Some(tx) = done {
-			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
+		task.set_hook(HookInOutDownload { id: task.id });
+		if url.kind().is_remote() {
+			self.queue(
+				FileInDownload { id: task.id, url, cha: None, retry: 0, done: task.done.clone() },
+				LOW,
+			);
+		} else {
+			self.ops.out(task.id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		}
 
-		if !url.scheme.is_remote() {
-			return self.ops.out(id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
-		};
-
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move {
-			file.download(FileInDownload { id, url, cha: None, retry: 0 }).await
-		});
+		task.done.clone()
 	}
 
 	pub fn file_upload(&self, url: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
+		let task = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
 
-		if !url.scheme.is_remote() {
-			return self.ops.out(id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
+		if !url.kind().is_remote() {
+			return self
+				.ops
+				.out(task.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 
-		let file = self.file.clone();
-		self.send_micro(id, LOW, async move { file.upload(FileInUpload { id, url }).await });
+		self.queue(
+			FileInUpload { id: task.id, url, cha: None, cache: None, done: task.done.clone() },
+			LOW,
+		);
 	}
 
-	pub fn plugin_micro(&self, opt: PluginOpt) {
-		let id = self.ongoing.lock().add::<PluginProgEntry>(format!("Run micro plugin `{}`", opt.id));
+	pub fn plugin_entry(&self, opt: PluginOpt) {
+		let mut ongoing = self.ongoing.lock();
+		let task = ongoing.add::<PluginProgEntry>(format!("Run micro plugin `{}`", opt.id));
 
-		let plugin = self.plugin.clone();
-		self.send_micro(id, NORMAL, async move { plugin.micro(PluginInEntry { id, opt }).await });
-	}
-
-	pub fn plugin_macro(&self, opt: PluginOpt) {
-		let id = self.ongoing.lock().add::<PluginProgEntry>(format!("Run macro plugin `{}`", opt.id));
-
-		self.plugin.r#macro(PluginInEntry { id, opt }).ok();
+		self.queue(PluginInEntry { id: task.id, opt }, NORMAL);
 	}
 
 	pub fn fetch_paged(
 		&self,
 		fetcher: &'static Fetcher,
 		targets: Vec<yazi_fs::File>,
-		done: Option<oneshot::Sender<bool>>,
-	) {
+	) -> CompletionToken {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<PreworkProgFetch>(format!(
+		let task = ongoing.add::<PreworkProgFetch>(format!(
 			"Run fetcher `{}` with {} target(s)",
 			fetcher.run.name,
 			targets.len()
 		));
 
-		if let Some(tx) = done {
-			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
-		}
-
-		let prework = self.prework.clone();
-		self.send_micro(id, NORMAL, async move {
-			prework.fetch(PreworkInFetch { id, plugin: fetcher, targets }).await
-		});
+		self.queue(PreworkInFetch { id: task.id, plugin: fetcher, targets }, NORMAL);
+		task.done.clone()
 	}
 
 	pub async fn fetch_mimetype(&self, targets: Vec<yazi_fs::File>) -> bool {
 		let mut wg = vec![];
 		for (fetcher, targets) in YAZI.plugin.mime_fetchers(targets) {
-			let (tx, rx) = oneshot::channel();
-			self.fetch_paged(fetcher, targets, Some(tx));
-			wg.push(rx);
+			wg.push(self.fetch_paged(fetcher, targets));
 		}
 
-		for rx in wg {
-			if rx.await != Ok(false) {
-				return false; // Canceled or error
+		for done in wg {
+			if !done.future().await {
+				return false; // Canceled
 			}
 		}
 		true
 	}
 
 	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
-		let id =
-			self.ongoing.lock().add::<PreworkProgLoad>(format!("Run preloader `{}`", preloader.run.name));
+		let mut ongoing = self.ongoing.lock();
+		let task = ongoing.add::<PreworkProgLoad>(format!("Run preloader `{}`", preloader.run.name));
 
 		let target = target.clone();
-		let prework = self.prework.clone();
-		self.send_micro(id, NORMAL, async move {
-			prework.load(PreworkInLoad { id, plugin: preloader, target }).await
-		});
+		self.queue(PreworkInLoad { id: task.id, plugin: preloader, target }, NORMAL);
 	}
 
 	pub fn prework_size(&self, targets: Vec<&UrlBuf>) {
@@ -305,15 +258,12 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 
 		for target in targets {
-			let id =
+			let task =
 				ongoing.add::<PreworkProgSize>(format!("Calculate the size of {}", target.display()));
 			let target = target.clone();
 			let throttle = throttle.clone();
 
-			let prework = self.prework.clone();
-			self.send_micro(id, NORMAL, async move {
-				prework.size(PreworkInSize { id, target, throttle }).await
-			});
+			self.queue(PreworkInSize { id: task.id, target, throttle }, NORMAL);
 		}
 	}
 
@@ -328,50 +278,63 @@ impl Scheduler {
 		};
 
 		let mut ongoing = self.ongoing.lock();
-		let (id, clean): (_, TaskOut) = if opt.block {
-			(ongoing.add::<ProcessProgBlock>(name), ProcessOutBlock::Clean.into())
+		let task = if opt.block {
+			ongoing.add::<ProcessProgBlock>(name)
 		} else if opt.orphan {
-			(ongoing.add::<ProcessProgOrphan>(name), ProcessOutOrphan::Clean.into())
+			ongoing.add::<ProcessProgOrphan>(name)
 		} else {
-			(ongoing.add::<ProcessProgBg>(name), ProcessOutBg::Clean.into())
+			ongoing.add::<ProcessProgBg>(name)
 		};
 
-		let ops = self.ops.clone();
-		let (cancel_tx, cancel_rx) = mpsc::channel(1);
-		ongoing.hooks.add_async(id, move |canceled| async move {
-			if canceled {
-				cancel_tx.send(()).await.ok();
-				cancel_tx.closed().await;
-			}
-			if let Some(tx) = opt.done {
-				tx.send(()).ok();
-			}
-			ops.out(id, clean);
-		});
+		if let Some(done) = opt.done {
+			task.done = done;
+		}
 
-		let process = self.process.clone();
-		self.send_micro::<_, TaskOut>(id, NORMAL, async move {
-			if opt.block {
-				process.block(ProcessInBlock { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }).await?;
-			} else if opt.orphan {
-				process.orphan(ProcessInOrphan { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }).await?;
-			} else {
-				process
-					.bg(ProcessInBg { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args, cancel: cancel_rx })
-					.await?;
-			}
-			Ok(())
-		});
+		if opt.block {
+			self
+				.queue(ProcessInBlock { id: task.id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }, NORMAL);
+		} else if opt.orphan {
+			self
+				.queue(ProcessInOrphan { id: task.id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }, NORMAL);
+		} else {
+			self.queue(
+				ProcessInBg {
+					id:   task.id,
+					cwd:  opt.cwd,
+					cmd:  opt.cmd,
+					args: opt.args,
+					done: task.done.clone(),
+				},
+				NORMAL,
+			);
+		};
 	}
 
-	fn schedule_micro(
-		&self,
-		rx: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
-	) -> JoinHandle<()> {
+	fn schedule_micro(&self, rx: async_priority_channel::Receiver<TaskIn, u8>) -> JoinHandle<()> {
+		let ops = self.ops.clone();
+		let runner = self.runner.clone();
+		let ongoing = self.ongoing.clone();
+
 		tokio::spawn(async move {
 			loop {
-				if let Ok((fut, _)) = rx.recv().await {
-					fut.await;
+				if let Ok((r#in, _)) = rx.recv().await {
+					let id = r#in.id();
+					let Some(token) = ongoing.lock().get_token(id) else {
+						continue;
+					};
+
+					let result = if r#in.is_hook() {
+						runner.micro(r#in).await
+					} else {
+						select! {
+							r = runner.micro(r#in) => r,
+							false = token.future() => Ok(())
+						}
+					};
+
+					if let Err(out) = result {
+						ops.out(id, out);
+					}
 				}
 			}
 		})
@@ -379,49 +342,41 @@ impl Scheduler {
 
 	fn schedule_macro(
 		&self,
-		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
+		micro: async_priority_channel::Receiver<TaskIn, u8>,
 		r#macro: async_priority_channel::Receiver<TaskIn, u8>,
 	) -> JoinHandle<()> {
-		let file = self.file.clone();
-		let plugin = self.plugin.clone();
-		let prework = self.prework.clone();
-
 		let ops = self.ops.clone();
+		let runner = self.runner.clone();
 		let ongoing = self.ongoing.clone();
 
 		tokio::spawn(async move {
 			loop {
-				select! {
-					Ok((fut, _)) = micro.recv() => {
-						fut.await;
-					}
-					Ok((r#in, _)) = r#macro.recv() => {
-						let id = r#in.id();
-						if !ongoing.lock().exists(id) {
-							continue;
-						}
+				let (r#in, micro) = select! {
+					Ok((r#in, _)) = micro.recv() => (r#in, true),
+					Ok((r#in, _)) = r#macro.recv() => (r#in, false),
+				};
 
-						let result: Result<_, TaskOut> = match r#in {
-							// File
-							TaskIn::FilePaste(r#in) => file.paste_do(r#in).await.map_err(Into::into),
-							TaskIn::FileLink(r#in) => file.link_do(r#in).await.map_err(Into::into),
-							TaskIn::FileHardlink(r#in) => file.hardlink_do(r#in).await.map_err(Into::into),
-							TaskIn::FileDelete(r#in) => file.delete_do(r#in).await.map_err(Into::into),
-							TaskIn::FileTrash(r#in) => file.trash_do(r#in).await.map_err(Into::into),
-							TaskIn::FileDownload(r#in) => file.download_do(r#in).await.map_err(Into::into),
-							TaskIn::FileUploadDo(r#in) => file.upload_do(r#in).await.map_err(Into::into),
-							// Plugin
-							TaskIn::PluginEntry(r#in) => plugin.macro_do(r#in).await.map_err(Into::into),
-							// Prework
-							TaskIn::PreworkFetch(r#in) => prework.fetch_do(r#in).await.map_err(Into::into),
-							TaskIn::PreworkLoad(r#in) => prework.load_do(r#in).await.map_err(Into::into),
-							TaskIn::PreworkSize(r#in) => prework.size_do(r#in).await.map_err(Into::into),
-						};
+				let id = r#in.id();
+				let Some(token) = ongoing.lock().get_token(id) else {
+					continue;
+				};
 
-						if let Err(out) = result {
-							ops.out(id, out);
-						}
+				let result = if r#in.is_hook() {
+					if micro { runner.micro(r#in).await } else { runner.r#macro(r#in).await }
+				} else if micro {
+					select! {
+						r = runner.micro(r#in) => r,
+						false = token.future() => Ok(()),
 					}
+				} else {
+					select! {
+						r = runner.r#macro(r#in) => r,
+						false = token.future() => Ok(()),
+					}
+				};
+
+				if let Err(out) = result {
+					ops.out(id, out);
 				}
 			}
 		})
@@ -437,33 +392,21 @@ impl Scheduler {
 				let Some(task) = ongoing.get_mut(op.id) else { continue };
 
 				op.out.reduce(task);
-				if !task.prog.success() && !task.prog.cleaned() {
-					continue;
-				} else if let Some(hook) = ongoing.hooks.pop(op.id)
-					&& let Some(fut) = hook.call(false)
-				{
-					micro.try_send(fut, LOW).ok();
+				if !task.prog.cooked() && task.done.completed() != Some(false) {
+					continue; // Not cooked yet, also not canceled
+				} else if task.prog.cleaned() == Some(false) {
+					continue; // Failed to clean up
+				} else if let Some(hook) = task.hook.take() {
+					micro.try_send(hook, LOW).ok();
 				} else {
-					ongoing.all.remove(&op.id);
+					ongoing.fulfill(op.id);
 				}
 			}
 		})
 	}
 
-	fn send_micro<F, E>(&self, id: Id, priority: u8, f: F)
-	where
-		F: Future<Output = Result<(), E>> + Send + 'static,
-		E: Into<TaskOut>,
-	{
-		let ops = self.ops.clone();
-		_ = self.micro.try_send(
-			async move {
-				if let Err(out) = f.await {
-					ops.out(id, out);
-				}
-			}
-			.boxed(),
-			priority,
-		);
+	#[inline]
+	fn queue(&self, r#in: impl Into<TaskIn>, priority: u8) {
+		_ = self.micro.try_send(r#in.into(), priority);
 	}
 }

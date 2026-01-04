@@ -3,10 +3,11 @@ use std::{borrow::Cow, path::PathBuf};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::{Xdg, path::expand_url};
+use yazi_fs::Xdg;
 use yazi_shared::{SStr, timestamp_us};
 
 use super::PreviewWrap;
+use crate::normalize_path;
 
 #[rustfmt::skip]
 const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];
@@ -50,10 +51,10 @@ impl Preview {
 
 		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
 			Xdg::cache_dir().to_owned()
-		} else if let Some(p) = expand_url(self.cache_dir).into_path() {
+		} else if let Some(p) = normalize_path(self.cache_dir) {
 			p
 		} else {
-			bail!("[preview].cache_dir must be a path within local filesystem.");
+			bail!("[preview].cache_dir must be either empty or an absolute path.");
 		};
 
 		std::fs::create_dir_all(&self.cache_dir)

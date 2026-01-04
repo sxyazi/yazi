@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::RevealOpt;
-use yazi_shared::{data::Data, path::PathLike, url::UrlLike};
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -19,7 +19,7 @@ impl Actor for Reveal {
 		// Cd to the parent directory
 		act!(mgr:cd, cx, (parent, opt.source))?;
 
-		// Try to hover on the child file
+		// Try to hover over the child file
 		let tab = cx.tab_mut();
 		render!(tab.current.hover(child));
 
@@ -30,8 +30,8 @@ impl Actor for Reveal {
 			tab.current.update_pub(tab.id, op);
 		}
 
-		// Now, we can safely hover on the target
-		act!(mgr:hover, cx, Some(child.owned()))?;
+		// Now, we can safely hover over the target
+		act!(mgr:hover, cx, Some(child.into()))?;
 
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;

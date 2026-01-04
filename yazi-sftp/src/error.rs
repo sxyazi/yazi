@@ -42,6 +42,11 @@ impl From<Error> for std::io::Error {
 				responses::StatusCode::NoConnection => Self::from(std::io::ErrorKind::NotConnected),
 				responses::StatusCode::ConnectionLost => Self::from(std::io::ErrorKind::ConnectionReset),
 				responses::StatusCode::OpUnsupported => Self::from(std::io::ErrorKind::Unsupported),
+				responses::StatusCode::InvalidHandle => Self::from(std::io::ErrorKind::InvalidInput),
+				responses::StatusCode::NoSuchPath => Self::from(std::io::ErrorKind::NotFound),
+				responses::StatusCode::FileAlreadyExists => Self::from(std::io::ErrorKind::AlreadyExists),
+				responses::StatusCode::WriteProtect => Self::from(std::io::ErrorKind::PermissionDenied),
+				responses::StatusCode::NoMedia => Self::from(std::io::ErrorKind::Other),
 			},
 			Error::Packet(e) => Self::new(std::io::ErrorKind::InvalidData, e),
 			Error::Timeout => Self::from(std::io::ErrorKind::TimedOut),
@@ -57,6 +62,10 @@ impl<T> From<tokio::sync::mpsc::error::SendError<T>> for Error {
 
 impl From<tokio::sync::oneshot::error::RecvError> for Error {
 	fn from(_: tokio::sync::oneshot::error::RecvError) -> Self { Self::custom("channel closed") }
+}
+
+impl From<tokio::time::error::Elapsed> for Error {
+	fn from(_: tokio::time::error::Elapsed) -> Self { Self::Timeout }
 }
 
 impl std::error::Error for Error {}

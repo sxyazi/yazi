@@ -1,21 +1,25 @@
-use std::{ffi::OsStr, io, time::{Duration, UNIX_EPOCH}};
+use std::{io, time::{Duration, UNIX_EPOCH}};
 
 use yazi_fs::cha::ChaKind;
 
 // --- Attrs
 pub(crate) struct Attrs(pub(crate) yazi_fs::provider::Attrs);
 
-impl From<Attrs> for yazi_sftp::fs::Attrs {
-	fn from(attrs: Attrs) -> Self {
-		Self {
+impl TryFrom<Attrs> for yazi_sftp::fs::Attrs {
+	type Error = ();
+
+	fn try_from(value: Attrs) -> Result<Self, Self::Error> {
+		let attrs = Self {
 			size:     None,
 			uid:      None,
 			gid:      None,
-			perm:     attrs.0.mode.map(|m| m.bits() as u32),
-			atime:    attrs.0.atime_dur().map(|d| d.as_secs() as u32),
-			mtime:    attrs.0.mtime_dur().map(|d| d.as_secs() as u32),
+			perm:     value.0.mode.map(|m| m.bits() as u32),
+			atime:    value.0.atime_dur().map(|d| d.as_secs() as u32),
+			mtime:    value.0.mtime_dur().map(|d| d.as_secs() as u32),
 			extended: Default::default(),
-		}
+		};
+
+		if attrs.is_empty() { Err(()) } else { Ok(attrs) }
 	}
 }
 
@@ -26,20 +30,19 @@ impl TryFrom<&yazi_sftp::fs::DirEntry> for Cha {
 	type Error = io::Error;
 
 	fn try_from(ent: &yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
-		let mut cha = Self::try_from((ent.name().as_ref(), ent.attrs()))?;
+		let mut cha = Self::try_from((ent.name(), ent.attrs()))?;
 		cha.0.nlink = ent.nlink().unwrap_or_default();
 		Ok(cha)
 	}
 }
 
-impl TryFrom<(&OsStr, &yazi_sftp::fs::Attrs)> for Cha {
+impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Cha {
 	type Error = io::Error;
 
-	fn try_from((name, attrs): (&OsStr, &yazi_sftp::fs::Attrs)) -> Result<Self, Self::Error> {
-		let kind =
-			if name.as_encoded_bytes().starts_with(b".") { ChaKind::HIDDEN } else { ChaKind::empty() };
+	fn try_from((name, attrs): (&[u8], &yazi_sftp::fs::Attrs)) -> Result<Self, Self::Error> {
+		let kind = if name.starts_with(b".") { ChaKind::HIDDEN } else { ChaKind::empty() };
 
-		Ok(Cha(yazi_fs::cha::Cha {
+		Ok(Self(yazi_fs::cha::Cha {
 			kind,
 			mode: ChaMode::try_from(attrs)?.0,
 			len: attrs.size.unwrap_or(0),

@@ -1,9 +1,8 @@
 use std::ffi::OsString;
 
-use tokio::sync::oneshot;
 use yazi_macro::{emit, relay};
 use yazi_parser::tasks::ProcessOpenOpt;
-use yazi_shared::url::{UrlBuf, UrlCow};
+use yazi_shared::{CompletionToken, url::{UrlBuf, UrlCow}};
 
 pub struct TasksProxy;
 
@@ -20,20 +19,25 @@ impl TasksProxy {
 		block: bool,
 		orphan: bool,
 	) {
-		let (tx, rx) = oneshot::channel();
+		let done = CompletionToken::default();
 		emit!(Call(relay!(tasks:process_open).with_any("opt", ProcessOpenOpt {
 			cwd,
 			cmd,
 			args,
 			block,
 			orphan,
-			done: Some(tx),
+			done: Some(done.clone()),
 			spread: false
 		})));
-		rx.await.ok();
+		done.future().await;
 	}
 
-	pub fn update_succeed(url: impl Into<UrlBuf>) {
-		emit!(Call(relay!(tasks:update_succeed).with_any("urls", vec![url.into()])));
+	pub fn update_succeed<I>(url: I)
+	where
+		I: IntoIterator,
+		I::Item: Into<UrlBuf>,
+	{
+		let urls: Vec<_> = url.into_iter().map(Into::into).collect();
+		emit!(Call(relay!(tasks:update_succeed).with_any("urls", urls)));
 	}
 }

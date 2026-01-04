@@ -21,7 +21,7 @@ impl Actor for Leave {
 
 		let Some(mut url) = url else { succ!() };
 		if url.is_search() {
-			url = url.into_regular();
+			url = url.as_regular()?;
 		}
 
 		act!(mgr:cd, cx, (url, CdSource::Leave))

@@ -6,10 +6,14 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use yazi_macro::{errln, outln};
+use yazi_shared::LOCAL_SET;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-	match run().await {
+	yazi_shared::init();
+	yazi_fs::init();
+
+	match LOCAL_SET.run_until(run()).await {
 		Ok(()) => ExitCode::SUCCESS,
 		Err(e) => {
 			for cause in e.chain() {
@@ -26,9 +30,6 @@ async fn main() -> ExitCode {
 }
 
 async fn run() -> anyhow::Result<()> {
-	yazi_shared::init();
-	yazi_fs::init();
-
 	if std::env::args_os().nth(1).is_some_and(|s| s == "-V" || s == "--version") {
 		outln!(
 			"Ya {} ({} {})",

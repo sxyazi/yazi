@@ -26,7 +26,7 @@ impl Default for Preference {
 			sort_translit:  YAZI.mgr.sort_translit.get(),
 
 			// Display
-			linemode:    YAZI.mgr.linemode.to_owned(),
+			linemode:    YAZI.mgr.linemode.clone(),
 			show_hidden: YAZI.mgr.show_hidden.get(),
 		}
 	}

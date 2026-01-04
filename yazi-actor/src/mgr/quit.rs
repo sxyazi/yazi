@@ -1,4 +1,4 @@
-use std::{ffi::OsString, time::Duration};
+use std::time::Duration;
 
 use anyhow::Result;
 use tokio::{select, time};
@@ -7,7 +7,7 @@ use yazi_dds::spark::SparkKind;
 use yazi_macro::{emit, succ};
 use yazi_parser::mgr::QuitOpt;
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::{data::Data, event::EventQuit, url::{AsUrl, UrlCow}};
+use yazi_shared::{data::Data, event::EventQuit, strand::{Strand, StrandLike, ToStrandJoin}, url::AsUrl};
 
 use crate::{Actor, Ctx};
 
@@ -66,17 +66,12 @@ impl Actor for Quit {
 }
 
 impl Quit {
-	pub(super) fn with_selected<'a, I, T>(selected: I)
+	pub(super) fn with_selected<I>(selected: I)
 	where
-		I: IntoIterator<Item = T>,
-		T: Into<UrlCow<'a>>,
+		I: IntoIterator,
+		I::Item: AsUrl,
 	{
-		let paths = selected.into_iter().fold(OsString::new(), |mut s, u| {
-			s.push(u.into().as_url().os_str());
-			s.push("\n");
-			s
-		});
-
+		let paths = selected.into_iter().join(Strand::Utf8("\n"));
 		if !paths.is_empty() {
 			emit!(Quit(EventQuit { selected: Some(paths), ..Default::default() }));
 		}

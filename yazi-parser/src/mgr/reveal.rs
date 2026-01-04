@@ -1,12 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_fs::path::expand_url;
-use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlCow}};
+use yazi_fs::path::{clean_url, expand_url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_vfs::provider;
 
 use crate::mgr::CdSource;
 
 #[derive(Debug)]
 pub struct RevealOpt {
-	pub target:   UrlCow<'static>,
+	pub target:   UrlBuf,
 	pub source:   CdSource,
 	pub no_dummy: bool,
 }
@@ -16,33 +17,25 @@ impl From<CmdCow> for RevealOpt {
 		let mut target = c.take_first().unwrap_or_default();
 
 		if !c.bool("raw") {
-			target = expand_url(target).into();
+			target = expand_url(target);
 		}
 
-		Self { target, source: CdSource::Reveal, no_dummy: c.bool("no-dummy") }
-	}
-}
+		if let Some(u) = provider::try_absolute(&target)
+			&& u.is_owned()
+		{
+			target = u.into_static();
+		}
 
-impl From<UrlCow<'static>> for RevealOpt {
-	fn from(target: UrlCow<'static>) -> Self {
-		Self { target, source: CdSource::Reveal, no_dummy: false }
-	}
-}
-
-impl From<(UrlCow<'static>, CdSource)> for RevealOpt {
-	fn from((target, source): (UrlCow<'static>, CdSource)) -> Self {
-		Self { target, source, no_dummy: false }
+		Self { target: clean_url(target), source: CdSource::Reveal, no_dummy: c.bool("no-dummy") }
 	}
 }
 
 impl From<UrlBuf> for RevealOpt {
-	fn from(target: UrlBuf) -> Self { Self::from(UrlCow::from(target)) }
+	fn from(target: UrlBuf) -> Self { Self { target, source: CdSource::Reveal, no_dummy: false } }
 }
 
 impl From<(UrlBuf, CdSource)> for RevealOpt {
-	fn from((target, source): (UrlBuf, CdSource)) -> Self {
-		Self::from((UrlCow::from(target), source))
-	}
+	fn from((target, source): (UrlBuf, CdSource)) -> Self { Self { target, source, no_dummy: false } }
 }
 
 impl FromLua for RevealOpt {

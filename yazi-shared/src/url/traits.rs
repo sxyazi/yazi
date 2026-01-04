@@ -1,6 +1,6 @@
-use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
+use std::path::{Path, PathBuf};
 
-use crate::{loc::Loc, path::{AsPathDyn, PathDyn}, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{loc::Loc, url::{Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -9,7 +9,7 @@ pub trait AsUrl {
 
 impl AsUrl for Path {
 	#[inline]
-	fn as_url(&self) -> Url<'_> { Url { loc: Loc::bare(self), scheme: SchemeRef::Regular } }
+	fn as_url(&self) -> Url<'_> { Url::Regular(Loc::bare(self)) }
 }
 
 impl AsUrl for &Path {
@@ -27,15 +27,6 @@ impl AsUrl for &PathBuf {
 	fn as_url(&self) -> Url<'_> { (*self).as_path().as_url() }
 }
 
-impl AsUrl for PathDyn<'_> {
-	#[inline]
-	fn as_url(&self) -> Url<'_> {
-		match *self {
-			Self::Os(p) => p.as_url(),
-		}
-	}
-}
-
 impl AsUrl for Url<'_> {
 	#[inline]
 	fn as_url(&self) -> Url<'_> { *self }
@@ -43,7 +34,14 @@ impl AsUrl for Url<'_> {
 
 impl AsUrl for UrlBuf {
 	#[inline]
-	fn as_url(&self) -> Url<'_> { Url { loc: self.loc.as_loc(), scheme: self.scheme.as_scheme() } }
+	fn as_url(&self) -> Url<'_> {
+		match self {
+			Self::Regular(loc) => Url::Regular(loc.as_loc()),
+			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
+			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
+			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+		}
+	}
 }
 
 impl AsUrl for &UrlBuf {
@@ -57,18 +55,27 @@ impl AsUrl for &mut UrlBuf {
 }
 
 impl AsUrl for UrlCow<'_> {
-	#[inline]
 	fn as_url(&self) -> Url<'_> {
 		match self {
-			UrlCow::Borrowed { loc, scheme } => Url { loc: *loc, scheme: scheme.as_scheme() },
-			UrlCow::Owned { loc, scheme } => Url { loc: loc.as_loc(), scheme: scheme.as_scheme() },
+			Self::Regular(loc) => Url::Regular(loc.as_loc()),
+			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
+			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
+			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+
+			Self::RegularRef(loc) => Url::Regular(*loc),
+			Self::SearchRef { loc, domain } => Url::Search { loc: *loc, domain },
+			Self::ArchiveRef { loc, domain } => Url::Archive { loc: *loc, domain },
+			Self::SftpRef { loc, domain } => Url::Sftp { loc: *loc, domain },
 		}
 	}
 }
 
 impl AsUrl for &UrlCow<'_> {
-	#[inline]
 	fn as_url(&self) -> Url<'_> { (**self).as_url() }
+}
+
+impl AsUrl for super::Components<'_> {
+	fn as_url(&self) -> Url<'_> { self.url() }
 }
 
 impl<'a, T> From<&'a T> for Url<'a>
@@ -84,54 +91,3 @@ where
 {
 	fn from(value: &'a mut T) -> Self { value.as_url() }
 }
-
-// UrlLike
-pub trait UrlLike
-where
-	Self: AsUrl + Sized,
-{
-	fn as_path(&self) -> Option<&Path> { self.as_url().as_path() }
-
-	fn base(&self) -> Option<Url<'_>> { self.as_url().base() }
-
-	fn components(&self) -> Components<'_> { self.as_url().into() }
-
-	fn covariant(&self, other: impl AsUrl) -> bool { self.as_url().covariant(other) }
-
-	fn display(&self) -> Display<'_> { self.as_url().into() }
-
-	fn ends_with(&self, child: impl AsUrl) -> bool { self.as_url().ends_with(child) }
-
-	fn ext(&self) -> Option<&OsStr> { self.as_url().ext() }
-
-	fn has_root(&self) -> bool { self.as_url().has_root() }
-
-	fn has_trail(&self) -> bool { self.as_url().has_trail() }
-
-	fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
-
-	fn join(&self, path: impl AsPathDyn) -> UrlBuf { self.as_url().join(path) }
-
-	fn name(&self) -> Option<&OsStr> { self.as_url().name() }
-
-	fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
-
-	fn pair(&self) -> Option<(Url<'_>, PathDyn<'_>)> { self.as_url().pair() }
-
-	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
-
-	fn starts_with(&self, base: impl AsUrl) -> bool { self.as_url().starts_with(base) }
-
-	fn stem(&self) -> Option<&OsStr> { self.as_url().stem() }
-
-	fn strip_prefix(&self, base: impl AsUrl) -> Option<PathDyn<'_>> {
-		self.as_url().strip_prefix(base)
-	}
-
-	fn uri(&self) -> PathDyn<'_> { self.as_url().uri() }
-
-	fn urn(&self) -> PathDyn<'_> { self.as_url().urn() }
-}
-
-impl UrlLike for UrlBuf {}
-impl UrlLike for UrlCow<'_> {}

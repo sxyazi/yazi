@@ -1,7 +1,7 @@
 Entity = {
 	_inc = 1000,
 	_children = {
-		{ "spacer", id = 1, order = 1000 },
+		{ "padding", id = 1, order = 1000 },
 		{ "icon", id = 2, order = 2000 },
 		{ "prefix", id = 3, order = 3000 },
 		{ "highlights", id = 4, order = 4000 },
@@ -12,7 +12,18 @@ Entity = {
 
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Entity:spacer() return " " end
+function Entity:padding()
+	if not self._file.is_hovered then
+		return " "
+	end
+
+	local style = self:style_rev()
+	if style then
+		return ui.Span(th.indicator.padding.open):style(style)
+	else
+		return " "
+	end
+end
 
 function Entity:icon()
 	local icon = self._file:icon()
@@ -31,22 +42,22 @@ function Entity:prefix()
 end
 
 function Entity:highlights()
-	local name = self._file.name:gsub("\r", "?", 1)
+	local name, p = self._file.name, ui.printable
 	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
-		return name
+		return p(name)
 	end
 
 	local spans, last = {}, 0
 	for _, h in ipairs(highlights) do
 		if h[1] > last then
-			spans[#spans + 1] = name:sub(last + 1, h[1])
+			spans[#spans + 1] = p(name:sub(last + 1, h[1]))
 		end
-		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(th.mgr.find_keyword)
+		spans[#spans + 1] = ui.Span(p(name:sub(h[1] + 1, h[2]))):style(th.mgr.find_keyword)
 		last = h[2]
 	end
 	if last < #name then
-		spans[#spans + 1] = name:sub(last + 1)
+		spans[#spans + 1] = p(name:sub(last + 1))
 	end
 	return ui.Line(spans)
 end
@@ -86,13 +97,25 @@ function Entity:redraw()
 end
 
 function Entity:style()
-	local s = self._file:style()
+	local s = self._file:style() or ui.Style()
 	if not self._file.is_hovered then
 		return s
+	elseif self._file.in_current then
+		return s:patch(th.indicator.current)
 	elseif self._file.in_preview then
-		return s and s:patch(th.mgr.preview_hovered) or th.mgr.preview_hovered
+		return s:patch(th.indicator.preview)
 	else
-		return s and s:patch(th.mgr.hovered) or th.mgr.hovered
+		return s:patch(th.indicator.parent)
+	end
+end
+
+function Entity:style_rev()
+	local s = self:style()
+	local bg = s:bg(true)
+	if bg then
+		return ui.Style():fg(bg):bg("reset"):reverse(true)
+	elseif s:raw().reversed then
+		return ui.Style():bg("reset"):reverse(true)
 	end
 end
 

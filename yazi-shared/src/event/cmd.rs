@@ -152,6 +152,14 @@ impl Cmd {
 		self.take(0)
 	}
 
+	pub fn take_second<T>(&mut self) -> Result<T>
+	where
+		T: TryFrom<Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		self.take(1)
+	}
+
 	pub fn take_seq<T>(&mut self) -> Vec<T>
 	where
 		T: TryFrom<Data>,
@@ -206,23 +214,22 @@ impl Cmd {
 impl Display for Cmd {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name)?;
+
+		for i in 0..self.args.len() {
+			let Ok(s) = self.get::<&str>(i) else { break };
+			write!(f, " {s}")?;
+		}
+
 		for (k, v) in &self.args {
-			match k {
-				DataKey::Integer(_) => {
-					if let Some(s) = v.as_str() {
-						write!(f, " {s}")?;
-					}
+			if let DataKey::String(k) = k {
+				if v.try_into().is_ok_and(|b| b) {
+					write!(f, " --{k}")?;
+				} else if let Some(s) = v.as_str() {
+					write!(f, " --{k}={s}")?;
 				}
-				DataKey::String(k) => {
-					if v.try_into().is_ok_and(|b| b) {
-						write!(f, " --{k}")?;
-					} else if let Some(s) = v.as_str() {
-						write!(f, " --{k}={s}")?;
-					}
-				}
-				_ => {}
 			}
 		}
+
 		Ok(())
 	}
 }
@@ -231,7 +238,7 @@ impl FromStr for Cmd {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let (mut words, last) = crate::shell::split_unix(s, true)?;
+		let (mut words, last) = crate::shell::unix::split(s, true)?;
 		if words.is_empty() || words[0].is_empty() {
 			bail!("command name cannot be empty");
 		}

@@ -1,12 +1,10 @@
-#![allow(clippy::option_map_unit_fn, clippy::unit_arg)]
-
 yazi_macro::mod_pub!(drivers);
 
-yazi_macro::mod_flat!(adapter brand dimension emulator image info mux unknown);
+yazi_macro::mod_flat!(adapter brand dimension emulator icc image info mux unknown);
 
-use yazi_shared::{SyncCell, in_wsl};
+use yazi_shared::{RoCell, SyncCell, in_wsl};
 
-pub static EMULATOR: SyncCell<Emulator> = SyncCell::new(Emulator::unknown());
+pub static EMULATOR: RoCell<Emulator> = RoCell::new();
 pub static ADAPTOR: SyncCell<Adapter> = SyncCell::new(Adapter::Chafa);
 
 // Image state
@@ -26,8 +24,8 @@ pub fn init() -> anyhow::Result<()> {
 	WSL.set(in_wsl());
 
 	// Emulator detection
-	EMULATOR.set(Emulator::detect().unwrap_or_default());
-	TMUX.set(EMULATOR.get().kind.is_left_and(|&b| b == Brand::Tmux));
+	let mut emulator = Emulator::detect().unwrap_or_default();
+	TMUX.set(emulator.kind.is_left_and(|&b| b == Brand::Tmux));
 
 	// Tmux support
 	if TMUX.get() {
@@ -35,12 +33,13 @@ pub fn init() -> anyhow::Result<()> {
 		START.set("\x1bPtmux;\x1b\x1b");
 		CLOSE.set("\x1b\\");
 		Mux::tmux_passthrough();
-		EMULATOR.set(Emulator::detect().unwrap_or_default());
+		emulator = Emulator::detect().unwrap_or_default();
 	}
 
-	yazi_config::init_flavor(EMULATOR.get().light)?;
+	EMULATOR.init(emulator);
+	yazi_config::init_flavor(EMULATOR.light)?;
 
-	ADAPTOR.set(Adapter::matches(EMULATOR.get()));
+	ADAPTOR.set(Adapter::matches(&EMULATOR));
 	ADAPTOR.get().start();
 	Ok(())
 }

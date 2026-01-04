@@ -30,7 +30,7 @@ impl Serialize for ExtendedData<'_> {
 		S: serde::Serializer,
 	{
 		let mut seq = serializer.serialize_seq(None)?;
-		for b in self.0.as_ref() {
+		for b in &*self.0 {
 			seq.serialize_element(b)?;
 		}
 		seq.end()

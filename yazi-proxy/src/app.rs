@@ -13,8 +13,10 @@ impl AppProxy {
 		rx.await.ok();
 	}
 
-	pub fn resume() {
-		emit!(Call(relay!(app:resume)));
+	pub async fn resume() {
+		let (tx, rx) = oneshot::channel::<()>();
+		emit!(Call(relay!(app:resume).with_any("tx", tx)));
+		rx.await.ok();
 	}
 
 	pub fn notify(opt: NotifyOpt) {
@@ -25,10 +27,10 @@ impl AppProxy {
 		emit!(Call(relay!(app:update_notify, [dur.as_secs_f64()])));
 	}
 
-	pub fn notify_warn(title: &str, content: impl ToString) {
+	pub fn notify_warn(title: impl Into<String>, content: impl Into<String>) {
 		Self::notify(NotifyOpt {
-			title:   title.to_owned(),
-			content: content.to_string(),
+			title:   title.into(),
+			content: content.into(),
 			level:   NotifyLevel::Warn,
 			timeout: Duration::from_secs(5),
 		});

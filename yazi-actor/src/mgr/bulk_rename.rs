@@ -1,17 +1,18 @@
-use std::{ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
+use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
 
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
 use hashbrown::HashMap;
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
+use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
-use yazi_shared::{OsStrJoin, data::Data, terminal_clear, url::{AsUrl, Component, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_term::tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -47,10 +48,15 @@ impl Actor for BulkRename {
 				.create_new(true)
 				.open(&tmp)
 				.await?
-				.write_all(old.join(OsStr::new("\n")).as_encoded_bytes())
+				.write_all(old.join(Strand::Utf8("\n")).encoded_bytes())
 				.await?;
 
-			defer! { tokio::spawn(Local.remove_file(tmp.clone())); }
+			defer! {
+				let tmp = tmp.clone();
+				tokio::spawn(async move {
+					Local::regular(&tmp).remove_file().await
+				});
+			}
 			TasksProxy::process_exec(
 				cwd.into(),
 				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
@@ -60,12 +66,11 @@ impl Actor for BulkRename {
 			)
 			.await;
 
-			let _permit = HIDER.acquire().await.unwrap();
-			defer!(AppProxy::resume());
+			let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> = Local
-				.read_to_string(&tmp)
+			let new: Vec<_> = Local::regular(&tmp)
+				.read_to_string()
 				.await?
 				.lines()
 				.take(old.len())
@@ -120,10 +125,12 @@ impl BulkRename {
 		let permit = WATCHER.acquire().await.unwrap();
 		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
 		for (o, n) in todo {
-			let (old, new): (UrlBuf, UrlBuf) = (
-				selected[o.0].components().take(root).chain([Component::Normal(&o)]).collect(),
-				selected[n.0].components().take(root).chain([Component::Normal(&n)]).collect(),
-			);
+			let (Ok(old), Ok(new)) =
+				(Self::replace_url(&selected[o.0], root, &o), Self::replace_url(&selected[n.0], root, &n))
+			else {
+				failed.push((o, n, anyhow!("Invalid new or old file name")));
+				continue;
+			};
 
 			if maybe_exists(&new).await && !provider::must_identical(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
@@ -137,7 +144,7 @@ impl BulkRename {
 		}
 
 		if !succeeded.is_empty() {
-			let it = succeeded.iter().map(|(o, n)| (o, &n.url));
+			let it = succeeded.iter().map(|(o, n)| (o.as_url(), n.url.as_url()));
 			err!(Pubsub::pub_after_bulk(it));
 			FilesOp::rename(succeeded);
 		}
@@ -151,6 +158,10 @@ impl BulkRename {
 
 	fn opener() -> Option<&'static OpenerRule> {
 		YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
+	}
+
+	fn replace_url(url: &UrlBuf, take: usize, rep: &StrandBuf) -> Result<UrlBuf> {
+		Ok(url.try_replace(take, PathDyn::with(url.kind(), rep)?)?.into_owned())
 	}
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {
@@ -209,10 +220,10 @@ impl BulkRename {
 
 // --- Tuple
 #[derive(Clone, Debug)]
-struct Tuple(usize, OsString);
+struct Tuple(usize, StrandBuf);
 
 impl Deref for Tuple {
-	type Target = OsStr;
+	type Target = StrandBuf;
 
 	fn deref(&self) -> &Self::Target { &self.1 }
 }
@@ -227,12 +238,12 @@ impl Hash for Tuple {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) { self.1.hash(state); }
 }
 
-impl AsRef<OsStr> for Tuple {
-	fn as_ref(&self) -> &OsStr { &self.1 }
+impl AsStrand for &Tuple {
+	fn as_strand(&self) -> Strand<'_> { self.1.as_strand() }
 }
 
 impl Tuple {
-	fn new(index: usize, inner: impl Into<OsString>) -> Self { Self(index, inner.into()) }
+	fn new(index: usize, inner: impl Into<StrandBuf>) -> Self { Self(index, inner.into()) }
 }
 
 // --- Tests
