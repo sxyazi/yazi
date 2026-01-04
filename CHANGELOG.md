@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+## [v26.1.4]
+
 ### Added
 
 - Support VFS for preset previewers that rely on external commands ([#3477])
@@ -986,6 +988,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [v25.5.28]: https://github.com/sxyazi/yazi/compare/v25.4.8...v25.5.28
 [v25.5.31]: https://github.com/sxyazi/yazi/compare/v25.5.28...v25.5.31
 [v25.12.29]: https://github.com/sxyazi/yazi/compare/v25.5.31...v25.12.29
+[v26.1.4]: https://github.com/sxyazi/yazi/compare/v25.12.29...v26.1.4
 [#4]: https://github.com/sxyazi/yazi/pull/4
 [#5]: https://github.com/sxyazi/yazi/pull/5
 [#6]: https://github.com/sxyazi/yazi/pull/6
