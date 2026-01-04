@@ -3,7 +3,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::FolderStage;
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::ExcludedOpt;
-use yazi_shared::{data::Data, path::PathLike};
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -18,7 +18,7 @@ impl Actor for Excluded {
 		let current_state = cx.tab().current.files.show_excluded();
 		let state = opt.state.bool(current_state);
 
-		let hovered = cx.hovered().map(|f| f.urn().owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();

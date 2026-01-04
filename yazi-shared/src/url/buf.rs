@@ -162,7 +162,7 @@ impl UrlBuf {
 			Self::Archive { loc, domain } => {
 				Self::Archive { loc: loc.rebase(base), domain: domain.clone() }
 			}
-			Self::Sftp { loc, domain } => {
+			Self::Sftp { loc: _, domain: _ } => {
 				todo!();
 				// Self::Sftp { loc: loc.rebase(base), domain: domain.clone() }
 			}

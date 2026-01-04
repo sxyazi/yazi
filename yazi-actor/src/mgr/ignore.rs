@@ -6,7 +6,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::{FolderStage, IgnoreFilter};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::{data::Data, path::PathLike, url::UrlLike};
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -24,14 +24,14 @@ impl Actor for Ignore {
 		let cwd_str = if cwd.is_search() {
 			"search://**".to_string()
 		} else {
-			cwd.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+			cwd.loc().as_os().ok().map(|p| p.display().to_string()).unwrap_or_default()
 		};
 
 		let exclude_patterns = YAZI.files.excludes_for_context(&cwd_str);
 
 		// Check if we're inside an excluded directory
 		// If so, don't apply filters to allow viewing excluded directory contents
-		if let Some(cwd_path) = cwd.as_path() {
+		if let Some(cwd_path) = cwd.loc().as_os().ok() {
 			// Quick test: does the CWD match any exclude pattern?
 			for pattern in &exclude_patterns {
 				if pattern.starts_with('!') {
@@ -62,7 +62,7 @@ impl Actor for Ignore {
 		// Load ignore filter from exclude patterns
 		let ignore_filter = IgnoreFilter::from_patterns(glob_matcher.clone());
 
-		let hovered = cx.hovered().map(|f| f.urn().owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder, filter: Option<IgnoreFilter>| {
 			// Always set the filter, even when loading
 			let changed = f.files.set_ignore_filter(filter);
@@ -81,7 +81,7 @@ impl Actor for Ignore {
 			let parent_str = if p.url.is_search() {
 				"search://**".to_string()
 			} else {
-				p.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+				p.url.loc().as_os().ok().map(|p| p.display().to_string()).unwrap_or_default()
 			};
 
 			let parent_excludes = YAZI.files.excludes_for_context(&parent_str);
@@ -109,7 +109,7 @@ impl Actor for Ignore {
 			let hovered_str = if h.url.is_search() {
 				"search://**".to_string()
 			} else {
-				h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+				h.url.loc().as_os().ok().map(|p| p.display().to_string()).unwrap_or_default()
 			};
 			let hovered_excludes = YAZI.files.excludes_for_context(&hovered_str);
 			let hovered_matcher: Option<Arc<dyn Fn(&std::path::Path) -> Option<bool> + Send + Sync>> =

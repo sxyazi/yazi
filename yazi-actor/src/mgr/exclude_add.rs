@@ -7,7 +7,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::{FolderStage, IgnoreFilter};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::ExcludeAddOpt;
-use yazi_shared::{data::Data, path::PathLike, url::UrlLike};
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -28,12 +28,12 @@ impl Actor for ExcludeAdd {
 		let cwd_str = if cwd.is_search() {
 			"search://**".to_string()
 		} else {
-			cwd.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+			cwd.loc().as_os().ok().map(|p| p.display().to_string()).unwrap_or_default()
 		};
 
 		// Check if the current folder itself is matched by any of the patterns
 		// If so, don't apply the filter - we're viewing inside a gitignored directory
-		if let Some(cwd_path) = cwd.as_path() {
+		if let Some(cwd_path) = cwd.loc().as_os().ok() {
 			// Build a quick GlobSet to test if current folder matches any pattern
 			let mut test_builder = GlobSetBuilder::new();
 			for pattern in &opt.patterns {
@@ -154,7 +154,7 @@ impl Actor for ExcludeAdd {
 		// Load ignore filter with merged patterns
 		let ignore_filter = IgnoreFilter::from_patterns(glob_matcher.clone());
 
-		let hovered = cx.hovered().map(|f| f.urn().owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder, filter: Option<IgnoreFilter>| {
 			let changed = f.files.set_ignore_filter(filter);
 			if f.stage == FolderStage::Loading {
@@ -172,7 +172,7 @@ impl Actor for ExcludeAdd {
 			let parent_str = if p.url.is_search() {
 				"search://**".to_string()
 			} else {
-				p.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+				p.url.loc().as_os().ok().map(|p| p.display().to_string()).unwrap_or_default()
 			};
 
 			let parent_config_patterns = YAZI.files.excludes_for_context(&parent_str);
@@ -265,7 +265,7 @@ impl Actor for ExcludeAdd {
 			let hovered_str = if h.url.is_search() {
 				"search://**".to_string()
 			} else {
-				h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+				h.url.loc().as_os().ok().map(|p| p.display().to_string()).unwrap_or_default()
 			};
 
 			let hovered_config_patterns = YAZI.files.excludes_for_context(&hovered_str);

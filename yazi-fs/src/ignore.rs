@@ -59,7 +59,7 @@ impl IgnoreFilter {
 	/// Returns true if matched as ignore, false if whitelisted or no match.
 	pub fn matches_url(&self, url: impl AsUrl) -> bool {
 		let url = url.as_url();
-		let path = url.loc.as_path();
+		let Ok(path) = url.loc().as_os() else { return false };
 
 		// Check glob matcher
 		if let Some(ref matcher) = self.glob_matcher {
