@@ -116,7 +116,6 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 #[cfg(any(
 	target_os = "macos",
 	target_os = "netbsd",
-	target_os = "openbsd",
 	target_os = "freebsd"
 ))]
 fn final_path(path: &Path) -> io::Result<PathBuf> {
@@ -137,6 +136,11 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 
 	let cstr = unsafe { CStr::from_ptr(buf.as_ptr() as *const i8) };
 	Ok(OsString::from_vec(cstr.to_bytes().to_vec()).into())
+}
+
+#[cfg(target_os = "openbsd")]
+fn final_path(path: &Path) -> io::Result<PathBuf> {
+    std::fs::canonicalize(path)
 }
 
 #[cfg(target_os = "windows")]
