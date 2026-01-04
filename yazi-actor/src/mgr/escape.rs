@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::{VoidOpt, mgr::EscapeOpt};
 use yazi_proxy::AppProxy;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 

@@ -4,9 +4,9 @@ use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, RoCell, url::{UrlBuf, UrlBufCov}};
+use yazi_shared::{Id, RoCell, url::{Url, UrlBuf, UrlBufCov}};
 
-use crate::{Client, ID, PEERS, ember::{BodyMoveItem, Ember, EmberBulk, EmberHi}};
+use crate::{Client, ID, PEERS, ember::{BodyDuplicateItem, BodyMoveItem, Ember, EmberBulk, EmberHi}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -123,7 +123,7 @@ impl Pubsub {
 
 	pub fn pub_after_bulk<'a, I>(changes: I) -> Result<()>
 	where
-		I: Iterator<Item = (&'a UrlBuf, &'a UrlBuf)> + Clone,
+		I: Iterator<Item = (Url<'a>, Url<'a>)> + Clone,
 	{
 		if BOOT.local_events.contains("bulk") {
 			EmberBulk::borrowed(changes.clone()).with_receiver(*ID).flush()?;
@@ -156,6 +156,8 @@ impl Pubsub {
 	pub_after!(rename(tab: Id, from: &UrlBuf, to: &UrlBuf), (tab, from, to));
 
 	pub_after!(@yank(cut: bool, urls: &HashSet<UrlBufCov>), (cut, urls));
+
+	pub_after!(duplicate(items: Vec<BodyDuplicateItem>), (&items), (items));
 
 	pub_after!(move(items: Vec<BodyMoveItem>), (&items), (items));
 

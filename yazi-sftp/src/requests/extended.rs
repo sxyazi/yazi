@@ -2,7 +2,7 @@ use std::{borrow::Cow, fmt::Debug};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, Error, ToByteStr};
+use crate::{AsSftpPath, SftpPath};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Extended<'a, D> {
@@ -30,17 +30,17 @@ pub trait ExtendedData: Debug + Serialize + for<'de> Deserialize<'de> {
 // --- POSIX Rename
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ExtendedRename<'a> {
-	pub from: ByteStr<'a>,
-	pub to:   ByteStr<'a>,
+	pub from: SftpPath<'a>,
+	pub to:   SftpPath<'a>,
 }
 
 impl<'a> ExtendedRename<'a> {
-	pub fn new<F, T>(from: F, to: T) -> Result<Self, Error>
+	pub fn new<F, T>(from: F, to: T) -> Self
 	where
-		F: ToByteStr<'a>,
-		T: ToByteStr<'a>,
+		F: AsSftpPath<'a>,
+		T: AsSftpPath<'a>,
 	{
-		Ok(Self { from: from.to_byte_str()?, to: to.to_byte_str()? })
+		Self { from: from.as_sftp_path(), to: to.as_sftp_path() }
 	}
 }
 
@@ -65,17 +65,17 @@ impl ExtendedData for ExtendedFsync<'_> {
 // --- Hardlink
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ExtendedHardlink<'a> {
-	pub original: ByteStr<'a>,
-	pub link:     ByteStr<'a>,
+	pub original: SftpPath<'a>,
+	pub link:     SftpPath<'a>,
 }
 
 impl<'a> ExtendedHardlink<'a> {
-	pub fn new<O, L>(original: O, link: L) -> Result<Self, Error>
+	pub fn new<O, L>(original: O, link: L) -> Self
 	where
-		O: ToByteStr<'a>,
-		L: ToByteStr<'a>,
+		O: AsSftpPath<'a>,
+		L: AsSftpPath<'a>,
 	{
-		Ok(Self { original: original.to_byte_str()?, link: link.to_byte_str()? })
+		Self { original: original.as_sftp_path(), link: link.as_sftp_path() }
 	}
 }
 

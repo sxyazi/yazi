@@ -12,10 +12,15 @@ impl Input {
 		}
 
 		let snap = self.snap_mut();
+		if let InputOp::Select(_) = snap.op {
+			succ!();
+		}
+
 		if !snap.value.is_empty() {
 			snap.op = InputOp::Select(snap.cursor);
 			render!();
 		}
+
 		succ!();
 	}
 }

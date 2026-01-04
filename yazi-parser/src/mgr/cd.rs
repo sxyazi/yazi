@@ -1,10 +1,12 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_fs::path::expand_url;
-use yazi_shared::{event::CmdCow, url::{Url, UrlBuf, UrlCow}};
+use serde::{Deserialize, Serialize};
+use yazi_fs::path::{clean_url, expand_url};
+use yazi_shared::{event::CmdCow, url::{Url, UrlBuf}};
+use yazi_vfs::provider;
 
 #[derive(Debug)]
 pub struct CdOpt {
-	pub target:      UrlCow<'static>,
+	pub target:      UrlBuf,
 	pub interactive: bool,
 	pub source:      CdSource,
 }
@@ -14,22 +16,26 @@ impl From<CmdCow> for CdOpt {
 		let mut target = c.take_first().unwrap_or_default();
 
 		if !c.bool("raw") {
-			target = expand_url(target).into();
+			target = expand_url(target);
 		}
 
-		Self { target, interactive: c.bool("interactive"), source: CdSource::Cd }
-	}
-}
+		if let Some(u) = provider::try_absolute(&target)
+			&& u.is_owned()
+		{
+			target = u.into_static();
+		}
 
-impl From<(UrlCow<'static>, CdSource)> for CdOpt {
-	fn from((target, source): (UrlCow<'static>, CdSource)) -> Self {
-		Self { target, interactive: false, source }
+		Self {
+			target:      clean_url(target),
+			interactive: c.bool("interactive"),
+			source:      CdSource::Cd,
+		}
 	}
 }
 
 impl From<(UrlBuf, CdSource)> for CdOpt {
 	fn from((target, source): (UrlBuf, CdSource)) -> Self {
-		Self::from((UrlCow::from(target), source))
+		Self { target, interactive: false, source }
 	}
 }
 
@@ -46,18 +52,17 @@ impl IntoLua for CdOpt {
 }
 
 // --- Source
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum CdSource {
 	Tab,
 	Cd,
 	Reveal,
 	Enter,
 	Leave,
+	Follow,
 	Forward,
 	Back,
-}
-
-impl CdSource {
-	#[inline]
-	pub fn big_jump(self) -> bool { self == Self::Cd || self == Self::Reveal }
+	Escape,
+	Displace,
 }

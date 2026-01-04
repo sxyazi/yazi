@@ -30,7 +30,7 @@ impl Backend {
 
 	pub(super) fn watch(&mut self, url: impl AsUrl) -> Result<()> {
 		let url = url.as_url();
-		if let Some(path) = url.as_path() {
+		if let Some(path) = url.as_local() {
 			self.local.watch(path)?;
 		} else {
 			self.remote.watch(url)?;
@@ -41,7 +41,7 @@ impl Backend {
 
 	pub(super) fn unwatch(&mut self, url: impl AsUrl) -> Result<()> {
 		let url = url.as_url();
-		if let Some(path) = url.as_path() {
+		if let Some(path) = url.as_local() {
 			self.local.unwatch(path)?;
 		} else {
 			self.remote.unwatch(url)?;

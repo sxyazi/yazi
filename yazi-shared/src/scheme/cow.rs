@@ -1,18 +1,14 @@
-use std::{borrow::Cow, ops::Not, path::Path};
+use std::borrow::Cow;
 
-use anyhow::{Result, bail, ensure};
+use anyhow::{Result, ensure};
 use percent_encoding::percent_decode;
 
-use crate::{BytesExt, pool::InternStr, scheme::{AsScheme, Scheme, SchemeRef}};
+use crate::{path::{PathCow, PathLike}, pool::{InternStr, SymbolCow}, scheme::{AsScheme, Scheme, SchemeKind, SchemeRef}, url::Url};
 
 #[derive(Clone, Debug)]
 pub enum SchemeCow<'a> {
 	Borrowed(SchemeRef<'a>),
 	Owned(Scheme),
-}
-
-impl Default for SchemeCow<'_> {
-	fn default() -> Self { Self::Borrowed(SchemeRef::Regular) }
 }
 
 impl<'a> From<SchemeRef<'a>> for SchemeCow<'a> {
@@ -31,71 +27,75 @@ impl From<Scheme> for SchemeCow<'_> {
 }
 
 impl From<SchemeCow<'_>> for Scheme {
-	fn from(value: SchemeCow<'_>) -> Self {
-		match value {
-			SchemeCow::Borrowed(s) => s.into(),
-			SchemeCow::Owned(s) => s,
-		}
-	}
+	fn from(value: SchemeCow<'_>) -> Self { value.into_owned() }
+}
+
+impl PartialEq<SchemeRef<'_>> for SchemeCow<'_> {
+	fn eq(&self, other: &SchemeRef) -> bool { self.as_scheme() == *other }
 }
 
 impl<'a> SchemeCow<'a> {
-	pub fn search(domain: impl Into<Cow<'a, str>>) -> Self {
+	pub fn regular(uri: usize, urn: usize) -> Self { SchemeRef::Regular { uri, urn }.into() }
+
+	pub fn search<T>(domain: T, uri: usize, urn: usize) -> Self
+	where
+		T: Into<Cow<'a, str>>,
+	{
 		match domain.into() {
-			Cow::Borrowed(s) => SchemeRef::Search(s).into(),
-			Cow::Owned(s) => Scheme::Search(s.intern()).into(),
+			Cow::Borrowed(domain) => SchemeRef::Search { domain, uri, urn }.into(),
+			Cow::Owned(domain) => Scheme::Search { domain: domain.intern(), uri, urn }.into(),
 		}
 	}
 
-	pub fn archive(domain: impl Into<Cow<'a, str>>) -> Self {
+	pub fn archive<T>(domain: T, uri: usize, urn: usize) -> Self
+	where
+		T: Into<Cow<'a, str>>,
+	{
 		match domain.into() {
-			Cow::Borrowed(s) => SchemeRef::Archive(s).into(),
-			Cow::Owned(s) => Scheme::Archive(s.intern()).into(),
+			Cow::Borrowed(domain) => SchemeRef::Archive { domain, uri, urn }.into(),
+			Cow::Owned(domain) => Scheme::Archive { domain: domain.intern(), uri, urn }.into(),
 		}
 	}
 
-	pub fn sftp(domain: impl Into<Cow<'a, str>>) -> Self {
+	pub fn sftp<T>(domain: T, uri: usize, urn: usize) -> Self
+	where
+		T: Into<Cow<'a, str>>,
+	{
 		match domain.into() {
-			Cow::Borrowed(s) => SchemeRef::Sftp(s).into(),
-			Cow::Owned(s) => Scheme::Sftp(s.intern()).into(),
+			Cow::Borrowed(domain) => SchemeRef::Sftp { domain, uri, urn }.into(),
+			Cow::Owned(domain) => Scheme::Sftp { domain: domain.intern(), uri, urn }.into(),
 		}
 	}
 
-	pub(crate) fn parse(
-		bytes: &'a [u8],
-		skip: &mut usize,
-	) -> Result<(Self, bool, Option<usize>, Option<usize>)> {
-		let Some((mut protocol, rest)) = bytes.split_by_seq(b"://") else {
-			return Ok((Self::default(), false, None, None));
+	pub fn parse(bytes: &'a [u8]) -> Result<(Self, PathCow<'a>)> {
+		let Some((kind, tilde)) = SchemeKind::parse(bytes)? else {
+			let path = Self::decode_path(SchemeKind::Regular, false, bytes)?;
+			let (uri, urn) = Self::normalize_ports(SchemeKind::Regular, None, None, &path)?;
+			return Ok((Self::regular(uri, urn), path));
 		};
 
-		// Advance to the beginning of the path
-		*skip += 3 + protocol.len();
-
-		// Tilded schemes
-		let tilde = protocol.ends_with(b"~");
-		if tilde {
-			protocol = &protocol[..protocol.len() - 1];
-		}
-
-		let (scheme, uri, urn) = match protocol {
-			b"regular" => (Self::default(), None, None),
-			b"search" => {
-				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::search(domain), uri, urn)
-			}
-			b"archive" => {
-				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::archive(domain), uri, urn)
-			}
-			b"sftp" => {
-				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::sftp(domain), uri, urn)
-			}
-			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
+		// Decode domain and ports
+		let mut skip = kind.offset(tilde);
+		let (domain, uri, urn) = match kind {
+			SchemeKind::Regular => ("".into(), None, None),
+			SchemeKind::Search => Self::decode_param(&bytes[skip..], &mut skip)?,
+			SchemeKind::Archive => Self::decode_param(&bytes[skip..], &mut skip)?,
+			SchemeKind::Sftp => Self::decode_param(&bytes[skip..], &mut skip)?,
 		};
 
-		Ok((scheme, tilde, uri, urn))
+		// Decode path
+		let path = Self::decode_path(kind, tilde, &bytes[skip..])?;
+
+		// Build scheme
+		let (uri, urn) = Self::normalize_ports(kind, uri, urn, &path)?;
+		let scheme = match kind {
+			SchemeKind::Regular => Self::regular(uri, urn),
+			SchemeKind::Search => Self::search(domain, uri, urn),
+			SchemeKind::Archive => Self::archive(domain, uri, urn),
+			SchemeKind::Sftp => Self::sftp(domain, uri, urn),
+		};
+
+		Ok((scheme, path))
 	}
 
 	fn decode_param(
@@ -132,35 +132,72 @@ impl<'a> SchemeCow<'a> {
 		Ok((b, a))
 	}
 
-	pub(crate) fn normalize_ports(
-		&self,
+	fn decode_path(kind: SchemeKind, tilde: bool, bytes: &'a [u8]) -> Result<PathCow<'a>> {
+		let bytes: Cow<_> = if tilde { percent_decode(bytes).into() } else { bytes.into() };
+		PathCow::with(kind, bytes)
+	}
+
+	fn normalize_ports(
+		kind: SchemeKind,
 		uri: Option<usize>,
 		urn: Option<usize>,
-		path: &Path,
-	) -> Result<Option<(usize, usize)>> {
-		Ok(match self.as_scheme() {
-			SchemeRef::Regular => {
+		path: &PathCow,
+	) -> Result<(usize, usize)> {
+		Ok(match kind {
+			SchemeKind::Regular => {
 				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
-				None
+				(path.name().is_some() as usize, path.name().is_some() as usize)
 			}
-			SchemeRef::Search(_) => {
+			SchemeKind::Search => {
 				let (uri, urn) = (uri.unwrap_or(0), urn.unwrap_or(0));
 				ensure!(uri == urn, "Search scheme requires URI and URN to be equal");
-				Some((uri, urn))
+				(uri, urn)
 			}
-			SchemeRef::Archive(_) => Some((uri.unwrap_or(0), urn.unwrap_or(0))),
-			SchemeRef::Sftp(_) => {
-				let uri = uri.unwrap_or(path.as_os_str().is_empty().not() as usize);
-				let urn = urn.unwrap_or(path.file_name().is_some() as usize);
-				Some((uri, urn))
+			SchemeKind::Archive => (uri.unwrap_or(0), urn.unwrap_or(0)),
+			SchemeKind::Sftp => {
+				let uri = uri.unwrap_or(path.name().is_some() as usize);
+				let urn = urn.unwrap_or(path.name().is_some() as usize);
+				(uri, urn)
 			}
 		})
 	}
+
+	pub fn retrieve_ports(url: Url) -> (usize, usize) {
+		match url {
+			Url::Regular(loc) => (loc.file_name().is_some() as usize, loc.file_name().is_some() as usize),
+			Url::Search { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::Archive { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::Sftp { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+		}
+	}
 }
 
-impl SchemeCow<'_> {
+impl<'a> SchemeCow<'a> {
 	#[inline]
-	pub fn into_owned(self) -> Scheme { self.into() }
+	pub fn into_domain(self) -> Option<SymbolCow<'a, str>> {
+		Some(match self {
+			SchemeCow::Borrowed(s) => s.domain()?.into(),
+			SchemeCow::Owned(s) => s.into_domain()?.into(),
+		})
+	}
+
+	#[inline]
+	pub fn into_owned(self) -> Scheme {
+		match self {
+			Self::Borrowed(s) => s.to_owned(),
+			Self::Owned(s) => s,
+		}
+	}
+
+	pub fn with_ports(self, uri: usize, urn: usize) -> Self {
+		match self {
+			Self::Borrowed(s) => s.with_ports(uri, urn).into(),
+			Self::Owned(s) => s.with_ports(uri, urn).into(),
+		}
+	}
+
+	#[inline]
+	pub fn zeroed(self) -> Self { self.with_ports(0, 0) }
 }
 
 #[cfg(test)]

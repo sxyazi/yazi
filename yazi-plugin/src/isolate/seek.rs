@@ -16,5 +16,5 @@ pub fn seek_sync(cmd: &'static Cmd, file: yazi_fs::File, units: i16) {
 		plugin.call_method("seek", job)
 	});
 
-	AppProxy::plugin(PluginOpt::new_callback(cmd.name.as_ref(), cb));
+	AppProxy::plugin(PluginOpt::new_callback(&*cmd.name, cb));
 }

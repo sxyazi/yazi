@@ -11,6 +11,9 @@ env:
   RUSTC_WRAPPER: sccache
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
   test:
     strategy:
@@ -18,7 +21,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Rust toolchain
         run: rustup toolchain install stable --profile minimal

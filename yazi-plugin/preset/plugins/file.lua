@@ -2,8 +2,8 @@ local M = {}
 
 function M:peek(job)
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local path = tostring(job.file.cache or job.file.url)
-	local output, err = Command(cmd):arg({ "-bL", "--", path }):stdout(Command.PIPED):output()
+	local path = tostring(job.file.path)
+	local output, err = Command(cmd):arg({ "-bL", "--", path }):output()
 
 	local text
 	if output then
@@ -49,8 +49,8 @@ function M:spot_base(job)
 
 	return {
 		ui.Row({ "Base" }):style(ui.Style():fg("green")),
-		ui.Row { "  Created:", cha.btime and os.date("%y/%m/%d %H:%M", math.floor(cha.btime)) or "-" },
-		ui.Row { "  Modified:", cha.mtime and os.date("%y/%m/%d %H:%M", math.floor(cha.mtime)) or "-" },
+		ui.Row { "  Created:", cha.btime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.btime)) or "-" },
+		ui.Row { "  Modified:", cha.mtime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.mtime)) or "-" },
 		ui.Row { "  Mimetype:", job.mime },
 		ui.Row {},
 

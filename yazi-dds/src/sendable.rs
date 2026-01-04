@@ -47,7 +47,7 @@ impl Sendable {
 					Data::Url(ud.take::<yazi_binding::Url>()?.into())
 				}
 				Some(t) if t == TypeId::of::<yazi_binding::Path>() => {
-					Data::Path(ud.take::<yazi_binding::Path>()?.0)
+					Data::Path(ud.take::<yazi_binding::Path>()?.into())
 				}
 				Some(t) if t == TypeId::of::<yazi_binding::Id>() => {
 					Data::Id(**ud.borrow::<yazi_binding::Id>()?)
@@ -103,7 +103,7 @@ impl Sendable {
 			Data::Boolean(b) => Value::Boolean(*b),
 			Data::Integer(i) => Value::Integer(*i),
 			Data::Number(n) => Value::Number(*n),
-			Data::String(s) => Value::String(lua.create_string(s.as_ref())?),
+			Data::String(s) => Value::String(lua.create_string(&**s)?),
 			Data::List(l) => {
 				let mut vec = Vec::with_capacity(l.len());
 				for v in l {
@@ -120,7 +120,7 @@ impl Sendable {
 				Value::Table(tbl)
 			}
 			Data::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
-			Data::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
+			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			Data::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
 			Data::Any(a) => {
@@ -175,7 +175,7 @@ impl Sendable {
 			match k {
 				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value_ref(lua, v)?),
 				DataKey::String(s) => {
-					tbl.raw_set(replace_cow(s.as_ref(), "-", "_"), Self::data_to_value_ref(lua, v)?)
+					tbl.raw_set(replace_cow(&**s, "-", "_"), Self::data_to_value_ref(lua, v)?)
 				}
 				_ => Err("invalid key in Data".into_lua_err()),
 			}?;
@@ -215,7 +215,7 @@ impl Sendable {
 					DataKey::Url(ud.take::<yazi_binding::Url>()?.into())
 				}
 				Some(t) if t == TypeId::of::<yazi_binding::Path>() => {
-					DataKey::Path(ud.take::<yazi_binding::Path>()?.0)
+					DataKey::Path(ud.take::<yazi_binding::Path>()?.into())
 				}
 				Some(t) if t == TypeId::of::<yazi_binding::Id>() => {
 					DataKey::Id(**ud.borrow::<yazi_binding::Id>()?)
@@ -241,9 +241,9 @@ impl Sendable {
 			DataKey::Boolean(b) => Value::Boolean(*b),
 			DataKey::Integer(i) => Value::Integer(*i),
 			DataKey::Number(n) => Value::Number(n.0),
-			DataKey::String(s) => Value::String(lua.create_string(s.as_ref())?),
+			DataKey::String(s) => Value::String(lua.create_string(&**s)?),
 			DataKey::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
-			DataKey::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
+			DataKey::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			DataKey::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			DataKey::Bytes(b) => Value::String(lua.create_string(b)?),
 		})

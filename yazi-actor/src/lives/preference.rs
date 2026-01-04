@@ -32,7 +32,7 @@ impl UserData for Preference {
 		fields.add_field_method_get("sort_dir_first", |_, me| Ok(me.sort_dir_first));
 		fields.add_field_method_get("sort_translit", |_, me| Ok(me.sort_translit));
 
-		cached_field!(fields, linemode, |_, me| Ok(me.linemode.to_string()));
+		cached_field!(fields, linemode, |lua, me| lua.create_string(&me.linemode));
 		fields.add_field_method_get("show_hidden", |_, me| Ok(me.show_hidden));
 	}
 }

@@ -1,14 +1,14 @@
-use std::{ffi::OsString, path::{MAIN_SEPARATOR_STR, PathBuf}};
+use std::path::MAIN_SEPARATOR_STR;
 
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, event::CmdCow, url::UrlBuf};
+use yazi_shared::{Id, event::CmdCow, path::PathBufDyn, strand::{StrandBuf, StrandLike}, url::UrlBuf};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ShowOpt {
 	pub cache:      Vec<CmpItem>,
 	pub cache_name: UrlBuf,
-	pub word:       PathBuf,
+	pub word:       PathBufDyn,
 	pub ticket:     Id,
 }
 
@@ -35,7 +35,7 @@ impl IntoLua for ShowOpt {
 // --- Item
 #[derive(Debug, Clone)]
 pub struct CmpItem {
-	pub name:   OsString,
+	pub name:   StrandBuf,
 	pub is_dir: bool,
 }
 

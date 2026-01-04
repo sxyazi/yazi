@@ -1,6 +1,6 @@
-use std::{ffi::OsStr, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{hash::{Hash, Hasher}, ops::Deref, path::Path};
 
-use yazi_shared::{path::PathDyn, url::{UrlBuf, UrlLike}};
+use yazi_shared::{path::{PathBufDyn, PathDyn}, strand::Strand, url::{UrlBuf, UrlLike}};
 
 use crate::cha::{Cha, ChaType};
 
@@ -8,13 +8,17 @@ use crate::cha::{Cha, ChaType};
 pub struct File {
 	pub url:     UrlBuf,
 	pub cha:     Cha,
-	pub link_to: Option<PathBuf>,
+	pub link_to: Option<PathBufDyn>,
 }
 
 impl Deref for File {
 	type Target = Cha;
 
 	fn deref(&self) -> &Self::Target { &self.cha }
+}
+
+impl From<&Self> for File {
+	fn from(value: &Self) -> Self { value.clone() }
 }
 
 impl File {
@@ -34,7 +38,7 @@ impl File {
 impl File {
 	// --- Url
 	#[inline]
-	pub fn url_owned(&self) -> UrlBuf { self.url.to_owned() }
+	pub fn url_owned(&self) -> UrlBuf { self.url.clone() }
 
 	#[inline]
 	pub fn uri(&self) -> PathDyn<'_> { self.url.uri() }
@@ -43,10 +47,10 @@ impl File {
 	pub fn urn(&self) -> PathDyn<'_> { self.url.urn() }
 
 	#[inline]
-	pub fn name(&self) -> Option<&OsStr> { self.url.name() }
+	pub fn name(&self) -> Option<Strand<'_>> { self.url.name() }
 
 	#[inline]
-	pub fn stem(&self) -> Option<&OsStr> { self.url.stem() }
+	pub fn stem(&self) -> Option<Strand<'_>> { self.url.stem() }
 }
 
 impl Hash for File {

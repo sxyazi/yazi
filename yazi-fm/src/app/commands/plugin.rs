@@ -16,13 +16,13 @@ use crate::app::App;
 impl App {
 	pub(crate) fn plugin(&mut self, mut opt: PluginOpt) -> Result<Data> {
 		let mut hits = false;
-		if let Some(chunk) = LOADER.read().get(opt.id.as_ref()) {
+		if let Some(chunk) = LOADER.read().get(&*opt.id) {
 			hits = true;
 			opt.mode = opt.mode.auto_then(chunk.sync_entry);
 		}
 
 		if opt.mode == PluginMode::Async {
-			succ!(self.core.tasks.plugin_micro(opt));
+			succ!(self.core.tasks.plugin_entry(opt));
 		} else if opt.mode == PluginMode::Sync && hits {
 			return self.plugin_do(opt);
 		}
@@ -38,7 +38,7 @@ impl App {
 
 	pub(crate) fn plugin_do(&mut self, opt: PluginOpt) -> Result<Data> {
 		let loader = LOADER.read();
-		let Some(chunk) = loader.get(opt.id.as_ref()) else {
+		let Some(chunk) = loader.get(&*opt.id) else {
 			succ!(warn!("plugin `{}` not found", opt.id));
 		};
 
@@ -47,7 +47,7 @@ impl App {
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			succ!(self.core.tasks.plugin_micro(opt));
+			succ!(self.core.tasks.plugin_entry(opt));
 		}
 
 		runtime_mut!(LUA)?.push(&opt.id);

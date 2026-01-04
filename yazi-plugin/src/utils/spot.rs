@@ -23,7 +23,7 @@ impl Utils {
 					r#type: ratatui::widgets::BorderType::Rounded,
 					style: THEME.spot.border.into(),
 					titles: vec![(
-						ratatui::widgets::block::Position::Top,
+						ratatui::widgets::TitlePosition::Top,
 						ratatui::text::Line::raw("Spot").centered().style(THEME.spot.title),
 					)],
 				}),

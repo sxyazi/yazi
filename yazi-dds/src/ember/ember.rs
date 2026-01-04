@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use yazi_shared::Id;
 
-use super::{EmberBulk, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberHey, EmberHi, EmberHover, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
+use super::{EmberBulk, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
 use crate::Payload;
 
 #[derive(Debug)]
@@ -17,6 +17,7 @@ pub enum Ember<'a> {
 	Rename(EmberRename<'a>),
 	Bulk(EmberBulk<'a>),
 	Yank(EmberYank<'a>),
+	Duplicate(EmberDuplicate<'a>),
 	Move(EmberMove<'a>),
 	Trash(EmberTrash<'a>),
 	Delete(EmberDelete<'a>),
@@ -37,6 +38,7 @@ impl Ember<'static> {
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk" => Self::Bulk(serde_json::from_str(body)?),
 			"@yank" => Self::Yank(serde_json::from_str(body)?),
+			"duplicate" => Self::Duplicate(serde_json::from_str(body)?),
 			"move" => Self::Move(serde_json::from_str(body)?),
 			"trash" => Self::Trash(serde_json::from_str(body)?),
 			"delete" => Self::Delete(serde_json::from_str(body)?),
@@ -63,16 +65,15 @@ impl Ember<'static> {
 				| "rename"
 				| "bulk"
 				| "@yank"
+				| "duplicate"
 				| "move"
 				| "trash"
 				| "delete"
 				| "mount"
-		) || kind.starts_with("emit-")
-			|| kind.starts_with("emit-ind-")
+		) || kind.starts_with("key-")
 			|| kind.starts_with("ind-")
-			|| kind.starts_with("key-")
+			|| kind.starts_with("emit-")
 			|| kind.starts_with("relay-")
-			|| kind.starts_with("relay-ind-")
 		{
 			bail!("Cannot construct system event");
 		}
@@ -102,6 +103,7 @@ impl<'a> Ember<'a> {
 			Self::Rename(_) => "rename",
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "@yank",
+			Self::Duplicate(_) => "duplicate",
 			Self::Move(_) => "move",
 			Self::Trash(_) => "trash",
 			Self::Delete(_) => "delete",
@@ -130,6 +132,7 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Rename(b) => b.into_lua(lua),
 			Self::Bulk(b) => b.into_lua(lua),
 			Self::Yank(b) => b.into_lua(lua),
+			Self::Duplicate(b) => b.into_lua(lua),
 			Self::Move(b) => b.into_lua(lua),
 			Self::Trash(b) => b.into_lua(lua),
 			Self::Delete(b) => b.into_lua(lua),

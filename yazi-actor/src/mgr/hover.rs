@@ -18,7 +18,7 @@ impl Actor for Hover {
 
 		// Parent should always track CWD
 		if let Some(p) = &mut tab.parent {
-			render!(p.repos(tab.current.url.strip_prefix(&p.url)));
+			render!(p.repos(tab.current.url.try_strip_prefix(&p.url).ok()));
 		}
 
 		// Repos CWD
@@ -30,7 +30,7 @@ impl Actor for Hover {
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of the file regardless.
-			tab.current.trace = Some(u.to_owned());
+			tab.current.trace = Some(u.clone());
 		}
 
 		// Publish through DDS

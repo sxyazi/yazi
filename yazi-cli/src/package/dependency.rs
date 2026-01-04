@@ -3,7 +3,8 @@ use std::{io::BufWriter, path::{Path, PathBuf}, str::FromStr};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash3_128;
-use yazi_fs::{Xdg, provider::{DirReader, FileHolder, Provider, local::Local}};
+use yazi_fs::Xdg;
+use yazi_macro::ok_or_not_found;
 use yazi_shared::BytesExt;
 
 #[derive(Clone, Default)]
@@ -62,11 +63,11 @@ impl Dependency {
 	}
 
 	pub(super) async fn plugin_files(dir: &Path) -> std::io::Result<Vec<String>> {
-		let mut it = Local.read_dir(dir).await?;
+		let mut it = ok_or_not_found!(tokio::fs::read_dir(dir).await, return Ok(vec![]));
 		let mut files: Vec<String> =
 			["LICENSE", "README.md", "main.lua"].into_iter().map(Into::into).collect();
-		while let Some(entry) = it.next().await? {
-			if let Ok(name) = entry.name().into_owned().into_string()
+		while let Some(entry) = it.next_entry().await? {
+			if let Ok(name) = entry.file_name().into_string()
 				&& let Some(stripped) = name.strip_suffix(".lua")
 				&& stripped != "main"
 				&& stripped.as_bytes().kebab_cased()

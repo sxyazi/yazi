@@ -1,7 +1,6 @@
 use std::ffi::OsString;
 
-use tokio::sync::mpsc;
-use yazi_shared::{Id, url::UrlCow};
+use yazi_shared::{CompletionToken, Id, url::UrlCow};
 
 use super::ShellOpt;
 
@@ -38,11 +37,11 @@ impl From<ProcessInOrphan> for ShellOpt {
 // --- Bg
 #[derive(Debug)]
 pub(crate) struct ProcessInBg {
-	pub(crate) id:     Id,
-	pub(crate) cwd:    UrlCow<'static>,
-	pub(crate) cmd:    OsString,
-	pub(crate) args:   Vec<UrlCow<'static>>,
-	pub(crate) cancel: mpsc::Receiver<()>,
+	pub(crate) id:   Id,
+	pub(crate) cwd:  UrlCow<'static>,
+	pub(crate) cmd:  OsString,
+	pub(crate) args: Vec<UrlCow<'static>>,
+	pub(crate) done: CompletionToken,
 }
 
 impl From<ProcessInBg> for ShellOpt {

@@ -6,10 +6,9 @@ macro_rules! spark {
 		}
 	};
 	($layer:ident : $name:ident, $body:expr) => {
-		$crate::spark::Spark::Void(yazi_parser::VoidOpt)
-		// paste::paste! {
-		// 	$crate::body::Body::[<Key $layer:camel $name:camel>]($body)
-		// }
+		paste::paste! {
+			$crate::spark::Spark::[<$layer:camel $name:camel>]($body.into())
+		}
 	};
 }
 

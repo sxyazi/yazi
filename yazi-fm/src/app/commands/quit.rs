@@ -1,8 +1,6 @@
-use std::ffi::OsString;
-
 use yazi_boot::ARGS;
 use yazi_fs::provider::{Provider, local::Local};
-use yazi_shared::{event::EventQuit, url::UrlLike};
+use yazi_shared::{event::EventQuit, strand::{StrandBuf, StrandLike, ToStrand}};
 
 use crate::{Term, app::App};
 
@@ -25,14 +23,14 @@ impl App {
 
 	async fn cwd_to_file(&self, no: bool) {
 		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no) {
-			let cwd = self.core.mgr.cwd().os_str();
-			Local.write(p, cwd.as_encoded_bytes()).await.ok();
+			let cwd = self.core.mgr.cwd().to_strand();
+			Local::regular(p).write(cwd.encoded_bytes()).await.ok();
 		}
 	}
 
-	async fn selected_to_file(&self, selected: Option<OsString>) {
+	async fn selected_to_file(&self, selected: Option<StrandBuf>) {
 		if let (Some(s), Some(p)) = (selected, &ARGS.chooser_file) {
-			Local.write(p, s.as_encoded_bytes()).await.ok();
+			Local::regular(p).write(s.encoded_bytes()).await.ok();
 		}
 	}
 }

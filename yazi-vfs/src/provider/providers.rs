@@ -1,274 +1,239 @@
-use std::{io, path::{Path, PathBuf}, sync::Arc};
+use std::io;
 
-use yazi_config::vfs::{ProviderSftp, Vfs};
-use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
-use yazi_shared::{scheme::SchemeRef, url::{AsUrl, Url, UrlCow}};
+use tokio::sync::mpsc;
+use yazi_fs::{cha::Cha, provider::{Attrs, Capabilities, Provider}};
+use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
-pub(super) struct Providers<'a>(Inner<'a>);
-
-enum Inner<'a> {
-	Regular,
-	Search(Url<'a>),
-	Sftp((super::sftp::Sftp, Url<'a>)),
+#[derive(Clone)]
+pub(super) enum Providers<'a> {
+	Local(yazi_fs::provider::local::Local<'a>),
+	Sftp(super::sftp::Sftp<'a>),
 }
 
-impl<'a> Providers<'a> {
-	pub(super) async fn new(url: Url<'a>) -> io::Result<Self> {
-		Ok(match url.scheme {
-			SchemeRef::Regular => Self(Inner::Regular),
-			SchemeRef::Search(_) => Self(Inner::Search(url)),
-			SchemeRef::Archive(_) => {
-				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
-			}
-			SchemeRef::Sftp(name) => {
-				Self(Inner::Sftp((Vfs::provider::<&ProviderSftp>(name).await?.into(), url)))
-			}
-		})
-	}
-}
-
-impl Provider for Providers<'_> {
+impl<'a> Provider for Providers<'a> {
 	type File = super::RwFile;
 	type Gate = super::Gate;
+	type Me<'b> = Providers<'b>;
 	type ReadDir = super::ReadDir;
+	type UrlCow = UrlCow<'a>;
 
-	async fn absolute<'a, U>(&self, url: &'a U) -> io::Result<UrlCow<'a>>
-	where
-		U: AsUrl,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.absolute(url).await,
-			Inner::Sftp((p, _)) => p.absolute(url).await,
+	async fn absolute(&self) -> io::Result<Self::UrlCow> {
+		match self {
+			Self::Local(p) => p.absolute().await,
+			Self::Sftp(p) => p.absolute().await,
 		}
 	}
 
-	async fn canonicalize<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.canonicalize(path).await,
-			Inner::Sftp((p, _)) => p.canonicalize(path).await,
+	async fn canonicalize(&self) -> io::Result<UrlBuf> {
+		match self {
+			Self::Local(p) => p.canonicalize().await,
+			Self::Sftp(p) => p.canonicalize().await,
 		}
 	}
 
-	async fn casefold<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.casefold(path).await,
-			Inner::Sftp((p, _)) => p.casefold(path).await,
+	fn capabilities(&self) -> Capabilities {
+		match self {
+			Self::Local(p) => p.capabilities(),
+			Self::Sftp(p) => p.capabilities(),
 		}
 	}
 
-	async fn copy<P, Q>(&self, from: P, to: Q, attrs: Attrs) -> io::Result<u64>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.copy(from, to, attrs).await,
-			Inner::Sftp((p, _)) => p.copy(from, to, attrs).await,
+	async fn casefold(&self) -> io::Result<UrlBuf> {
+		match self {
+			Self::Local(p) => p.casefold().await,
+			Self::Sftp(p) => p.casefold().await,
 		}
 	}
 
-	async fn create<P>(&self, path: P) -> io::Result<Self::File>
+	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsRef<Path>,
+		P: AsPath,
 	{
-		Ok(match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.create(path).await?.into(),
-			Inner::Sftp((p, _)) => p.create(path).await?.into(),
+		match self {
+			Self::Local(p) => p.copy(to, attrs).await,
+			Self::Sftp(p) => p.copy(to, attrs).await,
+		}
+	}
+
+	fn copy_with_progress<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
+	where
+		P: AsPath,
+		A: Into<Attrs>,
+	{
+		match self {
+			Self::Local(p) => p.copy_with_progress(to, attrs),
+			Self::Sftp(p) => p.copy_with_progress(to, attrs),
+		}
+	}
+
+	async fn create(&self) -> io::Result<Self::File> {
+		Ok(match self {
+			Self::Local(p) => p.create().await?.into(),
+			Self::Sftp(p) => p.create().await?.into(),
 		})
 	}
 
-	async fn create_dir<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.create_dir(path).await,
-			Inner::Sftp((p, _)) => p.create_dir(path).await,
+	async fn create_dir(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.create_dir().await,
+			Self::Sftp(p) => p.create_dir().await,
 		}
 	}
 
-	async fn create_dir_all<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.create_dir_all(path).await,
-			Inner::Sftp((p, _)) => p.create_dir_all(path).await,
+	async fn create_dir_all(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.create_dir_all().await,
+			Self::Sftp(p) => p.create_dir_all().await,
 		}
 	}
 
-	async fn gate(&self) -> io::Result<Self::Gate> {
-		Ok(match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.gate().await?.into(),
-			Inner::Sftp((p, _)) => p.gate().await?.into(),
+	async fn create_new(&self) -> io::Result<Self::File> {
+		Ok(match self {
+			Self::Local(p) => p.create_new().await?.into(),
+			Self::Sftp(p) => p.create_new().await?.into(),
 		})
 	}
 
-	async fn hard_link<P, Q>(&self, original: P, link: Q) -> io::Result<()>
+	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPath,
 	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.hard_link(original, link).await,
-			Inner::Sftp((p, _)) => p.hard_link(original, link).await,
+		match self {
+			Self::Local(p) => p.hard_link(to).await,
+			Self::Sftp(p) => p.hard_link(to).await,
 		}
 	}
 
-	async fn metadata<P>(&self, path: P) -> io::Result<Cha>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.metadata(path).await,
-			Inner::Sftp((p, _)) => p.metadata(path).await,
+	async fn metadata(&self) -> io::Result<Cha> {
+		match self {
+			Self::Local(p) => p.metadata().await,
+			Self::Sftp(p) => p.metadata().await,
 		}
 	}
 
-	async fn open<P>(&self, path: P) -> io::Result<Self::File>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.open(path).await?.into(),
-			Inner::Sftp((p, _)) => p.open(path).await?.into(),
-		})
-	}
+	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
+		use yazi_shared::scheme::SchemeKind as K;
 
-	async fn read_dir<P>(&self, path: P) -> io::Result<Self::ReadDir>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(match self.0 {
-			Inner::Regular => Self::ReadDir::Regular(Local.read_dir(path).await?),
-			Inner::Search(dir) => {
-				Self::ReadDir::Search((Arc::new(dir.to_owned()), Local.read_dir(path).await?))
+		Ok(match url.kind() {
+			K::Regular | K::Search => Self::Me::Local(yazi_fs::provider::local::Local::new(url).await?),
+			K::Archive => {
+				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
 			}
-			Inner::Sftp((p, dir)) => {
-				Self::ReadDir::Sftp((Arc::new(dir.to_owned()), p.read_dir(path).await?))
-			}
+			K::Sftp => Self::Me::Sftp(super::sftp::Sftp::new(url).await?),
 		})
 	}
 
-	async fn read_link<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.read_link(path).await,
-			Inner::Sftp((p, _)) => p.read_link(path).await,
+	async fn open(&self) -> io::Result<Self::File> {
+		Ok(match self {
+			Self::Local(p) => p.open().await?.into(),
+			Self::Sftp(p) => p.open().await?.into(),
+		})
+	}
+
+	async fn read_dir(self) -> io::Result<Self::ReadDir> {
+		Ok(match self {
+			Self::Local(p) => Self::ReadDir::Local(p.read_dir().await?),
+			Self::Sftp(p) => Self::ReadDir::Sftp(p.read_dir().await?),
+		})
+	}
+
+	async fn read_link(&self) -> io::Result<PathBufDyn> {
+		match self {
+			Self::Local(p) => p.read_link().await,
+			Self::Sftp(p) => p.read_link().await,
 		}
 	}
 
-	async fn remove_dir<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.remove_dir(path).await,
-			Inner::Sftp((p, _)) => p.remove_dir(path).await,
+	async fn remove_dir(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.remove_dir().await,
+			Self::Sftp(p) => p.remove_dir().await,
 		}
 	}
 
-	async fn remove_dir_all<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.remove_dir_all(path).await,
-			Inner::Sftp((p, _)) => p.remove_dir_all(path).await,
+	async fn remove_dir_all(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.remove_dir_all().await,
+			Self::Sftp(p) => p.remove_dir_all().await,
 		}
 	}
 
-	async fn remove_file<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.remove_file(path).await,
-			Inner::Sftp((p, _)) => p.remove_file(path).await,
+	async fn remove_file(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.remove_file().await,
+			Self::Sftp(p) => p.remove_file().await,
 		}
 	}
 
-	async fn rename<P, Q>(&self, from: P, to: Q) -> io::Result<()>
+	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPath,
 	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.rename(from, to).await,
-			Inner::Sftp((p, _)) => p.rename(from, to).await,
+		match self {
+			Self::Local(p) => p.rename(to).await,
+			Self::Sftp(p) => p.rename(to).await,
 		}
 	}
 
-	async fn symlink<P, Q, F>(&self, original: P, link: Q, is_dir: F) -> io::Result<()>
+	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		S: AsStrand,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.symlink(original, link, is_dir).await,
-			Inner::Sftp((p, _)) => p.symlink(original, link, is_dir).await,
+		match self {
+			Self::Local(p) => p.symlink(original, is_dir).await,
+			Self::Sftp(p) => p.symlink(original, is_dir).await,
 		}
 	}
 
-	async fn symlink_dir<P, Q>(&self, original: P, link: Q) -> io::Result<()>
+	async fn symlink_dir<S>(&self, original: S) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		S: AsStrand,
 	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.symlink_dir(original, link).await,
-			Inner::Sftp((p, _)) => p.symlink_dir(original, link).await,
+		match self {
+			Self::Local(p) => p.symlink_dir(original).await,
+			Self::Sftp(p) => p.symlink_dir(original).await,
 		}
 	}
 
-	async fn symlink_file<P, Q>(&self, original: P, link: Q) -> io::Result<()>
+	async fn symlink_file<S>(&self, original: S) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		S: AsStrand,
 	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.symlink_file(original, link).await,
-			Inner::Sftp((p, _)) => p.symlink_file(original, link).await,
+		match self {
+			Self::Local(p) => p.symlink_file(original).await,
+			Self::Sftp(p) => p.symlink_file(original).await,
 		}
 	}
 
-	async fn symlink_metadata<P>(&self, path: P) -> io::Result<Cha>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.symlink_metadata(path).await,
-			Inner::Sftp((p, _)) => p.symlink_metadata(path).await,
+	async fn symlink_metadata(&self) -> io::Result<Cha> {
+		match self {
+			Self::Local(p) => p.symlink_metadata().await,
+			Self::Sftp(p) => p.symlink_metadata().await,
 		}
 	}
 
-	async fn trash<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.trash(path).await,
-			Inner::Sftp((p, _)) => p.trash(path).await,
+	async fn trash(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.trash().await,
+			Self::Sftp(p) => p.trash().await,
 		}
 	}
 
-	async fn write<P, C>(&self, path: P, contents: C) -> io::Result<()>
+	fn url(&self) -> Url<'_> {
+		match self {
+			Self::Local(p) => p.url(),
+			Self::Sftp(p) => p.url(),
+		}
+	}
+
+	async fn write<C>(&self, contents: C) -> io::Result<()>
 	where
-		P: AsRef<Path>,
 		C: AsRef<[u8]>,
 	{
-		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.write(path, contents).await,
-			Inner::Sftp((p, _)) => p.write(path, contents).await,
+		match self {
+			Self::Local(p) => p.write(contents).await,
+			Self::Sftp(p) => p.write(contents).await,
 		}
 	}
 }

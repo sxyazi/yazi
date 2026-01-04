@@ -1,103 +1,104 @@
 use std::io;
 
+use anyhow::{Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use super::Error;
 
-fn kind_to_str(kind: io::ErrorKind) -> &'static str {
+pub(super) fn kind_to_str(kind: io::ErrorKind) -> &'static str {
 	use std::io::ErrorKind as K;
 	match kind {
-		K::NotFound => "not_found",
-		K::PermissionDenied => "permission_denied",
-		K::ConnectionRefused => "connection_refused",
-		K::ConnectionReset => "connection_reset",
-		K::HostUnreachable => "host_unreachable",
-		K::NetworkUnreachable => "network_unreachable",
-		K::ConnectionAborted => "connection_aborted",
-		K::NotConnected => "not_connected",
-		K::AddrInUse => "addr_in_use",
-		K::AddrNotAvailable => "addr_not_available",
-		K::NetworkDown => "network_down",
-		K::BrokenPipe => "broken_pipe",
-		K::AlreadyExists => "already_exists",
-		K::WouldBlock => "would_block",
-		K::NotADirectory => "not_a_directory",
-		K::IsADirectory => "is_a_directory",
-		K::DirectoryNotEmpty => "directory_not_empty",
-		K::ReadOnlyFilesystem => "read_only_filesystem",
-		// K::FilesystemLoop => "filesystem_loop",
-		K::StaleNetworkFileHandle => "stale_network_file_handle",
-		K::InvalidInput => "invalid_input",
-		K::InvalidData => "invalid_data",
-		K::TimedOut => "timed_out",
-		K::WriteZero => "write_zero",
-		K::StorageFull => "storage_full",
-		K::NotSeekable => "not_seekable",
-		K::QuotaExceeded => "quota_exceeded",
-		K::FileTooLarge => "file_too_large",
-		K::ResourceBusy => "resource_busy",
-		K::ExecutableFileBusy => "executable_file_busy",
-		K::Deadlock => "deadlock",
-		K::CrossesDevices => "crosses_devices",
-		K::TooManyLinks => "too_many_links",
-		K::InvalidFilename => "invalid_filename",
-		K::ArgumentListTooLong => "argument_list_too_long",
-		K::Interrupted => "interrupted",
-		K::Unsupported => "unsupported",
-		K::UnexpectedEof => "unexpected_eof",
-		K::OutOfMemory => "out_of_memory",
-		// K::InProgress => "in_progress",
-		K::Other => "other",
-		_ => "other",
+		K::NotFound => "NotFound",
+		K::PermissionDenied => "PermissionDenied",
+		K::ConnectionRefused => "ConnectionRefused",
+		K::ConnectionReset => "ConnectionReset",
+		K::HostUnreachable => "HostUnreachable",
+		K::NetworkUnreachable => "NetworkUnreachable",
+		K::ConnectionAborted => "ConnectionAborted",
+		K::NotConnected => "NotConnected",
+		K::AddrInUse => "AddrInUse",
+		K::AddrNotAvailable => "AddrNotAvailable",
+		K::NetworkDown => "NetworkDown",
+		K::BrokenPipe => "BrokenPipe",
+		K::AlreadyExists => "AlreadyExists",
+		K::WouldBlock => "WouldBlock",
+		K::NotADirectory => "NotADirectory",
+		K::IsADirectory => "IsADirectory",
+		K::DirectoryNotEmpty => "DirectoryNotEmpty",
+		K::ReadOnlyFilesystem => "ReadOnlyFilesystem",
+		// K::FilesystemLoop => "FilesystemLoop",
+		K::StaleNetworkFileHandle => "StaleNetworkFileHandle",
+		K::InvalidInput => "InvalidInput",
+		K::InvalidData => "InvalidData",
+		K::TimedOut => "TimedOut",
+		K::WriteZero => "WriteZero",
+		K::StorageFull => "StorageFull",
+		K::NotSeekable => "NotSeekable",
+		K::QuotaExceeded => "QuotaExceeded",
+		K::FileTooLarge => "FileTooLarge",
+		K::ResourceBusy => "ResourceBusy",
+		K::ExecutableFileBusy => "ExecutableFileBusy",
+		K::Deadlock => "Deadlock",
+		K::CrossesDevices => "CrossesDevices",
+		K::TooManyLinks => "TooManyLinks",
+		K::InvalidFilename => "InvalidFilename",
+		K::ArgumentListTooLong => "ArgumentListTooLong",
+		K::Interrupted => "Interrupted",
+		K::Unsupported => "Unsupported",
+		K::UnexpectedEof => "UnexpectedEof",
+		K::OutOfMemory => "OutOfMemory",
+		// K::InProgress => "InProgress",
+		K::Other => "Other",
+		_ => "Other",
 	}
 }
 
-fn kind_from_str(s: &str) -> io::ErrorKind {
+pub(super) fn kind_from_str(s: &str) -> Result<io::ErrorKind> {
 	use std::io::ErrorKind as K;
-	match s {
-		"not_found" => K::NotFound,
-		"permission_denied" => K::PermissionDenied,
-		"connection_refused" => K::ConnectionRefused,
-		"connection_reset" => K::ConnectionReset,
-		"host_unreachable" => K::HostUnreachable,
-		"network_unreachable" => K::NetworkUnreachable,
-		"connection_aborted" => K::ConnectionAborted,
-		"not_connected" => K::NotConnected,
-		"addr_in_use" => K::AddrInUse,
-		"addr_not_available" => K::AddrNotAvailable,
-		"network_down" => K::NetworkDown,
-		"broken_pipe" => K::BrokenPipe,
-		"already_exists" => K::AlreadyExists,
-		"would_block" => K::WouldBlock,
-		"not_a_directory" => K::NotADirectory,
-		"is_a_directory" => K::IsADirectory,
-		"directory_not_empty" => K::DirectoryNotEmpty,
-		"read_only_filesystem" => K::ReadOnlyFilesystem,
-		// "filesystem_loop" => K::FilesystemLoop,
-		"stale_network_file_handle" => K::StaleNetworkFileHandle,
-		"invalid_input" => K::InvalidInput,
-		"invalid_data" => K::InvalidData,
-		"timed_out" => K::TimedOut,
-		"write_zero" => K::WriteZero,
-		"storage_full" => K::StorageFull,
-		"not_seekable" => K::NotSeekable,
-		"quota_exceeded" => K::QuotaExceeded,
-		"file_too_large" => K::FileTooLarge,
-		"resource_busy" => K::ResourceBusy,
-		"executable_file_busy" => K::ExecutableFileBusy,
-		"deadlock" => K::Deadlock,
-		"crosses_devices" => K::CrossesDevices,
-		"too_many_links" => K::TooManyLinks,
-		"invalid_filename" => K::InvalidFilename,
-		"argument_list_too_long" => K::ArgumentListTooLong,
-		"interrupted" => K::Interrupted,
-		"unsupported" => K::Unsupported,
-		"unexpected_eof" => K::UnexpectedEof,
-		"out_of_memory" => K::OutOfMemory,
-		// "in_progress" => K::InProgress,
-		"other" => K::Other,
-		_ => K::Other,
-	}
+	Ok(match s {
+		"NotFound" => K::NotFound,
+		"PermissionDenied" => K::PermissionDenied,
+		"ConnectionRefused" => K::ConnectionRefused,
+		"ConnectionReset" => K::ConnectionReset,
+		"HostUnreachable" => K::HostUnreachable,
+		"NetworkUnreachable" => K::NetworkUnreachable,
+		"ConnectionAborted" => K::ConnectionAborted,
+		"NotConnected" => K::NotConnected,
+		"AddrInUse" => K::AddrInUse,
+		"AddrNotAvailable" => K::AddrNotAvailable,
+		"NetworkDown" => K::NetworkDown,
+		"BrokenPipe" => K::BrokenPipe,
+		"AlreadyExists" => K::AlreadyExists,
+		"WouldBlock" => K::WouldBlock,
+		"NotADirectory" => K::NotADirectory,
+		"IsADirectory" => K::IsADirectory,
+		"DirectoryNotEmpty" => K::DirectoryNotEmpty,
+		"ReadOnlyFilesystem" => K::ReadOnlyFilesystem,
+		// "FilesystemLoop" => K::FilesystemLoop,
+		"StaleNetworkFileHandle" => K::StaleNetworkFileHandle,
+		"InvalidInput" => K::InvalidInput,
+		"InvalidData" => K::InvalidData,
+		"TimedOut" => K::TimedOut,
+		"WriteZero" => K::WriteZero,
+		"StorageFull" => K::StorageFull,
+		"NotSeekable" => K::NotSeekable,
+		"QuotaExceeded" => K::QuotaExceeded,
+		"FileTooLarge" => K::FileTooLarge,
+		"ResourceBusy" => K::ResourceBusy,
+		"ExecutableFileBusy" => K::ExecutableFileBusy,
+		"Deadlock" => K::Deadlock,
+		"CrossesDevices" => K::CrossesDevices,
+		"TooManyLinks" => K::TooManyLinks,
+		"InvalidFilename" => K::InvalidFilename,
+		"ArgumentListTooLong" => K::ArgumentListTooLong,
+		"Interrupted" => K::Interrupted,
+		"Unsupported" => K::Unsupported,
+		"UnexpectedEof" => K::UnexpectedEof,
+		"OutOfMemory" => K::OutOfMemory,
+		// "InProgress" => K::InProgress,
+		"Other" => K::Other,
+		_ => bail!("unknown error kind: {s}"),
+	})
 }
 
 impl Serialize for Error {
@@ -114,9 +115,9 @@ impl Serialize for Error {
 		}
 
 		match self {
-			Error::Kind(kind) => Shadow::Kind { kind: kind_to_str(*kind) }.serialize(serializer),
-			Error::Raw(code) => Shadow::Raw { code: *code }.serialize(serializer),
-			Error::Custom { kind, code, message } => {
+			Self::Kind(kind) => Shadow::Kind { kind: kind_to_str(*kind) }.serialize(serializer),
+			Self::Raw(code) => Shadow::Raw { code: *code }.serialize(serializer),
+			Self::Custom { kind, code, message } => {
 				Shadow::Dyn { kind: kind_to_str(*kind), code: *code, message }.serialize(serializer)
 			}
 		}
@@ -138,15 +139,19 @@ impl<'de> Deserialize<'de> for Error {
 
 		let shadow = Shadow::deserialize(deserializer)?;
 		Ok(match shadow {
-			Shadow::Kind { kind } => Error::Kind(kind_from_str(&kind)),
-			Shadow::Raw { code } => Error::Raw(code),
+			Shadow::Kind { kind } => Self::Kind(kind_from_str(&kind).map_err(serde::de::Error::custom)?),
+			Shadow::Raw { code } => Self::Raw(code),
 			Shadow::Dyn { kind, code, message } => {
 				if !message.is_empty() {
-					Error::Custom { kind: kind_from_str(&kind), code, message: message.into() }
+					Self::Custom {
+						kind: kind_from_str(&kind).map_err(serde::de::Error::custom)?,
+						code,
+						message: message.into(),
+					}
 				} else if let Some(code) = code {
-					Error::Raw(code)
+					Self::Raw(code)
 				} else {
-					Error::Kind(kind_from_str(&kind))
+					Self::Kind(kind_from_str(&kind).map_err(serde::de::Error::custom)?)
 				}
 			}
 		})

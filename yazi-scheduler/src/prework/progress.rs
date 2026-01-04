@@ -19,13 +19,15 @@ impl From<PreworkProgFetch> for TaskSummary {
 }
 
 impl PreworkProgFetch {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -48,13 +50,15 @@ impl From<PreworkProgLoad> for TaskSummary {
 }
 
 impl PreworkProgLoad {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -77,13 +81,15 @@ impl From<PreworkProgSize> for TaskSummary {
 }
 
 impl PreworkProgSize {
+	pub fn cooked(self) -> bool { self.done }
+
 	pub fn running(self) -> bool { !self.done }
 
-	pub fn success(self) -> bool { self.done }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { false }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

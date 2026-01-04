@@ -18,7 +18,7 @@ impl Input {
 		}
 
 		act!(insert, self, !opt.before)?;
-		self.type_str(&s.to_string_lossy())?;
+		self.type_str(&String::from_utf8_lossy(&s))?;
 		act!(escape, self)?;
 		succ!(render!());
 	}

@@ -1,10 +1,8 @@
-#![allow(clippy::option_map_unit_fn, clippy::unit_arg)]
-
 mod macros;
 
-yazi_macro::mod_pub!(file plugin prework process);
+yazi_macro::mod_pub!(file hook plugin prework process);
 
-yazi_macro::mod_flat!(hooks ongoing op out progress r#in scheduler snap task);
+yazi_macro::mod_flat!(ongoing op out progress r#in runner scheduler snap task);
 
 const LOW: u8 = yazi_config::Priority::Low as u8;
 const NORMAL: u8 = yazi_config::Priority::Normal as u8;

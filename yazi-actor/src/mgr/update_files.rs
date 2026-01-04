@@ -18,6 +18,7 @@ impl Actor for UpdateFiles {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let revision = cx.current().files.revision;
 		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.chdir(u)).collect();
+
 		for op in [opt.op].into_iter().chain(linked) {
 			cx.mgr.yanked.apply_op(&op);
 			Self::update_tab(cx, op).ok();
@@ -25,7 +26,7 @@ impl Actor for UpdateFiles {
 
 		render!(cx.mgr.yanked.catchup_revision(false));
 		act!(mgr:hidden, cx)?;
-		act!(mgr:sort, cx)?;
+		act!(mgr:sort, cx).ok();
 
 		if revision != cx.current().files.revision {
 			act!(mgr:hover, cx)?;

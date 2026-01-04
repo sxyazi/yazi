@@ -3,7 +3,7 @@ use std::str::FromStr;
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_config::Pattern;
-use yazi_fs::{mounts::PARTITIONS, provider::{DirReader, FileHolder}};
+use yazi_fs::{mounts::PARTITIONS, provider::{Attrs, DirReader, FileHolder}};
 use yazi_shared::url::{UrlCow, UrlLike};
 use yazi_vfs::{VfsFile, provider};
 
@@ -15,9 +15,11 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"op" => op(lua)?,
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
+			b"copy" => copy(lua)?,
 			b"write" => write(lua)?,
 			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
+			b"rename" => rename(lua)?,
 			b"read_dir" => read_dir(lua)?,
 			b"calc_size" => calc_size(lua)?,
 			b"expand_url" => expand_url(lua)?,
@@ -34,7 +36,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 }
 
 fn op(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|lua, (name, t): (mlua::String, Table)| match name.as_bytes().as_ref() {
+	lua.create_function(|lua, (name, t): (mlua::String, Table)| match &*name.as_bytes() {
 		b"part" => super::FilesOp::part(lua, t),
 		b"done" => super::FilesOp::done(lua, t),
 		b"size" => super::FilesOp::size(lua, t),
@@ -64,6 +66,15 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
+fn copy(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
+		match provider::copy(&*from, &*to, Attrs::default()).await {
+			Ok(len) => len.into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
 fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match provider::write(&*url, data.as_bytes()).await {
@@ -75,7 +86,7 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 
 fn create(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
-		let result = match r#type.as_bytes().as_ref() {
+		let result = match &*r#type.as_bytes() {
 			b"dir" => provider::create_dir(&*url).await,
 			b"dir_all" => provider::create_dir_all(&*url).await,
 			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
@@ -90,7 +101,7 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 
 fn remove(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
-		let result = match r#type.as_bytes().as_ref() {
+		let result = match &*r#type.as_bytes() {
 			b"file" => provider::remove_file(&*url).await,
 			b"dir" => provider::remove_dir(&*url).await,
 			b"dir_all" => provider::remove_dir_all(&*url).await,
@@ -99,6 +110,15 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
+			Ok(()) => true.into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
+fn rename(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
+		match provider::rename(&*from, &*to).await {
 			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
@@ -148,7 +168,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		let it = if let Some(path) = url.as_path() {
+		let it = if let Some(path) = url.as_local() {
 			yazi_fs::provider::local::SizeCalculator::new(path).await.map(SizeCalculator::Local)
 		} else {
 			yazi_vfs::provider::SizeCalculator::new(&*url).await.map(SizeCalculator::Remote)
@@ -161,14 +181,23 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
+#[allow(irrefutable_let_patterns)]
 fn expand_url(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, value: Value| {
+	lua.create_function(|lua, value: Value| {
 		use yazi_fs::path::expand_url;
-		Ok(Url::new(match value {
-			Value::String(s) => expand_url(UrlCow::try_from(s.as_bytes().as_ref())?),
-			Value::UserData(ud) => expand_url(&*ud.borrow::<yazi_binding::Url>()?),
+		match &value {
+			Value::String(s) => Url::new(expand_url(UrlCow::try_from(&*s.as_bytes())?)).into_lua(lua),
+			Value::UserData(ud) => {
+				if let u = expand_url(&*ud.borrow::<yazi_binding::Url>()?)
+					&& u.is_owned()
+				{
+					Url::new(u.into_owned()).into_lua(lua)
+				} else {
+					Ok(value)
+				}
+			}
 			_ => Err("must be a string or a Url".into_lua_err())?,
-		}))
+		}
 	})
 }
 

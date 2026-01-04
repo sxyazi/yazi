@@ -1,35 +1,32 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
+use anyhow::Result;
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode, percent_encode};
-use yazi_shared::loc::Loc;
+use yazi_shared::path::{PathCow, PathDyn, PathKind};
 
 const SET: &AsciiSet =
 	&CONTROLS.add(b'"').add(b'*').add(b':').add(b'<').add(b'>').add(b'?').add(b'\\').add(b'|');
 
-pub trait PercentEncoding {
-	fn percent_encode(&self) -> Cow<'_, Path>;
+pub trait PercentEncoding<'a> {
+	fn percent_encode(self) -> Cow<'a, Path>;
 
-	fn percent_decode(&self) -> Cow<'_, [u8]>;
+	fn percent_decode<K>(self, kind: K) -> Result<PathCow<'a>>
+	where
+		K: Into<PathKind>;
 }
 
-impl PercentEncoding for Path {
-	fn percent_encode(&self) -> Cow<'_, Path> {
-		match percent_encode(self.as_os_str().as_encoded_bytes(), SET).into() {
-			Cow::Borrowed(_) => self.into(),
+impl<'a> PercentEncoding<'a> for PathDyn<'a> {
+	fn percent_encode(self) -> Cow<'a, Path> {
+		match percent_encode(self.encoded_bytes(), SET).into() {
+			Cow::Borrowed(s) => Path::new(s).into(),
 			Cow::Owned(s) => PathBuf::from(s).into(),
 		}
 	}
 
-	fn percent_decode(&self) -> Cow<'_, [u8]> {
-		match percent_decode(self.as_os_str().as_encoded_bytes()).into() {
-			Cow::Borrowed(_) => self.as_os_str().as_encoded_bytes().into(),
-			Cow::Owned(s) => s.into(),
-		}
+	fn percent_decode<K>(self, kind: K) -> Result<PathCow<'a>>
+	where
+		K: Into<PathKind>,
+	{
+		PathCow::with(kind, percent_decode(self.encoded_bytes()))
 	}
-}
-
-impl PercentEncoding for Loc<'_> {
-	fn percent_encode(&self) -> Cow<'_, Path> { self.as_path().percent_encode() }
-
-	fn percent_decode(&self) -> Cow<'_, [u8]> { self.as_path().percent_decode() }
 }

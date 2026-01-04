@@ -80,7 +80,7 @@ impl From<ChaMode> for std::fs::Permissions {
 	fn from(value: ChaMode) -> Self {
 		use std::os::unix::fs::PermissionsExt;
 
-		std::fs::Permissions::from_mode(value.bits() as _)
+		Self::from_mode(value.bits() as _)
 	}
 }
 

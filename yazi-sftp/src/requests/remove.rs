@@ -1,19 +1,19 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, Error, ToByteStr};
+use crate::{AsSftpPath, SftpPath};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Remove<'a> {
 	pub id:   u32,
-	pub path: ByteStr<'a>,
+	pub path: SftpPath<'a>,
 }
 
 impl<'a> Remove<'a> {
-	pub fn new<P>(path: P) -> Result<Self, Error>
+	pub fn new<P>(path: P) -> Self
 	where
-		P: ToByteStr<'a>,
+		P: AsSftpPath<'a>,
 	{
-		Ok(Self { id: 0, path: path.to_byte_str()? })
+		Self { id: 0, path: path.as_sftp_path() }
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() }

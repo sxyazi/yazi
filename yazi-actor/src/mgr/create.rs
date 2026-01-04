@@ -4,7 +4,7 @@ use yazi_fs::{File, FilesOp};
 use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{data::Data, path::PathLike, url::{UrlBuf, UrlLike}};
+use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
@@ -27,7 +27,10 @@ impl Actor for Create {
 				return;
 			}
 
-			let new = cwd.join(&name);
+			let Ok(new) = cwd.try_join(&name) else {
+				return;
+			};
+
 			if !opt.force
 				&& maybe_exists(&new).await
 				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
@@ -51,7 +54,7 @@ impl Create {
 			&& let Some((parent, urn)) = real.pair()
 		{
 			ok_or_not_found!(provider::remove_file(&new).await);
-			FilesOp::Deleting(parent.into(), [urn.owned()].into()).emit();
+			FilesOp::Deleting(parent.into(), [urn.into()].into()).emit();
 			provider::create(&new).await?;
 		} else if let Some(parent) = new.parent() {
 			provider::create_dir_all(parent).await.ok();
@@ -65,7 +68,7 @@ impl Create {
 			&& let Some((parent, urn)) = real.pair()
 		{
 			let file = File::new(&real).await?;
-			FilesOp::Upserting(parent.into(), [(urn.owned(), file)].into()).emit();
+			FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()).emit();
 			MgrProxy::reveal(&real);
 		}
 

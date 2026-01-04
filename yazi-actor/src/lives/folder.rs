@@ -54,7 +54,7 @@ impl Folder {
 
 impl UserData for Folder {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cwd, |_, me| Ok(Url::new(me.url.to_owned())));
+		cached_field!(fields, cwd, |_, me| Ok(Url::new(&me.url)));
 		cached_field!(fields, files, |_, me| Files::make(0..me.files.len(), me, &me.tab));
 		cached_field!(fields, stage, |_, me| Ok(FolderStage::new(me.stage.clone())));
 		cached_field!(fields, window, |_, me| Files::make(me.window.clone(), me, &me.tab));

@@ -1,9 +1,7 @@
-use std::{ffi::OsString, io};
+use std::io::{self};
 
-use tokio::{select, sync::{mpsc, oneshot}};
-use yazi_fs::provider::Attrs;
 use yazi_macro::ok_or_not_found;
-use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
+use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 
 use crate::provider;
 
@@ -15,11 +13,7 @@ pub async fn maybe_exists(url: impl AsUrl) -> bool {
 	}
 }
 
-#[inline]
-pub async fn must_be_dir(url: impl AsUrl) -> bool {
-	provider::metadata(url).await.is_ok_and(|m| m.is_dir())
-}
-
+// TODO: deprecate
 pub async fn unique_name<F>(u: UrlBuf, append: F) -> io::Result<UrlBuf>
 where
 	F: Future<Output = bool>,
@@ -36,92 +30,91 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let dot_ext = url.ext().map_or_else(OsString::new, |e| {
-		let mut s = OsString::with_capacity(e.len() + 1);
-		s.push(".");
-		s.push(e);
-		s
-	});
+	let dot_ext = match url.ext() {
+		Some(e) => {
+			let mut s = StrandBuf::with_capacity(url.kind(), e.len() + 1);
+			s.push_str(".");
+			s.try_push(e)?;
+			s
+		}
+		None => StrandBuf::default(),
+	};
 
-	let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
+	let mut name = StrandBuf::with_capacity(url.kind(), stem.len() + dot_ext.len() + 5);
 	for i in 1u64.. {
 		name.clear();
-		name.push(&stem);
+		name.try_push(&stem)?;
 
 		if append {
-			name.push(&dot_ext);
-			name.push(format!("_{i}"));
+			name.try_push(&dot_ext)?;
+			name.push_str(format!("_{i}"));
 		} else {
-			name.push(format!("_{i}"));
-			name.push(&dot_ext);
+			name.push_str(format!("_{i}"));
+			name.try_push(&dot_ext)?;
 		}
 
-		url.set_name(&name);
+		url.try_set_name(&name)?;
 		ok_or_not_found!(provider::symlink_metadata(&url).await, break);
 	}
 
 	Ok(url)
 }
 
-pub fn copy_with_progress<U, V, A>(
-	from: U,
-	to: V,
-	attrs: A,
-) -> mpsc::Receiver<Result<u64, io::Error>>
-where
-	U: AsUrl,
-	V: AsUrl,
-	A: Into<Attrs>,
-{
-	_copy_with_progress(from.as_url(), to.as_url(), attrs.into())
+pub async fn unique_file(u: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
+	let result = if is_dir {
+		provider::create_dir(&u).await
+	} else {
+		provider::create_new(&u).await.map(|_| ())
+	};
+
+	match result {
+		Ok(()) => Ok(u),
+		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => _unique_file(u, is_dir).await,
+		Err(e) => Err(e),
+	}
 }
 
-fn _copy_with_progress(from: Url, to: Url, attrs: Attrs) -> mpsc::Receiver<Result<u64, io::Error>> {
-	let (prog_tx, prog_rx) = mpsc::channel(1);
-	let (done_tx, mut done_rx) = oneshot::channel();
+async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
+	let Some(stem) = url.stem().map(|s| s.to_owned()) else {
+		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
+	};
 
-	tokio::spawn({
-		let (from, to) = (from.to_owned(), to.to_owned());
-		async move {
-			done_tx.send(provider::copy(from, to, attrs).await).ok();
+	let dot_ext = match url.ext() {
+		Some(e) => {
+			let mut s = StrandBuf::with_capacity(url.kind(), e.len() + 1);
+			s.push_str(".");
+			s.try_push(e)?;
+			s
 		}
-	});
+		None => StrandBuf::default(),
+	};
 
-	tokio::spawn({
-		let (prog_tx, to) = (prog_tx.to_owned(), to.to_owned());
-		async move {
-			let mut last = 0;
-			let mut done = None;
-			loop {
-				select! {
-					res = &mut done_rx => done = Some(res.unwrap()),
-					_ = prog_tx.closed() => break,
-					_ = tokio::time::sleep(std::time::Duration::from_secs(3)) => {},
-				}
+	let mut name = StrandBuf::with_capacity(url.kind(), stem.len() + dot_ext.len() + 5);
+	for i in 1u64.. {
+		name.clear();
+		name.try_push(&stem)?;
 
-				match done {
-					Some(Ok(len)) => {
-						if len > last {
-							prog_tx.send(Ok(len - last)).await.ok();
-						}
-						prog_tx.send(Ok(0)).await.ok();
-						break;
-					}
-					Some(Err(e)) => {
-						prog_tx.send(Err(e)).await.ok();
-						break;
-					}
-					None => {}
-				}
-
-				let len = provider::symlink_metadata(&to).await.map(|m| m.len).unwrap_or(0);
-				if len > last {
-					prog_tx.send(Ok(len - last)).await.ok();
-					last = len;
-				}
-			}
+		if is_dir {
+			name.try_push(&dot_ext)?;
+			name.push_str(format!("_{i}"));
+		} else {
+			name.push_str(format!("_{i}"));
+			name.try_push(&dot_ext)?;
 		}
-	});
 
-	prog_rx
+		url.try_set_name(&name)?;
+		let result = if is_dir {
+			provider::create_dir(&url).await
+		} else {
+			provider::create_new(&url).await.map(|_| ())
+		};
+
+		match result {
+			Ok(()) => break,
+			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
+			Err(e) => Err(e)?,
+		};
+	}
+
+	Ok(url)
 }

@@ -24,9 +24,9 @@ impl PartialEq<UrlBufCov> for UrlCov<'_> {
 
 impl Hash for UrlCov<'_> {
 	fn hash<H: Hasher>(&self, state: &mut H) {
-		self.0.loc.hash(state);
-		if self.0.scheme.is_virtual() {
-			self.0.scheme.hash(state);
+		self.0.loc().hash(state);
+		if self.0.kind().is_virtual() {
+			self.0.scheme().hash(state);
 		}
 	}
 }
@@ -52,6 +52,10 @@ impl Deref for UrlBufCov {
 
 impl From<UrlBufCov> for UrlBuf {
 	fn from(value: UrlBufCov) -> Self { value.0 }
+}
+
+impl From<&UrlBufCov> for UrlBuf {
+	fn from(value: &UrlBufCov) -> Self { value.0.clone() }
 }
 
 impl From<UrlBuf> for UrlBufCov {

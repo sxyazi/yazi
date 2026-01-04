@@ -12,16 +12,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+## [v26.1.4]
+
 ### Added
 
-- Remote file management ([#3166], [#3170], [#3172], [#3198], [#3201], [#3243], [#3264], [#3268])
+- Support VFS for preset previewers that rely on external commands ([#3477])
+- Support 8-bit images in RGB, CIELAB, and GRAY color spaces ([#3358])
+
+### Fixed
+
+- `ya pkg` fails to write `package.toml` when the config directory does not exist ([#3482])
+- A race condition generating unique filenames for concurrent file operations ([#3494])
+
+## [v25.12.29]
+
+### Added
+
+- Remote file management ([#3396])
 - Virtual file system ([#3034], [#3035], [#3094], [#3108], [#3187], [#3203])
 - Shell formatting ([#3232])
 - Multi-entry support for plugin system ([#3154])
 - Zoom in or out of the preview image ([#2864])
 - Improve the UX of the pick and input components ([#2906], [#2935])
 - Show progress of each task in task manager ([#3121], [#3131], [#3134])
+- New `fs.copy()` and `fs.rename()` APIs ([#3467])
+- New experimental `ya.async()` API ([#3422])
 - New `overall` option to set the overall background color ([#3317])
+- Rounded corners for indicator bar ([#3419])
 - New `bulk_rename` command always renames files with the editor ([#2984])
 - `key-*` DDS events to allow changing or canceling user key events ([#3005], [#3037])
 - New `--bg` specifying image background color in the preset SVG and ImageMagick previewers ([#3189])
@@ -30,12 +47,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Allow dynamic adjustment of layout ratio via `rt.mgr.ratio` ([#2964])
 - Support `.deb` packages ([#2807], [#3128], [#3209])
 - Port several widespread GUI keys to the input component ([#2849])
-- Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290])
+- Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290], [#3369])
 - Allow upgrading only specific packages with `ya pkg` ([#2841])
 - Respect the user's `image_filter` setting in the preset ImageMagick previewer ([#3286])
+- New `duplicate` DDS event for copying files ([#3456])
+- New `ind-sort` and `key-sort` DDS events to change sorting in Lua ([#3391])
 - Allow custom mouse click behavior for individual files ([#2925])
 - Display newlines in input as spaces to improve readability ([#2932])
-- Fill in error messages if preview fails ([#2917])
+- Fill in error messages if preview fails ([#2917], [#3383], [#3387])
 - Search view shares file selection and yank state ([#2855])
 - Offload mimetype fetching on opening files to the task scheduler ([#3141])
 - Increase terminal response timeout to better tolerate slow SSH network environments ([#2843])
@@ -44,7 +63,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rename `name` to `url` for open, fetchers, spotters, preloaders, previewers, filetype, and `globs` icon rules to support virtual file system ([#3034])
 - Rename `mime` fetcher to `mime.local`, and introduce `mime.dir` fetcher to support folder MIME types ([#3222])
+- Reclassify `hovered` and `preview_hovered` under `[mgr]` of `theme.toml` into `[indicator]` as `current` and `preview`, respectively ([#3419])
 - Remove `$0` parameter in opener rules to make the `open` command work under empty directories ([#3226])
+- Return `Path` instead of `Url` from `Url:strip_prefix()` and `File.link_to` to enforce type safety ([#3361], [#3385])
 - Use `body` instead of the term `content` in confirmations ([#2921])
 - Use `u16` instead of `u32` as the type of `max_width` and `max_height` options to avoid memory exhaustion ([#3313])
 - Implement `__pairs` metamethod instead of `__index` for the callback argument of the `@yank` DDS event ([#2997])
@@ -60,6 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
+- User-prepended open rules do not override presets ([#3360])
 - Respect user's system media opener instead of hardcoding `mpv` ([#2959])
 - Incorrect `$0` and `$@` parameters in `shell` command under empty directories ([#3225])
 - Avoid appending a newline when reading clipboard contents ([#3059])
@@ -71,14 +93,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Force Git checkout for plugin cache repositories ([#3169])
 - Check compatibility when reusing previewer bytecode cache ([#3190])
 - Disable kitty keyboard protocol on Windows due to `crossterm` inability to handle it ([#3250])
+- Prevent quotes in file(1) arguments from being stripped under MSYS2 ([#3364])
 - Expose `ya` CLI in the Snap build ([#2904])
 - Fallback to `PollWatcher` for file changes watching on NetBSD ([#2941])
 - Generate unique image IDs for Kgp to tolerate tmux ([#3038])
 
 ### Improved
 
+- Make copy, cut, delete, link, hardlink, download, and upload tasks immediately cancellable ([#3429])
 - Make preload tasks discardable ([#2875])
 - Reduce file change event frequency ([#2820])
+- Upload and download of a single file over SFTP in chunks concurrently ([#3393])
 - Do not listen for file changes in inactive tabs ([#2958])
 - Switch to a higher-performance hash algorithm ([#3083])
 - Sequence-based rendering merge strategy ([#2861])
@@ -776,7 +801,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Show keywords when in search mode ([#152])
 - Tab switch wraparound ([#160])
 - Highlight matched keywords in find mode ([#211])
-- Customable main UI border styles ([#278])
+- Customizable main UI border styles ([#278])
 - `<BackTab>` key notion ([#209])
 - Use of environment variables in `cd` paths ([#241])
 - Nix Flakes package ([#205])
@@ -962,6 +987,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [v25.4.8]: https://github.com/sxyazi/yazi/compare/v25.3.2...v25.4.8
 [v25.5.28]: https://github.com/sxyazi/yazi/compare/v25.4.8...v25.5.28
 [v25.5.31]: https://github.com/sxyazi/yazi/compare/v25.5.28...v25.5.31
+[v25.12.29]: https://github.com/sxyazi/yazi/compare/v25.5.31...v25.12.29
+[v26.1.4]: https://github.com/sxyazi/yazi/compare/v25.12.29...v26.1.4
 [#4]: https://github.com/sxyazi/yazi/pull/4
 [#5]: https://github.com/sxyazi/yazi/pull/5
 [#6]: https://github.com/sxyazi/yazi/pull/6
@@ -1537,3 +1564,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3290]: https://github.com/sxyazi/yazi/pull/3290
 [#3313]: https://github.com/sxyazi/yazi/pull/3313
 [#3317]: https://github.com/sxyazi/yazi/pull/3317
+[#3358]: https://github.com/sxyazi/yazi/pull/3358
+[#3360]: https://github.com/sxyazi/yazi/pull/3360
+[#3361]: https://github.com/sxyazi/yazi/pull/3361
+[#3364]: https://github.com/sxyazi/yazi/pull/3364
+[#3369]: https://github.com/sxyazi/yazi/pull/3369
+[#3383]: https://github.com/sxyazi/yazi/pull/3383
+[#3385]: https://github.com/sxyazi/yazi/pull/3385
+[#3387]: https://github.com/sxyazi/yazi/pull/3387
+[#3391]: https://github.com/sxyazi/yazi/pull/3391
+[#3393]: https://github.com/sxyazi/yazi/pull/3393
+[#3396]: https://github.com/sxyazi/yazi/pull/3396
+[#3419]: https://github.com/sxyazi/yazi/pull/3419
+[#3422]: https://github.com/sxyazi/yazi/pull/3422
+[#3429]: https://github.com/sxyazi/yazi/pull/3429
+[#3456]: https://github.com/sxyazi/yazi/pull/3456
+[#3467]: https://github.com/sxyazi/yazi/pull/3467
+[#3477]: https://github.com/sxyazi/yazi/pull/3477
+[#3482]: https://github.com/sxyazi/yazi/pull/3482
+[#3494]: https://github.com/sxyazi/yazi/pull/3494

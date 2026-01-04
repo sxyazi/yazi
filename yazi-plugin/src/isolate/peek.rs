@@ -64,7 +64,7 @@ fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Symbol<str>, skip: us
 		plugin.call_method("peek", job)
 	});
 
-	AppProxy::plugin(PluginOpt::new_callback(cmd.name.as_ref(), cb));
+	AppProxy::plugin(PluginOpt::new_callback(&*cmd.name, cb));
 }
 
 fn peek_async(

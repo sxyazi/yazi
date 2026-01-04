@@ -21,17 +21,18 @@ function M:peek(job)
 		return ya.preview_widget(job, ui.Text(s):area(job.area):align(ui.Align.CENTER):wrap(ui.Wrap.YES))
 	end
 
-	local items = {}
+	local left, right = {}, {}
 	for _, f in ipairs(folder.window) do
 		local entity = Entity:new(f)
-		items[#items + 1] = entity:redraw():truncate {
-			max = job.area.w,
-			ellipsis = entity:ellipsis(job.area.w),
-		}
+		left[#left + 1], right[#right + 1] = entity:redraw(), Linemode:new(f):redraw()
+
+		local max = math.max(0, job.area.w - right[#right]:width())
+		left[#left]:truncate { max = max, ellipsis = entity:ellipsis(max) }
 	end
 
 	ya.preview_widget(job, {
-		ui.List(items):area(job.area),
+		ui.List(left):area(job.area),
+		ui.Text(right):area(job.area):align(ui.Align.RIGHT),
 		table.unpack(Marker:new(job.area, folder):redraw()),
 	})
 end
@@ -50,6 +51,7 @@ end
 
 function M:spot(job)
 	self.size, self.last = 0, 0
+	self:spot_multi(job, false)
 
 	local url = job.file.url
 	local it = fs.calc_size(url)
@@ -69,15 +71,15 @@ function M:spot(job)
 	self:spot_multi(job, true)
 end
 
-function M:spot_multi(job, force)
+function M:spot_multi(job, comp)
 	local now = ya.time()
-	if not force and now < self.last + 0.1 then
+	if not comp and now < self.last + 0.1 then
 		return
 	end
 
 	local rows = {
 		ui.Row({ "Folder" }):style(ui.Style():fg("green")),
-		ui.Row { "  Size:", ya.readable_size(self.size) .. (force and "" or " (?)") },
+		ui.Row { "  Size:", ya.readable_size(self.size) .. (comp and "" or " (?)") },
 		ui.Row {},
 	}
 

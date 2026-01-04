@@ -2,12 +2,13 @@ use std::ops::Deref;
 
 use anyhow::Result;
 use hashbrown::HashMap;
+use ratatui::style::Color;
 use serde::{Deserialize, Deserializer};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
 use yazi_shared::{Condition, url::UrlLike};
 
-use crate::{Color, Icon as I, Pattern, Style};
+use crate::{Icon as I, Pattern, Style};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Icon {
@@ -74,7 +75,7 @@ impl Icon {
 	}
 
 	fn match_by_name(&self, file: &File) -> Option<&I> {
-		let name = file.name()?.to_str()?;
+		let name = file.name()?.to_str().ok()?;
 		if file.is_dir() {
 			self.dirs.get(name).or_else(|| self.dirs.get(&name.to_ascii_lowercase()))
 		} else {
@@ -87,7 +88,7 @@ impl Icon {
 	}
 
 	fn match_by_ext(&self, file: &File) -> Option<&I> {
-		let ext = file.url.ext()?.to_str()?;
+		let ext = file.url.ext()?.to_str().ok()?;
 		self.exts.get(ext).or_else(|| self.exts.get(&ext.to_ascii_lowercase()))
 	}
 }

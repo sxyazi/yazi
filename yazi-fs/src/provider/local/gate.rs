@@ -1,6 +1,6 @@
-use std::{io, path::Path};
+use std::io;
 
-use yazi_shared::scheme::SchemeRef;
+use yazi_shared::url::AsUrl;
 
 use crate::provider::{Attrs, FileBuilder};
 
@@ -33,19 +33,16 @@ impl FileBuilder for Gate {
 		self
 	}
 
-	async fn new(scheme: SchemeRef<'_>) -> io::Result<Self> {
-		if scheme.is_local() {
-			Ok(Self::default())
-		} else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local filesystem"))?
-		}
-	}
-
-	async fn open<P>(&self, path: P) -> io::Result<Self::File>
+	async fn open<U>(&self, url: U) -> io::Result<Self::File>
 	where
-		P: AsRef<Path>,
+		U: AsUrl,
 	{
-		self.0.open(path).await
+		let url = url.as_url();
+		if let Some(path) = url.as_local() {
+			self.0.open(path).await
+		} else {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url:?}")))
+		}
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

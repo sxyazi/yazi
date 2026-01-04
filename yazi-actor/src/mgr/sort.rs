@@ -1,9 +1,10 @@
 use anyhow::Result;
 use yazi_core::tab::Folder;
+use yazi_dds::spark::SparkKind;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::SortOpt;
-use yazi_shared::{data::Data, path::PathLike};
+use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
 
@@ -23,7 +24,7 @@ impl Actor for Sort {
 		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
 
 		let sorter = FilesSorter::from(&*pref);
-		let hovered = cx.hovered().map(|f| f.urn().owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();
@@ -55,5 +56,13 @@ impl Actor for Sort {
 		}
 
 		succ!();
+	}
+
+	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+		match cx.source() {
+			Source::Ind => Some(SparkKind::IndSort),
+			Source::Key => Some(SparkKind::KeySort),
+			_ => None,
+		}
 	}
 }

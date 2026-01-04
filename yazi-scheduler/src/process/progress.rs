@@ -4,8 +4,7 @@ use yazi_parser::app::TaskSummary;
 // --- Block
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgBlock {
-	pub state:   Option<bool>,
-	pub cleaned: bool,
+	pub state: Option<bool>,
 }
 
 impl From<ProcessProgBlock> for TaskSummary {
@@ -20,13 +19,15 @@ impl From<ProcessProgBlock> for TaskSummary {
 }
 
 impl ProcessProgBlock {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -34,8 +35,7 @@ impl ProcessProgBlock {
 // --- Orphan
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgOrphan {
-	pub state:   Option<bool>,
-	pub cleaned: bool,
+	pub state: Option<bool>,
 }
 
 impl From<ProcessProgOrphan> for TaskSummary {
@@ -50,13 +50,15 @@ impl From<ProcessProgOrphan> for TaskSummary {
 }
 
 impl ProcessProgOrphan {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -64,8 +66,7 @@ impl ProcessProgOrphan {
 // --- Bg
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgBg {
-	pub state:   Option<bool>,
-	pub cleaned: bool,
+	pub state: Option<bool>,
 }
 
 impl From<ProcessProgBg> for TaskSummary {
@@ -80,13 +81,15 @@ impl From<ProcessProgBg> for TaskSummary {
 }
 
 impl ProcessProgBg {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { self.cleaned }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

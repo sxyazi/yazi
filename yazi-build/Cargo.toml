@@ -1,12 +1,15 @@
 [package]
 name        = "yazi-build"
-version     = "25.9.15"
+version     = "26.1.4"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
 description = "Yazi build system"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
+
+[lints]
+workspace = true
 
 [profile.release]
 codegen-units = 1
@@ -15,7 +18,7 @@ panic         = "abort"
 strip         = true
 
 [build-dependencies]
-yazi-term = { path = "../yazi-term", version = "25.9.15" }
+yazi-term = { path = "../yazi-term", version = "26.1.4" }
 
 [[bin]]
 name = "yazi-build"

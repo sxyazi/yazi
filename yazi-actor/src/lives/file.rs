@@ -1,10 +1,10 @@
-use std::ops::Deref;
+use std::{ops::Deref, ptr};
 
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::Style;
+use yazi_binding::{Style, cached_field};
 use yazi_config::THEME;
 use yazi_plugin::bindings::Range;
-use yazi_shared::url::UrlLike;
+use yazi_shared::{path::AsPath, url::UrlLike};
 
 use super::Lives;
 use crate::lives::PtrCell;
@@ -19,7 +19,10 @@ pub(super) struct File {
 	v_link_to: Option<Value>,
 
 	v_name:  Option<Value>,
+	v_path:  Option<Value>,
 	v_cache: Option<Value>,
+
+	v_bare: Option<Value>,
 }
 
 impl Deref for File {
@@ -53,7 +56,10 @@ impl File {
 					v_link_to: None,
 
 					v_name: None,
+					v_path: None,
 					v_cache: None,
+
+					v_bare: None,
 				})?;
 				ve.insert(ud.clone());
 				ud
@@ -65,11 +71,13 @@ impl File {
 impl UserData for File {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		yazi_binding::impl_file_fields!(fields);
+		cached_field!(fields, bare, |_, me| Ok(yazi_binding::File::new(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.idx == me.folder.cursor));
+		fields.add_field_method_get("in_current", |_, me| Ok(ptr::eq(&*me.folder, &me.tab.current)));
 		fields.add_field_method_get("in_preview", |_, me| {
-			Ok(me.tab.hovered().is_some_and(|f| f.url == me.folder.url))
+			Ok(me.idx == me.folder.cursor && me.tab.hovered().is_some_and(|f| f.url == me.folder.url))
 		});
 	}
 
@@ -88,13 +96,10 @@ impl UserData for File {
 			if !me.url.has_trail() {
 				return Ok(None);
 			}
-			let Some(path) = me.url.as_path() else {
-				return Ok(None);
-			};
 
-			let mut comp = path.strip_prefix(me.url.loc.trail()).unwrap_or(path).components();
+			let mut comp = me.url.try_strip_prefix(me.url.trail()).unwrap_or(me.url.loc()).components();
 			comp.next_back();
-			Some(lua.create_string(comp.as_path().as_os_str().as_encoded_bytes())).transpose()
+			Some(lua.create_string(comp.as_path().encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {

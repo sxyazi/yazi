@@ -55,6 +55,18 @@ impl CmdCow {
 		}
 	}
 
+	pub fn take_second<'a, T>(&mut self) -> Result<T>
+	where
+		T: TryFrom<Data> + TryFrom<&'a Data>,
+		<T as TryFrom<Data>>::Error: Into<anyhow::Error>,
+		<T as TryFrom<&'a Data>>::Error: Into<anyhow::Error>,
+	{
+		match self {
+			Self::Owned(c) => c.take_second(),
+			Self::Borrowed(c) => c.second(),
+		}
+	}
+
 	pub fn take_seq<'a, T>(&mut self) -> Vec<T>
 	where
 		T: TryFrom<Data> + TryFrom<&'a Data>,

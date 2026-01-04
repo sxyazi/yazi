@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-codegen"
-version     = "25.9.15"
+version     = "26.1.4"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -8,10 +8,13 @@ description = "Yazi code generator"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [lib]
 proc-macro = true
 
 [dependencies]
 # External dependencies
-syn   = { version = "2.0.108", features = [ "full" ] }
-quote = "1.0.41"
+syn   = { version = "2.0.113", features = [ "full" ] }
+quote = "1.0.42"

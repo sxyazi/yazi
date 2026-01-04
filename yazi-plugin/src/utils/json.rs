@@ -1,8 +1,7 @@
 use mlua::{Function, IntoLuaMulti, Lua, LuaSerdeExt, Value};
-use yazi_binding::Error;
+use yazi_binding::{Error, SER_OPT};
 
 use super::Utils;
-use crate::runtime::SER_OPT;
 
 impl Utils {
 	pub(super) fn json_encode(lua: &Lua) -> mlua::Result<Function> {

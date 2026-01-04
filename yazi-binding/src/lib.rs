@@ -1,7 +1,5 @@
-#![allow(clippy::unit_arg)]
-
 mod macros;
 
 yazi_macro::mod_pub!(elements);
 
-yazi_macro::mod_flat!(cha color composer error file icon id iter permit runtime scheme stage style url urn utils);
+yazi_macro::mod_flat!(cha color composer error file handle icon id iter path permit runtime scheme stage style url utils);

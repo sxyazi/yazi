@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{deprecate, elements::{Line, Pos, Text}};
+use yazi_binding::{deprecate, elements::{Line, Pos, Text}, runtime};
 use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::relay;
 use yazi_parser::which::ShowOpt;
@@ -15,19 +15,26 @@ use crate::bindings::InputRx;
 
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(|_, t: Table| async move {
-			let (tx, mut rx) = mpsc::channel::<usize>(1);
-
-			let mut cands = Vec::with_capacity(30);
-			for (i, cand) in t.raw_get::<Table>("cands")?.sequence_values::<Table>().enumerate() {
-				let cand = cand?;
-				cands.push(Chord {
-					on:    Self::parse_keys(cand.raw_get("on")?)?,
-					run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
-					desc:  cand.raw_get("desc").ok(),
-					r#for: None,
-				});
+		lua.create_async_function(|lua, t: Table| async move {
+			if runtime!(lua)?.initing {
+				return Err("Cannot call `ya.which()` during app initialization".into_lua_err());
 			}
+
+			let (tx, mut rx) = mpsc::channel::<usize>(1);
+			let cands: Vec<_> = t
+				.raw_get::<Table>("cands")?
+				.sequence_values::<Table>()
+				.enumerate()
+				.map(|(i, cand)| {
+					let cand = cand?;
+					Ok(Chord {
+						on:    Self::parse_keys(cand.raw_get("on")?)?,
+						run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
+						desc:  cand.raw_get("desc").ok(),
+						r#for: None,
+					})
+				})
+				.collect::<mlua::Result<_>>()?;
 
 			drop(tx);
 			WhichProxy::show(ShowOpt { cands, silent: t.raw_get("silent").unwrap_or_default() });
@@ -38,6 +45,10 @@ impl Utils {
 
 	pub(super) fn input(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
+			if runtime!(lua)?.initing {
+				return Err("Cannot call `ya.input()` during app initialization".into_lua_err());
+			}
+
 			let mut pos = t.raw_get::<Value>("pos")?;
 			if pos.is_nil() {
 				pos = t.raw_get("position")?;
@@ -80,7 +91,11 @@ impl Utils {
 			})
 		}
 
-		lua.create_async_function(|_, t: Table| async move {
+		lua.create_async_function(|lua, t: Table| async move {
+			if runtime!(lua)?.initing {
+				return Err("Cannot call `ya.confirm()` during app initialization".into_lua_err());
+			}
+
 			let result = ConfirmProxy::show(ConfirmCfg {
 				position: Pos::try_from(t.raw_get::<Value>("pos")?)?.into(),
 				title:    Line::try_from(t.raw_get::<Value>("title")?)?.into(),

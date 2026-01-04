@@ -19,13 +19,15 @@ impl From<PluginProgEntry> for TaskSummary {
 }
 
 impl PluginProgEntry {
+	pub fn cooked(self) -> bool { self.state == Some(true) }
+
 	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.cooked() }
 
 	pub fn failed(self) -> bool { self.state == Some(false) }
 
-	pub fn cleaned(self) -> bool { false }
+	pub fn cleaned(self) -> Option<bool> { None }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-vfs"
-version     = "25.9.15"
+version     = "26.1.4"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -8,12 +8,15 @@ description = "Yazi virtual file system"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[lints]
+workspace = true
+
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "25.9.15" }
-yazi-fs     = { path = "../yazi-fs", version = "25.9.15" }
-yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
-yazi-sftp   = { path = "../yazi-sftp", version = "0.1.0" }
-yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
+yazi-config = { path = "../yazi-config", version = "26.1.4" }
+yazi-fs     = { path = "../yazi-fs", version = "26.1.4" }
+yazi-macro  = { path = "../yazi-macro", version = "26.1.4" }
+yazi-sftp   = { path = "../yazi-sftp", version = "26.1.4" }
+yazi-shared = { path = "../yazi-shared", version = "26.1.4" }
 
 # External dependencies
 anyhow      = { workspace = true }
@@ -24,3 +27,4 @@ parking_lot = { workspace = true }
 russh       = { workspace = true }
 tokio       = { workspace = true }
 tracing     = { workspace = true }
+typed-path  = { workspace = true }

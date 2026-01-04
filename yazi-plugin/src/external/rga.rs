@@ -1,9 +1,9 @@
 use std::process::Stdio;
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_fs::File;
-use yazi_shared::url::{UrlBuf, UrlLike};
+use yazi_fs::{File, FsUrl};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
 pub struct RgaOpt {
@@ -14,16 +14,12 @@ pub struct RgaOpt {
 }
 
 pub fn rga(opt: RgaOpt) -> Result<UnboundedReceiver<File>> {
-	let Some(path) = opt.cwd.as_path() else {
-		bail!("rga can only search local filesystem");
-	};
-
 	let mut child = Command::new("rga")
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject)
-		.arg(path)
+		.arg(&*opt.cwd.as_url().unified_path())
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())
@@ -34,7 +30,10 @@ pub fn rga(opt: RgaOpt) -> Result<UnboundedReceiver<File>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			if let Ok(file) = File::new(opt.cwd.join(line)).await {
+			let Ok(url) = opt.cwd.try_join(line) else {
+				continue;
+			};
+			if let Ok(file) = File::new(url).await {
 				tx.send(file).ok();
 			}
 		}

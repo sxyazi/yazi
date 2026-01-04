@@ -4,7 +4,7 @@ use mlua::{UserData, UserDataFields, Value};
 use yazi_fs::FsScheme;
 use yazi_shared::scheme::SchemeLike;
 
-use crate::{Url, cached_field};
+use crate::{Path, cached_field};
 
 pub struct Scheme {
 	inner: yazi_shared::scheme::Scheme,
@@ -20,15 +20,15 @@ impl Deref for Scheme {
 }
 
 impl Scheme {
-	pub fn new(scheme: &yazi_shared::scheme::Scheme) -> Self {
-		Self { inner: scheme.clone(), v_kind: None, v_cache: None }
+	pub fn new(scheme: impl Into<yazi_shared::scheme::Scheme>) -> Self {
+		Self { inner: scheme.into(), v_kind: None, v_cache: None }
 	}
 }
 
 impl UserData for Scheme {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, kind, |_, me| Ok(me.kind()));
-		cached_field!(fields, cache, |_, me| Ok(me.cache().map(Url::new)));
+		cached_field!(fields, kind, |_, me| Ok(me.kind().as_str()));
+		cached_field!(fields, cache, |_, me| Ok(me.cache().map(Path::new)));
 
 		fields.add_field_method_get("is_virtual", |_, me| Ok(me.is_virtual()));
 	}

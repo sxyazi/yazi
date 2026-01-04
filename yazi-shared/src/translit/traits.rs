@@ -19,7 +19,7 @@ impl Transliterator for &[u8] {
 		// but instead of `+ 16` uses `| 15` to stay in the smallest allocation bucket
 		// for short strings
 		let mut out = String::new();
-		out.try_reserve_exact(self.len() | 15).unwrap_or_else(|_| panic!());
+		out.reserve_exact(self.len() | 15);
 		out.push_str(unsafe { str::from_utf8_unchecked(ascii) });
 
 		for c in String::from_utf8_lossy(rest).chars() {

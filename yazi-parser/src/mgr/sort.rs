@@ -1,8 +1,9 @@
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
+use serde::{Deserialize, Serialize};
 use yazi_fs::SortBy;
 use yazi_shared::event::CmdCow;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct SortOpt {
 	pub by:        Option<SortBy>,
 	pub reverse:   Option<bool>,
@@ -26,9 +27,9 @@ impl TryFrom<CmdCow> for SortOpt {
 }
 
 impl FromLua for SortOpt {
-	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl IntoLua for SortOpt {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
 }

@@ -1,7 +1,8 @@
 use std::cmp::Ordering;
 
 use hashbrown::HashMap;
-use yazi_shared::{LcgRng, natsort, path::{PathBufDyn, PathLike}, translit::Transliterator, url::UrlLike};
+use rand::{RngCore, SeedableRng, rngs::SmallRng};
+use yazi_shared::{natsort, path::PathBufDyn, translit::Transliterator, url::UrlLike};
 
 use crate::{File, SortBy};
 
@@ -43,8 +44,8 @@ impl FilesSorter {
 					self.cmp(a.url.ext(), b.url.ext(), self.promote(a, b))
 				} else {
 					self.cmp_insensitive(
-						a.url.ext().map_or(&[], |s| s.as_encoded_bytes()),
-						b.url.ext().map_or(&[], |s| s.as_encoded_bytes()),
+						a.url.ext().map_or(&[], |s| s.encoded_bytes()),
+						b.url.ext().map_or(&[], |s| s.encoded_bytes()),
 						self.promote(a, b),
 					)
 				};
@@ -59,8 +60,8 @@ impl FilesSorter {
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Random => {
-				let mut rng = LcgRng::default();
-				items.sort_unstable_by(|a, b| self.cmp(rng.next(), rng.next(), self.promote(a, b)))
+				let mut rng = SmallRng::from_os_rng();
+				items.sort_unstable_by(|a, b| self.cmp(rng.next_u64(), rng.next_u64(), self.promote(a, b)))
 			}
 		}
 	}

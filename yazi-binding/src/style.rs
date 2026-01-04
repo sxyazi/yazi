@@ -1,4 +1,6 @@
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, LuaSerdeExt, MetaMethod, Table, UserData, UserDataMethods, Value};
+
+use crate::SER_OPT;
 
 #[derive(Clone, Copy, Default)]
 pub struct Style(pub ratatui::style::Style);
@@ -33,6 +35,9 @@ impl From<yazi_config::Style> for Style {
 impl UserData for Style {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_shorthands!(methods, 0);
+
+		methods
+			.add_method("raw", |lua, me, ()| lua.to_value_with(&yazi_config::Style::from(me.0), SER_OPT));
 
 		methods.add_function_mut("patch", |_, (ud, value): (AnyUserData, Value)| {
 			{

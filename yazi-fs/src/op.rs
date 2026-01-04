@@ -2,7 +2,7 @@ use std::path::Path;
 
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
-use yazi_shared::{Id, Ids, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, Ids, path::PathBufDyn, url::{UrlBuf, UrlLike}};
 
 use super::File;
 use crate::{cha::Cha, error::Error};
@@ -57,10 +57,10 @@ impl FilesOp {
 			let Some(o_p) = o.parent() else { continue };
 			let Some(n_p) = n.url.parent() else { continue };
 			if o_p == n_p {
-				parents.entry_ref(&o_p).or_default().1.insert(o.urn().owned(), n);
+				parents.entry_ref(&o_p).or_default().1.insert(o.urn().into(), n);
 			} else {
-				parents.entry_ref(&o_p).or_default().0.insert(o.urn().owned());
-				parents.entry_ref(&n_p).or_default().1.insert(n.urn().owned(), n);
+				parents.entry_ref(&o_p).or_default().0.insert(o.urn().into());
+				parents.entry_ref(&n_p).or_default().1.insert(n.urn().into(), n);
 			}
 		}
 		for (p, (o, n)) in parents {
@@ -123,11 +123,13 @@ impl FilesOp {
 
 	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<UrlBuf>) {
 		match self {
-			Self::Deleting(cwd, urns) => (urns.iter().map(|u| cwd.join(u)).collect(), vec![]),
+			Self::Deleting(cwd, urns) => {
+				(urns.iter().filter_map(|u| cwd.try_join(u).ok()).collect(), vec![])
+			}
 			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns
 				.iter()
 				.filter(|&(u, f)| u != f.urn())
-				.map(|(u, f)| (cwd.join(u), f))
+				.filter_map(|(u, f)| cwd.try_join(u).ok().map(|u| (u, f)))
 				.filter(|(u, _)| contains(u))
 				.map(|(u, f)| (u, f.url_owned()))
 				.unzip(),

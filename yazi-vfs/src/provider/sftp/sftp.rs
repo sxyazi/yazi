@@ -1,365 +1,224 @@
-use std::{io, path::{Path, PathBuf}, sync::Arc};
+use std::{io, sync::Arc};
 
-use russh::keys::PrivateKeyWithHashAlg;
-use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
-use yazi_config::vfs::ProviderSftp;
-use yazi_fs::provider::{DirReader, FileBuilder, FileHolder, Provider, local::Local};
+use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
+use yazi_config::vfs::{ServiceSftp, Vfs};
+use yazi_fs::provider::{Capabilities, DirReader, FileHolder, Provider};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlBuf, UrlCow}};
+use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
+use crate::provider::sftp::Conn;
 
-#[derive(Clone, Copy)]
-pub struct Sftp {
+#[derive(Clone)]
+pub struct Sftp<'a> {
+	url:  Url<'a>,
+	path: &'a typed_path::UnixPath,
+
 	name:   &'static str,
-	config: &'static ProviderSftp,
+	config: &'static ServiceSftp,
 }
 
-impl From<(&'static str, &'static ProviderSftp)> for Sftp {
-	fn from((name, config): (&'static str, &'static ProviderSftp)) -> Self { Self { name, config } }
-}
-
-impl Provider for Sftp {
+impl<'a> Provider for Sftp<'a> {
 	type File = yazi_sftp::fs::File;
 	type Gate = super::Gate;
+	type Me<'b> = Sftp<'b>;
 	type ReadDir = super::ReadDir;
+	type UrlCow = UrlCow<'a>;
 
-	async fn absolute<'a, U>(&self, url: &'a U) -> io::Result<UrlCow<'a>>
-	where
-		U: AsUrl,
-	{
-		let url = url.as_url();
-		Ok(if url.is_absolute() {
-			url.into()
-		} else if let SchemeRef::Sftp(_) = url.scheme {
-			UrlBuf { loc: self.canonicalize(url.loc).await?.into(), scheme: url.scheme.into() }.into()
+	async fn absolute(&self) -> io::Result<Self::UrlCow> {
+		Ok(if let Some(u) = super::try_absolute(self.url) {
+			u
 		} else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not an SFTP URL"))?
+			self.canonicalize().await?.into()
 		})
 	}
 
-	async fn canonicalize<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(self.op().await?.realpath(&path).await?)
+	async fn canonicalize(&self) -> io::Result<UrlBuf> {
+		Ok(UrlBuf::Sftp {
+			loc:    self.op().await?.realpath(self.path).await?.into(),
+			domain: self.name.intern(),
+		})
 	}
 
-	async fn casefold<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref();
-		let Some((parent, name)) = path.parent().zip(path.file_name()) else {
-			return Ok(path.to_owned());
+	fn capabilities(&self) -> Capabilities { Capabilities { symlink: true } }
+
+	async fn casefold(&self) -> io::Result<UrlBuf> {
+		let Some((parent, name)) = self.url.parent().zip(self.url.name()) else {
+			return Ok(self.url.to_owned());
 		};
 
-		if !self.symlink_metadata(path).await?.is_link() {
-			return match self.canonicalize(path).await?.file_name() {
-				Some(name) => Ok(parent.join(name)),
-				None => Err(io::Error::other("Cannot get filename")),
-			};
+		if !self.symlink_metadata().await?.is_link() {
+			return Ok(match self.canonicalize().await?.name() {
+				Some(name) => parent.try_join(name)?,
+				None => Err(io::Error::other("Cannot get filename"))?,
+			});
 		}
 
-		let mut it = self.read_dir(parent).await?;
+		let mut it = Self::new(parent).await?.read_dir().await?;
 		let mut similar = None;
 		while let Some(entry) = it.next().await? {
 			let s = entry.name();
-			if !s.eq_ignore_ascii_case(name) {
+			if !name.eq_ignore_ascii_case(&s) {
 				continue;
 			} else if s == name {
-				return Ok(entry.path());
+				return Ok(entry.url());
 			} else if similar.is_none() {
 				similar = Some(s.into_owned());
+			} else {
+				return Err(io::Error::from(io::ErrorKind::NotFound));
 			}
 		}
 
-		similar.map(|n| parent.join(n)).ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))
+		similar
+			.map(|n| parent.try_join(n))
+			.transpose()?
+			.ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))
 	}
 
-	async fn copy<P, Q>(&self, from: P, to: Q, attrs: yazi_fs::provider::Attrs) -> io::Result<u64>
+	async fn copy<P>(&self, to: P, attrs: yazi_fs::provider::Attrs) -> io::Result<u64>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		P: AsPath,
 	{
-		let attrs = Attrs::from(super::Attrs(attrs));
+		let to = to.as_path().as_unix()?;
+		let attrs = super::Attrs(attrs).try_into().unwrap_or_default();
 
 		let op = self.op().await?;
-		let from = op.open(&from, Flags::READ, &Attrs::default()).await?;
-		let to = op.open(&to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, &attrs).await?;
+		let from = op.open(self.path, Flags::READ, &Attrs::default()).await?;
+		let to = op.open(to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, &attrs).await?;
 
 		let mut reader = BufReader::with_capacity(524288, from);
 		let mut writer = BufWriter::with_capacity(524288, to);
 		let written = tokio::io::copy(&mut reader, &mut writer).await?;
 
 		writer.flush().await?;
-		writer.get_ref().fsetstat(&attrs).await.ok();
+		if !attrs.is_empty() {
+			writer.get_ref().fsetstat(&attrs).await.ok();
+		}
+
 		writer.shutdown().await.ok();
 		Ok(written)
 	}
 
-	async fn create_dir<P>(&self, path: P) -> io::Result<()>
+	fn copy_with_progress<P, A>(&self, to: P, attrs: A) -> io::Result<Receiver<io::Result<u64>>>
 	where
-		P: AsRef<Path>,
+		P: AsPath,
+		A: Into<yazi_fs::provider::Attrs>,
 	{
-		Ok(self.op().await?.mkdir(&path, Attrs::default()).await?)
+		let to = UrlBuf::Sftp {
+			loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(
+				to.as_path().to_unix_owned()?,
+				SchemeKind::Sftp,
+			),
+			domain: self.name.intern(),
+		};
+		let from = self.url.to_owned();
+
+		Ok(crate::provider::copy_with_progress_impl(from, to, attrs.into()))
 	}
 
-	async fn gate(&self) -> io::Result<Self::Gate> {
-		super::Gate::new(SchemeRef::Sftp(self.name)).await
-	}
-
-	async fn hard_link<P, Q>(&self, original: P, link: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		Ok(self.op().await?.hardlink(&original, &link).await?)
-	}
-
-	async fn metadata<P>(&self, path: P) -> io::Result<yazi_fs::cha::Cha>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref();
-		let attrs = self.op().await?.stat(path).await?;
-		Ok(Cha::try_from((path.file_name().unwrap_or_default(), &attrs))?.0)
-	}
-
-	async fn read_dir<P>(&self, path: P) -> io::Result<Self::ReadDir>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(super::ReadDir(self.op().await?.read_dir(&path).await?))
-	}
-
-	async fn read_link<P>(&self, path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(self.op().await?.readlink(&path).await?)
-	}
-
-	async fn remove_dir<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(self.op().await?.rmdir(&path).await?)
-	}
-
-	async fn remove_file<P>(&self, path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		Ok(self.op().await?.remove(&path).await?)
-	}
-
-	async fn rename<P, Q>(&self, from: P, to: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
+	async fn create_dir(&self) -> io::Result<()> {
 		let op = self.op().await?;
-		match op.rename_posix(&from, &to).await {
+		let result = op.mkdir(self.path, Attrs::default()).await;
+
+		if let Err(yazi_sftp::Error::Status(status)) = &result
+			&& status.is_failure()
+			&& op.lstat(self.path).await.is_ok()
+		{
+			return Err(io::Error::from(io::ErrorKind::AlreadyExists));
+		}
+
+		Ok(result?)
+	}
+
+	async fn hard_link<P>(&self, to: P) -> io::Result<()>
+	where
+		P: AsPath,
+	{
+		let to = to.as_path().as_unix()?;
+
+		Ok(self.op().await?.hardlink(self.path, to).await?)
+	}
+
+	async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+		let attrs = self.op().await?.stat(self.path).await?;
+		Ok(Cha::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
+	}
+
+	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
+		match url {
+			Url::Regular(_) | Url::Search { .. } | Url::Archive { .. } => {
+				Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url:?}")))
+			}
+			Url::Sftp { loc, domain } => {
+				let (name, config) = Vfs::service::<&ServiceSftp>(domain).await?;
+				Ok(Self::Me { url, path: loc.as_inner(), name, config })
+			}
+		}
+	}
+
+	async fn read_dir(self) -> io::Result<Self::ReadDir> {
+		Ok(Self::ReadDir {
+			dir:    Arc::new(self.url.to_owned()),
+			reader: self.op().await?.read_dir(self.path).await?,
+		})
+	}
+
+	async fn read_link(&self) -> io::Result<PathBufDyn> {
+		Ok(self.op().await?.readlink(self.path).await?.into())
+	}
+
+	async fn remove_dir(&self) -> io::Result<()> { Ok(self.op().await?.rmdir(self.path).await?) }
+
+	async fn remove_file(&self) -> io::Result<()> { Ok(self.op().await?.remove(self.path).await?) }
+
+	async fn rename<P>(&self, to: P) -> io::Result<()>
+	where
+		P: AsPath,
+	{
+		let to = to.as_path().as_unix()?;
+		let op = self.op().await?;
+
+		match op.rename_posix(self.path, &to).await {
 			Ok(()) => {}
 			Err(yazi_sftp::Error::Unsupported) => {
-				op.remove(&to).await?;
-				op.rename(&from, &to).await?;
+				match op.remove(&to).await.map_err(io::Error::from) {
+					Ok(()) => {}
+					Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+					Err(e) => Err(e)?,
+				}
+				op.rename(self.path, &to).await?;
 			}
 			Err(e) => Err(e)?,
 		}
 		Ok(())
 	}
 
-	async fn symlink<P, Q, F>(&self, original: P, link: Q, _is_dir: F) -> io::Result<()>
+	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
 	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
+		S: AsStrand,
 		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		Ok(self.op().await?.symlink(&original, &link).await?)
+		let original = original.as_strand().encoded_bytes();
+
+		Ok(self.op().await?.symlink(original, self.path).await?)
 	}
 
-	async fn symlink_metadata<P>(&self, path: P) -> io::Result<yazi_fs::cha::Cha>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref();
-		let attrs = self.op().await?.lstat(path).await?;
-		Ok(Cha::try_from((path.file_name().unwrap_or_default(), &attrs))?.0)
+	async fn symlink_metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+		let attrs = self.op().await?.lstat(self.path).await?;
+		Ok(Cha::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
 	}
 
-	async fn trash<P>(&self, _path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
+	async fn trash(&self) -> io::Result<()> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Trash not supported"))
 	}
+
+	#[inline]
+	fn url(&self) -> Url<'_> { self.url }
 }
 
-impl Sftp {
-	pub(super) async fn op(self) -> io::Result<deadpool::managed::Object<Sftp>> {
-		use deadpool::managed::PoolError;
-
-		let pool = *super::CONN.lock().entry(self.config).or_insert_with(|| {
-			Box::leak(Box::new(deadpool::managed::Pool::builder(self).max_size(5).build().unwrap()))
-		});
-
-		pool.get().await.map_err(|e| match e {
-			PoolError::Timeout(_) => io::Error::new(io::ErrorKind::TimedOut, e.to_string()),
-			PoolError::Backend(e) => e,
-			PoolError::Closed | PoolError::NoRuntimeSpecified | PoolError::PostCreateHook(_) => {
-				io::Error::other(e.to_string())
-			}
-		})
-	}
-}
-
-impl russh::client::Handler for Sftp {
-	type Error = russh::Error;
-
-	async fn check_server_key(
-		&mut self,
-		_server_public_key: &russh::keys::PublicKey,
-	) -> Result<bool, Self::Error> {
-		Ok(true)
-	}
-}
-
-impl deadpool::managed::Manager for Sftp {
-	type Error = io::Error;
-	type Type = yazi_sftp::Operator;
-
-	async fn create(&self) -> Result<Self::Type, Self::Error> {
-		let channel = self.connect().await.map_err(|e| {
-			io::Error::other(format!("Failed to connect to SFTP server `{}`: {e}", self.name))
-		})?;
-
-		let mut op = yazi_sftp::Operator::make(channel.into_stream());
-		op.init().await?;
-		Ok(op)
-	}
-
-	async fn recycle(
-		&self,
-		obj: &mut Self::Type,
-		_metrics: &deadpool::managed::Metrics,
-	) -> deadpool::managed::RecycleResult<Self::Error> {
-		if obj.is_closed() {
-			Err(deadpool::managed::RecycleError::Message("Channel closed".into()))
-		} else {
-			Ok(())
-		}
-	}
-}
-
-impl Sftp {
-	async fn connect(self) -> Result<russh::Channel<russh::client::Msg>, russh::Error> {
-		let pref = Arc::new(russh::client::Config {
-			inactivity_timeout: Some(std::time::Duration::from_secs(30)),
-			keepalive_interval: Some(std::time::Duration::from_secs(10)),
-			nodelay: true,
-			..Default::default()
-		});
-
-		let session = if self.config.password.is_some() {
-			self.connect_by_password(pref).await
-		} else if !self.config.key_file.as_os_str().is_empty() {
-			self.connect_by_key(pref).await
-		} else {
-			self.connect_by_agent(pref).await
-		}?;
-
-		let channel = session.channel_open_session().await?;
-		channel.request_subsystem(true, "sftp").await?;
-		Ok(channel)
-	}
-
-	async fn connect_by_password(
-		self,
-		pref: Arc<russh::client::Config>,
-	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let Some(password) = &self.config.password else {
-			return Err(russh::Error::InvalidConfig("Password not provided".to_owned()));
-		};
-
-		let mut session =
-			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
-
-		if session.authenticate_password(&self.config.user, password).await?.success() {
-			Ok(session)
-		} else {
-			Err(russh::Error::InvalidConfig("Password authentication failed".to_owned()))
-		}
-	}
-
-	async fn connect_by_key(
-		self,
-		pref: Arc<russh::client::Config>,
-	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let key_file = &self.config.key_file;
-		if key_file.as_os_str().is_empty() {
-			return Err(russh::Error::InvalidConfig("Key file not provided".to_owned()));
-		};
-
-		let key = Local
-			.read_to_string(key_file)
-			.await
-			.map_err(|e| russh::Error::InvalidConfig(format!("Failed to read key file: {e}")))?;
-
-		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
-
-		let mut session =
-			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
-
-		let result = session
-			.authenticate_publickey(
-				&self.config.user,
-				PrivateKeyWithHashAlg::new(
-					Arc::new(key),
-					session.best_supported_rsa_hash().await?.flatten(),
-				),
-			)
-			.await?;
-
-		if result.success() {
-			Ok(session)
-		} else {
-			Err(russh::Error::InvalidConfig("Public key authentication failed".to_owned()))
-		}
-	}
-
-	async fn connect_by_agent(
-		self,
-		pref: Arc<russh::client::Config>,
-	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let identity_agent = &self.config.identity_agent;
-		if identity_agent.as_os_str().is_empty() {
-			return Err(russh::Error::InvalidConfig("Identity agent not provided".to_owned()));
-		};
-
-		#[cfg(unix)]
-		let mut agent = russh::keys::agent::client::AgentClient::connect_uds(identity_agent).await?;
-		#[cfg(windows)]
-		let mut agent =
-			russh::keys::agent::client::AgentClient::connect_named_pipe(identity_agent).await?;
-
-		let keys = agent.request_identities().await?;
-		if keys.is_empty() {
-			return Err(russh::Error::InvalidConfig("No keys found in SSH agent".to_owned()));
-		}
-
-		let mut session =
-			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
-
-		for key in keys {
-			match session.authenticate_publickey_with(&self.config.user, key, None, &mut agent).await {
-				Ok(result) if result.success() => return Ok(session),
-				Ok(_) => {}
-				Err(e) => tracing::error!("Identity agent authentication error: {e}"),
-			}
-		}
-
-		Err(russh::Error::InvalidConfig("Public key authentication via agent failed".to_owned()))
+impl<'a> Sftp<'a> {
+	#[inline]
+	pub(super) async fn op(&self) -> io::Result<deadpool::managed::Object<Conn>> {
+		Conn { name: self.name, config: self.config }.roll().await
 	}
 }

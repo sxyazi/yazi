@@ -3,7 +3,7 @@ use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::{CdSource, TabCreateOpt};
 use yazi_proxy::AppProxy;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -25,14 +25,17 @@ impl Actor for TabCreate {
 		}
 
 		let mut tab = Tab::default();
-		let (cd, url) = if let Some(wd) = opt.wd {
+		let (cd, url) = if let Some(wd) = opt.url {
 			(true, wd.into_owned())
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();
-			(false, h.url.to_regular())
+			(false, h.url.clone())
+		} else if cx.cwd().is_search() {
+			tab.pref = cx.tab().pref.clone();
+			(true, cx.cwd().to_regular()?)
 		} else {
 			tab.pref = cx.tab().pref.clone();
-			(true, cx.cwd().to_regular())
+			(true, cx.cwd().clone())
 		};
 
 		let tabs = &mut cx.mgr.tabs;

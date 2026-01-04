@@ -1,8 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields, Value};
-use yazi_binding::cached_field;
-use yazi_plugin::runtime::SER_OPT;
+use yazi_binding::{SER_OPT, cached_field};
 
 use super::{Lives, PtrCell};
 
@@ -30,6 +29,7 @@ impl UserData for TaskSnap {
 		cached_field!(fields, name, |lua, me| lua.create_string(&me.name));
 		cached_field!(fields, prog, |lua, me| lua.to_value_with(&me.prog, SER_OPT));
 
+		fields.add_field_method_get("cooked", |_, me| Ok(me.prog.cooked()));
 		fields.add_field_method_get("running", |_, me| Ok(me.prog.running()));
 		fields.add_field_method_get("success", |_, me| Ok(me.prog.success()));
 		fields.add_field_method_get("failed", |_, me| Ok(me.prog.failed()));

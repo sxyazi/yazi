@@ -17,10 +17,11 @@ impl Actor for Close {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let cmp = &mut cx.core.cmp;
 		if let Some(item) = cmp.selected().filter(|_| opt.submit).cloned() {
-			return act!(complete, cx.core.input, CompleteOpt { item, _ticket: cmp.ticket });
+			return act!(input:complete, cx, CompleteOpt { item, ticket: cmp.ticket });
 		}
 
 		cmp.caches.clear();
+		cmp.ticket = Default::default();
 		succ!(render!(mem::replace(&mut cmp.visible, false)));
 	}
 }
