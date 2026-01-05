@@ -20,9 +20,6 @@ light = ""
 
 [app]
 overall = {}
-parent  = {}
-current = {}
-preview = {}
 
 # : }}}
 

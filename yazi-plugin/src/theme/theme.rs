@@ -35,9 +35,6 @@ fn app() -> Composer<ComposerGet, ComposerSet> {
 		let a = &THEME.app;
 		match key {
 			b"overall" => Style::from(a.overall).into_lua(lua),
-			b"parent" => Style::from(a.parent).into_lua(lua),
-			b"current" => Style::from(a.current).into_lua(lua),
-			b"preview" => Style::from(a.preview).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}
