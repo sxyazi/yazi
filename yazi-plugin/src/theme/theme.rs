@@ -25,7 +25,9 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -35,11 +37,16 @@ fn app() -> Composer<ComposerGet, ComposerSet> {
 		let a = &THEME.app;
 		match key {
 			b"overall" => Style::from(a.overall).into_lua(lua),
+			b"parent" => Style::from(a.parent).into_lua(lua),
+			b"current" => Style::from(a.current).into_lua(lua),
+			b"preview" => Style::from(a.preview).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -87,7 +94,9 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -116,7 +125,9 @@ fn tabs() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -138,7 +149,9 @@ fn mode() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -161,7 +174,9 @@ fn indicator() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -198,7 +213,9 @@ fn status() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -220,7 +237,9 @@ fn which() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -247,7 +266,9 @@ fn confirm() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -266,7 +287,9 @@ fn spot() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -287,7 +310,9 @@ fn notify() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -304,7 +329,9 @@ fn pick() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -322,7 +349,9 @@ fn input() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -343,7 +372,9 @@ fn cmp() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -360,7 +391,9 @@ fn tasks() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
@@ -380,7 +413,9 @@ fn help() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> {
+		Ok(value)
+	}
 
 	Composer::new(get, set)
 }
