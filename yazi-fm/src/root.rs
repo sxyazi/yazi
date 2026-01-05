@@ -1,9 +1,5 @@
 use mlua::{ObjectLike, Table};
-use ratatui::{
-	buffer::Buffer,
-	layout::{Constraint, Direction, Layout, Rect},
-	widgets::Widget,
-};
+use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
 use tracing::error;
 use yazi_binding::elements::render_once;
 use yazi_config::{THEME, YAZI};
@@ -17,9 +13,7 @@ pub(super) struct Root<'a> {
 }
 
 impl<'a> Root<'a> {
-	pub(super) fn new(core: &'a Core) -> Self {
-		Self { core }
-	}
+	pub(super) fn new(core: &'a Core) -> Self { Self { core } }
 
 	pub(super) fn reflow(area: Rect) -> mlua::Result<Table> {
 		let area = yazi_binding::elements::Rect::from(area);

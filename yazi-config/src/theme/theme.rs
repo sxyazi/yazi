@@ -10,35 +10,35 @@ use crate::{Style, normalize_path};
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Theme {
-	pub flavor: Flavor,
-	pub app: App,
-	pub mgr: Mgr,
-	pub tabs: Tabs,
-	pub mode: Mode,
+	pub flavor:    Flavor,
+	pub app:       App,
+	pub mgr:       Mgr,
+	pub tabs:      Tabs,
+	pub mode:      Mode,
 	pub indicator: Indicator,
-	pub status: Status,
-	pub which: Which,
-	pub confirm: Confirm,
-	pub spot: Spot,
-	pub notify: Notify,
-	pub pick: Pick,
-	pub input: Input,
-	pub cmp: Cmp,
-	pub tasks: Tasks,
-	pub help: Help,
+	pub status:    Status,
+	pub which:     Which,
+	pub confirm:   Confirm,
+	pub spot:      Spot,
+	pub notify:    Notify,
+	pub pick:      Pick,
+	pub input:     Input,
+	pub cmp:       Cmp,
+	pub tasks:     Tasks,
+	pub help:      Help,
 
 	// File-specific styles
 	#[serde(skip_serializing)]
 	pub filetype: Filetype,
 	#[serde(skip_serializing)]
-	pub icon: Icon,
+	pub icon:     Icon,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct App {
 	pub overall: Style,
 	#[serde(default)]
-	pub parent: Style,
+	pub parent:  Style,
 	#[serde(default)]
 	pub current: Style,
 	#[serde(default)]
@@ -50,26 +50,26 @@ pub struct Mgr {
 	pub cwd: Style,
 
 	// Find
-	pub find_keyword: Style,
+	pub find_keyword:  Style,
 	pub find_position: Style,
 
 	// Symlink
 	pub symlink_target: Style,
 
 	// Marker
-	pub marker_copied: Style,
-	pub marker_cut: Style,
-	pub marker_marked: Style,
+	pub marker_copied:   Style,
+	pub marker_cut:      Style,
+	pub marker_marked:   Style,
 	pub marker_selected: Style,
 
 	// Count
-	pub count_copied: Style,
-	pub count_cut: Style,
+	pub count_copied:   Style,
+	pub count_cut:      Style,
 	pub count_selected: Style,
 
 	// Border
 	pub border_symbol: String,
-	pub border_style: Style,
+	pub border_style:  Style,
 
 	// Highlighting
 	pub syntect_theme: PathBuf,
@@ -77,7 +77,7 @@ pub struct Mgr {
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Tabs {
-	pub active: Style,
+	pub active:   Style,
 	pub inactive: Style,
 
 	pub sep_inner: TabsSep,
@@ -86,25 +86,25 @@ pub struct Tabs {
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct TabsSep {
-	pub open: String,
+	pub open:  String,
 	pub close: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Mode {
 	pub normal_main: Style,
-	pub normal_alt: Style,
+	pub normal_alt:  Style,
 
 	pub select_main: Style,
-	pub select_alt: Style,
+	pub select_alt:  Style,
 
 	pub unset_main: Style,
-	pub unset_alt: Style,
+	pub unset_alt:  Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Indicator {
-	pub parent: Style,
+	pub parent:  Style,
 	pub current: Style,
 	pub preview: Style,
 	pub padding: IndicatorPadding,
@@ -112,32 +112,32 @@ pub struct Indicator {
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct IndicatorPadding {
-	pub open: String,
+	pub open:  String,
 	pub close: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Status {
-	pub overall: Style,
-	pub sep_left: StatusSep,
+	pub overall:   Style,
+	pub sep_left:  StatusSep,
 	pub sep_right: StatusSep,
 
 	// Permissions
-	pub perm_sep: Style,
-	pub perm_type: Style,
-	pub perm_read: Style,
+	pub perm_sep:   Style,
+	pub perm_type:  Style,
+	pub perm_read:  Style,
 	pub perm_write: Style,
-	pub perm_exec: Style,
+	pub perm_exec:  Style,
 
 	// Progress
-	pub progress_label: Style,
+	pub progress_label:  Style,
 	pub progress_normal: Style,
-	pub progress_error: Style,
+	pub progress_error:  Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct StatusSep {
-	pub open: String,
+	pub open:  String,
 	pub close: String,
 }
 
@@ -149,83 +149,83 @@ pub struct Which {
 	pub rest: Style,
 	pub desc: Style,
 
-	pub separator: String,
+	pub separator:       String,
 	pub separator_style: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Confirm {
 	pub border: Style,
-	pub title: Style,
-	pub body: Style,
-	pub list: Style,
+	pub title:  Style,
+	pub body:   Style,
+	pub list:   Style,
 
-	pub btn_yes: Style,
-	pub btn_no: Style,
+	pub btn_yes:    Style,
+	pub btn_no:     Style,
 	pub btn_labels: [String; 2],
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Spot {
 	pub border: Style,
-	pub title: Style,
+	pub title:  Style,
 
-	pub tbl_col: Style,
+	pub tbl_col:  Style,
 	pub tbl_cell: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Notify {
-	pub title_info: Style,
-	pub title_warn: Style,
+	pub title_info:  Style,
+	pub title_warn:  Style,
 	pub title_error: Style,
 
-	pub icon_info: String,
-	pub icon_warn: String,
+	pub icon_info:  String,
+	pub icon_warn:  String,
 	pub icon_error: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Pick {
-	pub border: Style,
-	pub active: Style,
+	pub border:   Style,
+	pub active:   Style,
 	pub inactive: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Input {
-	pub border: Style,
-	pub title: Style,
-	pub value: Style,
+	pub border:   Style,
+	pub title:    Style,
+	pub value:    Style,
 	pub selected: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Cmp {
-	pub border: Style,
-	pub active: Style,
+	pub border:   Style,
+	pub active:   Style,
 	pub inactive: Style,
 
-	pub icon_file: String,
-	pub icon_folder: String,
+	pub icon_file:    String,
+	pub icon_folder:  String,
 	pub icon_command: String,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Tasks {
-	pub border: Style,
-	pub title: Style,
+	pub border:  Style,
+	pub title:   Style,
 	pub hovered: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Help {
-	pub on: Style,
-	pub run: Style,
+	pub on:   Style,
+	pub run:  Style,
 	pub desc: Style,
 
 	pub hovered: Style,
-	pub footer: Style,
+	pub footer:  Style,
 }
 
 impl Theme {
@@ -253,19 +253,11 @@ impl Theme {
 }
 
 impl App {
-	pub fn bg_color(&self) -> String {
-		self.overall.bg.map(|c| c.to_string()).unwrap_or_default()
-	}
+	pub fn bg_color(&self) -> String { self.overall.bg.map(|c| c.to_string()).unwrap_or_default() }
 
-	pub fn parent_bg(&self) -> String {
-		self.parent.bg.map(|c| c.to_string()).unwrap_or_default()
-	}
+	pub fn parent_bg(&self) -> String { self.parent.bg.map(|c| c.to_string()).unwrap_or_default() }
 
-	pub fn current_bg(&self) -> String {
-		self.current.bg.map(|c| c.to_string()).unwrap_or_default()
-	}
+	pub fn current_bg(&self) -> String { self.current.bg.map(|c| c.to_string()).unwrap_or_default() }
 
-	pub fn preview_bg(&self) -> String {
-		self.preview.bg.map(|c| c.to_string()).unwrap_or_default()
-	}
+	pub fn preview_bg(&self) -> String { self.preview.bg.map(|c| c.to_string()).unwrap_or_default() }
 }

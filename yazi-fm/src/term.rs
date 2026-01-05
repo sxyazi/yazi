@@ -1,24 +1,8 @@
-use std::{
-	io,
-	ops::{Deref, DerefMut},
-	sync::atomic::{AtomicBool, Ordering},
-};
+use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{
-	event::{
-		DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
-		KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
-	},
-	execute, queue,
-	style::Print,
-	terminal::{
-		EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode,
-	},
-};
-use ratatui::{
-	CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect,
-};
+use crossterm::{event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
+use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux, TMUX};
 use yazi_config::{THEME, YAZI};
 use yazi_shared::SyncCell;
@@ -27,16 +11,16 @@ use yazi_term::tty::{TTY, TtyWriter};
 static CSI_U: AtomicBool = AtomicBool::new(false);
 
 pub(super) struct Term {
-	inner: Terminal<CrosstermBackend<TtyWriter<'static>>>,
-	last_area: Rect,
+	inner:       Terminal<CrosstermBackend<TtyWriter<'static>>>,
+	last_area:   Rect,
 	last_buffer: Buffer,
 }
 
 impl Term {
 	pub(super) fn start() -> Result<Self> {
 		let mut term = Self {
-			inner: Terminal::new(CrosstermBackend::new(TTY.writer()))?,
-			last_area: Default::default(),
+			inner:       Terminal::new(CrosstermBackend::new(TTY.writer()))?,
+			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};
 		let background = THEME.app.bg_color();
@@ -165,21 +149,15 @@ impl Term {
 }
 
 impl Drop for Term {
-	fn drop(&mut self) {
-		self.stop().ok();
-	}
+	fn drop(&mut self) { self.stop().ok(); }
 }
 
 impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<TtyWriter<'static>>>;
 
-	fn deref(&self) -> &Self::Target {
-		&self.inner
-	}
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.inner
-	}
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }
