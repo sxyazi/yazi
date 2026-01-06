@@ -98,6 +98,7 @@ keymap = [
 	{ on = [ "c", "d" ], run = "copy dirname",          desc = "Copy the directory path" },
 	{ on = [ "c", "f" ], run = "copy filename",         desc = "Copy the filename" },
 	{ on = [ "c", "n" ], run = "copy name_without_ext", desc = "Copy the filename without extension" },
+	{ on = [ "c", "t" ], run = "copy target",           desc = "Copy the symlink target path" },
 
 	# Filter
 	{ on = "f", run = "filter --smart", desc = "Filter files" },
