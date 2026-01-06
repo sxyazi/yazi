@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use std::path::Path;
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::CopyOpt;
 use yazi_shared::{data::Data, strand::ToStrand, url::UrlLike};
@@ -40,6 +41,35 @@ impl Actor for Copy {
 				}
 				"name_without_ext" => {
 					s.extend_from_slice(&opt.separator.transform(&u.stem().unwrap_or_default()));
+				}
+				"target" => {
+					if let Some(local_path) = u.as_local() {
+						match std::fs::read_link(local_path) {
+							Ok(target_path) => {
+								let resolved = if target_path.is_absolute() {
+									target_path
+								} else {
+									// `read_link` returns the raw link text, which is often relative
+									// Resolve it against the symlink's parent directory so the result is usable
+									let parent = local_path
+										.parent()
+										.or_else(|| cx.cwd().as_local())
+										.unwrap_or_else(|| Path::new(""));
+									parent.join(target_path)
+								};
+
+								let resolved = resolved.as_path();
+								s.extend_from_slice(&opt.separator.transform(&resolved));
+							}
+							Err(_) => {
+								// If read_link fails, fall back to copying the symlink path itself
+								s.extend_from_slice(&opt.separator.transform(&u.to_strand()));
+							}
+						}
+					} else {
+						// If not a local path, fall back to copying the symlink path itself
+						s.extend_from_slice(&opt.separator.transform(&u.to_strand()));
+					}
 				}
 				_ => bail!("Unknown copy type: {}", opt.r#type),
 			};
