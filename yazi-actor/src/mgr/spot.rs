@@ -20,13 +20,16 @@ impl Actor for Spot {
 		// self.active_mut().spot.reset();
 		// }
 
+		// Collect selected files
+		let selected: Vec<_> = cx.tab().selected.values().cloned().collect();
+		
 		if let Some(skip) = opt.skip {
 			cx.tab_mut().spot.skip = skip;
 		} else if !cx.tab().spot.same_url(&hovered.url) {
 			cx.tab_mut().spot.skip = 0;
 		}
 
-		cx.tab_mut().spot.go(hovered, mime);
+		cx.tab_mut().spot.go(hovered, mime, selected);
 		succ!();
 	}
 }

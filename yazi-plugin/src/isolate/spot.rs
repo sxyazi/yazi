@@ -16,6 +16,7 @@ pub fn spot(
 	file: yazi_fs::File,
 	mime: Symbol<str>,
 	skip: usize,
+	selected: Vec<yazi_shared::url::UrlBuf>,
 ) -> CancellationToken {
 	let ct = CancellationToken::new();
 	let (ct1, ct2) = (ct.clone(), ct.clone());
@@ -37,12 +38,20 @@ pub fn spot(
 			)?;
 
 			let plugin = LOADER.load_once(&lua, &cmd.name)?;
+			
+			// Convert selected URLs to Lua table
+			let selected_table = lua.create_table()?;
+			for (i, url) in selected.iter().enumerate() {
+				selected_table.set(i + 1, yazi_binding::Url::new(url.clone()))?;
+			}
+			
 			let job = lua.create_table_from([
 				("id", Id(IDS.next()).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
 				("file", File::new(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),
+				("selected", selected_table.into_lua(&lua)?),
 			])?;
 
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
