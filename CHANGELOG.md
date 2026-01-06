@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Fixed
+
+- Account for URL covariance in `Url:join()` ([#3514])
+
 ## [v26.1.4]
 
 ### Added
@@ -1583,3 +1587,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3477]: https://github.com/sxyazi/yazi/pull/3477
 [#3482]: https://github.com/sxyazi/yazi/pull/3482
 [#3494]: https://github.com/sxyazi/yazi/pull/3494
+[#3514]: https://github.com/sxyazi/yazi/pull/3514

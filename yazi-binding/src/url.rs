@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_fs::{FsHash64, FsHash128, FsUrl};
-use yazi_shared::{path::{PathLike, StripPrefixError}, scheme::SchemeCow, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_shared::{path::{PathLike, StripPrefixError}, scheme::{SchemeCow, SchemeLike}, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlCow, UrlLike}};
 
 use crate::{Path, Scheme, cached_field, deprecate};
 
@@ -121,7 +121,7 @@ impl Url {
 			Value::String(s) => {
 				let b = s.as_bytes();
 				let (scheme, path) = SchemeCow::parse(&b)?;
-				if scheme == self.scheme() {
+				if scheme.covariant(self.scheme()) {
 					Self::new(self.try_join(path).into_lua_err()?).into_lua(lua)
 				} else {
 					Self::new(UrlCow::try_from((scheme, path))?).into_lua(lua)
@@ -129,7 +129,7 @@ impl Url {
 			}
 			Value::UserData(ref ud) => {
 				let url = ud.borrow::<Self>()?;
-				if url.scheme() == self.scheme() {
+				if url.scheme().covariant(self.scheme()) {
 					Self::new(self.try_join(url.loc()).into_lua_err()?).into_lua(lua)
 				} else {
 					Ok(other)
