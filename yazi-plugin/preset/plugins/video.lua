@@ -108,9 +108,20 @@ function M:spot_base(job)
 	end
 
 	local dur = meta.format.duration or 0
+	local hours = math.floor(dur / 3600)
+	local mins = math.floor((dur % 3600) / 60)
+	local secs = math.floor(dur % 60)
+	
+	local duration_str
+	if hours > 0 then
+		duration_str = string.format("%d:%02d:%02d", hours, mins, secs)
+	else
+		duration_str = string.format("%d:%02d", mins, secs)
+	end
+	
 	local rows = {
 		ui.Row({ "Video" }):style(ui.Style():fg("green")),
-		ui.Row { "  Duration:", string.format("%d:%02d", math.floor(dur / 60), math.floor(dur % 60)) },
+		ui.Row { "  Duration:", duration_str },
 	}
 
 	for i, s in ipairs(meta.streams) do
