@@ -2,12 +2,36 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local files, bound, err = self.list_files({ "-p", tostring(job.file.path) }, job.skip, limit)
+	local filepath = tostring(job.file.path)
+	local files, bound, err = nil, nil, nil
 
+	if M.is_nested_tar_path(filepath) then
+		files, bound, err = self.list_files_tar({ "-p", filepath }, job.skip, limit)
+	else
+		files, bound, err = self.list_files({ "-p", filepath }, job.skip, limit)
+	end
+
+	return M:display_response(job, files, bound, err)
+end
+
+function M:seek(job) require("code"):seek(job) end
+
+-- Display a response to an archive list. Handles errors and empty archives.
+-- Can be called by other plugins, to implement their own archive peek logic.
+-- @param job Job
+-- @param files table List of files in the archive - { { path=string, size=integer, attr=string }, ... }
+-- @param bound integer Last bound reached
+-- @param err Error? Error encountered during listing
+function M:display_response(job, files, bound, err)
+	local limit = job.area.h
 	if err then
 		return ya.preview_widget(job, err)
 	elseif job.skip > 0 and bound < job.skip + limit then
-		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
+		return ya.emit("peek", {
+			math.max(0, bound - limit),
+			only_if = job.file.url,
+			upper_bound = true,
+		})
 	elseif #files == 0 then
 		files = { { path = job.file.url.stem, size = 0, attr = "" } }
 	end
@@ -16,7 +40,9 @@ function M:peek(job)
 	for _, f in ipairs(files) do
 		local icon = File({
 			url = Url(f.path),
-			cha = Cha { mode = tonumber(f.attr:sub(1, 1) == "D" and "40700" or "100644", 8) },
+			cha = Cha {
+				mode = tonumber(f.attr:sub(1, 1) == "D" and "40700" or "100644", 8),
+			},
 		}):icon()
 
 		if f.size > 0 then
@@ -46,8 +72,9 @@ function M:peek(job)
 	})
 end
 
-function M:seek(job) require("code"):seek(job) end
-
+-- ==============================================================
+-- ==================        SPAWNERS        ====================
+-- ==============================================================
 function M.spawn_7z(args)
 	local last_err = nil
 	local try = function(name)
@@ -66,23 +93,58 @@ function M.spawn_7z(args)
 	return child, last_err
 end
 
----List files in an archive
----@param args table
+-- Spawn a 7z instance which pipes a "7z {argsX}" into a "7z {argsL}"
+-- Used for previewing tar.* archives, by doing "7z x -so .. | 7z l -si .."
+function M.spawn_7z_piped(argsX, argsL)
+	local last_err = nil
+	local try = function(name)
+		local childX, err = Command(name):arg(argsX):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		if not childX then
+			last_err = err
+			return childX, nil
+		end
+		local childL, err =
+			Command(name):arg(argsL):stdin(childX:take_stdout()):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		if not childL then
+			last_err = err
+		end
+		return childX, childL
+	end
+
+	local childX, childL = try("7zz")
+	if not childX or not childL then
+		childX, childL = try("7z")
+	end
+	if not childX or not childL then
+		return ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
+	end
+	return childX, childL, last_err
+end
+
+function M.spawn_tar(args)
+	local child, err = Command("tar"):arg(args):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+	if not child then
+		return ya.err("Failed to start `tar`, error: " .. err)
+	end
+	return child, err
+end
+
+-- ==============================================================
+-- ==================       PARSERS         ====================
+-- ==============================================================
+
+-- Parse the output of a "7z l" command. The caller is responsible for killing the child process right after the execution of this function
+---@param childL Child
 ---@param skip integer
 ---@param limit integer
 ---@return table files
 ---@return integer bound
 ---@return Error? err
-function M.list_files(args, skip, limit)
-	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
-	if not child then
-		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
-	end
-
+function M.parse_7z_list(childL, skip, limit)
 	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
 	local key, value, stderr = "", "", {}
 	repeat
-		local next, event = child:read_line()
+		local next, event = childL:read_line()
 		if event == 1 and M.is_encrypted(next) then
 			err = Err("File list in this archive is encrypted")
 			break
@@ -114,7 +176,6 @@ function M.list_files(args, skip, limit)
 
 		::continue::
 	until i >= skip + limit
-	child:start_kill()
 
 	if files[#files].path == "" then
 		files[#files] = nil
@@ -124,6 +185,119 @@ function M.list_files(args, skip, limit)
 	end
 	return files, i, err
 end
+
+-- Parse the output of a "tar -vt ..." command. The caller is responsible for killing the child process right after the execution of this function
+---@param childL Child
+---@param skip integer
+---@param limit integer
+---@return table files
+---@return integer bound
+---@return Error? err
+function M.parse_tar_list(childL, skip, limit)
+	local i, files, err = 0, {}, nil
+	local stderr = {}
+	repeat
+		local line, event = childL:read_line()
+		if event == 1 then
+			stderr[#stderr + 1] = line
+			goto continue
+		elseif event ~= 0 then
+			break
+		end
+
+		if line ~= "" then
+			if i >= skip and (#files < limit) then
+				-- line looks like: drwxr-xr-x root/root         0 2025-12-26 12:07 usr/bin/\n
+				local attr, size, path = line:match("^(%S+)%s+%S+%s*(%d+)%s*%d+%-%d+%-%d+ %d+:%d+%s*(.+)\n$")
+
+				if attr and size and path then
+					files[#files + 1] = {
+						path = path,
+						size = tonumber(size) or 0,
+						attr = attr,
+					}
+					ya.dbg("found path: '" .. path .. "'")
+				end
+			end
+			i = i + 1
+		end
+
+		::continue::
+	until #files >= limit
+
+	if #stderr ~= 0 then
+		err = Err("tar errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
+	end
+	return files, i, err
+end
+
+-- ==============================================================
+-- ===================       LISTERS        =====================
+-- ==============================================================
+
+---List files in an archive (non-tar)
+---@param args table
+---@param skip integer
+---@param limit integer
+---@return table files
+---@return integer bound
+---@return Error? err
+function M.list_files(args, skip, limit)
+	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
+	if not child then
+		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
+	end
+
+	local files, bound, err = M.parse_7z_list(child, skip, limit)
+	child:start_kill()
+
+	return files, bound, err
+end
+
+---List files in a tar.* archive
+---@param args table
+---@param skip integer
+---@param limit integer
+---@return table files
+---@return integer bound
+---@return Error? err
+function M.list_files_tar(args, skip, limit)
+	if ya.target_family() == "unix" then
+		if args[1] == "-p" then
+			-- Remove -p argument, as tar doesn't support it
+			table.remove(args, 1)
+		end
+		local child = M.spawn_tar {
+			"-vtf",
+			table.unpack(args),
+		}
+		if child then
+			local files, bound, err = M.parse_tar_list(child, skip, limit)
+			child:start_kill()
+
+			return files, bound, err
+		end
+		ya.err("Failed to spawn `tar`, falling back to 7-zip")
+	end
+
+	local childX, childL = M.spawn_7z_piped(
+		{ "x", "-so", table.unpack(args) },
+		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
+	)
+	if not childX or not childL then
+		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
+	end
+
+	local files, bound, err = M.parse_7z_list(childL, skip, limit)
+	childL:start_kill()
+	childX:start_kill()
+
+	return files, bound, err
+end
+
+-- ==============================================================
+-- ====================       UTILS        ======================
+-- ==============================================================
 
 ---List metadata of an archive
 ---@param args table
@@ -169,5 +343,28 @@ end
 function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
+
+function M.is_nested_tar_path(path)
+    -- stylua: ignore
+    local exts = {
+        -- Formats supported by 7z for tar archives
+        ".tar.gz", ".tgz", ".tar.gzip",
+        ".tar.bz2", ".tbz", ".tbz2",
+        ".tar.xz", ".txz",
+        ".tar.lzma", ".tlz",
+        -- Might be supported one day (and are supported by https://github.com/mcmilk/7-Zip-zstd)
+        ".tar.zst", ".tzst",
+        ".tar.br",
+        ".tar.lz4", ".tar.lz5",
+    }
+
+	for _, ext in ipairs(exts) do
+		if path:sub(-#ext) == ext then
+			return true
+		end
+	end
+
+	return false
+end
 
 return M
