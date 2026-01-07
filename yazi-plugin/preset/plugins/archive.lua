@@ -14,10 +14,8 @@ function M:peek(job)
 	return M:display_response(job, files, bound, err)
 end
 
-function M:seek(job) require("code"):seek(job) end
-
 -- Display a response to an archive list. Handles errors and empty archives.
--- Can be called by other plugins, to implement their own archive peek logic.
+-- Can be called by other plugins, to implement their own archive peek logic - the API of this function should remain stable.
 -- @param job Job
 -- @param files table List of files in the archive - { { path=string, size=integer, attr=string }, ... }
 -- @param bound integer Last bound reached
@@ -27,11 +25,7 @@ function M:display_response(job, files, bound, err)
 	if err then
 		return ya.preview_widget(job, err)
 	elseif job.skip > 0 and bound < job.skip + limit then
-		return ya.emit("peek", {
-			math.max(0, bound - limit),
-			only_if = job.file.url,
-			upper_bound = true,
-		})
+		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	elseif #files == 0 then
 		files = { { path = job.file.url.stem, size = 0, attr = "" } }
 	end
@@ -40,9 +34,7 @@ function M:display_response(job, files, bound, err)
 	for _, f in ipairs(files) do
 		local icon = File({
 			url = Url(f.path),
-			cha = Cha {
-				mode = tonumber(f.attr:sub(1, 1) == "D" and "40700" or "100644", 8),
-			},
+			cha = Cha { mode = tonumber(f.attr:sub(1, 1) == "D" and "40700" or "100644", 8) },
 		}):icon()
 
 		if f.size > 0 then
@@ -72,9 +64,8 @@ function M:display_response(job, files, bound, err)
 	})
 end
 
--- ==============================================================
--- ==================        SPAWNERS        ====================
--- ==============================================================
+function M:seek(job) require("code"):seek(job) end
+
 function M.spawn_7z(args)
 	local last_err = nil
 	local try = function(name)
@@ -121,19 +112,7 @@ function M.spawn_7z_piped(argsX, argsL)
 	return childX, childL, last_err
 end
 
-function M.spawn_tar(args)
-	local child, err = Command("tar"):arg(args):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
-	if not child then
-		return ya.err("Failed to start `tar`, error: " .. err)
-	end
-	return child, err
-end
-
--- ==============================================================
--- ==================       PARSERS         ====================
--- ==============================================================
-
--- Parse the output of a "7z l" command. The caller is responsible for killing the child process right after the execution of this function
+-- Parse the output of a "7z l -slt" command. The caller is responsible for killing the child process right after the execution of this function
 ---@param childL Child
 ---@param skip integer
 ---@param limit integer
@@ -186,55 +165,6 @@ function M.parse_7z_list(childL, skip, limit)
 	return files, i, err
 end
 
--- Parse the output of a "tar -vt ..." command. The caller is responsible for killing the child process right after the execution of this function
----@param childL Child
----@param skip integer
----@param limit integer
----@return table files
----@return integer bound
----@return Error? err
-function M.parse_tar_list(childL, skip, limit)
-	local i, files, err = 0, {}, nil
-	local stderr = {}
-	repeat
-		local line, event = childL:read_line()
-		if event == 1 then
-			stderr[#stderr + 1] = line
-			goto continue
-		elseif event ~= 0 then
-			break
-		end
-
-		if line ~= "" then
-			if i >= skip and (#files < limit) then
-				-- line looks like: drwxr-xr-x root/root         0 2025-12-26 12:07 usr/bin/\n
-				local attr, size, path = line:match("^(%S+)%s+%S+%s*(%d+)%s*%d+%-%d+%-%d+ %d+:%d+%s*(.+)\n$")
-
-				if attr and size and path then
-					files[#files + 1] = {
-						path = path,
-						size = tonumber(size) or 0,
-						attr = attr,
-					}
-					ya.dbg("found path: '" .. path .. "'")
-				end
-			end
-			i = i + 1
-		end
-
-		::continue::
-	until #files >= limit
-
-	if #stderr ~= 0 then
-		err = Err("tar errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
-	end
-	return files, i, err
-end
-
--- ==============================================================
--- ===================       LISTERS        =====================
--- ==============================================================
-
 ---List files in an archive (non-tar)
 ---@param args table
 ---@param skip integer
@@ -262,24 +192,6 @@ end
 ---@return integer bound
 ---@return Error? err
 function M.list_files_tar(args, skip, limit)
-	if ya.target_family() == "unix" then
-		if args[1] == "-p" then
-			-- Remove -p argument, as tar doesn't support it
-			table.remove(args, 1)
-		end
-		local child = M.spawn_tar {
-			"-vtf",
-			table.unpack(args),
-		}
-		if child then
-			local files, bound, err = M.parse_tar_list(child, skip, limit)
-			child:start_kill()
-
-			return files, bound, err
-		end
-		ya.err("Failed to spawn `tar`, falling back to 7-zip")
-	end
-
 	local childX, childL = M.spawn_7z_piped(
 		{ "x", "-so", table.unpack(args) },
 		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
@@ -294,10 +206,6 @@ function M.list_files_tar(args, skip, limit)
 
 	return files, bound, err
 end
-
--- ==============================================================
--- ====================       UTILS        ======================
--- ==============================================================
 
 ---List metadata of an archive
 ---@param args table
