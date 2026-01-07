@@ -242,26 +242,17 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
 function M.is_nested_tar_path(path)
-    -- stylua: ignore
-    local exts = {
-        -- Formats supported by 7z for tar archives
-        ".tar.gz", ".tgz", ".tar.gzip",
-        ".tar.bz2", ".tbz", ".tbz2",
-        ".tar.xz", ".txz",
-        ".tar.lzma", ".tlz",
-        -- Might be supported one day (and are supported by https://github.com/mcmilk/7-Zip-zstd)
-        ".tar.zst", ".tzst",
-        ".tar.br",
-        ".tar.lz4", ".tar.lz5",
-    }
-
-	for _, ext in ipairs(exts) do
-		if path:sub(-#ext) == ext then
-			return true
-		end
+	-- Warning: doing -slt will *not* print the .tar file, it will only print the .tar.* file
+	-- doing -ba will print the .tar file in the listing, as the first line
+	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", path }
+	if not child then
+		return false
 	end
 
-	return false
+	local next, event = child:read_line()
+	child:start_kill()
+
+	return event == 0 and next:match("(.+%.tar)[\r\n]+$") ~= nil
 end
 
 return M
