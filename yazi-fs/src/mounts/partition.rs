@@ -18,7 +18,7 @@ impl Partition {
 	// metadata on changes, and should be refreshed frequently / heuristically.
 	pub fn heuristic(&self) -> bool {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
-		matches!(b, b"exfat" | b"fuse.rclone")
+		matches!(b, b"exfat" | b"fuse.rclone" | b"nfs4")
 	}
 
 	#[rustfmt::skip]
