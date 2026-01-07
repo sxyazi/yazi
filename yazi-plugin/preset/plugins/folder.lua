@@ -51,8 +51,33 @@ end
 
 function M:spot(job)
 	self.size, self.last = 0, 0
+	self.selected_size = 0
+	self.folder_count = 0
+
+	-- Calculate selected folders sizes first if multiple are selected
+	if job.selected and #job.selected > 1 then
+		for _, file in ipairs(job.selected) do
+			local cha = fs.cha(file)
+			if cha and cha.is_dir then
+				local size = 0
+				local it = fs.calc_size(file)
+				while true do
+					local next = it:recv()
+					if next then
+						size = size + next
+					else
+						break
+					end
+				end
+				self.selected_size = self.selected_size + size
+				self.folder_count = self.folder_count + 1
+			end
+		end
+	end
+
 	self:spot_multi(job, false)
 
+	-- Calculate current folder size
 	local url = job.file.url
 	local it = fs.calc_size(url)
 	while true do
@@ -77,11 +102,18 @@ function M:spot_multi(job, comp)
 		return
 	end
 
-	local rows = {
-		ui.Row({ "Folder" }):style(ui.Style():fg("green")),
-		ui.Row { "  Size:", ya.readable_size(self.size) .. (comp and "" or " (?)") },
-		ui.Row {},
-	}
+	local rows = {}
+
+	-- Show selected folders sum if multiple are selected
+	if self.folder_count > 1 then
+		rows[#rows + 1] = ui.Row({ string.format("# Folders (%d)", self.folder_count) }):style(ui.Style():fg("green"))
+		rows[#rows + 1] = ui.Row { "  Size:", ya.readable_size(self.selected_size) }
+		rows[#rows + 1] = ui.Row {}
+	end
+
+	rows[#rows + 1] = ui.Row({ "Folder" }):style(ui.Style():fg("green"))
+	rows[#rows + 1] = ui.Row { "  Size:", ya.readable_size(self.size) .. (comp and "" or " (?)") }
+	rows[#rows + 1] = ui.Row {}
 
 	ya.spot_table(
 		job,

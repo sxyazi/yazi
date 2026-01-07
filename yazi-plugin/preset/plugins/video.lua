@@ -102,22 +102,32 @@ end
 
 function M:spot_base(job)
 	local rows = {}
-	
+
 	-- Check if there are multiple selected files
 	if job.selected and #job.selected > 1 then
 		-- Multi-file selection: show sum at the top
 		local total_dur = 0
 		local video_count = 0
-		
+
 		-- Start all ffprobe commands concurrently
 		local commands = {}
 		for i, file in ipairs(job.selected) do
 			commands[i] = Command("ffprobe")
-				:arg { "-v", "quiet", "-select_streams", "v", "-show_entries", "format=duration", "-of", "json=c=1", tostring(file.path) }
+				:arg({
+					"-v",
+					"quiet",
+					"-select_streams",
+					"v",
+					"-show_entries",
+					"format=duration",
+					"-of",
+					"json=c=1",
+					tostring(file.path),
+				})
 				:stdout(Command.PIPED)
 				:spawn()
 		end
-		
+
 		-- Collect results
 		for i, child in ipairs(commands) do
 			local output, err = child:wait_with_output()
@@ -129,43 +139,43 @@ function M:spot_base(job)
 				end
 			end
 		end
-		
+
 		-- Format total duration
 		local hours = math.floor(total_dur / 3600)
 		local mins = math.floor((total_dur % 3600) / 60)
 		local secs = math.floor(total_dur % 60)
-		
+
 		local duration_str
 		if hours > 0 then
 			duration_str = string.format("%d:%02d:%02d", hours, mins, secs)
 		else
 			duration_str = string.format("%d:%02d", mins, secs)
 		end
-		
+
 		rows[#rows + 1] = ui.Row({ string.format("# Videos (%d)", video_count) }):style(ui.Style():fg("green"))
 		rows[#rows + 1] = ui.Row { "  Duration:", duration_str }
-		rows[#rows + 1] = ui.Row {}  -- Empty row separator
+		rows[#rows + 1] = ui.Row {} -- Empty row separator
 	end
-	
+
 	-- Show detailed info for the current hovered file
 	local meta, err = self.list_meta(job.file.path, "format=duration:stream=codec_name,codec_type,width,height")
 	if not meta then
 		ya.err(tostring(err))
-		return rows  -- Return at least the selection info if available
+		return rows -- Return at least the selection info if available
 	end
 
 	local dur = meta.format.duration or 0
 	local hours = math.floor(dur / 3600)
 	local mins = math.floor((dur % 3600) / 60)
 	local secs = math.floor(dur % 60)
-	
+
 	local duration_str
 	if hours > 0 then
 		duration_str = string.format("%d:%02d:%02d", hours, mins, secs)
 	else
 		duration_str = string.format("%d:%02d", mins, secs)
 	end
-	
+
 	rows[#rows + 1] = ui.Row({ "Video" }):style(ui.Style():fg("green"))
 	rows[#rows + 1] = ui.Row { "  Duration:", duration_str }
 
