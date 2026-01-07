@@ -11,17 +11,6 @@ function M:peek(job)
 		files, bound, err = self.list_files({ "-p", filepath }, job.skip, limit)
 	end
 
-	return M:display_response(job, files, bound, err)
-end
-
--- Display a response to an archive list. Handles errors and empty archives.
--- Can be called by other plugins, to implement their own archive peek logic - the API of this function should remain stable.
--- @param job Job
--- @param files table List of files in the archive - { { path=string, size=integer, attr=string }, ... }
--- @param bound integer Last bound reached
--- @param err Error? Error encountered during listing
-function M:display_response(job, files, bound, err)
-	local limit = job.area.h
 	if err then
 		return ya.preview_widget(job, err)
 	elseif job.skip > 0 and bound < job.skip + limit then
@@ -113,17 +102,17 @@ function M.spawn_7z_piped(argsX, argsL)
 end
 
 -- Parse the output of a "7z l -slt" command. The caller is responsible for killing the child process right after the execution of this function
----@param childL Child
+---@param child Child
 ---@param skip integer
 ---@param limit integer
 ---@return table files
 ---@return integer bound
 ---@return Error? err
-function M.parse_7z_list(childL, skip, limit)
+function M.parse_7z_list(child, skip, limit)
 	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
 	local key, value, stderr = "", "", {}
 	repeat
-		local next, event = childL:read_line()
+		local next, event = child:read_line()
 		if event == 1 and M.is_encrypted(next) then
 			err = Err("File list in this archive is encrypted")
 			break
