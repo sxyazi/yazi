@@ -2,12 +2,10 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local files, bound, err = nil, nil, nil
+	local files, bound, err = self.list_files({ "-p", tostring(job.file.path) }, job.skip, limit)
 
-	if M.is_compressed_tar(job.file.path) then
-		files, bound, err = self.list_files_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
-	else
-		files, bound, err = self.list_files({ "-p", tostring(job.file.path) }, job.skip, limit)
+	if (#files == 1 and files[1].path:find(".+%.tar$")) or (#files == 0 and M.is_compressed_tar(job.file.path)) then
+		files, bound, err = self.list_tar_files({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
 	if err then
@@ -179,7 +177,7 @@ end
 ---@return table files
 ---@return integer bound
 ---@return Error? err
-function M.list_files_tar(args, skip, limit)
+function M.list_tar_files(args, skip, limit)
 	local childX, childL = M.spawn_7z_piped(
 		{ "x", "-so", table.unpack(args) },
 		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
