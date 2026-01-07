@@ -75,27 +75,27 @@ end
 function M.spawn_7z_piped(argsX, argsL)
 	local last_err = nil
 	local try = function(name)
-		local childX, err = Command(name):arg(argsX):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
-		if not childX then
+		local src, err = Command(name):arg(argsX):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		if not src then
 			last_err = err
-			return childX, nil
+			return src
 		end
-		local childL, err =
-			Command(name):arg(argsL):stdin(childX:take_stdout()):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
-		if not childL then
+		local dst, err =
+			Command(name):arg(argsL):stdin(src:take_stdout()):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		if not dst then
 			last_err = err
 		end
-		return childX, childL
+		return src, dst
 	end
 
-	local childX, childL = try("7zz")
-	if not childX or not childL then
-		childX, childL = try("7z")
+	local src, dst = try("7zz")
+	if not src then
+		src, dst = try("7z")
 	end
-	if not childX or not childL then
+	if not dst then
 		return ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
 	end
-	return childX, childL, last_err
+	return src, dst, last_err
 end
 
 -- Parse the output of a "7z l -slt" command. The caller is responsible for killing the child process right after the execution of this function
@@ -178,17 +178,17 @@ end
 ---@return integer bound
 ---@return Error? err
 function M.list_tar_files(args, skip, limit)
-	local childX, childL = M.spawn_7z_piped(
+	local src, dst = M.spawn_7z_piped(
 		{ "x", "-so", table.unpack(args) },
 		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
 	)
-	if not childX or not childL then
+	if not src or not dst then
 		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local files, bound, err = M.parse_7z_list(childL, skip, limit)
-	childL:start_kill()
-	childX:start_kill()
+	local files, bound, err = M.parse_7z_list(dst, skip, limit)
+	dst:start_kill()
+	src:start_kill()
 
 	return files, bound, err
 end
