@@ -2,13 +2,12 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local filepath = tostring(job.file.path)
 	local files, bound, err = nil, nil, nil
 
-	if M.is_nested_tar_path(filepath) then
-		files, bound, err = self.list_files_tar({ "-p", filepath }, job.skip, limit)
+	if M.is_compressed_tar(job.file.path) then
+		files, bound, err = self.list_files_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	else
-		files, bound, err = self.list_files({ "-p", filepath }, job.skip, limit)
+		files, bound, err = self.list_files({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
 	if err then
@@ -241,18 +240,29 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
-function M.is_nested_tar_path(path)
+function M.is_compressed_tar(path)
 	-- Warning: doing -slt will *not* print the .tar file, it will only print the .tar.* file
 	-- doing -ba will print the .tar file in the listing, as the first line
-	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", path }
+	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
 	if not child then
 		return false
 	end
 
-	local next, event = child:read_line()
-	child:start_kill()
+	local names = {}
+	while #names < 2 do
+		local next, event = child:read_line()
+		if event == 0 then
+			local name = next:sub(20):match("[^ ]+ +[^ ]+ +[^ ]+ +([^\r\n]+)")
+			if name then
+				names[#names + 1] = name
+			end
+		elseif event ~= 1 then
+			break
+		end
+	end
 
-	return event == 0 and next:match("(.+%.tar)[\r\n]+$") ~= nil
+	child:start_kill()
+	return #names == 1 and names[1]:find(".+%.tar$") ~= nil
 end
 
 return M
