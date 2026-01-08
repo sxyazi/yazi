@@ -1,7 +1,6 @@
 use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_config::{YAZI, popup::PickCfg};
-use yazi_fs::Splatter;
 use yazi_macro::succ;
 use yazi_parser::{mgr::OpenDoOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::{PickProxy, TasksProxy};
@@ -45,7 +44,7 @@ impl Actor for OpenDo {
 			if let Ok(choice) = pick.await {
 				TasksProxy::open_shell_compat(ProcessOpenOpt {
 					cwd:    opt.cwd,
-					cmd:    Splatter::new(&urls).splat(&openers[choice].run),
+					cmd:    openers[choice].run.clone().into(),
 					args:   urls,
 					block:  openers[choice].block,
 					orphan: openers[choice].orphan,
@@ -70,7 +69,7 @@ impl OpenDo {
 		for (opener, args) in openers {
 			cx.tasks.open_shell_compat(ProcessOpenOpt {
 				cwd: cwd.clone(),
-				cmd: Splatter::new(&args).splat(&opener.run),
+				cmd: opener.run.clone().into(),
 				args,
 				block: opener.block,
 				orphan: opener.orphan,

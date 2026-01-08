@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use yazi_config::popup::InputCfg;
-use yazi_fs::Splatter;
 use yazi_macro::{act, succ};
 use yazi_parser::{mgr::ShellOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::{InputProxy, TasksProxy};
@@ -40,7 +39,7 @@ impl Actor for Shell {
 
 			TasksProxy::open_shell_compat(ProcessOpenOpt {
 				cwd:    cwd.into(),
-				cmd:    Splatter::new(&selected).splat(&*opt.run),
+				cmd:    opt.run.to_string().into(),
 				args:   selected,
 				block:  opt.block,
 				orphan: opt.orphan,

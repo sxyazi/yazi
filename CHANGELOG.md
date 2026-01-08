@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Account for URL covariance in `Url:join()` ([#3514])
+- Fix shell formatting for non-spread opener rules ([#3532])
 
 ## [v26.1.4]
 
@@ -1593,3 +1594,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3494]: https://github.com/sxyazi/yazi/pull/3494
 [#3514]: https://github.com/sxyazi/yazi/pull/3514
 [#3518]: https://github.com/sxyazi/yazi/pull/3518
+[#3532]: https://github.com/sxyazi/yazi/pull/3532
