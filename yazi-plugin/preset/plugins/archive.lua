@@ -4,7 +4,8 @@ function M:peek(job)
 	local limit = job.area.h
 	local files, bound, err = self.list_archive({ "-p", tostring(job.file.path) }, job.skip, limit)
 
-	if (#files == 1 and files[1].path:find(".+%.tar$")) or (#files == 0 and M.is_compressed_tar(job.file.path)) then
+	local first = (#files == 1 and files[1]) or (#files == 0 and M.list_if_only_one(job.file.path))
+	if M.should_decompress_tar(first) then
 		files, bound, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
@@ -131,11 +132,13 @@ function M.parse_7z_slt(child, skip, limit)
 			goto continue
 		end
 
-		key, value = next:match("^(%u%l+) = (.-)[\r\n]+")
+		key, value = next:match("^(Path|Size|Packed Size|Attributes) = (.-)[\r\n]+")
 		if key == "Path" then
 			files[#files].path = value
 		elseif key == "Size" then
 			files[#files].size = tonumber(value) or 0
+		elseif key == "Packed Size" then
+			files[#files].packed_size = tonumber(value) or 0
 		elseif key == "Attributes" then
 			files[#files].attr = value
 		end
@@ -194,6 +197,33 @@ function M.list_compressed_tar(args, skip, limit)
 	return files, bound, err
 end
 
+function M.list_if_only_one(path)
+	-- For certain compressed tarballs (e.g. .tar.xz),
+	-- 7-zip doesn't print a .tar file if -slt is specified, so we are not doing that here
+	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
+	if not child then
+		return false
+	end
+
+	local files = {}
+	while #files < 2 do
+		local next, event = child:read_line()
+		if event == 0 then
+			local attr, size, packed_size, path = next:sub(20):match("([^ ]+) +(%d+) +(%d+) +([^\r\n]+)")
+			if path then
+				files[#files + 1] = { path = path, size = tonumber(size), packed_size = tonumber(packed_size), attr = attr }
+			end
+		elseif event ~= 1 then
+			break
+		end
+	end
+
+	child:start_kill()
+	if #files == 1 then
+		return files[1]
+	end
+end
+
 ---List metadata of an archive
 ---@param args table
 ---@return string|nil type
@@ -239,29 +269,8 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
-function M.is_compressed_tar(path)
-	-- For certain compressed tarballs (e.g. .tar.xz),
-	-- 7-zip doesn't print a .tar file if -slt is specified, so we are not doing that here
-	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
-	if not child then
-		return false
-	end
-
-	local names = {}
-	while #names < 2 do
-		local next, event = child:read_line()
-		if event == 0 then
-			local name = next:sub(20):match("[^ ]+ +[^ ]+ +[^ ]+ +([^\r\n]+)")
-			if name then
-				names[#names + 1] = name
-			end
-		elseif event ~= 1 then
-			break
-		end
-	end
-
-	child:start_kill()
-	return #names == 1 and names[1]:find(".+%.tar$") ~= nil
+function M.should_decompress_tar(file)
+	return file and file.packed_size <= 1024 * 1024 * 1024 and file.path:find(".+%.tar$") ~= nil
 end
 
 return M
