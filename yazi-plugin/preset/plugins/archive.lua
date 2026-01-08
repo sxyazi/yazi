@@ -5,7 +5,7 @@ function M:peek(job)
 	local files, bound, err = self.list_archive({ "-p", tostring(job.file.path) }, job.skip, limit)
 
 	local first = (#files == 1 and files[1]) or (#files == 0 and M.list_if_only_one(job.file.path))
-	if M.should_decompress_tar(first) then
+	if first and M.should_decompress_tar(first) then
 		files, bound, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
@@ -97,62 +97,6 @@ function M.spawn_7z_piped(src_args, dst_args)
 		return ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
 	end
 	return src, dst, last_err
-end
-
--- Parse the output of a "7z l -slt" command.
--- The caller is responsible for killing the child process right after the execution of this function
----@param child Child
----@param skip integer
----@param limit integer
----@return table files
----@return integer bound
----@return Error? err
-function M.parse_7z_slt(child, skip, limit)
-	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
-	local key, value, stderr = "", "", {}
-	repeat
-		local next, event = child:read_line()
-		if event == 1 and M.is_encrypted(next) then
-			err = Err("File list in this archive is encrypted")
-			break
-		elseif event == 1 then
-			stderr[#stderr + 1] = next
-			goto continue
-		elseif event ~= 0 then
-			break
-		end
-
-		if next == "\n" or next == "\r\n" then
-			i = i + 1
-			if files[#files].path ~= "" then
-				files[#files + 1] = { path = "", size = 0, attr = "" }
-			end
-			goto continue
-		elseif i < skip then
-			goto continue
-		end
-
-		key, value = next:match("^(Path|Size|Packed Size|Attributes) = (.-)[\r\n]+")
-		if key == "Path" then
-			files[#files].path = value
-		elseif key == "Size" then
-			files[#files].size = tonumber(value) or 0
-		elseif key == "Packed Size" then
-			files[#files].packed_size = tonumber(value) or 0
-		elseif key == "Attributes" then
-			files[#files].attr = value
-		end
-
-		::continue::
-	until i >= skip + limit
-
-	if files[#files].path == "" then
-		files[#files] = nil
-	end
-	if #stderr ~= 0 then
-		err = Err("7-zip errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
-	end
-	return files, i, err
 end
 
 ---List files in an archive
@@ -270,7 +214,63 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
 function M.should_decompress_tar(file)
-	return file and file.packed_size <= 1024 * 1024 * 1024 and file.path:find(".+%.tar$") ~= nil
+	return file.packed_size <= 1024 * 1024 * 1024 and file.path:find(".+%.tar$") ~= nil
+end
+
+-- Parse the output of a "7z l -slt" command.
+-- The caller is responsible for killing the child process right after the execution of this function
+---@param child Child
+---@param skip integer
+---@param limit integer
+---@return table files
+---@return integer bound
+---@return Error? err
+function M.parse_7z_slt(child, skip, limit)
+	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
+	local key, value, stderr = "", "", {}
+	repeat
+		local next, event = child:read_line()
+		if event == 1 and M.is_encrypted(next) then
+			err = Err("File list in this archive is encrypted")
+			break
+		elseif event == 1 then
+			stderr[#stderr + 1] = next
+			goto continue
+		elseif event ~= 0 then
+			break
+		end
+
+		if next == "\n" or next == "\r\n" then
+			i = i + 1
+			if files[#files].path ~= "" then
+				files[#files + 1] = { path = "", size = 0, attr = "" }
+			end
+			goto continue
+		elseif i < skip then
+			goto continue
+		end
+
+		key, value = next:match("^(Path|Size|Packed Size|Attributes) = (.-)[\r\n]+")
+		if key == "Path" then
+			files[#files].path = value
+		elseif key == "Size" then
+			files[#files].size = tonumber(value) or 0
+		elseif key == "Packed Size" then
+			files[#files].packed_size = tonumber(value) or 0
+		elseif key == "Attributes" then
+			files[#files].attr = value
+		end
+
+		::continue::
+	until i >= skip + limit
+
+	if files[#files].path == "" then
+		files[#files] = nil
+	end
+	if #stderr ~= 0 then
+		err = Err("7-zip errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
+	end
+	return files, i, err
 end
 
 return M
