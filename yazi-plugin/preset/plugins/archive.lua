@@ -2,10 +2,10 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local files, bound, err = self.list_files({ "-p", tostring(job.file.path) }, job.skip, limit)
+	local files, bound, err = self.list_archive({ "-p", tostring(job.file.path) }, job.skip, limit)
 
 	if (#files == 1 and files[1].path:find(".+%.tar$")) or (#files == 0 and M.is_compressed_tar(job.file.path)) then
-		files, bound, err = self.list_tar_files({ "-p", tostring(job.file.path) }, job.skip, limit)
+		files, bound, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
 	if err then
@@ -70,18 +70,18 @@ function M.spawn_7z(args)
 	return child, last_err
 end
 
--- Spawn a 7z instance which pipes a "7z {argsX}" into a "7z {argsL}"
--- Used for previewing tar.* archives, by doing "7z x -so .. | 7z l -si .."
-function M.spawn_7z_piped(argsX, argsL)
+-- Spawn a 7z instance which pipes a "7z {src_args}" into a "7z {dst_args}"
+-- Used for previewing compressed tarballs, by doing "7z x -so .. | 7z l -si .."
+function M.spawn_7z_piped(src_args, dst_args)
 	local last_err = nil
 	local try = function(name)
-		local src, err = Command(name):arg(argsX):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		local src, err = Command(name):arg(src_args):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
 		if not src then
 			last_err = err
 			return src
 		end
 		local dst, err =
-			Command(name):arg(argsL):stdin(src:take_stdout()):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+			Command(name):arg(dst_args):stdin(src:take_stdout()):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
 		if not dst then
 			last_err = err
 		end
@@ -98,14 +98,15 @@ function M.spawn_7z_piped(argsX, argsL)
 	return src, dst, last_err
 end
 
--- Parse the output of a "7z l -slt" command. The caller is responsible for killing the child process right after the execution of this function
+-- Parse the output of a "7z l -slt" command.
+-- The caller is responsible for killing the child process right after the execution of this function
 ---@param child Child
 ---@param skip integer
 ---@param limit integer
 ---@return table files
 ---@return integer bound
 ---@return Error? err
-function M.parse_7z_list(child, skip, limit)
+function M.parse_7z_slt(child, skip, limit)
 	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
 	local key, value, stderr = "", "", {}
 	repeat
@@ -151,44 +152,44 @@ function M.parse_7z_list(child, skip, limit)
 	return files, i, err
 end
 
----List files in an archive (non-tar)
+---List files in an archive
 ---@param args table
 ---@param skip integer
 ---@param limit integer
 ---@return table files
 ---@return integer bound
 ---@return Error? err
-function M.list_files(args, skip, limit)
+function M.list_archive(args, skip, limit)
 	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
 		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local files, bound, err = M.parse_7z_list(child, skip, limit)
+	local files, bound, err = M.parse_7z_slt(child, skip, limit)
 	child:start_kill()
 
 	return files, bound, err
 end
 
----List files in a tar.* archive
+---List files in a compressed tarball
 ---@param args table
 ---@param skip integer
 ---@param limit integer
 ---@return table files
 ---@return integer bound
 ---@return Error? err
-function M.list_tar_files(args, skip, limit)
+function M.list_compressed_tar(args, skip, limit)
 	local src, dst = M.spawn_7z_piped(
 		{ "x", "-so", table.unpack(args) },
 		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
 	)
-	if not src or not dst then
+	if not dst then
 		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local files, bound, err = M.parse_7z_list(dst, skip, limit)
-	dst:start_kill()
+	local files, bound, err = M.parse_7z_slt(dst, skip, limit)
 	src:start_kill()
+	dst:start_kill()
 
 	return files, bound, err
 end
@@ -239,8 +240,8 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
 function M.is_compressed_tar(path)
-	-- Warning: doing -slt will *not* print the .tar file, it will only print the .tar.* file
-	-- doing -ba will print the .tar file in the listing, as the first line
+	-- For certain compressed tarballs (e.g. .tar.xz),
+	-- 7-zip doesn't print a .tar file if -slt is specified, so we are not doing that here
 	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
 	if not child then
 		return false
