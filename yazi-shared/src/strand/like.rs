@@ -29,6 +29,10 @@ pub trait StrandLike: AsStrand {
 
 	fn starts_with(&self, needle: impl AsStrand) -> bool { self.as_strand().starts_with(needle) }
 
+	fn starts_with_ignore_ascii_case(&self, needle: impl AsStrand) -> bool {
+		self.as_strand().starts_with_ignore_ascii_case(needle)
+	}
+
 	fn to_owned(&self) -> StrandBuf { self.as_strand().to_owned() }
 
 	fn to_str(&self) -> Result<&str, std::str::Utf8Error> { self.as_strand().to_str() }

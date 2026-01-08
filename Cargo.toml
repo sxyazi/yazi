@@ -38,9 +38,9 @@ foldhash            = "0.2.0"
 futures             = "0.3.31"
 globset             = "0.4.18"
 hashbrown           = { version = "0.16.1", features = [ "serde" ] }
-indexmap            = { version = "2.12.1", features = [ "serde" ] }
-libc                = "0.2.179"
-lru                 = "0.16.2"
+indexmap            = { version = "2.13.0", features = [ "serde" ] }
+libc                = "0.2.180"
+lru                 = "0.16.3"
 mlua                = { version = "0.11.5", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
 objc2               = "0.6.3"
 ordered-float       = { version = "5.1.0", features = [ "serde" ] }
@@ -53,12 +53,12 @@ regex               = "1.12.2"
 russh               = { version = "0.56.0", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
-serde_json          = "1.0.148"
+serde_json          = "1.0.149"
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror           = "2.0.17"
 tokio               = { version = "1.49.0", features = [ "full" ] }
-tokio-stream        = "0.1.17"
-tokio-util          = "0.7.17"
+tokio-stream        = "0.1.18"
+tokio-util          = "0.7.18"
 toml                = { version = "0.9.10" }
 tracing             = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }

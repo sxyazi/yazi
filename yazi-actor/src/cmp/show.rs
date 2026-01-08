@@ -46,8 +46,11 @@ impl Show {
 		let smart = !word.encoded_bytes().iter().any(|&b| b.is_ascii_uppercase());
 
 		let flow = cache.iter().try_fold((Vec::new(), Vec::new()), |(mut exact, mut fuzzy), item| {
-			let starts_with =
-				if smart { item.name.eq_ignore_ascii_case(word) } else { item.name.starts_with(word) };
+			let starts_with = if smart {
+				item.name.starts_with_ignore_ascii_case(word)
+			} else {
+				item.name.starts_with(word)
+			};
 
 			if starts_with {
 				exact.push(item);

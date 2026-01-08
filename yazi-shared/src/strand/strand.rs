@@ -176,6 +176,12 @@ impl<'a> Strand<'a> {
 		self.encoded_bytes().starts_with(needle.as_strand().encoded_bytes())
 	}
 
+	pub fn starts_with_ignore_ascii_case(self, needle: impl AsStrand) -> bool {
+		let haystack = self.encoded_bytes();
+		let needle = needle.as_strand().encoded_bytes();
+		haystack.len() >= needle.len() && haystack[..needle.len()].eq_ignore_ascii_case(needle)
+	}
+
 	pub fn to_owned(self) -> StrandBuf {
 		match self {
 			Self::Os(s) => StrandBuf::Os(s.to_owned()),
