@@ -214,7 +214,7 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
 function M.should_decompress_tar(file)
-	return file.packed_size <= 1024 * 1024 * 1024 and file.path:find(".+%.tar$") ~= nil
+	return file.packed_size <= 1024 * 1024 * 1024 and file.path:lower():find(".+%.tar$") ~= nil
 end
 
 -- Parse the output of a "7z l -slt" command.
