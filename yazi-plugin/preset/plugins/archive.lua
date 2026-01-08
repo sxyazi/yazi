@@ -9,19 +9,117 @@ function M:peek(job)
 		files, bound, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
+	return self:display_file_list(job, files, bound, err)
+end
+
+-- Modifies files in-place to prepare for tree display.
+-- All parent directories will be included, if not already present.
+-- All returned files will have a "display_name" and a "depth" field.
+local function prepare_tree(files)
+	if #files == 0 then
+		return
+	end
+
+	local result = {}
+	local dir_stack, previous_path = {}, nil
+
+	-- Initialize dir_stack with the first file's
+	local first_file_url, components = Url(files[1].path).path, {}
+	while true do
+		first_file_url = first_file_url.parent
+		if first_file_url then
+			components[#components + 1] = first_file_url
+		else
+			break
+		end
+	end
+	for i, comp in ipairs(components) do
+		table.insert(files, 1, {
+			path = tostring(comp),
+			size = 0,
+			attr = "",
+			is_dir = true,
+			display_name = comp.name,
+			depth = #components - i,
+		})
+	end
+
+	local path, parent, dirs_to_add, dir_path = nil, nil, nil, nil
+	for i, f in ipairs(files) do
+		path = Url(f.path).path
+
+		while #dir_stack > 0 and not path:starts_with(dir_stack[#dir_stack]) do
+			dir_stack[#dir_stack] = nil
+		end
+
+		f.display_name = path.name
+		f.depth = #dir_stack
+
+		if f.is_dir then
+			dir_stack[#dir_stack + 1] = path
+		elseif not previous_path or (path.parent ~= previous_path.parent) then
+			parent = path.parent
+			dirs_to_add = {}
+			while parent and (not dir_stack[#dir_stack] or parent ~= dir_stack[#dir_stack]) do
+				dirs_to_add[#dirs_to_add + 1] = parent
+				parent = parent.parent
+			end
+			for j = #dirs_to_add, 1, -1 do
+				dir_path = dirs_to_add[j]
+				result[#result + 1] = {
+					path = tostring(dir_path),
+					size = 0,
+					attr = "",
+					is_dir = true,
+					display_name = dir_path.name,
+					depth = #dir_stack,
+				}
+				dir_stack[#dir_stack + 1] = dir_path
+			end
+			f.depth = #dir_stack
+		end
+
+		result[#result + 1] = f
+		previous_path = path
+	end
+
+	for i = #result, 1, -1 do
+		files[i] = result[i]
+	end
+end
+
+-- Lists the files in a previewer. Handles errors and empty archives.
+-- Can be called by other plugins, to implement their own archive peek logic.
+-- @param job Job
+-- @param files table List of files in the archive - { { path=string, size=integer, attr=string, [ is_dir = boolean ] }, ... }
+-- @param bound integer Last bound reached
+-- @param err Error? Error encountered during listing
+-- @param opts table Additional options - { tree = boolean (default: true), tree_indent = string (default: " │") }
+function M:display_file_list(job, files, bound, err, opts)
+	opts = opts or {}
+	opts.tree = opts.tree ~= false
+	opts.tree_indent = opts.tree_indent or " │"
+
+	local limit = job.area.h
 	if err then
 		return ya.preview_widget(job, err)
 	elseif job.skip > 0 and bound < job.skip + limit then
 		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	elseif #files == 0 then
-		files = { { path = job.file.url.stem, size = 0, packed_size = 0, attr = "" } }
+		files = { { path = job.file.url.stem, size = 0, attr = "" } }
+	end
+
+	local dir_stack, depth, depth_indicator, display_name = {}, 0, nil, ""
+
+	if opts.tree then
+		prepare_tree(files)
 	end
 
 	local left, right = {}, {}
 	for _, f in ipairs(files) do
 		local icon = File({
 			url = Url(f.path),
-			cha = Cha { mode = tonumber(f.attr:sub(1, 1) == "D" and "40700" or "100644", 8) },
+			cha = Cha { mode = tonumber(f.is_dir and "40700" or "100644", 8) },
 		}):icon()
 
 		if f.size > 0 then
@@ -37,8 +135,9 @@ function M:peek(job)
 		end
 
 		left[#left] = ui.Line {
+			opts.tree and ui.Span(string.rep(opts.tree_indent, f.depth)) or ui.Span(""),
 			left[#left],
-			ui.truncate(f.path, {
+			ui.truncate(opts.tree and f.display_name or f.path, {
 				rtl = true,
 				max = math.max(0, job.area.w - ui.width(left[#left]) - ui.width(right[#right])),
 			}),
@@ -259,6 +358,13 @@ function M.parse_7z_slt(child, skip, limit)
 			files[#files].packed_size = tonumber(value) or 0
 		elseif key == "Attributes" then
 			files[#files].attr = value
+			if value:sub(1, 1) == "D" then
+				files[#files].is_dir = true
+			end
+		elseif key == "Folder" and value == "+" then
+			-- Mark as directory if Folder = +
+			-- this is needed for some archive types, where Attributes may not have the D flag (ex: tarballs)
+			files[#files].is_dir = true
 		end
 
 		::continue::
