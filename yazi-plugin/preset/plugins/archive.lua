@@ -14,7 +14,7 @@ function M:peek(job)
 	elseif job.skip > 0 and bound < job.skip + limit then
 		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	elseif #files == 0 then
-		files = { { path = job.file.url.stem, size = 0, attr = "" } }
+		files = { { path = job.file.url.stem, size = 0, packed_size = 0, attr = "" } }
 	end
 
 	local left, right = {}, {}
@@ -226,7 +226,7 @@ end
 ---@return integer bound
 ---@return Error? err
 function M.parse_7z_slt(child, skip, limit)
-	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
+	local i, files, err = 0, { { path = "", size = 0, packed_size = 0, attr = "" } }, nil
 	local key, value, stderr = "", "", {}
 	repeat
 		local next, event = child:read_line()
@@ -243,14 +243,14 @@ function M.parse_7z_slt(child, skip, limit)
 		if next == "\n" or next == "\r\n" then
 			i = i + 1
 			if files[#files].path ~= "" then
-				files[#files + 1] = { path = "", size = 0, attr = "" }
+				files[#files + 1] = { path = "", size = 0, packed_size = 0, attr = "" }
 			end
 			goto continue
 		elseif i < skip then
 			goto continue
 		end
 
-		key, value = next:match("^(Path|Size|Packed Size|Attributes) = (.-)[\r\n]+")
+		key, value = next:match("^(%u[%a ]+) = (.-)[\r\n]+")
 		if key == "Path" then
 			files[#files].path = value
 		elseif key == "Size" then
