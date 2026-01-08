@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Added
+
+- Support compressed tarballs (`.tar.gz`, `.tar.bz2`, etc.) in the preset archive previewer ([#3518])
+
 ### Fixed
 
 - Account for URL covariance in `Url:join()` ([#3514])
@@ -367,7 +371,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
-- Correctly handle CRLF on Windows in preset `archive` and `json` plugins ([#2017])
+- Correctly handle CRLF on Windows in preset archive and JSON plugins ([#2017])
 - Failed to parse certain image dimensions for Überzug++ backend ([#2020])
 - Disable passthrough when the user launches Yazi in Neovim inside tmux ([#2014])
 
@@ -1588,3 +1592,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3482]: https://github.com/sxyazi/yazi/pull/3482
 [#3494]: https://github.com/sxyazi/yazi/pull/3494
 [#3514]: https://github.com/sxyazi/yazi/pull/3514
+[#3518]: https://github.com/sxyazi/yazi/pull/3518
