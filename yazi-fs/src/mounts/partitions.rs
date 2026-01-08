@@ -38,8 +38,8 @@ impl Partitions {
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{
-			// For now, assume other targets update directory stat data correctly & do not need
-			// heuristic polling.
+			// For now, assume other targets update directory stat data correctly & do not
+			// need heuristic polling.
 			false
 		}
 	}
