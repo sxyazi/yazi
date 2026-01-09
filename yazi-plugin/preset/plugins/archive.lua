@@ -14,10 +14,10 @@ function M:peek(job)
 	elseif job.skip > 0 and bound < job.skip + limit then
 		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	elseif #files == 0 then
-		files = { { path = job.file.url.stem, size = 0, packed_size = 0, attr = "" } }
+		files = { { path = Path.os(job.file.url.stem), size = 0, packed_size = 0, attr = "" } }
 	end
 
-	M.prepare_tree(files)
+	files = M.prepare_tree(files)
 
 	local left, right = {}, {}
 	for _, f in ipairs(files) do
@@ -158,7 +158,8 @@ function M.list_if_only_one(path)
 		if event == 0 then
 			local attr, size, packed_size, path = next:sub(20):match("([^ ]+) +(%d+) +(%d+) +([^\r\n]+)")
 			if path then
-				files[#files + 1] = { path = path, size = tonumber(size), packed_size = tonumber(packed_size), attr = attr }
+				files[#files + 1] =
+					{ path = Path.os(path), size = tonumber(size), packed_size = tonumber(packed_size), attr = attr }
 			end
 		elseif event ~= 1 then
 			break
@@ -217,7 +218,7 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
 function M.should_decompress_tar(file)
-	return file.packed_size <= 1024 * 1024 * 1024 and file.path:lower():find(".+%.tar$") ~= nil
+	return file.packed_size <= 1024 * 1024 * 1024 and (file.path.ext or ""):lower() == "tar"
 end
 
 -- Parse the output of a "7z l -slt" command.
@@ -229,7 +230,7 @@ end
 ---@return integer bound
 ---@return Error? err
 function M.parse_7z_slt(child, skip, limit)
-	local i, files, err = 0, { { path = "", size = 0, packed_size = 0, attr = "" } }, nil
+	local i, files, err = 0, { { path = Path.os(""), size = 0, packed_size = 0, attr = "" } }, nil
 	local key, value, stderr = "", "", {}
 	repeat
 		local next, event = child:read_line()
@@ -245,8 +246,8 @@ function M.parse_7z_slt(child, skip, limit)
 
 		if next == "\n" or next == "\r\n" then
 			i = i + 1
-			if files[#files].path ~= "" then
-				files[#files + 1] = { path = "", size = 0, packed_size = 0, attr = "" }
+			if files[#files].path ~= Path.os("") then
+				files[#files + 1] = { path = Path.os(""), size = 0, packed_size = 0, attr = "" }
 			end
 			goto continue
 		elseif i < skip then
@@ -255,26 +256,21 @@ function M.parse_7z_slt(child, skip, limit)
 
 		key, value = next:match("^(%u[%a ]+) = (.-)[\r\n]+")
 		if key == "Path" then
-			files[#files].path = value
+			files[#files].path = Path.os(value)
 		elseif key == "Size" then
 			files[#files].size = tonumber(value) or 0
 		elseif key == "Packed Size" then
 			files[#files].packed_size = tonumber(value) or 0
 		elseif key == "Attributes" then
 			files[#files].attr = value
-			if value:sub(1, 1) == "D" then
-				files[#files].is_dir = true
-			end
-		elseif key == "Folder" and value == "+" then
-			-- Mark as directory if Folder = +
-			-- this is needed for some archive types, where Attributes may not have the D flag (ex: tarballs)
-			files[#files].is_dir = true
+		elseif key == "Folder" then
+			files[#files].folder = value
 		end
 
 		::continue::
 	until i >= skip + limit
 
-	if files[#files].path == "" then
+	if files[#files].path == Path.os("") then
 		files[#files] = nil
 	end
 	if #stderr ~= 0 then
@@ -288,72 +284,62 @@ function M.prepare_tree(files)
 		return
 	end
 
-	local result = {}
-	local dir_stack, previous_path = {}, nil
-
-	-- Initialize dir_stack with the first file's
-	local first_file_url, components = Url(files[1].path).path, {}
-	while true do
-		first_file_url = first_file_url.parent
-		if first_file_url then
-			components[#components + 1] = first_file_url
-		else
-			break
-		end
-	end
-	for i, comp in ipairs(components) do
+	local parent = files[1].path.parent
+	while parent do
 		table.insert(files, 1, {
-			path = tostring(comp),
+			path = parent,
 			size = 0,
 			attr = "",
 			is_dir = true,
-			display_name = comp.name,
-			depth = #components - i,
+			display_name = parent.name,
 		})
+		parent = parent.parent
 	end
 
-	local path, parent, dirs_to_add, dir_path = nil, nil, nil, nil
-	for _, f in ipairs(files) do
-		path = Url(f.path).path
-
-		while #dir_stack > 0 and not path:starts_with(dir_stack[#dir_stack]) do
-			dir_stack[#dir_stack] = nil
+	local tree = {}
+	local parents, prev_parent = {}, nil
+	for i, f in ipairs(files) do
+		if f.is_dir then
+			f.depth = i - 1
+		else
+			f.is_dir = f.folder == "+" or (f.attr and f.attr:sub(1, 1) == "D")
 		end
 
-		f.display_name = path.name
-		f.depth = #dir_stack
+		while #parents > 0 and not f.path:starts_with(parents[#parents]) do
+			parents[#parents] = nil
+		end
+
+		f.display_name = f.path.name
+		f.depth = #parents
 
 		if f.is_dir then
-			dir_stack[#dir_stack + 1] = path
-		elseif not previous_path or (path.parent ~= previous_path.parent) then
-			parent = path.parent
-			dirs_to_add = {}
-			while parent and (not dir_stack[#dir_stack] or parent ~= dir_stack[#dir_stack]) do
+			parents[#parents + 1] = f.path
+		elseif prev_parent ~= f.path.parent then
+			local parent = f.path.parent
+			local dirs_to_add = {}
+			while parent and parent ~= parents[#parents] do
 				dirs_to_add[#dirs_to_add + 1] = parent
 				parent = parent.parent
 			end
 			for j = #dirs_to_add, 1, -1 do
-				dir_path = dirs_to_add[j]
-				result[#result + 1] = {
-					path = tostring(dir_path),
+				tree[#tree + 1] = {
+					path = dirs_to_add[j],
 					size = 0,
 					attr = "",
 					is_dir = true,
-					display_name = dir_path.name,
-					depth = #dir_stack,
+					display_name = dirs_to_add[j].name,
+					depth = #parents,
 				}
-				dir_stack[#dir_stack + 1] = dir_path
+				parents[#parents + 1] = dirs_to_add[j]
 			end
-			f.depth = #dir_stack
+			f.depth = #parents
 		end
 
-		result[#result + 1] = f
-		previous_path = path
+		tree[#tree + 1] = f
+		prev_parent = f.path.parent
 	end
 
-	for i = #result, 1, -1 do
-		files[i] = result[i]
-	end
+	return tree
 end
 
 return M
