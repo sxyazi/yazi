@@ -41,7 +41,7 @@ function M:peek(job)
 		left[#left] = ui.Line {
 			string.rep(" │", f.depth),
 			left[#left],
-			ui.truncate(f.display_name, {
+			ui.truncate(f.path.name, {
 				rtl = true,
 				max = math.max(0, job.area.w - ui.width(left[#left]) - ui.width(right[#right])),
 			}),
@@ -291,7 +291,6 @@ function M.prepare_tree(files)
 			size = 0,
 			attr = "",
 			is_dir = true,
-			display_name = parent.name,
 		})
 		parent = parent.parent
 	end
@@ -309,7 +308,6 @@ function M.prepare_tree(files)
 			parents[#parents] = nil
 		end
 
-		f.display_name = f.path.name
 		f.depth = #parents
 
 		if f.is_dir then
@@ -327,7 +325,6 @@ function M.prepare_tree(files)
 					size = 0,
 					attr = "",
 					is_dir = true,
-					display_name = dirs_to_add[j].name,
 					depth = #parents,
 				}
 				parents[#parents + 1] = dirs_to_add[j]
