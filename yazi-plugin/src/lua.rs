@@ -34,6 +34,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	crate::process::install(lua)?;
 	yazi_binding::File::install(lua)?;
 	yazi_binding::Url::install(lua)?;
+	yazi_binding::Path::install(lua)?;
 
 	// Addons
 	lua.load(preset!("ya")).set_name("ya.lua").exec()?;

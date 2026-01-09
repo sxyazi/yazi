@@ -89,6 +89,16 @@ impl<'a> Strand<'a> {
 	}
 
 	#[inline]
+	pub fn as_os_path(self) -> Result<&'a std::path::Path, StrandError> {
+		self.as_os().map(std::path::Path::new)
+	}
+
+	#[inline]
+	pub fn as_unix_path(self) -> &'a typed_path::UnixPath {
+		typed_path::UnixPath::new(self.encoded_bytes())
+	}
+
+	#[inline]
 	pub fn as_utf8(self) -> Result<&'a str, StrandError> {
 		match self {
 			Self::Os(s) => s.to_str().ok_or(StrandError::AsUtf8),
