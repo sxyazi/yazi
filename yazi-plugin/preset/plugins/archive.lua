@@ -14,13 +14,11 @@ function M:peek(job)
 	elseif job.skip > 0 and bound < job.skip + limit then
 		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	elseif #files == 0 then
-		files = { { path = Path.os(job.file.url.stem), size = 0, packed_size = 0, attr = "" } }
+		files = { M.make_file { path = job.file.url.stem } }
 	end
 
-	files = M.prepare_tree(files)
-
 	local left, right = {}, {}
-	for _, f in ipairs(files) do
+	for _, f in ipairs(M.treelize(files)) do
 		local icon = File({
 			url = Url(f.path),
 			cha = Cha { mode = tonumber(f.is_dir and "40700" or "100644", 8) },
@@ -158,8 +156,7 @@ function M.list_if_only_one(path)
 		if event == 0 then
 			local attr, size, packed_size, path = next:sub(20):match("([^ ]+) +(%d+) +(%d+) +([^\r\n]+)")
 			if path then
-				files[#files + 1] =
-					{ path = Path.os(path), size = tonumber(size), packed_size = tonumber(packed_size), attr = attr }
+				files[#files + 1] = M.make_file { path = path, size = size, packed_size = packed_size, attr = attr }
 			end
 		elseif event ~= 1 then
 			break
@@ -217,6 +214,16 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
+function M.make_file(fields)
+	fields = fields or {}
+	fields.path = type(fields.path or "") == "string" and Path.os(fields.path or "") or fields.path
+	fields.size = tonumber(fields.size) or 0
+	fields.packed_size = tonumber(fields.packed_size) or 0
+	fields.attr = fields.attr or ""
+	fields.folder = fields.folder or ""
+	return fields
+end
+
 function M.should_decompress_tar(file)
 	return file.packed_size <= 1024 * 1024 * 1024 and (file.path.ext or ""):lower() == "tar"
 end
@@ -230,7 +237,7 @@ end
 ---@return integer bound
 ---@return Error? err
 function M.parse_7z_slt(child, skip, limit)
-	local i, files, err = 0, { { path = Path.os(""), size = 0, packed_size = 0, attr = "" } }, nil
+	local i, files, err = 0, { M.make_file() }, nil
 	local key, value, stderr = "", "", {}
 	repeat
 		local next, event = child:read_line()
@@ -247,7 +254,7 @@ function M.parse_7z_slt(child, skip, limit)
 		if next == "\n" or next == "\r\n" then
 			i = i + 1
 			if files[#files].path ~= Path.os("") then
-				files[#files + 1] = { path = Path.os(""), size = 0, packed_size = 0, attr = "" }
+				files[#files + 1] = M.make_file()
 			end
 			goto continue
 		elseif i < skip then
@@ -279,55 +286,39 @@ function M.parse_7z_slt(child, skip, limit)
 	return files, i, err
 end
 
-function M.prepare_tree(files)
+---Convert a flat list of files into a tree structure
+---@param files table
+---@return table tree
+function M.treelize(files)
 	if #files == 0 then
-		return
+		return files
 	end
 
 	local parent = files[1].path.parent
 	while parent do
-		table.insert(files, 1, {
-			path = parent,
-			size = 0,
-			attr = "",
-			is_dir = true,
-		})
+		table.insert(files, 1, M.make_file { path = parent, is_dir = true })
 		parent = parent.parent
 	end
 
-	local tree = {}
-	local parents, prev_parent = {}, nil
-	for i, f in ipairs(files) do
-		if f.is_dir then
-			f.depth = i - 1
-		else
-			f.is_dir = f.folder == "+" or (f.attr and f.attr:sub(1, 1) == "D")
-		end
-
+	local tree, parents, prev_parent = {}, {}, nil
+	for _, f in ipairs(files) do
 		while #parents > 0 and not f.path:starts_with(parents[#parents]) do
 			parents[#parents] = nil
 		end
 
 		f.depth = #parents
+		f.is_dir = f.is_dir or f.folder == "+" or f.attr:sub(1, 1) == "D"
 
 		if f.is_dir then
 			parents[#parents + 1] = f.path
 		elseif prev_parent ~= f.path.parent then
-			local parent = f.path.parent
-			local dirs_to_add = {}
+			local buf, parent = {}, f.path.parent
 			while parent and parent ~= parents[#parents] do
-				dirs_to_add[#dirs_to_add + 1] = parent
-				parent = parent.parent
+				buf[#buf + 1], parent = parent, parent.parent
 			end
-			for j = #dirs_to_add, 1, -1 do
-				tree[#tree + 1] = {
-					path = dirs_to_add[j],
-					size = 0,
-					attr = "",
-					is_dir = true,
-					depth = #parents,
-				}
-				parents[#parents + 1] = dirs_to_add[j]
+			for j = #buf, 1, -1 do
+				tree[#tree + 1] = M.make_file { path = buf[j], depth = #parents, is_dir = true }
+				parents[#parents + 1] = buf[j]
 			end
 			f.depth = #parents
 		end
