@@ -11,6 +11,10 @@ pub enum PathBufDyn {
 	Unix(typed_path::UnixPathBuf),
 }
 
+impl From<&std::path::Path> for PathBufDyn {
+	fn from(value: &std::path::Path) -> Self { Self::Os(value.into()) }
+}
+
 impl From<std::path::PathBuf> for PathBufDyn {
 	fn from(value: std::path::PathBuf) -> Self { Self::Os(value) }
 }

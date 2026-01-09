@@ -46,6 +46,18 @@ impl Path {
 		}
 	}
 
+	pub fn install(lua: &Lua) -> mlua::Result<()> {
+		lua.globals().raw_set(
+			"Path",
+			lua.create_table_from([(
+				"os",
+				lua.create_function(|_, s: mlua::String| {
+					Ok(Self::new(s.as_bytes().as_strand().as_os_path().into_lua_err()?))
+				})?,
+			)])?,
+		)
+	}
+
 	fn ends_with(&self, child: Value) -> mlua::Result<bool> {
 		match child {
 			Value::String(s) => {

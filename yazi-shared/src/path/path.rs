@@ -259,8 +259,8 @@ impl<'p> PathDyn<'p> {
 		let s = suffix.as_strand();
 		let mut me_comps = self.components();
 		let mut suf_comps = match self.kind() {
-			PathKind::Os => Components::Os(std::path::Path::new(s.as_os()?).components()),
-			PathKind::Unix => Components::Unix(typed_path::UnixPath::new(s.encoded_bytes()).components()),
+			PathKind::Os => Components::Os(s.as_os_path()?.components()),
+			PathKind::Unix => Components::Unix(s.as_unix_path().components()),
 		};
 
 		while let Some(next) = suf_comps.next_back() {
@@ -279,8 +279,8 @@ impl<'p> PathDyn<'p> {
 	{
 		let s = strand.as_strand();
 		Ok(match kind.into() {
-			PathKind::Os => Self::Os(std::path::Path::new(s.as_os()?)),
-			PathKind::Unix => Self::Unix(typed_path::UnixPath::new(s.encoded_bytes())),
+			PathKind::Os => Self::Os(s.as_os_path()?),
+			PathKind::Unix => Self::Unix(s.as_unix_path()),
 		})
 	}
 

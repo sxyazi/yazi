@@ -17,6 +17,7 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	yazi_binding::Cha::install(&lua)?;
 	yazi_binding::File::install(&lua)?;
 	yazi_binding::Url::install(&lua)?;
+	yazi_binding::Path::install(&lua)?;
 
 	yazi_binding::Error::install(&lua)?;
 	crate::loader::install(&lua)?;
