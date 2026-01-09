@@ -9,13 +9,12 @@ function M:peek(job)
 		files, bound, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
-	local limit = job.area.h
 	if err then
 		return ya.preview_widget(job, err)
 	elseif job.skip > 0 and bound < job.skip + limit then
 		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	elseif #files == 0 then
-		files = { { path = job.file.url.stem, size = 0, attr = "" } }
+		files = { { path = job.file.url.stem, size = 0, packed_size = 0, attr = "" } }
 	end
 
 	M.prepare_tree(files)
@@ -40,7 +39,7 @@ function M:peek(job)
 		end
 
 		left[#left] = ui.Line {
-			ui.Span(string.rep(" │", f.depth)),
+			string.rep(" │", f.depth),
 			left[#left],
 			ui.truncate(f.display_name, {
 				rtl = true,
