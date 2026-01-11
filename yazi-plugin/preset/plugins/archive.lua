@@ -108,7 +108,7 @@ end
 ---@return table files
 ---@return Error? err
 function M.list_archive(args, skip, limit)
-	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
+	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", "-xr!__MACOSX", table.unpack(args) }
 	if not child then
 		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
@@ -128,7 +128,7 @@ end
 function M.list_compressed_tar(args, skip, limit)
 	local src, dst = M.spawn_7z_piped(
 		{ "x", "-so", table.unpack(args) },
-		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
+		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-xr!__MACOSX", "-si" }
 	)
 	if not dst then
 		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
