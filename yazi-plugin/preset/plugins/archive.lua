@@ -110,7 +110,7 @@ end
 function M.list_archive(args, skip, limit)
 	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
-		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
+		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
 	local files, err = M.parse_7z_slt(child, skip, limit)
@@ -131,7 +131,7 @@ function M.list_compressed_tar(args, skip, limit)
 		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-si" }
 	)
 	if not dst then
-		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
+		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
 	local files, err = M.parse_7z_slt(dst, skip, limit)
@@ -141,12 +141,14 @@ function M.list_compressed_tar(args, skip, limit)
 	return files, err
 end
 
+---@param path Path
+---@return table?
 function M.list_if_only_one(path)
 	-- For certain compressed tarballs (e.g. .tar.xz),
 	-- 7-zip doesn't print a .tar file if -slt is specified, so we are not doing that here
 	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
 	if not child then
-		return false
+		return
 	end
 
 	local files = {}
@@ -273,9 +275,12 @@ function M.parse_7z_slt(child, skip, limit)
 		::continue::
 	until #files > skip + limit
 
-	if files[#files].path == Path.os("") then
+	if files[#files].path == empty then
 		files[#files] = nil
+	else
+		M.treelize(files, parents)
 	end
+
 	if #stderr ~= 0 then
 		err = Err("7-zip errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
 	end
