@@ -238,5 +238,10 @@ macro_rules! impl_file_methods {
 			// TODO: use a cache
 			Ok(yazi_config::THEME.icon.matches(me).map(Icon::from))
 		});
+
+		$methods.add_method("line", |_, me, ()| {
+			use yazi_shared::url::AsUrl;
+			Ok(me.url.as_url().line().map(|v| v as i64))
+		});
 	};
 }
