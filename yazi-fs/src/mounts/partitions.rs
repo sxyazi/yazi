@@ -34,12 +34,11 @@ impl Partitions {
 	pub fn heuristic(&self, _cha: Cha) -> bool {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		{
-			self.by_dev(_cha.dev).is_none_or(|p| p.heuristic())
+			self.by_dev(_cha.dev).is_some_and(|p| p.heuristic())
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{
-			// For now, assume other targets update directory stat data correctly & do not
-			// need heuristic polling.
+			// For now, assume other targets update directory stat data correctly
 			false
 		}
 	}

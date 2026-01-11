@@ -15,8 +15,7 @@ pub struct Partition {
 
 impl Partition {
 	// Match mount types that do not reliably emit change notifications, or do not
-	// update directory metadata on changes, and should be refreshed frequently /
-	// heuristically.
+	// update directory metadata on changes, and should be refreshed frequently.
 	pub fn heuristic(&self) -> bool {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
 		matches!(b, b"exfat" | b"fuse.rclone")

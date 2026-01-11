@@ -26,7 +26,7 @@ lto           = false
 debug = false
 
 [workspace.dependencies]
-ansi-to-tui         = "8.0.0"
+ansi-to-tui         = "8.0.1"
 anyhow              = "1.0.100"
 base64              = "0.22.1"
 bitflags            = { version = "2.10.0", features = [ "serde" ] }
@@ -59,7 +59,7 @@ thiserror           = "2.0.17"
 tokio               = { version = "1.49.0", features = [ "full" ] }
 tokio-stream        = "0.1.18"
 tokio-util          = "0.7.18"
-toml                = { version = "0.9.10" }
+toml                = { version = "0.9.11" }
 tracing             = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 typed-path          = "0.12.0"
