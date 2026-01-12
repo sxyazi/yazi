@@ -266,20 +266,20 @@ rules = [
 [icon]
 globs = []
 dirs  = [
-	{ name = ".config", text = "", fg = "blue" },
-	{ name = ".git", text = "", fg = "blue" },
-	{ name = ".github", text = "", fg = "blue" },
-	{ name = ".npm", text = "", fg = "blue" },
-	{ name = "Desktop", text = "", fg = "blue" },
-	{ name = "Development", text = "", fg = "blue" },
-	{ name = "Documents", text = "", fg = "blue" },
-	{ name = "Downloads", text = "", fg = "blue" },
-	{ name = "Library", text = "", fg = "blue" },
-	{ name = "Movies", text = "", fg = "blue" },
-	{ name = "Music", text = "", fg = "blue" },
-	{ name = "Pictures", text = "", fg = "blue" },
-	{ name = "Public", text = "", fg = "blue" },
-	{ name = "Videos", text = "", fg = "blue" },
+	{ name = ".config", text = "" },
+	{ name = ".git", text = "" },
+	{ name = ".github", text = "" },
+	{ name = ".npm", text = "" },
+	{ name = "Desktop", text = "" },
+	{ name = "Development", text = "" },
+	{ name = "Documents", text = "" },
+	{ name = "Downloads", text = "" },
+	{ name = "Library", text = "" },
+	{ name = "Movies", text = "" },
+	{ name = "Music", text = "" },
+	{ name = "Pictures", text = "" },
+	{ name = "Public", text = "" },
+	{ name = "Videos", text = "" },
 ]
 files = [
 	{ name = ".babelrc", text = "", fg = "#cbcb41" },
@@ -996,7 +996,7 @@ conds = [
 	{ if = "dummy", text = "" },
 
 	# Fallback
-	{ if = "dir", text = "", fg = "blue" },
+	{ if = "dir", text = "" },
 	{ if = "exec", text = "" },
 	{ if = "!dir", text = "" },
 ]
