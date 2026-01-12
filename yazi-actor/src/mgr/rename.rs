@@ -76,9 +76,9 @@ impl Actor for Rename {
 			}
 
 			if conversion_to_dir_requested && target_is_empty {
-				Self::replace_file_with_dir(old, new).await.ok();
+				_ = Self::replace_file_with_dir(old, new).await;
 			} else {
-				Self::r#do(tab, old, new).await.ok();
+				_ = Self::r#do(tab, old, new).await;
 			}
 		});
 		succ!();
