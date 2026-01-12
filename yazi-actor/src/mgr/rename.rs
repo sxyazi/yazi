@@ -67,18 +67,18 @@ impl Actor for Rename {
 				return;
 			};
 
-			if opt.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
-				if conversion_to_dir_requested && target_is_empty {
-					Self::replace_file_with_dir(old, new).await.ok();
-				} else {
-					Self::r#do(tab, old, new).await.ok();
-				}
-			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
-				if conversion_to_dir_requested && target_is_empty {
-					Self::replace_file_with_dir(old, new).await.ok();
-				} else {
-					Self::r#do(tab, old, new).await.ok();
-				}
+			if !opt.force
+				&& maybe_exists(&new).await
+				&& !provider::must_identical(&old, &new).await
+				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
+			{
+				return;
+			}
+
+			if conversion_to_dir_requested && target_is_empty {
+				Self::replace_file_with_dir(old, new).await.ok();
+			} else {
+				Self::r#do(tab, old, new).await.ok();
 			}
 		});
 		succ!();
