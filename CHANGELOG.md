@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Tree view for the preset archive previewer ([#3525])
 - Support compressed tarballs (`.tar.gz`, `.tar.bz2`, etc.) in the preset archive previewer ([#3518])
+- Check and refresh the file list when the terminal gains focus ([#3561])
 - New `Path.os()` API creates an OS-native `Path` ([#3541])
 
 ### Fixed
@@ -1601,3 +1602,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3532]: https://github.com/sxyazi/yazi/pull/3532
 [#3540]: https://github.com/sxyazi/yazi/pull/3540
 [#3541]: https://github.com/sxyazi/yazi/pull/3541
+[#3561]: https://github.com/sxyazi/yazi/pull/3561
