@@ -9,7 +9,7 @@ use crate::{WATCHED, local::LINKED};
 #[derive(Clone)]
 pub(crate) struct Reporter {
 	pub(super) local_tx:  mpsc::UnboundedSender<UrlBuf>,
-	pub(super) remote_tx: mpsc::UnboundedSender<UrlBuf>,
+	pub(super) remote_tx: mpsc::UnboundedSender<(UrlBuf, bool)>,
 }
 
 impl Reporter {
@@ -49,9 +49,9 @@ impl Reporter {
 			let Some(dir) = watched.find_by_cache(parent.loc()) else { continue };
 			let Some(name) = url.name() else { continue };
 			if let Ok(u) = dir.try_join(Cow::from(percent_decode(name.encoded_bytes()))) {
-				self.remote_tx.send(u).ok();
+				self.remote_tx.send((u, true)).ok();
 			}
-			self.remote_tx.send(dir).ok();
+			self.remote_tx.send((dir, false)).ok();
 		}
 	}
 
@@ -61,7 +61,7 @@ impl Reporter {
 			return;
 		}
 
-		self.remote_tx.send(parent.to_owned()).ok();
-		self.remote_tx.send(url.into_owned()).ok();
+		self.remote_tx.send((parent.to_owned(), false)).ok();
+		self.remote_tx.send((url.into_owned(), false)).ok();
 	}
 }

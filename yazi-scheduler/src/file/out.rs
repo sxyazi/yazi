@@ -455,6 +455,7 @@ pub(crate) enum FileOutUpload {
 	Deform(String),
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<anyhow::Error> for FileOutUpload {
@@ -480,6 +481,9 @@ impl FileOutUpload {
 			Self::Fail(reason) => {
 				prog.collected = Some(false);
 				task.log(reason);
+			}
+			Self::Clean => {
+				prog.cleaned = Some(true);
 			}
 		}
 	}

@@ -39,6 +39,7 @@ impl Runner {
 			TaskIn::HookDelete(r#in) => Ok(self.hook.delete(r#in).await),
 			TaskIn::HookTrash(r#in) => Ok(self.hook.trash(r#in).await),
 			TaskIn::HookDownload(r#in) => Ok(self.hook.download(r#in).await),
+			TaskIn::HookUpload(r#in) => Ok(self.hook.upload(r#in).await),
 		}
 	}
 
@@ -69,6 +70,7 @@ impl Runner {
 			TaskIn::HookDelete(_in) => unreachable!(),
 			TaskIn::HookTrash(_in) => unreachable!(),
 			TaskIn::HookDownload(_in) => unreachable!(),
+			TaskIn::HookUpload(_in) => unreachable!(),
 		}
 	}
 }

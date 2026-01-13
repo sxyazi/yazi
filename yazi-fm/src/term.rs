@@ -1,7 +1,7 @@
 use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
+use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableFocusChange, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux, TMUX};
 use yazi_config::{THEME, YAZI};
@@ -40,6 +40,7 @@ impl Term {
 			yazi_term::If(TMUX.get(), EnterAlternateScreen),
 			yazi_term::SetBackground(true, THEME.app.bg_color()), // Set app background
 			EnableBracketedPaste,
+			EnableFocusChange,
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
 		)?;
 
@@ -81,6 +82,7 @@ impl Term {
 			TTY.writer(),
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
 			yazi_term::RestoreCursor,
+			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 		)?;
@@ -103,6 +105,7 @@ impl Term {
 			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
 			yazi_term::SetBackground(false, THEME.app.bg_color()),
 			yazi_term::RestoreCursor,
+			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 			crossterm::cursor::Show

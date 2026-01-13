@@ -64,8 +64,9 @@ impl Signals {
 					Event::Mouse(mouse).emit();
 				}
 			}
-			CrosstermEvent::Paste(str) => Event::Paste(str).emit(),
 			CrosstermEvent::Resize(..) => Event::Resize.emit(),
+			CrosstermEvent::FocusGained => Event::Focus.emit(),
+			CrosstermEvent::Paste(str) => Event::Paste(str).emit(),
 			_ => {}
 		}
 	}

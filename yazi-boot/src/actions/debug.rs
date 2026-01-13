@@ -21,11 +21,12 @@ impl Actions {
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
 
 		writeln!(s, "\nConfig")?;
-		writeln!(s, "    Yazi             : {}", Self::config_state("yazi"))?;
-		writeln!(s, "    Keymap           : {}", Self::config_state("keymap"))?;
-		writeln!(s, "    Theme            : {}", Self::config_state("theme"))?;
-		writeln!(s, "    VFS              : {}", Self::config_state("vfs"))?;
-		writeln!(s, "    Package          : {}", Self::config_state("package"))?;
+		writeln!(s, "    Init             : {}", Self::config_state("init.lua"))?;
+		writeln!(s, "    Yazi             : {}", Self::config_state("yazi.toml"))?;
+		writeln!(s, "    Keymap           : {}", Self::config_state("keymap.toml"))?;
+		writeln!(s, "    Theme            : {}", Self::config_state("theme.toml"))?;
+		writeln!(s, "    VFS              : {}", Self::config_state("vfs.toml"))?;
+		writeln!(s, "    Package          : {}", Self::config_state("package.toml"))?;
 		writeln!(s, "    Dark/light flavor: {:?} / {:?}", THEME.flavor.dark, THEME.flavor.light)?;
 
 		writeln!(s, "\nEmulator")?;
@@ -125,7 +126,7 @@ impl Actions {
 	}
 
 	fn config_state(name: &str) -> String {
-		let p = Xdg::config_dir().join(format!("{name}.toml"));
+		let p = Xdg::config_dir().join(name);
 		match std::fs::read_to_string(&p) {
 			Ok(s) if s.is_empty() => format!("{} (empty)", p.display()),
 			Ok(s) if s.trim().is_empty() => format!("{} (whitespaces)", p.display()),

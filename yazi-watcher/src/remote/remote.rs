@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 use anyhow::Result;
-use hashbrown::HashSet;
+use hashbrown::HashMap;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{File, FilesOp};
@@ -14,7 +14,7 @@ use crate::{Reporter, WATCHER};
 pub(crate) struct Remote;
 
 impl Remote {
-	pub(crate) fn serve(rx: UnboundedReceiver<UrlBuf>, _reporter: Reporter) -> Self {
+	pub(crate) fn serve(rx: UnboundedReceiver<(UrlBuf, bool)>, _reporter: Reporter) -> Self {
 		tokio::spawn(Self::changed(rx));
 
 		Self
@@ -24,19 +24,22 @@ impl Remote {
 
 	pub(crate) fn unwatch(&mut self, _url: Url) -> Result<()> { Ok(()) }
 
-	async fn changed(rx: UnboundedReceiver<UrlBuf>) {
+	async fn changed(rx: UnboundedReceiver<(UrlBuf, bool)>) {
 		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(250));
 		pin!(rx);
 
 		while let Some(chunk) = rx.next().await {
-			let urls: HashSet<_> = chunk.into_iter().collect();
+			let mut urls = HashMap::with_capacity(chunk.len());
+			for (u, upload) in chunk {
+				urls.entry(u).and_modify(|b| *b |= upload).or_insert(upload);
+			}
 
 			let _permit = WATCHER.acquire().await.unwrap();
 
 			let mut ops = Vec::with_capacity(urls.len());
 			let mut ups = Vec::with_capacity(urls.len());
 
-			for u in urls {
+			for (u, upload) in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
 				let Ok(mut file) = File::new(&u).await else {
 					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
@@ -47,7 +50,7 @@ impl Remote {
 				file.cha.ctime = Some(SystemTime::now());
 
 				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
-				if is_file {
+				if upload && is_file {
 					ups.push(u);
 				}
 			}

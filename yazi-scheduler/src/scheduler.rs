@@ -7,7 +7,7 @@ use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
 use yazi_shared::{CompletionToken, Id, Throttle, url::{UrlBuf, UrlLike}};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, Runner, TaskIn, TaskOps, file::{File, FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{Hook, HookInOutDelete, HookInOutDownload, HookInOutTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, Runner, TaskIn, TaskOps, file::{File, FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{Hook, HookInDelete, HookInDownload, HookInTrash, HookInUpload}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
 	ops:         TaskOps,
@@ -163,7 +163,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let task = ongoing.add::<FileProgDelete>(format!("Delete {}", target.display()));
 
-		task.set_hook(HookInOutDelete { id: task.id, target: target.clone() });
+		task.set_hook(HookInDelete { id: task.id, target: target.clone() });
 		self.queue(FileInDelete { id: task.id, target, cha: None }, LOW);
 	}
 
@@ -171,7 +171,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let task = ongoing.add::<FileProgTrash>(format!("Trash {}", target.display()));
 
-		task.set_hook(HookInOutTrash { id: task.id, target: target.clone() });
+		task.set_hook(HookInTrash { id: task.id, target: target.clone() });
 		self.queue(FileInTrash { id: task.id, target }, LOW);
 	}
 
@@ -179,8 +179,8 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let task = ongoing.add::<FileProgDownload>(format!("Download {}", url.display()));
 
-		task.set_hook(HookInOutDownload { id: task.id });
 		if url.kind().is_remote() {
+			task.set_hook(HookInDownload { id: task.id });
 			self.queue(
 				FileInDownload { id: task.id, url, cha: None, retry: 0, done: task.done.clone() },
 				LOW,
@@ -202,6 +202,7 @@ impl Scheduler {
 				.out(task.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 
+		task.set_hook(HookInUpload { id: task.id, target: url.clone() });
 		self.queue(
 			FileInUpload { id: task.id, url, cha: None, cache: None, done: task.done.clone() },
 			LOW,

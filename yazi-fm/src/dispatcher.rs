@@ -28,6 +28,7 @@ impl<'a> Dispatcher<'a> {
 			Event::Key(key) => self.dispatch_key(key),
 			Event::Mouse(mouse) => act!(mouse, self.app, mouse),
 			Event::Resize => act!(resize, self.app),
+			Event::Focus => act!(focus, self.app),
 			Event::Paste(str) => self.dispatch_paste(str),
 			Event::Quit(opt) => act!(quit, self.app, opt),
 		};
