@@ -15,6 +15,7 @@ pub enum Event {
 	Key(KeyEvent),
 	Mouse(MouseEvent),
 	Resize,
+	Focus,
 	Paste(String),
 	Quit(EventQuit),
 }

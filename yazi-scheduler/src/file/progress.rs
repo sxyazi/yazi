@@ -321,6 +321,7 @@ pub struct FileProgUpload {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       Option<bool>,
+	pub cleaned:         Option<bool>,
 }
 
 impl From<FileProgUpload> for TaskSummary {
@@ -340,14 +341,16 @@ impl FileProgUpload {
 	}
 
 	pub fn running(self) -> bool {
-		self.collected.is_none() || self.success_files + self.failed_files != self.total_files
+		self.collected.is_none()
+			|| self.success_files + self.failed_files != self.total_files
+			|| (self.cleaned.is_none() && self.cooked())
 	}
 
-	pub fn success(self) -> bool { self.cooked() }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
 
-	pub fn failed(self) -> bool { self.collected == Some(false) }
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.collected == Some(false) }
 
-	pub fn cleaned(self) -> Option<bool> { None }
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {

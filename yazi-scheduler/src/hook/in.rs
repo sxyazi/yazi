@@ -48,44 +48,27 @@ impl HookInOutCut {
 
 // --- Delete
 #[derive(Debug)]
-pub(crate) struct HookInOutDelete {
+pub(crate) struct HookInDelete {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
-}
-
-impl HookInOutDelete {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::FileDelete(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
 }
 
 // --- Trash
 #[derive(Debug)]
-pub(crate) struct HookInOutTrash {
+pub(crate) struct HookInTrash {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
 }
 
-impl HookInOutTrash {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::FileTrash(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
-}
-
 // --- Download
 #[derive(Debug)]
-pub(crate) struct HookInOutDownload {
+pub(crate) struct HookInDownload {
 	pub(crate) id: Id,
 }
 
-impl HookInOutDownload {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::FileDownload(_) = &task.prog {
-			task.hook = Some(self.into());
-		}
-	}
+// --- Upload
+#[derive(Debug)]
+pub(crate) struct HookInUpload {
+	pub(crate) id:     Id,
+	pub(crate) target: UrlBuf,
 }
