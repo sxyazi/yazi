@@ -47,16 +47,29 @@ impl Dependency {
 
 	pub(super) fn header(&self, s: &str) -> Result<()> {
 		use crossterm::style::{Attribute, Print, SetAttributes};
+		use std::io::IsTerminal;
+		use yazi_term::If;
 
+		fn styles_enabled() -> bool {
+			if let Ok(v) = std::env::var("YA_FORCE_ANSI")
+				&& !v.is_empty()
+				&& v != "0"
+			{
+				return true;
+			}
+			std::io::stdout().is_terminal()
+		}
+
+		let styled = styles_enabled();
 		crossterm::execute!(
 			BufWriter::new(std::io::stdout()),
 			Print("\n"),
-			SetAttributes(Attribute::Reverse.into()),
-			SetAttributes(Attribute::Bold.into()),
+			If(styled, SetAttributes(Attribute::Reverse.into())),
+			If(styled, SetAttributes(Attribute::Bold.into())),
 			Print("  "),
 			Print(s.replacen("{name}", &self.name, 1)),
 			Print("  "),
-			SetAttributes(Attribute::Reset.into()),
+			If(styled, SetAttributes(Attribute::Reset.into())),
 			Print("\n\n"),
 		)?;
 		Ok(())
