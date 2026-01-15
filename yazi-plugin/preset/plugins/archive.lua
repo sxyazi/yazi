@@ -308,9 +308,10 @@ function M.treelize(files, parents)
 	f.depth = #parents
 	f.is_dir = f.folder == "+" or f.attr:sub(1, 1) == "D"
 
-	files[#files + 1] = f
-	if f.is_dir then
-		parents[#parents + 1] = f.path
+	if not f.is_dir then
+		files[#files + 1] = f
+	elseif f.path ~= parents[#parents] then
+		files[#files + 1], parents[#parents + 1] = f, f.path
 	end
 end
 
