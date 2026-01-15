@@ -1436,6 +1436,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd2e7510819d6fbf51a5545c8f922716ecfb14df168a3242f7d33e0239efe6a1"
 
 [[package]]
+name = "fax"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f05de7d48f37cd6730705cbca900770cab77a89f413d23e100ad7fad7795a0ab"
+dependencies = [
+ "fax_derive",
+]
+
+[[package]]
+name = "fax_derive"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0aca10fb742cb43f9e7bb8467c91aa9bcb8e3ffbc6a6f7389bb93ffc920577d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
+]
+
+[[package]]
 name = "fdeflate"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1891,8 +1911,9 @@ dependencies = [
  "qoi",
  "ravif",
  "rgb",
- "zune-core",
- "zune-jpeg",
+ "tiff",
+ "zune-core 0.5.0",
+ "zune-jpeg 0.5.8",
 ]
 
 [[package]]
@@ -4351,6 +4372,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tiff"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af9605de7fee8d9551863fd692cce7637f548dbd9db9180fcc07ccc6d26c336f"
+dependencies = [
+ "fax",
+ "flate2",
+ "half",
+ "quick-error",
+ "weezl",
+ "zune-jpeg 0.4.21",
+]
+
+[[package]]
 name = "tikv-jemalloc-sys"
 version = "0.6.1+5.3.0-1-ge13ca993e8ccb9ba9847cc330696e02839f328f7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5954,6 +5989,12 @@ checksum = "bd8f3f50b848df28f887acb68e41201b5aea6bc8a8dacc00fb40635ff9a72fea"
 
 [[package]]
 name = "zune-core"
+version = "0.4.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f423a2c17029964870cfaabb1f13dfab7d092a62a29a89264f4d36990ca414a"
+
+[[package]]
+name = "zune-core"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "111f7d9820f05fd715df3144e254d6fc02ee4088b0644c0ffd0efc9e6d9d2773"
@@ -5969,9 +6010,18 @@ dependencies = [
 
 [[package]]
 name = "zune-jpeg"
+version = "0.4.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29ce2c8a9384ad323cf564b67da86e21d3cfdff87908bc1223ed5c99bc792713"
+dependencies = [
+ "zune-core 0.4.12",
+]
+
+[[package]]
+name = "zune-jpeg"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e35aee689668bf9bd6f6f3a6c60bb29ba1244b3b43adfd50edd554a371da37d5"
 dependencies = [
- "zune-core",
+ "zune-core 0.5.0",
 ]
