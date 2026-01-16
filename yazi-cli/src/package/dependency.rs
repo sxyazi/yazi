@@ -1,4 +1,4 @@
-use std::{io::BufWriter, path::{Path, PathBuf}, str::FromStr};
+use std::{env, io::{self, BufWriter}, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -46,23 +46,27 @@ impl Dependency {
 	}
 
 	pub(super) fn header(&self, s: &str) -> Result<()> {
-		use crossterm::style::{Attribute, Print, SetAttributes};
+		use std::io::IsTerminal;
 
+		use crossterm::style::{Attribute, Print, SetAttributes};
+		use yazi_term::If;
+
+		let ansi = env::var_os("YA_FORCE_ANSI").is_some_and(|v| v == "1") || io::stdout().is_terminal();
 		crossterm::execute!(
-			BufWriter::new(std::io::stdout()),
+			BufWriter::new(io::stdout()),
 			Print("\n"),
-			SetAttributes(Attribute::Reverse.into()),
-			SetAttributes(Attribute::Bold.into()),
+			If(ansi, SetAttributes(Attribute::Reverse.into())),
+			If(ansi, SetAttributes(Attribute::Bold.into())),
 			Print("  "),
 			Print(s.replacen("{name}", &self.name, 1)),
 			Print("  "),
-			SetAttributes(Attribute::Reset.into()),
+			If(ansi, SetAttributes(Attribute::Reset.into())),
 			Print("\n\n"),
 		)?;
 		Ok(())
 	}
 
-	pub(super) async fn plugin_files(dir: &Path) -> std::io::Result<Vec<String>> {
+	pub(super) async fn plugin_files(dir: &Path) -> io::Result<Vec<String>> {
 		let mut it = ok_or_not_found!(tokio::fs::read_dir(dir).await, return Ok(vec![]));
 		let mut files: Vec<String> =
 			["LICENSE", "README.md", "main.lua"].into_iter().map(Into::into).collect();
