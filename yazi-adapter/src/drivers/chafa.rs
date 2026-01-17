@@ -1,7 +1,7 @@
 use std::{io::Write, path::PathBuf, process::Stdio};
 
 use ansi_to_tui::IntoText;
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use crossterm::{cursor::MoveTo, queue};
 use ratatui::layout::Rect;
 use tokio::process::Command;
@@ -32,7 +32,8 @@ impl Chafa {
 			.stdout(Stdio::piped())
 			.stderr(Stdio::null())
 			.kill_on_drop(true)
-			.spawn()?;
+			.spawn()
+			.map_err(|e| anyhow!("failed to spawn chafa: {e}"))?;
 
 		let output = child.wait_with_output().await?;
 		if !output.status.success() {

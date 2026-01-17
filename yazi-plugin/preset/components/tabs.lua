@@ -52,7 +52,7 @@ function Tabs:click(event, up)
 	if up or event.is_middle then
 		return
 	end
-	for i = #self._offsets, 1, -1 do
+	for i = #cx.tabs, 1, -1 do
 		if event.x >= self._offsets[i] then
 			ya.emit("tab_switch", { i - 1 })
 			break
