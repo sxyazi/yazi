@@ -40,12 +40,14 @@ impl FilesSorter {
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {
+				let aa = a.url.ext().filter(|_| a.is_file());
+				let bb = b.url.ext().filter(|_| b.is_file());
 				let ord = if self.sensitive {
-					self.cmp(a.url.ext(), b.url.ext(), self.promote(a, b))
+					self.cmp(aa, bb, self.promote(a, b))
 				} else {
 					self.cmp_insensitive(
-						a.url.ext().map_or(&[], |s| s.encoded_bytes()),
-						b.url.ext().map_or(&[], |s| s.encoded_bytes()),
+						aa.map_or(&[], |s| s.encoded_bytes()),
+						bb.map_or(&[], |s| s.encoded_bytes()),
 						self.promote(a, b),
 					)
 				};

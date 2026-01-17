@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Smart-case in interactive `cd` broken due to a typo ([#3540])
 - Fix shell formatting for non-spread opener rules ([#3532])
+- `sort extension` excludes directories since only files have extensions ([#3582])
 - Account for URL covariance in `Url:join()` ([#3514])
 
 ## [v26.1.4]
@@ -340,7 +341,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
-- `before_ext` should exclude directories since only files have extensions ([#2132])
+- `before_ext` excludes directories since only files have extensions ([#2132])
 - Element style of `ui.Text` was not applied to the entire area ([#2093])
 - Incorrect monorepo sub-plugin path resolution ([#2186])
 - Use `u32` for parsing Linux partition blocks ([#2234])
@@ -1605,3 +1606,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3541]: https://github.com/sxyazi/yazi/pull/3541
 [#3561]: https://github.com/sxyazi/yazi/pull/3561
 [#3566]: https://github.com/sxyazi/yazi/pull/3566
+[#3582]: https://github.com/sxyazi/yazi/pull/3582
