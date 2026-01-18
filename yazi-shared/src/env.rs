@@ -9,7 +9,8 @@ pub fn env_exists(name: &str) -> bool { std::env::var_os(name).is_some_and(|s| !
 pub fn in_wsl() -> bool {
 	#[cfg(target_os = "linux")]
 	{
-		std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok()
+		std::fs::read("/proc/sys/kernel/osrelease")
+			.is_ok_and(|b| b.windows(11).any(|w| w == b"-microsoft-"))
 	}
 	#[cfg(not(target_os = "linux"))]
 	{

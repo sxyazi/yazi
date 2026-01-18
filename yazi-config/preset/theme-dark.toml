@@ -266,20 +266,20 @@ rules = [
 [icon]
 globs = []
 dirs  = [
-	{ name = ".config", text = "", fg = "blue" },
-	{ name = ".git", text = "", fg = "blue" },
-	{ name = ".github", text = "", fg = "blue" },
-	{ name = ".npm", text = "", fg = "blue" },
-	{ name = "Desktop", text = "", fg = "blue" },
-	{ name = "Development", text = "", fg = "blue" },
-	{ name = "Documents", text = "", fg = "blue" },
-	{ name = "Downloads", text = "", fg = "blue" },
-	{ name = "Library", text = "", fg = "blue" },
-	{ name = "Movies", text = "", fg = "blue" },
-	{ name = "Music", text = "", fg = "blue" },
-	{ name = "Pictures", text = "", fg = "blue" },
-	{ name = "Public", text = "", fg = "blue" },
-	{ name = "Videos", text = "", fg = "blue" },
+	{ name = ".config", text = "", fg = "#00bcd4" },
+	{ name = ".git", text = "", fg = "#ff9800" },
+	{ name = ".github", text = "", fg = "#03a9f4" },
+	{ name = ".npm", text = "", fg = "#03a9f4" },
+	{ name = "Desktop", text = "", fg = "#ff9800" },
+	{ name = "Development", text = "", fg = "#ff9800" },
+	{ name = "Documents", text = "", fg = "#ff9800" },
+	{ name = "Downloads", text = "", fg = "#ff9800" },
+	{ name = "Library", text = "", fg = "#ff9800" },
+	{ name = "Movies", text = "", fg = "#ff9800" },
+	{ name = "Music", text = "", fg = "#ff9800" },
+	{ name = "Pictures", text = "", fg = "#ff9800" },
+	{ name = "Public", text = "", fg = "#ff9800" },
+	{ name = "Videos", text = "", fg = "#ff9800" },
 ]
 files = [
 	{ name = ".babelrc", text = "", fg = "#cbcb41" },
@@ -986,19 +986,19 @@ exts = [
 ]
 conds = [
 	# Special files
-	{ if = "orphan", text = "" },
-	{ if = "link", text = "" },
-	{ if = "block", text = "" },
-	{ if = "char", text = "" },
-	{ if = "fifo", text = "" },
-	{ if = "sock", text = "" },
-	{ if = "sticky", text = "" },
-	{ if = "dummy", text = "" },
+	{ if = "orphan", text = "", fg = "#ffffff" },
+	{ if = "link", text = "", fg = "#9e9e9e" },
+	{ if = "block", text = "", fg = "#cddc39" },
+	{ if = "char", text = "", fg = "#cddc39" },
+	{ if = "fifo", text = "", fg = "#cddc39" },
+	{ if = "sock", text = "", fg = "#cddc39" },
+	{ if = "sticky", text = "", fg = "#cddc39" },
+	{ if = "dummy", text = "", fg = "#f44336" },
 
 	# Fallback
-	{ if = "dir", text = "", fg = "blue" },
-	{ if = "exec", text = "" },
-	{ if = "!dir", text = "" },
+	{ if = "dir", text = "", fg = "#03a9f4" },
+	{ if = "exec", text = "", fg = "#8bc34a" },
+	{ if = "!dir", text = "", fg = "#ffffff" },
 ]
 
 # : }}}
