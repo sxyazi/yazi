@@ -225,7 +225,7 @@ overwrite_offset = [ 0, 0, 50, 15 ]
 
 # quit
 quit_title  = "Quit?"
-quit_body   = "The following tasks are still running, are you sure you want to quit?"
+quit_body   = "There are unfinished tasks, quit anyway?\n(Open task manager with default key 'w')"
 quit_origin = "center"
 quit_offset = [ 0, 0, 50, 15 ]
 

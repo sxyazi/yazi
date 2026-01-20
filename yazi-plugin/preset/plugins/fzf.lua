@@ -16,8 +16,10 @@ function M:entry()
 		return ya.notify { title = "Fzf", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" }
 	end
 
-	local _permit = ui.hide()
+	local permit = ui.hide()
 	local output, err = M.run_with(cwd, selected)
+
+	permit:drop()
 	if not output then
 		return ya.notify { title = "Fzf", content = tostring(err), timeout = 5, level = "error" }
 	end
@@ -32,6 +34,9 @@ function M:entry()
 	end
 end
 
+---@param cwd Url
+---@param selected Url[]
+---@return string?, Error?
 function M.run_with(cwd, selected)
 	local child, err = Command("fzf")
 		:arg("-m")

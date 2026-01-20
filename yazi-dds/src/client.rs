@@ -167,13 +167,20 @@ impl Client {
 		loop {
 			if let Ok(conn) = Stream::connect().await {
 				Pubsub::pub_inner_hi();
+				tracing::debug!("Connected to existing DDS server on instance {ID}");
 				return conn;
 			}
 
 			server.take().map(|h| h.abort());
-			*server = Server::make().await.ok();
-			if server.is_some() {
-				super::STATE.load_or_create().await;
+			match Server::make().await {
+				Ok(h) => {
+					*server = Some(h);
+					super::STATE.load_or_create().await;
+					tracing::debug!("Started new DDS server on instance {ID}");
+				}
+				Err(e) => {
+					tracing::error!("Could not connect to or start a new DDS server on instance {ID}: {e}");
+				}
 			}
 
 			if mem::replace(&mut first, false) && server.is_some() {
