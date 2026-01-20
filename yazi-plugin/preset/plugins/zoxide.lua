@@ -1,3 +1,5 @@
+local M = {}
+
 local state = ya.sync(function(st)
 	return {
 		cwd = tostring(cx.active.current.cwd),
@@ -7,9 +9,51 @@ end)
 
 local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
-local function fail(s, ...) ya.notify { title = "Zoxide", content = s:format(...), timeout = 5, level = "error" } end
+function M:setup(opts)
+	opts = opts or {}
 
-local function options()
+	if opts.update_db then
+		ps.sub(
+			"cd",
+			function()
+				ya.emit("shell", {
+					cwd = fs.cwd(),
+					orphan = true,
+					"zoxide add " .. ya.quote(tostring(cx.active.current.cwd)):gsub("%%", "%%%%"),
+				})
+			end
+		)
+	end
+end
+
+function M:entry()
+	local st = state()
+	if st.empty == nil then
+		st.empty = M.is_empty(st.cwd)
+		set_state(st.empty)
+	end
+
+	if st.empty then
+		return ya.notify {
+			title = "Zoxide",
+			content = "No directory history found, check Zoxide's doc to set it up and restart Yazi.",
+			timeout = 5,
+			level = "error",
+		}
+	end
+
+	local permit = ui.hide()
+	local target, err = M.run_with(st.cwd)
+	permit:drop()
+
+	if not target then
+		ya.notify { title = "Zoxide", content = tostring(err), timeout = 5, level = "error" }
+	elseif target ~= "" then
+		ya.emit("cd", { target, raw = true })
+	end
+end
+
+function M.options()
 	-- https://github.com/ajeetdsouza/zoxide/blob/main/src/cmd/query.rs#L92
 	local default = {
 		-- Search mode
@@ -48,7 +92,9 @@ local function options()
 		.. (os.getenv("YAZI_ZOXIDE_OPTS") or "")
 end
 
-local function empty(cwd)
+---@param cwd string
+---@return boolean
+function M.is_empty(cwd)
 	local child = Command("zoxide"):arg({ "query", "-l", "--exclude", cwd }):stdout(Command.PIPED):spawn()
 	if not child then
 		return true
@@ -59,61 +105,31 @@ local function empty(cwd)
 	return not first
 end
 
-local function setup(_, opts)
-	opts = opts or {}
-
-	if opts.update_db then
-		ps.sub(
-			"cd",
-			function()
-				ya.emit("shell", {
-					cwd = fs.cwd(),
-					orphan = true,
-					"zoxide add " .. ya.quote(tostring(cx.active.current.cwd)),
-				})
-			end
-		)
-	end
-end
-
-local function entry()
-	local st = state()
-	if st.empty == nil then
-		st.empty = empty(st.cwd)
-		set_state(st.empty)
-	end
-
-	if st.empty then
-		return fail("No directory history found, check Zoxide's doc to set it up and restart Yazi.")
-	end
-
-	local _permit = ui.hide()
-	local child, err1 = Command("zoxide")
-		:arg({ "query", "-i", "--exclude", st.cwd })
+---@param cwd string
+---@return string?, Error?
+function M.run_with(cwd)
+	local child, err = Command("zoxide")
+		:arg({ "query", "-i", "--exclude", cwd })
 		:env("SHELL", "sh")
 		:env("CLICOLOR", 1)
 		:env("CLICOLOR_FORCE", 1)
-		:env("_ZO_FZF_OPTS", options())
+		:env("_ZO_FZF_OPTS", M.options())
 		:stdin(Command.INHERIT)
 		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)
 		:spawn()
 
 	if not child then
-		return fail("Failed to start `zoxide`, error: " .. err1)
+		return nil, Err("Failed to start `zoxide`, error: %s", err)
 	end
 
-	local output, err2 = child:wait_with_output()
+	local output, err = child:wait_with_output()
 	if not output then
-		return fail("Cannot read `zoxide` output, error: " .. err2)
+		return nil, Err("Cannot read `zoxide` output, error: %s", err)
 	elseif not output.status.success and output.status.code ~= 130 then
-		return fail("`zoxide` exited with code %s: %s", output.status.code, output.stderr:gsub("^zoxide:%s*", ""))
+		return nil, Err("`zoxide` exited with code %s: %s", output.status.code, output.stderr:gsub("^zoxide:%s*", ""))
 	end
-
-	local target = output.stdout:gsub("\n$", "")
-	if target ~= "" then
-		ya.emit("cd", { target, raw = true })
-	end
+	return output.stdout:gsub("\n$", ""), nil
 end
 
-return { setup = setup, entry = entry }
+return M
