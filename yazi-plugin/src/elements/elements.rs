@@ -44,8 +44,8 @@ pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 
 pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_async_function(|lua, ()| async move {
-		if runtime!(lua)?.initing {
-			return Err("Cannot call `ui.hide()` during app initialization".into_lua_err());
+		if runtime!(lua)?.blocking {
+			return Err("Cannot call `ui.hide()` while main thread is blocked".into_lua_err());
 		}
 
 		if lua.named_registry_value::<PermitRef>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {

@@ -16,8 +16,8 @@ use crate::bindings::InputRx;
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
-			if runtime!(lua)?.initing {
-				return Err("Cannot call `ya.which()` during app initialization".into_lua_err());
+			if runtime!(lua)?.blocking {
+				return Err("Cannot call `ya.which()` while main thread is blocked".into_lua_err());
 			}
 
 			let (tx, mut rx) = mpsc::channel::<usize>(1);
@@ -45,8 +45,8 @@ impl Utils {
 
 	pub(super) fn input(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
-			if runtime!(lua)?.initing {
-				return Err("Cannot call `ya.input()` during app initialization".into_lua_err());
+			if runtime!(lua)?.blocking {
+				return Err("Cannot call `ya.input()` while main thread is blocked".into_lua_err());
 			}
 
 			let mut pos = t.raw_get::<Value>("pos")?;
@@ -92,8 +92,8 @@ impl Utils {
 		}
 
 		lua.create_async_function(|lua, t: Table| async move {
-			if runtime!(lua)?.initing {
-				return Err("Cannot call `ya.confirm()` during app initialization".into_lua_err());
+			if runtime!(lua)?.blocking {
+				return Err("Cannot call `ya.confirm()` while main thread is blocked".into_lua_err());
 			}
 
 			let result = ConfirmProxy::show(ConfirmCfg {

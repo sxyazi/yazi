@@ -5,9 +5,9 @@ use mlua::Function;
 
 #[derive(Debug)]
 pub struct Runtime {
-	frames:      VecDeque<RuntimeFrame>,
-	blocks:      HashMap<String, Vec<Function>>,
-	pub initing: bool,
+	frames:       VecDeque<RuntimeFrame>,
+	blocks:       HashMap<String, Vec<Function>>,
+	pub blocking: bool,
 }
 
 #[derive(Debug)]
@@ -17,13 +17,13 @@ struct RuntimeFrame {
 }
 
 impl Runtime {
-	pub fn new() -> Self { Self { frames: <_>::default(), blocks: <_>::default(), initing: true } }
+	pub fn new() -> Self { Self { frames: <_>::default(), blocks: <_>::default(), blocking: true } }
 
 	pub fn new_isolate(id: &str) -> Self {
 		Self {
-			frames:  VecDeque::from([RuntimeFrame { id: id.to_owned(), calls: 0 }]),
-			blocks:  <_>::default(),
-			initing: false,
+			frames:   VecDeque::from([RuntimeFrame { id: id.to_owned(), calls: 0 }]),
+			blocks:   <_>::default(),
+			blocking: false,
 		}
 	}
 
@@ -48,12 +48,12 @@ impl Runtime {
 		self.blocks.get(id).and_then(|v| v.get(calls)).cloned()
 	}
 
-	pub fn put_block(&mut self, f: Function) -> bool {
+	pub fn put_block(&mut self, f: &Function) -> bool {
 		let Some(cur) = self.frames.back() else { return false };
 		if let Some(v) = self.blocks.get_mut(&cur.id) {
-			v.push(f);
+			v.push(f.clone());
 		} else {
-			self.blocks.insert(cur.id.clone(), vec![f]);
+			self.blocks.insert(cur.id.clone(), vec![f.clone()]);
 		}
 		true
 	}
