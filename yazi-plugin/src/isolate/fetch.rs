@@ -18,15 +18,14 @@ pub async fn fetch(
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&cmd.name)?;
-		let plugin = LOADER.load_once(&lua, &cmd.name)?;
+		let job = lua.create_table_from([
+			("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
+			("files", lua.create_sequence_from(files.into_iter().map(File::new))?.into_lua(&lua)?),
+		])?;
 
-		Handle::current().block_on(plugin.call_async_method(
-			"fetch",
-			lua.create_table_from([
-				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
-				("files", lua.create_sequence_from(files.into_iter().map(File::new))?.into_lua(&lua)?),
-			])?,
-		))
+		Handle::current().block_on(async {
+			LOADER.load_once(&lua, &cmd.name).await?.call_async_method("fetch", job).await
+		})
 	})
 	.await
 	.into_lua_err()?

@@ -68,6 +68,6 @@ fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
 		block_on(lua.load(b).set_name("init.lua").exec_async())?;
 	}
 
-	runtime_mut!(lua)?.initing = false;
+	runtime_mut!(lua)?.blocking = false;
 	Ok(())
 }

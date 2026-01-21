@@ -17,7 +17,7 @@ impl Require {
 				LOADER.ensure(&id, |_| ()).await.into_lua_err()?;
 
 				runtime_mut!(lua)?.push(&id);
-				let mod_ = LOADER.load(&lua, &id);
+				let mod_ = LOADER.load(&lua, &id).await;
 				runtime_mut!(lua)?.pop();
 
 				Self::create_mt(&lua, id.into_owned(), mod_?)

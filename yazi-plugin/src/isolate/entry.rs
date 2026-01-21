@@ -11,10 +11,11 @@ pub async fn entry(opt: PluginOpt) -> mlua::Result<()> {
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&opt.id)?;
-		let plugin = LOADER.load_once(&lua, &opt.id)?;
-
 		let job = lua.create_table_from([("args", Sendable::args_to_table(&lua, opt.args)?)])?;
-		Handle::current().block_on(plugin.call_async_method("entry", job))
+
+		Handle::current().block_on(async {
+			LOADER.load_once(&lua, &opt.id).await?.call_async_method("entry", job).await
+		})
 	})
 	.await
 	.into_lua_err()?

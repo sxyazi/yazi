@@ -34,7 +34,7 @@ impl Utils {
 		} else {
 			lua.create_function(|lua, f: Function| {
 				let mut rt = runtime_mut!(lua)?;
-				if !rt.put_block(f.clone()) {
+				if !rt.put_block(&f) {
 					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
 				}
 

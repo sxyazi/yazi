@@ -79,7 +79,7 @@ impl Loader {
 		result.map(|_| inspect)
 	}
 
-	pub fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+	pub async fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
 		let (id, ..) = Self::normalize_id(id)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
@@ -87,14 +87,14 @@ impl Loader {
 			return Ok(t);
 		}
 
-		let t = self.load_once(lua, id)?;
+		let t = self.load_once(lua, id).await?;
 		t.raw_set("_id", lua.create_string(id)?)?;
 
 		loaded.raw_set(id, t.clone())?;
 		Ok(t)
 	}
 
-	pub fn load_once(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+	pub async fn load_once(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
 		let (id, ..) = Self::normalize_id(id)?;
 
 		let mut mode = ChunkMode::Text;
@@ -114,7 +114,7 @@ impl Loader {
 			}
 		}
 
-		f.call(())
+		f.call_async(()).await
 	}
 
 	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
