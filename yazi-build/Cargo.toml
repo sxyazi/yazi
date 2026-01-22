@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-build"
-version     = "26.1.4"
+version     = "26.1.22"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -18,7 +18,7 @@ panic         = "abort"
 strip         = true
 
 [build-dependencies]
-yazi-term = { path = "../yazi-term", version = "26.1.4" }
+yazi-term = { path = "../yazi-term", version = "26.1.22" }
 
 [[bin]]
 name = "yazi-build"

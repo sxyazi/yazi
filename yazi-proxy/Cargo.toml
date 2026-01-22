@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-proxy"
-version     = "26.1.4"
+version     = "26.1.22"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -12,10 +12,10 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "26.1.4" }
-yazi-macro  = { path = "../yazi-macro", version = "26.1.4" }
-yazi-parser = { path = "../yazi-parser", version = "26.1.4" }
-yazi-shared = { path = "../yazi-shared", version = "26.1.4" }
+yazi-config = { path = "../yazi-config", version = "26.1.22" }
+yazi-macro  = { path = "../yazi-macro", version = "26.1.22" }
+yazi-parser = { path = "../yazi-parser", version = "26.1.22" }
+yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
 
 # External dependencies
 anyhow = { workspace = true }

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-macro"
-version     = "26.1.4"
+version     = "26.1.22"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
