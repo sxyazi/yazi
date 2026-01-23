@@ -7,5 +7,5 @@ TryExec=yazi
 Exec=yazi %u
 Type=Application
 MimeType=inode/directory
-Categories=Utility;Core;System;FileTools;FileManager;ConsoleOnly
+Categories=System;FileManager;FileTools;ConsoleOnly
 Keywords=File;Manager;Explorer;Browser;Launcher
