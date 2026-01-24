@@ -1,6 +1,9 @@
 {
 	"$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
 	"runtime.version": "Lua 5.4",
+	"runtime.special": {
+		"fail": "error"
+	},
 	"workspace.library": ["~/.config/yazi/plugins/types.yazi/"],
 	"diagnostics.disable": ["redefined-local"]
 }
