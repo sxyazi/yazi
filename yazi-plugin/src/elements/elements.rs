@@ -138,7 +138,7 @@ pub(super) fn truncate(lua: &Lua) -> mlua::Result<Value> {
 		}
 
 		let lossy = String::from_utf8_lossy(&b);
-		let rtl = t.raw_get("rtl").unwrap_or(false);
+		let rtl = t.raw_get("rtl")?;
 		let (idx, width, remain) = if rtl {
 			traverse(lossy.char_indices().rev(), max)
 		} else {

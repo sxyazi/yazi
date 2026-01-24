@@ -1,15 +1,17 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use yazi_codegen::FromLuaOwned;
 use yazi_fs::{FsHash64, FsHash128, FsUrl};
 use yazi_shared::{path::{PathLike, StripPrefixError}, scheme::{SchemeCow, SchemeLike}, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlCow, UrlLike}};
 
-use crate::{Path, Scheme, cached_field, deprecate};
+use crate::{Path, Scheme, cached_field};
 
 pub type UrlRef = UserDataRef<Url>;
 
 const EXPECTED: &str = "expected a string, Url, or Path";
 
+#[derive(FromLuaOwned)]
 pub struct Url {
 	inner: yazi_shared::url::UrlBuf,
 
@@ -162,15 +164,6 @@ impl Url {
 	}
 }
 
-impl FromLua for Url {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(match value {
-			Value::UserData(ud) => ud.take()?,
-			_ => Err("Expected a Url".into_lua_err())?,
-		})
-	}
-}
-
 impl UserData for Url {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		cached_field!(fields, path, |_, me| Ok(Path::new(me.loc())));
@@ -195,11 +188,6 @@ impl UserData for Url {
 		});
 
 		cached_field!(fields, cache, |_, me| Ok(me.cache().map(Path::new)));
-
-		fields.add_field_method_get("frag", |lua, me| {
-			deprecate!(lua, "`frag` property of Url is deprecated and renamed to `domain`, please use the new name instead, in your {}");
-			me.scheme().domain().map(|s| lua.create_string(s)).transpose()
-		});
 
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 		fields.add_field_method_get("is_search", |_, me| Ok(me.is_search()));

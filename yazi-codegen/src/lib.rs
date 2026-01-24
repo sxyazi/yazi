@@ -144,3 +144,28 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 	}
 	.into()
 }
+
+#[proc_macro_derive(FromLuaOwned)]
+pub fn from_lua(input: TokenStream) -> TokenStream {
+	let DeriveInput { ident, generics, .. } = parse_macro_input!(input as DeriveInput);
+
+	let ident_str = ident.to_string();
+	let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+	quote! {
+		impl #impl_generics ::mlua::FromLua for #ident #ty_generics #where_clause {
+			#[inline]
+			fn from_lua(value: ::mlua::Value, _: &::mlua::Lua) -> ::mlua::Result<Self> {
+				match value {
+					::mlua::Value::UserData(ud) => ud.take::<Self>(),
+					_ => Err(::mlua::Error::FromLuaConversionError {
+							from: value.type_name(),
+							to: #ident_str.to_owned(),
+							message: None,
+					}),
+				}
+			}
+		}
+	}
+	.into()
+}

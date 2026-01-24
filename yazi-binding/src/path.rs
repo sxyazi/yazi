@@ -1,12 +1,14 @@
 use std::ops::Deref;
 
-use mlua::{ExternalError, ExternalResult, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{ExternalError, ExternalResult, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use yazi_codegen::FromLuaOwned;
 use yazi_shared::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, Strand, StrandCow}};
 
 use crate::cached_field;
 
 pub type PathRef = UserDataRef<Path>;
 
+#[derive(FromLuaOwned)]
 pub struct Path {
 	inner: PathBufDyn,
 
@@ -102,15 +104,6 @@ impl Path {
 			Ok(p) => Some(Self::new(p)),
 			Err(StripPrefixError::Exotic | StripPrefixError::NotPrefix) => None,
 			Err(e @ StripPrefixError::WrongEncoding) => Err(e.into_lua_err())?,
-		})
-	}
-}
-
-impl FromLua for Path {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(match value {
-			Value::UserData(ud) => ud.take()?,
-			_ => Err("Expected a Path".into_lua_err())?,
 		})
 	}
 }

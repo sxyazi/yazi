@@ -1,10 +1,10 @@
 use std::{borrow::Cow, fmt::Display};
 
-use mlua::{ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{ExternalError, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_codegen::FromLuaOwned;
 use yazi_shared::SStr;
 
-const EXPECTED: &str = "expected a Error";
-
+#[derive(FromLuaOwned)]
 pub enum Error {
 	Io(std::io::Error),
 	Fs(yazi_fs::error::Error),
@@ -49,15 +49,6 @@ impl Display for Error {
 			Self::Fs(e) => write!(f, "{e}"),
 			Self::Serde(e) => write!(f, "{e}"),
 			Self::Custom(s) => write!(f, "{s}"),
-		}
-	}
-}
-
-impl FromLua for Error {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		match value {
-			Value::UserData(ud) => ud.take(),
-			_ => Err(EXPECTED.into_lua_err()),
 		}
 	}
 }

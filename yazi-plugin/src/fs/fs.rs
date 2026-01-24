@@ -134,7 +134,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		let limit = options.raw_get("limit").unwrap_or(usize::MAX);
-		let resolve = options.raw_get("resolve").unwrap_or(false);
+		let resolve = options.raw_get::<bool>("resolve")?;
 
 		let mut it = match provider::read_dir(&*dir).await {
 			Ok(it) => it,

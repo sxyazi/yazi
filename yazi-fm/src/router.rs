@@ -1,6 +1,7 @@
 use anyhow::Result;
+use yazi_actor::Ctx;
 use yazi_config::{KEYMAP, keymap::{Chord, ChordCow, Key}};
-use yazi_macro::emit;
+use yazi_macro::{act, emit};
 use yazi_shared::Layer;
 
 use crate::app::App;
@@ -41,7 +42,8 @@ impl<'a> Router<'a> {
 			}
 
 			if on.len() > 1 {
-				self.app.core.which.show_with(key, layer);
+				let cx = &mut Ctx::active(&mut self.app.core);
+				act!(which:show, cx, (layer, key)).ok();
 			} else {
 				emit!(Seq(ChordCow::from(chord).into_seq()));
 			}

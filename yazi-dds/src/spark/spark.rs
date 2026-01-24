@@ -140,14 +140,16 @@ impl<'a> Spark<'a> {
 		use SparkKind::*;
 
 		Ok(match kind {
-			// Sort
+			// sort
 			KeySort => Self::Sort(<_>::from_lua(value, lua)?),
 			IndSort => Self::Sort(<_>::from_lua(value, lua)?),
-			// Stash
+			// stash
 			IndStash => Self::Stash(<_>::from_lua(value, lua)?),
 			RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
-			// Quit
+			// quit
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
+			// which:show
+			IndWhichShow => Self::WhichShow(<_>::from_lua(value, lua)?),
 		})
 	}
 }

@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, ExternalError, FromLua, Lua, ObjectLike, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, ExternalError, Lua, ObjectLike, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use yazi_codegen::FromLuaOwned;
 
 use crate::{Cha, Url, impl_file_fields, impl_file_methods};
 
@@ -8,7 +9,7 @@ pub type FileRef = UserDataRef<File>;
 
 const EXPECTED: &str = "expected a table, File, or fs::File";
 
-#[derive(Clone)]
+#[derive(Clone, FromLuaOwned)]
 pub struct File {
 	inner: yazi_fs::File,
 
@@ -79,15 +80,6 @@ impl TryFrom<AnyUserData> for File {
 
 	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> {
 		Ok(if let Ok(me) = value.borrow::<Self>() { me.clone() } else { value.get("bare")? })
-	}
-}
-
-impl FromLua for File {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(match value {
-			Value::UserData(ud) => Self::new(ud.take::<Self>()?.inner),
-			_ => Err("expected a File".into_lua_err())?,
-		})
 	}
 }
 

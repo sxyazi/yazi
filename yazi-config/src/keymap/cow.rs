@@ -30,14 +30,17 @@ impl Deref for ChordCow {
 }
 
 impl Default for ChordCow {
-	fn default() -> Self { Self::Owned(Chord::default()) }
+	fn default() -> Self {
+		const C: &Chord = &Chord { on: vec![], run: vec![], desc: None, r#for: None };
+		Self::Borrowed(C)
+	}
 }
 
 impl ChordCow {
 	pub fn into_seq(self) -> Vec<CmdCow> {
 		match self {
-			Self::Owned(c) => c.run.into_iter().rev().map(|c| c.into()).collect(),
-			Self::Borrowed(c) => c.run.iter().rev().map(|c| c.into()).collect(),
+			Self::Owned(c) => c.run.into_iter().rev().map(Into::into).collect(),
+			Self::Borrowed(c) => c.run.iter().rev().map(Into::into).collect(),
 		}
 	}
 }

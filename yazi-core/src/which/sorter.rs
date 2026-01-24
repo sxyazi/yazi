@@ -23,7 +23,7 @@ impl Default for WhichSorter {
 }
 
 impl WhichSorter {
-	pub(super) fn sort(&self, items: &mut Vec<ChordCow>) {
+	pub fn sort(&self, items: &mut Vec<ChordCow>) {
 		if self.by == SortBy::None || items.is_empty() {
 			return;
 		}

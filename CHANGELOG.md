@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Added
+
+- New `ind-which-show` DDS event to change the which component behavior ([#3608])
+
 ### Fixed
 
 - Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
@@ -1617,3 +1621,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3582]: https://github.com/sxyazi/yazi/pull/3582
 [#3594]: https://github.com/sxyazi/yazi/pull/3594
 [#3607]: https://github.com/sxyazi/yazi/pull/3607
+[#3608]: https://github.com/sxyazi/yazi/pull/3608

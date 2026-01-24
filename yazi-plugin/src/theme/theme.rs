@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url, deprecate};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url};
 use yazi_config::THEME;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
@@ -50,21 +50,6 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 		let m = &THEME.mgr;
 		match key {
 			b"cwd" => Style::from(m.cwd).into_lua(lua),
-
-			b"hovered" => {
-				deprecate!(
-					lua,
-					"`th.mgr.hovered` is deprecated, use `th.indicator.current` instead, in your {}\nSee #3419 for more details: https://github.com/sxyazi/yazi/pull/3419"
-				);
-				Style::from(THEME.indicator.current).into_lua(lua)
-			}
-			b"preview_hovered" => {
-				deprecate!(
-					lua,
-					"`th.mgr.preview_hovered` is deprecated, use `th.indicator.preview` instead, in your {}\nSee #3419 for more details: https://github.com/sxyazi/yazi/pull/3419"
-				);
-				Style::from(THEME.indicator.preview).into_lua(lua)
-			}
 
 			b"find_keyword" => Style::from(m.find_keyword).into_lua(lua),
 			b"find_position" => Style::from(m.find_position).into_lua(lua),

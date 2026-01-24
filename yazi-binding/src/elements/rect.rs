@@ -3,7 +3,6 @@ use std::ops::Deref;
 use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Pad;
-use crate::deprecate;
 
 #[derive(Clone, Copy, Debug, Default, FromLua)]
 pub struct Rect(pub ratatui::layout::Rect);
@@ -35,20 +34,8 @@ impl Rect {
 			}))
 		})?;
 
-		let index = lua.create_function(move |lua, (_, key): (Table, mlua::String)| {
-			Ok(match &*key.as_bytes() {
-				b"default" => {
-					deprecate!(lua, "`ui.Rect.default` is deprecated, use `ui.Rect{{}}` instead, in your {}\nSee #2927 for more details: https://github.com/sxyazi/yazi/pull/2927");
-					Some(Self(Default::default()))
-				}
-				_ => None,
-			})
-		})?;
-
 		let rect = lua.create_table()?;
-		rect.set_metatable(Some(
-			lua.create_table_from([(MetaMethod::Call.name(), new), (MetaMethod::Index.name(), index)])?,
-		))?;
+		rect.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		rect.into_lua(lua)
 	}
 
