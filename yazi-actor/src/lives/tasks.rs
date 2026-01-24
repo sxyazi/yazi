@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields, Value};
-use yazi_binding::{SER_OPT, cached_field, deprecate};
+use yazi_binding::{SER_OPT, cached_field};
 
 use super::{Lives, PtrCell};
 use crate::lives::TaskSnap;
@@ -9,9 +9,8 @@ use crate::lives::TaskSnap;
 pub(super) struct Tasks {
 	inner: PtrCell<yazi_core::tasks::Tasks>,
 
-	v_snaps:    Option<Value>,
-	v_summary:  Option<Value>,
-	v_progress: Option<Value>,
+	v_snaps:   Option<Value>,
+	v_summary: Option<Value>,
 }
 
 impl Deref for Tasks {
@@ -25,9 +24,8 @@ impl Tasks {
 		Lives::scoped_userdata(Self {
 			inner: inner.into(),
 
-			v_snaps:    None,
-			v_summary:  None,
-			v_progress: None,
+			v_snaps:   None,
+			v_summary: None,
 		})
 	}
 }
@@ -45,19 +43,5 @@ impl UserData for Tasks {
 		});
 
 		cached_field!(fields, summary, |lua, me| lua.to_value_with(&me.summary, SER_OPT));
-
-		cached_field!(fields, progress, |lua, me| {
-			deprecate!(
-				lua,
-				"`cx.tasks.progress` is deprecated, use `cx.tasks.summary` instead, in your {}"
-			);
-			lua.create_table_from([
-				("total", me.summary.total),
-				("succ", me.summary.success),
-				("fail", me.summary.failed),
-				("found", 0),
-				("processed", 0),
-			])
-		});
 	}
 }

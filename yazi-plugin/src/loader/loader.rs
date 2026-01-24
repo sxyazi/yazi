@@ -38,7 +38,7 @@ impl Default for Loader {
 			("image".to_owned(), preset!("plugins/image").into()),
 			("json".to_owned(), preset!("plugins/json").into()),
 			("magick".to_owned(), preset!("plugins/magick").into()),
-			("mime".to_owned(), preset!("plugins/mime").into()), // TODO: remove this
+			("mime".to_owned(), preset!("plugins/mime").into()),
 			("mime.dir".to_owned(), preset!("plugins/mime-dir").into()),
 			("mime.local".to_owned(), preset!("plugins/mime-local").into()),
 			("mime.remote".to_owned(), preset!("plugins/mime-remote").into()),

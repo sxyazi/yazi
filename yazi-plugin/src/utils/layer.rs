@@ -3,8 +3,8 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{deprecate, elements::{Line, Pos, Text}, runtime};
-use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_binding::{elements::{Line, Pos, Text}, runtime};
+use yazi_config::{keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::relay;
 use yazi_parser::which::ShowOpt;
 use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy, WhichProxy};
@@ -27,17 +27,17 @@ impl Utils {
 				.enumerate()
 				.map(|(i, cand)| {
 					let cand = cand?;
-					Ok(Chord {
+					Ok(ChordCow::Owned(Chord {
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
 						run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
 						desc:  cand.raw_get("desc").ok(),
 						r#for: None,
-					})
+					}))
 				})
 				.collect::<mlua::Result<_>>()?;
 
 			drop(tx);
-			WhichProxy::show(ShowOpt { cands, silent: t.raw_get("silent").unwrap_or_default() });
+			WhichProxy::show(ShowOpt { cands, times: 0, silent: t.raw_get("silent")? });
 
 			Ok(rx.recv().await.map(|idx| idx + 1))
 		})
@@ -49,21 +49,13 @@ impl Utils {
 				return Err("Cannot call `ya.input()` while main thread is blocked".into_lua_err());
 			}
 
-			let mut pos = t.raw_get::<Value>("pos")?;
-			if pos.is_nil() {
-				pos = t.raw_get("position")?;
-				if !pos.is_nil() {
-					deprecate!(lua, "The `position` property of `ya.input()` is deprecated, use `pos` instead in your {}\nSee #2921 for more details: https://github.com/sxyazi/yazi/pull/2921");
-				}
-			}
-
-			let realtime = t.raw_get("realtime").unwrap_or_default();
+			let realtime = t.raw_get("realtime")?;
 			let rx = UnboundedReceiverStream::new(InputProxy::show(InputCfg {
 				title: t.raw_get("title")?,
 				value: t.raw_get("value").unwrap_or_default(),
 				cursor: None, // TODO
-				obscure: t.raw_get("obscure").unwrap_or_default(),
-				position: Pos::new_input(pos)?.into(),
+				obscure: t.raw_get("obscure")?,
+				position: Pos::new_input(t.raw_get("pos")?)?.into(),
 				realtime,
 				completion: false,
 			}));
