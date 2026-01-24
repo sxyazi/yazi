@@ -99,10 +99,9 @@ function M:tidy(from, to, tmp)
 		fail("Failed to determine a target for '%s'", from)
 	end
 
-	target = tostring(target)
-	if only and not os.rename(tostring(outs[1].url), target) then
+	if only and not fs.rename(outs[1].url, target) then
 		fail('Failed to move "%s" to "%s"', outs[1].url, target)
-	elseif not only and not os.rename(tostring(tmp), target) then
+	elseif not only and not fs.rename(tmp, target) then
 		fail('Failed to move "%s" to "%s"', tmp, target)
 	end
 	fs.remove("dir", tmp)
