@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt::Debug, str::FromStr};
+use std::{borrow::Cow, fmt::{self, Debug}, str::FromStr};
 
 use anyhow::bail;
 use dyn_clone::DynClone;
@@ -7,7 +7,7 @@ use mlua::{Lua, Table};
 use serde::Deserialize;
 use yazi_shared::{SStr, data::{Data, DataKey}, event::{Cmd, CmdCow}};
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
 	pub id:       SStr,
 	pub args:     HashMap<DataKey, Data>,
@@ -36,17 +36,6 @@ impl TryFrom<CmdCow> for PluginOpt {
 
 		let mode = c.str("mode").parse().unwrap_or_default();
 		Ok(Self { id: Self::normalize_id(id), args, mode, callback: c.take_any("callback") })
-	}
-}
-
-impl Debug for PluginOpt {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("PluginOpt")
-			.field("id", &self.id)
-			.field("args", &self.args)
-			.field("mode", &self.mode)
-			.field("callback", &self.callback.is_some())
-			.finish()
 	}
 }
 
@@ -111,4 +100,10 @@ impl<T> PluginCallback for T where
 
 impl Clone for Box<dyn PluginCallback> {
 	fn clone(&self) -> Self { dyn_clone::clone_box(&**self) }
+}
+
+impl fmt::Debug for dyn PluginCallback {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.debug_struct("PluginCallback").finish_non_exhaustive()
+	}
 }
