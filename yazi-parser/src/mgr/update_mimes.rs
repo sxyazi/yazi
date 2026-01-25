@@ -13,7 +13,7 @@ impl TryFrom<CmdCow> for UpdateMimesOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let Ok(updates) = c.take("updates") else {
-			bail!("Invalid 'updates' argument in UpdateMimesOpt");
+			bail!("Invalid 'updates' in UpdateMimesOpt");
 		};
 
 		Ok(Self { updates })

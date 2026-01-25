@@ -1,12 +1,12 @@
-use std::{any::Any, borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
+use std::{borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
 
 use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, de};
 
-use crate::{Layer, SStr, Source, data::{Data, DataKey}};
+use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Cmd {
 	pub name:   SStr,
 	pub args:   HashMap<DataKey, Data>,
@@ -76,7 +76,7 @@ impl Cmd {
 		self
 	}
 
-	pub fn with_any(mut self, name: impl Into<DataKey>, data: impl Any + Send + Sync) -> Self {
+	pub fn with_any(mut self, name: impl Into<DataKey>, data: impl DataAny) -> Self {
 		self.args.insert(name.into(), Data::Any(Box::new(data)));
 		self
 	}

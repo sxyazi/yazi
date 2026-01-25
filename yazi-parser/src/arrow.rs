@@ -14,7 +14,7 @@ impl TryFrom<CmdCow> for ArrowOpt {
 
 	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
 		let Ok(step) = c.first() else {
-			bail!("'step' is required for ArrowOpt");
+			bail!("Invalid 'step' in ArrowOpt");
 		};
 
 		Ok(Self { step })

@@ -6,6 +6,7 @@ use serde::Deserialize;
 use yazi_config::{Style, THEME};
 use yazi_shared::event::CmdCow;
 
+#[derive(Clone)]
 pub struct NotifyOpt {
 	pub title:   String,
 	pub content: String,

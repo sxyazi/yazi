@@ -4,7 +4,7 @@ use yazi_shared::Id;
 
 use super::Ember;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberTab {
 	pub id: Id,
 }

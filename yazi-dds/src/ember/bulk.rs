@@ -5,7 +5,7 @@ use yazi_shared::url::{Url, UrlCow};
 
 use super::Ember;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberBulk<'a> {
 	pub changes: HashMap<UrlCow<'a>, UrlCow<'a>>,
 }

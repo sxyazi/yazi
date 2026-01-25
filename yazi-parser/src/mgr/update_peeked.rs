@@ -3,7 +3,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use yazi_binding::{FileRef, elements::{Rect, Renderable}};
 use yazi_shared::event::CmdCow;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct UpdatePeekedOpt {
 	pub lock: PreviewLock,
 }
@@ -17,7 +17,7 @@ impl TryFrom<CmdCow> for UpdatePeekedOpt {
 		}
 
 		let Some(lock) = c.take_any("lock") else {
-			bail!("Invalid 'lock' argument in UpdatePeekedOpt");
+			bail!("Invalid 'lock' in UpdatePeekedOpt");
 		};
 
 		Ok(Self { lock })
@@ -33,7 +33,7 @@ impl IntoLua for UpdatePeekedOpt {
 }
 
 // --- Lock
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PreviewLock {
 	pub url:  yazi_shared::url::UrlBuf,
 	pub cha:  yazi_fs::cha::Cha,

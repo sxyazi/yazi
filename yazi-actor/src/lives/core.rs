@@ -13,6 +13,7 @@ pub(super) struct Core {
 	c_tasks:  Option<Value>,
 	c_yanked: Option<Value>,
 	c_layer:  Option<Value>,
+	c_which:  Option<Value>,
 }
 
 impl Deref for Core {
@@ -31,6 +32,7 @@ impl Core {
 			c_tasks:  None,
 			c_yanked: None,
 			c_layer:  None,
+			c_which:  None,
 		})
 	}
 }
@@ -58,6 +60,7 @@ impl UserData for Core {
 				b"layer" => {
 					reuse!(layer, Ok::<_, mlua::Error>(yazi_plugin::bindings::Layer::from(me.layer())))
 				}
+				b"which" => reuse!(which, super::Which::make(&me.which)),
 				_ => Value::Nil,
 			})
 		});

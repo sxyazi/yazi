@@ -4,7 +4,7 @@ use yazi_shared::{scheme::Encode as EncodeScheme, strand::ToStrand, url::{Url, U
 use super::{Offset, Position};
 use crate::YAZI;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct InputCfg {
 	pub title:      String,
 	pub value:      String,
@@ -15,14 +15,14 @@ pub struct InputCfg {
 	pub completion: bool,
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PickCfg {
 	pub title:    String,
 	pub items:    Vec<String>,
 	pub position: Position,
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct ConfirmCfg {
 	pub position: Position,
 	pub title:    Line<'static>,

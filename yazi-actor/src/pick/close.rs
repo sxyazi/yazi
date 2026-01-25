@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use yazi_macro::{render, succ};
 use yazi_parser::pick::CloseOpt;
 use yazi_shared::data::Data;
@@ -15,7 +15,7 @@ impl Actor for Close {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let pick = &mut cx.pick;
 		if let Some(cb) = pick.callback.take() {
-			_ = cb.send(if opt.submit { Ok(pick.cursor) } else { Err(anyhow!("canceled")) });
+			_ = cb.send(if opt.submit { Some(pick.cursor) } else { None });
 		}
 
 		pick.cursor = 0;

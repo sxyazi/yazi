@@ -1,11 +1,11 @@
-use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
+use mlua::{ExternalError, HookTriggers, IntoLua, Lua, ObjectLike, Table, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_binding::{Error, File, elements::{Rect, Renderable}};
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
-use yazi_parser::{app::{PluginCallback, PluginOpt}, mgr::{PreviewLock, UpdatePeekedOpt}};
+use yazi_parser::{app::PluginOpt, mgr::{PreviewLock, UpdatePeekedOpt}};
 use yazi_proxy::{AppProxy, MgrProxy};
 use yazi_shared::{event::Cmd, pool::Symbol};
 
@@ -52,7 +52,7 @@ pub fn peek(
 }
 
 fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Symbol<str>, skip: usize) {
-	let cb: PluginCallback = Box::new(move |lua, plugin| {
+	let cb = move |lua: &Lua, plugin: Table| {
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
 			("args", Sendable::args_to_table_ref(lua, &cmd.args)?.into_lua(lua)?),
@@ -62,7 +62,7 @@ fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Symbol<str>, skip: us
 		])?;
 
 		plugin.call_method("peek", job)
-	});
+	};
 
 	AppProxy::plugin(PluginOpt::new_callback(&*cmd.name, cb));
 }

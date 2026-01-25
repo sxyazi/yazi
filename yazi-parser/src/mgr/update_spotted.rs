@@ -3,7 +3,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use yazi_binding::{FileRef, elements::Renderable};
 use yazi_shared::{Id, event::CmdCow};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct UpdateSpottedOpt {
 	pub lock: SpotLock,
 }
@@ -17,7 +17,7 @@ impl TryFrom<CmdCow> for UpdateSpottedOpt {
 		}
 
 		let Some(lock) = c.take_any("lock") else {
-			bail!("Invalid 'lock' argument in UpdateSpottedOpt");
+			bail!("Invalid 'lock' in UpdateSpottedOpt");
 		};
 
 		Ok(Self { lock })
@@ -33,7 +33,7 @@ impl IntoLua for UpdateSpottedOpt {
 }
 
 // --- Lock
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SpotLock {
 	pub url:  yazi_shared::url::UrlBuf,
 	pub cha:  yazi_fs::cha::Cha,

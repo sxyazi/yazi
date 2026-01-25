@@ -20,7 +20,7 @@ impl Utils {
 				return Err("Cannot call `ya.which()` while main thread is blocked".into_lua_err());
 			}
 
-			let (tx, mut rx) = mpsc::channel::<usize>(1);
+			let (tx, mut rx) = mpsc::unbounded_channel::<usize>();
 			let cands: Vec<_> = t
 				.raw_get::<Table>("cands")?
 				.sequence_values::<Table>()

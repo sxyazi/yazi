@@ -2,7 +2,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
 use yazi_shared::{SStr, event::CmdCow};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct FilterOpt {
 	pub query: SStr,
 	pub case:  FilterCase,

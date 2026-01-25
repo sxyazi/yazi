@@ -1,10 +1,10 @@
 use anyhow::Context;
 use futures::future::join_all;
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Value, Variadic};
-use tokio::sync::oneshot;
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Table, Value, Variadic};
+use tokio::sync::mpsc;
 use yazi_binding::{Handle, runtime, runtime_mut};
 use yazi_dds::Sendable;
-use yazi_parser::app::{PluginCallback, PluginOpt};
+use yazi_parser::app::PluginOpt;
 use yazi_proxy::AppProxy;
 use yazi_shared::{LOCAL_SET, data::Data};
 
@@ -115,27 +115,25 @@ impl Utils {
 		args: MultiValue,
 	) -> mlua::Result<Vec<Data>> {
 		let args = Sendable::values_to_list(lua, args)?;
-		let (tx, rx) = oneshot::channel::<Vec<Data>>();
+		let (tx, mut rx) = mpsc::channel::<Vec<Data>>(1);
 
-		let callback: PluginCallback = {
-			let id = id.to_owned();
-			Box::new(move |lua, plugin| {
-				let Some(block) = runtime!(lua)?.get_block(&id, calls) else {
-					return Err("sync block not found".into_lua_err());
-				};
+		let id_ = id.to_owned();
+		let callback = move |lua: &Lua, plugin: Table| {
+			let Some(block) = runtime!(lua)?.get_block(&id_, calls) else {
+				return Err("sync block not found".into_lua_err());
+			};
 
-				let args = [Ok(Value::Table(plugin))]
-					.into_iter()
-					.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
-					.collect::<mlua::Result<MultiValue>>()?;
+			let args = [Ok(Value::Table(plugin))]
+				.into_iter()
+				.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
+				.collect::<mlua::Result<MultiValue>>()?;
 
-				let values = Sendable::values_to_list(lua, block.call(args)?)?;
-				tx.send(values).map_err(|_| "send failed".into_lua_err())
-			})
+			let values = Sendable::values_to_list(lua, block.call(args)?)?;
+			tx.try_send(values).map_err(|_| "send failed".into_lua_err())
 		};
 
 		AppProxy::plugin(PluginOpt::new_callback(id.to_owned(), callback));
 
-		rx.await.into_lua_err()
+		rx.recv().await.ok_or("recv failed").into_lua_err()
 	}
 }

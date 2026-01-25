@@ -7,7 +7,7 @@ use yazi_shared::Id;
 
 use crate::{ID, ember::Ember};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Payload<'a> {
 	pub receiver: Id,
 	pub sender:   Id,

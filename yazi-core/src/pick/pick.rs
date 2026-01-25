@@ -1,5 +1,4 @@
-use anyhow::Result;
-use tokio::sync::oneshot::Sender;
+use tokio::sync::mpsc::UnboundedSender;
 use yazi_config::{YAZI, popup::Position};
 use yazi_widgets::Scrollable;
 
@@ -11,7 +10,7 @@ pub struct Pick {
 
 	pub offset:   usize,
 	pub cursor:   usize,
-	pub callback: Option<Sender<Result<usize>>>,
+	pub callback: Option<UnboundedSender<Option<usize>>>,
 
 	pub visible: bool,
 }

@@ -41,7 +41,7 @@ impl Actor for OpenDo {
 		let urls: Vec<_> =
 			[UrlCow::default()].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
-			if let Ok(choice) = pick.await {
+			if let Some(choice) = pick.await {
 				TasksProxy::open_shell_compat(ProcessOpenOpt {
 					cwd:    opt.cwd,
 					cmd:    openers[choice].run.clone().into(),

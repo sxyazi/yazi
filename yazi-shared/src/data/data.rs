@@ -1,13 +1,13 @@
-use std::{any::Any, borrow::Cow};
+use std::borrow::Cow;
 
 use anyhow::{Result, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::{Id, SStr, data::DataKey, path::PathBufDyn, url::{UrlBuf, UrlCow}};
+use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, url::{UrlBuf, UrlCow}};
 
 // --- Data
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Data {
 	Nil,
@@ -25,7 +25,7 @@ pub enum Data {
 	#[serde(skip)]
 	Bytes(Vec<u8>),
 	#[serde(skip)]
-	Any(Box<dyn Any + Send + Sync>),
+	Any(Box<dyn DataAny>),
 }
 
 impl From<()> for Data {
@@ -199,7 +199,7 @@ impl Data {
 
 	pub fn into_any<T: 'static>(self) -> Option<T> {
 		match self {
-			Self::Any(b) => b.downcast::<T>().ok().map(|b| *b),
+			Self::Any(b) => b.into_any().downcast::<T>().ok().map(|b| *b),
 			_ => None,
 		}
 	}
@@ -207,7 +207,7 @@ impl Data {
 	// FIXME: find a better name
 	pub fn into_any2<T: 'static>(self) -> Result<T> {
 		if let Self::Any(b) = self
-			&& let Ok(t) = b.downcast::<T>()
+			&& let Ok(t) = b.into_any().downcast::<T>()
 		{
 			Ok(*t)
 		} else {

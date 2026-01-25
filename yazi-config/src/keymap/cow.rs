@@ -4,7 +4,7 @@ use yazi_shared::event::CmdCow;
 
 use super::Chord;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum ChordCow {
 	Owned(Chord),
 	Borrowed(&'static Chord),

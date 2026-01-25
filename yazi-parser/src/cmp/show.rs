@@ -4,7 +4,7 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{Id, event::CmdCow, path::PathBufDyn, strand::{StrandBuf, StrandLike}, url::UrlBuf};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ShowOpt {
 	pub cache:      Vec<CmpItem>,
 	pub cache_name: UrlBuf,

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(data key);
+yazi_macro::mod_flat!(any data key);

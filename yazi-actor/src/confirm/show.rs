@@ -23,7 +23,7 @@ impl Actor for Show {
 		confirm.position = opt.cfg.position;
 		confirm.offset = 0;
 
-		confirm.callback = Some(opt.tx);
+		confirm.token = opt.token;
 		confirm.visible = true;
 
 		succ!(render!());

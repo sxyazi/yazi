@@ -1,6 +1,6 @@
 use ratatui::{text::Line, widgets::Paragraph};
-use tokio::sync::oneshot::Sender;
 use yazi_config::popup::Position;
+use yazi_shared::CompletionToken;
 
 #[derive(Default)]
 pub struct Confirm {
@@ -11,6 +11,6 @@ pub struct Confirm {
 	pub position: Position,
 	pub offset:   usize,
 
-	pub callback: Option<Sender<bool>>,
-	pub visible:  bool,
+	pub token:   CompletionToken,
+	pub visible: bool,
 }

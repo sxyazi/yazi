@@ -1,19 +1,18 @@
 use std::{borrow::Cow, fmt::Debug, str::FromStr};
 
 use anyhow::bail;
+use dyn_clone::DynClone;
 use hashbrown::HashMap;
 use mlua::{Lua, Table};
 use serde::Deserialize;
 use yazi_shared::{SStr, data::{Data, DataKey}, event::{Cmd, CmdCow}};
 
-pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync>;
-
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct PluginOpt {
-	pub id:   SStr,
-	pub args: HashMap<DataKey, Data>,
-	pub mode: PluginMode,
-	pub cb:   Option<PluginCallback>,
+	pub id:       SStr,
+	pub args:     HashMap<DataKey, Data>,
+	pub mode:     PluginMode,
+	pub callback: Option<Box<dyn PluginCallback>>,
 }
 
 impl TryFrom<CmdCow> for PluginOpt {
@@ -36,7 +35,7 @@ impl TryFrom<CmdCow> for PluginOpt {
 		};
 
 		let mode = c.str("mode").parse().unwrap_or_default();
-		Ok(Self { id: Self::normalize_id(id), args, mode, cb: c.take_any("callback") })
+		Ok(Self { id: Self::normalize_id(id), args, mode, callback: c.take_any("callback") })
 	}
 }
 
@@ -46,17 +45,17 @@ impl Debug for PluginOpt {
 			.field("id", &self.id)
 			.field("args", &self.args)
 			.field("mode", &self.mode)
-			.field("cb", &self.cb.is_some())
+			.field("callback", &self.callback.is_some())
 			.finish()
 	}
 }
 
 impl PluginOpt {
-	pub fn new_callback(id: impl Into<SStr>, cb: PluginCallback) -> Self {
+	pub fn new_callback(id: impl Into<SStr>, f: impl PluginCallback) -> Self {
 		Self {
 			id: Self::normalize_id(id.into()),
 			mode: PluginMode::Sync,
-			cb: Some(cb),
+			callback: Some(Box::new(f)),
 			..Default::default()
 		}
 	}
@@ -97,4 +96,19 @@ impl PluginMode {
 		}
 		if sync { Self::Sync } else { Self::Async }
 	}
+}
+
+// --- Callback
+pub trait PluginCallback:
+	FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync + DynClone + 'static
+{
+}
+
+impl<T> PluginCallback for T where
+	T: FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync + DynClone + 'static
+{
+}
+
+impl Clone for Box<dyn PluginCallback> {
+	fn clone(&self) -> Self { dyn_clone::clone_box(&**self) }
 }

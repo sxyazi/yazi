@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use super::Ember;
 use crate::Sendable;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct EmberCustom {
 	pub kind: String,
 	pub data: Data,

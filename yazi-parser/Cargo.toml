@@ -28,6 +28,7 @@ yazi-vfs     = { path = "../yazi-vfs", version = "26.1.22" }
 anyhow        = { workspace = true }
 bitflags      = { workspace = true }
 crossterm     = { workspace = true }
+dyn-clone     = { workspace = true }
 hashbrown     = { workspace = true }
 mlua          = { workspace = true }
 ordered-float = { workspace = true }

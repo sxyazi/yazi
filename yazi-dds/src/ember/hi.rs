@@ -8,7 +8,7 @@ use yazi_shared::SStr;
 use super::Ember;
 
 /// Client handshake
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberHi<'a> {
 	/// Kinds of events the client can handle
 	pub abilities: HashSet<Cow<'a, str>>,
