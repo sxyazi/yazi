@@ -3,7 +3,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
 use yazi_shared::{SStr, event::CmdCow};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FindDoOpt {
 	pub query: SStr,
 	pub prev:  bool,
@@ -19,7 +19,7 @@ impl TryFrom<CmdCow> for FindDoOpt {
 		}
 
 		let Ok(query) = c.take_first() else {
-			bail!("'query' is required for FindDoOpt");
+			bail!("Invalid 'query' in FindDoOpt");
 		};
 
 		Ok(Self { query, prev: c.bool("previous"), case: FilterCase::from(&*c) })

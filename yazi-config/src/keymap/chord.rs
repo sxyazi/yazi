@@ -9,7 +9,7 @@ use super::Key;
 
 static RE: OnceLock<Regex> = OnceLock::new();
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 pub struct Chord {
 	#[serde(deserialize_with = "super::deserialize_on")]
 	pub on:    Vec<Key>,

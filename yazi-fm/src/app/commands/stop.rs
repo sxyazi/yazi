@@ -14,7 +14,7 @@ impl App {
 		// while the app is being suspended.
 		self.term = None;
 
-		self.signals.stop(opt.tx);
+		self.signals.stop(opt.token);
 
 		succ!();
 	}

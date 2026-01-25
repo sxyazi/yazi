@@ -20,7 +20,7 @@ impl Actor for DisplaceDo {
 
 		let to = match opt.to {
 			Ok(url) => url,
-			Err(e) => return act!(mgr:update_files, cx, FilesOp::IOErr(opt.from, e.into())),
+			Err(e) => return act!(mgr:update_files, cx, FilesOp::IOErr(opt.from, e)),
 		};
 
 		if !to.is_absolute() {

@@ -1,7 +1,7 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{event::CmdCow, url::UrlCow};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OpenOpt {
 	pub cwd:         Option<UrlCow<'static>>,
 	pub targets:     Vec<UrlCow<'static>>,

@@ -25,7 +25,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 		};
 
 		let Ok(args) = yazi_shared::shell::unix::split(c.str("args"), false) else {
-			bail!("Invalid 'args' argument in SearchOpt");
+			bail!("Invalid 'args' in SearchOpt");
 		};
 
 		Ok(Self {

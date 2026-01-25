@@ -3,7 +3,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use yazi_config::{KEYMAP, keymap::{ChordCow, Key}};
 use yazi_shared::{Layer, event::CmdCow};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ShowOpt {
 	pub cands:  Vec<ChordCow>,
 	pub silent: bool,

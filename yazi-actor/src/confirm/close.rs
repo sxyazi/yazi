@@ -13,10 +13,7 @@ impl Actor for Close {
 	const NAME: &str = "close";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		if let Some(cb) = cx.confirm.callback.take() {
-			_ = cb.send(opt.submit);
-		}
-
+		cx.confirm.token.complete(opt.submit);
 		cx.confirm.visible = false;
 		succ!(render!());
 	}

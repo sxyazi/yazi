@@ -13,7 +13,7 @@ impl TryFrom<CmdCow> for UpdateFilesOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let Some(op) = c.take_any("op") else {
-			bail!("Invalid 'op' argument in UpdateFilesOpt");
+			bail!("Invalid 'op' in UpdateFilesOpt");
 		};
 
 		Ok(Self { op })

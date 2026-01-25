@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize, de};
 
 use crate::{Id, SStr, path::PathBufDyn, url::{UrlBuf, UrlCow}};
 
-#[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum DataKey {
 	Nil,

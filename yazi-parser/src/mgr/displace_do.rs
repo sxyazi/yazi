@@ -2,9 +2,9 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{event::CmdCow, url::UrlBuf};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct DisplaceDoOpt {
-	pub to:   std::io::Result<UrlBuf>,
+	pub to:   Result<UrlBuf, yazi_fs::error::Error>,
 	pub from: UrlBuf,
 }
 
@@ -15,7 +15,7 @@ impl TryFrom<CmdCow> for DisplaceDoOpt {
 		if let Some(opt) = c.take_any2("opt") {
 			opt
 		} else {
-			bail!("'opt' is required for DisplaceDoOpt");
+			bail!("Invalid 'opt' in DisplaceDoOpt");
 		}
 	}
 }

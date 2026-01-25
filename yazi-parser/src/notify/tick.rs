@@ -14,7 +14,7 @@ impl TryFrom<CmdCow> for TickOpt {
 
 	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
 		let Ok(interval) = c.first() else {
-			bail!("Invalid 'interval' argument in TickOpt");
+			bail!("Invalid 'interval' in TickOpt");
 		};
 
 		if interval < 0.0 {

@@ -24,7 +24,7 @@ pub struct Client {
 	pub(super) abilities: HashSet<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Peer {
 	pub(super) abilities: HashSet<String>,
 }

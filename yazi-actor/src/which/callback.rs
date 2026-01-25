@@ -13,7 +13,7 @@ impl Actor for Callback {
 	const NAME: &str = "callback";
 
 	fn act(_: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		opt.tx.try_send(opt.idx)?;
+		opt.tx.send(opt.idx)?;
 		succ!();
 	}
 }

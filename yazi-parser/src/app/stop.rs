@@ -1,10 +1,18 @@
-use tokio::sync::oneshot;
-use yazi_shared::event::CmdCow;
+use anyhow::bail;
+use yazi_shared::{CompletionToken, event::CmdCow};
 
 pub struct StopOpt {
-	pub tx: Option<oneshot::Sender<()>>,
+	pub token: CompletionToken,
 }
 
-impl From<CmdCow> for StopOpt {
-	fn from(mut c: CmdCow) -> Self { Self { tx: c.take_any("tx") } }
+impl TryFrom<CmdCow> for StopOpt {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		let Some(token) = c.take_any("token") else {
+			bail!("Invalid 'token' in StopOpt");
+		};
+
+		Ok(Self { token })
+	}
 }

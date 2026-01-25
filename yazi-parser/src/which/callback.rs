@@ -5,7 +5,7 @@ use yazi_shared::event::CmdCow;
 
 #[derive(Debug)]
 pub struct CallbackOpt {
-	pub tx:  mpsc::Sender<usize>,
+	pub tx:  mpsc::UnboundedSender<usize>,
 	pub idx: usize,
 }
 
@@ -14,11 +14,11 @@ impl TryFrom<CmdCow> for CallbackOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let Some(tx) = c.take_any("tx") else {
-			bail!("Invalid 'tx' argument in CallbackOpt");
+			bail!("Invalid 'tx' in CallbackOpt");
 		};
 
 		let Ok(idx) = c.first() else {
-			bail!("Invalid 'idx' argument in CallbackOpt");
+			bail!("Invalid 'idx' in CallbackOpt");
 		};
 
 		Ok(Self { tx, idx })

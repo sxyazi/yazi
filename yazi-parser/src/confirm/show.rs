@@ -1,13 +1,12 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use tokio::sync::oneshot;
 use yazi_config::popup::ConfirmCfg;
-use yazi_shared::event::CmdCow;
+use yazi_shared::{CompletionToken, event::CmdCow};
 
 #[derive(Debug)]
 pub struct ShowOpt {
-	pub cfg: ConfirmCfg,
-	pub tx:  oneshot::Sender<bool>,
+	pub cfg:   ConfirmCfg,
+	pub token: CompletionToken,
 }
 
 impl TryFrom<CmdCow> for ShowOpt {
@@ -15,14 +14,14 @@ impl TryFrom<CmdCow> for ShowOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let Some(cfg) = c.take_any("cfg") else {
-			bail!("Invalid 'cfg' argument in ShowOpt");
+			bail!("Invalid 'cfg' in ShowOpt");
 		};
 
-		let Some(tx) = c.take_any("tx") else {
-			bail!("Invalid 'tx' argument in ShowOpt");
+		let Some(token) = c.take_any("token") else {
+			bail!("Invalid 'token' in ShowOpt");
 		};
 
-		Ok(Self { cfg, tx })
+		Ok(Self { cfg, token })
 	}
 }
 

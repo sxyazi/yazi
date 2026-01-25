@@ -60,7 +60,7 @@ impl App {
 		drop(loader);
 
 		let result = Lives::scope(&self.core, || {
-			if let Some(cb) = opt.cb {
+			if let Some(cb) = opt.callback {
 				cb(&LUA, plugin)
 			} else {
 				let job = LUA.create_table_from([("args", Sendable::args_to_table(&LUA, opt.args)?)])?;

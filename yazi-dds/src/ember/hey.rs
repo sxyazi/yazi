@@ -7,7 +7,7 @@ use super::{Ember, EmberHi};
 use crate::Peer;
 
 /// Server handshake
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberHey {
 	pub peers:   HashMap<Id, Peer>,
 	pub version: SStr,

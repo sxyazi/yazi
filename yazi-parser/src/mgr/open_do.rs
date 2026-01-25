@@ -2,7 +2,7 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{event::CmdCow, url::UrlCow};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct OpenDoOpt {
 	pub cwd:         UrlCow<'static>,
 	pub targets:     Vec<UrlCow<'static>>,
@@ -16,7 +16,7 @@ impl TryFrom<CmdCow> for OpenDoOpt {
 		if let Some(opt) = c.take_any2("opt") {
 			opt
 		} else {
-			bail!("'opt' is required for OpenDoOpt");
+			bail!("Invalid 'opt' in OpenDoOpt");
 		}
 	}
 }

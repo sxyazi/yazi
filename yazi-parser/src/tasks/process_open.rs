@@ -5,7 +5,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{CompletionToken, event::CmdCow, url::UrlCow};
 
 // --- Exec
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ProcessOpenOpt {
 	pub cwd:    UrlCow<'static>,
 	pub cmd:    OsString,

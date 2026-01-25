@@ -22,7 +22,10 @@ impl Actor for Displace {
 		let tab = cx.tab().id;
 		let from = cx.cwd().to_owned();
 		tokio::spawn(async move {
-			MgrProxy::displace_do(tab, DisplaceDoOpt { to: provider::canonicalize(&from).await, from });
+			MgrProxy::displace_do(tab, DisplaceDoOpt {
+				to: provider::canonicalize(&from).await.map_err(Into::into),
+				from,
+			});
 		});
 
 		succ!();

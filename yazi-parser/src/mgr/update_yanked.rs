@@ -25,7 +25,7 @@ impl TryFrom<CmdCow> for UpdateYankedOpt<'_> {
 		if let Some(opt) = c.take_any2("opt") {
 			opt
 		} else {
-			bail!("'opt' is required for UpdateYankedOpt");
+			bail!("Invalid 'opt' in UpdateYankedOpt");
 		}
 	}
 }

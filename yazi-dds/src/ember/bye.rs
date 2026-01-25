@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::Ember;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberBye;
 
 impl EmberBye {

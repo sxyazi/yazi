@@ -12,7 +12,7 @@ impl TryFrom<CmdCow> for UpdateSucceedOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let Some(urls) = c.take_any("urls") else {
-			bail!("Invalid 'urls' argument in UpdateSucceedOpt");
+			bail!("Invalid 'urls' in UpdateSucceedOpt");
 		};
 
 		Ok(Self { urls })

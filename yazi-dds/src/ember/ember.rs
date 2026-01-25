@@ -5,7 +5,7 @@ use yazi_shared::Id;
 use super::{EmberBulk, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
 use crate::Payload;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Ember<'a> {
 	Hi(EmberHi<'a>),
 	Hey(EmberHey),

@@ -1,22 +1,22 @@
 use std::time::Duration;
 
-use tokio::sync::oneshot;
 use yazi_macro::{emit, relay};
 use yazi_parser::app::{NotifyLevel, NotifyOpt, PluginOpt, TaskSummary};
+use yazi_shared::CompletionToken;
 
 pub struct AppProxy;
 
 impl AppProxy {
 	pub async fn stop() {
-		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(relay!(app:stop).with_any("tx", tx)));
-		rx.await.ok();
+		let token = CompletionToken::default();
+		emit!(Call(relay!(app:stop).with_any("token", token.clone())));
+		token.future().await;
 	}
 
 	pub async fn resume() {
-		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(relay!(app:resume).with_any("tx", tx)));
-		rx.await.ok();
+		let token = CompletionToken::default();
+		emit!(Call(relay!(app:resume).with_any("token", token.clone())));
+		token.future().await;
 	}
 
 	pub fn notify(opt: NotifyOpt) {

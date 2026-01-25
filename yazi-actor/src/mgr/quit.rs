@@ -33,7 +33,7 @@ impl Actor for Quit {
 
 		tokio::spawn(async move {
 			let mut i = 0;
-			let mut rx = ConfirmProxy::show_rx(ConfirmCfg::quit(left, left_names));
+			let token = ConfirmProxy::show_sync(ConfirmCfg::quit(left, left_names));
 			loop {
 				select! {
 					_ = time::sleep(Duration::from_millis(50)) => {
@@ -44,8 +44,8 @@ impl Actor for Quit {
 							return;
 						}
 					}
-					b = &mut rx => {
-						if b.unwrap_or(false) {
+					b = token.future() => {
+						if b {
 							emit!(Quit(event));
 						}
 						return;
@@ -53,7 +53,7 @@ impl Actor for Quit {
 				}
 			}
 
-			if rx.await.unwrap_or(false) {
+			if token.future().await {
 				emit!(Quit(event));
 			}
 		});
