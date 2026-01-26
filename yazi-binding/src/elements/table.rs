@@ -127,20 +127,20 @@ impl UserData for Table {
 			Ok(ud)
 		});
 
-		methods.add_function_mut("style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.style = Style::try_from(value)?.0;
+		methods.add_function_mut("style", |_, (ud, style): (AnyUserData, Style)| {
+			ud.borrow_mut::<Self>()?.style = style.0;
 			Ok(ud)
 		});
-		methods.add_function_mut("row_style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.row_highlight_style = Style::try_from(value)?.0;
+		methods.add_function_mut("row_style", |_, (ud, style): (AnyUserData, Style)| {
+			ud.borrow_mut::<Self>()?.row_highlight_style = style.0;
 			Ok(ud)
 		});
-		methods.add_function_mut("col_style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.column_highlight_style = Style::try_from(value)?.0;
+		methods.add_function_mut("col_style", |_, (ud, style): (AnyUserData, Style)| {
+			ud.borrow_mut::<Self>()?.column_highlight_style = style.0;
 			Ok(ud)
 		});
-		methods.add_function_mut("cell_style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.cell_highlight_style = Style::try_from(value)?.0;
+		methods.add_function_mut("cell_style", |_, (ud, style): (AnyUserData, Style)| {
+			ud.borrow_mut::<Self>()?.cell_highlight_style = style.0;
 			Ok(ud)
 		});
 	}

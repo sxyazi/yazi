@@ -1,4 +1,4 @@
-use hashbrown::{HashMap, hash_map::RawEntryMut};
+use hashbrown::{HashMap, hash_map::Entry};
 use ordered_float::OrderedFloat;
 use yazi_config::YAZI;
 use yazi_parser::app::TaskSummary;
@@ -24,8 +24,8 @@ impl Ongoing {
 	}
 
 	pub(super) fn cancel(&mut self, id: Id) -> Option<TaskIn> {
-		match self.inner.raw_entry_mut().from_key(&id) {
-			RawEntryMut::Occupied(mut oe) => {
+		match self.inner.entry(id) {
+			Entry::Occupied(mut oe) => {
 				let task = oe.get_mut();
 				task.done.complete(false);
 
@@ -35,7 +35,7 @@ impl Ongoing {
 
 				oe.remove();
 			}
-			RawEntryMut::Vacant(_) => {}
+			Entry::Vacant(_) => {}
 		}
 		None
 	}

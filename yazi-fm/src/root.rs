@@ -65,7 +65,7 @@ impl Widget for Root<'_> {
 			cmp::Cmp::new(self.core).render(area, buf);
 		}
 
-		if self.core.which.visible {
+		if self.core.which.active {
 			which::Which::new(self.core).render(area, buf);
 		}
 	}

@@ -2,17 +2,17 @@ use anyhow::Result;
 use yazi_core::which::WhichSorter;
 use yazi_dds::spark::SparkKind;
 use yazi_macro::{render, succ};
-use yazi_parser::which::ShowOpt;
+use yazi_parser::which::ActivateOpt;
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
 
-pub struct Show;
+pub struct Activate;
 
-impl Actor for Show {
-	type Options = ShowOpt;
+impl Actor for Activate {
+	type Options = ActivateOpt;
 
-	const NAME: &str = "show";
+	const NAME: &str = "activate";
 
 	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
 		opt.cands.retain(|c| c.on.len() > opt.times);
@@ -26,14 +26,14 @@ impl Actor for Show {
 		which.times = opt.times;
 		which.cands = opt.cands;
 
-		which.visible = true;
+		which.active = true;
 		which.silent = opt.silent;
 		succ!(render!());
 	}
 
 	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<SparkKind> {
 		match cx.source() {
-			Source::Unknown => Some(SparkKind::IndWhichShow),
+			Source::Unknown => Some(SparkKind::IndWhichActivate),
 			_ => None,
 		}
 	}

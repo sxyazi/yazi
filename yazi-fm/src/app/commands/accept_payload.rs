@@ -29,11 +29,11 @@ impl App {
 		succ!(Lives::scope(&self.core, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
-				runtime_mut!(LUA)?.push(&id);
+				let blocking = runtime_mut!(LUA)?.critical_push(&id, true);
 				if let Err(e) = cb.call::<()>(body.clone()) {
 					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
 				}
-				runtime_mut!(LUA)?.pop();
+				runtime_mut!(LUA)?.critical_pop(blocking);
 			}
 			Ok(())
 		})?);

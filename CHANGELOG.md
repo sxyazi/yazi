@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
-- New `ind-which-show` DDS event to change the which component behavior ([#3608])
+- New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
 ### Fixed
 

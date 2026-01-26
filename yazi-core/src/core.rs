@@ -46,7 +46,7 @@ impl Core {
 	}
 
 	pub fn layer(&self) -> Layer {
-		if self.which.visible {
+		if self.which.active {
 			Layer::Which
 		} else if self.cmp.visible {
 			Layer::Cmp

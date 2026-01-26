@@ -50,8 +50,8 @@ impl App {
 			succ!(self.core.tasks.plugin_entry(opt));
 		}
 
-		runtime_mut!(LUA)?.push(&opt.id);
-		defer! { _ = runtime_mut!(LUA).map(|mut r| r.pop()) }
+		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);
+		defer! { _ = runtime_mut!(LUA).map(|mut r| r.critical_pop(blocking)) }
 
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
 			Ok(t) => t,

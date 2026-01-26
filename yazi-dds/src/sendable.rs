@@ -58,6 +58,9 @@ impl Sendable {
 				Some(t) if t == TypeId::of::<yazi_parser::mgr::UpdateYankedIter>() => {
 					Data::Any(Box::new(ud.take::<yazi_parser::mgr::UpdateYankedIter>()?.into_opt(lua)?))
 				}
+				Some(t) if t == TypeId::of::<yazi_binding::ChordCow>() => {
+					Data::Any(Box::new(ud.take::<yazi_binding::ChordCow>()?))
+				}
 				_ => Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?,
 			},
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
@@ -98,6 +101,7 @@ impl Sendable {
 
 				try_cast!(|v: yazi_fs::FilesOp| lua.create_any_userdata(v));
 				try_cast!(|v: yazi_parser::mgr::UpdateYankedOpt| v.into_lua(lua));
+				try_cast!(|v: yazi_binding::ChordCow| v.into_lua(lua));
 				Err("unsupported DataAny included".into_lua_err())?
 			}
 			data => Self::data_to_value_ref(lua, &data)?,
@@ -130,14 +134,19 @@ impl Sendable {
 			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			Data::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
-			Data::Any(a) => {
-				if let Some(t) = a.as_any().downcast_ref::<yazi_fs::FilesOp>() {
-					lua.create_any_userdata(t.clone())?.into_lua(lua)?
-				} else if let Some(t) = a.as_any().downcast_ref::<yazi_parser::mgr::UpdateYankedOpt>() {
-					t.clone().into_lua(lua)?
-				} else {
-					Err("unsupported DataAny included".into_lua_err())?
+			Data::Any(b) => {
+				macro_rules! try_cast {
+					($f:expr) => {
+						if let Some(v) = b.as_any().downcast_ref() {
+							return $f(Clone::clone(v))?.into_lua(lua);
+						}
+					};
 				}
+
+				try_cast!(|v: yazi_fs::FilesOp| lua.create_any_userdata(v));
+				try_cast!(|v: yazi_parser::mgr::UpdateYankedOpt| v.into_lua(lua));
+				try_cast!(|v: yazi_binding::ChordCow| v.into_lua(lua));
+				Err("unsupported DataAny included".into_lua_err())?
 			}
 		})
 	}

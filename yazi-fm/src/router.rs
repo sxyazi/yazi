@@ -43,7 +43,7 @@ impl<'a> Router<'a> {
 
 			if on.len() > 1 {
 				let cx = &mut Ctx::active(&mut self.app.core);
-				act!(which:show, cx, (layer, key)).ok();
+				act!(which:activate, cx, (layer, key)).ok();
 			} else {
 				emit!(Seq(ChordCow::from(chord).into_seq()));
 			}

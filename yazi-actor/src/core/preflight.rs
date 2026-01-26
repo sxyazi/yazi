@@ -18,9 +18,9 @@ impl Preflight {
 		Ok(Lives::scope(cx.core, || {
 			let mut body = opt.1.into_lua(&LUA)?;
 			for (id, cb) in handlers {
-				runtime_mut!(LUA)?.push(&id);
+				let blocking = runtime_mut!(LUA)?.critical_push(&id, true);
 				let result = cb.call::<Value>(&body);
-				runtime_mut!(LUA)?.pop();
+				runtime_mut!(LUA)?.critical_pop(blocking);
 
 				match result {
 					Ok(Value::Nil) => {

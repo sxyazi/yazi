@@ -6,7 +6,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{elements::{Line, Pos, Text}, runtime};
 use yazi_config::{keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::relay;
-use yazi_parser::which::ShowOpt;
+use yazi_parser::which::ActivateOpt;
 use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy, WhichProxy};
 use yazi_shared::Debounce;
 
@@ -37,7 +37,7 @@ impl Utils {
 				.collect::<mlua::Result<_>>()?;
 
 			drop(tx);
-			WhichProxy::show(ShowOpt { cands, times: 0, silent: t.raw_get("silent")? });
+			WhichProxy::activate(ActivateOpt { cands, times: 0, silent: t.raw_get("silent")? });
 
 			Ok(rx.recv().await.map(|idx| idx + 1))
 		})
