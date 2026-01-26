@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{iter, ops::Deref};
 
 use anyhow::Result;
 
@@ -90,6 +90,13 @@ impl CmdCow {
 		match self {
 			Self::Owned(c) => c.take_any2(name),
 			Self::Borrowed(_) => None,
+		}
+	}
+
+	pub fn take_any_iter<'a, T: 'static>(&'a mut self) -> Box<dyn Iterator<Item = T> + 'a> {
+		match self {
+			Self::Owned(c) => Box::new(c.take_any_iter()),
+			Self::Borrowed(_) => Box::new(iter::empty()),
 		}
 	}
 }

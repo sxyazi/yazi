@@ -1,10 +1,10 @@
 use yazi_macro::{emit, relay};
-use yazi_parser::which::ShowOpt;
+use yazi_parser::which::ActivateOpt;
 
 pub struct WhichProxy;
 
 impl WhichProxy {
-	pub fn show(opt: ShowOpt) {
-		emit!(Call(relay!(which:show).with_any("opt", opt)));
+	pub fn activate(opt: ActivateOpt) {
+		emit!(Call(relay!(which:activate).with_any("opt", opt)));
 	}
 }

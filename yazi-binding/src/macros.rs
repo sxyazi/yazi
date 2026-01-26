@@ -71,8 +71,8 @@ macro_rules! impl_area_method {
 #[macro_export]
 macro_rules! impl_style_method {
 	($methods:ident, $($field:tt).+) => {
-		$methods.add_function_mut("style", |_, (ud, value): (mlua::AnyUserData, mlua::Value)| {
-			ud.borrow_mut::<Self>()?.$($field).+ = $crate::Style::try_from(value)?.0;
+		$methods.add_function_mut("style", |_, (ud, style): (mlua::AnyUserData, $crate::Style)| {
+			ud.borrow_mut::<Self>()?.$($field).+ = style.0;
 			Ok(ud)
 		});
 	};

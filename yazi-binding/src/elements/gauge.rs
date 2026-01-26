@@ -66,8 +66,8 @@ impl UserData for Gauge {
 			Ok(ud)
 		});
 
-		methods.add_function_mut("gauge_style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.gauge_style = Style::try_from(value)?.0;
+		methods.add_function_mut("gauge_style", |_, (ud, style): (AnyUserData, Style)| {
+			ud.borrow_mut::<Self>()?.gauge_style = style.0;
 			Ok(ud)
 		});
 	}

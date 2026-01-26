@@ -10,8 +10,8 @@ pub enum SparkKind {
 	RelayStash,
 	// quit
 	KeyQuit,
-	// which:show
-	IndWhichShow,
+	// which:activate
+	IndWhichActivate,
 }
 
 impl AsRef<str> for SparkKind {
@@ -25,8 +25,8 @@ impl AsRef<str> for SparkKind {
 			Self::RelayStash => "relay-stash",
 			// quit
 			Self::KeyQuit => "key-quit",
-			// which:show
-			Self::IndWhichShow => "ind-which-show",
+			// which:activate
+			Self::IndWhichActivate => "ind-which-activate",
 		}
 	}
 }

@@ -340,7 +340,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(show);
+		on!(activate);
 		on!(callback);
 
 		succ!();

@@ -14,7 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
-- New `ind-which-show` DDS event to change the which component behavior ([#3608])
+- New `cx.which` API to access the which component state ([#3617])
+- New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
 ### Fixed
 
@@ -1622,3 +1623,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3594]: https://github.com/sxyazi/yazi/pull/3594
 [#3607]: https://github.com/sxyazi/yazi/pull/3607
 [#3608]: https://github.com/sxyazi/yazi/pull/3608
+[#3617]: https://github.com/sxyazi/yazi/pull/3617

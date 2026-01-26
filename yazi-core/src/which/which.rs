@@ -6,9 +6,9 @@ pub struct Which {
 	pub times: usize,
 	pub cands: Vec<ChordCow>,
 
-	// Visibility
-	pub visible: bool,
-	pub silent:  bool,
+	// Active state
+	pub active: bool,
+	pub silent: bool,
 }
 
 impl Which {
@@ -33,7 +33,7 @@ impl Which {
 		self.times = 0;
 		self.cands.clear();
 
-		self.visible = false;
+		self.active = false;
 		self.silent = false;
 	}
 }

@@ -1,27 +1,31 @@
-use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use yazi_config::{KEYMAP, keymap::{ChordCow, Key}};
 use yazi_shared::{Layer, event::CmdCow};
 
 #[derive(Clone, Debug)]
-pub struct ShowOpt {
+pub struct ActivateOpt {
 	pub cands:  Vec<ChordCow>,
 	pub silent: bool,
 	pub times:  usize,
 }
 
-impl TryFrom<CmdCow> for ShowOpt {
+impl TryFrom<CmdCow> for ActivateOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		match c.take_any2("opt") {
-			Some(opt) => opt,
-			None => bail!("missing 'opt' argument"),
+		if let Some(opt) = c.take_any2("opt") {
+			return opt;
 		}
+
+		Ok(Self {
+			cands:  c.take_any_iter::<yazi_binding::ChordCow>().map(Into::into).collect(),
+			silent: c.bool("silent"),
+			times:  c.get("times").unwrap_or(0),
+		})
 	}
 }
 
-impl From<(Layer, Key)> for ShowOpt {
+impl From<(Layer, Key)> for ActivateOpt {
 	fn from((layer, key): (Layer, Key)) -> Self {
 		Self {
 			cands:  KEYMAP
@@ -36,13 +40,13 @@ impl From<(Layer, Key)> for ShowOpt {
 	}
 }
 
-impl FromLua for ShowOpt {
+impl FromLua for ActivateOpt {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		let Value::Table(t) = value else {
 			return Err("expected a table".into_lua_err());
 		};
 
-		Ok(ShowOpt {
+		Ok(Self {
 			cands:  t
 				.raw_get::<Table>("cands")?
 				.sequence_values::<yazi_binding::ChordCow>()
@@ -54,7 +58,7 @@ impl FromLua for ShowOpt {
 	}
 }
 
-impl IntoLua for ShowOpt {
+impl IntoLua for ActivateOpt {
 	#[rustfmt::skip]
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua

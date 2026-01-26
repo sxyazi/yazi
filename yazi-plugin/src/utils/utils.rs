@@ -50,7 +50,7 @@ pub fn compose(
 			b"spot_widgets" => Utils::spot_widgets(lua)?,
 
 			// Sync
-			b"sync" => Utils::sync(lua, isolate)?,
+			b"sync" => Utils::sync(lua)?,
 			b"async" => Utils::r#async(lua, isolate)?,
 			b"chan" => Utils::chan(lua)?,
 			b"join" => Utils::join(lua)?,

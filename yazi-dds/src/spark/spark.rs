@@ -132,7 +132,7 @@ pub enum Spark<'a> {
 
 	// Which
 	WhichCallback(yazi_parser::which::CallbackOpt),
-	WhichShow(yazi_parser::which::ShowOpt),
+	WhichActivate(yazi_parser::which::ActivateOpt),
 }
 
 impl<'a> Spark<'a> {
@@ -148,8 +148,8 @@ impl<'a> Spark<'a> {
 			RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
 			// quit
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
-			// which:show
-			IndWhichShow => Self::WhichShow(<_>::from_lua(value, lua)?),
+			// which:activate
+			IndWhichActivate => Self::WhichActivate(<_>::from_lua(value, lua)?),
 		})
 	}
 }
@@ -285,7 +285,7 @@ impl<'a> IntoLua for Spark<'a> {
 
 			// Which
 			Self::WhichCallback(b) => b.into_lua(lua),
-			Self::WhichShow(b) => b.into_lua(lua),
+			Self::WhichActivate(b) => b.into_lua(lua),
 		}
 	}
 }
@@ -378,4 +378,4 @@ try_from_spark!(spot::CopyOpt, spot:copy);
 try_from_spark!(tasks::ProcessOpenOpt, tasks:process_open);
 try_from_spark!(tasks::UpdateSucceedOpt, tasks:update_succeed);
 try_from_spark!(which::CallbackOpt, which:callback);
-try_from_spark!(which::ShowOpt, which:show);
+try_from_spark!(which::ActivateOpt, which:activate);

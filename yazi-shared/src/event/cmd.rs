@@ -185,6 +185,10 @@ impl Cmd {
 		self.args.remove(&name.into()).map(Data::into_any2)
 	}
 
+	pub fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
+		(0..self.len()).filter_map(|i| self.args.remove(&DataKey::from(i))?.into_any())
+	}
+
 	// Parse
 	pub fn parse_args<I>(words: I, last: Option<String>) -> Result<HashMap<DataKey, Data>>
 	where
