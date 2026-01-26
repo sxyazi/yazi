@@ -6,9 +6,10 @@ use super::{Offset, Origin};
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Pick {
 	// open
-	pub open_title:  String,
-	pub open_origin: Origin,
-	pub open_offset: Offset,
+	pub open_title:   String,
+	pub open_origin:  Origin,
+	pub open_offset:  Offset,
+	pub line_numbers: bool,
 }
 
 impl Pick {

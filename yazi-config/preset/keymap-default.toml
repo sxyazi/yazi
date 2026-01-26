@@ -219,6 +219,16 @@ keymap = [
 	{ on = "<Up>",   run = "arrow prev", desc = "Previous option" },
 	{ on = "<Down>", run = "arrow next", desc = "Next option" },
 
+	{ on = "1", run = "select 0", desc = "Select first option" },
+	{ on = "2", run = "select 1", desc = "Select second option" },
+	{ on = "3", run = "select 2", desc = "Select third option" },
+	{ on = "4", run = "select 3", desc = "Select fourth option" },
+	{ on = "5", run = "select 4", desc = "Select fifth option" },
+	{ on = "6", run = "select 5", desc = "Select sixth option" },
+	{ on = "7", run = "select 6", desc = "Select seventh option" },
+	{ on = "8", run = "select 7", desc = "Select eighth option" },
+	{ on = "9", run = "select 8", desc = "Select ninth option" },
+
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
