@@ -55,7 +55,7 @@ impl Clipboard {
 
 		use crossterm::execute;
 		use tokio::{io::AsyncWriteExt, process::Command};
-		use yazi_term::tty::TTY;
+		use yazi_tty::TTY;
 
 		s.as_ref().clone_into(&mut self.content.lock());
 		execute!(TTY.writer(), osc52::SetClipboard::new(s.as_ref())).ok();

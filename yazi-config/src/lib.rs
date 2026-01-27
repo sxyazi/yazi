@@ -5,7 +5,7 @@ yazi_macro::mod_flat!(icon layout pattern platform preset priority style utils y
 use std::io::{Read, Write};
 
 use yazi_shared::{RoCell, SyncCell};
-use yazi_term::tty::TTY;
+use yazi_tty::TTY;
 
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();

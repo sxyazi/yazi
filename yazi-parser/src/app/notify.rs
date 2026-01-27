@@ -1,16 +1,19 @@
 use std::{str::FromStr, time::Duration};
 
 use anyhow::anyhow;
-use mlua::{ExternalError, ExternalResult};
-use serde::Deserialize;
+use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
+use serde::{Deserialize, Serialize};
+use serde_with::{DurationSeconds, serde_as};
 use yazi_config::{Style, THEME};
 use yazi_shared::event::CmdCow;
 
-#[derive(Clone)]
+#[serde_as]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct NotifyOpt {
 	pub title:   String,
 	pub content: String,
 	pub level:   NotifyLevel,
+	#[serde_as(as = "DurationSeconds<f64>")]  // FIXME
 	pub timeout: Duration,
 }
 
@@ -22,32 +25,16 @@ impl TryFrom<CmdCow> for NotifyOpt {
 	}
 }
 
-impl TryFrom<mlua::Table> for NotifyOpt {
-	type Error = mlua::Error;
+impl FromLua for NotifyOpt {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
+}
 
-	fn try_from(t: mlua::Table) -> Result<Self, Self::Error> {
-		let timeout = t.raw_get("timeout")?;
-		if timeout < 0.0 {
-			return Err("timeout must be non-negative".into_lua_err());
-		}
-
-		let level = if let Ok(s) = t.raw_get::<mlua::String>("level") {
-			s.to_str()?.parse().into_lua_err()?
-		} else {
-			Default::default()
-		};
-
-		Ok(Self {
-			title: t.raw_get("title")?,
-			content: t.raw_get("content")?,
-			level,
-			timeout: Duration::from_secs_f64(timeout),
-		})
-	}
+impl IntoLua for NotifyOpt {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
 }
 
 // --- Level
-#[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum NotifyLevel {
 	#[default]

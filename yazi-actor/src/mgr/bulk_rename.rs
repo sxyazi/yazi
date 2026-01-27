@@ -13,7 +13,7 @@ use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
-use yazi_term::tty::TTY;
+use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 

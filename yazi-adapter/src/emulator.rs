@@ -6,9 +6,9 @@ use scopeguard::defer;
 use tokio::time::sleep;
 use tracing::{debug, error, warn};
 use yazi_shared::Either;
-use yazi_term::tty::{Handle, TTY};
+use yazi_tty::{Handle, TTY};
 
-use crate::{Adapter, Brand, Dimension, Mux, TMUX, Unknown};
+use crate::{Brand, Dimension, Mux, TMUX, Unknown};
 
 #[derive(Clone, Debug)]
 pub struct Emulator {
@@ -74,13 +74,6 @@ impl Emulator {
 			csi_16t,
 			force_16t: Self::force_16t(csi_16t),
 		})
-	}
-
-	pub fn adapters(&self) -> &'static [Adapter] {
-		match self.kind {
-			Either::Left(brand) => brand.adapters(),
-			Either::Right(unknown) => unknown.adapters(),
-		}
 	}
 
 	pub fn move_lock<F, T>((x, y): (u16, u16), cb: F) -> Result<T>
