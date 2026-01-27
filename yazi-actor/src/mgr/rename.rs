@@ -4,8 +4,12 @@ use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, err, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameOpt;
-use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{Id, data::Data, url::{UrlBuf, UrlLike}};
+use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy, MgrProxy};
+use yazi_shared::{
+	Id,
+	data::Data,
+	url::{UrlBuf, UrlLike},
+};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
@@ -40,6 +44,9 @@ impl Actor for Rename {
 			_ => None,
 		};
 
+		let target_is_file = hovered.is_file();
+		let target_is_empty = hovered.len == 0;
+
 		let (tab, old) = (cx.tab().id, hovered.url_owned());
 		let mut input = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
 
@@ -49,14 +56,29 @@ impl Actor for Rename {
 				return;
 			}
 
+			let conversion_to_dir_requested =
+				target_is_file && (name.ends_with('/') || name.ends_with('\\'));
+			if conversion_to_dir_requested && !target_is_empty {
+				AppProxy::notify_warn("Rename", "Only empty files may be converted to directories");
+				return;
+			}
+
 			let Some(Ok(new)) = old.parent().map(|u| u.try_join(name)) else {
 				return;
 			};
 
-			if opt.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
-				Self::r#do(tab, old, new).await.ok();
-			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
-				Self::r#do(tab, old, new).await.ok();
+			if !opt.force
+				&& maybe_exists(&new).await
+				&& !provider::must_identical(&old, &new).await
+				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
+			{
+				return;
+			}
+
+			if conversion_to_dir_requested && target_is_empty {
+				_ = Self::replace_file_with_dir(old, new).await;
+			} else {
+				_ = Self::r#do(tab, old, new).await;
 			}
 		});
 		succ!();
@@ -93,6 +115,29 @@ impl Rename {
 
 		MgrProxy::reveal(&new);
 		err!(Pubsub::pub_after_rename(tab, &old, &new));
+		Ok(())
+	}
+
+	async fn replace_file_with_dir(file: UrlBuf, dir: UrlBuf) -> Result<()> {
+		let _permit = WATCHER.acquire().await.unwrap();
+
+		if let Ok(real_file) = provider::casefold(&file).await
+			&& let Some((file_p, file_n)) = real_file.pair()
+		{
+			ok_or_not_found!(provider::remove_file(&file).await);
+			FilesOp::Deleting(file_p.into(), [file_n.into()].into()).emit();
+		}
+
+		provider::create_dir_all(&dir).await?;
+
+		if let Ok(real_dir) = provider::casefold(&dir).await
+			&& let Some((dir_p, dir_n)) = real_dir.pair()
+		{
+			let dir = File::new(&real_dir).await?;
+			FilesOp::Upserting(dir_p.into(), [(dir_n.into(), dir)].into()).emit();
+			MgrProxy::reveal(&real_dir);
+		}
+
 		Ok(())
 	}
 
