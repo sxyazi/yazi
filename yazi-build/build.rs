@@ -17,6 +17,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let target = env::var("TARGET").unwrap();
 	let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
 	unsafe {
+		env::set_var("CARGO_TARGET_DIR", "target");
 		env::set_var("VERGEN_GIT_SHA", "Crates.io");
 		env::set_var("YAZI_CRATE_BUILD", "1");
 
