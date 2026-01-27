@@ -583,6 +583,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link",
 ]
@@ -1004,6 +1005,16 @@ dependencies = [
 
 [[package]]
 name = "darling"
+version = "0.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9cdf337090841a411e2a7f3deb9187445851f91b309c0c0a29e05f74a00a48c0"
+dependencies = [
+ "darling_core 0.21.3",
+ "darling_macro 0.21.3",
+]
+
+[[package]]
+name = "darling"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25ae13da2f202d56bd7f91c25fba009e7717a1e4a1cc98a76d844b65ae912e9d"
@@ -1017,6 +1028,20 @@ name = "darling_core"
 version = "0.20.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d00b9596d185e565c2207a0b01f8bd1a135483d02d9b7b0a54b11da8d53412e"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim",
+ "syn 2.0.114",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1247195ecd7e3c85f83c8d2a366e4210d588e802133e1e355180a9870b517ea4"
 dependencies = [
  "fnv",
  "ident_case",
@@ -1046,6 +1071,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
 dependencies = [
  "darling_core 0.20.11",
+ "quote",
+ "syn 2.0.114",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d38308df82d1080de0afee5d069fa14b0326a88c14f15c5ccda35b4a6c414c81"
+dependencies = [
+ "darling_core 0.21.3",
  "quote",
  "syn 2.0.114",
 ]
@@ -1134,6 +1170,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ececcb659e7ba858fb4f10388c250a7252eb0a27373f1a72b8748afdd248e587"
 dependencies = [
  "powerfmt",
+ "serde_core",
 ]
 
 [[package]]
@@ -1761,6 +1798,12 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+
+[[package]]
+name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
@@ -1940,12 +1983,23 @@ checksum = "e7c5cedc30da3a610cac6b4ba17597bdf7152cf974e8aab3afb3d54455e371c8"
 
 [[package]]
 name = "indexmap"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
+dependencies = [
+ "autocfg",
+ "hashbrown 0.12.3",
+ "serde",
+]
+
+[[package]]
+name = "indexmap"
 version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7714e70437a7dc3ac8eb7e6f8df75fd8eb422675fc7678aff7364301092b1017"
 dependencies = [
  "equivalent",
- "hashbrown",
+ "hashbrown 0.16.1",
  "serde",
  "serde_core",
 ]
@@ -2091,7 +2145,7 @@ version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fe90c1150662e858c7d5f945089b7517b0a80d8bf7ba4b1b5ffc984e7230a5b"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.16.1",
  "portable-atomic",
  "thiserror 2.0.18",
 ]
@@ -2292,7 +2346,7 @@ version = "0.16.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1dc47f592c06f33f8e3aea9591776ec7c9f9e4124778ff8a3c3b87159f7e593"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.16.1",
 ]
 
 [[package]]
@@ -3097,7 +3151,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "740ebea15c5d1428f910cd1a5f52cebf8d25006245ed8ade92702f4943d91e07"
 dependencies = [
  "base64",
- "indexmap",
+ "indexmap 2.13.0",
  "quick-xml",
  "serde",
  "time",
@@ -3380,7 +3434,7 @@ checksum = "5ef8dea09a92caaf73bff7adb70b76162e5937524058a7e5bff37869cbbec293"
 dependencies = [
  "bitflags 2.10.0",
  "compact_str",
- "hashbrown",
+ "hashbrown 0.16.1",
  "indoc",
  "itertools",
  "kasuari",
@@ -3444,7 +3498,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7dbfa023cd4e604c2553483820c5fe8aa9d71a42eea5aa77c6e7f35756612db"
 dependencies = [
  "bitflags 2.10.0",
- "hashbrown",
+ "hashbrown 0.16.1",
  "indoc",
  "instability",
  "itertools",
@@ -3817,6 +3871,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "schemars"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cd191f9397d57d581cddd31014772520aa448f65ef991055d7f61582c65165f"
+dependencies = [
+ "dyn-clone",
+ "ref-cast",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54e910108742c57a770f492731f99be216a52fadd361b06c8fb59d74ccc267d2"
+dependencies = [
+ "dyn-clone",
+ "ref-cast",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3913,6 +3991,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8bbf91e5a4d6315eee45e704372590b30e260ee83af6639d64557f51b067776"
 dependencies = [
  "serde_core",
+]
+
+[[package]]
+name = "serde_with"
+version = "3.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fa237f2807440d238e0364a218270b98f767a00d3dada77b1c53ae88940e2e7"
+dependencies = [
+ "base64",
+ "chrono",
+ "hex",
+ "indexmap 1.9.3",
+ "indexmap 2.13.0",
+ "schemars 0.9.0",
+ "schemars 1.2.0",
+ "serde_core",
+ "serde_json",
+ "serde_with_macros",
+ "time",
+]
+
+[[package]]
+name = "serde_with_macros"
+version = "3.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52a8e3ca0ca629121f70ab50f95249e5a6f925cc0f6ffe8256c45b728875706c"
+dependencies = [
+ "darling 0.21.3",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
 ]
 
 [[package]]
@@ -4524,7 +4633,7 @@ version = "0.9.11+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3afc9a848309fe1aaffaed6e1546a7a14de1f935dc9d89d32afd9a44bab7c46"
 dependencies = [
- "indexmap",
+ "indexmap 2.13.0",
  "serde_core",
  "serde_spanned",
  "toml_datetime",
@@ -5426,7 +5535,7 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "futures",
- "hashbrown",
+ "hashbrown 0.16.1",
  "libc",
  "mlua",
  "paste",
@@ -5447,6 +5556,7 @@ dependencies = [
  "yazi-scheduler",
  "yazi-shared",
  "yazi-term",
+ "yazi-tty",
  "yazi-vfs",
  "yazi-watcher",
  "yazi-widgets",
@@ -5473,6 +5583,7 @@ dependencies = [
  "yazi-macro",
  "yazi-shared",
  "yazi-term",
+ "yazi-tty",
 ]
 
 [[package]]
@@ -5481,7 +5592,7 @@ version = "26.1.22"
 dependencies = [
  "ansi-to-tui",
  "futures",
- "hashbrown",
+ "hashbrown 0.16.1",
  "mlua",
  "paste",
  "ratatui",
@@ -5506,7 +5617,7 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "futures",
- "hashbrown",
+ "hashbrown 0.16.1",
  "regex",
  "vergen-gitcl",
  "yazi-adapter",
@@ -5522,6 +5633,7 @@ name = "yazi-build"
 version = "26.1.22"
 dependencies = [
  "yazi-term",
+ "yazi-tty",
 ]
 
 [[package]]
@@ -5565,8 +5677,8 @@ dependencies = [
  "crossterm 0.29.0",
  "dirs",
  "globset",
- "hashbrown",
- "indexmap",
+ "hashbrown 0.16.1",
+ "indexmap 2.13.0",
  "ratatui",
  "regex",
  "serde",
@@ -5578,6 +5690,7 @@ dependencies = [
  "yazi-macro",
  "yazi-shared",
  "yazi-term",
+ "yazi-tty",
 ]
 
 [[package]]
@@ -5586,8 +5699,8 @@ version = "26.1.22"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
- "hashbrown",
- "indexmap",
+ "hashbrown 0.16.1",
+ "indexmap 2.13.0",
  "parking_lot",
  "ratatui",
  "tokio",
@@ -5615,7 +5728,7 @@ name = "yazi-dds"
 version = "26.1.22"
 dependencies = [
  "anyhow",
- "hashbrown",
+ "hashbrown 0.16.1",
  "mlua",
  "ordered-float 5.1.0",
  "parking_lot",
@@ -5681,6 +5794,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-shared",
  "yazi-term",
+ "yazi-tty",
  "yazi-vfs",
  "yazi-watcher",
  "yazi-widgets",
@@ -5696,7 +5810,7 @@ dependencies = [
  "core-foundation-sys",
  "dirs",
  "foldhash",
- "hashbrown",
+ "hashbrown 0.16.1",
  "libc",
  "objc2",
  "parking_lot",
@@ -5733,10 +5847,11 @@ dependencies = [
  "bitflags 2.10.0",
  "crossterm 0.29.0",
  "dyn-clone",
- "hashbrown",
+ "hashbrown 0.16.1",
  "mlua",
  "ordered-float 5.1.0",
  "serde",
+ "serde_with",
  "tokio",
  "yazi-binding",
  "yazi-boot",
@@ -5754,7 +5869,7 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "futures",
- "hashbrown",
+ "hashbrown 0.16.1",
  "libc",
  "mlua",
  "parking_lot",
@@ -5811,7 +5926,7 @@ dependencies = [
  "anyhow",
  "async-priority-channel",
  "foldhash",
- "hashbrown",
+ "hashbrown 0.16.1",
  "libc",
  "lru",
  "mlua",
@@ -5854,7 +5969,7 @@ dependencies = [
  "dyn-clone",
  "foldhash",
  "futures",
- "hashbrown",
+ "hashbrown 0.16.1",
  "libc",
  "memchr",
  "ordered-float 5.1.0",
@@ -5885,6 +6000,17 @@ dependencies = [
  "libc",
  "parking_lot",
  "tracing",
+ "yazi-macro",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-tty"
+version = "26.1.22"
+dependencies = [
+ "libc",
+ "parking_lot",
+ "tracing",
  "windows-sys 0.61.2",
  "yazi-macro",
  "yazi-shared",
@@ -5897,7 +6023,7 @@ dependencies = [
  "anyhow",
  "deadpool",
  "futures",
- "hashbrown",
+ "hashbrown 0.16.1",
  "parking_lot",
  "russh",
  "tokio",
@@ -5915,7 +6041,7 @@ name = "yazi-watcher"
 version = "26.1.22"
 dependencies = [
  "anyhow",
- "hashbrown",
+ "hashbrown 0.16.1",
  "notify",
  "parking_lot",
  "percent-encoding",
@@ -5950,6 +6076,7 @@ dependencies = [
  "yazi-parser",
  "yazi-shared",
  "yazi-term",
+ "yazi-tty",
 ]
 
 [[package]]

@@ -88,32 +88,6 @@ impl Brand {
 		None
 	}
 
-	pub(super) fn adapters(self) -> &'static [crate::Adapter] {
-		use crate::Adapter as A;
-
-		match self {
-			Self::Kitty => &[A::Kgp],
-			Self::Konsole => &[A::KgpOld],
-			Self::Iterm2 => &[A::Iip, A::Sixel],
-			Self::WezTerm => &[A::Iip, A::Sixel],
-			Self::Foot => &[A::Sixel],
-			Self::Ghostty => &[A::Kgp],
-			Self::Microsoft => &[A::Sixel],
-			Self::Warp => &[A::Iip, A::KgpOld],
-			Self::Rio => &[A::Iip, A::Sixel],
-			Self::BlackBox => &[A::Sixel],
-			Self::VSCode => &[A::Iip, A::Sixel],
-			Self::Tabby => &[A::Iip, A::Sixel],
-			Self::Hyper => &[A::Iip, A::Sixel],
-			Self::Mintty => &[A::Iip],
-			Self::Tmux => &[],
-			Self::VTerm => &[],
-			Self::Apple => &[],
-			Self::Urxvt => &[],
-			Self::Bobcat => &[A::Iip, A::Sixel],
-		}
-	}
-
 	fn env() -> (String, String) {
 		let (term, program) = Mux::term_program();
 		(

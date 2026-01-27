@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::Result;
 use tracing::error;
 use yazi_macro::time;
-use yazi_term::tty::TTY;
+use yazi_tty::TTY;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, TMUX};
 

@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use crate::{Emulator, SHOWN, TMUX, drivers};
+use crate::{Adapters, Emulator, SHOWN, TMUX, drivers};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Adapter {
@@ -85,13 +85,13 @@ impl Adapter {
 
 impl Adapter {
 	pub fn matches(emulator: &Emulator) -> Self {
-		let mut protocols = emulator.adapters().to_owned();
+		let mut adapters: Adapters = emulator.into();
 		if env_exists("ZELLIJ_SESSION_NAME") {
-			protocols.retain(|p| *p == Self::Sixel);
+			adapters.retain(|p| *p == Self::Sixel);
 		} else if TMUX.get() {
-			protocols.retain(|p| *p != Self::KgpOld);
+			adapters.retain(|p| *p != Self::KgpOld);
 		}
-		if let Some(p) = protocols.first() {
+		if let Some(p) = adapters.first() {
 			return *p;
 		}
 

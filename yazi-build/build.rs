@@ -1,9 +1,9 @@
 use std::{env, error::Error, io::{BufRead, BufReader, Read, Write}, process::{Command, Stdio}, thread};
 
-use yazi_term::tty::TTY;
+use yazi_tty::TTY;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	yazi_term::init();
+	yazi_tty::init();
 
 	let manifest = env::var_os("CARGO_MANIFEST_DIR").unwrap().to_string_lossy().replace(r"\", "/");
 	let crates = if manifest.contains("/git/checkouts/yazi-") {

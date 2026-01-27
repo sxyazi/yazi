@@ -1,10 +1,10 @@
 [package]
-name        = "yazi-term"
+name        = "yazi-tty"
 version     = "26.1.22"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi terminal extensions"
+description = "Yazi TTY access layer"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
@@ -16,12 +16,11 @@ yazi-macro  = { path = "../yazi-macro", version = "26.1.22" }
 yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
 
 # External dependencies
-crossterm   = { workspace = true }
 parking_lot = { workspace = true }
 tracing     = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }
 
-[target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = [ "Win32_Globalization", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_System_Console", "Win32_System_Threading", "Win32_Security" ] }
