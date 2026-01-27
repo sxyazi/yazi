@@ -1240,9 +1240,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.11.0-rc.8"
+version = "0.11.0-rc.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fc1408b7a9f59a7b933faff3e9e7fc15a05a524effd3b3d1601156944c8077f"
+checksum = "bff8de092798697546237a3a701e4174fe021579faec9b854379af9bf1e31962"
 dependencies = [
  "block-buffer 0.11.0",
  "const-oid 0.10.2",
@@ -2064,7 +2064,7 @@ checksum = "fe44f2bbd99fcb302e246e2d6bcf51aeda346d02a365f80296a07a8c711b6da6"
 dependencies = [
  "argon2",
  "bcrypt-pbkdf",
- "digest 0.11.0-rc.8",
+ "digest 0.11.0-rc.9",
  "ecdsa",
  "ed25519-dalek",
  "hex",
@@ -2585,9 +2585,12 @@ dependencies = [
 
 [[package]]
 name = "notify-types"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e0826a989adedc2a244799e823aece04662b66609d96af8dff7ac6df9a8925d"
+checksum = "42b8cfee0e339a0337359f3c88165702ac6e600dc01c0cc9579a92d62b08477a"
+dependencies = [
+ "bitflags 2.10.0",
+]
 
 [[package]]
 name = "nu-ansi-term"
@@ -3130,9 +3133,9 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.9"
+version = "0.11.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80f8fa6196ede5a9f9ee95b44ca134bddc9b70e8913f9297bd58c909f5889a09"
+checksum = "b226d2cc389763951db8869584fd800cbbe2962bf454e2edeb5172b31ee99774"
 dependencies = [
  "der 0.8.0-rc.10",
  "spki 0.8.0-rc.4",
@@ -3688,9 +3691,9 @@ dependencies = [
  "const-oid 0.10.2",
  "crypto-bigint 0.7.0-rc.18",
  "crypto-primes",
- "digest 0.11.0-rc.8",
+ "digest 0.11.0-rc.9",
  "pkcs1",
- "pkcs8 0.11.0-rc.9",
+ "pkcs8 0.11.0-rc.10",
  "rand_core 0.10.0-rc-3",
  "sha2 0.11.0-rc.4",
  "signature 3.0.0-rc.6",
@@ -4053,7 +4056,7 @@ checksum = "9c777f0a122a53fddb0beb6e706771197000b8eb5c9f42b5b850f450ef48c788"
 dependencies = [
  "cfg-if",
  "cpufeatures",
- "digest 0.11.0-rc.8",
+ "digest 0.11.0-rc.9",
 ]
 
 [[package]]
@@ -4075,7 +4078,7 @@ checksum = "7535f94fa3339fe9e5e9be6260a909e62af97f6e14b32345ccf79b92b8b81233"
 dependencies = [
  "cfg-if",
  "cpufeatures",
- "digest 0.11.0-rc.8",
+ "digest 0.11.0-rc.9",
 ]
 
 [[package]]
@@ -4162,7 +4165,7 @@ version = "3.0.0-rc.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "597a96996ccff7dfa16f052bd995b4cecc72af22c35138738dc029f0ead6608d"
 dependencies = [
- "digest 0.11.0-rc.8",
+ "digest 0.11.0-rc.9",
  "rand_core 0.10.0-rc-3",
 ]
 
@@ -4189,9 +4192,9 @@ checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
 
 [[package]]
 name = "siphasher"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56199f7ddabf13fe5074ce809e7d3f42b42ae711800501b5b16ea82ad029c39d"
+checksum = "b2aa850e253778c88a04c3d7323b043aeda9d3e30d5971937c1855769763678e"
 
 [[package]]
 name = "slab"
@@ -4849,9 +4852,9 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.19.0"
+version = "1.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2e054861b4bd027cd373e18e8d8d8e6548085000e41290d95ce0c373a654b4a"
+checksum = "ee48d38b119b0cd71fe4141b30f5ba9c7c5d9f4e7a3a8b4a674e4b6ef789976f"
 dependencies = [
  "atomic",
  "getrandom 0.3.4",
@@ -5555,7 +5558,6 @@ dependencies = [
  "yazi-proxy",
  "yazi-scheduler",
  "yazi-shared",
- "yazi-term",
  "yazi-tty",
  "yazi-vfs",
  "yazi-watcher",
@@ -5575,14 +5577,13 @@ dependencies = [
  "palette",
  "quantette",
  "ratatui",
- "scopeguard",
  "tokio",
  "tracing",
  "yazi-config",
+ "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
- "yazi-term",
  "yazi-tty",
 ]
 
@@ -5622,6 +5623,7 @@ dependencies = [
  "vergen-gitcl",
  "yazi-adapter",
  "yazi-config",
+ "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
@@ -5632,7 +5634,6 @@ dependencies = [
 name = "yazi-build"
 version = "26.1.22"
 dependencies = [
- "yazi-term",
  "yazi-tty",
 ]
 
@@ -5689,7 +5690,6 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
- "yazi-term",
  "yazi-tty",
 ]
 
@@ -5711,6 +5711,7 @@ dependencies = [
  "yazi-adapter",
  "yazi-config",
  "yazi-dds",
+ "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
  "yazi-parser",
@@ -5746,6 +5747,20 @@ dependencies = [
  "yazi-macro",
  "yazi-parser",
  "yazi-shared",
+]
+
+[[package]]
+name = "yazi-emulator"
+version = "26.1.22"
+dependencies = [
+ "anyhow",
+ "crossterm 0.29.0",
+ "scopeguard",
+ "tokio",
+ "tracing",
+ "yazi-macro",
+ "yazi-shared",
+ "yazi-tty",
 ]
 
 [[package]]
@@ -5787,6 +5802,7 @@ dependencies = [
  "yazi-config",
  "yazi-core",
  "yazi-dds",
+ "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
  "yazi-parser",
@@ -5890,6 +5906,7 @@ dependencies = [
  "yazi-boot",
  "yazi-config",
  "yazi-dds",
+ "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
  "yazi-parser",
@@ -5911,7 +5928,6 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 name = "yazi-proxy"
 version = "26.1.22"
 dependencies = [
- "anyhow",
  "tokio",
  "yazi-config",
  "yazi-macro",
@@ -5998,10 +6014,7 @@ version = "26.1.22"
 dependencies = [
  "crossterm 0.29.0",
  "libc",
- "parking_lot",
- "tracing",
  "yazi-macro",
- "yazi-shared",
 ]
 
 [[package]]
@@ -6075,24 +6088,23 @@ dependencies = [
  "yazi-macro",
  "yazi-parser",
  "yazi-shared",
- "yazi-term",
  "yazi-tty",
 ]
 
 [[package]]
 name = "zerocopy"
-version = "0.8.33"
+version = "0.8.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "668f5168d10b9ee831de31933dc111a459c97ec93225beb307aed970d1372dfd"
+checksum = "71ddd76bcebeed25db614f82bf31a9f4222d3fbba300e6fb6c00afa26cbd4d9d"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.33"
+version = "0.8.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c7962b26b0a8685668b671ee4b54d007a67d4eaf05fda79ac0ecf41e32270f1"
+checksum = "d8187381b52e32220d50b255276aa16a084ec0a9017a0ca2152a1f55c539758d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6121,9 +6133,9 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "1.0.16"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfcd145825aace48cff44a8844de64bf75feec3080e0aa5cdbde72961ae51a65"
+checksum = "02aae0f83f69aafc94776e879363e9771d7ecbffe2c7fbb6c14c5e00dfe88439"
 
 [[package]]
 name = "zune-core"

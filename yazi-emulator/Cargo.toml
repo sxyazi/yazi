@@ -1,10 +1,10 @@
 [package]
-name        = "yazi-term"
+name        = "yazi-emulator"
 version     = "26.1.22"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi terminal extensions"
+description = "Yazi terminal emulator database"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
@@ -13,12 +13,15 @@ workspace = true
 
 [dependencies]
 yazi-macro  = { path = "../yazi-macro", version = "26.1.22" }
+yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
+yazi-tty    = { path = "../yazi-tty", version = "26.1.22" }
 
 # External dependencies
-crossterm   = { workspace = true }
-
-[target."cfg(unix)".dependencies]
-libc = { workspace = true }
+anyhow     = { workspace = true }
+crossterm  = { workspace = true }
+scopeguard = { workspace = true }
+tokio      = { workspace = true }
+tracing    = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

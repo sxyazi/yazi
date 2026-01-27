@@ -6,9 +6,10 @@ use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::{debug, warn};
 use yazi_config::YAZI;
+use yazi_emulator::Dimension;
 use yazi_shared::{LOG_LEVEL, RoCell, env_exists};
 
-use crate::{Adapter, Dimension};
+use crate::Adapter;
 
 type Cmd = Option<(PathBuf, Rect)>;
 

@@ -15,6 +15,7 @@ workspace = true
 yazi-adapter   = { path = "../yazi-adapter", version = "26.1.22" }
 yazi-config    = { path = "../yazi-config", version = "26.1.22" }
 yazi-dds       = { path = "../yazi-dds", version = "26.1.22" }
+yazi-emulator  = { path = "../yazi-emulator", version = "26.1.22" }
 yazi-fs        = { path = "../yazi-fs", version = "26.1.22" }
 yazi-macro     = { path = "../yazi-macro", version = "26.1.22" }
 yazi-parser    = { path = "../yazi-parser", version = "26.1.22" }

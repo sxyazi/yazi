@@ -18,7 +18,6 @@ panic         = "abort"
 strip         = true
 
 [build-dependencies]
-yazi-term = { path = "../yazi-term", version = "26.1.22" }
 yazi-tty  = { path = "../yazi-tty", version = "26.1.22" }
 
 [[bin]]

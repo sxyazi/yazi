@@ -18,5 +18,4 @@ yazi-parser = { path = "../yazi-parser", version = "26.1.22" }
 yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
 
 # External dependencies
-anyhow = { workspace = true }
 tokio  = { workspace = true }

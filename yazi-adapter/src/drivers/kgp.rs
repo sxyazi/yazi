@@ -6,9 +6,10 @@ use base64::{Engine, engine::general_purpose};
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
+use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_shared::SyncCell;
 
-use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter, image::Image};
+use crate::{adapter::Adapter, image::Image};
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',

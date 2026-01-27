@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use yazi_shared::Either;
 
-use crate::{Adapter, Brand, Emulator, Unknown};
+use crate::Adapter;
 
 pub(super) struct Adapters(Vec<Adapter>);
 
@@ -16,8 +16,8 @@ impl DerefMut for Adapters {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
-impl From<&Emulator> for Adapters {
-	fn from(value: &Emulator) -> Self {
+impl From<&yazi_emulator::Emulator> for Adapters {
+	fn from(value: &yazi_emulator::Emulator) -> Self {
 		match value.kind {
 			Either::Left(b) => b.into(),
 			Either::Right(u) => u.into(),
@@ -25,9 +25,9 @@ impl From<&Emulator> for Adapters {
 	}
 }
 
-impl From<Brand> for Adapters {
-	fn from(value: Brand) -> Self {
-		use Brand as B;
+impl From<yazi_emulator::Brand> for Adapters {
+	fn from(value: yazi_emulator::Brand) -> Self {
+		use yazi_emulator::Brand as B;
 
 		use crate::Adapter as A;
 
@@ -55,8 +55,8 @@ impl From<Brand> for Adapters {
 	}
 }
 
-impl From<Unknown> for Adapters {
-	fn from(value: Unknown) -> Self {
+impl From<yazi_emulator::Unknown> for Adapters {
+	fn from(value: yazi_emulator::Unknown) -> Self {
 		use Adapter as A;
 
 		Self(match (value.kgp, value.sixel) {

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use ratatui::layout::Rect;
-use yazi_adapter::Dimension;
+use yazi_emulator::Dimension;
 use yazi_macro::act;
 use yazi_parser::notify::TickOpt;
 use yazi_shared::data::Data;

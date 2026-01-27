@@ -16,7 +16,6 @@ yazi-codegen = { path = "../yazi-codegen", version = "26.1.22" }
 yazi-fs      = { path = "../yazi-fs", version = "26.1.22" }
 yazi-macro   = { path = "../yazi-macro", version = "26.1.22" }
 yazi-shared  = { path = "../yazi-shared", version = "26.1.22" }
-yazi-term    = { path = "../yazi-term", version = "26.1.22" }
 yazi-tty     = { path = "../yazi-tty", version = "26.1.22" }
 
 # External dependencies

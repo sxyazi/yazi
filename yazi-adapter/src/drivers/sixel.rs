@@ -6,8 +6,9 @@ use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
 use quantette::{PaletteSize, color_map::IndexedColorMap, wu::{BinnerU8x3, WuU8x3}};
 use ratatui::layout::Rect;
+use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 
-use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
+use crate::{Image, adapter::Adapter};
 
 pub(crate) struct Sixel;
 

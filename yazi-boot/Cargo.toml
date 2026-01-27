@@ -12,12 +12,13 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "26.1.22" }
-yazi-config  = { path = "../yazi-config", version = "26.1.22" }
-yazi-fs      = { path = "../yazi-fs", version = "26.1.22" }
-yazi-macro   = { path = "../yazi-macro", version = "26.1.22" }
-yazi-shared  = { path = "../yazi-shared", version = "26.1.22" }
-yazi-vfs     = { path = "../yazi-vfs", version = "26.1.22" }
+yazi-adapter  = { path = "../yazi-adapter", version = "26.1.22" }
+yazi-config   = { path = "../yazi-config", version = "26.1.22" }
+yazi-emulator = { path = "../yazi-emulator", version = "26.1.22" }
+yazi-fs       = { path = "../yazi-fs", version = "26.1.22" }
+yazi-macro    = { path = "../yazi-macro", version = "26.1.22" }
+yazi-shared   = { path = "../yazi-shared", version = "26.1.22" }
+yazi-vfs      = { path = "../yazi-vfs", version = "26.1.22" }
 
 # External dependencies
 clap      = { workspace = true }

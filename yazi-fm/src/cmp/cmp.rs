@@ -1,9 +1,9 @@
 use std::path::MAIN_SEPARATOR_STR;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
-use yazi_adapter::Dimension;
 use yazi_config::{THEME, popup::{Offset, Position}};
 use yazi_core::Core;
+use yazi_emulator::Dimension;
 use yazi_shared::strand::StrandLike;
 
 pub(crate) struct Cmp<'a> {

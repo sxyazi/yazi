@@ -5,9 +5,10 @@ use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
 use ratatui::layout::Rect;
+use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_tty::TTY;
 
-use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
+use crate::{Image, adapter::Adapter};
 
 pub(crate) struct KgpOld;
 
