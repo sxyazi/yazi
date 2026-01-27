@@ -4,9 +4,10 @@ use anyhow::Result;
 use image::{DynamicImage, ImageDecoder, ImageError, ImageReader, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
+use yazi_emulator::Dimension;
 use yazi_fs::provider::{Provider, local::Local};
 
-use crate::{Dimension, Icc};
+use crate::Icc;
 
 pub struct Image;
 

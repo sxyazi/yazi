@@ -1,8 +1,8 @@
 use std::iter;
 
 use ratatui::layout::Rect;
-use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
+use yazi_emulator::Dimension;
 use yazi_fs::Splatable;
 use yazi_shared::url::{AsUrl, Url, UrlBuf};
 use yazi_watcher::Watcher;

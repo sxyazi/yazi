@@ -13,7 +13,7 @@ pub struct NotifyOpt {
 	pub title:   String,
 	pub content: String,
 	pub level:   NotifyLevel,
-	#[serde_as(as = "DurationSeconds<f64>")]  // FIXME
+	#[serde_as(as = "DurationSeconds<f64>")] // FIXME
 	pub timeout: Duration,
 }
 

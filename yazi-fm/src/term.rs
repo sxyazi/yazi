@@ -3,8 +3,8 @@ use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableFocusChange, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
-use yazi_adapter::{Emulator, Mux, TMUX};
 use yazi_config::{THEME, YAZI};
+use yazi_emulator::{Emulator, Mux, TMUX};
 use yazi_shared::SyncCell;
 use yazi_tty::{TTY, TtyWriter};
 
@@ -26,8 +26,8 @@ impl Term {
 
 		enable_raw_mode()?;
 		static FIRST: SyncCell<bool> = SyncCell::new(false);
-		if FIRST.replace(true) && yazi_adapter::TMUX.get() {
-			yazi_adapter::Mux::tmux_passthrough();
+		if FIRST.replace(true) && yazi_emulator::TMUX.get() {
+			yazi_emulator::Mux::tmux_passthrough();
 		}
 
 		execute!(

@@ -1,8 +1,8 @@
 use std::{env, ffi::OsStr, fmt::Write, path::Path};
 
 use regex::Regex;
-use yazi_adapter::Mux;
 use yazi_config::{THEME, YAZI};
+use yazi_emulator::Mux;
 use yazi_fs::Xdg;
 use yazi_shared::timestamp_us;
 
@@ -33,12 +33,12 @@ impl Actions {
 		writeln!(s, "    TERM                : {:?}", env::var_os("TERM"))?;
 		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
 		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
-		writeln!(s, "    Brand.from_env      : {:?}", yazi_adapter::Brand::from_env())?;
-		writeln!(s, "    Emulator.detect     : {:?}", &*yazi_adapter::EMULATOR)?;
+		writeln!(s, "    Brand.from_env      : {:?}", yazi_emulator::Brand::from_env())?;
+		writeln!(s, "    Emulator.detect     : {:?}", &*yazi_emulator::EMULATOR)?;
 
 		writeln!(s, "\nAdapter")?;
 		writeln!(s, "    Adapter.matches    : {:?}", yazi_adapter::ADAPTOR)?;
-		writeln!(s, "    Dimension.available: {:?}", yazi_adapter::Dimension::available())?;
+		writeln!(s, "    Dimension.available: {:?}", yazi_emulator::Dimension::available())?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;
@@ -83,7 +83,7 @@ impl Actions {
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;
-		writeln!(s, "    TMUX               : {}", yazi_adapter::TMUX)?;
+		writeln!(s, "    TMUX               : {}", yazi_emulator::TMUX)?;
 		writeln!(s, "    tmux version       : {}", Self::process_output("tmux", "-V"))?;
 		writeln!(s, "    tmux build flags   : enable-sixel={}", Mux::tmux_sixel_flag())?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;

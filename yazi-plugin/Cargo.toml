@@ -16,19 +16,20 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "26.1.22" }
-yazi-binding = { path = "../yazi-binding", version = "26.1.22" }
-yazi-boot    = { path = "../yazi-boot", version = "26.1.22" }
-yazi-config  = { path = "../yazi-config", version = "26.1.22" }
-yazi-dds     = { path = "../yazi-dds", version = "26.1.22" }
-yazi-fs      = { path = "../yazi-fs", version = "26.1.22" }
-yazi-macro   = { path = "../yazi-macro", version = "26.1.22" }
-yazi-parser  = { path = "../yazi-parser", version = "26.1.22" }
-yazi-proxy   = { path = "../yazi-proxy", version = "26.1.22" }
-yazi-shared  = { path = "../yazi-shared", version = "26.1.22" }
-yazi-shim    = { path = "../yazi-shim", version = "26.1.22" }
-yazi-vfs     = { path = "../yazi-vfs", version = "26.1.22" }
-yazi-widgets = { path = "../yazi-widgets", version = "26.1.22" }
+yazi-adapter  = { path = "../yazi-adapter", version = "26.1.22" }
+yazi-binding  = { path = "../yazi-binding", version = "26.1.22" }
+yazi-boot     = { path = "../yazi-boot", version = "26.1.22" }
+yazi-config   = { path = "../yazi-config", version = "26.1.22" }
+yazi-dds      = { path = "../yazi-dds", version = "26.1.22" }
+yazi-emulator = { path = "../yazi-emulator", version = "26.1.22" }
+yazi-fs       = { path = "../yazi-fs", version = "26.1.22" }
+yazi-macro    = { path = "../yazi-macro", version = "26.1.22" }
+yazi-parser   = { path = "../yazi-parser", version = "26.1.22" }
+yazi-proxy    = { path = "../yazi-proxy", version = "26.1.22" }
+yazi-shared   = { path = "../yazi-shared", version = "26.1.22" }
+yazi-shim     = { path = "../yazi-shim", version = "26.1.22" }
+yazi-vfs      = { path = "../yazi-vfs", version = "26.1.22" }
+yazi-widgets  = { path = "../yazi-widgets", version = "26.1.22" }
 
 # External dependencies
 anyhow        = { workspace = true }

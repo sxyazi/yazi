@@ -1,8 +1,8 @@
 use anyhow::Result;
 use crossterm::{cursor::SetCursorStyle, event::KeyCode};
 use unicode_width::UnicodeWidthStr;
-use yazi_adapter::Dimension;
 use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
+use yazi_emulator::Dimension;
 use yazi_macro::{act, render, render_and};
 use yazi_shared::Layer;
 use yazi_widgets::Scrollable;

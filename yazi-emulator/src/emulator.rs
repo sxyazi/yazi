@@ -5,10 +5,12 @@ use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, 
 use scopeguard::defer;
 use tokio::time::sleep;
 use tracing::{debug, error, warn};
-use yazi_shared::Either;
+use yazi_shared::{Either, RoCell};
 use yazi_tty::{Handle, TTY};
 
 use crate::{Brand, Dimension, Mux, TMUX, Unknown};
+
+pub static EMULATOR: RoCell<Emulator> = RoCell::new();
 
 #[derive(Clone, Debug)]
 pub struct Emulator {

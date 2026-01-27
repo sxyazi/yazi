@@ -3,9 +3,15 @@ use std::borrow::Cow;
 use anyhow::Result;
 use tracing::error;
 use yazi_macro::time;
+use yazi_shared::SyncCell;
 use yazi_tty::TTY;
 
-use crate::{CLOSE, ESCAPE, Emulator, START, TMUX};
+use crate::Emulator;
+
+pub static TMUX: SyncCell<bool> = SyncCell::new(false);
+pub static ESCAPE: SyncCell<&'static str> = SyncCell::new("\x1b");
+pub static START: SyncCell<&'static str> = SyncCell::new("\x1b");
+pub static CLOSE: SyncCell<&'static str> = SyncCell::new("");
 
 pub struct Mux;
 

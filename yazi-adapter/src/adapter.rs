@@ -3,9 +3,10 @@ use std::{env, fmt::Display, path::PathBuf};
 use anyhow::Result;
 use ratatui::layout::Rect;
 use tracing::warn;
+use yazi_emulator::{Emulator, TMUX};
 use yazi_shared::env_exists;
 
-use crate::{Adapters, Emulator, SHOWN, TMUX, drivers};
+use crate::{Adapters, SHOWN, drivers};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Adapter {

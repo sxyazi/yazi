@@ -1,6 +1,6 @@
 use mlua::{Function, IntoLua, IntoLuaMulti, Lua, Value};
-use yazi_adapter::{Dimension, EMULATOR};
 use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_emulator::{Dimension, EMULATOR};
 
 pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {

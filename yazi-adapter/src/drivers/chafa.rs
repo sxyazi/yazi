@@ -5,8 +5,9 @@ use anyhow::{Result, anyhow, bail};
 use crossterm::{cursor::MoveTo, queue};
 use ratatui::layout::Rect;
 use tokio::process::Command;
+use yazi_emulator::Emulator;
 
-use crate::{Adapter, Emulator};
+use crate::Adapter;
 
 pub(crate) struct Chafa;
 

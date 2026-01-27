@@ -6,8 +6,9 @@ use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
+use yazi_emulator::{CLOSE, Emulator, START};
 
-use crate::{CLOSE, Emulator, Image, START, adapter::Adapter};
+use crate::{Image, adapter::Adapter};
 
 pub(crate) struct Iip;
 
