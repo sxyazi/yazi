@@ -19,7 +19,7 @@ impl Utils {
 				Some(false) => yazi_shared::shell::windows::escape_os_bytes(&b),
 				None => yazi_shared::shell::escape_os_bytes(&b),
 			};
-			lua.create_string(&*s)
+			lua.create_external_string(s)
 		})
 	}
 
@@ -29,7 +29,7 @@ impl Utils {
 				CLIPBOARD.set(text).await;
 				Ok(None)
 			} else {
-				Some(lua.create_string(CLIPBOARD.get().await)).transpose()
+				Some(lua.create_external_string(CLIPBOARD.get().await)).transpose()
 			}
 		})
 	}

@@ -118,7 +118,7 @@ impl UserData for Child {
 		});
 		methods.add_async_method_mut("read_line", |lua, mut me, ()| async move {
 			match me.read_line().await {
-				(Some(b), event) => (lua.create_string(b)?, event).into_lua_multi(&lua),
+				(Some(b), event) => (lua.create_external_string(b)?, event).into_lua_multi(&lua),
 				(None, event) => (Value::Nil, event).into_lua_multi(&lua),
 			}
 		});
@@ -129,7 +129,7 @@ impl UserData for Child {
 				return (Value::Nil, 3u8).into_lua_multi(&lua);
 			};
 			match result {
-				(Some(b), event) => (lua.create_string(b)?, event).into_lua_multi(&lua),
+				(Some(b), event) => (lua.create_external_string(b)?, event).into_lua_multi(&lua),
 				(None, event) => (Value::Nil, event).into_lua_multi(&lua),
 			}
 		});

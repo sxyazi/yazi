@@ -25,6 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
 
+### Improved
+
+- Reduce memory allocations by using Lua 5.5 external strings ([#3634])
+
 ## [v26.1.22]
 
 ### Added
@@ -1629,3 +1633,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3608]: https://github.com/sxyazi/yazi/pull/3608
 [#3617]: https://github.com/sxyazi/yazi/pull/3617
 [#3633]: https://github.com/sxyazi/yazi/pull/3633
+[#3634]: https://github.com/sxyazi/yazi/pull/3634
