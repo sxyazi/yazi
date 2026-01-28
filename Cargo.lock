@@ -5658,6 +5658,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
  "yazi-term",
 ]
 
@@ -5809,6 +5810,7 @@ dependencies = [
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
+ "yazi-shim",
  "yazi-term",
  "yazi-tty",
  "yazi-vfs",
@@ -6004,6 +6006,7 @@ dependencies = [
 name = "yazi-shim"
 version = "26.1.22"
 dependencies = [
+ "crossterm 0.29.0",
  "twox-hash",
  "yazi-macro",
 ]
@@ -6012,9 +6015,16 @@ dependencies = [
 name = "yazi-term"
 version = "26.1.22"
 dependencies = [
+ "anyhow",
  "crossterm 0.29.0",
  "libc",
+ "ratatui",
+ "yazi-config",
+ "yazi-emulator",
  "yazi-macro",
+ "yazi-shared",
+ "yazi-shim",
+ "yazi-tty",
 ]
 
 [[package]]

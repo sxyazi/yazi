@@ -1,23 +1,26 @@
-use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io, ops::Deref};
 
 use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableFocusChange, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
-use yazi_config::{THEME, YAZI};
 use yazi_emulator::{Emulator, Mux, TMUX};
 use yazi_shared::SyncCell;
+use yazi_shim::crossterm::{If, RestoreBackground, RestoreCursor, SetBackground};
 use yazi_tty::{TTY, TtyWriter};
 
-static CSI_U: AtomicBool = AtomicBool::new(false);
+use crate::{TermOption, TermState};
 
-pub(super) struct Term {
+static STATE: SyncCell<TermState> = SyncCell::new(TermState::default());
+
+pub struct Term {
 	inner:       Terminal<CrosstermBackend<TtyWriter<'static>>>,
 	last_area:   Rect,
 	last_buffer: Buffer,
 }
 
 impl Term {
-	pub(super) fn start() -> Result<Self> {
+	pub fn start() -> Result<Self> {
+		let opt = TermOption::default();
 		let mut term = Self {
 			inner:       Terminal::new(CrosstermBackend::new(TTY.writer()))?,
 			last_area:   Default::default(),
@@ -32,24 +35,23 @@ impl Term {
 
 		execute!(
 			TTY.writer(),
-			yazi_term::If(!TMUX.get(), EnterAlternateScreen),
+			If(!TMUX.get(), EnterAlternateScreen),
 			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQSS query for DECSCUSR)
 			Print("\x1b[?12$p"),      // Request cursor blink status (DECRQM query for DECSET 12)
 			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
 			Print("\x1b[0c"),         // Request device attributes
-			yazi_term::If(TMUX.get(), EnterAlternateScreen),
-			yazi_term::SetBackground(true, THEME.app.bg_color()), // Set app background
+			If(TMUX.get(), EnterAlternateScreen),
+			SetBackground(&opt.bg), // Set app background
 			EnableBracketedPaste,
 			EnableFocusChange,
-			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
+			If(opt.mouse, EnableMouseCapture),
 		)?;
 
 		let resp = Emulator::read_until_da1();
 		Mux::tmux_drain()?;
 
-		yazi_term::RestoreCursor::store(&resp);
-		CSI_U.store(resp.contains("\x1b[?0u"), Ordering::Relaxed);
-		if CSI_U.load(Ordering::Relaxed) {
+		STATE.set(TermState::new(&resp, &opt));
+		if STATE.get().csi_u {
 			_ = queue!(
 				TTY.writer(),
 				PushKeyboardEnhancementFlags(
@@ -59,52 +61,45 @@ impl Term {
 			);
 		}
 
-		if let Some(s) = YAZI.mgr.title() {
+		if let Some(s) = opt.title {
 			queue!(TTY.writer(), SetTitle(s)).ok();
 		}
 
-		term.hide_cursor()?;
-		term.clear()?;
-		term.flush()?;
+		term.inner.hide_cursor()?;
+		term.inner.clear()?;
+		term.inner.flush()?;
 		Ok(term)
 	}
 
 	fn stop(&mut self) -> Result<()> {
-		if CSI_U.swap(false, Ordering::Relaxed) {
-			queue!(TTY.writer(), PopKeyboardEnhancementFlags).ok();
-		}
-
-		if !YAZI.mgr.title_format.is_empty() {
-			queue!(TTY.writer(), SetTitle("")).ok();
-		}
+		let state = STATE.get();
 
 		execute!(
 			TTY.writer(),
-			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
-			yazi_term::RestoreCursor,
+			If(state.mouse, DisableMouseCapture),
+			If(state.bg, RestoreBackground),
+			If(state.csi_u, PopKeyboardEnhancementFlags),
+			RestoreCursor { shape: state.cursor_shape, blink: state.cursor_blink },
+			If(state.title, SetTitle("")),
 			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 		)?;
 
-		self.show_cursor()?;
+		self.inner.show_cursor()?;
 		Ok(disable_raw_mode()?)
 	}
 
-	pub(super) fn goodbye(f: impl FnOnce() -> i32) -> ! {
-		if CSI_U.swap(false, Ordering::Relaxed) {
-			queue!(TTY.writer(), PopKeyboardEnhancementFlags).ok();
-		}
-
-		if !YAZI.mgr.title_format.is_empty() {
-			queue!(TTY.writer(), SetTitle("")).ok();
-		}
+	pub fn goodbye(f: impl FnOnce() -> i32) -> ! {
+		let state = STATE.get();
 
 		execute!(
 			TTY.writer(),
-			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
-			yazi_term::SetBackground(false, THEME.app.bg_color()),
-			yazi_term::RestoreCursor,
+			If(state.mouse, DisableMouseCapture),
+			If(state.bg, RestoreBackground),
+			If(state.csi_u, PopKeyboardEnhancementFlags),
+			RestoreCursor { shape: state.cursor_shape, blink: state.cursor_blink },
+			If(state.title, SetTitle("")),
 			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
@@ -117,7 +112,7 @@ impl Term {
 		std::process::exit(f());
 	}
 
-	pub(super) fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {
+	pub fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {
 		let last = self.inner.draw(f)?;
 
 		self.last_area = last.area;
@@ -125,10 +120,7 @@ impl Term {
 		Ok(last)
 	}
 
-	pub(super) fn draw_partial(
-		&mut self,
-		f: impl FnOnce(&mut Frame),
-	) -> io::Result<CompletedFrame<'_>> {
+	pub fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {
 		self.inner.draw(|frame| {
 			let buffer = frame.buffer_mut();
 			for y in self.last_area.top()..self.last_area.bottom() {
@@ -143,7 +135,7 @@ impl Term {
 		})
 	}
 
-	pub(super) fn can_partial(&mut self) -> bool {
+	pub fn can_partial(&mut self) -> bool {
 		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().area()
 	}
 }
@@ -156,8 +148,4 @@ impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<TtyWriter<'static>>>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
-}
-
-impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }

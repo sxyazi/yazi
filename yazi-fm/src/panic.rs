@@ -1,4 +1,4 @@
-use crate::Term;
+use yazi_term::Term;
 
 pub(super) struct Panic;
 

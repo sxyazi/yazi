@@ -20,9 +20,6 @@ yazi-proxy   = { path = "../yazi-proxy", version = "26.1.22" }
 yazi-shared  = { path = "../yazi-shared", version = "26.1.22" }
 yazi-vfs     = { path = "../yazi-vfs", version = "26.1.22" }
 
-# Logging
-tracing = { workspace = true }
-
 # External dependencies
 anyhow           = { workspace = true }
 hashbrown        = { workspace = true }
@@ -31,3 +28,4 @@ parking_lot      = { workspace = true }
 percent-encoding = { workspace = true }
 tokio            = { workspace = true }
 tokio-stream     = { workspace = true }
+tracing          = { workspace = true }

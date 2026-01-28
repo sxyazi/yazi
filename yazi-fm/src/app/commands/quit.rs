@@ -1,8 +1,9 @@
 use yazi_boot::ARGS;
 use yazi_fs::provider::{Provider, local::Local};
 use yazi_shared::{event::EventQuit, strand::{StrandBuf, StrandLike, ToStrand}};
+use yazi_term::Term;
 
-use crate::{Term, app::App};
+use crate::app::App;
 
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {

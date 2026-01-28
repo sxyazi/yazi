@@ -2,8 +2,9 @@ use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::app::ResumeOpt;
 use yazi_shared::data::Data;
+use yazi_term::Term;
 
-use crate::{Term, app::App};
+use crate::app::App;
 
 impl App {
 	pub(crate) fn resume(&mut self, opt: ResumeOpt) -> Result<Data> {

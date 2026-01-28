@@ -8,13 +8,17 @@ function bugReportBody(creator, content, hash) {
 		return null
 	}
 
-	return `Hey @${creator}, I noticed that you did not correctly follow the issue template. Please ensure that:
+	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi - we really appreciate it!
+
+I noticed that you did not correctly follow the issue template. Please ensure that:
 
 - The bug can still be reproduced on the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
 - The debug information (\`yazi --debug\`) is updated for the newest nightly.
 - The non-optional items in the checklist are checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
+
+Our maintainers work on Yazi in a personal capacity, and debug info helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thank you for the understanding!
 `
 }
 
@@ -23,13 +27,17 @@ function featureRequestBody(creator, content) {
 		return null
 	}
 
-	return `Hey @${creator}, I noticed that you did not correctly follow the issue template. Please ensure that:
+	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi - we really appreciate it!
+
+I noticed that you did not correctly follow the issue template. Please ensure that:
 
 - The requested feature does not exist in the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
 - The debug information (\`yazi --debug\`) is updated for the newest nightly.
 - The non-optional items in the checklist are checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
+
+Our maintainers work on Yazi in a personal capacity, and debug info helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thank you for the understanding!
 `
 }
 
@@ -66,7 +74,7 @@ module.exports = async ({ github, context, core }) => {
 			const { data: events } = await github.rest.issues.listEvents({
 				...context.repo,
 				issue_number: id,
-				per_page    : 100,
+				per_page: 100,
 			})
 
 			const all = events.filter(v => v.event === "labeled" && v.label?.name === LABEL_NAME)
@@ -82,7 +90,7 @@ module.exports = async ({ github, context, core }) => {
 			const { data: events } = await github.rest.issues.listEvents({
 				...context.repo,
 				issue_number: id,
-				per_page    : 100,
+				per_page: 100,
 			})
 
 			const all = events.filter(v => v.event === "unlabeled" && v.label?.name === LABEL_NAME)
@@ -101,14 +109,14 @@ module.exports = async ({ github, context, core }) => {
 				await github.rest.issues.removeLabel({
 					...context.repo,
 					issue_number: id,
-					name        : LABEL_NAME,
+					name: LABEL_NAME,
 				})
 				await hideOldComments(id)
 			} else if (mark && !marked && !await removedLabelManually(id)) {
 				await github.rest.issues.addLabels({
 					...context.repo,
 					issue_number: id,
-					labels      : [LABEL_NAME],
+					labels: [LABEL_NAME],
 				})
 				await hideOldComments(id)
 				await github.rest.issues.createComment({
@@ -127,7 +135,7 @@ module.exports = async ({ github, context, core }) => {
 			const comments = await github.paginate(github.rest.issues.listComments, {
 				...context.repo,
 				issue_number: id,
-				per_page    : 100,
+				per_page: 100,
 			})
 
 			for (const c of comments) {
@@ -157,7 +165,7 @@ module.exports = async ({ github, context, core }) => {
 		try {
 			const { data: issues } = await github.rest.issues.listForRepo({
 				...context.repo,
-				state : "open",
+				state: "open",
 				labels: LABEL_NAME,
 			})
 
@@ -170,13 +178,13 @@ module.exports = async ({ github, context, core }) => {
 					await github.rest.issues.update({
 						...context.repo,
 						issue_number: issue.number,
-						state       : "closed",
+						state: "closed",
 						state_reason: "not_planned",
 					})
 					await github.rest.issues.createComment({
 						...context.repo,
 						issue_number: issue.number,
-						body        : `This issue has been automatically closed because it was marked as \`${LABEL_NAME}\` for more than 2 days without updates.
+						body: `This issue has been automatically closed because it was marked as \`${LABEL_NAME}\` for more than 2 days without updates.
 If the problem persists, please file a new issue and complete the issue template so we can capture all the details necessary to investigate further.`,
 					})
 				}
@@ -191,13 +199,13 @@ If the problem persists, please file a new issue and complete the issue template
 			await github.rest.issues.update({
 				...context.repo,
 				issue_number: id,
-				state       : "closed",
+				state: "closed",
 				state_reason: "not_planned",
 			})
 			await github.rest.issues.createComment({
 				...context.repo,
 				issue_number: id,
-				body        : `Unsupported issue template.
+				body: `Unsupported issue template.
 Either the [Bug Report](https://github.com/sxyazi/yazi/issues/new?template=bug.yml) or [Feature Request](https://github.com/sxyazi/yazi/issues/new?template=feature.yml) template should be used.`,
 			})
 		} catch (e) {
