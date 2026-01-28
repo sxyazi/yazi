@@ -37,7 +37,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return act!(app:$name, cx, cmd)
+					return act!(app:$name, cx, cmd);
 				}
 			};
 		}
@@ -47,6 +47,7 @@ impl<'a> Executor<'a> {
 		on!(plugin_do);
 		on!(update_progress);
 		on!(deprecate);
+		on!(quit);
 
 		match &*cmd.name {
 			"resize" => act!(app:resize, cx, crate::Root::reflow as fn(_) -> _),

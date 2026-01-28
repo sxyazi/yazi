@@ -18,7 +18,7 @@ I noticed that you did not correctly follow the issue template. Please ensure th
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 
-Our maintainers work on Yazi in a personal capacity, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding!
+Our maintainers work on Yazi in their free time, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding!
 `
 }
 
@@ -37,7 +37,7 @@ I noticed that you did not correctly follow the issue template. Please ensure th
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 
-Our maintainers work on Yazi in a personal capacity, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding!
+Our maintainers work on Yazi in their free time, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding!
 `
 }
 
