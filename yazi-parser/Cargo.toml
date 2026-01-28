@@ -35,3 +35,6 @@ ordered-float = { workspace = true }
 serde         = { workspace = true }
 serde_with    = { workspace = true }
 tokio         = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

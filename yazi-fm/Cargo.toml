@@ -40,6 +40,7 @@ yazi-parser   = { path = "../yazi-parser", version = "26.1.22" }
 yazi-plugin   = { path = "../yazi-plugin", version = "26.1.22" }
 yazi-proxy    = { path = "../yazi-proxy", version = "26.1.22" }
 yazi-shared   = { path = "../yazi-shared", version = "26.1.22" }
+yazi-shim     = { path = "../yazi-shim", version = "26.1.22" }
 yazi-term     = { path = "../yazi-term", version = "26.1.22" }
 yazi-tty      = { path = "../yazi-tty", version = "26.1.22" }
 yazi-vfs      = { path = "../yazi-vfs", version = "26.1.22" }
@@ -47,19 +48,17 @@ yazi-watcher  = { path = "../yazi-watcher", version = "26.1.22" }
 yazi-widgets  = { path = "../yazi-widgets", version = "26.1.22" }
 
 # External dependencies
-anyhow       = { workspace = true }
-better-panic = "0.3.0"
-crossterm    = { workspace = true }
-fdlimit      = "0.3.0"
-futures      = { workspace = true }
-mlua         = { workspace = true }
-paste        = { workspace = true }
-ratatui      = { workspace = true }
-scopeguard   = { workspace = true }
-tokio        = { workspace = true }
-tokio-stream = { workspace = true }
-
-# Logging
+anyhow             = { workspace = true }
+better-panic       = "0.3.0"
+crossterm          = { workspace = true }
+fdlimit            = "0.3.0"
+futures            = { workspace = true }
+mlua               = { workspace = true }
+paste              = { workspace = true }
+ratatui            = { workspace = true }
+scopeguard         = { workspace = true }
+tokio              = { workspace = true }
+tokio-stream       = { workspace = true }
 tracing            = { workspace = true }
 tracing-appender   = "0.2.4"
 tracing-subscriber = { version = "0.3.22", features = [ "env-filter" ] }

@@ -49,7 +49,7 @@ impl Dependency {
 		use std::io::IsTerminal;
 
 		use crossterm::style::{Attribute, Print, SetAttributes};
-		use yazi_term::If;
+		use yazi_shim::crossterm::If;
 
 		let ansi = env::var_os("YA_FORCE_ANSI").is_some_and(|v| v == "1") || io::stdout().is_terminal();
 		crossterm::execute!(

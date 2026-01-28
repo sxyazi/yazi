@@ -15,4 +15,8 @@ workspace = true
 yazi-macro = { path = "../yazi-macro", version = "26.1.22" }
 
 # External dependencies
+crossterm = { workspace = true }
 twox-hash = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

@@ -5,8 +5,9 @@ use tokio::{select, time::sleep};
 use yazi_core::Core;
 use yazi_macro::act;
 use yazi_shared::event::{Event, NEED_RENDER};
+use yazi_term::Term;
 
-use crate::{Dispatcher, Signals, Term};
+use crate::{Dispatcher, Signals};
 
 pub(crate) struct App {
 	pub(crate) core:    Core,

@@ -32,7 +32,5 @@ paste         = { workspace = true }
 ratatui       = { workspace = true }
 serde_json    = { workspace = true }
 tokio  	      = { workspace = true }
+tracing       = { workspace = true }
 unicode-width = { workspace = true }
-
-# Logging
-tracing = { workspace = true }
