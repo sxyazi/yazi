@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_binding::Permit;
-use yazi_proxy::{AppProxy, HIDER};
+use yazi_proxy::{AppProxy, HIDER, NotifyProxy};
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
 use crate::{TaskOp, TaskOps, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
@@ -20,7 +20,7 @@ impl Process {
 		let (id, cmd) = (task.id, task.cmd.clone());
 		let result = super::shell(task.into()).await;
 		if let Err(e) = result {
-			AppProxy::notify_warn(cmd.to_string_lossy(), format!("Failed to start process: {e}"));
+			NotifyProxy::push_warn(cmd.to_string_lossy(), format!("Failed to start process: {e}"));
 			return Ok(self.ops.out(id, ProcessOutBlock::Succ));
 		}
 
@@ -31,7 +31,7 @@ impl Process {
 				Some(code) => format!("Process exited with status code: {code}"),
 				None => "Process terminated by signal".to_string(),
 			};
-			AppProxy::notify_warn(cmd.to_string_lossy(), content);
+			NotifyProxy::push_warn(cmd.to_string_lossy(), content);
 		}
 
 		Ok(self.ops.out(id, ProcessOutBlock::Succ))

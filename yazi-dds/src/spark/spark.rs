@@ -7,6 +7,21 @@ pub enum Spark<'a> {
 	// Void
 	Void(yazi_parser::VoidOpt),
 
+	// App
+	AppAcceptPayload(crate::Payload<'a>),
+	AppBootstrap(yazi_parser::VoidOpt),
+	AppDeprecate(yazi_parser::app::DeprecateOpt),
+	AppFocus(yazi_parser::VoidOpt),
+	AppMouse(yazi_parser::app::MouseOpt),
+	AppPlugin(yazi_parser::app::PluginOpt),
+	AppPluginDo(yazi_parser::app::PluginOpt),
+	AppQuit(yazi_parser::app::QuitOpt),
+	AppReflow(yazi_parser::app::ReflowOpt),
+	AppResize(yazi_parser::app::ReflowOpt),
+	AppResume(yazi_parser::app::ResumeOpt),
+	AppStop(yazi_parser::app::StopOpt),
+	AppUpdateProgress(yazi_parser::app::UpdateProgressOpt),
+
 	// Mgr
 	Arrow(yazi_parser::ArrowOpt),
 	Back(yazi_parser::VoidOpt),
@@ -42,7 +57,7 @@ pub enum Spark<'a> {
 	OpenDo(yazi_parser::mgr::OpenDoOpt),
 	Paste(yazi_parser::mgr::PasteOpt),
 	Peek(yazi_parser::mgr::PeekOpt),
-	Quit(yazi_parser::mgr::QuitOpt),
+	Quit(yazi_parser::app::QuitOpt),
 	Refresh(yazi_parser::VoidOpt),
 	Remove(yazi_parser::mgr::RemoveOpt),
 	RemoveDo(yazi_parser::mgr::RemoveOpt),
@@ -107,6 +122,7 @@ pub enum Spark<'a> {
 	InputShow(yazi_parser::input::ShowOpt),
 
 	// Notify
+	NotifyPush(yazi_parser::notify::PushOpt),
 	NotifyTick(yazi_parser::notify::TickOpt),
 
 	// Pick
@@ -159,6 +175,21 @@ impl<'a> IntoLua for Spark<'a> {
 		match self {
 			// Void
 			Self::Void(b) => b.into_lua(lua),
+
+			// App
+			Self::AppAcceptPayload(b) => b.into_lua(lua),
+			Self::AppBootstrap(b) => b.into_lua(lua),
+			Self::AppDeprecate(b) => b.into_lua(lua),
+			Self::AppFocus(b) => b.into_lua(lua),
+			Self::AppMouse(b) => b.into_lua(lua),
+			Self::AppPlugin(b) => b.into_lua(lua),
+			Self::AppPluginDo(b) => b.into_lua(lua),
+			Self::AppQuit(b) => b.into_lua(lua),
+			Self::AppReflow(b) => b.into_lua(lua),
+			Self::AppResize(b) => b.into_lua(lua),
+			Self::AppResume(b) => b.into_lua(lua),
+			Self::AppStop(b) => b.into_lua(lua),
+			Self::AppUpdateProgress(b) => b.into_lua(lua),
 
 			// Mgr
 			Self::Arrow(b) => b.into_lua(lua),
@@ -260,6 +291,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::InputShow(b) => b.into_lua(lua),
 
 			// Notify
+			Self::NotifyPush(b) => b.into_lua(lua),
 			Self::NotifyTick(b) => b.into_lua(lua),
 
 			// Pick
@@ -292,6 +324,8 @@ impl<'a> IntoLua for Spark<'a> {
 
 try_from_spark!(
 	VoidOpt,
+	app:bootstrap,
+	app:focus,
 	mgr:back,
 	mgr:bulk_rename,
 	mgr:enter,
@@ -309,7 +343,17 @@ try_from_spark!(
 	mgr:unyank,
 	mgr:watch
 );
+
+// App
 try_from_spark!(ArrowOpt, mgr:arrow, mgr:tab_swap);
+try_from_spark!(app::DeprecateOpt, app:deprecate);
+try_from_spark!(app::MouseOpt, app:mouse);
+try_from_spark!(app::PluginOpt, app:plugin, app:plugin_do);
+try_from_spark!(app::QuitOpt, app:quit, mgr:quit);
+try_from_spark!(app::ReflowOpt, app:reflow, app:resize);
+try_from_spark!(app::ResumeOpt, app:resume);
+try_from_spark!(app::StopOpt, app:stop);
+try_from_spark!(app::UpdateProgressOpt, app:update_progress);
 try_from_spark!(cmp::CloseOpt, cmp:close);
 try_from_spark!(cmp::ShowOpt, cmp:show);
 try_from_spark!(cmp::TriggerOpt, cmp:trigger);
@@ -347,7 +391,6 @@ try_from_spark!(mgr::OpenDoOpt, mgr:open_do);
 try_from_spark!(mgr::OpenOpt, mgr:open);
 try_from_spark!(mgr::PasteOpt, mgr:paste);
 try_from_spark!(mgr::PeekOpt, mgr:peek);
-try_from_spark!(mgr::QuitOpt, mgr:quit);
 try_from_spark!(mgr::RemoveOpt, mgr:remove, mgr:remove_do);
 try_from_spark!(mgr::RenameOpt, mgr:rename);
 try_from_spark!(mgr::RevealOpt, mgr:reveal);
@@ -371,11 +414,12 @@ try_from_spark!(mgr::UpdateYankedOpt<'a>, mgr:update_yanked);
 try_from_spark!(mgr::UploadOpt, mgr:upload);
 try_from_spark!(mgr::VisualModeOpt, mgr:visual_mode);
 try_from_spark!(mgr::YankOpt, mgr:yank);
+try_from_spark!(notify::PushOpt, notify:push);
 try_from_spark!(notify::TickOpt, notify:tick);
 try_from_spark!(pick::CloseOpt, pick:close);
 try_from_spark!(pick::ShowOpt, pick:show);
 try_from_spark!(spot::CopyOpt, spot:copy);
 try_from_spark!(tasks::ProcessOpenOpt, tasks:process_open);
 try_from_spark!(tasks::UpdateSucceedOpt, tasks:update_succeed);
-try_from_spark!(which::CallbackOpt, which:callback);
 try_from_spark!(which::ActivateOpt, which:activate);
+try_from_spark!(which::CallbackOpt, which:callback);

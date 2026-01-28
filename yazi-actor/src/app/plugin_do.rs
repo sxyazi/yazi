@@ -2,52 +2,35 @@ use anyhow::Result;
 use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
-use yazi_actor::lives::Lives;
 use yazi_binding::runtime_mut;
 use yazi_dds::Sendable;
 use yazi_macro::succ;
 use yazi_parser::app::{PluginMode, PluginOpt};
 use yazi_plugin::{LUA, loader::{LOADER, Loader}};
-use yazi_proxy::AppProxy;
+use yazi_proxy::NotifyProxy;
 use yazi_shared::data::Data;
 
-use crate::app::App;
+use crate::{Actor, Ctx, lives::Lives};
 
-impl App {
-	pub(crate) fn plugin(&mut self, mut opt: PluginOpt) -> Result<Data> {
-		let mut hits = false;
-		if let Some(chunk) = LOADER.read().get(&*opt.id) {
-			hits = true;
-			opt.mode = opt.mode.auto_then(chunk.sync_entry);
-		}
+pub struct PluginDo;
 
-		if opt.mode == PluginMode::Async {
-			succ!(self.core.tasks.plugin_entry(opt));
-		} else if opt.mode == PluginMode::Sync && hits {
-			return self.plugin_do(opt);
-		}
+impl Actor for PluginDo {
+	type Options = PluginOpt;
 
-		tokio::spawn(async move {
-			match LOADER.ensure(&opt.id, |_| ()).await {
-				Ok(()) => AppProxy::plugin_do(opt),
-				Err(e) => AppProxy::notify_error("Plugin load failed", e),
-			}
-		});
-		succ!();
-	}
+	const NAME: &str = "plugin_do";
 
-	pub(crate) fn plugin_do(&mut self, opt: PluginOpt) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let loader = LOADER.read();
 		let Some(chunk) = loader.get(&*opt.id) else {
 			succ!(warn!("plugin `{}` not found", opt.id));
 		};
 
 		if let Err(e) = Loader::compatible_or_error(&opt.id, chunk) {
-			succ!(AppProxy::notify_error("Incompatible plugin", e));
+			succ!(NotifyProxy::push_error("Incompatible plugin", e));
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			succ!(self.core.tasks.plugin_entry(opt));
+			succ!(cx.core.tasks.scheduler.plugin_entry(opt));
 		}
 
 		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);
@@ -59,7 +42,7 @@ impl App {
 		};
 		drop(loader);
 
-		let result = Lives::scope(&self.core, || {
+		let result = Lives::scope(&cx.core, || {
 			if let Some(cb) = opt.callback {
 				cb(&LUA, plugin)
 			} else {

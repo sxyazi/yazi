@@ -1,8 +1,10 @@
 use anyhow::bail;
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use ordered_float::OrderedFloat;
 use serde::Serialize;
 use yazi_shared::event::CmdCow;
 
+#[derive(Debug)]
 pub struct UpdateProgressOpt {
 	pub summary: TaskSummary,
 }
@@ -17,6 +19,14 @@ impl TryFrom<CmdCow> for UpdateProgressOpt {
 
 		Ok(Self { summary })
 	}
+}
+
+impl FromLua for UpdateProgressOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for UpdateProgressOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 
 // --- Progress

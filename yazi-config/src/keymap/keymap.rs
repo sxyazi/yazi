@@ -31,6 +31,7 @@ impl Keymap {
 			Layer::Help => &self.help,
 			Layer::Cmp => &self.cmp,
 			Layer::Which => &[],
+			Layer::Notify => &[],
 		}
 	}
 }

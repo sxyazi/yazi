@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::ToggleAllOpt;
-use yazi_proxy::AppProxy;
+use yazi_proxy::NotifyProxy;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -39,7 +39,7 @@ impl Actor for ToggleAll {
 		};
 
 		if warn {
-			AppProxy::notify_warn(
+			NotifyProxy::push_warn(
 				"Toggle all",
 				"Some files cannot be selected, due to path nesting conflict.",
 			);

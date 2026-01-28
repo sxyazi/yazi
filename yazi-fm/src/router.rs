@@ -26,7 +26,7 @@ impl<'a> Router<'a> {
 
 		use Layer as L;
 		Ok(match layer {
-			L::App => unreachable!(),
+			L::App | L::Notify => unreachable!(),
 			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm | L::Help => {
 				self.matches(layer, key)
 			}
@@ -42,7 +42,7 @@ impl<'a> Router<'a> {
 			}
 
 			if on.len() > 1 {
-				let cx = &mut Ctx::active(&mut self.app.core);
+				let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 				act!(which:activate, cx, (layer, key)).ok();
 			} else {
 				emit!(Seq(ChordCow::from(chord).into_seq()));

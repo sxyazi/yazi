@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::{CdSource, TabCreateOpt};
-use yazi_proxy::AppProxy;
+use yazi_proxy::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -18,7 +18,7 @@ impl Actor for TabCreate {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if cx.tabs().len() >= MAX_TABS {
-			succ!(AppProxy::notify_warn(
+			succ!(NotifyProxy::push_warn(
 				"Too many tabs",
 				"You can only open up to 9 tabs at the same time."
 			));

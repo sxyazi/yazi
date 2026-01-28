@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt::{self, Debug}, str::FromStr};
 use anyhow::bail;
 use dyn_clone::DynClone;
 use hashbrown::HashMap;
-use mlua::{Lua, Table};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use serde::Deserialize;
 use yazi_shared::{SStr, data::{Data, DataKey}, event::{Cmd, CmdCow}};
 
@@ -37,6 +37,14 @@ impl TryFrom<CmdCow> for PluginOpt {
 		let mode = c.str("mode").parse().unwrap_or_default();
 		Ok(Self { id: Self::normalize_id(id), args, mode, callback: c.take_any("callback") })
 	}
+}
+
+impl FromLua for PluginOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for PluginOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 
 impl PluginOpt {

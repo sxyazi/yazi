@@ -21,6 +21,7 @@ yazi-boot      = { path = "../yazi-boot", version = "26.1.22" }
 yazi-config    = { path = "../yazi-config", version = "26.1.22" }
 yazi-core      = { path = "../yazi-core", version = "26.1.22" }
 yazi-dds       = { path = "../yazi-dds", version = "26.1.22" }
+yazi-emulator  = { path = "../yazi-emulator", version = "26.1.22" }
 yazi-fs        = { path = "../yazi-fs", version = "26.1.22" }
 yazi-macro     = { path = "../yazi-macro", version = "26.1.22" }
 yazi-parser    = { path = "../yazi-parser", version = "26.1.22" }
@@ -28,6 +29,7 @@ yazi-plugin    = { path = "../yazi-plugin", version = "26.1.22" }
 yazi-proxy     = { path = "../yazi-proxy", version = "26.1.22" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.1.22" }
 yazi-shared    = { path = "../yazi-shared", version = "26.1.22" }
+yazi-term      = { path = "../yazi-term", version = "26.1.22" }
 yazi-tty       = { path = "../yazi-tty", version = "26.1.22" }
 yazi-vfs       = { path = "../yazi-vfs", version = "26.1.22" }
 yazi-watcher   = { path = "../yazi-watcher", version = "26.1.22" }
@@ -40,6 +42,7 @@ futures      = { workspace = true }
 hashbrown    = { workspace = true }
 mlua         = { workspace = true }
 paste        = { workspace = true }
+ratatui      = { workspace = true }
 scopeguard   = { workspace = true }
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }

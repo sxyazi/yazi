@@ -1,11 +1,12 @@
 use std::{fmt::Display, io::Write, str::FromStr};
 
 use anyhow::{Result, anyhow};
+use mlua::{IntoLua, Lua, Value};
 use yazi_boot::BOOT;
 use yazi_macro::{emit, relay};
-use yazi_shared::Id;
+use yazi_shared::{Id, event::CmdCow};
 
-use crate::{ID, ember::Ember};
+use crate::{ID, ember::Ember, spark::Spark};
 
 #[derive(Clone, Debug)]
 pub struct Payload<'a> {
@@ -76,6 +77,25 @@ impl<'a> From<Ember<'a>> for Payload<'a> {
 	fn from(value: Ember<'a>) -> Self { Self::new(value) }
 }
 
+impl<'a> TryFrom<Spark<'a>> for Payload<'a> {
+	type Error = ();
+
+	fn try_from(value: Spark<'a>) -> Result<Self, Self::Error> {
+		match value {
+			Spark::AppAcceptPayload(payload) => Ok(payload),
+			_ => Err(()),
+		}
+	}
+}
+
+impl TryFrom<CmdCow> for Payload<'_> {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		c.take_any2("payload").ok_or_else(|| anyhow!("Missing 'payload' in Payload"))?
+	}
+}
+
 impl Display for Payload<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let result = match &self.body {
@@ -102,5 +122,17 @@ impl Display for Payload<'_> {
 		} else {
 			Err(std::fmt::Error)
 		}
+	}
+}
+
+impl<'a> IntoLua for Payload<'a> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua
+			.create_table_from([
+				("receiver", yazi_binding::Id(self.receiver).into_lua(lua)?),
+				("sender", yazi_binding::Id(self.sender).into_lua(lua)?),
+				("body", self.body.into_lua(lua)?),
+			])?
+			.into_lua(lua)
 	}
 }

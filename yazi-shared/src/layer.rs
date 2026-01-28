@@ -16,6 +16,7 @@ pub enum Layer {
 	Help,
 	Cmp,
 	Which,
+	Notify,
 }
 
 impl Display for Layer {
@@ -31,6 +32,7 @@ impl Display for Layer {
 			Self::Help => "help",
 			Self::Cmp => "cmp",
 			Self::Which => "which",
+			Self::Notify => "notify",
 		})
 	}
 }

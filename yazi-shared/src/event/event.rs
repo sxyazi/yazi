@@ -2,7 +2,7 @@ use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 
 use super::CmdCow;
-use crate::{RoCell, strand::StrandBuf};
+use crate::RoCell;
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
@@ -11,20 +11,12 @@ static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
 pub enum Event {
 	Call(CmdCow),
 	Seq(Vec<CmdCow>),
-	Render,
+	Render(bool),
 	Key(KeyEvent),
 	Mouse(MouseEvent),
 	Resize,
 	Focus,
 	Paste(String),
-	Quit(EventQuit),
-}
-
-#[derive(Debug, Default)]
-pub struct EventQuit {
-	pub code:        i32,
-	pub no_cwd_file: bool,
-	pub selected:    Option<StrandBuf>,
 }
 
 impl Event {

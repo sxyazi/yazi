@@ -11,7 +11,7 @@ use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
-use yazi_proxy::{AppProxy, HIDER, TasksProxy};
+use yazi_proxy::{AppProxy, HIDER, NotifyProxy, TasksProxy};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
@@ -28,12 +28,12 @@ impl Actor for BulkRename {
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(opener) = Self::opener() else {
-			succ!(AppProxy::notify_warn("Bulk rename", "No text opener found"));
+			succ!(NotifyProxy::push_warn("Bulk rename", "No text opener found"));
 		};
 
 		let selected: Vec<_> = cx.tab().selected_or_hovered().cloned().collect();
 		if selected.is_empty() {
-			succ!(AppProxy::notify_warn("Bulk rename", "No files selected"));
+			succ!(NotifyProxy::push_warn("Bulk rename", "No files selected"));
 		}
 
 		let root = max_common_root(&selected);

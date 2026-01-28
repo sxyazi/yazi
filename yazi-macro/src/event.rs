@@ -1,8 +1,5 @@
 #[macro_export]
 macro_rules! emit {
-	(Quit($opt:expr)) => {
-		yazi_shared::event::Event::Quit($opt).emit();
-	};
 	(Call($cmd:expr)) => {
 		yazi_shared::event::Event::Call(yazi_shared::event::CmdCow::from($cmd)).emit();
 	};
