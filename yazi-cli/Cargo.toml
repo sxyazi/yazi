@@ -28,7 +28,6 @@ yazi-fs     = { path = "../yazi-fs", version = "26.1.22" }
 yazi-macro  = { path = "../yazi-macro", version = "26.1.22" }
 yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
 yazi-shim   = { path = "../yazi-shim", version = "26.1.22" }
-yazi-term   = { path = "../yazi-term", version = "26.1.22" }
 
 # External dependencies
 anyhow     = { workspace = true }

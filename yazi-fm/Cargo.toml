@@ -40,7 +40,6 @@ yazi-parser   = { path = "../yazi-parser", version = "26.1.22" }
 yazi-plugin   = { path = "../yazi-plugin", version = "26.1.22" }
 yazi-proxy    = { path = "../yazi-proxy", version = "26.1.22" }
 yazi-shared   = { path = "../yazi-shared", version = "26.1.22" }
-yazi-shim     = { path = "../yazi-shim", version = "26.1.22" }
 yazi-term     = { path = "../yazi-term", version = "26.1.22" }
 yazi-tty      = { path = "../yazi-tty", version = "26.1.22" }
 yazi-vfs      = { path = "../yazi-vfs", version = "26.1.22" }
