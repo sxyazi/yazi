@@ -70,6 +70,7 @@ impl Sendable {
 
 	pub fn data_to_value(lua: &Lua, data: Data) -> mlua::Result<Value> {
 		Ok(match data {
+			Data::String(Cow::Owned(s)) => Value::String(lua.create_external_string(s)?),
 			Data::List(l) => {
 				let mut vec = Vec::with_capacity(l.len());
 				for v in l.into_iter() {
@@ -87,6 +88,7 @@ impl Sendable {
 			}
 			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			Data::Path(u) => yazi_binding::Path::new(u).into_lua(lua)?,
+			Data::Bytes(b) => Value::String(lua.create_external_string(b)?),
 			Data::Any(b) => {
 				let mut b = b.into_any();
 				macro_rules! try_cast {
@@ -104,7 +106,7 @@ impl Sendable {
 				try_cast!(|v: yazi_binding::ChordCow| v.into_lua(lua));
 				Err("unsupported DataAny included".into_lua_err())?
 			}
-			data => Self::data_to_value_ref(lua, &data)?,
+			_ => Self::data_to_value_ref(lua, &data)?,
 		})
 	}
 
@@ -245,8 +247,10 @@ impl Sendable {
 
 	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
 		match key {
+			DataKey::String(Cow::Owned(s)) => lua.create_external_string(s).map(Value::String),
 			DataKey::Url(u) => yazi_binding::Url::new(u).into_lua(lua),
 			DataKey::Path(u) => yazi_binding::Path::new(u).into_lua(lua),
+			DataKey::Bytes(b) => lua.create_external_string(b).map(Value::String),
 			_ => Self::key_to_value_ref(lua, &key),
 		}
 	}

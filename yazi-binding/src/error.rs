@@ -74,7 +74,7 @@ impl UserData for Error {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 			Ok(match me {
-				Self::Io(_) | Self::Fs(_) | Self::Serde(_) => lua.create_string(me.to_string()),
+				Self::Io(_) | Self::Fs(_) | Self::Serde(_) => lua.create_external_string(me.to_string()),
 				Self::Custom(s) => lua.create_string(&**s),
 			})
 		});
@@ -82,11 +82,11 @@ impl UserData for Error {
 			match (lhs, rhs) {
 				(Value::String(l), Value::UserData(r)) => {
 					let r = r.borrow::<Self>()?;
-					lua.create_string([&l.as_bytes(), r.to_string().as_bytes()].concat())
+					lua.create_external_string([&l.as_bytes(), r.to_string().as_bytes()].concat())
 				}
 				(Value::UserData(l), Value::String(r)) => {
 					let l = l.borrow::<Self>()?;
-					lua.create_string([l.to_string().as_bytes(), &r.as_bytes()].concat())
+					lua.create_external_string([l.to_string().as_bytes(), &r.as_bytes()].concat())
 				}
 				_ => Err("only string can be concatenated with Error".into_lua_err()),
 			}

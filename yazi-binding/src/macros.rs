@@ -51,6 +51,28 @@ macro_rules! cached_field {
 }
 
 #[macro_export]
+macro_rules! cached_field_mut {
+	($fields:ident, $key:ident, $value:expr) => {
+		$fields.add_field_function_get(stringify!($key), |lua, ud| {
+			use mlua::{Error::UserDataDestructed, IntoLua, Lua, Result, Value, Value::UserData};
+			ud.borrow_mut_scoped::<Self, Result<Value>>(|me| match paste::paste! { &me.[<v_ $key>] } {
+				Some(Ok(v)) if !v.is_userdata() => Ok(v.clone()),
+				Some(Ok(v @ UserData(ud))) if !matches!(ud.borrow::<()>(), Err(UserDataDestructed)) => {
+					Ok(v.clone())
+				}
+				Some(Err(e)) => Err(e.clone()),
+				_ => {
+					let v =
+						($value as fn(&Lua, &mut Self) -> Result<_>)(lua, me).and_then(|v| v.into_lua(lua));
+					paste::paste! { me.[<v_ $key>] = Some(v.clone()) };
+					v
+				}
+			})?
+		});
+	};
+}
+
+#[macro_export]
 macro_rules! impl_area_method {
 	($methods:ident) => {
 		$methods.add_function_mut(

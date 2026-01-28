@@ -132,7 +132,7 @@ impl UserData for Path {
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
 		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: mlua::String| {
-			lua.create_string([lhs.encoded_bytes(), &rhs.as_bytes()].concat())
+			lua.create_external_string([lhs.encoded_bytes(), &rhs.as_bytes()].concat())
 		});
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: PathRef| Ok(me.inner == other.inner));
 		methods

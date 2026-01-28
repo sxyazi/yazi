@@ -5,8 +5,8 @@ use yazi_shared::{event::CmdCow, strand::StrandBuf};
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct QuitOpt {
 	pub code:        i32,
-	#[serde(skip)] // FIXME
-	pub selected: Option<StrandBuf>,
+	#[serde(skip)]
+	pub selected:    Option<StrandBuf>,
 	pub no_cwd_file: bool,
 }
 
@@ -20,7 +20,7 @@ impl TryFrom<CmdCow> for QuitOpt {
 
 		Ok(Self {
 			code:        c.get("code").unwrap_or_default(),
-			selected:    None, // FIXME
+			selected:    None,
 			no_cwd_file: c.bool("no-cwd-file"),
 		})
 	}
