@@ -4,14 +4,12 @@ yazi_macro::mod_flat!(
 	deprecate
 	focus
 	mouse
-	notify
 	plugin
+	plugin_do
 	quit
 	reflow
-	render
 	resize
 	resume
 	stop
-	update_notify
 	update_progress
 );

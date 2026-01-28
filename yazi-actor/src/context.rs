@@ -4,9 +4,11 @@ use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}, tasks::Tasks};
 use yazi_fs::File;
 use yazi_shared::{Id, Source, event::Cmd, url::UrlBuf};
+use yazi_term::Term;
 
 pub struct Ctx<'a> {
 	pub core:      &'a mut Core,
+	pub term:      &'a mut Option<Term>,
 	pub tab:       usize,
 	pub level:     usize,
 	pub source:    Source,
@@ -26,7 +28,7 @@ impl DerefMut for Ctx<'_> {
 
 impl<'a> Ctx<'a> {
 	#[inline]
-	pub fn new(core: &'a mut Core, cmd: &Cmd) -> Result<Self> {
+	pub fn new(cmd: &Cmd, core: &'a mut Core, term: &'a mut Option<Term>) -> Result<Self> {
 		let tab = if let Ok(id) = cmd.get::<Id>("tab") {
 			core
 				.mgr
@@ -40,6 +42,7 @@ impl<'a> Ctx<'a> {
 
 		Ok(Self {
 			core,
+			term,
 			tab,
 			level: 0,
 			source: cmd.source,
@@ -53,6 +56,7 @@ impl<'a> Ctx<'a> {
 		let tab = cx.core.mgr.tabs.cursor;
 		Self {
 			core: cx.core,
+			term: cx.term,
 			tab,
 			level: cx.level,
 			source: cx.source,
@@ -62,10 +66,11 @@ impl<'a> Ctx<'a> {
 	}
 
 	#[inline]
-	pub fn active(core: &'a mut Core) -> Self {
+	pub fn active(core: &'a mut Core, term: &'a mut Option<Term>) -> Self {
 		let tab = core.mgr.tabs.cursor;
 		Self {
 			core,
+			term,
 			tab,
 			level: 0,
 			source: Source::Unknown,

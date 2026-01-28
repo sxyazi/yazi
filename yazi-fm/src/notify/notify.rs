@@ -8,15 +8,6 @@ pub(crate) struct Notify<'a> {
 impl<'a> Notify<'a> {
 	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 
-	pub(crate) fn available(area: Rect) -> Rect {
-		let chunks = layout::Layout::horizontal([Constraint::Fill(1), Constraint::Min(80)]).split(area);
-
-		let chunks =
-			layout::Layout::vertical([Constraint::Fill(1), Constraint::Max(1)]).split(chunks[1]);
-
-		chunks[0]
-	}
-
 	fn tiles<'m>(area: Rect, messages: impl Iterator<Item = &'m Message> + Clone) -> Vec<Rect> {
 		layout::Layout::vertical(
 			[Constraint::Fill(1)]
@@ -42,7 +33,7 @@ impl<'a> Notify<'a> {
 impl Widget for Notify<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let notify = &self.core.notify;
-		let available = Self::available(area);
+		let available = yazi_core::notify::Notify::available(area);
 
 		let messages = notify.messages.iter().take(notify.limit(available)).rev();
 		let tiles = Self::tiles(available, messages.clone());

@@ -8,7 +8,7 @@ function bugReportBody(creator, content, hash) {
 		return null
 	}
 
-	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi, appreciate it!
+	return `Hey @${creator}, thank you for opening the issue to help improve Yazi, appreciate it!
 
 I noticed that you did not correctly follow the issue template. Please ensure that:
 
@@ -18,7 +18,7 @@ I noticed that you did not correctly follow the issue template. Please ensure th
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 
-Our maintainers work on Yazi in a personal capacity, and debug info helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thank you for the understanding!
+Our maintainers work on Yazi in their free time, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding!
 `
 }
 
@@ -27,7 +27,7 @@ function featureRequestBody(creator, content) {
 		return null
 	}
 
-	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi, appreciate it!
+	return `Hey @${creator}, thank you for opening the issue to help improve Yazi, appreciate it!
 
 I noticed that you did not correctly follow the issue template. Please ensure that:
 
@@ -37,7 +37,7 @@ I noticed that you did not correctly follow the issue template. Please ensure th
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 
-Our maintainers work on Yazi in a personal capacity, and debug info helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thank you for the understanding!
+Our maintainers work on Yazi in their free time, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding!
 `
 }
 

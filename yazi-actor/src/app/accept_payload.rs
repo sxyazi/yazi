@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use mlua::IntoLua;
 use tracing::error;
 use yazi_actor::lives::Lives;
@@ -6,16 +6,18 @@ use yazi_binding::runtime_mut;
 use yazi_dds::{LOCAL, Payload, REMOTE};
 use yazi_macro::succ;
 use yazi_plugin::LUA;
-use yazi_shared::{data::Data, event::CmdCow};
+use yazi_shared::data::Data;
 
-use crate::app::App;
+use crate::{Actor, Ctx};
 
-impl App {
-	pub(crate) fn accept_payload(&self, mut c: CmdCow) -> Result<Data> {
-		let Some(payload) = c.take_any2::<Payload>("payload").transpose()? else {
-			bail!("'payload' is required for accept_payload");
-		};
+pub struct AcceptPayload;
 
+impl Actor for AcceptPayload {
+	type Options = Payload<'static>;
+
+	const NAME: &str = "accept_payload";
+
+	fn act(cx: &mut Ctx, payload: Payload) -> Result<Data> {
 		let kind = payload.body.kind().to_owned();
 		let lock = if payload.receiver == 0 || payload.receiver != payload.sender {
 			REMOTE.read()
@@ -26,7 +28,7 @@ impl App {
 		let Some(handlers) = lock.get(&kind).filter(|&m| !m.is_empty()).cloned() else { succ!() };
 		drop(lock);
 
-		succ!(Lives::scope(&self.core, || {
+		succ!(Lives::scope(&cx.core, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
 				let blocking = runtime_mut!(LUA)?.critical_push(&id, true);

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{render_and, succ};
 use yazi_parser::mgr::ToggleOpt;
-use yazi_proxy::AppProxy;
+use yazi_proxy::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlCow};
 
 use crate::{Actor, Ctx};
@@ -26,7 +26,7 @@ impl Actor for Toggle {
 		};
 
 		if !b {
-			AppProxy::notify_warn(
+			NotifyProxy::push_warn(
 				"Toggle",
 				"This file cannot be selected, due to path nesting conflict.",
 			);

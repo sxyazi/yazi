@@ -1,17 +1,23 @@
 use std::ops::ControlFlow;
 
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Layout, Rect};
 use tokio::task::JoinHandle;
 
 use super::{Message, NOTIFY_SPACING};
 
 #[derive(Default)]
 pub struct Notify {
-	pub(super) tick_handle: Option<JoinHandle<()>>,
-	pub messages:           Vec<Message>,
+	pub tick_handle: Option<JoinHandle<()>>,
+	pub messages:    Vec<Message>,
 }
 
 impl Notify {
+	pub fn available(area: Rect) -> Rect {
+		let chunks = Layout::horizontal([Constraint::Fill(1), Constraint::Min(80)]).split(area);
+		let chunks = Layout::vertical([Constraint::Fill(1), Constraint::Max(1)]).split(chunks[1]);
+		chunks[0]
+	}
+
 	pub fn limit(&self, area: Rect) -> usize {
 		if self.messages.is_empty() {
 			return 0;

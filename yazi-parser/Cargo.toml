@@ -32,6 +32,7 @@ dyn-clone     = { workspace = true }
 hashbrown     = { workspace = true }
 mlua          = { workspace = true }
 ordered-float = { workspace = true }
+ratatui       = { workspace = true }
 serde         = { workspace = true }
 serde_with    = { workspace = true }
 tokio         = { workspace = true }

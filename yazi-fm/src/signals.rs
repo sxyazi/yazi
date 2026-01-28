@@ -6,7 +6,7 @@ use yazi_config::YAZI;
 use yazi_shared::{CompletionToken, event::Event};
 
 pub(super) struct Signals {
-	tx: mpsc::UnboundedSender<(bool, CompletionToken)>,
+	pub(super) tx: mpsc::UnboundedSender<(bool, CompletionToken)>,
 }
 
 impl Signals {
@@ -17,10 +17,6 @@ impl Signals {
 		Ok(Self { tx })
 	}
 
-	pub(super) fn stop(&mut self, token: CompletionToken) { self.tx.send((false, token)).ok(); }
-
-	pub(super) fn resume(&mut self, token: CompletionToken) { self.tx.send((true, token)).ok(); }
-
 	#[cfg(unix)]
 	fn handle_sys(n: libc::c_int) -> bool {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
@@ -30,7 +26,7 @@ impl Signals {
 		match n {
 			SIGINT => { /* ignored */ }
 			SIGQUIT | SIGHUP | SIGTERM => {
-				Event::Quit(Default::default()).emit();
+				AppProxy::quit(Default::default());
 				return false;
 			}
 			SIGTSTP => {
@@ -38,7 +34,7 @@ impl Signals {
 					AppProxy::stop().await;
 					if unsafe { libc::kill(0, SIGSTOP) } != 0 {
 						error!("Failed to stop the process:\n{}", std::io::Error::last_os_error());
-						Event::Quit(Default::default()).emit();
+						AppProxy::quit(Default::default());
 					}
 				});
 			}

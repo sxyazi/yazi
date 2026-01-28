@@ -5,18 +5,24 @@ use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_config::LAYOUT;
 use yazi_macro::{render, succ};
-use yazi_parser::VoidOpt;
+use yazi_parser::app::ReflowOpt;
 use yazi_shared::data::Data;
 
-use crate::{Root, app::App};
+use crate::{Actor, Ctx};
 
-impl App {
-	pub fn reflow(&mut self, _: VoidOpt) -> Result<Data> {
-		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
+pub struct Reflow;
+
+impl Actor for Reflow {
+	type Options = ReflowOpt;
+
+	const NAME: &str = "reflow";
+
+	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
 
-		let result = Lives::scope(&self.core, || {
-			let comps = Root::reflow((Position::ORIGIN, size).into())?;
+		let result = Lives::scope(&cx.core, || {
+			let comps = (opt.reflow)((Position::ORIGIN, size).into())?;
 
 			for v in comps.sequence_values::<Value>() {
 				let Value::Table(t) = v? else {

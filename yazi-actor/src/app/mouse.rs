@@ -9,14 +9,20 @@ use yazi_parser::app::MouseOpt;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
 
-use crate::app::App;
+use crate::{Actor, Ctx};
 
-impl App {
-	pub fn mouse(&mut self, opt: MouseOpt) -> Result<Data> {
+pub struct Mouse;
+
+impl Actor for Mouse {
+	type Options = MouseOpt;
+
+	const NAME: &str = "mouse";
+
+	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let event = yazi_plugin::bindings::MouseEvent::from(opt.event);
-		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
+		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 
-		let result = Lives::scope(&self.core, move || {
+		let result = Lives::scope(&cx.core, move || {
 			let area = yazi_binding::elements::Rect::from(size);
 			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 

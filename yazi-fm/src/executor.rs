@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use yazi_actor::Ctx;
 use yazi_macro::{act, succ};
 use yazi_shared::{Layer, data::Data, event::CmdCow};
@@ -27,34 +27,45 @@ impl<'a> Executor<'a> {
 			Layer::Help => self.help(cmd),
 			Layer::Cmp => self.cmp(cmd),
 			Layer::Which => self.which(cmd),
+			Layer::Notify => self.notify(cmd),
 		}
 	}
 
-	fn app(&mut self, cmd: CmdCow) -> Result<Data> {
+	fn app(&mut self, mut cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return act!($name, self.app, cmd);
+					return act!(app:$name, cx, cmd);
 				}
 			};
 		}
 
 		on!(accept_payload);
-		on!(notify);
 		on!(plugin);
 		on!(plugin_do);
-		on!(update_notify);
 		on!(update_progress);
-		on!(resize);
-		on!(stop);
-		on!(resume);
 		on!(deprecate);
+		on!(quit);
 
-		succ!();
+		match &*cmd.name {
+			"resize" => act!(app:resize, cx, crate::Root::reflow as fn(_) -> _),
+			"resume" => act!(app:resume, cx, yazi_parser::app::ResumeOpt {
+				tx: self.app.signals.tx.clone(),
+				token: cmd.take_any("token").context("Invalid 'token' in ResumeOpt")?,
+				reflow: crate::Root::reflow,
+			}),
+			"stop" => act!(app:stop, cx, yazi_parser::app::StopOpt {
+				tx: self.app.signals.tx.clone(),
+				token: cmd.take_any("token").context("Invalid 'token' in StopOpt")?,
+			}),
+			_ => succ!(),
+		}
 	}
 
 	fn mgr(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -143,13 +154,13 @@ impl<'a> Executor<'a> {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Mgr),
 			// Plugin
-			"plugin" => act!(plugin, self.app, cmd),
+			"plugin" => act!(app:plugin, cx, cmd),
 			_ => succ!(),
 		}
 	}
 
 	fn tasks(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -173,13 +184,13 @@ impl<'a> Executor<'a> {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Tasks),
 			// Plugin
-			"plugin" => act!(plugin, self.app, cmd),
+			"plugin" => act!(app:plugin, cx, cmd),
 			_ => succ!(),
 		}
 	}
 
 	fn spot(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -198,13 +209,13 @@ impl<'a> Executor<'a> {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Spot),
 			// Plugin
-			"plugin" => act!(plugin, self.app, cmd),
+			"plugin" => act!(app:plugin, cx, cmd),
 			_ => succ!(),
 		}
 	}
 
 	fn pick(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -222,14 +233,14 @@ impl<'a> Executor<'a> {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Pick),
 			// Plugin
-			"plugin" => act!(plugin, self.app, cmd),
+			"plugin" => act!(app:plugin, cx, cmd),
 			_ => succ!(),
 		}
 	}
 
 	fn input(&mut self, cmd: CmdCow) -> Result<Data> {
 		let mode = self.app.core.input.mode();
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -249,7 +260,7 @@ impl<'a> Executor<'a> {
 					// Help
 					"help" => return act!(help:toggle, cx, Layer::Input),
 					// Plugin
-					"plugin" => return act!(plugin, self.app, cmd),
+					"plugin" => return act!(app:plugin, cx, cmd),
 					_ => {}
 				}
 			}
@@ -263,7 +274,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn confirm(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -281,7 +292,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn help(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -299,13 +310,13 @@ impl<'a> Executor<'a> {
 			// Help
 			"close" => act!(help:toggle, cx, Layer::Help),
 			// Plugin
-			"plugin" => act!(plugin, self.app, cmd),
+			"plugin" => act!(app:plugin, cx, cmd),
 			_ => succ!(),
 		}
 	}
 
 	fn cmp(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -324,13 +335,13 @@ impl<'a> Executor<'a> {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Cmp),
 			// Plugin
-			"plugin" => act!(plugin, self.app, cmd),
+			"plugin" => act!(app:plugin, cx, cmd),
 			_ => succ!(),
 		}
 	}
 
 	fn which(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -342,6 +353,23 @@ impl<'a> Executor<'a> {
 
 		on!(activate);
 		on!(callback);
+
+		succ!();
+	}
+
+	fn notify(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+
+		macro_rules! on {
+			($name:ident) => {
+				if cmd.name == stringify!($name) {
+					return act!(notify:$name, cx, cmd);
+				}
+			};
+		}
+
+		on!(push);
+		on!(tick);
 
 		succ!();
 	}

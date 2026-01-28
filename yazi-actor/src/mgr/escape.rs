@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::{VoidOpt, mgr::EscapeOpt};
-use yazi_proxy::AppProxy;
+use yazi_proxy::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -76,7 +76,7 @@ impl Actor for EscapeVisual {
 		if !select {
 			tab.selected.remove_many(urls);
 		} else if urls.len() != tab.selected.add_many(urls) {
-			AppProxy::notify_warn(
+			NotifyProxy::push_warn(
 				"Escape visual mode",
 				"Some files cannot be selected, due to path nesting conflict.",
 			);

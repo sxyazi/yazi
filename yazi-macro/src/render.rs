@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! render {
 	() => {
-		yazi_shared::event::NEED_RENDER.store(true, std::sync::atomic::Ordering::Relaxed);
+		yazi_shared::event::NEED_RENDER.store(1, std::sync::atomic::Ordering::Relaxed);
 	};
 	($cond:expr) => {
 		if $cond {
@@ -27,4 +27,16 @@ macro_rules! render_and {
 			false
 		}
 	};
+}
+
+#[macro_export]
+macro_rules! render_partial {
+	() => {{
+		_ = yazi_shared::event::NEED_RENDER.compare_exchange(
+			0,
+			2,
+			std::sync::atomic::Ordering::Relaxed,
+			std::sync::atomic::Ordering::Relaxed,
+		);
+	}};
 }

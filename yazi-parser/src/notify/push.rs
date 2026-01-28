@@ -8,16 +8,16 @@ use yazi_config::{Style, THEME};
 use yazi_shared::event::CmdCow;
 
 #[serde_as]
-#[derive(Clone, Deserialize, Serialize)]
-pub struct NotifyOpt {
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PushOpt {
 	pub title:   String,
 	pub content: String,
-	pub level:   NotifyLevel,
+	pub level:   PushLevel,
 	#[serde_as(as = "DurationSeconds<f64>")] // FIXME
 	pub timeout: Duration,
 }
 
-impl TryFrom<CmdCow> for NotifyOpt {
+impl TryFrom<CmdCow> for PushOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
@@ -25,25 +25,25 @@ impl TryFrom<CmdCow> for NotifyOpt {
 	}
 }
 
-impl FromLua for NotifyOpt {
+impl FromLua for PushOpt {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
-impl IntoLua for NotifyOpt {
+impl IntoLua for PushOpt {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
 }
 
 // --- Level
-#[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum NotifyLevel {
+pub enum PushLevel {
 	#[default]
 	Info,
 	Warn,
 	Error,
 }
 
-impl NotifyLevel {
+impl PushLevel {
 	pub fn icon(self) -> &'static str {
 		match self {
 			Self::Info => &THEME.notify.icon_info,
@@ -61,7 +61,7 @@ impl NotifyLevel {
 	}
 }
 
-impl FromStr for NotifyLevel {
+impl FromStr for PushLevel {
 	type Err = serde::de::value::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
