@@ -62,6 +62,7 @@ impl Actions {
 		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
 		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
 		writeln!(s, "    YAZI_ZOXIDE_OPTS   : {:?}", env::var_os("YAZI_ZOXIDE_OPTS"))?;
+		writeln!(s, "    SSH_AUTH_SOCK      : {:?}", env::var_os("SSH_AUTH_SOCK"))?;
 		writeln!(s, "    FZF_DEFAULT_OPTS   : {:?}", env::var_os("FZF_DEFAULT_OPTS"))?;
 		writeln!(s, "    FZF_DEFAULT_COMMAND: {:?}", env::var_os("FZF_DEFAULT_COMMAND"))?;
 

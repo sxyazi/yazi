@@ -8,7 +8,7 @@ function bugReportBody(creator, content, hash) {
 		return null
 	}
 
-	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi - we really appreciate it!
+	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi, appreciate it!
 
 I noticed that you did not correctly follow the issue template. Please ensure that:
 
@@ -27,7 +27,7 @@ function featureRequestBody(creator, content) {
 		return null
 	}
 
-	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi - we really appreciate it!
+	return `Hey @${creator}, thank you for opening this issue to help us improve Yazi, appreciate it!
 
 I noticed that you did not correctly follow the issue template. Please ensure that:
 
