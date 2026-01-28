@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
+### Changed
+
+- Upgrade Lua to 5.5 ([#3633])
+
 ### Fixed
 
 - Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
@@ -1624,3 +1628,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3607]: https://github.com/sxyazi/yazi/pull/3607
 [#3608]: https://github.com/sxyazi/yazi/pull/3608
 [#3617]: https://github.com/sxyazi/yazi/pull/3617
+[#3633]: https://github.com/sxyazi/yazi/pull/3633

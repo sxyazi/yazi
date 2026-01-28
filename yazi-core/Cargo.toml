@@ -34,7 +34,6 @@ hashbrown     = { workspace = true }
 indexmap      = { workspace = true }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
-serde         = { workspace = true }
 tokio         = { workspace = true }
 tokio-stream  = { workspace = true }
 tokio-util    = { workspace = true }
