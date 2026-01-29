@@ -2,8 +2,9 @@ use std::mem;
 
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::{cmp::CloseOpt, input::CompleteOpt};
+use yazi_parser::cmp::CloseOpt;
 use yazi_shared::data::Data;
+use yazi_widgets::input::parser::CompleteOpt;
 
 use crate::{Actor, Ctx};
 
@@ -17,7 +18,7 @@ impl Actor for Close {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let cmp = &mut cx.core.cmp;
 		if let Some(item) = cmp.selected().filter(|_| opt.submit).cloned() {
-			return act!(input:complete, cx, CompleteOpt { item, ticket: cmp.ticket });
+			return act!(input:complete, cx, CompleteOpt { name: item.name, is_dir: item.is_dir, ticket: cmp.ticket });
 		}
 
 		cmp.caches.clear();

@@ -2,10 +2,9 @@ use std::ops::Range;
 
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::CasefyOpt;
 use yazi_shared::data::Data;
 
-use crate::input::{Input, op::InputOp};
+use crate::input::{Input, op::InputOp, parser::CasefyOpt};
 
 impl Input {
 	pub fn casefy(&mut self, opt: CasefyOpt) -> Result<Data> {

@@ -15,7 +15,7 @@ macro_rules! spark {
 #[macro_export]
 macro_rules! try_from_spark {
 	($opt:ty, $($($layer:ident)? : $name:ident),+) => {
-		impl<'a> std::convert::TryFrom<$crate::spark::Spark<'a>> for paste::paste! { yazi_parser::$opt } {
+		impl<'a> std::convert::TryFrom<$crate::spark::Spark<'a>> for $opt {
 			type Error = ();
 
 			fn try_from(value: $crate::spark::Spark<'a>) -> Result<Self, Self::Error> {

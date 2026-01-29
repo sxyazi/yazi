@@ -1,5 +1,6 @@
 use mlua::{IntoLuaMulti, UserData, UserDataMethods, Value};
-use yazi_binding::Error;
+
+use crate::Error;
 
 pub enum SizeCalculator {
 	Local(yazi_fs::provider::local::SizeCalculator),

@@ -4,10 +4,10 @@ use anyhow::Result;
 use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
 use yazi_actor::{Ctx, lives::Lives};
-use yazi_binding::elements::COLLISION;
 use yazi_macro::{act, succ};
 use yazi_shared::{data::Data, event::NEED_RENDER};
 use yazi_tty::TTY;
+use yazi_widgets::COLLISION;
 
 use crate::{app::App, root::Root};
 

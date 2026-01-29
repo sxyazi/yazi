@@ -1,8 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::event::CmdCow;
-
-use crate::Step;
+use yazi_widgets::Step;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct ArrowOpt {

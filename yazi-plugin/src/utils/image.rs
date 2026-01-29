@@ -1,11 +1,10 @@
 use mlua::{Function, IntoLuaMulti, Lua, Value};
 use yazi_adapter::{ADAPTOR, Image};
-use yazi_binding::{Error, UrlRef, elements::Rect};
+use yazi_binding::{Error, ImageInfo, UrlRef, elements::Rect};
 use yazi_fs::FsUrl;
 use yazi_shared::url::{AsUrl, UrlLike};
 
 use super::Utils;
-use crate::bindings::ImageInfo;
 
 impl Utils {
 	pub(super) fn image_info(lua: &Lua) -> mlua::Result<Function> {

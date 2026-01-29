@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::PasteOpt;
 use yazi_shared::data::Data;
 
-use crate::{CLIPBOARD, input::{Input, op::InputOp}};
+use crate::{CLIPBOARD, input::{Input, op::InputOp, parser::PasteOpt}};
 
 impl Input {
 	pub fn paste(&mut self, opt: PasteOpt) -> Result<Data> {

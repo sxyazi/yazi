@@ -1,7 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::input::CloseOpt;
-use yazi_shared::{data::Data, errors::InputError};
+use yazi_shared::data::Data;
+use yazi_widgets::input::InputError;
 
 use crate::{Actor, Ctx};
 

@@ -1,12 +1,11 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::VoidOpt;
 use yazi_shared::data::Data;
 
 use crate::input::{Input, op::InputOp};
 
 impl Input {
-	pub fn yank(&mut self, _: VoidOpt) -> Result<Data> {
+	pub fn yank(&mut self, _: ()) -> Result<Data> {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Yank(self.snap().cursor);

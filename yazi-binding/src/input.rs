@@ -3,7 +3,7 @@ use std::pin::Pin;
 use mlua::{UserData, prelude::LuaUserDataMethods};
 use tokio::pin;
 use tokio_stream::StreamExt;
-use yazi_shared::errors::InputError;
+use yazi_widgets::input::InputError;
 
 pub struct InputRx<T: StreamExt<Item = Result<String, InputError>>> {
 	inner: T,

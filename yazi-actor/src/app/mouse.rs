@@ -19,7 +19,7 @@ impl Actor for Mouse {
 	const NAME: &str = "mouse";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		let event = yazi_plugin::bindings::MouseEvent::from(opt.event);
+		let event = yazi_binding::MouseEvent::from(opt.event);
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 
 		let result = Lives::scope(&cx.core, move || {

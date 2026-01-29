@@ -1,6 +1,6 @@
 use std::{error::Error, fmt::{self, Display}};
 
-use crate::Id;
+use yazi_shared::Id;
 
 #[derive(Debug)]
 pub enum InputError {

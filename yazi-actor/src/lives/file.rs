@@ -1,9 +1,8 @@
 use std::{ops::Deref, ptr};
 
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::{Style, cached_field};
+use yazi_binding::{Range, Style, cached_field};
 use yazi_config::THEME;
-use yazi_plugin::bindings::Range;
 use yazi_shared::{path::AsPath, url::UrlLike};
 
 use super::Lives;

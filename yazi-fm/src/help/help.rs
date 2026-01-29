@@ -22,7 +22,7 @@ impl<'a> Help<'a> {
 impl Widget for Help<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let help = &self.core.help;
-		yazi_binding::elements::Clear::default().render(area, buf);
+		yazi_widgets::Clear.render(area, buf);
 
 		let chunks = layout::Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
 		Line::styled(

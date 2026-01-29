@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::InsertOpt;
 use yazi_shared::data::Data;
 
-use crate::input::{Input, InputMode, op::InputOp};
+use crate::input::{Input, InputMode, op::InputOp, parser::InsertOpt};
 
 impl Input {
 	pub fn insert(&mut self, opt: InsertOpt) -> Result<Data> {

@@ -52,7 +52,7 @@ impl Widget for Cmp<'_> {
 			area.height = rect.height.saturating_sub(area.y).min(area.height);
 		}
 
-		yazi_binding::elements::Clear::default().render(area, buf);
+		yazi_widgets::Clear.render(area, buf);
 		List::new(items)
 			.block(Block::bordered().border_type(BorderType::Rounded).border_style(THEME.cmp.border))
 			.render(area, buf);

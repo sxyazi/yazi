@@ -108,17 +108,17 @@ pub enum Spark<'a> {
 	HelpToggle(yazi_parser::help::ToggleOpt),
 
 	// Input
-	InputBackspace(yazi_parser::input::BackspaceOpt),
-	InputBackward(yazi_parser::input::BackwardOpt),
+	InputBackspace(yazi_widgets::input::parser::BackspaceOpt),
+	InputBackward(yazi_widgets::input::parser::BackwardOpt),
 	InputClose(yazi_parser::input::CloseOpt),
-	InputComplete(yazi_parser::input::CompleteOpt),
-	InputDelete(yazi_parser::input::DeleteOpt),
+	InputComplete(yazi_widgets::input::parser::CompleteOpt),
+	InputDelete(yazi_widgets::input::parser::DeleteOpt),
 	InputEscape(yazi_parser::VoidOpt),
-	InputForward(yazi_parser::input::ForwardOpt),
-	InputInsert(yazi_parser::input::InsertOpt),
-	InputKill(yazi_parser::input::KillOpt),
-	InputMove(yazi_parser::input::MoveOpt),
-	InputPaste(yazi_parser::input::PasteOpt),
+	InputForward(yazi_widgets::input::parser::ForwardOpt),
+	InputInsert(yazi_widgets::input::parser::InsertOpt),
+	InputKill(yazi_widgets::input::parser::KillOpt),
+	InputMove(yazi_widgets::input::parser::MoveOpt),
+	InputPaste(yazi_widgets::input::parser::PasteOpt),
 	InputShow(yazi_parser::input::ShowOpt),
 
 	// Notify
@@ -323,7 +323,7 @@ impl<'a> IntoLua for Spark<'a> {
 }
 
 try_from_spark!(
-	VoidOpt,
+	yazi_parser::VoidOpt,
 	app:bootstrap,
 	app:focus,
 	mgr:back,
@@ -345,81 +345,81 @@ try_from_spark!(
 );
 
 // App
-try_from_spark!(ArrowOpt, mgr:arrow, mgr:tab_swap);
-try_from_spark!(app::DeprecateOpt, app:deprecate);
-try_from_spark!(app::MouseOpt, app:mouse);
-try_from_spark!(app::PluginOpt, app:plugin, app:plugin_do);
-try_from_spark!(app::QuitOpt, app:quit, mgr:quit);
-try_from_spark!(app::ReflowOpt, app:reflow, app:resize);
-try_from_spark!(app::ResumeOpt, app:resume);
-try_from_spark!(app::StopOpt, app:stop);
-try_from_spark!(app::UpdateProgressOpt, app:update_progress);
-try_from_spark!(cmp::CloseOpt, cmp:close);
-try_from_spark!(cmp::ShowOpt, cmp:show);
-try_from_spark!(cmp::TriggerOpt, cmp:trigger);
-try_from_spark!(confirm::CloseOpt, confirm:close);
-try_from_spark!(confirm::ShowOpt, confirm:show);
-try_from_spark!(help::ToggleOpt, help:toggle);
-try_from_spark!(input::BackspaceOpt, input:backspace);
-try_from_spark!(input::BackwardOpt, input:backward);
-try_from_spark!(input::CloseOpt, input:close);
-try_from_spark!(input::CompleteOpt, input:complete);
-try_from_spark!(input::DeleteOpt, input:delete);
-try_from_spark!(input::ForwardOpt, input:forward);
-try_from_spark!(input::InsertOpt, input:insert);
-try_from_spark!(input::KillOpt, input:kill);
-try_from_spark!(input::MoveOpt, input:move);
-try_from_spark!(input::PasteOpt, input:paste);
-try_from_spark!(input::ShowOpt, input:show);
-try_from_spark!(mgr::CdOpt, mgr:cd);
-try_from_spark!(mgr::CloseOpt, mgr:close);
-try_from_spark!(mgr::CopyOpt, mgr:copy);
-try_from_spark!(mgr::CreateOpt, mgr:create);
-try_from_spark!(mgr::DisplaceDoOpt, mgr:displace_do);
-try_from_spark!(mgr::DownloadOpt, mgr:download);
-try_from_spark!(mgr::EscapeOpt, mgr:escape);
-try_from_spark!(mgr::FilterOpt, mgr:filter, mgr:filter_do);
-try_from_spark!(mgr::FindArrowOpt, mgr:find_arrow);
-try_from_spark!(mgr::FindDoOpt, mgr:find_do);
-try_from_spark!(mgr::FindOpt, mgr:find);
-try_from_spark!(mgr::HardlinkOpt, mgr:hardlink);
-try_from_spark!(mgr::HiddenOpt, mgr:hidden);
-try_from_spark!(mgr::HoverOpt, mgr:hover);
-try_from_spark!(mgr::LinemodeOpt, mgr:linemode);
-try_from_spark!(mgr::LinkOpt, mgr:link);
-try_from_spark!(mgr::OpenDoOpt, mgr:open_do);
-try_from_spark!(mgr::OpenOpt, mgr:open);
-try_from_spark!(mgr::PasteOpt, mgr:paste);
-try_from_spark!(mgr::PeekOpt, mgr:peek);
-try_from_spark!(mgr::RemoveOpt, mgr:remove, mgr:remove_do);
-try_from_spark!(mgr::RenameOpt, mgr:rename);
-try_from_spark!(mgr::RevealOpt, mgr:reveal);
-try_from_spark!(mgr::SearchOpt, mgr:search, mgr:search_do);
-try_from_spark!(mgr::SeekOpt, mgr:seek);
-try_from_spark!(mgr::ShellOpt, mgr:shell);
-try_from_spark!(mgr::SortOpt, mgr:sort);
-try_from_spark!(mgr::SpotOpt, mgr:spot);
-try_from_spark!(mgr::StashOpt, mgr:stash);
-try_from_spark!(mgr::TabCloseOpt, mgr:tab_close);
-try_from_spark!(mgr::TabCreateOpt, mgr:tab_create);
-try_from_spark!(mgr::TabSwitchOpt, mgr:tab_switch);
-try_from_spark!(mgr::ToggleAllOpt, mgr:toggle_all);
-try_from_spark!(mgr::ToggleOpt, mgr:toggle);
-try_from_spark!(mgr::UpdateFilesOpt, mgr:update_files);
-try_from_spark!(mgr::UpdateMimesOpt, mgr:update_mimes);
-try_from_spark!(mgr::UpdatePagedOpt, mgr:update_paged);
-try_from_spark!(mgr::UpdatePeekedOpt, mgr:update_peeked);
-try_from_spark!(mgr::UpdateSpottedOpt, mgr:update_spotted);
-try_from_spark!(mgr::UpdateYankedOpt<'a>, mgr:update_yanked);
-try_from_spark!(mgr::UploadOpt, mgr:upload);
-try_from_spark!(mgr::VisualModeOpt, mgr:visual_mode);
-try_from_spark!(mgr::YankOpt, mgr:yank);
-try_from_spark!(notify::PushOpt, notify:push);
-try_from_spark!(notify::TickOpt, notify:tick);
-try_from_spark!(pick::CloseOpt, pick:close);
-try_from_spark!(pick::ShowOpt, pick:show);
-try_from_spark!(spot::CopyOpt, spot:copy);
-try_from_spark!(tasks::ProcessOpenOpt, tasks:process_open);
-try_from_spark!(tasks::UpdateSucceedOpt, tasks:update_succeed);
-try_from_spark!(which::ActivateOpt, which:activate);
-try_from_spark!(which::CallbackOpt, which:callback);
+try_from_spark!(yazi_parser::ArrowOpt, mgr:arrow, mgr:tab_swap);
+try_from_spark!(yazi_parser::app::DeprecateOpt, app:deprecate);
+try_from_spark!(yazi_parser::app::MouseOpt, app:mouse);
+try_from_spark!(yazi_parser::app::PluginOpt, app:plugin, app:plugin_do);
+try_from_spark!(yazi_parser::app::QuitOpt, app:quit, mgr:quit);
+try_from_spark!(yazi_parser::app::ReflowOpt, app:reflow, app:resize);
+try_from_spark!(yazi_parser::app::ResumeOpt, app:resume);
+try_from_spark!(yazi_parser::app::StopOpt, app:stop);
+try_from_spark!(yazi_parser::app::UpdateProgressOpt, app:update_progress);
+try_from_spark!(yazi_parser::cmp::CloseOpt, cmp:close);
+try_from_spark!(yazi_parser::cmp::ShowOpt, cmp:show);
+try_from_spark!(yazi_parser::cmp::TriggerOpt, cmp:trigger);
+try_from_spark!(yazi_parser::confirm::CloseOpt, confirm:close);
+try_from_spark!(yazi_parser::confirm::ShowOpt, confirm:show);
+try_from_spark!(yazi_parser::help::ToggleOpt, help:toggle);
+try_from_spark!(yazi_parser::input::CloseOpt, input:close);
+try_from_spark!(yazi_parser::input::ShowOpt, input:show);
+try_from_spark!(yazi_parser::mgr::CdOpt, mgr:cd);
+try_from_spark!(yazi_parser::mgr::CloseOpt, mgr:close);
+try_from_spark!(yazi_parser::mgr::CopyOpt, mgr:copy);
+try_from_spark!(yazi_parser::mgr::CreateOpt, mgr:create);
+try_from_spark!(yazi_parser::mgr::DisplaceDoOpt, mgr:displace_do);
+try_from_spark!(yazi_parser::mgr::DownloadOpt, mgr:download);
+try_from_spark!(yazi_parser::mgr::EscapeOpt, mgr:escape);
+try_from_spark!(yazi_parser::mgr::FilterOpt, mgr:filter, mgr:filter_do);
+try_from_spark!(yazi_parser::mgr::FindArrowOpt, mgr:find_arrow);
+try_from_spark!(yazi_parser::mgr::FindDoOpt, mgr:find_do);
+try_from_spark!(yazi_parser::mgr::FindOpt, mgr:find);
+try_from_spark!(yazi_parser::mgr::HardlinkOpt, mgr:hardlink);
+try_from_spark!(yazi_parser::mgr::HiddenOpt, mgr:hidden);
+try_from_spark!(yazi_parser::mgr::HoverOpt, mgr:hover);
+try_from_spark!(yazi_parser::mgr::LinemodeOpt, mgr:linemode);
+try_from_spark!(yazi_parser::mgr::LinkOpt, mgr:link);
+try_from_spark!(yazi_parser::mgr::OpenDoOpt, mgr:open_do);
+try_from_spark!(yazi_parser::mgr::OpenOpt, mgr:open);
+try_from_spark!(yazi_parser::mgr::PasteOpt, mgr:paste);
+try_from_spark!(yazi_parser::mgr::PeekOpt, mgr:peek);
+try_from_spark!(yazi_parser::mgr::RemoveOpt, mgr:remove, mgr:remove_do);
+try_from_spark!(yazi_parser::mgr::RenameOpt, mgr:rename);
+try_from_spark!(yazi_parser::mgr::RevealOpt, mgr:reveal);
+try_from_spark!(yazi_parser::mgr::SearchOpt, mgr:search, mgr:search_do);
+try_from_spark!(yazi_parser::mgr::SeekOpt, mgr:seek);
+try_from_spark!(yazi_parser::mgr::ShellOpt, mgr:shell);
+try_from_spark!(yazi_parser::mgr::SortOpt, mgr:sort);
+try_from_spark!(yazi_parser::mgr::SpotOpt, mgr:spot);
+try_from_spark!(yazi_parser::mgr::StashOpt, mgr:stash);
+try_from_spark!(yazi_parser::mgr::TabCloseOpt, mgr:tab_close);
+try_from_spark!(yazi_parser::mgr::TabCreateOpt, mgr:tab_create);
+try_from_spark!(yazi_parser::mgr::TabSwitchOpt, mgr:tab_switch);
+try_from_spark!(yazi_parser::mgr::ToggleAllOpt, mgr:toggle_all);
+try_from_spark!(yazi_parser::mgr::ToggleOpt, mgr:toggle);
+try_from_spark!(yazi_parser::mgr::UpdateFilesOpt, mgr:update_files);
+try_from_spark!(yazi_parser::mgr::UpdateMimesOpt, mgr:update_mimes);
+try_from_spark!(yazi_parser::mgr::UpdatePagedOpt, mgr:update_paged);
+try_from_spark!(yazi_parser::mgr::UpdatePeekedOpt, mgr:update_peeked);
+try_from_spark!(yazi_parser::mgr::UpdateSpottedOpt, mgr:update_spotted);
+try_from_spark!(yazi_parser::mgr::UpdateYankedOpt<'a>, mgr:update_yanked);
+try_from_spark!(yazi_parser::mgr::UploadOpt, mgr:upload);
+try_from_spark!(yazi_parser::mgr::VisualModeOpt, mgr:visual_mode);
+try_from_spark!(yazi_parser::mgr::YankOpt, mgr:yank);
+try_from_spark!(yazi_parser::notify::PushOpt, notify:push);
+try_from_spark!(yazi_parser::notify::TickOpt, notify:tick);
+try_from_spark!(yazi_parser::pick::CloseOpt, pick:close);
+try_from_spark!(yazi_parser::pick::ShowOpt, pick:show);
+try_from_spark!(yazi_parser::spot::CopyOpt, spot:copy);
+try_from_spark!(yazi_parser::tasks::ProcessOpenOpt, tasks:process_open);
+try_from_spark!(yazi_parser::tasks::UpdateSucceedOpt, tasks:update_succeed);
+try_from_spark!(yazi_parser::which::ActivateOpt, which:activate);
+try_from_spark!(yazi_parser::which::CallbackOpt, which:callback);
+try_from_spark!(yazi_widgets::input::parser::BackspaceOpt, input:backspace);
+try_from_spark!(yazi_widgets::input::parser::BackwardOpt, input:backward);
+try_from_spark!(yazi_widgets::input::parser::CompleteOpt, input:complete);
+try_from_spark!(yazi_widgets::input::parser::DeleteOpt, input:delete);
+try_from_spark!(yazi_widgets::input::parser::ForwardOpt, input:forward);
+try_from_spark!(yazi_widgets::input::parser::InsertOpt, input:insert);
+try_from_spark!(yazi_widgets::input::parser::KillOpt, input:kill);
+try_from_spark!(yazi_widgets::input::parser::MoveOpt, input:move);
+try_from_spark!(yazi_widgets::input::parser::PasteOpt, input:paste);

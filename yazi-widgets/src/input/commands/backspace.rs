@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::BackspaceOpt;
 use yazi_shared::data::Data;
 
-use crate::input::Input;
+use crate::input::{Input, parser::BackspaceOpt};
 
 impl Input {
 	pub fn backspace(&mut self, opt: BackspaceOpt) -> Result<Data> {
