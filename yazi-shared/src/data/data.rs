@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, url::{UrlBuf, UrlCow}};
+use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{UrlBuf, UrlCow}};
 
 // --- Data
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -175,6 +175,32 @@ impl<'a> TryFrom<&'a Data> for &'a [u8] {
 			Data::Bytes(b) => Ok(b),
 			_ => bail!("not bytes"),
 		}
+	}
+}
+
+impl TryFrom<Data> for StrandBuf {
+	type Error = anyhow::Error;
+
+	fn try_from(value: Data) -> Result<Self, Self::Error> {
+		Ok(match value {
+			Data::String(s) => s.into_owned().into(),
+			Data::Path(p) => p.into_strand(),
+			Data::Bytes(b) => StrandBuf::Bytes(b),
+			_ => bail!("cannot convert to StrandBuf"),
+		})
+	}
+}
+
+impl TryFrom<&Data> for StrandBuf {
+	type Error = anyhow::Error;
+
+	fn try_from(value: &Data) -> Result<Self, Self::Error> {
+		Ok(match value {
+			Data::String(s) => s.to_string().into(),
+			Data::Path(p) => p.into_strand(),
+			Data::Bytes(b) => StrandBuf::Bytes(b.clone()),
+			_ => bail!("cannot convert to StrandBuf"),
+		})
 	}
 }
 

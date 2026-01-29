@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{elements::{Line, Pos, Text}, runtime};
+use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
 use yazi_config::{keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::relay;
 use yazi_parser::{notify::PushOpt, which::ActivateOpt};
@@ -11,7 +11,6 @@ use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
 use yazi_shared::Debounce;
 
 use super::Utils;
-use crate::bindings::InputRx;
 
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {

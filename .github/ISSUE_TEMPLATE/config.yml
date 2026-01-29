@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: 🚧 Build Issues
+    url: https://github.com/sxyazi/yazi/discussions/new?category=3-build-issues
+    about: If you have issues building Yazi from source code
   - name: 📝 Documentation Improvement
     url: https://github.com/yazi-rs/yazi-rs.github.io
     about: If you'd like to help improve the documentation

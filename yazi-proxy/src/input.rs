@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
 use yazi_macro::{emit, relay};
-use yazi_shared::errors::InputError;
+use yazi_widgets::input::InputError;
 
 pub struct InputProxy;
 

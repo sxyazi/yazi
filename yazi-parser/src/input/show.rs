@@ -2,7 +2,8 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{errors::InputError, event::CmdCow};
+use yazi_shared::event::CmdCow;
+use yazi_widgets::input::InputError;
 
 #[derive(Debug)]
 pub struct ShowOpt {

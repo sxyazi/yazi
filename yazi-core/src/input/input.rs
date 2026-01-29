@@ -2,7 +2,8 @@ use std::{ops::{Deref, DerefMut}, rc::Rc};
 
 use tokio::sync::mpsc::UnboundedSender;
 use yazi_config::popup::Position;
-use yazi_shared::{Ids, errors::InputError};
+use yazi_shared::Ids;
+use yazi_widgets::input::InputError;
 
 #[derive(Default)]
 pub struct Input {

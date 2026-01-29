@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_parser::input::BackwardOpt;
 use yazi_shared::{CharKind, data::Data};
 
-use crate::input::Input;
+use crate::input::{Input, parser::BackwardOpt};
 
 impl Input {
 	pub fn backward(&mut self, opt: BackwardOpt) -> Result<Data> {

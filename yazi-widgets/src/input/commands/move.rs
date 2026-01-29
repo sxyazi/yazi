@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::input::MoveOpt;
 use yazi_shared::data::Data;
 
-use crate::input::{Input, op::InputOp, snap::InputSnap};
+use crate::input::{Input, op::InputOp, parser::MoveOpt, snap::InputSnap};
 
 impl Input {
 	pub fn r#move(&mut self, opt: MoveOpt) -> Result<Data> {

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_parser::input::CompleteOpt;
 use yazi_shared::data::Data;
+use yazi_widgets::input::parser::CompleteOpt;
 
 use crate::{Actor, Ctx};
 

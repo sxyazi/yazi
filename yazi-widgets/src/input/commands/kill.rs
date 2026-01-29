@@ -2,10 +2,9 @@ use std::ops::RangeBounds;
 
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::KillOpt;
 use yazi_shared::{CharKind, data::Data};
 
-use crate::input::Input;
+use crate::input::{Input, parser::KillOpt};
 
 impl Input {
 	pub fn kill(&mut self, opt: KillOpt) -> Result<Data> {

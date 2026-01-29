@@ -11,14 +11,6 @@ pub enum CmdCow {
 	Borrowed(&'static Cmd),
 }
 
-impl From<Cmd> for CmdCow {
-	fn from(c: Cmd) -> Self { Self::Owned(c) }
-}
-
-impl From<&'static Cmd> for CmdCow {
-	fn from(c: &'static Cmd) -> Self { Self::Borrowed(c) }
-}
-
 impl Deref for CmdCow {
 	type Target = Cmd;
 
@@ -28,6 +20,18 @@ impl Deref for CmdCow {
 			Self::Borrowed(c) => c,
 		}
 	}
+}
+
+impl From<CmdCow> for () {
+	fn from(_: CmdCow) -> Self { () }
+}
+
+impl From<Cmd> for CmdCow {
+	fn from(c: Cmd) -> Self { Self::Owned(c) }
+}
+
+impl From<&'static Cmd> for CmdCow {
+	fn from(c: &'static Cmd) -> Self { Self::Borrowed(c) }
 }
 
 impl CmdCow {

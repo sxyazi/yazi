@@ -148,3 +148,26 @@ where
 {
 	fn to_strand(&self) -> StrandCow<'_> { self.as_url().components().strand() }
 }
+
+// --- IntoStrand
+pub trait IntoStrand {
+	fn into_strand(self) -> StrandBuf;
+}
+
+impl IntoStrand for PathBufDyn {
+	fn into_strand(self) -> StrandBuf {
+		match self {
+			Self::Os(p) => StrandBuf::Os(p.into_os_string()),
+			Self::Unix(p) => StrandBuf::Bytes(p.into_vec()),
+		}
+	}
+}
+
+impl IntoStrand for &PathBufDyn {
+	fn into_strand(self) -> StrandBuf {
+		match self {
+			PathBufDyn::Os(p) => StrandBuf::Os(p.as_os_str().to_owned()),
+			PathBufDyn::Unix(p) => StrandBuf::Bytes(p.as_bytes().to_owned()),
+		}
+	}
+}

@@ -15,7 +15,7 @@ impl Widget for Input<'_> {
 		let input = &self.core.input;
 		let area = self.core.mgr.area(input.position);
 
-		yazi_binding::elements::Clear::default().render(area, buf);
+		yazi_widgets::Clear.render(area, buf);
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)

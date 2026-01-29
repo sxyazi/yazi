@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::DeleteOpt;
 use yazi_shared::data::Data;
 
-use crate::input::{Input, op::InputOp};
+use crate::input::{Input, op::InputOp, parser::DeleteOpt};
 
 impl Input {
 	pub fn delete(&mut self, opt: DeleteOpt) -> Result<Data> {

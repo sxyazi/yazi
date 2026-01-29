@@ -1,3 +1,3 @@
-yazi_macro::mod_pub!(commands);
+yazi_macro::mod_pub!(commands parser);
 
-yazi_macro::mod_flat!(input mode op snap snaps widget);
+yazi_macro::mod_flat!(error input mode op snap snaps widget);

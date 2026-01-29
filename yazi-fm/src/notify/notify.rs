@@ -43,7 +43,7 @@ impl Widget for Notify<'_> {
 				tiles[i].offset(Offset { x: (100 - m.percent) as i32 * tiles[i].width as i32 / 100, y: 0 });
 			rect.width -= rect.x - tiles[i].x;
 
-			yazi_binding::elements::Clear::default().render(rect, buf);
+			yazi_widgets::Clear.render(rect, buf);
 			Paragraph::new(m.content.as_str())
 				.wrap(Wrap { trim: false })
 				.block(
