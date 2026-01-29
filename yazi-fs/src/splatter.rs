@@ -2,7 +2,7 @@
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
 #[cfg(windows)]
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
-use std::{cell::Cell, ffi::{OsStr, OsString}, iter::{self, Peekable}, mem};
+use std::{cell::Cell, ffi::{OsStr, OsString}, fs::OpenOptions, io::Write, iter::{self, Peekable}, mem};
 
 use yazi_shared::url::{AsUrl, Url, UrlCow};
 
@@ -81,6 +81,8 @@ where
 			Some('d') | Some('D') => self.visit_dirname(it, buf),
 			Some('t') | Some('T') => self.visit_tab(it, buf),
 			Some('y') | Some('Y') => self.visit_yanked(it, buf),
+			Some('l') | Some('L') => self.visit_line_number(it, buf),
+			Some('c') | Some('C') => self.visit_column_number(it, buf),
 			Some('%') => self.visit_escape(it, buf),
 			Some('*') => self.visit_selected(it, buf), // TODO: remove this
 			Some(c) if c.is_ascii_digit() => self.visit_digit(it, buf),
@@ -190,6 +192,36 @@ where
 				cue(buf, url.unified_path_str());
 			}
 		}
+	}
+
+	fn visit_line_number(&mut self, it: &mut Iter, buf: &mut Buf) {
+		it.next();
+		let idx = self.consume_digit(it);
+
+		let line_str = self
+			.src
+			.selected(self.tab, idx)
+			.next()
+			.and_then(|url| url.line())
+			.map(|line| line.to_string())
+			.unwrap_or_else(|| "".to_string());
+
+		cue(buf, OsStr::new(&line_str));
+	}
+
+	fn visit_column_number(&mut self, it: &mut Iter, buf: &mut Buf) {
+		it.next();
+		let idx = self.consume_digit(it);
+
+		let col_str = self
+			.src
+			.selected(self.tab, idx)
+			.next()
+			.and_then(|url| url.column())
+			.map(|col| col.to_string())
+			.unwrap_or_else(|| "".to_string());
+
+		cue(buf, OsStr::new(&col_str));
 	}
 
 	fn visit_escape(&mut self, it: &mut Iter, buf: &mut Buf) { buf.push(it.next().unwrap()); }
