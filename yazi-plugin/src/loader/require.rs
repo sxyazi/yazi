@@ -18,7 +18,7 @@ impl Require {
 
 				runtime_mut!(lua)?.push(&id);
 				let mod_ = LOADER.load(&lua, &id).await;
-				runtime_mut!(lua)?.pop();
+				runtime_mut!(lua)?.pop()?;
 
 				Self::create_mt(&lua, id.into_owned(), mod_?)
 			})?,
@@ -61,7 +61,7 @@ impl Require {
 				let (r#mod, args) = Self::split_mod_and_args(&lua, &id, args)?;
 				runtime_mut!(lua)?.push(&id);
 				let result = r#mod.call_async_function::<MultiValue>(&f, args).await;
-				runtime_mut!(lua)?.pop();
+				runtime_mut!(lua)?.pop()?;
 				result
 			}
 		})
@@ -90,10 +90,9 @@ impl Require {
 
 	fn absolute_id<'a>(lua: &Lua, id: &'a str) -> mlua::Result<Cow<'a, str>> {
 		let Some(stripped) = id.strip_prefix('.') else { return Ok(id.into()) };
-		Ok(if let Some(cur) = runtime!(lua)?.current() {
-			format!("{}.{stripped}", cur.split('.').next().unwrap_or(cur)).into()
-		} else {
-			stripped.into()
-		})
+
+		let rt = runtime!(lua)?;
+		let cur = rt.current()?;
+		Ok(format!("{}.{stripped}", cur.split('.').next().unwrap_or(cur)).into())
 	}
 }

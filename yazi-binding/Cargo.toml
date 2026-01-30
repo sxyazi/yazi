@@ -27,6 +27,7 @@ yazi-widgets = { path = "../yazi-widgets", version = "26.1.22" }
 
 # External dependencies
 ansi-to-tui   = { workspace = true }
+anyhow        = { workspace = true }
 crossterm     = { workspace = true }
 futures       = { workspace = true }
 hashbrown     = { workspace = true }

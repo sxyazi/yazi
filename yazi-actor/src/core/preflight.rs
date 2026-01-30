@@ -20,7 +20,7 @@ impl Preflight {
 			for (id, cb) in handlers {
 				let blocking = runtime_mut!(LUA)?.critical_push(&id, true);
 				let result = cb.call::<Value>(&body);
-				runtime_mut!(LUA)?.critical_pop(blocking);
+				runtime_mut!(LUA)?.critical_pop(blocking)?;
 
 				match result {
 					Ok(Value::Nil) => {

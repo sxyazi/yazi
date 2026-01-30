@@ -36,6 +36,7 @@ impl Default for Loader {
 			("font".to_owned(), preset!("plugins/font").into()),
 			("fzf".to_owned(), preset!("plugins/fzf").into()),
 			("image".to_owned(), preset!("plugins/image").into()),
+			("init".to_owned(), preset!("plugins/init").into()),
 			("json".to_owned(), preset!("plugins/json").into()),
 			("magick".to_owned(), preset!("plugins/magick").into()),
 			("mime".to_owned(), preset!("plugins/mime").into()),

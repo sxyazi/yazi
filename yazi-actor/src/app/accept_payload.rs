@@ -35,7 +35,7 @@ impl Actor for AcceptPayload {
 				if let Err(e) = cb.call::<()>(body.clone()) {
 					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
 				}
-				runtime_mut!(LUA)?.critical_pop(blocking);
+				runtime_mut!(LUA)?.critical_pop(blocking)?;
 			}
 			Ok(())
 		})?);
