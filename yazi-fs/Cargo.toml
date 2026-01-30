@@ -22,6 +22,7 @@ anyhow           = { workspace = true }
 arc-swap         = "1.8.0"
 bitflags         = { workspace = true }
 dirs             = { workspace = true }
+either           = { workspace = true }
 foldhash         = { workspace = true }
 hashbrown        = { workspace = true }
 parking_lot      = { workspace = true }

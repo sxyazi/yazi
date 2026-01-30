@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, future::poll_fn, io, mem, path::{Path, PathBuf}, pin::Pin, task::{Poll, ready}, time::{Duration, Instant}};
 
+use either::Either;
 use tokio::task::JoinHandle;
-use yazi_shared::Either;
 
 type Task = Either<PathBuf, std::fs::ReadDir>;
 
@@ -84,7 +84,7 @@ impl SizeCalculator {
 				};
 			}
 
-			let Some(next) = front.right_mut()?.next() else {
+			let Some(next) = front.as_mut().right()?.next() else {
 				pop_and_continue!();
 			};
 

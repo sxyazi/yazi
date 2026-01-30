@@ -1,6 +1,6 @@
 use anyhow::Result;
 use mlua::{ErrorContext, ExternalError, IntoLua, Value};
-use yazi_binding::runtime_mut;
+use yazi_binding::runtime_scope;
 use yazi_dds::{LOCAL, spark::{Spark, SparkKind}};
 use yazi_plugin::LUA;
 
@@ -18,11 +18,7 @@ impl Preflight {
 		Ok(Lives::scope(cx.core, || {
 			let mut body = opt.1.into_lua(&LUA)?;
 			for (id, cb) in handlers {
-				let blocking = runtime_mut!(LUA)?.critical_push(&id, true);
-				let result = cb.call::<Value>(&body);
-				runtime_mut!(LUA)?.critical_pop(blocking)?;
-
-				match result {
+				match runtime_scope!(LUA, &id, cb.call::<Value>(&body)) {
 					Ok(Value::Nil) => {
 						Err(format!("`{kind}` event cancelled by `{id}` plugin on preflight").into_lua_err())?
 					}

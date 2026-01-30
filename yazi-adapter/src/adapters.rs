@@ -1,7 +1,5 @@
 use std::ops::{Deref, DerefMut};
 
-use yazi_shared::Either;
-
 use crate::Adapter;
 
 pub(super) struct Adapters(Vec<Adapter>);
@@ -17,12 +15,7 @@ impl DerefMut for Adapters {
 }
 
 impl From<&yazi_emulator::Emulator> for Adapters {
-	fn from(value: &yazi_emulator::Emulator) -> Self {
-		match value.kind {
-			Either::Left(b) => b.into(),
-			Either::Right(u) => u.into(),
-		}
-	}
+	fn from(value: &yazi_emulator::Emulator) -> Self { value.kind.either_into() }
 }
 
 impl From<yazi_emulator::Brand> for Adapters {

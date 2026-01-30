@@ -1,8 +1,7 @@
 use anyhow::Result;
 use mlua::ObjectLike;
-use scopeguard::defer;
 use tracing::{error, warn};
-use yazi_binding::runtime_mut;
+use yazi_binding::runtime_scope;
 use yazi_dds::Sendable;
 use yazi_macro::succ;
 use yazi_parser::app::{PluginMode, PluginOpt};
@@ -33,9 +32,6 @@ impl Actor for PluginDo {
 			succ!(cx.core.tasks.scheduler.plugin_entry(opt));
 		}
 
-		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);
-		defer! { _ = runtime_mut!(LUA).map(|mut r| r.critical_pop(blocking)) }
-
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
 			Ok(t) => t,
 			Err(e) => succ!(warn!("{e}")),
@@ -44,10 +40,10 @@ impl Actor for PluginDo {
 
 		let result = Lives::scope(&cx.core, || {
 			if let Some(cb) = opt.callback {
-				cb(&LUA, plugin)
+				runtime_scope!(LUA, &opt.id, cb(&LUA, plugin))
 			} else {
 				let job = LUA.create_table_from([("args", Sendable::args_to_table(&LUA, opt.args)?)])?;
-				plugin.call_method("entry", job)
+				runtime_scope!(LUA, &opt.id, plugin.call_method("entry", job))
 			}
 		});
 		if let Err(ref e) = result {

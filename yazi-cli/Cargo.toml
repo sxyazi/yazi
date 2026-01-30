@@ -33,6 +33,7 @@ yazi-shim   = { path = "../yazi-shim", version = "26.1.22" }
 anyhow     = { workspace = true }
 clap       = { workspace = true }
 crossterm  = { workspace = true }
+either     = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 tokio      = { workspace = true }
@@ -48,6 +49,7 @@ clap                  = { workspace = true }
 clap_complete         = "4.5.65"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.10"
+either                = { workspace = true }
 serde_json            = { workspace = true }
 vergen-gitcl          = { version = "9.1.0", features = [ "build" ] }
 

@@ -2,7 +2,8 @@ use std::{borrow::Cow, ffi::OsString};
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use yazi_shared::{Either, Id};
+use either::Either;
+use yazi_shared::Id;
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]

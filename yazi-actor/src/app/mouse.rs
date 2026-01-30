@@ -3,6 +3,7 @@ use crossterm::event::MouseEventKind;
 use mlua::{ObjectLike, Table};
 use tracing::error;
 use yazi_actor::lives::Lives;
+use yazi_binding::runtime_scope;
 use yazi_config::YAZI;
 use yazi_macro::succ;
 use yazi_parser::app::MouseOpt;
@@ -20,11 +21,14 @@ impl Actor for Mouse {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let event = yazi_binding::MouseEvent::from(opt.event);
+
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
+		let area = yazi_binding::elements::Rect::from(size);
 
 		let result = Lives::scope(&cx.core, move || {
-			let area = yazi_binding::elements::Rect::from(size);
-			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
+			let root = runtime_scope!(LUA, "root", {
+				LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)
+			})?;
 
 			if matches!(event.kind, MouseEventKind::Down(_) if YAZI.mgr.mouse_events.get().draggable()) {
 				root.raw_set("_drag_start", event)?;

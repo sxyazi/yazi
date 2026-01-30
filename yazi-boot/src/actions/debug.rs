@@ -164,7 +164,7 @@ impl Actions {
 	fn file1_output() -> String {
 		use std::io::Write;
 
-		let p = env::temp_dir().join(format!("yazi-debug-{}", timestamp_us()));
+		let p = env::temp_dir().join(format!(".yazi-debug-{}.tmp", timestamp_us()));
 		std::fs::File::create_new(&p).map(|mut f| f.write_all(b"Hello, World!")).ok();
 
 		let cmd = env::var_os("YAZI_FILE_ONE").unwrap_or("file".into());
