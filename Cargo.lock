@@ -5596,6 +5596,7 @@ name = "yazi-binding"
 version = "26.1.22"
 dependencies = [
  "ansi-to-tui",
+ "anyhow",
  "crossterm 0.29.0",
  "futures",
  "hashbrown 0.16.1",

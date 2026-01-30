@@ -65,9 +65,10 @@ fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
 	if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
+		let blocking = runtime_mut!(lua)?.critical_push("init", true);
 		block_on(lua.load(b).set_name("init.lua").exec_async())?;
+		runtime_mut!(lua)?.critical_pop(blocking)?;
 	}
 
-	runtime_mut!(lua)?.blocking = false;
 	Ok(())
 }
