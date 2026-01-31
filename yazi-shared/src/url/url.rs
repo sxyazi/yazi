@@ -87,6 +87,36 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
+	pub fn line(self) -> Option<usize> {
+		let Self::Search { domain, .. } = self else { return None };
+		let Some(hash_pos) = domain.find('#') else {
+			return None
+		};
+
+		let frag = &domain[hash_pos + 1..];
+		if let Some(colon_pos) = frag.find(':') {
+			frag[..colon_pos].parse::<usize>().ok()
+		} else {
+			frag.parse::<usize>().ok()
+		}
+	}
+
+	#[inline]
+	pub fn column(self) -> Option<usize> {
+		let Self::Search { domain, .. } = self else { return None };
+		let Some(hash_pos) = domain.find('#') else {
+			return None
+		};
+
+		let frag = &domain[hash_pos + 1..];
+		if let Some(colon_pos) = frag.find(':') {
+			frag[colon_pos + 1..].parse::<usize>().ok()
+		} else {
+			None
+		}
+	}
+
+	#[inline]
 	pub fn has_base(self) -> bool {
 		match self {
 			Self::Regular(loc) => loc.has_base(),
