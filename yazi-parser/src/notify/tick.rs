@@ -4,7 +4,7 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::event::CmdCow;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TickOpt {
 	pub interval: Duration,
 }

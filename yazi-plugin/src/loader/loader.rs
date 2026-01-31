@@ -26,6 +26,7 @@ impl Deref for Loader {
 impl Default for Loader {
 	fn default() -> Self {
 		let cache = HashMap::from_iter([
+			// Plugins
 			("archive".to_owned(), preset!("plugins/archive").into()),
 			("code".to_owned(), preset!("plugins/code").into()),
 			("dds".to_owned(), preset!("plugins/dds").into()),
@@ -51,6 +52,22 @@ impl Default for Loader {
 			("vfs".to_owned(), preset!("plugins/vfs").into()),
 			("video".to_owned(), preset!("plugins/video").into()),
 			("zoxide".to_owned(), preset!("plugins/zoxide").into()),
+			// Components
+			("current".to_owned(), [][..].into()),
+			("entity".to_owned(), [][..].into()),
+			("header".to_owned(), [][..].into()),
+			("linemode".to_owned(), [][..].into()),
+			("marker".to_owned(), [][..].into()),
+			("modal".to_owned(), [][..].into()),
+			("parent".to_owned(), [][..].into()),
+			("preview".to_owned(), [][..].into()),
+			("progress".to_owned(), [][..].into()),
+			("rail".to_owned(), [][..].into()),
+			("root".to_owned(), [][..].into()),
+			("status".to_owned(), [][..].into()),
+			("tab".to_owned(), [][..].into()),
+			("tabs".to_owned(), [][..].into()),
+			("tasks".to_owned(), [][..].into()),
 		]);
 		Self { cache: RwLock::new(cache) }
 	}

@@ -15,6 +15,19 @@ macro_rules! runtime_mut {
 }
 
 #[macro_export]
+macro_rules! runtime_scope {
+	($lua:ident, $id:expr, $block:expr) => {{
+		let mut f = || {
+			let blocking = $crate::runtime_mut!($lua)?.critical_push($id, true);
+			let result = (|| $block)();
+			$crate::runtime_mut!($lua)?.critical_pop(blocking)?;
+			result
+		};
+		f()
+	}};
+}
+
+#[macro_export]
 macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
 		static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);

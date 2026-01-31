@@ -14,7 +14,7 @@ impl Actor for ToggleAll {
 	const NAME: &str = "toggle_all";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		use yazi_shared::Either::*;
+		use either::Either::*;
 		let tab = cx.tab_mut();
 
 		let it = tab.current.files.iter().map(|f| &f.url);

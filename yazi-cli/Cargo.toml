@@ -48,6 +48,7 @@ clap                  = { workspace = true }
 clap_complete         = "4.5.65"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.10"
+serde                 = { workspace = true }
 serde_json            = { workspace = true }
 vergen-gitcl          = { version = "9.1.0", features = [ "build" ] }
 

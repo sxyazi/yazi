@@ -166,6 +166,8 @@ impl<'a> Spark<'a> {
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
 			// which:activate
 			IndWhichActivate => Self::WhichActivate(<_>::from_lua(value, lua)?),
+			// notify:push
+			RelayNotifyPush => Self::NotifyPush(<_>::from_lua(value, lua)?),
 		})
 	}
 }

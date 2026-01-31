@@ -1,7 +1,8 @@
 use std::{collections::VecDeque, io, time::{Duration, Instant}};
 
+use either::Either;
 use yazi_fs::provider::{DirReader, FileHolder};
-use yazi_shared::{Either, url::{AsUrl, UrlBuf}};
+use yazi_shared::url::{AsUrl, UrlBuf};
 
 use super::ReadDir;
 
@@ -66,7 +67,7 @@ impl SizeCalculator {
 				};
 			}
 
-			let Ok(Some(ent)) = front.right_mut()?.next().await else {
+			let Ok(Some(ent)) = front.as_mut().right()?.next().await else {
 				pop_and_continue!();
 			};
 

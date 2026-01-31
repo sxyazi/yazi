@@ -182,8 +182,8 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 fn final_path(path: &Path) -> io::Result<PathBuf> {
 	use std::{ffi::OsString, fs::File, os::windows::{ffi::OsStringExt, fs::OpenOptionsExt, io::AsRawHandle}};
 
+	use either::Either;
 	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
-	use yazi_shared::Either;
 
 	let file = std::fs::OpenOptions::new()
 		.access_mode(0)
@@ -214,7 +214,8 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 	match inner(&file, &mut [0u16; 512])? {
 		Either::Left(path) => Ok(path),
 		Either::Right(len) => inner(&file, &mut vec![0u16; len as usize])?
-			.left_or_err(|| io::Error::new(io::ErrorKind::InvalidData, "path too long")),
+			.left()
+			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "path too long")),
 	}
 }
 

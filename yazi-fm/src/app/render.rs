@@ -4,7 +4,9 @@ use anyhow::Result;
 use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
 use yazi_actor::{Ctx, lives::Lives};
+use yazi_binding::runtime_scope;
 use yazi_macro::{act, succ};
+use yazi_plugin::LUA;
 use yazi_shared::{data::Data, event::NEED_RENDER};
 use yazi_tty::TTY;
 use yazi_widgets::COLLISION;
@@ -26,7 +28,9 @@ impl App {
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term
 			.draw(|f| {
-				_ = Lives::scope(&self.core, || Ok(f.render_widget(Root::new(&self.core), f.area())));
+				_ = Lives::scope(&self.core, || {
+					runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(&self.core), f.area())))
+				});
 			})
 			.unwrap();
 
@@ -57,9 +61,11 @@ impl App {
 		let frame = term
 			.draw_partial(|f| {
 				_ = Lives::scope(&self.core, || {
-					f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
-					f.render_widget(crate::notify::Notify::new(&self.core), f.area());
-					Ok(())
+					runtime_scope!(LUA, "root", {
+						f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
+						f.render_widget(crate::notify::Notify::new(&self.core), f.area());
+						Ok(())
+					})
 				});
 			})
 			.unwrap();

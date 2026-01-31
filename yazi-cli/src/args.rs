@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsString};
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use yazi_shared::{Either, Id};
+use yazi_shared::Id;
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]
@@ -139,9 +139,16 @@ macro_rules! impl_emit_body {
 		impl $name {
 			#[allow(dead_code)]
 			pub(super) fn body(self) -> Result<String> {
-				let cmd: Vec<_> = [Either::Left(self.name)]
+				#[derive(serde::Serialize)]
+				#[serde(untagged)]
+				enum Elem {
+					Name(String),
+					Arg(Vec<u8>),
+				}
+
+				let cmd: Vec<_> = [Elem::Name(self.name)]
 					.into_iter()
-					.chain(self.args.into_iter().map(|s| Either::Right(s.into_encoded_bytes())))
+					.chain(self.args.into_iter().map(|s| Elem::Arg(s.into_encoded_bytes())))
 					.collect();
 				Ok(serde_json::to_string(&cmd)?)
 			}

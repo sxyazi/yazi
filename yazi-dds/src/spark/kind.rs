@@ -12,6 +12,8 @@ pub enum SparkKind {
 	KeyQuit,
 	// which:activate
 	IndWhichActivate,
+	// notify:push
+	RelayNotifyPush,
 }
 
 impl AsRef<str> for SparkKind {
@@ -27,6 +29,8 @@ impl AsRef<str> for SparkKind {
 			Self::KeyQuit => "key-quit",
 			// which:activate
 			Self::IndWhichActivate => "ind-which-activate",
+			// notify:push
+			Self::RelayNotifyPush => "relay-notify-push",
 		}
 	}
 }

@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use anyhow::anyhow;
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use serde_with::{DurationSeconds, serde_as};
+use serde_with::{DurationSecondsWithFrac, serde_as};
 use yazi_config::{Style, THEME};
 use yazi_shared::event::CmdCow;
 
@@ -13,7 +13,7 @@ pub struct PushOpt {
 	pub title:   String,
 	pub content: String,
 	pub level:   PushLevel,
-	#[serde_as(as = "DurationSeconds<f64>")] // FIXME
+	#[serde_as(as = "DurationSecondsWithFrac<f64>")]
 	pub timeout: Duration,
 }
 

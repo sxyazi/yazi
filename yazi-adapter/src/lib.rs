@@ -19,7 +19,7 @@ pub fn init() -> anyhow::Result<()> {
 
 	// Emulator detection
 	let mut emulator = Emulator::detect().unwrap_or_default();
-	TMUX.set(emulator.kind.is_left_and(|&b| b == Brand::Tmux));
+	TMUX.set(emulator.kind.left() == Some(Brand::Tmux));
 
 	// Tmux support
 	if TMUX.get() {

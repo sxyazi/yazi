@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Added
 
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
+- New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
@@ -1636,3 +1637,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3633]: https://github.com/sxyazi/yazi/pull/3633
 [#3634]: https://github.com/sxyazi/yazi/pull/3634
 [#3638]: https://github.com/sxyazi/yazi/pull/3638
+[#3642]: https://github.com/sxyazi/yazi/pull/3642

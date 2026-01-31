@@ -1,11 +1,11 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use anyhow::Result;
 use yazi_core::notify::Message;
-use yazi_macro::succ;
+use yazi_dds::spark::SparkKind;
+use yazi_macro::{act, succ};
 use yazi_parser::notify::PushOpt;
-use yazi_proxy::NotifyProxy;
-use yazi_shared::data::Data;
+use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
 
@@ -24,8 +24,15 @@ impl Actor for Push {
 
 		if cx.notify.messages.iter().all(|m| m != &msg) {
 			cx.notify.messages.push(msg);
-			NotifyProxy::tick(Duration::ZERO);
+			act!(notify:tick, cx)?;
 		}
 		succ!();
+	}
+
+	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+		match cx.source() {
+			Source::Relay => Some(SparkKind::RelayNotifyPush),
+			_ => None,
+		}
 	}
 }

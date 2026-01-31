@@ -5538,6 +5538,7 @@ version = "26.1.22"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
+ "either",
  "futures",
  "hashbrown 0.16.1",
  "libc",
@@ -5765,6 +5766,7 @@ version = "26.1.22"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
+ "either",
  "scopeguard",
  "tokio",
  "tracing",
@@ -5835,6 +5837,7 @@ dependencies = [
  "bitflags 2.10.0",
  "core-foundation-sys",
  "dirs",
+ "either",
  "foldhash",
  "hashbrown 0.16.1",
  "libc",
@@ -6056,6 +6059,7 @@ version = "26.1.22"
 dependencies = [
  "anyhow",
  "deadpool",
+ "either",
  "futures",
  "hashbrown 0.16.1",
  "parking_lot",

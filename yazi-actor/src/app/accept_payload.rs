@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::IntoLua;
 use tracing::error;
 use yazi_actor::lives::Lives;
-use yazi_binding::runtime_mut;
+use yazi_binding::runtime_scope;
 use yazi_dds::{LOCAL, Payload, REMOTE};
 use yazi_macro::succ;
 use yazi_plugin::LUA;
@@ -31,11 +31,9 @@ impl Actor for AcceptPayload {
 		succ!(Lives::scope(&cx.core, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
-				let blocking = runtime_mut!(LUA)?.critical_push(&id, true);
-				if let Err(e) = cb.call::<()>(body.clone()) {
+				if let Err(e) = runtime_scope!(LUA, &id, cb.call::<()>(body.clone())) {
 					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
 				}
-				runtime_mut!(LUA)?.critical_pop(blocking)?;
 			}
 			Ok(())
 		})?);

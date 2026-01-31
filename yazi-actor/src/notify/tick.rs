@@ -4,7 +4,7 @@ use anyhow::Result;
 use ratatui::layout::Rect;
 use yazi_core::notify::Notify;
 use yazi_emulator::Dimension;
-use yazi_macro::succ;
+use yazi_macro::{render, render_partial, succ};
 use yazi_parser::notify::TickOpt;
 use yazi_proxy::NotifyProxy;
 use yazi_shared::data::Data;
@@ -52,13 +52,13 @@ impl Actor for Tick {
 		} else if let Some(min) = timeouts.iter().min() {
 			*min
 		} else {
-			succ!();
+			succ!(render!());
 		};
 
 		cx.notify.tick_handle = Some(tokio::spawn(async move {
 			tokio::time::sleep(interval).await;
 			NotifyProxy::tick(interval);
 		}));
-		succ!();
+		succ!(render_partial!());
 	}
 }

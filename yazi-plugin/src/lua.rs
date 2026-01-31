@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use futures::executor::block_on;
 use mlua::Lua;
-use yazi_binding::{Runtime, runtime_mut};
+use yazi_binding::{Runtime, runtime_scope};
 use yazi_boot::BOOT;
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::RoCell;
@@ -65,9 +65,7 @@ fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
 	if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
-		let blocking = runtime_mut!(lua)?.critical_push("init", true);
-		block_on(lua.load(b).set_name("init.lua").exec_async())?;
-		runtime_mut!(lua)?.critical_pop(blocking)?;
+		runtime_scope!(lua, "init", block_on(lua.load(b).set_name("init.lua").exec_async()))?;
 	}
 
 	Ok(())

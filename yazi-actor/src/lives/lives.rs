@@ -16,7 +16,10 @@ pub(super) static FILE_CACHE: RoCell<RefCell<HashMap<PtrCell<yazi_fs::File>, Any
 pub struct Lives;
 
 impl Lives {
-	pub fn scope<T>(core: &yazi_core::Core, f: impl FnOnce() -> mlua::Result<T>) -> mlua::Result<T> {
+	pub fn scope<T, F>(core: &yazi_core::Core, f: F) -> mlua::Result<T>
+	where
+		F: FnOnce() -> mlua::Result<T>,
+	{
 		FILE_CACHE.init(Default::default());
 		defer! { FILE_CACHE.drop(); }
 

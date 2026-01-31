@@ -21,6 +21,7 @@ yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
 # External dependencies
 anyhow      = { workspace = true }
 deadpool    = { version = "0.12.3", default-features = false, features = [ "managed", "rt_tokio_1" ] }
+either      = { workspace = true }
 futures     = { workspace = true }
 hashbrown   = { workspace = true }
 parking_lot = { workspace = true }
