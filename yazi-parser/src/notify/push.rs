@@ -12,6 +12,7 @@ use yazi_shared::event::CmdCow;
 pub struct PushOpt {
 	pub title:   String,
 	pub content: String,
+	#[serde(default)]
 	pub level:   PushLevel,
 	#[serde_as(as = "DurationSecondsWithFrac<f64>")]
 	pub timeout: Duration,
