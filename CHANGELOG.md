@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
+- Make `ya pkg` ignore default remote name in user Git config ([#3648])
 
 ### Improved
 
@@ -1638,3 +1639,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3634]: https://github.com/sxyazi/yazi/pull/3634
 [#3638]: https://github.com/sxyazi/yazi/pull/3638
 [#3642]: https://github.com/sxyazi/yazi/pull/3642
+[#3648]: https://github.com/sxyazi/yazi/pull/3648
