@@ -36,7 +36,7 @@ impl Actor for PluginDo {
 		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);
 		defer! { _ = runtime_mut!(LUA).map(|mut r| r.critical_pop(blocking)) }
 
-		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
+		let plugin = match LOADER.load_chunk(&LUA, &opt.id, chunk) {
 			Ok(t) => t,
 			Err(e) => succ!(warn!("{e}")),
 		};

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-boot"
-version     = "26.1.22"
+version     = "26.2.2"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -12,13 +12,13 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-adapter  = { path = "../yazi-adapter", version = "26.1.22" }
-yazi-config   = { path = "../yazi-config", version = "26.1.22" }
-yazi-emulator = { path = "../yazi-emulator", version = "26.1.22" }
-yazi-fs       = { path = "../yazi-fs", version = "26.1.22" }
-yazi-macro    = { path = "../yazi-macro", version = "26.1.22" }
-yazi-shared   = { path = "../yazi-shared", version = "26.1.22" }
-yazi-vfs      = { path = "../yazi-vfs", version = "26.1.22" }
+yazi-adapter  = { path = "../yazi-adapter", version = "26.2.2" }
+yazi-config   = { path = "../yazi-config", version = "26.2.2" }
+yazi-emulator = { path = "../yazi-emulator", version = "26.2.2" }
+yazi-fs       = { path = "../yazi-fs", version = "26.2.2" }
+yazi-macro    = { path = "../yazi-macro", version = "26.2.2" }
+yazi-shared   = { path = "../yazi-shared", version = "26.2.2" }
+yazi-vfs      = { path = "../yazi-vfs", version = "26.2.2" }
 
 # External dependencies
 clap      = { workspace = true }
@@ -27,7 +27,7 @@ hashbrown = { workspace = true }
 regex     = { workspace = true }
 
 [build-dependencies]
-yazi-shared = { path = "../yazi-shared", version = "26.1.22" }
+yazi-shared = { path = "../yazi-shared", version = "26.2.2" }
 
 # External dependencies
 clap                  = { workspace = true }

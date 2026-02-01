@@ -147,8 +147,8 @@ pub enum Spark<'a> {
 	TasksUpdateSucceed(yazi_parser::tasks::UpdateSucceedOpt),
 
 	// Which
-	WhichCallback(yazi_parser::which::CallbackOpt),
 	WhichActivate(yazi_parser::which::ActivateOpt),
+	WhichDismiss(yazi_parser::VoidOpt),
 }
 
 impl<'a> Spark<'a> {
@@ -318,8 +318,8 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::TasksUpdateSucceed(b) => b.into_lua(lua),
 
 			// Which
-			Self::WhichCallback(b) => b.into_lua(lua),
 			Self::WhichActivate(b) => b.into_lua(lua),
+			Self::WhichDismiss(b) => b.into_lua(lua),
 		}
 	}
 }
@@ -343,7 +343,8 @@ try_from_spark!(
 	mgr:search_stop,
 	mgr:suspend,
 	mgr:unyank,
-	mgr:watch
+	mgr:watch,
+	which:dismiss
 );
 
 // App
@@ -415,7 +416,6 @@ try_from_spark!(yazi_parser::spot::CopyOpt, spot:copy);
 try_from_spark!(yazi_parser::tasks::ProcessOpenOpt, tasks:process_open);
 try_from_spark!(yazi_parser::tasks::UpdateSucceedOpt, tasks:update_succeed);
 try_from_spark!(yazi_parser::which::ActivateOpt, which:activate);
-try_from_spark!(yazi_parser::which::CallbackOpt, which:callback);
 try_from_spark!(yazi_widgets::input::parser::BackspaceOpt, input:backspace);
 try_from_spark!(yazi_widgets::input::parser::BackwardOpt, input:backward);
 try_from_spark!(yazi_widgets::input::parser::CompleteOpt, input:complete);

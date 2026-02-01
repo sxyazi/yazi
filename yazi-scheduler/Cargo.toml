@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-scheduler"
-version     = "26.1.22"
+version     = "26.2.2"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -12,16 +12,16 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-binding = { path = "../yazi-binding", version = "26.1.22" }
-yazi-config  = { path = "../yazi-config", version = "26.1.22" }
-yazi-dds     = { path = "../yazi-dds", version = "26.1.22" }
-yazi-fs      = { path = "../yazi-fs", version = "26.1.22" }
-yazi-macro   = { path = "../yazi-macro", version = "26.1.22" }
-yazi-parser  = { path = "../yazi-parser", version = "26.1.22" }
-yazi-plugin  = { path = "../yazi-plugin", version = "26.1.22" }
-yazi-proxy   = { path = "../yazi-proxy", version = "26.1.22" }
-yazi-shared  = { path = "../yazi-shared", version = "26.1.22" }
-yazi-vfs     = { path = "../yazi-vfs", version = "26.1.22" }
+yazi-binding = { path = "../yazi-binding", version = "26.2.2" }
+yazi-config  = { path = "../yazi-config", version = "26.2.2" }
+yazi-dds     = { path = "../yazi-dds", version = "26.2.2" }
+yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
+yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
+yazi-parser  = { path = "../yazi-parser", version = "26.2.2" }
+yazi-plugin  = { path = "../yazi-plugin", version = "26.2.2" }
+yazi-proxy   = { path = "../yazi-proxy", version = "26.2.2" }
+yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
+yazi-vfs     = { path = "../yazi-vfs", version = "26.2.2" }
 
 # External dependencies
 anyhow                 = { workspace = true }

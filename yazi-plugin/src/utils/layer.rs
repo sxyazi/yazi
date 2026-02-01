@@ -1,14 +1,13 @@
 use std::{str::FromStr, time::Duration};
 
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
-use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
 use yazi_config::{keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::relay;
-use yazi_parser::{notify::PushOpt, which::ActivateOpt};
+use yazi_parser::notify::PushOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
-use yazi_shared::Debounce;
+use yazi_shared::{Debounce, Layer};
 
 use super::Utils;
 
@@ -19,7 +18,6 @@ impl Utils {
 				return Err("Cannot call `ya.which()` while main thread is blocked".into_lua_err());
 			}
 
-			let (tx, mut rx) = mpsc::unbounded_channel::<usize>();
 			let cands: Vec<_> = t
 				.raw_get::<Table>("cands")?
 				.sequence_values::<Table>()
@@ -28,17 +26,21 @@ impl Utils {
 					let cand = cand?;
 					Ok(ChordCow::Owned(Chord {
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
-						run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
+						run:   vec![relay!(which:callback, [i + 1])],
 						desc:  cand.raw_get("desc").ok(),
 						r#for: None,
 					}))
 				})
 				.collect::<mlua::Result<_>>()?;
 
-			drop(tx);
-			WhichProxy::activate(ActivateOpt { cands, times: 0, silent: t.raw_get("silent")? });
+			let idx: Option<usize> = WhichProxy::activate(cands, t.raw_get("silent")?)
+				.await
+				.iter()
+				.flat_map(|chord| &chord.run)
+				.find(|cmd| cmd.layer == Layer::Which && cmd.name == "callback")
+				.and_then(|cmd| cmd.first().ok());
 
-			Ok(rx.recv().await.map(|idx| idx + 1))
+			Ok(idx)
 		})
 	}
 

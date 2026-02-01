@@ -352,7 +352,7 @@ impl<'a> Executor<'a> {
 		}
 
 		on!(activate);
-		on!(callback);
+		on!(dismiss);
 
 		succ!();
 	}

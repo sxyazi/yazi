@@ -36,7 +36,7 @@ pub fn spot(
 				},
 			)?;
 
-			let plugin = LOADER.load_once(&lua, &cmd.name).await?;
+			let plugin = LOADER.load(&lua, &cmd.name).await?;
 			let job = lua.create_table_from([
 				("id", Id(IDS.next()).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),

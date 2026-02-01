@@ -13,9 +13,8 @@ pub async fn entry(opt: PluginOpt) -> mlua::Result<()> {
 		let lua = slim_lua(&opt.id)?;
 		let job = lua.create_table_from([("args", Sendable::args_to_table(&lua, opt.args)?)])?;
 
-		Handle::current().block_on(async {
-			LOADER.load_once(&lua, &opt.id).await?.call_async_method("entry", job).await
-		})
+		Handle::current()
+			.block_on(async { LOADER.load(&lua, &opt.id).await?.call_async_method("entry", job).await })
 	})
 	.await
 	.into_lua_err()?

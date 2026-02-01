@@ -105,14 +105,14 @@ impl Loader {
 			return Ok(t);
 		}
 
-		let t = self.load_once(lua, id).await?;
+		let t = self.load_new(lua, id).await?;
 		t.raw_set("_id", lua.create_string(id)?)?;
 
 		loaded.raw_set(id, t.clone())?;
 		Ok(t)
 	}
 
-	pub async fn load_once(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+	async fn load_new(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
 		let (id, ..) = Self::normalize_id(id)?;
 
 		let mut mode = ChunkMode::Text;
@@ -135,12 +135,7 @@ impl Loader {
 		f.call_async(()).await
 	}
 
-	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::normalize_id(id)?;
-		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(id)
-	}
-
-	pub fn load_with(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
+	pub fn load_chunk(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
 		let (id, ..) = Self::normalize_id(id)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
@@ -153,6 +148,11 @@ impl Loader {
 
 		loaded.raw_set(id, t.clone())?;
 		Ok(t)
+	}
+
+	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let (id, ..) = Self::normalize_id(id)?;
+		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(id)
 	}
 
 	pub fn compatible_or_error(id: &str, chunk: &Chunk) -> Result<()> {
