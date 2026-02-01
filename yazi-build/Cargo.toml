@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-build"
-version     = "26.1.22"
+version     = "26.2.2"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -18,7 +18,7 @@ panic         = "abort"
 strip         = true
 
 [build-dependencies]
-yazi-tty  = { path = "../yazi-tty", version = "26.1.22" }
+yazi-tty = { path = "../yazi-tty", version = "26.2.2" }
 
 [[bin]]
 name = "yazi-build"

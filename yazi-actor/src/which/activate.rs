@@ -23,6 +23,7 @@ impl Actor for Activate {
 		}
 
 		let which = &mut cx.which;
+		which.tx = opt.tx;
 		which.times = opt.times;
 		which.cands = opt.cands;
 

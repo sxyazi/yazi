@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(activate callback);
+yazi_macro::mod_flat!(activate);

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-widgets"
-version     = "26.1.22"
+version     = "26.2.2"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -12,11 +12,11 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "26.1.22" }
-yazi-config  = { path = "../yazi-config", version = "26.1.22" }
-yazi-macro   = { path = "../yazi-macro", version = "26.1.22" }
-yazi-shared  = { path = "../yazi-shared", version = "26.1.22" }
-yazi-tty     = { path = "../yazi-tty", version = "26.1.22" }
+yazi-adapter = { path = "../yazi-adapter", version = "26.2.2" }
+yazi-config  = { path = "../yazi-config", version = "26.2.2" }
+yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
+yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
+yazi-tty     = { path = "../yazi-tty", version = "26.2.2" }
 
 # External dependencies
 anyhow        = { workspace = true }

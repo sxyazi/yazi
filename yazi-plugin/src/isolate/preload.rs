@@ -31,7 +31,7 @@ pub async fn preload(
 				},
 			)?;
 
-			let plugin = LOADER.load_once(&lua, &cmd.name).await?;
+			let plugin = LOADER.load(&lua, &cmd.name).await?;
 			let job = lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),

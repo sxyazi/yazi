@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-ffi"
-version     = "26.1.22"
+version     = "26.2.2"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -12,7 +12,7 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-macro = { path = "../yazi-macro", version = "26.1.22" }
+yazi-macro = { path = "../yazi-macro", version = "26.2.2" }
 
 # External dependencies
 anyhow = { workspace = true }

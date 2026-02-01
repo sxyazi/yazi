@@ -23,9 +23,8 @@ pub async fn fetch(
 			("files", lua.create_sequence_from(files.into_iter().map(File::new))?.into_lua(&lua)?),
 		])?;
 
-		Handle::current().block_on(async {
-			LOADER.load_once(&lua, &cmd.name).await?.call_async_method("fetch", job).await
-		})
+		Handle::current()
+			.block_on(async { LOADER.load(&lua, &cmd.name).await?.call_async_method("fetch", job).await })
 	})
 	.await
 	.into_lua_err()?
