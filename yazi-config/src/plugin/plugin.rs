@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use hashbrown::HashSet;
 use serde::Deserialize;
 use tracing::warn;
@@ -6,7 +6,7 @@ use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
-use crate::{Preset, plugin::MAX_PREWORKERS};
+use crate::{Preset, plugin::{MAX_FETCHERS, MAX_PRELOADERS}};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Plugin {
@@ -52,7 +52,7 @@ impl Plugin {
 	}
 
 	pub fn mime_fetchers(&self, files: Vec<File>) -> impl Iterator<Item = (&Fetcher, Vec<File>)> {
-		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
+		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
 		for f in files {
 			let found = self.fetchers.iter().find(|&g| g.id == "mime" && g.matches(&f, ""));
 			if let Some(g) = found {
@@ -116,15 +116,17 @@ impl Plugin {
 		self.previewers =
 			Preset::mix(self.prepend_previewers, self.previewers, self.append_previewers).collect();
 
-		if self.fetchers.len() + self.preloaders.len() > MAX_PREWORKERS as usize {
-			panic!("Fetchers and preloaders exceed the limit of {MAX_PREWORKERS}");
+		if self.fetchers.len() > MAX_FETCHERS as usize {
+			bail!("Fetchers exceed the limit of {MAX_FETCHERS}");
+		} else if self.preloaders.len() > MAX_PRELOADERS as usize {
+			bail!("Preloaders exceed the limit of {MAX_PRELOADERS}");
 		}
 
 		for (i, p) in self.fetchers.iter_mut().enumerate() {
 			p.idx = i as u8;
 		}
 		for (i, p) in self.preloaders.iter_mut().enumerate() {
-			p.idx = self.fetchers.len() as u8 + i as u8;
+			p.idx = i as u8;
 		}
 
 		Ok(Self {

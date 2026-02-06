@@ -5,7 +5,7 @@ use yazi_parser::app::TaskSummary;
 use yazi_shared::{CompletionToken, Id, Ids};
 
 use super::Task;
-use crate::{TaskIn, TaskProg};
+use crate::{TaskProg, hook::HookIn};
 
 #[derive(Default)]
 pub struct Ongoing {
@@ -23,7 +23,7 @@ impl Ongoing {
 		self.inner.entry(id).insert(Task::new::<T>(id, name)).into_mut()
 	}
 
-	pub(super) fn cancel(&mut self, id: Id) -> Option<TaskIn> {
+	pub(super) fn cancel(&mut self, id: Id) -> Option<HookIn> {
 		match self.inner.entry(id) {
 			Entry::Occupied(mut oe) => {
 				let task = oe.get_mut();

@@ -1,4 +1,4 @@
-use crate::{Task, file::{FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutCut}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
+use crate::{Task, fetch::FetchOutFetch, file::{FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutCut}, impl_from_out, plugin::PluginOutEntry, preload::PreloadOut, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}, size::SizeOut};
 
 #[derive(Debug)]
 pub(super) enum TaskOut {
@@ -19,10 +19,12 @@ pub(super) enum TaskOut {
 	FileUploadDo(FileOutUploadDo),
 	// Plugin
 	PluginEntry(PluginOutEntry),
-	// Prework
-	PreworkFetch(PreworkOutFetch),
-	PreworkLoad(PreworkOutLoad),
-	PreworkSize(PreworkOutSize),
+	// Fetch
+	Fetch(FetchOutFetch),
+	// Preload
+	Preload(PreloadOut),
+	// Size
+	Size(SizeOut),
 	// Process
 	ProcessBlock(ProcessOutBlock),
 	ProcessOrphan(ProcessOutOrphan),
@@ -37,8 +39,12 @@ impl_from_out! {
 	FileCopy(FileOutCopy), FileCopyDo(FileOutCopyDo), FileCut(FileOutCut), FileCutDo(FileOutCutDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
 	// Plugin
 	PluginEntry(PluginOutEntry),
-	// Prework
-	PreworkFetch(PreworkOutFetch), PreworkLoad(PreworkOutLoad), PreworkSize(PreworkOutSize),
+	// Fetch
+	Fetch(FetchOutFetch),
+	// Preload
+	Preload(PreloadOut),
+	// Size
+	Size(SizeOut),
 	// Process
 	ProcessBlock(ProcessOutBlock), ProcessOrphan(ProcessOutOrphan), ProcessBg(ProcessOutBg),
 	// Hook
@@ -66,9 +72,9 @@ impl TaskOut {
 			// Plugin
 			Self::PluginEntry(out) => out.reduce(task),
 			// Prework
-			Self::PreworkFetch(out) => out.reduce(task),
-			Self::PreworkLoad(out) => out.reduce(task),
-			Self::PreworkSize(out) => out.reduce(task),
+			Self::Fetch(out) => out.reduce(task),
+			Self::Preload(out) => out.reduce(task),
+			Self::Size(out) => out.reduce(task),
 			// Process
 			Self::ProcessBlock(out) => out.reduce(task),
 			Self::ProcessOrphan(out) => out.reduce(task),

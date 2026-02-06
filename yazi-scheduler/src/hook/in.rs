@@ -2,6 +2,38 @@ use yazi_shared::{Id, url::UrlBuf};
 
 use crate::{Task, TaskProg, file::{FileInCopy, FileInCut}};
 
+#[derive(Debug)]
+pub(crate) enum HookIn {
+	Copy(HookInOutCopy),
+	Cut(HookInOutCut),
+	Delete(HookInDelete),
+	Trash(HookInTrash),
+	Download(HookInDownload),
+	Upload(HookInUpload),
+}
+
+impl_from_in!(
+	Copy(HookInOutCopy),
+	Cut(HookInOutCut),
+	Delete(HookInDelete),
+	Trash(HookInTrash),
+	Download(HookInDownload),
+	Upload(HookInUpload),
+);
+
+impl HookIn {
+	pub(crate) fn id(&self) -> Id {
+		match self {
+			Self::Copy(r#in) => r#in.id,
+			Self::Cut(r#in) => r#in.id,
+			Self::Delete(r#in) => r#in.id,
+			Self::Trash(r#in) => r#in.id,
+			Self::Download(r#in) => r#in.id,
+			Self::Upload(r#in) => r#in.id,
+		}
+	}
+}
+
 // --- Copy
 #[derive(Debug)]
 pub(crate) struct HookInOutCopy {
