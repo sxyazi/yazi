@@ -7,16 +7,21 @@ use yazi_fs::ok_or_not_found;
 use yazi_proxy::TasksProxy;
 use yazi_vfs::provider;
 
-use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash, FileOutUpload}, hook::{HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInTrash, HookInUpload}};
+use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInTrash, HookInUpload}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
 	ongoing: Arc<Mutex<Ongoing>>,
+	tx:      async_priority_channel::Sender<HookIn, u8>,
 }
 
 impl Hook {
-	pub(crate) fn new(ops: &mpsc::UnboundedSender<TaskOp>, ongoing: &Arc<Mutex<Ongoing>>) -> Self {
-		Self { ops: ops.into(), ongoing: ongoing.clone() }
+	pub(crate) fn new(
+		ops: &mpsc::UnboundedSender<TaskOp>,
+		ongoing: &Arc<Mutex<Ongoing>>,
+		tx: async_priority_channel::Sender<HookIn, u8>,
+	) -> Self {
+		Self { ops: ops.into(), ongoing: ongoing.clone(), tx }
 	}
 
 	// --- File
@@ -72,5 +77,12 @@ impl Hook {
 			TasksProxy::update_succeed([task.target]);
 		}
 		self.ops.out(task.id, FileOutUpload::Clean);
+	}
+}
+
+impl Hook {
+	#[inline]
+	pub(crate) fn submit(&self, r#in: impl Into<HookIn>, priority: u8) {
+		_ = self.tx.try_send(r#in.into(), priority);
 	}
 }

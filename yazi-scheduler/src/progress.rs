@@ -1,7 +1,7 @@
 use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
-use crate::{file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, prework::{PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{fetch::FetchProg, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(tag = "kind")]
@@ -17,10 +17,12 @@ pub enum TaskProg {
 	FileUpload(FileProgUpload),
 	// Plugin
 	PluginEntry(PluginProgEntry),
-	// Prework
-	PreworkFetch(PreworkProgFetch),
-	PreworkLoad(PreworkProgLoad),
-	PreworkSize(PreworkProgSize),
+	// Fetch
+	Fetch(FetchProg),
+	// Preload
+	Preload(PreloadProg),
+	// Size
+	Size(SizeProg),
 	// Process
 	ProcessBlock(ProcessProgBlock),
 	ProcessOrphan(ProcessProgOrphan),
@@ -32,8 +34,12 @@ impl_from_prog! {
 	FileCopy(FileProgCopy), FileCut(FileProgCut), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash), FileDownload(FileProgDownload), FileUpload(FileProgUpload),
 	// Plugin
 	PluginEntry(PluginProgEntry),
-	// Prework
-	PreworkFetch(PreworkProgFetch), PreworkLoad(PreworkProgLoad), PreworkSize(PreworkProgSize),
+	// Fetch
+	Fetch(FetchProg),
+	// Preload
+	Preload(PreloadProg),
+	// Size
+	Size(SizeProg),
 	// Process
 	ProcessBlock(ProcessProgBlock), ProcessOrphan(ProcessProgOrphan), ProcessBg(ProcessProgBg),
 }
@@ -53,9 +59,9 @@ impl From<TaskProg> for TaskSummary {
 			// Plugin
 			TaskProg::PluginEntry(p) => p.into(),
 			// Prework
-			TaskProg::PreworkFetch(p) => p.into(),
-			TaskProg::PreworkLoad(p) => p.into(),
-			TaskProg::PreworkSize(p) => p.into(),
+			TaskProg::Fetch(p) => p.into(),
+			TaskProg::Preload(p) => p.into(),
+			TaskProg::Size(p) => p.into(),
 			// Process
 			TaskProg::ProcessBlock(p) => p.into(),
 			TaskProg::ProcessOrphan(p) => p.into(),
@@ -79,9 +85,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(p) => p.cooked(),
 			// Prework
-			Self::PreworkFetch(p) => p.cooked(),
-			Self::PreworkLoad(p) => p.cooked(),
-			Self::PreworkSize(p) => p.cooked(),
+			Self::Fetch(p) => p.cooked(),
+			Self::Preload(p) => p.cooked(),
+			Self::Size(p) => p.cooked(),
 			// Process
 			Self::ProcessBlock(p) => p.cooked(),
 			Self::ProcessOrphan(p) => p.cooked(),
@@ -103,9 +109,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(p) => p.running(),
 			// Prework
-			Self::PreworkFetch(p) => p.running(),
-			Self::PreworkLoad(p) => p.running(),
-			Self::PreworkSize(p) => p.running(),
+			Self::Fetch(p) => p.running(),
+			Self::Preload(p) => p.running(),
+			Self::Size(p) => p.running(),
 			// Process
 			Self::ProcessBlock(p) => p.running(),
 			Self::ProcessOrphan(p) => p.running(),
@@ -127,9 +133,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(p) => p.success(),
 			// Prework
-			Self::PreworkFetch(p) => p.success(),
-			Self::PreworkLoad(p) => p.success(),
-			Self::PreworkSize(p) => p.success(),
+			Self::Fetch(p) => p.success(),
+			Self::Preload(p) => p.success(),
+			Self::Size(p) => p.success(),
 			// Process
 			Self::ProcessBlock(p) => p.success(),
 			Self::ProcessOrphan(p) => p.success(),
@@ -151,9 +157,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(p) => p.failed(),
 			// Prework
-			Self::PreworkFetch(p) => p.failed(),
-			Self::PreworkLoad(p) => p.failed(),
-			Self::PreworkSize(p) => p.failed(),
+			Self::Fetch(p) => p.failed(),
+			Self::Preload(p) => p.failed(),
+			Self::Size(p) => p.failed(),
 			// Process
 			Self::ProcessBlock(p) => p.failed(),
 			Self::ProcessOrphan(p) => p.failed(),
@@ -175,9 +181,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(p) => p.cleaned(),
 			// Prework
-			Self::PreworkFetch(p) => p.cleaned(),
-			Self::PreworkLoad(p) => p.cleaned(),
-			Self::PreworkSize(p) => p.cleaned(),
+			Self::Fetch(p) => p.cleaned(),
+			Self::Preload(p) => p.cleaned(),
+			Self::Size(p) => p.cleaned(),
 			// Process
 			Self::ProcessBlock(p) => p.cleaned(),
 			Self::ProcessOrphan(p) => p.cleaned(),
@@ -199,9 +205,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(p) => p.percent(),
 			// Prework
-			Self::PreworkFetch(p) => p.percent(),
-			Self::PreworkLoad(p) => p.percent(),
-			Self::PreworkSize(p) => p.percent(),
+			Self::Fetch(p) => p.percent(),
+			Self::Preload(p) => p.percent(),
+			Self::Size(p) => p.percent(),
 			// Process
 			Self::ProcessBlock(p) => p.percent(),
 			Self::ProcessOrphan(p) => p.percent(),
@@ -223,9 +229,9 @@ impl TaskProg {
 			// Plugin
 			Self::PluginEntry(_) => true,
 			// Prework
-			Self::PreworkFetch(_) => false,
-			Self::PreworkLoad(_) => false,
-			Self::PreworkSize(_) => false,
+			Self::Fetch(_) => false,
+			Self::Preload(_) => false,
+			Self::Size(_) => false,
 			// Process
 			Self::ProcessBlock(_) => true,
 			Self::ProcessOrphan(_) => true,

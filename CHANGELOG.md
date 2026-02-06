@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Changed
 
 - Upgrade Lua to 5.5 ([#3633])
+- Remove `micro_workers` and `macro_workers` in favor of finer control over concurrent workers ([#3661])
 
 ### Fixed
 
@@ -1640,3 +1641,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3638]: https://github.com/sxyazi/yazi/pull/3638
 [#3642]: https://github.com/sxyazi/yazi/pull/3642
 [#3648]: https://github.com/sxyazi/yazi/pull/3648
+[#3661]: https://github.com/sxyazi/yazi/pull/3661

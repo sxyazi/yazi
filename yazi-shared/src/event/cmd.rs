@@ -209,7 +209,7 @@ impl Cmd {
 				let key = parts.next().expect("at least one part");
 				let val = parts.next().map_or(Data::Boolean(true), Data::from);
 
-				Ok((DataKey::from(key.to_owned()), val))
+				Ok((key.to_owned().into(), val))
 			})
 			.collect()
 	}

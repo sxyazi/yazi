@@ -1,4 +1,4 @@
-use yazi_config::{YAZI, plugin::MAX_PREWORKERS};
+use yazi_config::{YAZI, plugin::MAX_FETCHERS};
 use yazi_fs::{File, Files, FsHash64, SortBy};
 
 use super::Tasks;
@@ -6,8 +6,8 @@ use crate::mgr::Mimetype;
 
 impl Tasks {
 	pub fn fetch_paged(&self, paged: &[File], mimetype: &Mimetype) {
-		let mut loaded = self.scheduler.runner.prework.loaded.lock();
-		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
+		let mut loaded = self.scheduler.fetch.loaded.lock();
+		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
 		for f in paged {
 			let hash = f.hash_u64();
 			for g in YAZI.plugin.fetchers(f, mimetype.get(&f.url).unwrap_or_default()) {
@@ -29,7 +29,7 @@ impl Tasks {
 	}
 
 	pub fn preload_paged(&self, paged: &[File], mimetype: &Mimetype) {
-		let mut loaded = self.scheduler.runner.prework.loaded.lock();
+		let mut loaded = self.scheduler.preload.loaded.lock();
 		for f in paged {
 			let hash = f.hash_u64();
 			for p in YAZI.plugin.preloaders(f, mimetype.get(&f.url).unwrap_or_default()) {
@@ -49,7 +49,7 @@ impl Tasks {
 		}
 
 		let targets: Vec<_> = {
-			let loading = self.scheduler.runner.prework.sizing.read();
+			let loading = self.scheduler.size.sizing.read();
 			targets
 				.iter()
 				.filter(|f| {
@@ -62,7 +62,7 @@ impl Tasks {
 			return;
 		}
 
-		let mut loading = self.scheduler.runner.prework.sizing.write();
+		let mut loading = self.scheduler.size.sizing.write();
 		for &target in &targets {
 			loading.insert(target.clone());
 		}

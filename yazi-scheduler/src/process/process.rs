@@ -4,14 +4,20 @@ use yazi_binding::Permit;
 use yazi_proxy::{AppProxy, HIDER, NotifyProxy};
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
-use crate::{TaskOp, TaskOps, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
+use crate::{TaskOp, TaskOps, process::{ProcessIn, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
 
 pub(crate) struct Process {
 	ops: TaskOps,
+	tx:  async_priority_channel::Sender<ProcessIn, u8>,
 }
 
 impl Process {
-	pub(crate) fn new(ops: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: ops.into() } }
+	pub(crate) fn new(
+		ops: &mpsc::UnboundedSender<TaskOp>,
+		tx: async_priority_channel::Sender<ProcessIn, u8>,
+	) -> Self {
+		Self { ops: ops.into(), tx }
+	}
 
 	pub(crate) async fn block(&self, task: ProcessInBlock) -> Result<(), ProcessOutBlock> {
 		let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
@@ -83,5 +89,12 @@ impl Process {
 		}
 
 		Ok(self.ops.out(task.id, ProcessOutBg::Succ))
+	}
+}
+
+impl Process {
+	#[inline]
+	pub(crate) fn submit(&self, r#in: impl Into<ProcessIn>, priority: u8) {
+		_ = self.tx.try_send(r#in.into(), priority);
 	}
 }
