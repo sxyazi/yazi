@@ -1,14 +1,14 @@
 use tokio::sync::mpsc;
 use yazi_shared::{CompletionToken, Id};
 
-use crate::{TaskIn, TaskProg};
+use crate::{TaskProg, hook::HookIn};
 
 #[derive(Debug)]
 pub struct Task {
 	pub id:          Id,
 	pub name:        String,
 	pub(crate) prog: TaskProg,
-	pub(crate) hook: Option<TaskIn>,
+	pub(crate) hook: Option<HookIn>,
 	pub done:        CompletionToken,
 
 	pub logs:   String,
@@ -41,5 +41,5 @@ impl Task {
 		}
 	}
 
-	pub(super) fn set_hook(&mut self, hook: impl Into<TaskIn>) { self.hook = Some(hook.into()); }
+	pub(super) fn set_hook(&mut self, hook: impl Into<HookIn>) { self.hook = Some(hook.into()); }
 }

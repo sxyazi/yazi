@@ -4,6 +4,25 @@ use yazi_shared::{CompletionToken, Id, url::UrlCow};
 
 use super::ShellOpt;
 
+#[derive(Debug)]
+pub(crate) enum ProcessIn {
+	Block(ProcessInBlock),
+	Orphan(ProcessInOrphan),
+	Bg(ProcessInBg),
+}
+
+impl_from_in!(Block(ProcessInBlock), Orphan(ProcessInOrphan), Bg(ProcessInBg));
+
+impl ProcessIn {
+	pub(crate) fn id(&self) -> Id {
+		match self {
+			Self::Block(r#in) => r#in.id,
+			Self::Orphan(r#in) => r#in.id,
+			Self::Bg(r#in) => r#in.id,
+		}
+	}
+}
+
 // --- Block
 #[derive(Debug)]
 pub(crate) struct ProcessInBlock {

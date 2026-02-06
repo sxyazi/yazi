@@ -9,19 +9,19 @@ use yazi_shared::{path::PathCow, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, maybe_exists, provider::{self, DirEntry}, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, ctx, file::{FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut}, ok_or_not_found, progress_or_break};
+use crate::{LOW, NORMAL, TaskOp, TaskOps, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut}, ok_or_not_found, progress_or_break};
 
 pub(crate) struct File {
-	ops:     TaskOps,
-	r#macro: async_priority_channel::Sender<TaskIn, u8>,
+	ops: TaskOps,
+	tx:  async_priority_channel::Sender<FileIn, u8>,
 }
 
 impl File {
 	pub(crate) fn new(
 		ops: &mpsc::UnboundedSender<TaskOp>,
-		r#macro: &async_priority_channel::Sender<TaskIn, u8>,
+		tx: async_priority_channel::Sender<FileIn, u8>,
 	) -> Self {
-		Self { ops: ops.into(), r#macro: r#macro.clone() }
+		Self { ops: ops.into(), tx }
 	}
 
 	pub(crate) async fn copy(&self, mut task: FileInCopy) -> Result<(), FileOutCopy> {
@@ -43,10 +43,10 @@ impl File {
 			async |task, cha| {
 				Ok(if cha.is_orphan() || (cha.is_link() && !task.follow) {
 					self.ops.out(id, FileOutCopy::New(0));
-					self.queue(task.into_link(), NORMAL);
+					self.requeue(task.into_link(), NORMAL);
 				} else {
 					self.ops.out(id, FileOutCopy::New(cha.len));
-					self.queue(task, LOW);
+					self.requeue(task, LOW);
 				})
 			},
 			|err| {
@@ -79,7 +79,7 @@ impl File {
 				{
 					task.retry += 1;
 					self.ops.out(task.id, FileOutCopyDo::Log(format!("Retrying due to error: {e}")));
-					return Ok(self.queue(task, LOW));
+					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
@@ -115,10 +115,10 @@ impl File {
 				self.ops.out(id, FileOutCut::New(if nofollow { 0 } else { cha.len }));
 
 				if nofollow {
-					self.queue(task.into_link(), NORMAL);
+					self.requeue(task.into_link(), NORMAL);
 				} else {
 					match (cha.is_link(), reorder) {
-						(_, false) => self.queue(task, LOW),
+						(_, false) => self.requeue(task, LOW),
 						(true, true) => links.push(task),
 						(false, true) => files.push(task),
 					}
@@ -135,14 +135,14 @@ impl File {
 		if !links.is_empty() {
 			let (tx, mut rx) = mpsc::channel(1);
 			for task in links {
-				self.queue(task.with_drop(&tx), LOW);
+				self.requeue(task.with_drop(&tx), LOW);
 			}
 			drop(tx);
 			while rx.recv().await.is_some() {}
 		}
 
 		for task in files {
-			self.queue(task, LOW);
+			self.requeue(task, LOW);
 		}
 
 		Ok(self.ops.out(id, FileOutCut::Succ))
@@ -172,7 +172,7 @@ impl File {
 				{
 					task.retry += 1;
 					self.ops.out(task.id, FileOutCutDo::Log(format!("Retrying due to error: {e}")));
-					return Ok(self.queue(task, LOW));
+					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
@@ -186,7 +186,7 @@ impl File {
 				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
-		Ok(self.queue(task, NORMAL))
+		Ok(self.requeue(task, NORMAL))
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
@@ -240,7 +240,7 @@ impl File {
 			},
 			async |task, _cha| {
 				self.ops.out(id, FileOutHardlink::New);
-				Ok(self.queue(task, NORMAL))
+				Ok(self.requeue(task, NORMAL))
 			},
 			|err| {
 				self.ops.out(id, FileOutHardlink::Deform(err));
@@ -274,7 +274,7 @@ impl File {
 			async |_dir| Ok(()),
 			async |task, cha| {
 				self.ops.out(id, FileOutDelete::New(cha.len));
-				Ok(self.queue(task, NORMAL))
+				Ok(self.requeue(task, NORMAL))
 			},
 			|_err| {},
 		)
@@ -294,7 +294,7 @@ impl File {
 	}
 
 	pub(crate) async fn trash(&self, task: FileInTrash) -> Result<(), FileOutTrash> {
-		Ok(self.queue(task, LOW))
+		Ok(self.requeue(task, LOW))
 	}
 
 	pub(crate) async fn trash_do(&self, task: FileInTrash) -> Result<(), FileOutTrash> {
@@ -317,7 +317,7 @@ impl File {
 					Err(anyhow!("Failed to work on {task:?}: source of symlink doesn't exist"))?
 				} else {
 					self.ops.out(id, FileOutDownload::New(cha.len));
-					self.queue(task, LOW);
+					self.requeue(task, LOW);
 				})
 			},
 			|err| {
@@ -364,7 +364,7 @@ impl File {
 				{
 					task.retry += 1;
 					self.ops.out(task.id, FileOutDownloadDo::Log(format!("Retrying due to error: {e}")));
-					return Ok(self.queue(task, LOW));
+					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
@@ -385,7 +385,7 @@ impl File {
 					Ok(c) if c.mtime == cha.mtime => {}
 					Ok(c) => {
 						self.ops.out(id, FileOutUpload::New(c.len));
-						self.queue(task, LOW);
+						self.requeue(task, LOW);
 					}
 					Err(e) if e.kind() == NotFound => {}
 					Err(e) => ctx!(task, Err(e))?,
@@ -464,7 +464,12 @@ impl File {
 
 impl File {
 	#[inline]
-	fn queue(&self, r#in: impl Into<TaskIn>, priority: u8) {
-		_ = self.r#macro.try_send(r#in.into(), priority);
+	pub(crate) fn submit(&self, r#in: impl Into<FileIn>, priority: u8) {
+		_ = self.tx.try_send(r#in.into(), priority);
+	}
+
+	#[inline]
+	fn requeue(&self, r#in: impl Into<FileIn>, priority: u8) {
+		_ = self.tx.try_send(r#in.into().into_doable(), priority);
 	}
 }
