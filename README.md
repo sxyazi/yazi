@@ -41,15 +41,36 @@ Public beta, can be used as a daily driver.
 
 Yazi is currently in heavy development, expect breaking changes.
 
-## Documentation
+## 📚 Documentation
 
-- Usage: https://yazi-rs.github.io/docs/installation
-- Features: https://yazi-rs.github.io/features
+### Getting Started
 
-## Discussion
+- 🚀 **[Installation](https://yazi-rs.github.io/docs/installation)**
+- ⚙️ **[Configuration](https://yazi-rs.github.io/docs/configuration/overview)**
+- 🎯 **[Quick Start](https://yazi-rs.github.io/docs/quick-start)**
 
-- Discord Server (English mainly): https://discord.gg/qfADduSdJu
-- Telegram Group (Chinese mainly): https://t.me/yazi_rs
+### Development
+
+- 🔌 **[Plugins BETA](https://yazi-rs.github.io/docs/plugins/overview)**
+- 🎨 **[Flavors BETA](https://yazi-rs.github.io/docs/flavors/overview)**
+- 💻 **[Yazi CLI](https://yazi-rs.github.io/docs/cli)**
+- 📝 **[Types](https://github.com/yazi-rs/plugins/tree/main/types.yazi)**
+
+### Resources
+
+- 🔗 **[yazi-rs/plugins](https://github.com/yazi-rs/plugins)**
+- 🎨 **[yazi-rs/flavors](https://github.com/yazi-rs/flavors)**
+- ⭐ **[awesome-yazi](https://github.com/AnirudhG07/awesome-yazi)**
+- 📖 **[Recipes](https://yazi-rs.github.io/docs/tips)**
+
+### Learn More
+- ✨ **[Features](https://yazi-rs.github.io/features)**
+- 🔄 **[DDS](https://yazi-rs.github.io/docs/dds)**
+- ❓ **[FAQ](https://yazi-rs.github.io/docs/faq)**
+
+### Discussion
+- 💬 **[Discord](https://discord.gg/qfADduSdJu)** — English
+- 💬 **[Telegram](https://t.me/yazi_rs)** — Chinese
 
 ## Image Preview
 
