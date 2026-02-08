@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
 - New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
+- Custom tab name ([#3666])
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
