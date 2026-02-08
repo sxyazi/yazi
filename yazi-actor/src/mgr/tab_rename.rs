@@ -17,8 +17,8 @@ impl Actor for TabRename {
 	const NAME: &str = "tab_rename";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		let tab = cx.active().id;
-		let pref = &mut cx.active_mut().pref;
+		let tab = cx.tab().id;
+		let pref = &mut cx.tab_mut().pref;
 
 		if !opt.interactive {
 			pref.name = opt.name.unwrap_or_default().into_owned();
