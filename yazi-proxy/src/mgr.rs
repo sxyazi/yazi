@@ -54,6 +54,10 @@ impl MgrProxy {
 		));
 	}
 
+	pub fn tab_rename(tab: Id, name: impl Into<SStr>) {
+		emit!(Call(relay!(mgr:tab_rename, [name.into()]).with("tab", tab)));
+	}
+
 	pub fn update_paged_by(page: usize, only_if: &UrlBuf) {
 		emit!(Call(relay!(mgr:update_paged, [page]).with("only-if", only_if)));
 	}

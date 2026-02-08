@@ -3,31 +3,33 @@ use yazi_fs::{FilesSorter, SortBy};
 
 #[derive(Clone, PartialEq)]
 pub struct Preference {
+	// Display
+	pub name:        String,
+	pub linemode:    String,
+	pub show_hidden: bool,
+
 	// Sorting
 	pub sort_by:        SortBy,
 	pub sort_sensitive: bool,
 	pub sort_reverse:   bool,
 	pub sort_dir_first: bool,
 	pub sort_translit:  bool,
-
-	// Display
-	pub linemode:    String,
-	pub show_hidden: bool,
 }
 
 impl Default for Preference {
 	fn default() -> Self {
 		Self {
+			// Display
+			name:        String::new(),
+			linemode:    YAZI.mgr.linemode.clone(),
+			show_hidden: YAZI.mgr.show_hidden.get(),
+
 			// Sorting
 			sort_by:        YAZI.mgr.sort_by.get(),
 			sort_sensitive: YAZI.mgr.sort_sensitive.get(),
 			sort_reverse:   YAZI.mgr.sort_reverse.get(),
 			sort_dir_first: YAZI.mgr.sort_dir_first.get(),
 			sort_translit:  YAZI.mgr.sort_translit.get(),
-
-			// Display
-			linemode:    YAZI.mgr.linemode.clone(),
-			show_hidden: YAZI.mgr.show_hidden.get(),
 		}
 	}
 }

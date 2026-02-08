@@ -30,6 +30,7 @@ yazi_macro::mod_flat!(
 	stash
 	tab_close
 	tab_create
+	tab_rename
 	tab_switch
 	toggle
 	toggle_all

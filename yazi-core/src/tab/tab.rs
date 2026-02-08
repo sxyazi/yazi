@@ -1,10 +1,12 @@
+use std::borrow::Cow;
+
 use anyhow::Result;
 use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_emulator::Dimension;
 use yazi_fs::File;
-use yazi_shared::{Id, Ids, url::UrlBuf};
+use yazi_shared::{Id, Ids, url::{UrlBuf, UrlLike}};
 
 use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
 use crate::{spot::Spot, tab::Selected};
@@ -60,6 +62,17 @@ impl Tab {
 	// --- Current
 	#[inline]
 	pub fn cwd(&self) -> &UrlBuf { &self.current.url }
+
+	pub fn name(&self) -> Cow<'_, str> {
+		let url = &self.current.url;
+		if !self.pref.name.is_empty() {
+			Cow::Borrowed(&self.pref.name)
+		} else if let Some(s) = url.name() {
+			s.to_string_lossy()
+		} else {
+			url.loc().to_string_lossy()
+		}
+	}
 
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.current.hovered() }
