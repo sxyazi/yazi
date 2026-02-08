@@ -18,10 +18,7 @@ impl Utils {
 			let path = lock.url.as_url().unified_path();
 			let inner = match Highlighter::new(path).highlight(lock.skip, area.size()).await {
 				Ok(text) => text,
-				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
-				Err(e @ PeekError::Unexpected(_)) => {
-					return e.to_string().into_lua_multi(&lua);
-				}
+				Err(e) => return e.to_string().into_lua_multi(&lua),
 			};
 
 			lock.data = vec![Renderable::Text(Text {
