@@ -141,6 +141,7 @@ impl<'a> Executor<'a> {
 
 		// Tabs
 		on!(tab_create);
+		on!(tab_rename);
 		on!(tab_close);
 		on!(tab_switch);
 		on!(tab_swap);
