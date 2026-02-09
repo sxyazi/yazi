@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, Function, Lua};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use yazi_binding::Id;
+use yazi_binding::{Fd, Id};
 
 use super::Utils;
 
@@ -20,6 +20,7 @@ impl Utils {
 	pub(super) fn drop(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, ud: AnyUserData| {
 			match ud.type_id() {
+				Some(t) if t == TypeId::of::<Fd>() => {}
 				Some(t) if t == TypeId::of::<ChildStdin>() => {}
 				Some(t) if t == TypeId::of::<ChildStdout>() => {}
 				Some(t) if t == TypeId::of::<ChildStderr>() => {}
