@@ -11,7 +11,8 @@ pub(super) struct Preference {
 	v_name:     Option<Value>,
 	v_linemode: Option<Value>,
 
-	v_sort_by: Option<Value>,
+	v_sort_by:     Option<Value>,
+	v_sort_dir_by: Option<Value>,
 }
 
 impl Deref for Preference {
@@ -28,7 +29,8 @@ impl Preference {
 			v_name:     None,
 			v_linemode: None,
 
-			v_sort_by: None,
+			v_sort_by:     None,
+			v_sort_dir_by: None,
 		})
 	}
 }
@@ -46,5 +48,8 @@ impl UserData for Preference {
 		fields.add_field_method_get("sort_reverse", |_, me| Ok(me.sort_reverse));
 		fields.add_field_method_get("sort_dir_first", |_, me| Ok(me.sort_dir_first));
 		fields.add_field_method_get("sort_translit", |_, me| Ok(me.sort_translit));
+		cached_field!(fields, sort_dir_by, |_, me| {
+			Ok(me.sort_dir_by.map(|s| s.to_string()).unwrap_or_default())
+		});
 	}
 }

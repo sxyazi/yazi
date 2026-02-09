@@ -123,6 +123,8 @@ keymap = [
 	{ on = [ ",", "S" ], run = [ "sort size --reverse=yes", "linemode size" ],   desc = "Sort by size (reverse)" },
 	{ on = [ ",", "r" ], run = "sort random --reverse=no",                       desc = "Sort randomly" },
 
+	{ on = [ ",", "d" ], run = [ "sort mtime --reverse=yes --dir-by=natural", "linemode mtime" ], desc = "Sort by modified time, dirs naturally" },
+
 	# Goto
 	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },
 	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go ~/.config" },

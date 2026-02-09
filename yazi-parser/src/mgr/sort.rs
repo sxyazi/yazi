@@ -10,6 +10,7 @@ pub struct SortOpt {
 	pub dir_first: Option<bool>,
 	pub sensitive: Option<bool>,
 	pub translit:  Option<bool>,
+	pub dir_by:    Option<SortBy>,
 }
 
 impl TryFrom<CmdCow> for SortOpt {
@@ -22,6 +23,7 @@ impl TryFrom<CmdCow> for SortOpt {
 			dir_first: c.get("dir-first").ok(),
 			sensitive: c.get("sensitive").ok(),
 			translit:  c.get("translit").ok(),
+			dir_by:    c.get::<&str>("dir-by").ok().map(str::parse).transpose()?,
 		})
 	}
 }

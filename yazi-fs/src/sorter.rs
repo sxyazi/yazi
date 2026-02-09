@@ -13,10 +13,37 @@ pub struct FilesSorter {
 	pub reverse:   bool,
 	pub dir_first: bool,
 	pub translit:  bool,
+	pub dir_by:    Option<SortBy>,
 }
 
 impl FilesSorter {
 	pub(super) fn sort(&self, items: &mut [File], sizes: &HashMap<PathBufDyn, u64>) {
+		if items.is_empty() {
+			return;
+		}
+
+		if self.dir_first && self.dir_by.is_some_and(|b| b != self.by) {
+			let dir_by = self.dir_by.unwrap();
+			// Stable-partition: dirs first, then files
+			items.sort_by(|a, b| b.is_dir().cmp(&a.is_dir()));
+			let mid = items.iter().position(|f| !f.is_dir()).unwrap_or(items.len());
+			let (dirs, files) = items.split_at_mut(mid);
+
+			// Sort dirs with dir_by, non-reversed (already partitioned)
+			let dir_sorter =
+				Self { by: dir_by, reverse: false, dir_first: false, dir_by: None, ..*self };
+			dir_sorter.sort_with_by(dirs, sizes);
+
+			// Sort files with the main sort_by
+			let file_sorter = Self { dir_first: false, dir_by: None, ..*self };
+			file_sorter.sort_with_by(files, sizes);
+			return;
+		}
+
+		self.sort_with_by(items, sizes);
+	}
+
+	fn sort_with_by(&self, items: &mut [File], sizes: &HashMap<PathBufDyn, u64>) {
 		if items.is_empty() {
 			return;
 		}

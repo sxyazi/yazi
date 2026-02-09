@@ -22,6 +22,12 @@ impl Actor for Sort {
 		pref.sort_dir_first = opt.dir_first.unwrap_or(pref.sort_dir_first);
 		pref.sort_sensitive = opt.sensitive.unwrap_or(pref.sort_sensitive);
 		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
+		pref.sort_dir_by = match (opt.by, opt.dir_by) {
+			(_, Some(yazi_fs::SortBy::None)) => None,
+			(_, Some(v)) => Some(v),
+			(Some(_), None) => None,
+			(None, None) => pref.sort_dir_by,
+		};
 
 		let sorter = FilesSorter::from(&*pref);
 		let hovered = cx.hovered().map(|f| f.urn().to_owned());

@@ -14,6 +14,7 @@ pub struct Preference {
 	pub sort_reverse:   bool,
 	pub sort_dir_first: bool,
 	pub sort_translit:  bool,
+	pub sort_dir_by:    Option<SortBy>,
 }
 
 impl Default for Preference {
@@ -30,6 +31,10 @@ impl Default for Preference {
 			sort_reverse:   YAZI.mgr.sort_reverse.get(),
 			sort_dir_first: YAZI.mgr.sort_dir_first.get(),
 			sort_translit:  YAZI.mgr.sort_translit.get(),
+			sort_dir_by:    match YAZI.mgr.sort_dir_by.get() {
+				SortBy::None => None,
+				v => Some(v),
+			},
 		}
 	}
 }
@@ -42,6 +47,7 @@ impl From<&Preference> for FilesSorter {
 			reverse:   value.sort_reverse,
 			dir_first: value.sort_dir_first,
 			translit:  value.sort_translit,
+			dir_by:    value.sort_dir_by,
 		}
 	}
 }

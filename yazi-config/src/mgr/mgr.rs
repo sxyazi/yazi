@@ -16,6 +16,7 @@ pub struct Mgr {
 	pub sort_reverse:   SyncCell<bool>,
 	pub sort_dir_first: SyncCell<bool>,
 	pub sort_translit:  SyncCell<bool>,
+	pub sort_dir_by:    SyncCell<SortBy>,
 
 	// Display
 	pub linemode:     String,
