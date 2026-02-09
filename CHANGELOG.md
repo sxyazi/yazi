@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- New `fs.access()` API to access the filesystem ([#3668])
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
 - New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
 - Custom tab name ([#3666])
@@ -1645,3 +1646,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3648]: https://github.com/sxyazi/yazi/pull/3648
 [#3661]: https://github.com/sxyazi/yazi/pull/3661
 [#3666]: https://github.com/sxyazi/yazi/pull/3666
+[#3668]: https://github.com/sxyazi/yazi/pull/3668
