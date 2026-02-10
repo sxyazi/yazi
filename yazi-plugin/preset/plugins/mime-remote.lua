@@ -4,13 +4,13 @@ local function stale_cache(file)
 	local url = file.url
 	local lock = url.scheme.cache:join(string.format("%%lock/%s", url:hash(true)))
 
-	local f = io.open(tostring(lock), "r")
-	if not f then
+	local fd = fs.access():read(true):open(Url(lock))
+	if not fd then
 		return true
 	end
 
-	local hash = f:read(32)
-	f:close()
+	local hash = fd:read(32)
+	ya.drop(fd)
 	return hash ~= file.cha:hash(true)
 end
 

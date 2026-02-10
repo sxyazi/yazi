@@ -35,6 +35,10 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:open_do).with_any("opt", opt)));
 	}
 
+	pub fn refresh() {
+		emit!(Call(relay!(mgr:refresh)));
+	}
+
 	pub fn remove_do(targets: Vec<UrlBuf>, permanently: bool) {
 		emit!(Call(
 			relay!(mgr:remove_do).with("permanently", permanently).with_any("targets", targets)
