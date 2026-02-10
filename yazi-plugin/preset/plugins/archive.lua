@@ -26,7 +26,7 @@ function M:peek(job)
 		}):icon()
 
 		if f.size > 0 then
-			right[#right + 1] = string.format(" %s ", ya.readable_size(f.size))
+			right[#right + 1] = " " .. ya.readable_size(f.size) .. " "
 		else
 			right[#right + 1] = " "
 		end
@@ -42,7 +42,7 @@ function M:peek(job)
 			left[#left],
 			ui.truncate(f.path.name, {
 				rtl = true,
-				max = math.max(0, job.area.w - ui.width(left[#left]) - ui.width(right[#right])),
+				max = math.max(0, job.area.w - (f.depth * 2) - ui.width(left[#left]) - ui.width(right[#right])),
 			}),
 		}
 	end
