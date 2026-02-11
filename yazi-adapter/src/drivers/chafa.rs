@@ -19,6 +19,8 @@ impl Chafa {
 				"symbols",
 				"--relative",
 				"off",
+				"--probe",
+				"off",
 				"--polite",
 				"on",
 				"--passthrough",
