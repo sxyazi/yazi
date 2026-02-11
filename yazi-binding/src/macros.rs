@@ -32,9 +32,9 @@ macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
 		static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 		if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-			let id = match $crate::runtime!($lua)?.current() {
-				Some(id) => &format!("`{id}.yazi` plugin"),
-				None => "`init.lua` config",
+			let id = match $crate::runtime!($lua)?.current()? {
+				"init" => "`init.lua` config file",
+				s => &format!("`{s}.yazi` plugin"),
 			};
 			yazi_macro::emit!(Call(
 				yazi_macro::relay!(app:deprecate).with("content", format!($tt, id))

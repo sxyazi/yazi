@@ -41,7 +41,7 @@ futures             = "0.3.31"
 globset             = "0.4.18"
 hashbrown           = { version = "0.16.1", features = [ "serde" ] }
 indexmap            = { version = "2.13.0", features = [ "serde" ] }
-libc                = "0.2.180"
+libc                = "0.2.181"
 lru                 = "0.16.3"
 mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2               = "0.6.3"
@@ -62,10 +62,10 @@ thiserror           = "2.0.18"
 tokio               = { version = "1.49.0", features = [ "full" ] }
 tokio-stream        = "0.1.18"
 tokio-util          = "0.7.18"
-toml                = { version = "0.9.11" }
+toml                = { version = "0.9.12" }
 tracing             = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
-typed-path          = "0.12.2"
+typed-path          = "0.12.3"
 unicode-width       = { version = "0.2.2", default-features = false }
 uzers               = "0.12.2"
 

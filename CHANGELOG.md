@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
 - New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
 - Custom tab name ([#3666])
+- New `fs.unique()` creates a unique file or directory ([#3677])
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
@@ -26,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Upgrade Lua to 5.5 ([#3633])
 - Change preset <kbd>t</kbd> for creating tabs to <kbd>t</kbd> ⇒ <kbd>t</kbd> to avoid conflict with new <kbd>t</kbd> ⇒ <kbd>r</kbd> for renaming tabs ([#3666])
 - Remove `micro_workers` and `macro_workers` in favor of finer control over concurrent workers ([#3661])
+
+### Deprecated
+
+- Deprecate `fs.unique_name()` in favor of `fs.unique()` to fix a TOCTOU race condition ([#3677])
 
 ### Fixed
 
@@ -1647,3 +1652,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3661]: https://github.com/sxyazi/yazi/pull/3661
 [#3666]: https://github.com/sxyazi/yazi/pull/3666
 [#3668]: https://github.com/sxyazi/yazi/pull/3668
+[#3677]: https://github.com/sxyazi/yazi/pull/3677
