@@ -165,14 +165,6 @@ where
 	}
 
 	#[inline]
-	pub fn to_inner(&self) -> P
-	where
-		P: Clone,
-	{
-		self.inner.clone()
-	}
-
-	#[inline]
 	pub fn into_inner(self) -> P { self.inner }
 
 	pub fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>

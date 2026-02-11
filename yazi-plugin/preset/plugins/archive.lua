@@ -237,7 +237,7 @@ end
 ---@return table files
 ---@return Error? err
 function M.parse_7z_slt(child, skip, limit)
-	local files, parents, err = { M.make_file() }, {}, nil
+	local files, tops, parents, err = { M.make_file() }, {}, {}, nil
 	local key, value, empty, stderr = "", "", Path.os(""), {}
 	repeat
 		local next, event = child:read_line()
@@ -253,7 +253,8 @@ function M.parse_7z_slt(child, skip, limit)
 
 		if next == "\n" or next == "\r\n" then
 			if files[#files].path ~= empty then
-				M.treelize(files, parents)
+				M.treelize(files, tops, parents)
+				M.pop_dup_dir(files, parents, false)
 				files[#files + 1] = M.make_file()
 			end
 			goto continue
@@ -273,12 +274,17 @@ function M.parse_7z_slt(child, skip, limit)
 		end
 
 		::continue::
-	until #files > skip + limit
+	until #files - 1 > skip + limit
 
 	if files[#files].path == empty then
 		files[#files] = nil
 	else
-		M.treelize(files, parents)
+		M.treelize(files, tops, parents)
+	end
+
+	M.pop_dup_dir(files, parents, #files <= skip + limit)
+	if #files > skip + limit then
+		files[#files] = nil
 	end
 
 	if #stderr ~= 0 then
@@ -289,29 +295,50 @@ end
 
 ---Convert a flat list of files into a tree structure
 ---@param files table
----@param parents Path[]
-function M.treelize(files, parents)
+---@param tops Path[]
+---@param parents table<string, boolean>
+function M.treelize(files, tops, parents)
 	local f = table.remove(files)
-	while #parents > 0 and not f.path:starts_with(parents[#parents]) do
-		parents[#parents] = nil
+	while #tops > 0 and not f.path:starts_with(tops[#tops]) do
+		tops[#tops] = nil
 	end
 
 	local buf, it = {}, f.path.parent
-	while it and it ~= parents[#parents] do
+	while it and it ~= tops[#tops] do
 		buf[#buf + 1], it = it, it.parent
 	end
 	for i = #buf, 1, -1 do
-		files[#files + 1] = M.make_file { path = buf[i], depth = #parents, is_dir = true }
-		parents[#parents + 1] = buf[i]
+		files[#files + 1] = M.make_file { path = buf[i], depth = #tops, is_dir = true }
+		tops[#tops + 1] = buf[i]
+		M.pop_dup_dir(files, parents, false)
 	end
 
-	f.depth = #parents
+	f.depth = #tops
 	f.is_dir = f.folder == "+" or f.attr:sub(1, 1) == "D"
 
 	if not f.is_dir then
 		files[#files + 1] = f
-	elseif f.path ~= parents[#parents] then
-		files[#files + 1], parents[#parents + 1] = f, f.path
+	elseif f.path ~= tops[#tops] then
+		files[#files + 1], tops[#tops + 1] = f, f.path
+	end
+end
+
+---@param files table
+---@param parents table<string, boolean>
+---@param eof boolean
+function M.pop_dup_dir(files, parents, eof)
+	local n, i = #files, eof and #files or #files - 1
+	if not files[i] or not files[i].is_dir then
+		return
+	end
+
+	local p = tostring(files[i].path)
+	if not parents[p] then
+		parents[p] = true
+	elseif eof then
+		files[n] = nil
+	elseif not files[n].path:starts_with(files[i].path) then
+		files[i], files[n] = files[n], nil
 	end
 end
 
