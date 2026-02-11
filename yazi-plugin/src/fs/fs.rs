@@ -233,7 +233,7 @@ fn unique(lua: &Lua) -> mlua::Result<Function> {
 
 fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		deprecate!(lua, "`fs.unique_name()` is deprecated, use `fs.unique()` instead, in your {}");
+		deprecate!(lua, "`fs.unique_name()` is deprecated, use `fs.unique()` instead, in your {}\nSee #3677 for more details: https://github.com/sxyazi/yazi/pull/3677");
 		match yazi_vfs::unique_name(url.clone(), async { false }).await {
 			Ok(u) => Url::new(u).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
