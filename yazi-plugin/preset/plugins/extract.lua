@@ -45,7 +45,7 @@ function M:try_with(from, pwd, to)
 		fail("Invalid URL '%s'", from)
 	end
 
-	local tmp = fs.unique_name(to:join(self.tmp_name(from)))
+	local tmp = fs.unique("dir", to:join(self.tmp_name(from)))
 	if not tmp then
 		fail("Failed to determine a temporary directory for %s", from)
 	end
@@ -94,7 +94,7 @@ function M:tidy(from, to, tmp)
 		target = to:join(self.trim_ext(from.name))
 	end
 
-	target = fs.unique_name(target)
+	target = fs.unique(only and "file" or "dir", target)
 	if not target then
 		fail("Failed to determine a target for '%s'", from)
 	end
