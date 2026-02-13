@@ -15,7 +15,7 @@ impl Actor for Resume {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		cx.core.active_mut().preview.reset();
-		*cx.term = Some(Term::start().unwrap());
+		*cx.term = Some(Term::start()?);
 
 		// While the app resumes, it's possible that the terminal size has changed.
 		// We need to trigger a resize, and render the UI based on the resized area.

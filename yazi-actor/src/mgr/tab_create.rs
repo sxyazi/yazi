@@ -51,6 +51,7 @@ impl Actor for TabCreate {
 
 		act!(mgr:refresh, cx)?;
 		act!(mgr:peek, cx, true)?;
+		act!(app:title, cx).ok();
 		succ!(render!());
 	}
 }

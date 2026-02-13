@@ -30,6 +30,7 @@ impl Actor for TabClose {
 		let cx = &mut Ctx::renew(cx);
 		act!(mgr:refresh, cx)?;
 		act!(mgr:peek, cx, true)?;
+		act!(app:title, cx).ok();
 
 		succ!(render!());
 	}

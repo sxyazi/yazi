@@ -70,7 +70,7 @@ Yazi is currently in heavy development, expect breaking changes.
 | [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                   | [Sixel graphics format][sixel]         | ✅ Built-in                              |
 | [Bobcat](https://github.com/ismail-yilmaz/Bobcat)                            | [Inline images protocol][iip]          | ✅ Built-in                              |
 | X11 / Wayland                                                                | Window system protocol                 | ☑️ [Überzug++][ueberzug] required        |
-| Fallback                                                                     | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required               |
+| Fallback                                                                     | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required (>= 1.16.0)   |
 
 See https://yazi-rs.github.io/docs/image-preview for details.
 

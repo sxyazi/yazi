@@ -20,6 +20,7 @@ pub enum Spark<'a> {
 	AppResize(yazi_parser::app::ReflowOpt),
 	AppResume(yazi_parser::app::ResumeOpt),
 	AppStop(yazi_parser::app::StopOpt),
+	AppTitle(yazi_parser::app::TitleOpt),
 	AppUpdateProgress(yazi_parser::app::UpdateProgressOpt),
 
 	// Mgr
@@ -157,16 +158,21 @@ impl<'a> Spark<'a> {
 		use SparkKind::*;
 
 		Ok(match kind {
-			// sort
+			// app:title
+			IndAppTitle => Self::AppTitle(<_>::from_lua(value, lua)?),
+
+			// mgr:sort
 			KeySort => Self::Sort(<_>::from_lua(value, lua)?),
 			IndSort => Self::Sort(<_>::from_lua(value, lua)?),
-			// stash
+			// mgr:stash
 			IndStash => Self::Stash(<_>::from_lua(value, lua)?),
 			RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
-			// quit
+			// mgr:quit
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
+
 			// which:activate
 			IndWhichActivate => Self::WhichActivate(<_>::from_lua(value, lua)?),
+
 			// notify:push
 			RelayNotifyPush => Self::NotifyPush(<_>::from_lua(value, lua)?),
 		})
@@ -192,6 +198,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppResize(b) => b.into_lua(lua),
 			Self::AppResume(b) => b.into_lua(lua),
 			Self::AppStop(b) => b.into_lua(lua),
+			Self::AppTitle(b) => b.into_lua(lua),
 			Self::AppUpdateProgress(b) => b.into_lua(lua),
 
 			// Mgr
@@ -358,6 +365,7 @@ try_from_spark!(yazi_parser::app::QuitOpt, app:quit, mgr:quit);
 try_from_spark!(yazi_parser::app::ReflowOpt, app:reflow, app:resize);
 try_from_spark!(yazi_parser::app::ResumeOpt, app:resume);
 try_from_spark!(yazi_parser::app::StopOpt, app:stop);
+try_from_spark!(yazi_parser::app::TitleOpt, app:title);
 try_from_spark!(yazi_parser::app::UpdateProgressOpt, app:update_progress);
 try_from_spark!(yazi_parser::cmp::CloseOpt, cmp:close);
 try_from_spark!(yazi_parser::cmp::ShowOpt, cmp:show);
