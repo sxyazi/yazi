@@ -15,8 +15,8 @@ impl Actor for Quit {
 	const NAME: &str = "quit";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		cx.core.tasks.shutdown();
-		cx.core.mgr.shutdown();
+		cx.tasks.shutdown();
+		cx.mgr.shutdown();
 
 		futures::executor::block_on(async {
 			_ = futures::join!(
@@ -34,7 +34,7 @@ impl Actor for Quit {
 impl Quit {
 	async fn cwd_to_file(cx: &Ctx<'_>, no: bool) {
 		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no) {
-			let cwd = cx.core.mgr.cwd().to_strand();
+			let cwd = cx.mgr.cwd().to_strand();
 			Local::regular(p).write(cwd.encoded_bytes()).await.ok();
 		}
 	}

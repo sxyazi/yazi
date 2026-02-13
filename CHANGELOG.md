@@ -14,10 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
-- New `fs.access()` API to access the filesystem ([#3668])
-- Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
-- New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
 - Custom tab name ([#3666])
+- Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
+- New `fs.access()` API to access the filesystem ([#3668])
+- New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
+- New `ind-app-title` DDS event to customize the app title ([#3684])
 - New `fs.unique()` creates a unique file or directory ([#3677])
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
@@ -26,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Upgrade Lua to 5.5 ([#3633])
 - Change preset <kbd>t</kbd> for creating tabs to <kbd>t</kbd> ⇒ <kbd>t</kbd> to avoid conflict with new <kbd>t</kbd> ⇒ <kbd>r</kbd> for renaming tabs ([#3666])
+- Remove `title_format` in favor of new `ind-app-title` DDS event for flexible title customization ([#3684])
 - Remove `micro_workers` and `macro_workers` in favor of finer control over concurrent workers ([#3661])
 
 ### Deprecated
@@ -1655,3 +1657,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3668]: https://github.com/sxyazi/yazi/pull/3668
 [#3677]: https://github.com/sxyazi/yazi/pull/3677
 [#3678]: https://github.com/sxyazi/yazi/pull/3678
+[#3684]: https://github.com/sxyazi/yazi/pull/3684
