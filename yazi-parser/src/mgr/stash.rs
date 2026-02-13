@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_binding::Url;
+use yazi_binding::{SER_OPT, Url};
 use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 use crate::mgr::{CdOpt, CdSource};
@@ -37,7 +37,7 @@ impl IntoLua for StashOpt {
 		lua
 			.create_table_from([
 				("target", Url::new(self.target).into_lua(lua)?),
-				("source", lua.to_value(&self.source)?),
+				("source", lua.to_value_with(&self.source, SER_OPT)?),
 			])?
 			.into_lua(lua)
 	}

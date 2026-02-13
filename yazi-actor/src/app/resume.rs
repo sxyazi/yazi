@@ -14,8 +14,8 @@ impl Actor for Resume {
 	const NAME: &str = "resume";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		cx.core.active_mut().preview.reset();
-		*cx.term = Some(Term::start().unwrap());
+		cx.active_mut().preview.reset();
+		*cx.term = Some(Term::start()?);
 
 		// While the app resumes, it's possible that the terminal size has changed.
 		// We need to trigger a resize, and render the UI based on the resized area.
@@ -23,6 +23,7 @@ impl Actor for Resume {
 
 		opt.tx.send((true, opt.token))?;
 
+		act!(app:title, cx).ok();
 		succ!(render!());
 	}
 }

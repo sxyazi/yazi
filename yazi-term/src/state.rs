@@ -1,13 +1,13 @@
 use crate::TermOption;
 
 #[derive(Clone, Copy)]
-pub(super) struct TermState {
-	pub(super) bg:           bool,
-	pub(super) csi_u:        bool,
-	pub(super) mouse:        bool,
-	pub(super) title:        bool,
-	pub(super) cursor_shape: u8,
-	pub(super) cursor_blink: bool,
+pub struct TermState {
+	pub bg:           bool,
+	pub csi_u:        bool,
+	pub mouse:        bool,
+	pub title:        bool,
+	pub cursor_shape: u8,
+	pub cursor_blink: bool,
 }
 
 impl TermState {
@@ -37,7 +37,7 @@ impl TermState {
 			bg: !opt.bg.is_empty(),
 			csi_u,
 			mouse: opt.mouse,
-			title: opt.title.is_some(),
+			title: false,
 			cursor_shape,
 			cursor_blink,
 		}

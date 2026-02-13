@@ -10,7 +10,7 @@ use yazi_tty::{TTY, TtyWriter};
 
 use crate::{TermOption, TermState};
 
-static STATE: SyncCell<TermState> = SyncCell::new(TermState::default());
+pub static STATE: SyncCell<TermState> = SyncCell::new(TermState::default());
 
 pub struct Term {
 	inner:       Terminal<CrosstermBackend<TtyWriter<'static>>>,
@@ -59,10 +59,6 @@ impl Term {
 						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS,
 				)
 			);
-		}
-
-		if let Some(s) = opt.title {
-			queue!(TTY.writer(), SetTitle(s)).ok();
 		}
 
 		term.inner.hide_cursor()?;

@@ -13,7 +13,7 @@ impl Actor for Stop {
 	const NAME: &str = "stop";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		cx.core.active_mut().preview.reset_image();
+		cx.active_mut().preview.reset_image();
 
 		// We need to destroy the `term` first before stopping the `signals`
 		// to prevent any signal from triggering the term to render again

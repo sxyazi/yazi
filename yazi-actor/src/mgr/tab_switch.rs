@@ -29,6 +29,7 @@ impl Actor for TabSwitch {
 
 		act!(mgr:refresh, cx)?;
 		act!(mgr:peek, cx, true)?;
+		act!(app:title, cx).ok();
 		succ!(render!());
 	}
 }

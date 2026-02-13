@@ -1,13 +1,10 @@
 use anyhow::Result;
-use crossterm::{execute, terminal::SetTitle};
-use yazi_config::YAZI;
 use yazi_core::tab::Folder;
 use yazi_fs::{CWD, Files, FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
-use yazi_tty::TTY;
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 use crate::{Actor, Ctx};
@@ -20,9 +17,7 @@ impl Actor for Refresh {
 	const NAME: &str = "refresh";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
-		if let (_, Some(s)) = (CWD.set(cx.cwd(), Self::cwd_changed), YAZI.mgr.title()) {
-			execute!(TTY.writer(), SetTitle(s)).ok();
-		}
+		CWD.set(cx.cwd(), Self::cwd_changed);
 
 		if let Some(p) = cx.parent() {
 			Self::trigger_dirs(&[cx.current(), p]);

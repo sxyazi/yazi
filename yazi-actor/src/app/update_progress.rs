@@ -15,7 +15,7 @@ impl Actor for UpdateProgress {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		// Update the progress of all tasks.
-		let tasks = &mut cx.core.tasks;
+		let tasks = &mut cx.tasks;
 		let progressed = tasks.summary != opt.summary;
 		tasks.summary = opt.summary;
 

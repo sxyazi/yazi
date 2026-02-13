@@ -16,9 +16,9 @@ impl Actor for Resize {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(app:reflow, cx, opt)?;
 
-		cx.core.current_mut().arrow(0);
-		cx.core.parent_mut().map(|f| f.arrow(0));
-		cx.core.current_mut().sync_page(true);
+		cx.current_mut().arrow(0);
+		cx.parent_mut().map(|f| f.arrow(0));
+		cx.current_mut().sync_page(true);
 
 		act!(mgr:peek, cx)
 	}

@@ -1,5 +1,6 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
+use yazi_binding::SER_OPT;
 use yazi_shared::{event::CmdCow, strand::StrandBuf};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -31,5 +32,5 @@ impl FromLua for QuitOpt {
 }
 
 impl IntoLua for QuitOpt {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
 }

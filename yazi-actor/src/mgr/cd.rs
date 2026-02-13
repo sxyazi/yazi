@@ -55,6 +55,7 @@ impl Actor for Cd {
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
 		act!(mgr:stash, cx, opt).ok();
+		act!(app:title, cx).ok();
 		succ!(render!());
 	}
 }

@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSecondsWithFrac, serde_as};
+use yazi_binding::SER_OPT;
 use yazi_config::{Style, THEME};
 use yazi_shared::event::CmdCow;
 
@@ -31,7 +32,7 @@ impl FromLua for PushOpt {
 }
 
 impl IntoLua for PushOpt {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
 }
 
 // --- Level

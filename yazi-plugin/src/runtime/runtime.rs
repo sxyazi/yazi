@@ -54,7 +54,6 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 			b"show_symlink" => m.show_symlink.get().into_lua(lua)?,
 			b"scrolloff" => m.scrolloff.get().into_lua(lua)?,
 			b"mouse_events" => lua.to_value_with(&m.mouse_events, SER_OPT)?,
-			b"title_format" => lua.create_string(&m.title_format)?.into_lua(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)

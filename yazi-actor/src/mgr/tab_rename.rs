@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use yazi_config::popup::InputCfg;
-use yazi_macro::{render, succ};
+use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::TabRenameOpt;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::data::Data;
@@ -22,6 +22,7 @@ impl Actor for TabRename {
 
 		if !opt.interactive {
 			pref.name = opt.name.unwrap_or_default().into_owned();
+			act!(app:title, cx).ok();
 			succ!(render!());
 		}
 
