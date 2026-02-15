@@ -1,7 +1,7 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::SER_OPT;
-use yazi_fs::SortBy;
+use yazi_fs::{SortBy, SortFallback};
 use yazi_shared::event::CmdCow;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -11,6 +11,7 @@ pub struct SortOpt {
 	pub dir_first: Option<bool>,
 	pub sensitive: Option<bool>,
 	pub translit:  Option<bool>,
+	pub fallback:  Option<SortFallback>,
 }
 
 impl TryFrom<CmdCow> for SortOpt {
@@ -23,6 +24,7 @@ impl TryFrom<CmdCow> for SortOpt {
 			dir_first: c.get("dir-first").ok(),
 			sensitive: c.get("sensitive").ok(),
 			translit:  c.get("translit").ok(),
+			fallback:  c.get("fallback").ok().map(str::parse).transpose()?,
 		})
 	}
 }

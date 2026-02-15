@@ -48,6 +48,7 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 			b"sort_reverse" => m.sort_reverse.get().into_lua(lua)?,
 			b"sort_dir_first" => m.sort_dir_first.get().into_lua(lua)?,
 			b"sort_translit" => m.sort_translit.get().into_lua(lua)?,
+			b"sort_fallback" => lua.to_value_with(&m.sort_fallback, SER_OPT)?,
 
 			b"linemode" => lua.create_string(&m.linemode)?.into_lua(lua)?,
 			b"show_hidden" => m.show_hidden.get().into_lua(lua)?,
