@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::SortBy;
+use yazi_fs::{SortBy, SortFallback};
 use yazi_shared::SyncCell;
 
 use super::{MgrRatio, MouseEvents};
@@ -16,6 +16,7 @@ pub struct Mgr {
 	pub sort_reverse:   SyncCell<bool>,
 	pub sort_dir_first: SyncCell<bool>,
 	pub sort_translit:  SyncCell<bool>,
+	pub sort_fallback:  SyncCell<SortFallback>,
 
 	// Display
 	pub linemode:     String,

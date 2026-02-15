@@ -19,7 +19,7 @@ yazi-shim   = { path = "../yazi-shim", version = "26.2.2" }
 
 # External dependencies
 anyhow           = { workspace = true }
-arc-swap         = "1.8.1"
+arc-swap         = "1.8.2"
 bitflags         = { workspace = true }
 dirs             = { workspace = true }
 either           = { workspace = true }

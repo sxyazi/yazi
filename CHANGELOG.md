@@ -16,8 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Custom tab name ([#3666])
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
+- New `sort_fallback` option to control fallback sorting behavior ([#3077])
 - New `fs.access()` API to access the filesystem ([#3668])
-- New `relay-notify-push` DDS event to allow custom notification handlers ([#3642])
+- New `relay-notify-push` DDS event to customize notification handlers ([#3642])
 - New `ind-app-title` DDS event to customize the app title ([#3684])
 - New `fs.unique()` creates a unique file or directory ([#3677])
 - New `cx.which` API to access the which component state ([#3617])
@@ -1577,6 +1578,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3038]: https://github.com/sxyazi/yazi/pull/3038
 [#3059]: https://github.com/sxyazi/yazi/pull/3059
 [#3067]: https://github.com/sxyazi/yazi/pull/3067
+[#3077]: https://github.com/sxyazi/yazi/pull/3077
 [#3083]: https://github.com/sxyazi/yazi/pull/3083
 [#3084]: https://github.com/sxyazi/yazi/pull/3084
 [#3091]: https://github.com/sxyazi/yazi/pull/3091

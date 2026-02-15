@@ -46,5 +46,6 @@ impl UserData for Preference {
 		fields.add_field_method_get("sort_reverse", |_, me| Ok(me.sort_reverse));
 		fields.add_field_method_get("sort_dir_first", |_, me| Ok(me.sort_dir_first));
 		fields.add_field_method_get("sort_translit", |_, me| Ok(me.sort_translit));
+		fields.add_field_method_get("sort_fallback", |_, me| Ok(me.sort_fallback.to_string()));
 	}
 }
