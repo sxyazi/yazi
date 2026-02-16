@@ -60,6 +60,7 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 			b"marker_cut" => Style::from(m.marker_cut).into_lua(lua),
 			b"marker_marked" => Style::from(m.marker_marked).into_lua(lua),
 			b"marker_selected" => Style::from(m.marker_selected).into_lua(lua),
+			b"marker_symbol" => lua.create_string(&m.marker_symbol)?.into_lua(lua),
 
 			b"count_copied" => Style::from(m.count_copied).into_lua(lua),
 			b"count_cut" => Style::from(m.count_cut).into_lua(lua),

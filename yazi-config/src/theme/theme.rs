@@ -55,6 +55,7 @@ pub struct Mgr {
 	pub marker_cut:      Style,
 	pub marker_marked:   Style,
 	pub marker_selected: Style,
+	pub marker_symbol:   String,
 
 	// Count
 	pub count_copied:   Style,

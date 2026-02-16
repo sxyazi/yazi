@@ -22,11 +22,12 @@ function Tab:layout()
 end
 
 function Tab:build()
+	local c = self._chunks
 	self._children = {
-		Parent:new(self._chunks[1]:pad(ui.Pad.x(1)), self._tab),
-		Current:new(self._chunks[2], self._tab),
-		Preview:new(self._chunks[3]:pad(ui.Pad.x(1)), self._tab),
-		Rail:new(self._chunks, self._tab),
+		Parent:new(c[1]:pad(ui.Pad.x(1)), self._tab),
+		Current:new(c[2]:pad(ui.Pad(0, c[3].w > 0 and 0 or 1, 0, c[1].w > 0 and 0 or 1)), self._tab),
+		Preview:new(c[3]:pad(ui.Pad.x(1)), self._tab),
+		Rail:new(c, self._tab),
 	}
 end
 
