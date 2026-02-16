@@ -197,9 +197,9 @@ pub(crate) struct FileInDownload {
 // --- Upload
 #[derive(Clone, Debug)]
 pub(crate) struct FileInUpload {
-	pub(crate) id:    Id,
-	pub(crate) url:   UrlBuf,
-	pub(crate) cha:   Option<Cha>,
-	pub(crate) cache: Option<PathBuf>,
-	pub(crate) done:  CompletionToken,
+	pub(crate) id:     Id,
+	pub(crate) target: UrlBuf,
+	pub(crate) cha:    Option<Cha>,
+	pub(crate) cache:  Option<PathBuf>,
+	pub(crate) done:   CompletionToken,
 }

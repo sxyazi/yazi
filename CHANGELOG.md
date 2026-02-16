@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `relay-notify-push` DDS event to customize the notification handler ([#3642])
 - New `ind-app-title` DDS event to customize the app title ([#3684])
 - New `fs.unique()` creates a unique file or directory ([#3677])
-- New `download` DDS event fires when remote files are downloaded
+- New `download` DDS event fires when remote files are downloaded ([#3687])
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 
@@ -1661,3 +1661,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3677]: https://github.com/sxyazi/yazi/pull/3677
 [#3678]: https://github.com/sxyazi/yazi/pull/3678
 [#3684]: https://github.com/sxyazi/yazi/pull/3684
+[#3687]: https://github.com/sxyazi/yazi/pull/3687

@@ -164,19 +164,19 @@ impl Scheduler {
 		task.done.clone()
 	}
 
-	pub fn file_upload(&self, url: UrlBuf) {
+	pub fn file_upload(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let task = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
+		let task = ongoing.add::<FileProgUpload>(format!("Upload {}", target.display()));
 
-		if !url.kind().is_remote() {
+		if !target.kind().is_remote() {
 			return self
 				.ops
 				.out(task.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 
-		task.set_hook(HookInUpload { id: task.id, target: url.clone() });
+		task.set_hook(HookInUpload { id: task.id, target: target.clone() });
 		self.file.submit(
-			FileInUpload { id: task.id, url, cha: None, cache: None, done: task.done.clone() },
+			FileInUpload { id: task.id, target, cha: None, cache: None, done: task.done.clone() },
 			LOW,
 		);
 	}
