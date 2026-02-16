@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `fs.access()` API to access the filesystem ([#3668])
 - New `relay-notify-push` DDS event to customize the notification handler ([#3642])
 - New `ind-app-title` DDS event to customize the app title ([#3684])
+- New `marker_symbol` option to specify the symbol used for marking files ([#3689])
 - New `fs.unique()` creates a unique file or directory ([#3677])
 - New `download` DDS event fires when remote files are downloaded ([#3687])
 - New `cx.which` API to access the which component state ([#3617])
@@ -1662,3 +1663,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3678]: https://github.com/sxyazi/yazi/pull/3678
 [#3684]: https://github.com/sxyazi/yazi/pull/3684
 [#3687]: https://github.com/sxyazi/yazi/pull/3687
+[#3689]: https://github.com/sxyazi/yazi/pull/3689
