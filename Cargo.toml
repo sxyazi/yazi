@@ -37,7 +37,7 @@ dirs                = "6.0.0"
 dyn-clone           = "1.0.20"
 either              = { version = "1.15.0" }
 foldhash            = "0.2.0"
-futures             = "0.3.31"
+futures             = "0.3.32"
 globset             = "0.4.18"
 hashbrown           = { version = "0.16.1", features = [ "serde" ] }
 indexmap            = { version = "2.13.0", features = [ "serde" ] }

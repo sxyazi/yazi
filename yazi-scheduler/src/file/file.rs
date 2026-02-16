@@ -335,17 +335,17 @@ impl File {
 	) -> Result<(), FileOutDownloadDo> {
 		let cha = task.cha.unwrap();
 
-		let cache = ctx!(task, task.url.cache(), "Cannot determine cache path")?;
+		let cache = ctx!(task, task.target.cache(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
-		let mut it = ctx!(task, provider::copy_with_progress(&task.url, &cache_tmp, cha).await)?;
+		let mut it = ctx!(task, provider::copy_with_progress(&task.target, &cache_tmp, cha).await)?;
 		loop {
 			match progress_or_break!(it, task.done) {
 				Ok(0) => {
 					Local::regular(&cache).remove_dir_all().await.ok();
 					ctx!(task, provider::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
 
-					let lock = ctx!(task, task.url.cache_lock(), "Cannot determine cache lock")?;
+					let lock = ctx!(task, task.target.cache_lock(), "Cannot determine cache lock")?;
 					let hash = format!("{:x}", cha.hash_u128());
 					ctx!(task, Local::regular(&lock).write(hash).await, "Cannot lock cache")?;
 
@@ -403,7 +403,7 @@ impl File {
 	pub(crate) async fn upload_do(&self, task: FileInUpload) -> Result<(), FileOutUploadDo> {
 		let cha = task.cha.unwrap();
 		let cache = ctx!(task, task.cache.as_ref(), "Cannot determine cache path")?;
-		let lock = ctx!(task, task.url.cache_lock(), "Cannot determine cache lock")?;
+		let lock = ctx!(task, task.target.cache_lock(), "Cannot determine cache lock")?;
 
 		let hash = ctx!(task, Local::regular(&lock).read_to_string().await, "Cannot read cache lock")?;
 		let hash = ctx!(task, u128::from_str_radix(&hash, 16), "Cannot parse hash from lock")?;
@@ -412,7 +412,7 @@ impl File {
 		}
 
 		let tmp =
-			ctx!(task, Transaction::tmp(&task.url).await, "Cannot determine temporary upload path")?;
+			ctx!(task, Transaction::tmp(&task.target).await, "Cannot determine temporary upload path")?;
 		let mut it = ctx!(
 			task,
 			provider::copy_with_progress(cache, &tmp, Attrs {
@@ -428,15 +428,15 @@ impl File {
 			match progress_or_break!(it, task.done) {
 				Ok(0) => {
 					let cha =
-						ctx!(task, Self::cha(&task.url, true, None).await, "Cannot stat original file")?;
+						ctx!(task, Self::cha(&task.target, true, None).await, "Cannot stat original file")?;
 					if hash != cha.hash_u128() {
 						Err(anyhow!("Failed to work on: {task:?}: remote file has changed during upload"))?;
 					}
 
-					ctx!(task, provider::rename(&tmp, &task.url).await, "Cannot persist uploaded file")?;
+					ctx!(task, provider::rename(&tmp, &task.target).await, "Cannot persist uploaded file")?;
 
 					let cha =
-						ctx!(task, Self::cha(&task.url, true, None).await, "Cannot stat uploaded file")?;
+						ctx!(task, Self::cha(&task.target, true, None).await, "Cannot stat uploaded file")?;
 					let hash = format!("{:x}", cha.hash_u128());
 					ctx!(task, Local::regular(&lock).write(hash).await, "Cannot lock cache")?;
 

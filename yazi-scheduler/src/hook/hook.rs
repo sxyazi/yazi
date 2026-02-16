@@ -68,6 +68,11 @@ impl Hook {
 	}
 
 	pub(crate) async fn download(&self, task: HookInDownload) {
+		let intact = self.ongoing.lock().intact(task.id);
+		if intact {
+			TasksProxy::update_succeed([&task.target]);
+			Pump::push_download(task.target);
+		}
 		self.ops.out(task.id, FileOutDownload::Clean);
 	}
 

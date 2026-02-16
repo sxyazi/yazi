@@ -112,15 +112,15 @@ impl Traverse for FileInDownload {
 
 	fn follow(&self) -> bool { true }
 
-	fn from(&self) -> Url<'_> { self.url.as_url() }
+	fn from(&self) -> Url<'_> { self.target.as_url() }
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
 		Self {
-			id:    self.id,
-			url:   from,
-			cha:   Some(cha),
-			retry: self.retry,
-			done:  self.done.clone(),
+			id:     self.id,
+			target: from,
+			cha:    Some(cha),
+			retry:  self.retry,
+			done:   self.done.clone(),
 		}
 	}
 
@@ -132,25 +132,25 @@ impl Traverse for FileInUpload {
 
 	fn follow(&self) -> bool { true }
 
-	fn from(&self) -> Url<'_> { self.url.as_url() }
+	fn from(&self) -> Url<'_> { self.target.as_url() }
 
 	async fn init(&mut self) -> anyhow::Result<Cha> {
 		if self.cha.is_none() {
 			self.cha = Some(super::File::cha(self.from(), self.follow(), None).await?)
 		}
 		if self.cache.is_none() {
-			self.cache = self.url.cache();
+			self.cache = self.target.cache();
 		}
 		Ok(self.cha.unwrap())
 	}
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
 		Self {
-			id:    self.id,
-			cha:   Some(cha),
-			cache: from.cache(),
-			url:   from,
-			done:  self.done.clone(),
+			id:     self.id,
+			cha:    Some(cha),
+			cache:  from.cache(),
+			target: from,
+			done:   self.done.clone(),
 		}
 	}
 

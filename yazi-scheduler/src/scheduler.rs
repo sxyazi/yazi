@@ -147,14 +147,14 @@ impl Scheduler {
 		self.file.submit(FileInTrash { id: task.id, target }, LOW);
 	}
 
-	pub fn file_download(&self, url: UrlBuf) -> CompletionToken {
+	pub fn file_download(&self, target: UrlBuf) -> CompletionToken {
 		let mut ongoing = self.ongoing.lock();
-		let task = ongoing.add::<FileProgDownload>(format!("Download {}", url.display()));
+		let task = ongoing.add::<FileProgDownload>(format!("Download {}", target.display()));
 
-		if url.kind().is_remote() {
-			task.set_hook(HookInDownload { id: task.id });
+		if target.kind().is_remote() {
+			task.set_hook(HookInDownload { id: task.id, target: target.clone() });
 			self.file.submit(
-				FileInDownload { id: task.id, url, cha: None, retry: 0, done: task.done.clone() },
+				FileInDownload { id: task.id, target, cha: None, retry: 0, done: task.done.clone() },
 				LOW,
 			);
 		} else {
@@ -164,19 +164,19 @@ impl Scheduler {
 		task.done.clone()
 	}
 
-	pub fn file_upload(&self, url: UrlBuf) {
+	pub fn file_upload(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let task = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
+		let task = ongoing.add::<FileProgUpload>(format!("Upload {}", target.display()));
 
-		if !url.kind().is_remote() {
+		if !target.kind().is_remote() {
 			return self
 				.ops
 				.out(task.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 
-		task.set_hook(HookInUpload { id: task.id, target: url.clone() });
+		task.set_hook(HookInUpload { id: task.id, target: target.clone() });
 		self.file.submit(
-			FileInUpload { id: task.id, url, cha: None, cache: None, done: task.done.clone() },
+			FileInUpload { id: task.id, target, cha: None, cache: None, done: task.done.clone() },
 			LOW,
 		);
 	}
