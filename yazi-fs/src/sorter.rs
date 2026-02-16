@@ -112,8 +112,11 @@ impl FilesSorter {
 		}
 
 		match self.fallback {
-			SortFallback::Alphabetical => self.sort_alphabetically(a, b),
-			SortFallback::Natural => self.sort_naturally(a, b),
+			SortFallback::Alphabetical => self.cmp(a.urn().encoded_bytes(), b.urn().encoded_bytes()),
+			SortFallback::Natural => {
+				let ord = natsort(a.urn().encoded_bytes(), b.urn().encoded_bytes(), false);
+				if self.reverse { ord.reverse() } else { ord }
+			}
 		}
 	}
 

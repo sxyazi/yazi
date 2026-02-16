@@ -335,17 +335,17 @@ impl File {
 	) -> Result<(), FileOutDownloadDo> {
 		let cha = task.cha.unwrap();
 
-		let cache = ctx!(task, task.url.cache(), "Cannot determine cache path")?;
+		let cache = ctx!(task, task.target.cache(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
-		let mut it = ctx!(task, provider::copy_with_progress(&task.url, &cache_tmp, cha).await)?;
+		let mut it = ctx!(task, provider::copy_with_progress(&task.target, &cache_tmp, cha).await)?;
 		loop {
 			match progress_or_break!(it, task.done) {
 				Ok(0) => {
 					Local::regular(&cache).remove_dir_all().await.ok();
 					ctx!(task, provider::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
 
-					let lock = ctx!(task, task.url.cache_lock(), "Cannot determine cache lock")?;
+					let lock = ctx!(task, task.target.cache_lock(), "Cannot determine cache lock")?;
 					let hash = format!("{:x}", cha.hash_u128());
 					ctx!(task, Local::regular(&lock).write(hash).await, "Cannot lock cache")?;
 

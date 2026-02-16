@@ -95,7 +95,8 @@ pub(crate) struct HookInTrash {
 // --- Download
 #[derive(Debug)]
 pub(crate) struct HookInDownload {
-	pub(crate) id: Id,
+	pub(crate) id:     Id,
+	pub(crate) target: UrlBuf,
 }
 
 // --- Upload

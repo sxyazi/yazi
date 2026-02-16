@@ -165,5 +165,7 @@ impl Pubsub {
 
 	pub_after!(delete(urls: Vec<UrlBuf>), (&urls), (urls));
 
+	pub_after!(download(urls: Vec<UrlBuf>), (&urls), (urls));
+
 	pub_after!(mount(), ());
 }

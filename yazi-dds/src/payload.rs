@@ -113,6 +113,7 @@ impl Display for Payload<'_> {
 			Ember::Move(b) => serde_json::to_string(b),
 			Ember::Trash(b) => serde_json::to_string(b),
 			Ember::Delete(b) => serde_json::to_string(b),
+			Ember::Download(b) => serde_json::to_string(b),
 			Ember::Mount(b) => serde_json::to_string(b),
 			Ember::Custom(b) => serde_json::to_string(b),
 		};

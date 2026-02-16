@@ -18,9 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
 - New `sort_fallback` option to control fallback sorting behavior ([#3077])
 - New `fs.access()` API to access the filesystem ([#3668])
-- New `relay-notify-push` DDS event to customize notification handlers ([#3642])
+- New `relay-notify-push` DDS event to customize the notification handler ([#3642])
 - New `ind-app-title` DDS event to customize the app title ([#3684])
 - New `fs.unique()` creates a unique file or directory ([#3677])
+- New `download` DDS event fires when remote files are downloaded
 - New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 

@@ -112,15 +112,15 @@ impl Traverse for FileInDownload {
 
 	fn follow(&self) -> bool { true }
 
-	fn from(&self) -> Url<'_> { self.url.as_url() }
+	fn from(&self) -> Url<'_> { self.target.as_url() }
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
 		Self {
-			id:    self.id,
-			url:   from,
-			cha:   Some(cha),
-			retry: self.retry,
-			done:  self.done.clone(),
+			id:     self.id,
+			target: from,
+			cha:    Some(cha),
+			retry:  self.retry,
+			done:   self.done.clone(),
 		}
 	}
 

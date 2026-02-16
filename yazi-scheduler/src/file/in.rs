@@ -187,11 +187,11 @@ pub(crate) struct FileInTrash {
 // --- Download
 #[derive(Clone, Debug)]
 pub(crate) struct FileInDownload {
-	pub(crate) id:    Id,
-	pub(crate) url:   UrlBuf,
-	pub(crate) cha:   Option<Cha>,
-	pub(crate) retry: u8,
-	pub(crate) done:  CompletionToken,
+	pub(crate) id:     Id,
+	pub(crate) target: UrlBuf,
+	pub(crate) cha:    Option<Cha>,
+	pub(crate) retry:  u8,
+	pub(crate) done:   CompletionToken,
 }
 
 // --- Upload
