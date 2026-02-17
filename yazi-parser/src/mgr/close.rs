@@ -1,15 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 use crate::app::QuitOpt;
 
 #[derive(Debug, Default)]
 pub struct CloseOpt(pub QuitOpt);
 
-impl TryFrom<CmdCow> for CloseOpt {
+impl TryFrom<ActionCow> for CloseOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(c: CmdCow) -> Result<Self, Self::Error> { c.try_into().map(Self) }
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { a.try_into().map(Self) }
 }
 
 impl FromLua for CloseOpt {

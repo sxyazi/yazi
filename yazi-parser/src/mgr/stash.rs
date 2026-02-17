@@ -2,7 +2,7 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::{SER_OPT, Url};
-use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 use crate::mgr::{CdOpt, CdSource};
 
@@ -12,10 +12,10 @@ pub struct StashOpt {
 	pub source: CdSource,
 }
 
-impl TryFrom<CmdCow> for StashOpt {
+impl TryFrom<ActionCow> for StashOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(_: CmdCow) -> Result<Self, Self::Error> { bail!("unsupported") }
+	fn try_from(_: ActionCow) -> Result<Self, Self::Error> { bail!("unsupported") }
 }
 
 impl From<CdOpt> for StashOpt {

@@ -6,7 +6,7 @@ use tracing::warn;
 use yazi_actor::Ctx;
 use yazi_config::keymap::Key;
 use yazi_macro::{act, emit, succ};
-use yazi_shared::{data::Data, event::{CmdCow, Event, NEED_RENDER}};
+use yazi_shared::{data::Data, event::{ActionCow, Event, NEED_RENDER}};
 use yazi_widgets::input::InputMode;
 
 use crate::{Executor, Router, app::App};
@@ -22,8 +22,8 @@ impl<'a> Dispatcher<'a> {
 	#[inline]
 	pub(super) fn dispatch(&mut self, event: Event) -> Result<()> {
 		let result = match event {
-			Event::Call(cmd) => self.dispatch_call(cmd),
-			Event::Seq(cmds) => self.dispatch_seq(cmds),
+			Event::Call(action) => self.dispatch_call(action),
+			Event::Seq(actions) => self.dispatch_seq(actions),
 			Event::Render(partial) => self.dispatch_render(partial),
 			Event::Key(key) => self.dispatch_key(key),
 			Event::Mouse(mouse) => self.dispatch_mouse(mouse),
@@ -39,15 +39,17 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	#[inline]
-	fn dispatch_call(&mut self, cmd: CmdCow) -> Result<Data> { Executor::new(self.app).execute(cmd) }
+	fn dispatch_call(&mut self, action: ActionCow) -> Result<Data> {
+		Executor::new(self.app).execute(action)
+	}
 
 	#[inline]
-	fn dispatch_seq(&mut self, mut cmds: Vec<CmdCow>) -> Result<Data> {
-		if let Some(last) = cmds.pop() {
+	fn dispatch_seq(&mut self, mut actions: Vec<ActionCow>) -> Result<Data> {
+		if let Some(last) = actions.pop() {
 			self.dispatch_call(last)?;
 		}
-		if !cmds.is_empty() {
-			emit!(Seq(cmds));
+		if !actions.is_empty() {
+			emit!(Seq(actions));
 		}
 		succ!();
 	}

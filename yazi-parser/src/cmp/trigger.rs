@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, SStr, event::CmdCow};
+use yazi_shared::{Id, SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct TriggerOpt {
@@ -7,9 +7,9 @@ pub struct TriggerOpt {
 	pub ticket: Option<Id>,
 }
 
-impl From<CmdCow> for TriggerOpt {
-	fn from(mut c: CmdCow) -> Self {
-		Self { word: c.take_first().unwrap_or_default(), ticket: c.get("ticket").ok() }
+impl From<ActionCow> for TriggerOpt {
+	fn from(mut a: ActionCow) -> Self {
+		Self { word: a.take_first().unwrap_or_default(), ticket: a.get("ticket").ok() }
 	}
 }
 

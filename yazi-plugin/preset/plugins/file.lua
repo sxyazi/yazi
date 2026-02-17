@@ -1,15 +1,15 @@
 local M = {}
 
 function M:peek(job)
-	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
+	local program = os.getenv("YAZI_FILE_ONE") or "file"
 	local path = tostring(job.file.path)
-	local output, err = Command(cmd):arg({ "-bL", "--", path }):output()
+	local output, err = Command(program):arg({ "-bL", "--", path }):output()
 
 	local text
 	if output then
 		text = ui.Text.parse("----- File Type Classification -----\n\n" .. output.stdout)
 	else
-		text = ui.Text(string.format("Failed to start `%s`, error: %s", cmd, err))
+		text = ui.Text(string.format("Failed to start `%s`, error: %s", program, err))
 	end
 
 	ya.preview_widget(job, text:area(job.area):wrap(ui.Wrap.YES))

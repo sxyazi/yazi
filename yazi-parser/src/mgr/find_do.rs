@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Clone, Debug)]
 pub struct FindDoOpt {
@@ -10,19 +10,19 @@ pub struct FindDoOpt {
 	pub case:  FilterCase,
 }
 
-impl TryFrom<CmdCow> for FindDoOpt {
+impl TryFrom<ActionCow> for FindDoOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}
 
-		let Ok(query) = c.take_first() else {
+		let Ok(query) = a.take_first() else {
 			bail!("Invalid 'query' in FindDoOpt");
 		};
 
-		Ok(Self { query, prev: c.bool("previous"), case: FilterCase::from(&*c) })
+		Ok(Self { query, prev: a.bool("previous"), case: FilterCase::from(&*a) })
 	}
 }
 

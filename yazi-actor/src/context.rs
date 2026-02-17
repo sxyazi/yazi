@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}, tasks::Tasks};
 use yazi_fs::File;
-use yazi_shared::{Id, Source, event::Cmd, url::UrlBuf};
+use yazi_shared::{Id, Source, event::Action, url::UrlBuf};
 use yazi_term::Term;
 
 pub struct Ctx<'a> {
@@ -28,8 +28,8 @@ impl DerefMut for Ctx<'_> {
 
 impl<'a> Ctx<'a> {
 	#[inline]
-	pub fn new(cmd: &Cmd, core: &'a mut Core, term: &'a mut Option<Term>) -> Result<Self> {
-		let tab = if let Ok(id) = cmd.get::<Id>("tab") {
+	pub fn new(action: &Action, core: &'a mut Core, term: &'a mut Option<Term>) -> Result<Self> {
+		let tab = if let Ok(id) = action.get::<Id>("tab") {
 			core
 				.mgr
 				.tabs
@@ -45,7 +45,7 @@ impl<'a> Ctx<'a> {
 			term,
 			tab,
 			level: 0,
-			source: cmd.source,
+			source: action.source,
 			#[cfg(debug_assertions)]
 			backtrace: vec![],
 		})

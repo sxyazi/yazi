@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct SearchOpt {
@@ -13,18 +13,18 @@ pub struct SearchOpt {
 	pub args_raw: SStr,
 }
 
-impl TryFrom<CmdCow> for SearchOpt {
+impl TryFrom<ActionCow> for SearchOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
 		// TODO: remove this
-		let (via, subject) = if let Ok(s) = c.get("via") {
-			(str::parse(s)?, c.take_first().unwrap_or_default())
+		let (via, subject) = if let Ok(s) = a.get("via") {
+			(str::parse(s)?, a.take_first().unwrap_or_default())
 		} else {
-			(c.str(0).parse()?, "".into())
+			(a.str(0).parse()?, "".into())
 		};
 
-		let Ok(args) = yazi_shared::shell::unix::split(c.str("args"), false) else {
+		let Ok(args) = yazi_shared::shell::unix::split(a.str("args"), false) else {
 			bail!("Invalid 'args' in SearchOpt");
 		};
 
@@ -33,7 +33,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 			subject,
 			// TODO: use second positional argument instead of `args` parameter
 			args: args.0,
-			args_raw: c.take("args").unwrap_or_default(),
+			args_raw: a.take("args").unwrap_or_default(),
 		})
 	}
 }

@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{CompletionToken, event::CmdCow, url::UrlCow};
+use yazi_shared::{CompletionToken, event::ActionCow, url::UrlCow};
 
 // --- Exec
 #[derive(Clone, Debug)]
@@ -17,11 +17,11 @@ pub struct ProcessOpenOpt {
 	pub spread: bool, // TODO: remove
 }
 
-impl TryFrom<CmdCow> for ProcessOpenOpt {
+impl TryFrom<ActionCow> for ProcessOpenOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		c.take_any("opt").ok_or_else(|| anyhow!("Missing 'opt' in ProcessOpenOpt"))
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		a.take_any("opt").ok_or_else(|| anyhow!("Missing 'opt' in ProcessOpenOpt"))
 	}
 }
 

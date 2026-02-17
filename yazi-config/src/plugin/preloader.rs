@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::Action;
 
 use crate::{Pattern, Priority};
 
@@ -11,7 +11,7 @@ pub struct Preloader {
 
 	pub url:  Option<Pattern>,
 	pub mime: Option<Pattern>,
-	pub run:  Cmd,
+	pub run:  Action,
 	#[serde(default)]
 	pub next: bool,
 	#[serde(default)]

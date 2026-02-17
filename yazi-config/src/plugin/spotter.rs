@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::Action;
 
 use crate::Pattern;
 
@@ -8,7 +8,7 @@ use crate::Pattern;
 pub struct Spotter {
 	pub url:  Option<Pattern>,
 	pub mime: Option<Pattern>,
-	pub run:  Cmd,
+	pub run:  Action,
 }
 
 impl Spotter {

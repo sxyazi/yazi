@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Clone, Debug)]
 pub struct DisplaceDoOpt {
@@ -8,11 +8,11 @@ pub struct DisplaceDoOpt {
 	pub from: UrlBuf,
 }
 
-impl TryFrom<CmdCow> for DisplaceDoOpt {
+impl TryFrom<ActionCow> for DisplaceDoOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			opt
 		} else {
 			bail!("Invalid 'opt' in DisplaceDoOpt");

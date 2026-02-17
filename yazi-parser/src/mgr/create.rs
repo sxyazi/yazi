@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct CreateOpt {
@@ -7,8 +7,8 @@ pub struct CreateOpt {
 	pub force: bool,
 }
 
-impl From<CmdCow> for CreateOpt {
-	fn from(c: CmdCow) -> Self { Self { dir: c.bool("dir"), force: c.bool("force") } }
+impl From<ActionCow> for CreateOpt {
+	fn from(a: ActionCow) -> Self { Self { dir: a.bool("dir"), force: a.bool("force") } }
 }
 
 impl FromLua for CreateOpt {

@@ -2,7 +2,7 @@ use std::{fmt::Display, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
-use yazi_shared::{event::Cmd, strand::AsStrand};
+use yazi_shared::{event::Action, strand::AsStrand};
 
 pub struct Filter {
 	raw:   String,
@@ -53,9 +53,9 @@ pub enum FilterCase {
 	Insensitive,
 }
 
-impl From<&Cmd> for FilterCase {
-	fn from(c: &Cmd) -> Self {
-		match (c.bool("smart"), c.bool("insensitive")) {
+impl From<&Action> for FilterCase {
+	fn from(a: &Action) -> Self {
+		match (a.bool("smart"), a.bool("insensitive")) {
 			(true, _) => Self::Smart,
 			(_, false) => Self::Sensitive,
 			(_, true) => Self::Insensitive,

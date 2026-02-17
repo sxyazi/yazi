@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct KillOpt {
 	pub kind: SStr,
 }
 
-impl From<CmdCow> for KillOpt {
-	fn from(mut c: CmdCow) -> Self { Self { kind: c.take_first().unwrap_or_default() } }
+impl From<ActionCow> for KillOpt {
+	fn from(mut a: ActionCow) -> Self { Self { kind: a.take_first().unwrap_or_default() } }
 }
 
 impl FromLua for KillOpt {

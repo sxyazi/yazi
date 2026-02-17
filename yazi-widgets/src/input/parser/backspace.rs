@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default)]
 pub struct BackspaceOpt {
 	pub under: bool,
 }
 
-impl From<CmdCow> for BackspaceOpt {
-	fn from(c: CmdCow) -> Self { Self { under: c.bool("under") } }
+impl From<ActionCow> for BackspaceOpt {
+	fn from(a: ActionCow) -> Self { Self { under: a.bool("under") } }
 }
 
 impl From<bool> for BackspaceOpt {

@@ -1,7 +1,7 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use tokio::sync::mpsc;
 use yazi_config::{KEYMAP, keymap::{ChordCow, Key}};
-use yazi_shared::{Layer, event::CmdCow};
+use yazi_shared::{Layer, event::ActionCow};
 
 #[derive(Clone, Debug)]
 pub struct ActivateOpt {
@@ -11,19 +11,19 @@ pub struct ActivateOpt {
 	pub times:  usize,
 }
 
-impl TryFrom<CmdCow> for ActivateOpt {
+impl TryFrom<ActionCow> for ActivateOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}
 
 		Ok(Self {
-			tx:     c.take_any2("tx").transpose()?,
-			cands:  c.take_any_iter::<yazi_binding::ChordCow>().map(Into::into).collect(),
-			silent: c.bool("silent"),
-			times:  c.get("times").unwrap_or(0),
+			tx:     a.take_any2("tx").transpose()?,
+			cands:  a.take_any_iter::<yazi_binding::ChordCow>().map(Into::into).collect(),
+			silent: a.bool("silent"),
+			times:  a.get("times").unwrap_or(0),
 		})
 	}
 }

@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct FindArrowOpt {
 	pub prev: bool,
 }
 
-impl From<CmdCow> for FindArrowOpt {
-	fn from(c: CmdCow) -> Self { Self { prev: c.bool("previous") } }
+impl From<ActionCow> for FindArrowOpt {
+	fn from(a: ActionCow) -> Self { Self { prev: a.bool("previous") } }
 }
 
 impl FromLua for FindArrowOpt {

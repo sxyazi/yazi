@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct RemoveOpt {
@@ -9,13 +9,13 @@ pub struct RemoveOpt {
 	pub targets:     Vec<UrlBuf>,
 }
 
-impl From<CmdCow> for RemoveOpt {
-	fn from(mut c: CmdCow) -> Self {
+impl From<ActionCow> for RemoveOpt {
+	fn from(mut a: ActionCow) -> Self {
 		Self {
-			force:       c.bool("force"),
-			permanently: c.bool("permanently"),
-			hovered:     c.bool("hovered"),
-			targets:     c.take_any("targets").unwrap_or_default(),
+			force:       a.bool("force"),
+			permanently: a.bool("permanently"),
+			hovered:     a.bool("hovered"),
+			targets:     a.take_any("targets").unwrap_or_default(),
 		}
 	}
 }

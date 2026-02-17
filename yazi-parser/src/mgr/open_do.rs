@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Clone, Debug, Default)]
 pub struct OpenDoOpt {
@@ -9,11 +9,11 @@ pub struct OpenDoOpt {
 	pub interactive: bool,
 }
 
-impl TryFrom<CmdCow> for OpenDoOpt {
+impl TryFrom<ActionCow> for OpenDoOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			opt
 		} else {
 			bail!("Invalid 'opt' in OpenDoOpt");

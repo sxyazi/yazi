@@ -1,22 +1,22 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use yazi_binding::{FileRef, elements::Renderable};
-use yazi_shared::{Id, event::CmdCow};
+use yazi_shared::{Id, event::ActionCow};
 
 #[derive(Clone, Debug)]
 pub struct UpdateSpottedOpt {
 	pub lock: SpotLock,
 }
 
-impl TryFrom<CmdCow> for UpdateSpottedOpt {
+impl TryFrom<ActionCow> for UpdateSpottedOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}
 
-		let Some(lock) = c.take_any("lock") else {
+		let Some(lock) = a.take_any("lock") else {
 			bail!("Invalid 'lock' in UpdateSpottedOpt");
 		};
 

@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default)]
 pub struct SpotOpt {
 	pub skip: Option<usize>,
 }
 
-impl From<CmdCow> for SpotOpt {
-	fn from(c: CmdCow) -> Self { Self { skip: c.get("skip").ok() } }
+impl From<ActionCow> for SpotOpt {
+	fn from(a: ActionCow) -> Self { Self { skip: a.get("skip").ok() } }
 }
 
 impl From<usize> for SpotOpt {

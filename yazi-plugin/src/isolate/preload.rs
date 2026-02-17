@@ -4,22 +4,22 @@ use tokio_util::sync::CancellationToken;
 use yazi_binding::{Error, File, elements::Rect};
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::Action;
 
 use super::slim_lua;
 use crate::loader::LOADER;
 
 pub async fn preload(
-	cmd: &'static Cmd,
+	action: &'static Action,
 	file: yazi_fs::File,
 	ct: CancellationToken,
 ) -> mlua::Result<(bool, Option<Error>)> {
 	let ct_ = ct.clone();
 	tokio::task::spawn_blocking(move || {
 		let future = async {
-			LOADER.ensure(&cmd.name, |_| ()).await.into_lua_err()?;
+			LOADER.ensure(&action.name, |_| ()).await.into_lua_err()?;
 
-			let lua = slim_lua(&cmd.name)?;
+			let lua = slim_lua(&action.name)?;
 			lua.set_hook(
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 				move |_, dbg| {
@@ -31,10 +31,10 @@ pub async fn preload(
 				},
 			)?;
 
-			let plugin = LOADER.load(&lua, &cmd.name).await?;
+			let plugin = LOADER.load(&lua, &action.name).await?;
 			let job = lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
-				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
+				("args", Sendable::args_to_table_ref(&lua, &action.args)?.into_lua(&lua)?),
 				("file", File::new(file).into_lua(&lua)?),
 				("skip", 0.into_lua(&lua)?),
 			])?;

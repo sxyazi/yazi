@@ -2,18 +2,18 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use ordered_float::OrderedFloat;
 use serde::Serialize;
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct UpdateProgressOpt {
 	pub summary: TaskSummary,
 }
 
-impl TryFrom<CmdCow> for UpdateProgressOpt {
+impl TryFrom<ActionCow> for UpdateProgressOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Some(summary) = c.take_any("summary") else {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let Some(summary) = a.take_any("summary") else {
 			bail!("Invalid 'summary' in UpdateProgressOpt");
 		};
 

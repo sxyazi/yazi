@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default)]
 pub struct CloseOpt {
 	pub submit: bool,
 }
 
-impl From<CmdCow> for CloseOpt {
-	fn from(c: CmdCow) -> Self { Self { submit: c.bool("submit") } }
+impl From<ActionCow> for CloseOpt {
+	fn from(a: ActionCow) -> Self { Self { submit: a.bool("submit") } }
 }
 
 impl From<bool> for CloseOpt {

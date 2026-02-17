@@ -2,7 +2,7 @@ use std::{fmt, str::FromStr};
 
 use anyhow::Result;
 use serde::{Deserializer, de::{self, Visitor}};
-use yazi_shared::event::Cmd;
+use yazi_shared::event::Action;
 
 use crate::keymap::Key;
 
@@ -23,14 +23,14 @@ where
 		where
 			A: de::SeqAccess<'de>,
 		{
-			let mut cmds = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+			let mut keys = Vec::with_capacity(seq.size_hint().unwrap_or(0));
 			while let Some(value) = &seq.next_element::<String>()? {
-				cmds.push(Key::from_str(value).map_err(de::Error::custom)?);
+				keys.push(Key::from_str(value).map_err(de::Error::custom)?);
 			}
-			if cmds.is_empty() {
+			if keys.is_empty() {
 				return Err(de::Error::custom("`on` within keymap.toml cannot be empty"));
 			}
-			Ok(cmds)
+			Ok(keys)
 		}
 
 		fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
@@ -44,14 +44,14 @@ where
 	deserializer.deserialize_any(OnVisitor)
 }
 
-pub(super) fn deserialize_run<'de, D>(deserializer: D) -> Result<Vec<Cmd>, D::Error>
+pub(super) fn deserialize_run<'de, D>(deserializer: D) -> Result<Vec<Action>, D::Error>
 where
 	D: Deserializer<'de>,
 {
 	struct RunVisitor;
 
 	impl<'de> Visitor<'de> for RunVisitor {
-		type Value = Vec<Cmd>;
+		type Value = Vec<Action>;
 
 		fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
 			formatter.write_str("a `run` string or array of strings within keymap.toml")
@@ -61,21 +61,21 @@ where
 		where
 			A: de::SeqAccess<'de>,
 		{
-			let mut cmds = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+			let mut actions = Vec::with_capacity(seq.size_hint().unwrap_or(0));
 			while let Some(value) = &seq.next_element::<String>()? {
-				cmds.push(Cmd::from_str(value).map_err(de::Error::custom)?);
+				actions.push(Action::from_str(value).map_err(de::Error::custom)?);
 			}
-			if cmds.is_empty() {
+			if actions.is_empty() {
 				return Err(de::Error::custom("`run` within keymap.toml cannot be empty"));
 			}
-			Ok(cmds)
+			Ok(actions)
 		}
 
 		fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
 		where
 			E: de::Error,
 		{
-			Ok(vec![Cmd::from_str(value).map_err(de::Error::custom)?])
+			Ok(vec![Action::from_str(value).map_err(de::Error::custom)?])
 		}
 	}
 
