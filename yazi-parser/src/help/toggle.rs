@@ -1,15 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Layer, event::CmdCow};
+use yazi_shared::{Layer, event::ActionCow};
 
 #[derive(Debug)]
 pub struct ToggleOpt {
 	pub layer: Layer,
 }
 
-impl TryFrom<CmdCow> for ToggleOpt {
+impl TryFrom<ActionCow> for ToggleOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(c: CmdCow) -> Result<Self, Self::Error> { Ok(Self { layer: c.str(0).parse()? }) }
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(Self { layer: a.str(0).parse()? }) }
 }
 
 impl From<Layer> for ToggleOpt {

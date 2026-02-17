@@ -2,17 +2,17 @@ use std::{iter, ops::Deref};
 
 use anyhow::Result;
 
-use super::Cmd;
+use super::Action;
 use crate::data::{Data, DataKey};
 
 #[derive(Debug)]
-pub enum CmdCow {
-	Owned(Cmd),
-	Borrowed(&'static Cmd),
+pub enum ActionCow {
+	Owned(Action),
+	Borrowed(&'static Action),
 }
 
-impl Deref for CmdCow {
-	type Target = Cmd;
+impl Deref for ActionCow {
+	type Target = Action;
 
 	fn deref(&self) -> &Self::Target {
 		match self {
@@ -22,19 +22,19 @@ impl Deref for CmdCow {
 	}
 }
 
-impl From<CmdCow> for () {
-	fn from(_: CmdCow) -> Self { () }
+impl From<ActionCow> for () {
+	fn from(_: ActionCow) -> Self { () }
 }
 
-impl From<Cmd> for CmdCow {
-	fn from(c: Cmd) -> Self { Self::Owned(c) }
+impl From<Action> for ActionCow {
+	fn from(a: Action) -> Self { Self::Owned(a) }
 }
 
-impl From<&'static Cmd> for CmdCow {
-	fn from(c: &'static Cmd) -> Self { Self::Borrowed(c) }
+impl From<&'static Action> for ActionCow {
+	fn from(a: &'static Action) -> Self { Self::Borrowed(a) }
 }
 
-impl CmdCow {
+impl ActionCow {
 	pub fn take<'a, T>(&mut self, name: impl Into<DataKey>) -> Result<T>
 	where
 		T: TryFrom<Data> + TryFrom<&'a Data>,

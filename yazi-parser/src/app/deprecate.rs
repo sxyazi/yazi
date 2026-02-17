@@ -1,17 +1,17 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct DeprecateOpt {
 	pub content: SStr,
 }
 
-impl TryFrom<CmdCow> for DeprecateOpt {
+impl TryFrom<ActionCow> for DeprecateOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Ok(content) = c.take("content") else {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let Ok(content) = a.take("content") else {
 			bail!("Invalid 'content' in DeprecateOpt");
 		};
 

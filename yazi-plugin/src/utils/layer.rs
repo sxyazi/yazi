@@ -37,8 +37,8 @@ impl Utils {
 				.await
 				.iter()
 				.flat_map(|chord| &chord.run)
-				.find(|cmd| cmd.layer == Layer::Which && cmd.name == "callback")
-				.and_then(|cmd| cmd.first().ok());
+				.find(|action| action.layer == Layer::Which && action.name == "callback")
+				.and_then(|action| action.first().ok());
 
 			Ok(idx)
 		})

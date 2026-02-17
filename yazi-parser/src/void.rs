@@ -1,11 +1,11 @@
 use mlua::{FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct VoidOpt;
 
-impl From<CmdCow> for VoidOpt {
-	fn from(_: CmdCow) -> Self { Self }
+impl From<ActionCow> for VoidOpt {
+	fn from(_: ActionCow) -> Self { Self }
 }
 
 impl From<()> for VoidOpt {

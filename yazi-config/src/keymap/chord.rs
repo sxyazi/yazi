@@ -3,7 +3,7 @@ use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
 use anyhow::Result;
 use regex::Regex;
 use serde::Deserialize;
-use yazi_shared::{Layer, Source, event::Cmd};
+use yazi_shared::{Layer, Source, event::Action};
 
 use super::Key;
 
@@ -14,7 +14,7 @@ pub struct Chord {
 	#[serde(deserialize_with = "super::deserialize_on")]
 	pub on:    Vec<Key>,
 	#[serde(deserialize_with = "super::deserialize_run")]
-	pub run:   Vec<Cmd>,
+	pub run:   Vec<Action>,
 	pub desc:  Option<String>,
 	pub r#for: Option<String>,
 }
@@ -59,10 +59,10 @@ impl Chord {
 
 impl Chord {
 	pub(super) fn reshape(mut self, layer: Layer) -> Result<Self> {
-		for cmd in &mut self.run {
-			cmd.source = Source::Key;
-			if cmd.layer == Default::default() {
-				cmd.layer = layer;
+		for action in &mut self.run {
+			action.source = Source::Key;
+			if action.layer == Default::default() {
+				action.layer = layer;
 			}
 		}
 		Ok(self)

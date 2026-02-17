@@ -1,7 +1,7 @@
 use std::{mem, ops::Deref};
 
 use futures::{FutureExt, future::BoxFuture};
-use mlua::{UserData, prelude::LuaUserDataMethods};
+use mlua::{UserData, UserDataMethods};
 use tokio::sync::SemaphorePermit;
 
 pub type PermitRef = mlua::UserDataRef<Permit>;
@@ -45,7 +45,7 @@ impl Drop for Permit {
 }
 
 impl UserData for Permit {
-	fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method_mut("drop", |_, mut me, ()| async move { Ok(me.dropping().await) });
 	}
 }

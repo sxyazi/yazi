@@ -5,7 +5,7 @@ use dyn_clone::DynClone;
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, data::{Data, DataKey}, event::{Cmd, CmdCow}};
+use yazi_shared::{SStr, data::{Data, DataKey}, event::{Action, ActionCow}};
 
 #[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
@@ -15,27 +15,27 @@ pub struct PluginOpt {
 	pub callback: Option<Box<dyn PluginCallback>>,
 }
 
-impl TryFrom<CmdCow> for PluginOpt {
+impl TryFrom<ActionCow> for PluginOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any("opt") {
 			return Ok(opt);
 		}
 
-		let Some(id) = c.take_first::<SStr>().ok().filter(|s| !s.is_empty()) else {
+		let Some(id) = a.take_first::<SStr>().ok().filter(|s| !s.is_empty()) else {
 			bail!("plugin id cannot be empty");
 		};
 
-		let args = if let Ok(s) = c.second() {
+		let args = if let Ok(s) = a.second() {
 			let (words, last) = yazi_shared::shell::unix::split(s, true)?;
-			Cmd::parse_args(words, last)?
+			Action::parse_args(words, last)?
 		} else {
 			Default::default()
 		};
 
-		let mode = c.str("mode").parse().unwrap_or_default();
-		Ok(Self { id: Self::normalize_id(id), args, mode, callback: c.take_any("callback") })
+		let mode = a.str("mode").parse().unwrap_or_default();
+		Ok(Self { id: Self::normalize_id(id), args, mode, callback: a.take_any("callback") })
 	}
 }
 

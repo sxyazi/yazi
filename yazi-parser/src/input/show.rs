@@ -2,7 +2,7 @@ use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 use yazi_widgets::input::InputError;
 
 #[derive(Debug)]
@@ -11,15 +11,15 @@ pub struct ShowOpt {
 	pub tx:  mpsc::UnboundedSender<Result<String, InputError>>,
 }
 
-impl TryFrom<CmdCow> for ShowOpt {
+impl TryFrom<ActionCow> for ShowOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Some(cfg) = c.take_any("cfg") else {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let Some(cfg) = a.take_any("cfg") else {
 			bail!("Invalid 'cfg' in ShowOpt");
 		};
 
-		let Some(tx) = c.take_any("tx") else {
+		let Some(tx) = a.take_any("tx") else {
 			bail!("Invalid 'tx' in ShowOpt");
 		};
 

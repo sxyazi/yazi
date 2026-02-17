@@ -167,7 +167,7 @@ impl Sendable {
 						Self::value_to_data(lua, v)?,
 					);
 				}
-				_ => return Err("invalid key in Cmd".into_lua_err()),
+				_ => return Err("invalid key in Action".into_lua_err()),
 			}
 		}
 		Ok(args)

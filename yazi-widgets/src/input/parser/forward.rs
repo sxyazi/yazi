@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct ForwardOpt {
@@ -7,8 +7,8 @@ pub struct ForwardOpt {
 	pub end_of_word: bool,
 }
 
-impl From<CmdCow> for ForwardOpt {
-	fn from(c: CmdCow) -> Self { Self { far: c.bool("far"), end_of_word: c.bool("end-of-word") } }
+impl From<ActionCow> for ForwardOpt {
+	fn from(a: ActionCow) -> Self { Self { far: a.bool("far"), end_of_word: a.bool("end-of-word") } }
 }
 
 impl FromLua for ForwardOpt {

@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{ExternalError, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 use yazi_widgets::Step;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -8,11 +8,11 @@ pub struct ArrowOpt {
 	pub step: Step,
 }
 
-impl TryFrom<CmdCow> for ArrowOpt {
+impl TryFrom<ActionCow> for ArrowOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
-		let Ok(step) = c.first() else {
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		let Ok(step) = a.first() else {
 			bail!("Invalid 'step' in ArrowOpt");
 		};
 

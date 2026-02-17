@@ -4,7 +4,7 @@ macro_rules! deprecate {
 		static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 		if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
 			$crate::emit!(Call(
-				yazi_shared::event::Cmd::new("app:deprecate").with("content", format!($tt, id))
+				yazi_shared::event::Action::new("app:deprecate").with("content", format!($tt, id))
 			));
 		}
 	}};

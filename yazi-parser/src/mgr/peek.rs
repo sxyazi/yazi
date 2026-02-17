@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct PeekOpt {
@@ -9,13 +9,13 @@ pub struct PeekOpt {
 	pub upper_bound: bool,
 }
 
-impl From<CmdCow> for PeekOpt {
-	fn from(mut c: CmdCow) -> Self {
+impl From<ActionCow> for PeekOpt {
+	fn from(mut a: ActionCow) -> Self {
 		Self {
-			skip:        c.first().ok(),
-			force:       c.bool("force"),
-			only_if:     c.take("only-if").ok(),
-			upper_bound: c.bool("upper-bound"),
+			skip:        a.first().ok(),
+			force:       a.bool("force"),
+			only_if:     a.take("only-if").ok(),
+			upper_bound: a.bool("upper-bound"),
 		}
 	}
 }

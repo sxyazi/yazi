@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct TabCloseOpt {
 	pub idx: usize,
 }
 
-impl From<CmdCow> for TabCloseOpt {
-	fn from(c: CmdCow) -> Self { Self { idx: c.first().unwrap_or(0) } }
+impl From<ActionCow> for TabCloseOpt {
+	fn from(a: ActionCow) -> Self { Self { idx: a.first().unwrap_or(0) } }
 }
 
 impl From<usize> for TabCloseOpt {

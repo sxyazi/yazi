@@ -1,18 +1,18 @@
 use anyhow::bail;
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{data::{Data, DataKey}, event::CmdCow};
+use yazi_shared::{data::{Data, DataKey}, event::ActionCow};
 
 #[derive(Debug)]
 pub struct UpdateMimesOpt {
 	pub updates: HashMap<DataKey, Data>,
 }
 
-impl TryFrom<CmdCow> for UpdateMimesOpt {
+impl TryFrom<ActionCow> for UpdateMimesOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Ok(updates) = c.take("updates") else {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let Ok(updates) = a.take("updates") else {
 			bail!("Invalid 'updates' in UpdateMimesOpt");
 		};
 

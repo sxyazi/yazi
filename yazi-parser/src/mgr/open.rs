@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Clone, Debug)]
 pub struct OpenOpt {
@@ -9,19 +9,19 @@ pub struct OpenOpt {
 	pub hovered:     bool,
 }
 
-impl TryFrom<CmdCow> for OpenOpt {
+impl TryFrom<ActionCow> for OpenOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}
 
 		Ok(Self {
-			cwd:         c.take("cwd").ok(),
-			targets:     c.take_seq(),
-			interactive: c.bool("interactive"),
-			hovered:     c.bool("hovered"),
+			cwd:         a.take("cwd").ok(),
+			targets:     a.take_seq(),
+			interactive: a.bool("interactive"),
+			hovered:     a.bool("hovered"),
 		})
 	}
 }

@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, event::CmdCow, path::PathBufDyn, strand::StrandBuf, url::UrlBuf};
+use yazi_shared::{Id, event::ActionCow, path::PathBufDyn, strand::StrandBuf, url::UrlBuf};
 
 #[derive(Clone, Debug)]
 pub struct ShowOpt {
@@ -10,11 +10,11 @@ pub struct ShowOpt {
 	pub ticket:     Id,
 }
 
-impl TryFrom<CmdCow> for ShowOpt {
+impl TryFrom<ActionCow> for ShowOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			opt
 		} else {
 			bail!("missing 'opt' argument");

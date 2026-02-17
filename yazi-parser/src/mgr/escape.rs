@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 bitflags! {
 	#[derive(Debug)]
@@ -13,9 +13,9 @@ bitflags! {
 	}
 }
 
-impl From<CmdCow> for EscapeOpt {
-	fn from(c: CmdCow) -> Self {
-		c.args.iter().fold(Self::empty(), |acc, (k, v)| {
+impl From<ActionCow> for EscapeOpt {
+	fn from(a: ActionCow) -> Self {
+		a.args.iter().fold(Self::empty(), |acc, (k, v)| {
 			match (k.as_str().unwrap_or(""), v.try_into().unwrap_or(false)) {
 				("all", true) => Self::all(),
 				("find", true) => acc | Self::FIND,

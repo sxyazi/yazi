@@ -5,7 +5,7 @@ use hashbrown::HashSet;
 use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::get_metatable;
-use yazi_shared::{event::CmdCow, url::UrlBufCov};
+use yazi_shared::{event::ActionCow, url::UrlBufCov};
 
 type Iter = yazi_binding::Iter<
 	std::iter::Map<hashbrown::hash_set::IntoIter<UrlBufCov>, fn(UrlBufCov) -> yazi_binding::Url>,
@@ -18,11 +18,11 @@ pub struct UpdateYankedOpt<'a> {
 	pub urls: Cow<'a, HashSet<UrlBufCov>>,
 }
 
-impl TryFrom<CmdCow> for UpdateYankedOpt<'_> {
+impl TryFrom<ActionCow> for UpdateYankedOpt<'_> {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			opt
 		} else {
 			bail!("Invalid 'opt' in UpdateYankedOpt");

@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use ratatui::widgets::Widget;
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_adapter::ADAPTOR;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
@@ -9,7 +9,7 @@ pub static COLLISION: AtomicBool = AtomicBool::new(false);
 pub struct Clear;
 
 impl Widget for Clear {
-	fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::prelude::Buffer)
+	fn render(self, area: Rect, buf: &mut Buffer)
 	where
 		Self: Sized,
 	{
@@ -29,11 +29,11 @@ impl Widget for Clear {
 	}
 }
 
-const fn is_overlapping(a: ratatui::layout::Rect, b: ratatui::layout::Rect) -> bool {
+const fn is_overlapping(a: Rect, b: Rect) -> bool {
 	a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
 }
 
-fn overlap(a: ratatui::layout::Rect, b: ratatui::layout::Rect) -> Option<ratatui::layout::Rect> {
+fn overlap(a: Rect, b: Rect) -> Option<Rect> {
 	if !is_overlapping(a, b) {
 		return None;
 	}
@@ -42,5 +42,5 @@ fn overlap(a: ratatui::layout::Rect, b: ratatui::layout::Rect) -> Option<ratatui
 	let y = a.y.max(b.y);
 	let width = (a.x + a.width).min(b.x + b.width) - x;
 	let height = (a.y + a.height).min(b.y + b.height) - y;
-	Some(ratatui::layout::Rect { x, y, width, height })
+	Some(Rect { x, y, width, height })
 }

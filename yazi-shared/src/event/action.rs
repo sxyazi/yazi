@@ -7,14 +7,14 @@ use serde::{Deserialize, de};
 use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}};
 
 #[derive(Clone, Debug, Default)]
-pub struct Cmd {
+pub struct Action {
 	pub name:   SStr,
 	pub args:   HashMap<DataKey, Data>,
 	pub layer:  Layer,
 	pub source: Source,
 }
 
-impl Cmd {
+impl Action {
 	pub fn new<N>(name: N, source: Source, default: Option<Layer>) -> Result<Self>
 	where
 		N: Into<SStr>,
@@ -47,10 +47,10 @@ impl Cmd {
 		D: Into<Data>,
 		I: IntoIterator<Item = D>,
 	{
-		let mut cmd = Self::new(name, Source::Relay, None).unwrap_or(Self::null());
-		cmd.args =
+		let mut action = Self::new(name, Source::Relay, None).unwrap_or(Self::null());
+		action.args =
 			args.into_iter().enumerate().map(|(i, a)| (DataKey::Integer(i as i64), a.into())).collect();
-		cmd
+		action
 	}
 
 	fn null() -> Self { Self { name: Cow::Borrowed("null"), ..Default::default() } }
@@ -215,7 +215,7 @@ impl Cmd {
 	}
 }
 
-impl Display for Cmd {
+impl Display for Action {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name)?;
 
@@ -238,7 +238,7 @@ impl Display for Cmd {
 	}
 }
 
-impl FromStr for Cmd {
+impl FromStr for Action {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -253,7 +253,7 @@ impl FromStr for Cmd {
 	}
 }
 
-impl<'de> Deserialize<'de> for Cmd {
+impl<'de> Deserialize<'de> for Action {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: serde::Deserializer<'de>,

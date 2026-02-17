@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct SeekOpt {
 	pub units: i16,
 }
 
-impl From<CmdCow> for SeekOpt {
-	fn from(c: CmdCow) -> Self { Self { units: c.first().unwrap_or(0) } }
+impl From<ActionCow> for SeekOpt {
+	fn from(a: ActionCow) -> Self { Self { units: a.first().unwrap_or(0) } }
 }
 
 impl FromLua for SeekOpt {
