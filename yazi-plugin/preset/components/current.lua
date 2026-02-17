@@ -1,5 +1,7 @@
 Current = {
 	_id = "current",
+	_anchor = nil,
+	_last_click = nil,
 }
 
 function Current:new(area, tab)
@@ -49,9 +51,63 @@ end
 
 -- Mouse events
 function Current:click(event, up)
+	if up or event.is_middle then return end
+
 	local y = event.y - self._area.y + 1
-	if self._folder.window[y] then
-		Entity:new(self._folder.window[y]):click(event, up)
+	local file = self._folder.window[y]
+	if not file then return end
+
+	local abs = self._folder.offset + y
+
+	-- Reset anchor and clear selection on directory change
+	local cwd = tostring(self._folder.cwd)
+	if Current._cwd ~= cwd then
+		Current._cwd = cwd
+		Current._anchor = nil
+		ya.emit("escape", { select = true })
+	end
+
+	-- Double-click detection
+	local last = Current._last_click
+	if event.is_left and last and last.y == y and ya.time() - last.time < 0.4 then
+		Current._last_click = nil
+		ya.emit("reveal", { file.url })
+		ya.emit("open", {})
+		return
+	end
+	if event.is_left then
+		Current._last_click = { y = y, time = ya.time() }
+	end
+
+	if event.is_left and (event.is_super or event.is_ctrl) then
+		-- Cmd/Ctrl-click: toggle individual selection
+		ya.emit("toggle", { file.url })
+		ya.emit("reveal", { file.url })
+		Current._anchor = abs
+	elseif event.is_left and event.is_shift then
+		-- Shift-click: range select from anchor
+		local anchor = Current._anchor or (self._folder.cursor + 1)
+		local lo = math.min(anchor, abs)
+		local hi = math.max(anchor, abs)
+		local urls = {}
+		local files = self._folder.files
+		for i = lo, hi do
+			local f = files[i]
+			if f then urls[#urls + 1] = f.url end
+		end
+		urls.state = "on"
+		ya.emit("toggle_all", urls)
+		ya.emit("reveal", { file.url })
+		Current._anchor = abs
+	elseif event.is_right then
+		-- Right-click: open interactive ("Open with...")
+		ya.emit("reveal", { file.url })
+		ya.emit("open", { interactive = true })
+		Current._anchor = abs
+	else
+		-- Plain left-click: reveal + set anchor
+		ya.emit("reveal", { file.url })
+		Current._anchor = abs
 	end
 end
 

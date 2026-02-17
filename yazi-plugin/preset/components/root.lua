@@ -51,7 +51,8 @@ end
 -- Mouse events
 function Root:click(event, up)
 	if tostring(cx.layer) ~= "mgr" then
-		return
+		if up then return end
+		ya.emit(tostring(cx.layer) .. ":close", {})
 	end
 	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
 	return c and c:click(event, up)
