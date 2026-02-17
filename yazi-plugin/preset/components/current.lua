@@ -51,11 +51,15 @@ end
 
 -- Mouse events
 function Current:click(event, up)
-	if up or event.is_middle then return end
+	if up or event.is_middle then
+		return
+	end
 
 	local y = event.y - self._area.y + 1
 	local file = self._folder.window[y]
-	if not file then return end
+	if not file then
+		return
+	end
 
 	local abs = self._folder.offset + y
 
@@ -93,7 +97,9 @@ function Current:click(event, up)
 		local files = self._folder.files
 		for i = lo, hi do
 			local f = files[i]
-			if f then urls[#urls + 1] = f.url end
+			if f then
+				urls[#urls + 1] = f.url
+			end
 		end
 		urls.state = "on"
 		ya.emit("toggle_all", urls)
