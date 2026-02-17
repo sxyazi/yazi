@@ -1,7 +1,7 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_fs::path::{clean_url, expand_url};
-use yazi_shared::{event::CmdCow, url::{Url, UrlBuf}};
+use yazi_shared::{event::ActionCow, url::{Url, UrlBuf}};
 use yazi_vfs::provider;
 
 #[derive(Debug)]
@@ -11,11 +11,11 @@ pub struct CdOpt {
 	pub source:      CdSource,
 }
 
-impl From<CmdCow> for CdOpt {
-	fn from(mut c: CmdCow) -> Self {
-		let mut target = c.take_first().unwrap_or_default();
+impl From<ActionCow> for CdOpt {
+	fn from(mut a: ActionCow) -> Self {
+		let mut target = a.take_first().unwrap_or_default();
 
-		if !c.bool("raw") {
+		if !a.bool("raw") {
 			target = expand_url(target);
 		}
 
@@ -27,7 +27,7 @@ impl From<CmdCow> for CdOpt {
 
 		Self {
 			target:      clean_url(target),
-			interactive: c.bool("interactive"),
+			interactive: a.bool("interactive"),
 			source:      CdSource::Cd,
 		}
 	}

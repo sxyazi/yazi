@@ -4,7 +4,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_binding::{File, Id};
 use yazi_dds::Sendable;
-use yazi_shared::{Ids, event::Cmd, pool::Symbol};
+use yazi_shared::{Ids, event::Action, pool::Symbol};
 
 use super::slim_lua;
 use crate::loader::LOADER;
@@ -12,7 +12,7 @@ use crate::loader::LOADER;
 static IDS: Ids = Ids::new();
 
 pub fn spot(
-	cmd: &'static Cmd,
+	action: &'static Action,
 	file: yazi_fs::File,
 	mime: Symbol<str>,
 	skip: usize,
@@ -22,9 +22,9 @@ pub fn spot(
 
 	tokio::task::spawn_blocking(move || {
 		let future = async {
-			LOADER.ensure(&cmd.name, |_| ()).await.into_lua_err()?;
+			LOADER.ensure(&action.name, |_| ()).await.into_lua_err()?;
 
-			let lua = slim_lua(&cmd.name)?;
+			let lua = slim_lua(&action.name)?;
 			lua.set_hook(
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 				move |_, dbg| {
@@ -36,10 +36,10 @@ pub fn spot(
 				},
 			)?;
 
-			let plugin = LOADER.load(&lua, &cmd.name).await?;
+			let plugin = LOADER.load(&lua, &action.name).await?;
 			let job = lua.create_table_from([
 				("id", Id(IDS.next()).into_lua(&lua)?),
-				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
+				("args", Sendable::args_to_table_ref(&lua, &action.args)?.into_lua(&lua)?),
 				("file", File::new(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),

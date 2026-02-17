@@ -1,7 +1,7 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_boot::BOOT;
 use yazi_fs::path::{clean_url, expand_url};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 use yazi_vfs::provider;
 
 #[derive(Debug)]
@@ -9,17 +9,17 @@ pub struct TabCreateOpt {
 	pub url: Option<UrlCow<'static>>,
 }
 
-impl From<CmdCow> for TabCreateOpt {
-	fn from(mut c: CmdCow) -> Self {
-		if c.bool("current") {
+impl From<ActionCow> for TabCreateOpt {
+	fn from(mut a: ActionCow) -> Self {
+		if a.bool("current") {
 			return Self { url: None };
 		}
 
-		let Ok(mut url) = c.take_first() else {
+		let Ok(mut url) = a.take_first() else {
 			return Self { url: Some(UrlCow::from(&BOOT.cwds[0])) };
 		};
 
-		if !c.bool("raw") {
+		if !a.bool("raw") {
 			url = expand_url(url);
 		}
 

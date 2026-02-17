@@ -8,7 +8,7 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FsHash64;
 use yazi_plugin::isolate;
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 use crate::{HIGH, LOW, TaskOp, TaskOps, fetch::{FetchIn, FetchOutFetch}};
 
@@ -32,7 +32,7 @@ impl Fetch {
 
 	pub(crate) async fn fetch(&self, task: FetchIn) -> Result<(), FetchOutFetch> {
 		let hashes: Vec<_> = task.targets.iter().map(|f| f.hash_u64()).collect();
-		let (state, err) = isolate::fetch(CmdCow::from(&task.plugin.run), task.targets).await?;
+		let (state, err) = isolate::fetch(ActionCow::from(&task.plugin.run), task.targets).await?;
 
 		let mut loaded = self.loaded.lock();
 		for (_, h) in hashes.into_iter().enumerate().filter(|&(i, _)| !state.get(i)) {

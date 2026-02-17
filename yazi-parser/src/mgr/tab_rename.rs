@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct TabRenameOpt {
@@ -8,12 +8,12 @@ pub struct TabRenameOpt {
 	pub interactive: bool,
 }
 
-impl TryFrom<CmdCow> for TabRenameOpt {
+impl TryFrom<ActionCow> for TabRenameOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let name = c.take_first().ok();
-		let interactive = c.bool("interactive");
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let name = a.take_first().ok();
+		let interactive = a.bool("interactive");
 
 		if name.is_none() && !interactive {
 			bail!("either name or interactive must be specified in TabRenameOpt");

@@ -1,18 +1,18 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilesOp;
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct UpdateFilesOpt {
 	pub op: FilesOp,
 }
 
-impl TryFrom<CmdCow> for UpdateFilesOpt {
+impl TryFrom<ActionCow> for UpdateFilesOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Some(op) = c.take_any("op") else {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let Some(op) = a.take_any("op") else {
 			bail!("Invalid 'op' in UpdateFilesOpt");
 		};
 

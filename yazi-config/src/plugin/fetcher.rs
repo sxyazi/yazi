@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::Action;
 
 use crate::{Pattern, Priority};
 
@@ -12,7 +12,7 @@ pub struct Fetcher {
 	pub id:   String,
 	pub url:  Option<Pattern>,
 	pub mime: Option<Pattern>,
-	pub run:  Cmd,
+	pub run:  Action,
 	#[serde(default)]
 	pub prio: Priority,
 }

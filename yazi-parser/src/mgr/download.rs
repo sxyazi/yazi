@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct DownloadOpt {
@@ -7,8 +7,8 @@ pub struct DownloadOpt {
 	pub open: bool,
 }
 
-impl From<CmdCow> for DownloadOpt {
-	fn from(mut c: CmdCow) -> Self { Self { urls: c.take_seq(), open: c.bool("open") } }
+impl From<ActionCow> for DownloadOpt {
+	fn from(mut a: ActionCow) -> Self { Self { urls: a.take_seq(), open: a.bool("open") } }
 }
 
 impl FromLua for DownloadOpt {

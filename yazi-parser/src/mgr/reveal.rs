@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::path::{clean_url, expand_url};
-use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 use yazi_vfs::provider;
 
 use crate::mgr::CdSource;
@@ -12,11 +12,11 @@ pub struct RevealOpt {
 	pub no_dummy: bool,
 }
 
-impl From<CmdCow> for RevealOpt {
-	fn from(mut c: CmdCow) -> Self {
-		let mut target = c.take_first().unwrap_or_default();
+impl From<ActionCow> for RevealOpt {
+	fn from(mut a: ActionCow) -> Self {
+		let mut target = a.take_first().unwrap_or_default();
 
-		if !c.bool("raw") {
+		if !a.bool("raw") {
 			target = expand_url(target);
 		}
 
@@ -26,7 +26,7 @@ impl From<CmdCow> for RevealOpt {
 			target = u.into_static();
 		}
 
-		Self { target: clean_url(target), source: CdSource::Reveal, no_dummy: c.bool("no-dummy") }
+		Self { target: clean_url(target), source: CdSource::Reveal, no_dummy: a.bool("no-dummy") }
 	}
 }
 

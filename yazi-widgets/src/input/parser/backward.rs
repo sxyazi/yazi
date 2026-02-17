@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct BackwardOpt {
 	pub far: bool,
 }
 
-impl From<CmdCow> for BackwardOpt {
-	fn from(c: CmdCow) -> Self { Self { far: c.bool("far") } }
+impl From<ActionCow> for BackwardOpt {
+	fn from(a: ActionCow) -> Self { Self { far: a.bool("far") } }
 }
 
 impl FromLua for BackwardOpt {

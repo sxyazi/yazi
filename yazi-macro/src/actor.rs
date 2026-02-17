@@ -24,8 +24,8 @@ macro_rules! act {
 		result
 	}};
 
-	($layer:ident : $name:ident, $cx:ident, $cmd:expr) => {
-		<act!($layer:$name) as yazi_actor::Actor>::Options::try_from($cmd)
+	($layer:ident : $name:ident, $cx:ident, $action:expr) => {
+		<act!($layer:$name) as yazi_actor::Actor>::Options::try_from($action)
 			.map_err(anyhow::Error::from)
 			.and_then(|opt| act!(@impl $layer:$name, $cx, opt))
 	};
@@ -36,8 +36,8 @@ macro_rules! act {
 		paste::paste! { yazi_actor::$layer::[<$name:camel>] }
 	};
 
-	($name:ident, $cx:expr, $cmd:expr) => {
-		$cmd.try_into().map_err(anyhow::Error::from).and_then(|opt| $cx.$name(opt))
+	($name:ident, $cx:expr, $action:expr) => {
+		$action.try_into().map_err(anyhow::Error::from).and_then(|opt| $cx.$name(opt))
 	};
 	($name:ident, $cx:expr) => {
 		$cx.$name(Default::default())

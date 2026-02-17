@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct YankOpt {
 	pub cut: bool,
 }
 
-impl From<CmdCow> for YankOpt {
-	fn from(c: CmdCow) -> Self { Self { cut: c.bool("cut") } }
+impl From<ActionCow> for YankOpt {
+	fn from(a: ActionCow) -> Self { Self { cut: a.bool("cut") } }
 }
 
 impl FromLua for YankOpt {

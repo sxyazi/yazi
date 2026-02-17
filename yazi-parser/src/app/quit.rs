@@ -1,7 +1,7 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::SER_OPT;
-use yazi_shared::{event::CmdCow, strand::StrandBuf};
+use yazi_shared::{event::ActionCow, strand::StrandBuf};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct QuitOpt {
@@ -11,18 +11,18 @@ pub struct QuitOpt {
 	pub no_cwd_file: bool,
 }
 
-impl TryFrom<CmdCow> for QuitOpt {
+impl TryFrom<ActionCow> for QuitOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}
 
 		Ok(Self {
-			code:        c.get("code").unwrap_or_default(),
+			code:        a.get("code").unwrap_or_default(),
 			selected:    None,
-			no_cwd_file: c.bool("no-cwd-file"),
+			no_cwd_file: a.bool("no-cwd-file"),
 		})
 	}
 }

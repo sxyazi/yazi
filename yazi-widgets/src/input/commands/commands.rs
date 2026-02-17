@@ -1,20 +1,20 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_shared::{data::Data, event::CmdCow};
+use yazi_shared::{data::Data, event::ActionCow};
 
 use crate::input::{Input, InputMode};
 
 impl Input {
-	pub fn execute(&mut self, cmd: CmdCow) -> Result<Data> {
+	pub fn execute(&mut self, action: ActionCow) -> Result<Data> {
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!($name, self, cmd);
+				if action.name == stringify!($name) {
+					return act!($name, self, action);
 				}
 			};
 			($name:ident, $alias:literal) => {
-				if cmd.name == $alias {
-					return act!($name, self, cmd);
+				if action.name == $alias {
+					return act!($name, self, action);
 				}
 			};
 		}

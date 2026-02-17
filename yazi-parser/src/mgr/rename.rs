@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct RenameOpt {
@@ -9,13 +9,13 @@ pub struct RenameOpt {
 	pub cursor:  SStr,
 }
 
-impl From<CmdCow> for RenameOpt {
-	fn from(mut c: CmdCow) -> Self {
+impl From<ActionCow> for RenameOpt {
+	fn from(mut a: ActionCow) -> Self {
 		Self {
-			hovered: c.bool("hovered"),
-			force:   c.bool("force"),
-			empty:   c.take("empty").unwrap_or_default(),
-			cursor:  c.take("cursor").unwrap_or_default(),
+			hovered: a.bool("hovered"),
+			force:   a.bool("force"),
+			empty:   a.take("empty").unwrap_or_default(),
+			cursor:  a.take("cursor").unwrap_or_default(),
 		}
 	}
 }

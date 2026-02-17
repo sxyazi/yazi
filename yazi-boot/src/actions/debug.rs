@@ -167,8 +167,8 @@ impl Actions {
 		let p = env::temp_dir().join(format!(".yazi-debug-{}.tmp", timestamp_us()));
 		std::fs::File::create_new(&p).map(|mut f| f.write_all(b"Hello, World!")).ok();
 
-		let cmd = env::var_os("YAZI_FILE_ONE").unwrap_or("file".into());
-		match std::process::Command::new(cmd).args(["-bL", "--mime-type"]).arg(&p).output() {
+		let program = env::var_os("YAZI_FILE_ONE").unwrap_or("file".into());
+		match std::process::Command::new(program).args(["-bL", "--mime-type"]).arg(&p).output() {
 			Ok(out) => {
 				String::from_utf8_lossy(&out.stdout).trim().lines().next().unwrap_or_default().to_owned()
 			}

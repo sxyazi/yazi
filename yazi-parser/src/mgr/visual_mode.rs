@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct VisualModeOpt {
 	pub unset: bool,
 }
 
-impl From<CmdCow> for VisualModeOpt {
-	fn from(c: CmdCow) -> Self { Self { unset: c.bool("unset") } }
+impl From<ActionCow> for VisualModeOpt {
+	fn from(a: ActionCow) -> Self { Self { unset: a.bool("unset") } }
 }
 
 impl FromLua for VisualModeOpt {

@@ -1,17 +1,17 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct LinemodeOpt {
 	pub new: SStr,
 }
 
-impl TryFrom<CmdCow> for LinemodeOpt {
+impl TryFrom<ActionCow> for LinemodeOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Ok(new) = c.take_first::<SStr>() else {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		let Ok(new) = a.take_first::<SStr>() else {
 			bail!("a string argument is required for LinemodeOpt");
 		};
 

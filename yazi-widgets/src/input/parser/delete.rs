@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct DeleteOpt {
@@ -7,8 +7,8 @@ pub struct DeleteOpt {
 	pub insert: bool,
 }
 
-impl From<CmdCow> for DeleteOpt {
-	fn from(c: CmdCow) -> Self { Self { cut: c.bool("cut"), insert: c.bool("insert") } }
+impl From<ActionCow> for DeleteOpt {
+	fn from(a: ActionCow) -> Self { Self { cut: a.bool("cut"), insert: a.bool("insert") } }
 }
 
 impl FromLua for DeleteOpt {

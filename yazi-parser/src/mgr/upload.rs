@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct UploadOpt {
 	pub urls: Vec<UrlCow<'static>>,
 }
 
-impl From<CmdCow> for UploadOpt {
-	fn from(mut c: CmdCow) -> Self { Self { urls: c.take_seq() } }
+impl From<ActionCow> for UploadOpt {
+	fn from(mut a: ActionCow) -> Self { Self { urls: a.take_seq() } }
 }
 
 impl FromLua for UploadOpt {

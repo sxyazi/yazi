@@ -2,7 +2,7 @@ use std::{borrow::Cow, str::FromStr};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::CmdCow, strand::AsStrand};
+use yazi_shared::{SStr, event::ActionCow, strand::AsStrand};
 
 #[derive(Debug)]
 pub struct CopyOpt {
@@ -11,12 +11,12 @@ pub struct CopyOpt {
 	pub hovered:   bool,
 }
 
-impl From<CmdCow> for CopyOpt {
-	fn from(mut c: CmdCow) -> Self {
+impl From<ActionCow> for CopyOpt {
+	fn from(mut a: ActionCow) -> Self {
 		Self {
-			r#type:    c.take_first().unwrap_or_default(),
-			separator: c.str("separator").parse().unwrap_or_default(),
-			hovered:   c.bool("hovered"),
+			r#type:    a.take_first().unwrap_or_default(),
+			separator: a.str("separator").parse().unwrap_or_default(),
+			hovered:   a.bool("hovered"),
 		}
 	}
 }

@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Clone, Debug, Default)]
 pub struct FilterOpt {
@@ -9,18 +9,18 @@ pub struct FilterOpt {
 	pub done:  bool,
 }
 
-impl TryFrom<CmdCow> for FilterOpt {
+impl TryFrom<ActionCow> for FilterOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = c.take_any2("opt") {
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}
 
 		Ok(Self {
-			query: c.take_first().unwrap_or_default(),
-			case:  FilterCase::from(&*c),
-			done:  c.bool("done"),
+			query: a.take_first().unwrap_or_default(),
+			case:  FilterCase::from(&*a),
+			done:  a.bool("done"),
 		})
 	}
 }

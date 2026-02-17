@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct TabSwitchOpt {
@@ -7,8 +7,10 @@ pub struct TabSwitchOpt {
 	pub relative: bool,
 }
 
-impl From<CmdCow> for TabSwitchOpt {
-	fn from(c: CmdCow) -> Self { Self { step: c.first().unwrap_or(0), relative: c.bool("relative") } }
+impl From<ActionCow> for TabSwitchOpt {
+	fn from(a: ActionCow) -> Self {
+		Self { step: a.first().unwrap_or(0), relative: a.bool("relative") }
+	}
 }
 
 impl FromLua for TabSwitchOpt {

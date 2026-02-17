@@ -1,10 +1,10 @@
 local M = {}
 
 function M:setup()
-	ps.sub_remote("dds-emit", function(cmd)
+	ps.sub_remote("dds-emit", function(action)
 		local i, args = 1, {}
-		for j = 2, #cmd do
-			local word = string.char(table.unpack(cmd[j]))
+		for j = 2, #action do
+			local word = string.char(table.unpack(action[j]))
 			local key = word:match("^%-%-([^=]+)")
 			if not key then
 				i, args[i] = i + 1, word
@@ -14,7 +14,7 @@ function M:setup()
 				args[key] = word:sub(#key + 4)
 			end
 		end
-		ya.emit(cmd[1], args)
+		ya.emit(action[1], args)
 	end)
 end
 

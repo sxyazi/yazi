@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug)]
 pub struct ToggleAllOpt {
@@ -7,11 +7,11 @@ pub struct ToggleAllOpt {
 	pub state: Option<bool>,
 }
 
-impl From<CmdCow> for ToggleAllOpt {
-	fn from(mut c: CmdCow) -> Self {
+impl From<ActionCow> for ToggleAllOpt {
+	fn from(mut a: ActionCow) -> Self {
 		Self {
-			urls:  c.take_seq(),
-			state: match c.get("state") {
+			urls:  a.take_seq(),
+			state: match a.get("state") {
 				Ok("on") => Some(true),
 				Ok("off") => Some(false),
 				_ => None,

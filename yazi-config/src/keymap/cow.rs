@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 use super::Chord;
 
@@ -37,7 +37,7 @@ impl Default for ChordCow {
 }
 
 impl ChordCow {
-	pub fn into_seq(self) -> Vec<CmdCow> {
+	pub fn into_seq(self) -> Vec<ActionCow> {
 		match self {
 			Self::Owned(c) => c.run.into_iter().rev().map(Into::into).collect(),
 			Self::Borrowed(c) => c.run.iter().rev().map(Into::into).collect(),

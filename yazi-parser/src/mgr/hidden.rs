@@ -2,18 +2,18 @@ use std::str::FromStr;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default)]
 pub struct HiddenOpt {
 	pub state: HiddenOptState,
 }
 
-impl TryFrom<CmdCow> for HiddenOpt {
+impl TryFrom<ActionCow> for HiddenOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { state: c.str(0).parse().unwrap_or_default() })
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		Ok(Self { state: a.str(0).parse().unwrap_or_default() })
 	}
 }
 

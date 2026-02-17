@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use yazi_actor::Ctx;
 use yazi_macro::{act, succ};
-use yazi_shared::{Layer, data::Data, event::CmdCow};
+use yazi_shared::{Layer, data::Data, event::ActionCow};
 use yazi_widgets::input::InputMode;
 
 use crate::app::App;
@@ -15,29 +15,29 @@ impl<'a> Executor<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn execute(&mut self, cmd: CmdCow) -> Result<Data> {
-		match cmd.layer {
-			Layer::App => self.app(cmd),
-			Layer::Mgr => self.mgr(cmd),
-			Layer::Tasks => self.tasks(cmd),
-			Layer::Spot => self.spot(cmd),
-			Layer::Pick => self.pick(cmd),
-			Layer::Input => self.input(cmd),
-			Layer::Confirm => self.confirm(cmd),
-			Layer::Help => self.help(cmd),
-			Layer::Cmp => self.cmp(cmd),
-			Layer::Which => self.which(cmd),
-			Layer::Notify => self.notify(cmd),
+	pub(super) fn execute(&mut self, action: ActionCow) -> Result<Data> {
+		match action.layer {
+			Layer::App => self.app(action),
+			Layer::Mgr => self.mgr(action),
+			Layer::Tasks => self.tasks(action),
+			Layer::Spot => self.spot(action),
+			Layer::Pick => self.pick(action),
+			Layer::Input => self.input(action),
+			Layer::Confirm => self.confirm(action),
+			Layer::Help => self.help(action),
+			Layer::Cmp => self.cmp(action),
+			Layer::Which => self.which(action),
+			Layer::Notify => self.notify(action),
 		}
 	}
 
-	fn app(&mut self, mut cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn app(&mut self, mut action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(app:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(app:$name, cx, action);
 				}
 			};
 		}
@@ -49,28 +49,28 @@ impl<'a> Executor<'a> {
 		on!(deprecate);
 		on!(quit);
 
-		match &*cmd.name {
+		match &*action.name {
 			"resize" => act!(app:resize, cx, crate::Root::reflow as fn(_) -> _),
 			"resume" => act!(app:resume, cx, yazi_parser::app::ResumeOpt {
 				tx: self.app.signals.tx.clone(),
-				token: cmd.take_any("token").context("Invalid 'token' in ResumeOpt")?,
+				token: action.take_any("token").context("Invalid 'token' in ResumeOpt")?,
 				reflow: crate::Root::reflow,
 			}),
 			"stop" => act!(app:stop, cx, yazi_parser::app::StopOpt {
 				tx: self.app.signals.tx.clone(),
-				token: cmd.take_any("token").context("Invalid 'token' in StopOpt")?,
+				token: action.take_any("token").context("Invalid 'token' in StopOpt")?,
 			}),
 			_ => succ!(),
 		}
 	}
 
-	fn mgr(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn mgr(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(mgr:$name, cx, cmd)
+				if action.name == stringify!($name) {
+					return act!(mgr:$name, cx, action)
 				}
 			};
 		}
@@ -151,22 +151,22 @@ impl<'a> Executor<'a> {
 		on!(upload);
 		on!(displace_do);
 
-		match cmd.name.as_ref() {
+		match action.name.as_ref() {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Mgr),
 			// Plugin
-			"plugin" => act!(app:plugin, cx, cmd),
+			"plugin" => act!(app:plugin, cx, action),
 			_ => succ!(),
 		}
 	}
 
-	fn tasks(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn tasks(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(tasks:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(tasks:$name, cx, action);
 				}
 			};
 		}
@@ -181,22 +181,22 @@ impl<'a> Executor<'a> {
 		on!(process_open);
 		on!(open_shell_compat);
 
-		match cmd.name.as_ref() {
+		match action.name.as_ref() {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Tasks),
 			// Plugin
-			"plugin" => act!(app:plugin, cx, cmd),
+			"plugin" => act!(app:plugin, cx, action),
 			_ => succ!(),
 		}
 	}
 
-	fn spot(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn spot(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(spot:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(spot:$name, cx, action);
 				}
 			};
 		}
@@ -206,22 +206,22 @@ impl<'a> Executor<'a> {
 		on!(swipe);
 		on!(copy);
 
-		match cmd.name.as_ref() {
+		match action.name.as_ref() {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Spot),
 			// Plugin
-			"plugin" => act!(app:plugin, cx, cmd),
+			"plugin" => act!(app:plugin, cx, action),
 			_ => succ!(),
 		}
 	}
 
-	fn pick(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn pick(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(pick:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(pick:$name, cx, action);
 				}
 			};
 		}
@@ -230,23 +230,23 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
-		match cmd.name.as_ref() {
+		match action.name.as_ref() {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Pick),
 			// Plugin
-			"plugin" => act!(app:plugin, cx, cmd),
+			"plugin" => act!(app:plugin, cx, action),
 			_ => succ!(),
 		}
 	}
 
-	fn input(&mut self, cmd: CmdCow) -> Result<Data> {
+	fn input(&mut self, action: ActionCow) -> Result<Data> {
 		let mode = self.app.core.input.mode();
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(input:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(input:$name, cx, action);
 				}
 			};
 		}
@@ -257,11 +257,11 @@ impl<'a> Executor<'a> {
 
 		match mode {
 			InputMode::Normal => {
-				match cmd.name.as_ref() {
+				match action.name.as_ref() {
 					// Help
 					"help" => return act!(help:toggle, cx, Layer::Input),
 					// Plugin
-					"plugin" => return act!(app:plugin, cx, cmd),
+					"plugin" => return act!(app:plugin, cx, action),
 					_ => {}
 				}
 			}
@@ -271,16 +271,16 @@ impl<'a> Executor<'a> {
 			InputMode::Replace => {}
 		};
 
-		self.app.core.input.execute(cmd)
+		self.app.core.input.execute(action)
 	}
 
-	fn confirm(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn confirm(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(confirm:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(confirm:$name, cx, action);
 				}
 			};
 		}
@@ -292,13 +292,13 @@ impl<'a> Executor<'a> {
 		succ!();
 	}
 
-	fn help(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn help(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(help:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(help:$name, cx, action);
 				}
 			};
 		}
@@ -307,22 +307,22 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 		on!(filter);
 
-		match cmd.name.as_ref() {
+		match action.name.as_ref() {
 			// Help
 			"close" => act!(help:toggle, cx, Layer::Help),
 			// Plugin
-			"plugin" => act!(app:plugin, cx, cmd),
+			"plugin" => act!(app:plugin, cx, action),
 			_ => succ!(),
 		}
 	}
 
-	fn cmp(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn cmp(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(cmp:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(cmp:$name, cx, action);
 				}
 			};
 		}
@@ -332,22 +332,22 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
-		match cmd.name.as_ref() {
+		match action.name.as_ref() {
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Cmp),
 			// Plugin
-			"plugin" => act!(app:plugin, cx, cmd),
+			"plugin" => act!(app:plugin, cx, action),
 			_ => succ!(),
 		}
 	}
 
-	fn which(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn which(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(which:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(which:$name, cx, action);
 				}
 			};
 		}
@@ -358,13 +358,13 @@ impl<'a> Executor<'a> {
 		succ!();
 	}
 
-	fn notify(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&cmd, &mut self.app.core, &mut self.app.term)?;
+	fn notify(&mut self, action: ActionCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
 			($name:ident) => {
-				if cmd.name == stringify!($name) {
-					return act!(notify:$name, cx, cmd);
+				if action.name == stringify!($name) {
+					return act!(notify:$name, cx, action);
 				}
 			};
 		}

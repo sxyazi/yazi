@@ -1,7 +1,7 @@
 use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 
-use super::CmdCow;
+use super::ActionCow;
 use crate::RoCell;
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
@@ -9,8 +9,8 @@ static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
 
 #[derive(Debug)]
 pub enum Event {
-	Call(CmdCow),
-	Seq(Vec<CmdCow>),
+	Call(ActionCow),
+	Seq(Vec<ActionCow>),
 	Render(bool),
 	Key(KeyEvent),
 	Mouse(MouseEvent),

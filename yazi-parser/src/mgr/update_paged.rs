@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct UpdatePagedOpt {
@@ -7,8 +7,10 @@ pub struct UpdatePagedOpt {
 	pub only_if: Option<UrlCow<'static>>,
 }
 
-impl From<CmdCow> for UpdatePagedOpt {
-	fn from(mut c: CmdCow) -> Self { Self { page: c.first().ok(), only_if: c.take("only-if").ok() } }
+impl From<ActionCow> for UpdatePagedOpt {
+	fn from(mut a: ActionCow) -> Self {
+		Self { page: a.first().ok(), only_if: a.take("only-if").ok() }
+	}
 }
 
 impl From<()> for UpdatePagedOpt {

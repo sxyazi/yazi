@@ -2,29 +2,30 @@ use mlua::{ExternalResult, FromLua, IntoLua, Lua, ObjectLike, Value};
 use tokio::runtime::Handle;
 use yazi_binding::{Error, File};
 use yazi_dds::Sendable;
-use yazi_shared::event::CmdCow;
+use yazi_shared::event::ActionCow;
 
 use super::slim_lua;
 use crate::loader::LOADER;
 
 pub async fn fetch(
-	cmd: CmdCow,
+	action: ActionCow,
 	files: Vec<yazi_fs::File>,
 ) -> mlua::Result<(FetchState, Option<Error>)> {
 	if files.is_empty() {
 		return Ok((FetchState::Bool(true), None));
 	}
-	LOADER.ensure(&cmd.name, |_| ()).await.into_lua_err()?;
+	LOADER.ensure(&action.name, |_| ()).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {
-		let lua = slim_lua(&cmd.name)?;
+		let lua = slim_lua(&action.name)?;
 		let job = lua.create_table_from([
-			("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
+			("args", Sendable::args_to_table_ref(&lua, &action.args)?.into_lua(&lua)?),
 			("files", lua.create_sequence_from(files.into_iter().map(File::new))?.into_lua(&lua)?),
 		])?;
 
-		Handle::current()
-			.block_on(async { LOADER.load(&lua, &cmd.name).await?.call_async_method("fetch", job).await })
+		Handle::current().block_on(async {
+			LOADER.load(&lua, &action.name).await?.call_async_method("fetch", job).await
+		})
 	})
 	.await
 	.into_lua_err()?

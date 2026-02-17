@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::CmdCow};
+use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
 pub struct CopyOpt {
 	pub r#type: SStr,
 }
 
-impl From<CmdCow> for CopyOpt {
-	fn from(mut c: CmdCow) -> Self { Self { r#type: c.take_first().unwrap_or_default() } }
+impl From<ActionCow> for CopyOpt {
+	fn from(mut a: ActionCow) -> Self { Self { r#type: a.take_first().unwrap_or_default() } }
 }
 
 impl FromLua for CopyOpt {

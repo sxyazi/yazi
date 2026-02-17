@@ -7,18 +7,18 @@ use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_parser::{app::PluginOpt, mgr::{PreviewLock, UpdatePeekedOpt}};
 use yazi_proxy::{AppProxy, MgrProxy};
-use yazi_shared::{event::Cmd, pool::Symbol};
+use yazi_shared::{event::Action, pool::Symbol};
 
 use super::slim_lua;
 use crate::loader::{LOADER, Loader};
 
 pub fn peek(
-	cmd: &'static Cmd,
+	action: &'static Action,
 	file: yazi_fs::File,
 	mime: Symbol<str>,
 	skip: usize,
 ) -> Option<CancellationToken> {
-	let (id, ..) = Loader::normalize_id(&cmd.name).ok()?;
+	let (id, ..) = Loader::normalize_id(&action.name).ok()?;
 
 	let ct = CancellationToken::new();
 	if let Some(c) = LOADER.read().get(id) {
@@ -26,9 +26,9 @@ pub fn peek(
 			peek_error(file, mime, skip, e);
 			return None;
 		} else if c.sync_peek {
-			peek_sync(cmd, file, mime, skip);
+			peek_sync(action, file, mime, skip);
 		} else {
-			peek_async(cmd, file, mime, skip, ct.clone());
+			peek_async(action, file, mime, skip, ct.clone());
 		}
 		return Some(ct).filter(|_| !c.sync_peek);
 	}
@@ -39,9 +39,9 @@ pub fn peek(
 			_ = ct_.cancelled() => {},
 			Ok(b) = LOADER.ensure(id, |c| c.sync_peek) => {
 				if b {
-					peek_sync(cmd, file, mime, skip);
+					peek_sync(action, file, mime, skip);
 				} else {
-					peek_async(cmd, file, mime, skip, ct_);
+					peek_async(action, file, mime, skip, ct_);
 				}
 			},
 			else => {}
@@ -51,11 +51,11 @@ pub fn peek(
 	Some(ct)
 }
 
-fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Symbol<str>, skip: usize) {
+fn peek_sync(action: &'static Action, file: yazi_fs::File, mime: Symbol<str>, skip: usize) {
 	let cb = move |lua: &Lua, plugin: Table| {
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
-			("args", Sendable::args_to_table_ref(lua, &cmd.args)?.into_lua(lua)?),
+			("args", Sendable::args_to_table_ref(lua, &action.args)?.into_lua(lua)?),
 			("file", File::new(file).into_lua(lua)?),
 			("mime", mime.into_lua(lua)?),
 			("skip", skip.into_lua(lua)?),
@@ -64,11 +64,11 @@ fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Symbol<str>, skip: us
 		plugin.call_method("peek", job)
 	};
 
-	AppProxy::plugin(PluginOpt::new_callback(&*cmd.name, cb));
+	AppProxy::plugin(PluginOpt::new_callback(&*action.name, cb));
 }
 
 fn peek_async(
-	cmd: &'static Cmd,
+	action: &'static Action,
 	file: yazi_fs::File,
 	mime: Symbol<str>,
 	skip: usize,
@@ -77,7 +77,7 @@ fn peek_async(
 	let ct_ = ct.clone();
 	tokio::task::spawn_blocking(move || {
 		let future = async {
-			let lua = slim_lua(&cmd.name)?;
+			let lua = slim_lua(&action.name)?;
 			lua.set_hook(
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 				move |_, dbg| {
@@ -89,10 +89,10 @@ fn peek_async(
 				},
 			)?;
 
-			let plugin = LOADER.load(&lua, &cmd.name).await?;
+			let plugin = LOADER.load(&lua, &action.name).await?;
 			let job = lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
-				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
+				("args", Sendable::args_to_table_ref(&lua, &action.args)?.into_lua(&lua)?),
 				("file", File::new(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),

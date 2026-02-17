@@ -146,11 +146,11 @@ macro_rules! impl_emit_body {
 					Arg(Vec<u8>),
 				}
 
-				let cmd: Vec<_> = [Elem::Name(self.name)]
+				let action: Vec<_> = [Elem::Name(self.name)]
 					.into_iter()
 					.chain(self.args.into_iter().map(|s| Elem::Arg(s.into_encoded_bytes())))
 					.collect();
-				Ok(serde_json::to_string(&cmd)?)
+				Ok(serde_json::to_string(&action)?)
 			}
 		}
 	};
