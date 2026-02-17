@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_macro::succ;
 use yazi_parser::mgr::PeekOpt;
 use yazi_proxy::HIDER;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::AsUrl};
 
 use crate::{Actor, Ctx};
 
@@ -25,7 +25,8 @@ impl Actor for Peek {
 		let folder = cx.tab().hovered_folder().map(|f| (f.offset, f.cha));
 
 		if !cx.tab().preview.same_url(&hovered.url) {
-			cx.tab_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
+			// set matched line on the top of preview window
+			cx.tab_mut().preview.skip = folder.map(|f| f.0).unwrap_or_else(|| hovered.url.as_url().line().map_or(0, |l| l.saturating_sub(1)));
 		}
 		if !cx.tab().preview.same_file(&hovered, &mime) {
 			cx.tab_mut().preview.reset();

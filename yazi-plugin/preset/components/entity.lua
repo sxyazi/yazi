@@ -43,6 +43,13 @@ end
 
 function Entity:highlights()
 	local name, p = self._file.name, ui.printable
+
+	local ok, line = pcall(function() return self._file:line() end)
+	if ok and line then
+		local path_str = tostring(self._file.path)
+		name = name .. ":" .. line .. " (" .. path_str .. ")"
+	end
+
 	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
 		return p(name)

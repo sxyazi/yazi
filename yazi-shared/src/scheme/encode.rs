@@ -14,7 +14,7 @@ impl<'a> From<crate::url::Encode<'a>> for Encode<'a> {
 impl<'a> Encode<'a> {
 	#[inline]
 	pub fn domain<'s>(s: &'s str) -> PercentEncode<'s> {
-		const SET: &AsciiSet = &CONTROLS.add(b'/').add(b':');
+		const SET: &AsciiSet = &CONTROLS.add(b'/').add(b':').add(b'#');
 		percent_encode(s.as_bytes(), SET)
 	}
 
