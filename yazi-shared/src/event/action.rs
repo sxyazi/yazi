@@ -21,7 +21,7 @@ impl Action {
 	{
 		let cow: SStr = name.into();
 		let (layer, name) = match cow.find(':') {
-			None => (default.ok_or_else(|| anyhow!("Cannot infer layer from command name: {cow}"))?, cow),
+			None => (default.ok_or_else(|| anyhow!("Cannot infer layer from action name: {cow}"))?, cow),
 			Some(i) => (cow[..i].parse()?, match cow {
 				Cow::Borrowed(s) => Cow::Borrowed(&s[i + 1..]),
 				Cow::Owned(mut s) => {
@@ -244,7 +244,7 @@ impl FromStr for Action {
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let (mut words, last) = crate::shell::unix::split(s, true)?;
 		if words.is_empty() || words[0].is_empty() {
-			bail!("command name cannot be empty");
+			bail!("action name cannot be empty");
 		}
 
 		let mut me = Self::new(mem::take(&mut words[0]), Default::default(), Some(Default::default()))?;
