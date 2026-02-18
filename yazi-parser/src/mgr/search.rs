@@ -3,37 +3,42 @@ use std::str::FromStr;
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::ActionCow};
+use yazi_shared::{SStr, event::ActionCow, url::{UrlCow, UrlLike}};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SearchOpt {
 	pub via:      SearchOptVia,
 	pub subject:  SStr,
 	pub args:     Vec<String>,
 	pub args_raw: SStr,
+	pub r#in:     Option<UrlCow<'static>>,
 }
 
 impl TryFrom<ActionCow> for SearchOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		// TODO: remove this
-		let (via, subject) = if let Ok(s) = a.get("via") {
-			(str::parse(s)?, a.take_first().unwrap_or_default())
-		} else {
-			(a.str(0).parse()?, "".into())
-		};
+		if let Some(opt) = a.take_any2("opt") {
+			return opt;
+		}
+
+		let r#in = a.take::<UrlCow>("in").ok();
+		if let Some(u) = &r#in
+			&& (!u.is_absolute() || u.is_search())
+		{
+			bail!("invalid 'in' in SearchOpt");
+		}
 
 		let Ok(args) = yazi_shared::shell::unix::split(a.str("args"), false) else {
-			bail!("Invalid 'args' in SearchOpt");
+			bail!("invalid 'args' in SearchOpt");
 		};
 
 		Ok(Self {
-			via,
-			subject,
-			// TODO: use second positional argument instead of `args` parameter
+			via: a.str("via").parse()?,
+			subject: a.take_first().unwrap_or_default(),
 			args: args.0,
 			args_raw: a.take("args").unwrap_or_default(),
+			r#in,
 		})
 	}
 }

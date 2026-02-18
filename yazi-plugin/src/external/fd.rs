@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{path::Path, process::Stdio};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
@@ -21,6 +21,9 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
+			if Path::new(&line).is_absolute() {
+				continue;
+			}
 			let Ok(url) = opt.cwd.try_join(line) else {
 				continue;
 			};

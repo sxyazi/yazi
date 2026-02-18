@@ -180,14 +180,6 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn to_search(&self, domain: impl AsRef<str>) -> Result<Self, PathDynError> {
-		Ok(Self::Search {
-			loc:    LocBuf::<PathBuf>::zeroed(self.loc().to_os_owned()?),
-			domain: Pool::<str>::intern(domain),
-		})
-	}
-
-	#[inline]
 	pub fn into_search(self, domain: impl AsRef<str>) -> Result<Self, PathDynError> {
 		Ok(Self::Search {
 			loc:    LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),

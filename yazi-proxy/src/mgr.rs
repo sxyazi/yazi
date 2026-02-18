@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use yazi_macro::{emit, relay};
 use yazi_parser::mgr::{DisplaceDoOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt, UpdatePeekedOpt, UpdateSpottedOpt};
 use yazi_shared::{Id, SStr, url::UrlBuf};
@@ -50,12 +48,7 @@ impl MgrProxy {
 	}
 
 	pub fn search_do(opt: SearchOpt) {
-		emit!(Call(
-			// TODO: use second positional argument instead of `args` parameter
-			relay!(mgr:search_do, [opt.subject])
-				.with("via", Cow::Borrowed(opt.via.into_str()))
-				.with("args", opt.args_raw.into_owned())
-		));
+		emit!(Call(relay!(mgr:search_do).with_any("opt", opt)));
 	}
 
 	pub fn tab_rename(tab: Id, name: impl Into<SStr>) {

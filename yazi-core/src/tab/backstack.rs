@@ -33,6 +33,8 @@ impl Backstack {
 		}
 	}
 
+	pub fn current(&self) -> Option<&UrlBuf> { self.stack.get(self.cursor) }
+
 	pub fn shift_backward(&mut self) -> Option<&UrlBuf> {
 		if self.cursor > 0 {
 			self.cursor -= 1;
