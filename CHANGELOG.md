@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Added
 
 - Custom tab name ([#3666])
+- New `--in` for `search` action to set search directory ([#3696])
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
 - New `sort_fallback` option to control fallback sorting behavior ([#3077])
 - New `fs.access()` API to access the filesystem ([#3668])
@@ -1664,3 +1665,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3684]: https://github.com/sxyazi/yazi/pull/3684
 [#3687]: https://github.com/sxyazi/yazi/pull/3687
 [#3689]: https://github.com/sxyazi/yazi/pull/3689
+[#3696]: https://github.com/sxyazi/yazi/pull/3696
