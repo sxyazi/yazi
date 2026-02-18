@@ -5,7 +5,7 @@ use hashbrown::Equivalent;
 use serde::Serialize;
 
 use super::Encode as EncodeUrl;
-use crate::{loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, pool::InternStr, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
+use crate::{loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, pool::{InternStr, Pool}, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Url<'a> {
@@ -221,6 +221,13 @@ impl<'a> Url<'a> {
 
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }
+
+	pub fn to_search(self, domain: impl AsRef<str>) -> Result<UrlBuf, PathDynError> {
+		Ok(UrlBuf::Search {
+			loc:    LocBuf::<PathBuf>::zeroed(self.loc().to_os_owned()?),
+			domain: Pool::<str>::intern(domain),
+		})
+	}
 
 	pub fn trail(self) -> Self {
 		let uri = self.uri();

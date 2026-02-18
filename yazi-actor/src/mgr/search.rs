@@ -9,7 +9,7 @@ use yazi_macro::{act, succ};
 use yazi_parser::{VoidOpt, mgr::{CdSource, SearchOpt, SearchOptVia}};
 use yazi_plugin::external;
 use yazi_proxy::{InputProxy, MgrProxy, NotifyProxy};
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::{data::Data, url::{AsUrl, UrlLike}};
 
 use crate::{Actor, Ctx};
 
@@ -53,7 +53,8 @@ impl Actor for SearchDo {
 		}
 
 		let hidden = tab.pref.show_hidden;
-		let Ok(cwd) = tab.cwd().to_search(&opt.subject) else {
+		let r#in = opt.r#in.as_ref().map_or_else(|| tab.cwd().as_url(), |u| u.as_url());
+		let Ok(cwd) = r#in.to_search(&opt.subject) else {
 			succ!(NotifyProxy::push_warn("Search", "Only local filesystem searches are supported"));
 		};
 
@@ -109,10 +110,14 @@ impl Actor for SearchStop {
 			handle.abort();
 		}
 
-		if tab.cwd().is_search() {
-			act!(mgr:cd, cx, (tab.cwd().to_regular()?, CdSource::Escape))?;
+		if !tab.cwd().is_search() {
+			succ!();
 		}
 
-		succ!();
+		if let Some(u) = tab.backstack.current().cloned() {
+			act!(mgr:cd, cx, (u, CdSource::Escape))
+		} else {
+			act!(mgr:cd, cx, (tab.cwd().to_regular()?, CdSource::Escape))
+		}
 	}
 }
