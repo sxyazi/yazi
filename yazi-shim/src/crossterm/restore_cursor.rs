@@ -18,9 +18,7 @@ impl crossterm::Command for RestoreCursor {
 			2 if !blink => SetCursorStyle::SteadyUnderScore.write_ansi(f)?,
 			3 if blink => SetCursorStyle::BlinkingBar.write_ansi(f)?,
 			3 if !blink => SetCursorStyle::SteadyBar.write_ansi(f)?,
-			_ if blink => SetCursorStyle::DefaultUserShape.write_ansi(f)?,
-			_ if !blink => SetCursorStyle::SteadyBlock.write_ansi(f)?,
-			_ => unreachable!(),
+			_ => SetCursorStyle::DefaultUserShape.write_ansi(f)?,
 		})
 	}
 
