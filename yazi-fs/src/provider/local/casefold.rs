@@ -180,17 +180,12 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 
 #[cfg(target_os = "windows")]
 fn final_path(path: &Path) -> io::Result<PathBuf> {
-	use std::{ffi::OsString, fs::File, os::windows::{ffi::OsStringExt, fs::OpenOptionsExt, io::AsRawHandle}};
+	use std::{ffi::OsString, fs::File, mem, os::windows::{ffi::{OsStrExt, OsStringExt}, fs::OpenOptionsExt, io::AsRawHandle}};
 
 	use either::Either;
-	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
+	use windows_sys::Win32::{Foundation::{HANDLE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FindClose, FindFirstFileW, GetFinalPathNameByHandleW, VOLUME_NAME_DOS, WIN32_FIND_DATAW}};
 
-	let file = std::fs::OpenOptions::new()
-		.access_mode(0)
-		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
-		.open(path)?;
-
-	fn inner(file: &File, buf: &mut [u16]) -> io::Result<Either<PathBuf, u32>> {
+	fn by_handle(file: &File, buf: &mut [u16]) -> io::Result<Either<PathBuf, u32>> {
 		let len = unsafe {
 			GetFinalPathNameByHandleW(
 				file.as_raw_handle() as HANDLE,
@@ -211,11 +206,36 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 		})
 	}
 
-	match inner(&file, &mut [0u16; 512])? {
-		Either::Left(path) => Ok(path),
-		Either::Right(len) => inner(&file, &mut vec![0u16; len as usize])?
-			.left()
-			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "path too long")),
+	fn by_find(path: &Path) -> io::Result<PathBuf> {
+		let Some(parent) = path.parent() else {
+			return Ok(path.to_path_buf());
+		};
+
+		let wide: Vec<u16> = path.as_os_str().encode_wide().chain([0]).collect();
+		let mut data = unsafe { mem::zeroed::<WIN32_FIND_DATAW>() };
+		match unsafe { FindFirstFileW(wide.as_ptr(), &mut data) } {
+			INVALID_HANDLE_VALUE => return Err(io::Error::last_os_error()),
+			handle => _ = unsafe { FindClose(handle) },
+		}
+
+		let name = data.cFileName.split(|&c| c == 0).next().unwrap_or(&data.cFileName);
+		Ok(parent.join(OsString::from_wide(name)))
+	}
+
+	let file = std::fs::OpenOptions::new()
+		.access_mode(0)
+		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
+		.open(path)?;
+
+	match by_handle(&file, &mut [0u16; 512]) {
+		Ok(Either::Left(path)) => Ok(path),
+		Ok(Either::Right(len)) => match by_handle(&file, &mut vec![0u16; len as usize])? {
+			Either::Left(path) => Ok(path),
+			Either::Right(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "path too long")),
+		},
+		// Fallback for paths that GetFinalPathNameByHandleW cannot handle,
+		// such as those on DefineDosDeviceW-created devices (error 1005).
+		Err(_) => by_find(path),
 	}
 }
 

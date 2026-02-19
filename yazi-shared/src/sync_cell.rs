@@ -2,9 +2,9 @@ use std::{cell::Cell, fmt::{Debug, Display, Formatter}, ops::Deref};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-/// [`SyncCell`], but [`Sync`].
+/// [`Cell`], but [`Sync`].
 ///
-/// This is just an `Cell`, except it implements `Sync`
+/// This is just a `Cell`, except it implements `Sync`
 /// if `T` implements `Sync`.
 pub struct SyncCell<T: ?Sized>(Cell<T>);
 
