@@ -8,7 +8,7 @@ local state = ya.sync(function()
 	return cx.active.current.cwd, selected
 end)
 
-function M:entry()
+function M:entry(job)
 	ya.emit("escape", { visual = true })
 
 	local cwd, selected = state()
@@ -16,8 +16,12 @@ function M:entry()
 		return ya.notify { title = "Fzf", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" }
 	end
 
+	local default_cmd = M.parse_args(job and job.args or {})
+	if default_cmd == "" then
+		return ya.notify { title = "Fzf", content = "Missing string after --fzf-command", timeout = 5, level = "error" }
+	end
 	local permit = ui.hide()
-	local output, err = M.run_with(cwd, selected)
+	local output, err = M.run_with(cwd, selected, default_cmd)
 
 	permit:drop()
 	if not output then
@@ -37,11 +41,24 @@ end
 ---@param cwd Url
 ---@param selected Url[]
 ---@return string?, Error?
-function M.run_with(cwd, selected)
-	local child, err = Command("fzf")
-		:arg("-m")
+function M.run_with(cwd, selected, default_cmd)
+	local input = nil
+	local source = "stdin"
+	if #selected > 0 then
+		source = "selection"
+		input = ""
+		for _, u in ipairs(selected) do
+			input = input .. string.format("%s\n", u)
+		end
+	end
+
+	local cmd = Command("fzf"):arg("-m")
+	if default_cmd and #selected == 0 then
+		cmd:env("FZF_DEFAULT_COMMAND", default_cmd)
+	end
+	local child, err = cmd
 		:cwd(tostring(cwd))
-		:stdin(#selected > 0 and Command.PIPED or Command.INHERIT)
+		:stdin(input and Command.PIPED or Command.INHERIT)
 		:stdout(Command.PIPED)
 		:spawn()
 
@@ -49,10 +66,8 @@ function M.run_with(cwd, selected)
 		return nil, Err("Failed to start `fzf`, error: %s", err)
 	end
 
-	for _, u in ipairs(selected) do
-		child:write_all(string.format("%s\n", u))
-	end
-	if #selected > 0 then
+	if input then
+		child:write_all(input)
 		child:flush()
 	end
 
@@ -63,6 +78,23 @@ function M.run_with(cwd, selected)
 		return nil, Err("`fzf` exited with error code %s", output.status.code)
 	end
 	return output.stdout, nil
+end
+
+function M.parse_args(args)
+	if not args then
+		return nil
+	end
+
+	local v = args.fzf_command or args["fzf-command"]
+	if type(v) == "string" then
+		return v
+	end
+
+	if v ~= nil then
+		return ""
+	end
+
+	return nil
 end
 
 function M.split_urls(cwd, output)
