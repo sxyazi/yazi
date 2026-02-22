@@ -1,7 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
 use yazi_parser::mgr::PeekOpt;
-use yazi_proxy::HIDER;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -17,7 +16,7 @@ impl Actor for Peek {
 		let Some(hovered) = cx.hovered().cloned() else {
 			succ!(cx.tab_mut().preview.reset());
 		};
-		if HIDER.try_acquire().is_err() {
+		if cx.term.is_none() {
 			succ!(cx.tab_mut().preview.reset_image());
 		}
 

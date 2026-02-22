@@ -21,7 +21,8 @@ impl Signals {
 	fn handle_sys(n: libc::c_int) -> bool {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
 		use tracing::error;
-		use yazi_proxy::{AppProxy, HIDER};
+		use yazi_proxy::AppProxy;
+		use yazi_term::YIELD_TO_SUBPROCESS;
 
 		match n {
 			SIGINT => { /* ignored */ }
@@ -38,7 +39,7 @@ impl Signals {
 					}
 				});
 			}
-			SIGCONT if HIDER.try_acquire().is_ok() => _ = tokio::spawn(AppProxy::resume()),
+			SIGCONT if YIELD_TO_SUBPROCESS.try_acquire().is_ok() => _ = tokio::spawn(AppProxy::resume()),
 			_ => {}
 		}
 		true

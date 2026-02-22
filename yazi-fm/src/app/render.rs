@@ -5,6 +5,7 @@ use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
 use yazi_actor::{Ctx, lives::Lives};
 use yazi_binding::runtime_scope;
+use yazi_config::LAYOUT;
 use yazi_macro::{act, succ};
 use yazi_plugin::LUA;
 use yazi_shared::{data::Data, event::NEED_RENDER};
@@ -26,13 +27,12 @@ impl App {
 		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
-		let frame = term
-			.draw(|f| {
-				_ = Lives::scope(&self.core, || {
-					runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(&self.core), f.area())))
-				});
-			})
-			.unwrap();
+		let preview_rect = LAYOUT.get().preview;
+		let frame = term.draw(|f| {
+			_ = Lives::scope(&self.core, || {
+				runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(&self.core), f.area())))
+			});
+		})?;
 
 		if COLLISION.load(Ordering::Relaxed) {
 			Self::patch(frame);
@@ -41,10 +41,11 @@ impl App {
 			self.render_partially()?;
 		}
 
-		// Reload preview if collision is resolved
+		let cx = &mut Ctx::active(&mut self.core, &mut self.term);
 		if collision && !COLLISION.load(Ordering::Relaxed) {
-			let cx = &mut Ctx::active(&mut self.core, &mut self.term);
-			act!(mgr:peek, cx, true)?;
+			act!(mgr:peek, cx, true)?; // Reload preview if collision is resolved
+		} else if preview_rect != LAYOUT.get().preview {
+			act!(mgr:peek, cx)?; // Reload preview if layout changed
 		}
 		succ!();
 	}
@@ -58,17 +59,15 @@ impl App {
 		Self::routine(true, None);
 		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
 
-		let frame = term
-			.draw_partial(|f| {
-				_ = Lives::scope(&self.core, || {
-					runtime_scope!(LUA, "root", {
-						f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
-						f.render_widget(crate::notify::Notify::new(&self.core), f.area());
-						Ok(())
-					})
-				});
-			})
-			.unwrap();
+		let frame = term.draw_partial(|f| {
+			_ = Lives::scope(&self.core, || {
+				runtime_scope!(LUA, "root", {
+					f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
+					f.render_widget(crate::notify::Notify::new(&self.core), f.area());
+					Ok(())
+				})
+			});
+		})?;
 
 		if COLLISION.load(Ordering::Relaxed) {
 			Self::patch(frame);

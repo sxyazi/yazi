@@ -23,6 +23,7 @@ yazi-tty      = { path = "../yazi-tty", version = "26.2.2" }
 anyhow    = { workspace = true }
 crossterm = { workspace = true }
 ratatui   = { workspace = true }
+tokio     = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }

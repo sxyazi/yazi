@@ -16,6 +16,8 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_tty::init();
 
+	yazi_term::init();
+
 	yazi_fs::init();
 
 	yazi_config::init()?;
@@ -25,8 +27,6 @@ async fn main() -> anyhow::Result<()> {
 	yazi_adapter::init()?;
 
 	yazi_boot::init();
-
-	yazi_proxy::init();
 
 	yazi_dds::init();
 

@@ -27,10 +27,10 @@ debug = false
 
 [workspace.dependencies]
 ansi-to-tui         = "8.0.1"
-anyhow              = "1.0.101"
+anyhow              = "1.0.102"
 base64              = "0.22.1"
 bitflags            = { version = "2.11.0", features = [ "serde" ] }
-clap                = { version = "4.5.59", features = [ "derive" ] }
+clap                = { version = "4.5.60", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.29.0", features = [ "event-stream" ] }
 dirs                = "6.0.0"
@@ -62,7 +62,7 @@ thiserror           = "2.0.18"
 tokio               = { version = "1.49.0", features = [ "full" ] }
 tokio-stream        = "0.1.18"
 tokio-util          = "0.7.18"
-toml                = { version = "1.0.2" }
+toml                = { version = "1.0.3" }
 tracing             = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 typed-path          = "0.12.3"
