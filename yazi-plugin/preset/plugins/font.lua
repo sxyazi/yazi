@@ -33,7 +33,7 @@ function M:preload(job)
 		"-gravity",
 		"center",
 		"-font",
-		tostring(job.file.path),
+		tostring(job.file.path):gsub("\\", "\\\\"),
 		"-pointsize",
 		64,
 		"xc:white",
