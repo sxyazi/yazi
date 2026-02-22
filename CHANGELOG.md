@@ -40,9 +40,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
-- Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
-- Make `ya pkg` ignore default remote name in user Git config ([#3648])
 - Chafa v1.18.1 causes random ghost keypresses when previewing images ([#3678])
+- Make `ya pkg` ignore default remote name in user Git config ([#3648])
+- Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
+- Escape backslashes in ImageMagick font path parameter ([#3708])
 
 ### Improved
 
@@ -1666,3 +1667,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3687]: https://github.com/sxyazi/yazi/pull/3687
 [#3689]: https://github.com/sxyazi/yazi/pull/3689
 [#3696]: https://github.com/sxyazi/yazi/pull/3696
+[#3708]: https://github.com/sxyazi/yazi/pull/3708
