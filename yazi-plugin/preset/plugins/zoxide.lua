@@ -13,16 +13,10 @@ function M:setup(opts)
 	opts = opts or {}
 
 	if opts.update_db then
-		ps.sub(
-			"cd",
-			function()
-				ya.emit("shell", {
-					cwd = fs.cwd(),
-					orphan = true,
-					"zoxide add " .. ya.quote(tostring(cx.active.current.cwd)):gsub("%%", "%%%%"),
-				})
-			end
-		)
+		ps.sub("cd", function()
+			local cwd = cx.active.current.cwd
+			ya.async(function() Command("zoxide"):arg({ "add", tostring(cwd) }):status() end)
+		end)
 	end
 end
 

@@ -7,8 +7,9 @@ use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_binding::Permit;
 use yazi_macro::succ;
 use yazi_parser::VoidOpt;
-use yazi_proxy::{AppProxy, HIDER};
+use yazi_proxy::AppProxy;
 use yazi_shared::{data::Data, terminal_clear};
+use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::TTY;
 
 use crate::{Actor, Ctx};
@@ -27,7 +28,7 @@ impl Actor for Inspect {
 		};
 
 		tokio::spawn(async move {
-			let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
+			let _permit = Permit::new(YIELD_TO_SUBPROCESS.acquire().await.unwrap(), AppProxy::resume());
 			let (tx, mut rx) = mpsc::unbounded_channel();
 
 			let buffered = {

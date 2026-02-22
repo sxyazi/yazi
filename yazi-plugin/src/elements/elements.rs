@@ -5,8 +5,9 @@ use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}, runtime};
 use yazi_config::LAYOUT;
-use yazi_proxy::{AppProxy, HIDER};
+use yazi_proxy::AppProxy;
 use yazi_shared::replace_to_printable;
+use yazi_term::YIELD_TO_SUBPROCESS;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
@@ -52,7 +53,7 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 			return Err("Cannot hide while already hidden".into_lua_err());
 		}
 
-		let permit = HIDER.acquire().await.unwrap();
+		let permit = YIELD_TO_SUBPROCESS.acquire().await.unwrap();
 		AppProxy::stop().await;
 
 		lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume()))?;

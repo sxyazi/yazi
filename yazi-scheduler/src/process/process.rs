@@ -1,7 +1,8 @@
 use anyhow::{Result, anyhow};
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_binding::Permit;
-use yazi_proxy::{AppProxy, HIDER, NotifyProxy};
+use yazi_proxy::{AppProxy, NotifyProxy};
+use yazi_term::YIELD_TO_SUBPROCESS;
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
 use crate::{TaskOp, TaskOps, process::{ProcessIn, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
@@ -20,7 +21,7 @@ impl Process {
 	}
 
 	pub(crate) async fn block(&self, task: ProcessInBlock) -> Result<(), ProcessOutBlock> {
-		let _permit = Permit::new(HIDER.acquire().await.unwrap(), AppProxy::resume());
+		let _permit = Permit::new(YIELD_TO_SUBPROCESS.acquire().await.unwrap(), AppProxy::resume());
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());

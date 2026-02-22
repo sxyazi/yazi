@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Yazi
+Name=Yazi File Manager
 Icon=yazi
 Comment=Blazing fast terminal file manager written in Rust, based on async I/O
 Terminal=true
