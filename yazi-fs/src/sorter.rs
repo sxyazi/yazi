@@ -59,11 +59,11 @@ impl FilesSorter {
 			}),
 			SortBy::Alphabetical => items.sort_unstable_by(|a, b| {
 				promote!(a, b);
-				self.sort_alphabetically(a, b)
+				self.fallback(a, b, self.sort_alphabetically(a, b))
 			}),
 			SortBy::Natural => items.sort_unstable_by(|a, b| {
 				promote!(a, b);
-				self.sort_naturally(a, b)
+				self.fallback(a, b, self.sort_naturally(a, b))
 			}),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				promote!(a, b);

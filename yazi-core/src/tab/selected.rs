@@ -29,7 +29,7 @@ impl Selected {
 		I: IntoIterator<Item = T>,
 		T: Into<Url<'a>>,
 	{
-		let mut grouped: HashMap<_, Vec<_>> = Default::default();
+		let mut grouped: IndexMap<_, Vec<_>> = Default::default();
 		for url in urls.into_iter().map(Into::into) {
 			if let Some(p) = url.parent() {
 				grouped.entry(p).or_default().push(url);
@@ -71,7 +71,6 @@ impl Selected {
 		urls.len()
 	}
 
-	#[inline]
 	pub fn remove<'a>(&mut self, url: impl Into<Url<'a>> + Clone) -> bool {
 		self.remove_same([url]) == 1
 	}
