@@ -1,25 +1,27 @@
 use std::{path::Path, time::Duration};
 
-use anyhow::Result;
 use hashbrown::HashSet;
-use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_fs::{File, FilesOp, provider};
+use yazi_fs::{File, FilesOp, cha::Cha, mounts::PARTITIONS, provider};
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
-use crate::{Reporter, WATCHER};
+use crate::{Reporter, WATCHER, Watchee};
 
-pub(crate) struct Local(Box<dyn notify::Watcher + Send>);
+pub(crate) struct Local {
+	primary:     Option<RecommendedWatcher>,
+	alternative: PollWatcher,
+}
 
 impl Local {
 	pub(crate) fn serve(rx: mpsc::UnboundedReceiver<UrlBuf>, reporter: Reporter) -> Self {
 		tokio::spawn(Self::changed(rx));
 
 		let config = notify::Config::default().with_poll_interval(Duration::from_millis(500));
-		let handler = move |res: Result<notify::Event, notify::Error>| {
+		let handler = move |res: Result<notify::Event>| {
 			if let Ok(event) = res
 				&& !event.kind.is_access()
 			{
@@ -27,33 +29,58 @@ impl Local {
 			}
 		};
 
-		if cfg!(target_os = "netbsd") || yazi_adapter::WSL.get() {
-			return Self(Box::new(PollWatcher::new(handler, config).unwrap()));
+		let primary = RecommendedWatcher::new(handler.clone(), config);
+		let alternative = PollWatcher::new(handler, config).unwrap();
+
+		if let Err(e) = &primary {
+			error!("Failed to initialize primary watcher: {e:?}");
 		}
 
-		Self(match RecommendedWatcher::new(handler.clone(), config) {
-			Ok(watcher) => Box::new(watcher),
-			Err(e) => {
-				error!("Falling back to PollWatcher due to RecommendedWatcher init failure: {e:?}");
-				Box::new(PollWatcher::new(handler, config).unwrap())
+		Self { primary: primary.ok(), alternative }
+	}
+
+	pub(crate) fn watch(&mut self, watchee: &mut Watchee) -> Result<()> {
+		let (path, alt) =
+			watchee.as_local_mut().ok_or_else(|| notify::Error::generic("Not a local watchee"))?;
+
+		if let Some(primary) = self.primary.as_mut().filter(|_| !*alt) {
+			match primary.watch(path, RecursiveMode::NonRecursive) {
+				Ok(()) => return Ok(()),
+				Err(e) => tracing::warn!("Failed to watch {path:?} with primary watcher: {e:?}"),
 			}
-		})
-	}
-
-	pub(crate) fn watch(&mut self, path: &Path) -> Result<()> {
-		match self.0.watch(path, RecursiveMode::NonRecursive) {
-			Ok(()) => Ok(()),
-			Err(e) if matches!(e.kind, notify::ErrorKind::PathNotFound) => Ok(()),
-			Err(e) => Err(e)?,
 		}
+
+		tracing::debug!("Watching {path:?} with alternative watcher");
+		*alt = true;
+		self.alternative.watch(path, RecursiveMode::NonRecursive)
 	}
 
-	pub(crate) fn unwatch(&mut self, path: &Path) -> Result<()> {
-		match self.0.unwatch(path) {
+	pub(crate) fn unwatch(&mut self, watchee: &Watchee) -> Result<()> {
+		let (path, alt) =
+			watchee.as_local().ok_or_else(|| notify::Error::generic("Not a local watchee"))?;
+
+		let result = if alt {
+			self.alternative.unwatch(path)
+		} else if let Some(primary) = &mut self.primary {
+			primary.unwatch(path)
+		} else {
+			Ok(())
+		};
+
+		match result {
 			Ok(()) => Ok(()),
 			Err(e) if matches!(e.kind, notify::ErrorKind::WatchNotFound) => Ok(()),
 			Err(e) => Err(e)?,
 		}
+	}
+
+	pub(crate) fn heuristic(path: &Path) -> bool {
+		if cfg!(target_os = "netbsd") || yazi_adapter::WSL.get() {
+			return true;
+		}
+
+		let Ok(meta) = path.metadata() else { return true };
+		PARTITIONS.read().heuristic(Cha::new(path.file_name().unwrap_or_default(), meta))
 	}
 
 	async fn changed(rx: UnboundedReceiver<UrlBuf>) {

@@ -1,6 +1,6 @@
 yazi_macro::mod_pub!(local remote);
 
-yazi_macro::mod_flat!(backend reporter watched watcher);
+yazi_macro::mod_flat!(backend reporter watched watchee watcher);
 
 pub static WATCHED: yazi_shared::RoCell<parking_lot::RwLock<Watched>> = yazi_shared::RoCell::new();
 pub static WATCHER: yazi_shared::RoCell<tokio::sync::Semaphore> = yazi_shared::RoCell::new();

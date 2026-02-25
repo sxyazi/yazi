@@ -51,7 +51,7 @@ impl Linked {
 			let watched = watched.read();
 
 			// Remove entries that are no longer watched
-			linked.write().retain(|from, _| watched.contains(from));
+			linked.write().retain(|from, _| watched.contains_path(from));
 
 			// Update existing entries and remove broken links
 			for from in watched.paths() {

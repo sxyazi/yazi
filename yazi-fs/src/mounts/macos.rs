@@ -16,7 +16,8 @@ impl Partitions {
 	where
 		F: Fn() + Copy + Send + 'static,
 	{
-		tokio::task::spawn_blocking(move || {
+		let rt = tokio::runtime::Handle::current();
+		std::thread::spawn(move || {
 			let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
 			if session.is_null() {
 				return error!("Cannot create a disk arbitration session");
@@ -39,11 +40,12 @@ impl Partitions {
 			}
 
 			let create_context = || {
+				let rt = rt.clone();
 				let boxed: Box<dyn Fn()> = Box::new(move || {
 					if mem::replace(&mut me.write().need_update, true) {
 						return;
 					}
-					Self::update(me, cb);
+					Self::update(me, cb, &rt);
 				});
 				Box::into_raw(Box::new(boxed)) as *mut c_void
 			};
@@ -69,8 +71,11 @@ impl Partitions {
 		});
 	}
 
-	fn update(me: &'static Locked, cb: impl Fn() + Send + 'static) {
-		_ = tokio::task::spawn_blocking(move || {
+	fn update<F>(me: &'static Locked, cb: F, rt: &tokio::runtime::Handle)
+	where
+		F: Fn() + Send + 'static,
+	{
+		_ = rt.spawn_blocking(move || {
 			let result = Self::all_names().and_then(Self::all_partitions);
 			if let Err(ref e) = result {
 				error!("Error encountered while updating mount points: {e:?}");

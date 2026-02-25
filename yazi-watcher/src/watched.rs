@@ -1,32 +1,43 @@
-use std::path::Path;
+use std::{ops::{Deref, DerefMut}, path::Path};
 
 use hashbrown::HashSet;
 use percent_encoding::percent_decode_str;
 use yazi_fs::{Xdg, path::PercentEncoding};
-use yazi_shared::{path::{Component, PathBufDyn, PathDyn, PathLike}, pool::InternStr, scheme::SchemeKind, url::{AsUrl, UrlBuf, UrlLike}};
+use yazi_shared::{path::{Component, PathBufDyn, PathDyn, PathLike}, pool::InternStr, scheme::SchemeKind, url::{AsUrl, UrlBuf}};
+
+use crate::Watchee;
 
 #[derive(Debug, Default)]
-pub struct Watched(HashSet<UrlBuf>);
+pub struct Watched(HashSet<Watchee<'static>>);
+
+impl Deref for Watched {
+	type Target = HashSet<Watchee<'static>>;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl DerefMut for Watched {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
 
 impl Watched {
-	#[inline]
-	pub(crate) fn contains(&self, url: impl AsUrl) -> bool { self.0.contains(&url.as_url()) }
-
-	#[inline]
-	pub(crate) fn diff(&self, new: &HashSet<UrlBuf>) -> (Vec<UrlBuf>, Vec<UrlBuf>) {
-		(self.0.difference(new).cloned().collect(), new.difference(&self.0).cloned().collect())
+	pub(super) fn contains_url(&self, url: impl AsUrl) -> bool {
+		let url = url.as_url();
+		if url.as_local().is_some() {
+			self.0.contains(&Watchee::Local(url.into(), false))
+				|| self.0.contains(&Watchee::Local(url.into(), true))
+		} else {
+			self.0.contains(&Watchee::Remote(url.into()))
+		}
 	}
 
-	#[inline]
-	pub(crate) fn insert(&mut self, url: impl Into<UrlBuf>) { self.0.insert(url.into()); }
-
-	#[inline]
-	pub(crate) fn paths(&self) -> impl Iterator<Item = &Path> {
-		self.0.iter().filter_map(|u| u.as_local())
+	pub(super) fn contains_path(&self, path: &Path) -> bool {
+		self.0.iter().any(|watchee| watchee.as_url().as_local() == Some(path))
 	}
 
-	#[inline]
-	pub(crate) fn remove(&mut self, url: impl AsUrl) { self.0.remove(&url.as_url()); }
+	pub(super) fn paths(&self) -> impl Iterator<Item = &Path> {
+		self.0.iter().filter_map(|watchee| watchee.as_url().as_local())
+	}
 
 	pub(super) fn find_by_cache(&self, cache: PathDyn) -> Option<UrlBuf> {
 		let mut it = cache.try_strip_prefix(Xdg::cache_dir()).ok()?.components();
@@ -46,6 +57,6 @@ impl Watched {
 		.ok()?;
 
 		let url = UrlBuf::Sftp { loc: path.into_unix().ok()?.into(), domain };
-		if self.contains(&url) { Some(url) } else { None }
+		if self.contains_url(&url) { Some(url) } else { None }
 	}
 }
