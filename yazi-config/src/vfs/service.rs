@@ -39,6 +39,10 @@ pub struct ServiceSftp {
 	pub key_file:       PathBuf,
 	pub key_passphrase: Option<String>,
 	#[serde(default)]
+	pub cert_file: PathBuf,
+	#[serde(default)]
+	pub skip_cert_validation: bool,
+	#[serde(default)]
 	pub identity_agent: PathBuf,
 }
 

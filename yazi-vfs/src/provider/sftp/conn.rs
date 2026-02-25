@@ -81,6 +81,10 @@ impl Conn {
 
 		let session = if self.config.password.is_some() {
 			self.connect_by_password(pref).await
+		} else if !self.config.key_file.as_os_str().is_empty()
+			&& !self.config.cert_file.as_os_str().is_empty()
+		{
+			self.connect_by_key_and_cert(pref).await
 		} else if !self.config.key_file.as_os_str().is_empty() {
 			self.connect_by_key(pref).await
 		} else {
@@ -143,6 +147,61 @@ impl Conn {
 			Ok(session)
 		} else {
 			Err(russh::Error::InvalidConfig("Public key authentication failed".to_owned()))
+		}
+	}
+
+	async fn connect_by_key_and_cert(
+		self,
+		pref: Arc<russh::client::Config>,
+	) -> Result<russh::client::Handle<Self>, russh::Error> {
+		let key_file = &self.config.key_file;
+		if key_file.as_os_str().is_empty() {
+			return Err(russh::Error::InvalidConfig("Key file not provided".to_owned()));
+		};
+		let cert_file = &self.config.cert_file;
+		if cert_file.as_os_str().is_empty() {
+			return Err(russh::Error::InvalidConfig("Cert file not provided".to_owned()));
+		};
+
+		let cert = russh::keys::load_openssh_certificate(cert_file).map_err(
+			|e: russh::keys::ssh_key::Error| {
+				russh::Error::InvalidConfig(format!("Failed to read cert file: {e}"))
+			},
+		)?;
+
+		if !self.config.skip_cert_validation {
+			// TODO: Also validate the certificate cryptographically: https://docs.rs/russh/latest/russh/keys/struct.Certificate.html#method.validate
+			// however, this would require fetching CAs, which could require additional config and complexity
+
+			cert.verify_signature().map_err(|e| {
+				russh::Error::InvalidConfig(format!("Certificate signature verification failed: {e}"))
+			})?;
+			let unix_timestamp = std::time::UNIX_EPOCH.elapsed().unwrap_or_default().as_secs();
+			if !(cert.valid_after() <= unix_timestamp && unix_timestamp <= cert.valid_before()) {
+				return Err(russh::Error::InvalidConfig(
+					"Certificate is not valid at this time".to_owned(),
+				));
+			}
+		}
+
+		let key = Local::regular(key_file)
+			.read_to_string()
+			.await
+			.map_err(|e| russh::Error::InvalidConfig(format!("Failed to read key file: {e}")))?;
+
+		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
+
+		let mut session =
+			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
+
+		let result = session.authenticate_openssh_cert(&self.config.user, Arc::new(key), cert).await?;
+
+		if result.success() {
+			Ok(session)
+		} else {
+			Err(russh::Error::InvalidConfig(
+				"Public key with certificate authentication failed".to_owned(),
+			))
 		}
 	}
 
