@@ -40,7 +40,7 @@ impl<'a> Watchee<'a> {
 	{
 		let url = url.into();
 		if let Some(path) = url.as_local() {
-			let b = Local::heuristic(path);
+			let b = Local::soundless(path);
 			Self::Local(url, b)
 		} else {
 			Self::Remote(url)

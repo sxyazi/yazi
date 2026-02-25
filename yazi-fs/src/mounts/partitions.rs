@@ -31,14 +31,26 @@ impl Partitions {
 		self.inner.iter().find(|p| p.rdev == Some(dev))
 	}
 
-	pub fn heuristic(&self, _cha: Cha) -> bool {
+	pub fn timeless(&self, _cha: Cha) -> bool {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		{
-			self.by_dev(_cha.dev).is_some_and(|p| p.heuristic())
+			self.by_dev(_cha.dev).is_some_and(|p| p.timeless())
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{
-			// For now, assume other targets update directory stat data correctly
+			// For now, assume other targets update directory mtime correctly
+			false
+		}
+	}
+
+	pub fn soundless(&self, _cha: Cha) -> bool {
+		#[cfg(any(target_os = "linux", target_os = "macos"))]
+		{
+			self.by_dev(_cha.dev).is_some_and(|p| p.soundless())
+		}
+		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+		{
+			// For now, assume other targets emit change notifications correctly
 			false
 		}
 	}

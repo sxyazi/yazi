@@ -74,13 +74,13 @@ impl Local {
 		}
 	}
 
-	pub(crate) fn heuristic(path: &Path) -> bool {
+	pub(crate) fn soundless(path: &Path) -> bool {
 		if cfg!(target_os = "netbsd") || yazi_adapter::WSL.get() {
 			return true;
 		}
 
 		let Ok(meta) = path.metadata() else { return true };
-		PARTITIONS.read().heuristic(Cha::new(path.file_name().unwrap_or_default(), meta))
+		PARTITIONS.read().soundless(Cha::new(path.file_name().unwrap_or_default(), meta))
 	}
 
 	async fn changed(rx: UnboundedReceiver<UrlBuf>) {
