@@ -40,7 +40,7 @@ function M:peek(job)
 		left[#left] = ui.Line {
 			string.rep(" │", f.depth),
 			left[#left],
-			ui.truncate(f.path.name, {
+			ui.truncate(f.path.name or tostring(f.path), {
 				rtl = true,
 				max = math.max(0, job.area.w - (f.depth * 2) - ui.width(left[#left]) - ui.width(right[#right])),
 			}),

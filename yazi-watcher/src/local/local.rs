@@ -20,7 +20,7 @@ impl Local {
 	pub(crate) fn serve(rx: mpsc::UnboundedReceiver<UrlBuf>, reporter: Reporter) -> Self {
 		tokio::spawn(Self::changed(rx));
 
-		let config = notify::Config::default().with_poll_interval(Duration::from_millis(500));
+		let config = notify::Config::default().with_poll_interval(Duration::from_secs(1));
 		let handler = move |res: Result<notify::Event>| {
 			if let Ok(event) = res
 				&& !event.kind.is_access()

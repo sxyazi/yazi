@@ -14,6 +14,7 @@ impl Backend {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		yazi_fs::mounts::Partitions::monitor(&yazi_fs::mounts::PARTITIONS, || {
 			yazi_proxy::MgrProxy::watch();
+			yazi_proxy::MgrProxy::refresh();
 			yazi_macro::err!(yazi_dds::Pubsub::pub_after_mount())
 		});
 
