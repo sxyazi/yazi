@@ -12,7 +12,6 @@ repository  = "https://github.com/sxyazi/yazi"
 workspace = true
 
 [dependencies]
-yazi-binding = { path = "../yazi-binding", version = "26.2.2" }
 yazi-config  = { path = "../yazi-config", version = "26.2.2" }
 yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
 yazi-parser  = { path = "../yazi-parser", version = "26.2.2" }

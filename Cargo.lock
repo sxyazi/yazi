@@ -5859,7 +5859,6 @@ dependencies = [
  "anyhow",
  "bitflags 2.11.0",
  "crossterm 0.29.0",
- "dirs",
  "globset",
  "hashbrown 0.16.1",
  "indexmap 2.13.0",
@@ -6119,7 +6118,6 @@ name = "yazi-proxy"
 version = "26.2.2"
 dependencies = [
  "tokio",
- "yazi-binding",
  "yazi-config",
  "yazi-macro",
  "yazi-parser",
@@ -6256,7 +6254,7 @@ dependencies = [
 name = "yazi-watcher"
 version = "26.2.2"
 dependencies = [
- "anyhow",
+ "futures",
  "hashbrown 0.16.1",
  "notify",
  "parking_lot",

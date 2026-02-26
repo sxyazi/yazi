@@ -1,25 +1,25 @@
+use futures::{StreamExt, stream};
 use hashbrown::HashSet;
-use tokio::sync::watch;
 use tracing::error;
 use yazi_fs::FsUrl;
-use yazi_shared::url::{UrlBuf, UrlCow, UrlLike};
+use yazi_shared::{LastValue, url::{UrlBuf, UrlCow, UrlLike}};
 
 use crate::{Reporter, WATCHED, Watchee, backend::Backend};
 
 pub struct Watcher {
-	tx:       watch::Sender<HashSet<UrlBuf>>,
+	last:     LastValue<HashSet<UrlBuf>>,
 	reporter: Reporter,
 }
 
 impl Watcher {
 	pub fn serve() -> Self {
-		let (tx, rx) = watch::channel(Default::default());
+		let last = LastValue::default();
 
 		let backend = Backend::serve();
 		let reporter = backend.reporter.clone();
 
-		tokio::spawn(Self::watched(rx, backend));
-		Self { tx, reporter }
+		tokio::spawn(Self::watched(last.clone(), backend));
+		Self { last, reporter }
 	}
 
 	pub fn watch<'a, I>(&mut self, urls: I)
@@ -28,18 +28,18 @@ impl Watcher {
 		I::Item: Into<UrlCow<'a>>,
 	{
 		let it = urls.into_iter();
-		let mut set = HashSet::with_capacity(it.size_hint().0);
+		let mut urls = HashSet::with_capacity(it.size_hint().0);
 
 		for url in it.map(Into::into) {
 			if !url.is_absolute() {
 				continue;
 			} else if let Some(cache) = url.cache() {
-				set.insert(cache.into());
+				urls.insert(cache.into());
 			}
-			set.insert(url.into_owned());
+			urls.insert(url.into_owned());
 		}
 
-		self.tx.send(set).ok();
+		self.last.set(urls);
 	}
 
 	pub fn report<'a, I>(&self, urls: I)
@@ -50,46 +50,31 @@ impl Watcher {
 		self.reporter.report(urls);
 	}
 
-	async fn watched(mut rx: watch::Receiver<HashSet<UrlBuf>>, mut backend: Backend) {
+	async fn watched(last: LastValue<HashSet<UrlBuf>>, mut backend: Backend) {
 		loop {
-			let (rx_, to_unwatch, to_watch) = Self::diff(rx).await;
-			rx = rx_;
+			let (to_unwatch, to_watch) = Self::diff(last.get().await).await;
 
 			if !to_unwatch.is_empty() || !to_watch.is_empty() {
 				backend = Self::sync(backend, to_unwatch, to_watch).await;
 				backend = backend.sync().await;
 			}
-
-			if rx.changed().await.is_err() {
-				break;
-			}
 		}
 	}
 
-	async fn diff(
-		mut rx: watch::Receiver<HashSet<UrlBuf>>,
-	) -> (watch::Receiver<HashSet<UrlBuf>>, Vec<Watchee<'static>>, Vec<Watchee<'static>>) {
-		tokio::task::spawn_blocking(move || {
-			let new = rx.borrow_and_update();
-			let new_: HashSet<_> = new.iter().map(Watchee::new).collect();
+	async fn diff(urls: HashSet<UrlBuf>) -> (Vec<Watchee<'static>>, HashSet<Watchee<'static>>) {
+		let mut new: HashSet<_> = stream::iter(urls).then(Watchee::new).collect().await;
+		let old = WATCHED.read();
 
-			let old = WATCHED.read();
+		let to_unwatch = old.difference(&new).map(Watchee::to_static).collect();
+		new.retain(|watchee| !old.contains(watchee));
 
-			let to_unwatch = old.difference(&new_).map(Watchee::to_static).collect();
-			let to_watch = new_.difference(&old).map(Watchee::to_static).collect();
-
-			drop(new_);
-			drop(new);
-			(rx, to_unwatch, to_watch)
-		})
-		.await
-		.unwrap()
+		(to_unwatch, new)
 	}
 
 	async fn sync(
 		mut backend: Backend,
 		to_unwatch: Vec<Watchee<'static>>,
-		to_watch: Vec<Watchee<'static>>,
+		to_watch: HashSet<Watchee<'static>>,
 	) -> Backend {
 		tokio::task::spawn_blocking(move || {
 			for watchee in to_unwatch {
