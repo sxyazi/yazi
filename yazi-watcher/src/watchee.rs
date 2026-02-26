@@ -34,13 +34,13 @@ impl<'a> Watchee<'a> {
 		})
 	}
 
-	pub(super) fn new<U>(url: U) -> Self
+	pub(super) async fn new<U>(url: U) -> Self
 	where
 		U: Into<UrlCow<'a>>,
 	{
 		let url = url.into();
 		if let Some(path) = url.as_local() {
-			let b = Local::soundless(path);
+			let b = Local::soundless(path).await;
 			Self::Local(url, b)
 		} else {
 			Self::Remote(url)

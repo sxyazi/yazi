@@ -5,7 +5,7 @@ use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_fs::{File, FilesOp, cha::Cha, mounts::PARTITIONS, provider};
+use yazi_fs::{File, FilesOp, mounts::PARTITIONS, provider::{self, Provider}};
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
@@ -74,13 +74,15 @@ impl Local {
 		}
 	}
 
-	pub(crate) fn soundless(path: &Path) -> bool {
+	pub(crate) async fn soundless(path: &Path) -> bool {
 		if cfg!(target_os = "netbsd") || yazi_adapter::WSL.get() {
 			return true;
 		}
 
-		let Ok(meta) = path.metadata() else { return true };
-		PARTITIONS.read().soundless(Cha::new(path.file_name().unwrap_or_default(), meta))
+		match provider::local::Local::regular(path).metadata().await {
+			Ok(cha) => PARTITIONS.read().soundless(cha),
+			Err(_) => true,
+		}
 	}
 
 	async fn changed(rx: UnboundedReceiver<UrlBuf>) {

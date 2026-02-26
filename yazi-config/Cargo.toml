@@ -22,7 +22,6 @@ yazi-tty     = { path = "../yazi-tty", version = "26.2.2" }
 anyhow    = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
-dirs      = { workspace = true }
 globset   = { workspace = true }
 hashbrown = { workspace = true }
 indexmap  = { workspace = true }
