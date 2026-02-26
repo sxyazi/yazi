@@ -16,11 +16,12 @@ impl<T> LastValue<T> {
 
 	pub async fn get(&self) -> T {
 		loop {
+			let notified = self.inner.0.notified();
 			if let Some(data) = self.inner.1.lock().take() {
 				return data;
 			}
 
-			self.inner.0.notified().await;
+			notified.await;
 		}
 	}
 }
