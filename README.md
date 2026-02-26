@@ -1,16 +1,10 @@
 <div align="center">
-	<a href="https://go.warp.dev/yazi" target="_blank">
-		<sup>Special thanks to:</sup>
-		<br>
-		<img alt="Warp sponsorship" width="400" src="https://github.com/warpdotdev/brand-assets/blob/main/Github/Sponsor/Warp-Github-LG-02.png">
-		<br>
-		<b>Warp, built for coding with multiple AI agents</b>
-		<br>
-		<sup>Available for macOS, Linux and Windows</sup>
-	</a>
-</div>
+	<sup>Special thanks to:</sup><br>
 
-<br>
+|<a href="https://go.warp.dev/yazi" target="_blank"><img alt="Warp sponsorship" width=350 src="https://github.com/warpdotdev/brand-assets/blob/main/Github/Sponsor/Warp-Github-LG-02.png"><br><b>Warp, built for coding with multiple AI agents</b><br><sup>Available for macOS, Linux and Windows</sup></a>|<a href="https://git-tower.com/?utm_source=yazi&utm_medium=referral" target="_blank"><img alt="Tower sponsorship" height=210 src="https://github.com/user-attachments/assets/b2b98d50-f0f8-4d7e-8429-5516dfc4bff6"><br><b>The most powerful Git client for Mac and Windows</b></a>|
+|-|-|
+
+</div>
 
 ## Yazi - ⚡️ Blazing Fast Terminal File Manager
 
