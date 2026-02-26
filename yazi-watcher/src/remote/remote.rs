@@ -1,15 +1,15 @@
 use std::time::{Duration, SystemTime};
 
-use anyhow::Result;
 use hashbrown::HashMap;
+use notify::Result;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{File, FilesOp};
 use yazi_proxy::MgrProxy;
-use yazi_shared::url::{Url, UrlBuf, UrlLike};
+use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
-use crate::{Reporter, WATCHER};
+use crate::{Reporter, WATCHER, Watchee};
 
 pub(crate) struct Remote;
 
@@ -20,9 +20,9 @@ impl Remote {
 		Self
 	}
 
-	pub(crate) fn watch(&mut self, _url: Url) -> Result<()> { Ok(()) }
+	pub(crate) fn watch(&mut self, _watchee: &mut Watchee) -> Result<()> { Ok(()) }
 
-	pub(crate) fn unwatch(&mut self, _url: Url) -> Result<()> { Ok(()) }
+	pub(crate) fn unwatch(&mut self, _watchee: &Watchee) -> Result<()> { Ok(()) }
 
 	async fn changed(rx: UnboundedReceiver<(UrlBuf, bool)>) {
 		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(250));

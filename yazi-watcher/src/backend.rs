@@ -1,8 +1,7 @@
-use anyhow::Result;
+use notify::Result;
 use tokio::sync::mpsc;
-use yazi_shared::url::AsUrl;
 
-use crate::{Reporter, WATCHED, local::{self, LINKED, Linked}, remote};
+use crate::{Reporter, WATCHED, Watchee, local::{self, LINKED, Linked}, remote};
 
 pub(crate) struct Backend {
 	local:               local::Local,
@@ -14,7 +13,7 @@ impl Backend {
 	pub(crate) fn serve() -> Self {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		yazi_fs::mounts::Partitions::monitor(&yazi_fs::mounts::PARTITIONS, || {
-			yazi_proxy::MgrProxy::refresh();
+			yazi_proxy::MgrProxy::watch();
 			yazi_macro::err!(yazi_dds::Pubsub::pub_after_mount())
 		});
 
@@ -29,26 +28,18 @@ impl Backend {
 		}
 	}
 
-	pub(super) fn watch(&mut self, url: impl AsUrl) -> Result<()> {
-		let url = url.as_url();
-		if let Some(path) = url.as_local() {
-			self.local.watch(path)?;
-		} else {
-			self.remote.watch(url)?;
+	pub(super) fn watch(&mut self, watchee: &mut Watchee) -> Result<()> {
+		match watchee {
+			Watchee::Local(..) => self.local.watch(watchee),
+			Watchee::Remote(_) => self.remote.watch(watchee),
 		}
-
-		Ok(())
 	}
 
-	pub(super) fn unwatch(&mut self, url: impl AsUrl) -> Result<()> {
-		let url = url.as_url();
-		if let Some(path) = url.as_local() {
-			self.local.unwatch(path)?;
-		} else {
-			self.remote.unwatch(url)?;
+	pub(super) fn unwatch(&mut self, watchee: &Watchee) -> Result<()> {
+		match watchee {
+			Watchee::Local(..) => self.local.unwatch(watchee),
+			Watchee::Remote(_) => self.remote.unwatch(watchee),
 		}
-
-		Ok(())
 	}
 
 	pub(super) async fn sync(self) -> Self {

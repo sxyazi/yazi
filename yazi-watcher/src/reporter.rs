@@ -36,7 +36,7 @@ impl Reporter {
 
 		let watched = WATCHED.read();
 		for parent in [parent].into_iter().chain(linked) {
-			if watched.contains(parent) {
+			if watched.contains_url(parent) {
 				self.local_tx.send(url.to_owned()).ok();
 				self.local_tx.send(parent.to_owned()).ok();
 			}
@@ -57,7 +57,7 @@ impl Reporter {
 
 	fn report_remote(&self, url: UrlCow) {
 		let Some(parent) = url.parent() else { return };
-		if !WATCHED.read().contains(parent) {
+		if !WATCHED.read().contains_url(parent) {
 			return;
 		}
 

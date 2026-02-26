@@ -4,7 +4,7 @@ use tracing::error;
 use yazi_fs::FsUrl;
 use yazi_shared::url::{UrlBuf, UrlCow, UrlLike};
 
-use crate::{Reporter, WATCHED, backend::Backend};
+use crate::{Reporter, WATCHED, Watchee, backend::Backend};
 
 pub struct Watcher {
 	tx:       watch::Sender<HashSet<UrlBuf>>,
@@ -52,7 +52,8 @@ impl Watcher {
 
 	async fn watched(mut rx: watch::Receiver<HashSet<UrlBuf>>, mut backend: Backend) {
 		loop {
-			let (to_unwatch, to_watch) = WATCHED.read().diff(&rx.borrow_and_update());
+			let (rx_, to_unwatch, to_watch) = Self::diff(rx).await;
+			rx = rx_;
 
 			if !to_unwatch.is_empty() || !to_watch.is_empty() {
 				backend = Self::sync(backend, to_unwatch, to_watch).await;
@@ -65,17 +66,42 @@ impl Watcher {
 		}
 	}
 
-	async fn sync(mut backend: Backend, to_unwatch: Vec<UrlBuf>, to_watch: Vec<UrlBuf>) -> Backend {
+	async fn diff(
+		mut rx: watch::Receiver<HashSet<UrlBuf>>,
+	) -> (watch::Receiver<HashSet<UrlBuf>>, Vec<Watchee<'static>>, Vec<Watchee<'static>>) {
 		tokio::task::spawn_blocking(move || {
-			for u in to_unwatch {
-				match backend.unwatch(&u) {
-					Ok(()) => WATCHED.write().remove(&u),
+			let new = rx.borrow_and_update();
+			let new_: HashSet<_> = new.iter().map(Watchee::new).collect();
+
+			let old = WATCHED.read();
+
+			let to_unwatch = old.difference(&new_).map(Watchee::to_static).collect();
+			let to_watch = new_.difference(&old).map(Watchee::to_static).collect();
+
+			drop(new_);
+			drop(new);
+			(rx, to_unwatch, to_watch)
+		})
+		.await
+		.unwrap()
+	}
+
+	async fn sync(
+		mut backend: Backend,
+		to_unwatch: Vec<Watchee<'static>>,
+		to_watch: Vec<Watchee<'static>>,
+	) -> Backend {
+		tokio::task::spawn_blocking(move || {
+			for watchee in to_unwatch {
+				match backend.unwatch(&watchee) {
+					Ok(()) => _ = WATCHED.write().remove(&watchee),
 					Err(e) => error!("Unwatch failed: {e:?}"),
 				}
 			}
-			for u in to_watch {
-				match backend.watch(&u) {
-					Ok(()) => WATCHED.write().insert(u),
+			for mut watchee in to_watch {
+				match backend.watch(&mut watchee) {
+					Ok(()) => _ = WATCHED.write().insert(watchee),
+					Err(e) if matches!(e.kind, notify::ErrorKind::PathNotFound) => {}
 					Err(e) => error!("Watch failed: {e:?}"),
 				}
 			}
