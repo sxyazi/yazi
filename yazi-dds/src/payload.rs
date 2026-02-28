@@ -46,10 +46,8 @@ impl<'a> Payload<'a> {
 }
 
 impl Payload<'static> {
-	pub(super) fn emit(self) -> Result<()> {
-		self.try_flush()?;
+	pub(super) fn emit(self) {
 		emit!(Call(relay!(app:accept_payload).with_any("payload", self)));
-		Ok(())
 	}
 }
 

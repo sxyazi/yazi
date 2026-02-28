@@ -1,5 +1,5 @@
 use hashbrown::HashMap;
-use mlua::{ExternalResult, IntoLua, Lua, Value};
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::{Id, SStr};
 
@@ -24,7 +24,5 @@ impl From<EmberHey> for Ember<'_> {
 }
 
 impl IntoLua for EmberHey {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
-		Err("BodyHey cannot be converted to Lua").into_lua_err()
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_table()?.into_lua(lua) }
 }

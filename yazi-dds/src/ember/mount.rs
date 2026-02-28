@@ -7,9 +7,9 @@ use super::Ember;
 pub struct EmberMount;
 
 impl EmberMount {
-	pub fn owned() -> Ember<'static> { Self.into() }
+	pub fn borrowed() -> Ember<'static> { Self.into() }
 
-	pub fn borrowed() -> Ember<'static> { Self::owned() }
+	pub fn owned() -> Ember<'static> { Self::borrowed() }
 }
 
 impl From<EmberMount> for Ember<'_> {

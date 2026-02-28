@@ -24,8 +24,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `marker_symbol` option to specify the symbol used for marking files ([#3689])
 - New `fs.unique()` creates a unique file or directory ([#3677])
 - New `download` DDS event fires when remote files are downloaded ([#3687])
-- New `cx.which` API to access the which component state ([#3617])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
+- New `hey` DDS event fires when static messages are restored from persistence ([#3725])
+- New `cx.which` API to access the which component state ([#3617])
 
 ### Changed
 
@@ -1668,3 +1669,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3689]: https://github.com/sxyazi/yazi/pull/3689
 [#3696]: https://github.com/sxyazi/yazi/pull/3696
 [#3708]: https://github.com/sxyazi/yazi/pull/3708
+[#3725]: https://github.com/sxyazi/yazi/pull/3725

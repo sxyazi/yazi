@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use hashbrown::HashSet;
-use mlua::{ExternalResult, IntoLua, Lua, Value};
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::SStr;
 
@@ -33,7 +33,5 @@ impl<'a> From<EmberHi<'a>> for Ember<'a> {
 }
 
 impl IntoLua for EmberHi<'_> {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
-		Err("BodyHi cannot be converted to Lua").into_lua_err()
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_table()?.into_lua(lua) }
 }

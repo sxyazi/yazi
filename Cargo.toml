@@ -44,7 +44,7 @@ indexmap            = { version = "2.13.0", features = [ "serde" ] }
 libc                = "0.2.182"
 lru                 = "0.16.3"
 mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
-objc2               = "0.6.3"
+objc2               = "0.6.4"
 ordered-float       = { version = "5.1.0", features = [ "serde" ] }
 parking_lot         = "0.12.5"
 paste               = "1.0.15"

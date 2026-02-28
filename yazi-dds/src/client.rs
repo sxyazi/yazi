@@ -9,7 +9,7 @@ use tracing::error;
 use yazi_macro::try_format;
 use yazi_shared::{Id, RoCell};
 
-use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberBye, EmberHi}};
+use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberBye, EmberHey, EmberHi}};
 
 pub static ID: RoCell<Id> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<Id, Peer>>> = RoCell::new();
@@ -54,12 +54,23 @@ impl Client {
 						};
 
 						if line.is_empty() {
-							continue;
-						} else if line.starts_with("hey,") {
-							Self::handle_hey(&line);
-						} else if let Err(e) = Payload::from_str(&line).and_then(|p| p.emit()) {
-							error!("Could not parse payload:\n{line}\n\nError:\n{e}");
+							continue;  // Heartbeat, ignore
 						}
+
+						let payload = match Payload::from_str(&line) {
+							Ok(p) => p,
+							Err(e) => {
+								error!("Failed to parse DDS payload:\n{line}\n\nError:\n{e}");
+								continue;
+							}
+						};
+
+						if let Ember::Hey(hey) = &payload.body {
+							Self::handle_hey(hey);
+						}
+
+						payload.try_flush().ok();
+						payload.emit();
 					}
 				}
 			}
@@ -73,7 +84,7 @@ impl Client {
 		let payload = try_format!(
 			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
 			Payload::new(EmberHi::borrowed(iter::empty())),
-			Payload::new(EmberBye::owned())
+			Payload::new(EmberBye::borrowed())
 		)?;
 
 		let (mut lines, mut writer) = Stream::connect().await?;
@@ -197,11 +208,13 @@ impl Client {
 		Self::connect(server).await
 	}
 
-	fn handle_hey(s: &str) {
-		if let Ok(Ember::Hey(mut hey)) = Payload::from_str(s).map(|p| p.body) {
-			hey.peers.retain(|&id, _| id != *ID);
-			*PEERS.write() = hey.peers;
-		}
+	fn handle_hey(body: &EmberHey) {
+		*PEERS.write() = body
+			.peers
+			.iter()
+			.filter(|&(id, _)| *id != *ID)
+			.map(|(&id, peer)| (id, peer.clone()))
+			.collect();
 	}
 }
 
