@@ -1,4 +1,4 @@
-use mlua::{ExternalResult, IntoLua, Lua, Value};
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 
 use super::Ember;
@@ -7,7 +7,7 @@ use super::Ember;
 pub struct EmberBye;
 
 impl EmberBye {
-	pub fn owned() -> Ember<'static> { Self.into() }
+	pub fn borrowed() -> Ember<'static> { Self.into() }
 }
 
 impl From<EmberBye> for Ember<'_> {
@@ -15,7 +15,5 @@ impl From<EmberBye> for Ember<'_> {
 }
 
 impl IntoLua for EmberBye {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
-		Err("BodyBye cannot be converted to Lua").into_lua_err()
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_table()?.into_lua(lua) }
 }

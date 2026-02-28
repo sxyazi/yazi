@@ -8,17 +8,17 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberMove<'a> {
-	pub items: Cow<'a, Vec<BodyMoveItem>>,
+	pub items: Cow<'a, Vec<EmberMoveItem>>,
 }
 
 impl<'a> EmberMove<'a> {
-	pub fn borrowed(items: &'a Vec<BodyMoveItem>) -> Ember<'a> {
+	pub fn borrowed(items: &'a Vec<EmberMoveItem>) -> Ember<'a> {
 		Self { items: Cow::Borrowed(items) }.into()
 	}
 }
 
 impl EmberMove<'static> {
-	pub fn owned(items: Vec<BodyMoveItem>) -> Ember<'static> {
+	pub fn owned(items: Vec<EmberMoveItem>) -> Ember<'static> {
 		Self { items: Cow::Owned(items) }.into()
 	}
 }
@@ -35,12 +35,12 @@ impl IntoLua for EmberMove<'_> {
 
 // --- Item
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct BodyMoveItem {
+pub struct EmberMoveItem {
 	pub from: UrlBuf,
 	pub to:   UrlBuf,
 }
 
-impl IntoLua for BodyMoveItem {
+impl IntoLua for EmberMoveItem {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

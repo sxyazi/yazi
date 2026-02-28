@@ -93,14 +93,13 @@ impl Server {
 		let Ok(payload) = Payload::from_str(&s) else { return };
 		let Ember::Hi(hi) = payload.body else { return };
 
-		if id.is_none()
-			&& let Some(ref state) = *STATE.read()
-		{
+		let mut clients = CLIENTS.write();
+		if let Some(old_id) = id.replace(payload.sender) {
+			clients.remove(&old_id);
+		} else if let Some(state) = &*STATE.read() {
 			state.values().for_each(|s| _ = tx.send(s.clone()));
 		}
 
-		let mut clients = CLIENTS.write();
-		id.replace(payload.sender).and_then(|id| clients.remove(&id));
 		clients.insert(payload.sender, Client {
 			id: payload.sender,
 			tx,
@@ -126,7 +125,7 @@ impl Server {
 			}
 		}
 
-		let bye = EmberBye::owned().with_receiver(id).with_sender(Id(0));
+		let bye = EmberBye::borrowed().with_receiver(id).with_sender(Id(0));
 		if let Ok(s) = try_format!("{bye}") {
 			writer.write_all(s.as_bytes()).await.ok();
 			writer.flush().await.ok();

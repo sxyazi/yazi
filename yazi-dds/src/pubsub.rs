@@ -6,7 +6,7 @@ use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
 use yazi_shared::{Id, RoCell, url::{Url, UrlBuf, UrlBufCov}};
 
-use crate::{Client, ID, PEERS, ember::{BodyDuplicateItem, BodyMoveItem, Ember, EmberBulk, EmberHi}};
+use crate::{Client, ID, PEERS, ember::{Ember, EmberBulk, EmberDuplicateItem, EmberHi, EmberMoveItem}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -96,7 +96,12 @@ impl Pubsub {
 		unsub!(REMOTE)(plugin, kind) && Self::pub_inner_hi()
 	}
 
-	pub fn r#pub(body: Ember<'static>) -> Result<()> { body.with_receiver(*ID).emit() }
+	pub fn r#pub(body: Ember<'static>) -> Result<()> {
+		let payload = body.with_receiver(*ID);
+		payload.try_flush()?;
+		payload.emit();
+		Ok(())
+	}
 
 	pub fn pub_to(receiver: Id, body: Ember<'static>) -> Result<()> {
 		if receiver == *ID {
@@ -157,9 +162,9 @@ impl Pubsub {
 
 	pub_after!(@yank(cut: bool, urls: &HashSet<UrlBufCov>), (cut, urls));
 
-	pub_after!(duplicate(items: Vec<BodyDuplicateItem>), (&items), (items));
+	pub_after!(duplicate(items: Vec<EmberDuplicateItem>), (&items), (items));
 
-	pub_after!(move(items: Vec<BodyMoveItem>), (&items), (items));
+	pub_after!(move(items: Vec<EmberMoveItem>), (&items), (items));
 
 	pub_after!(trash(urls: Vec<UrlBuf>), (&urls), (urls));
 

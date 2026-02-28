@@ -5,10 +5,10 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_macro::err;
 use yazi_shared::{RoCell, url::UrlBuf};
 
-use crate::{Pubsub, ember::{BodyDuplicateItem, BodyMoveItem}};
+use crate::{Pubsub, ember::{EmberDuplicateItem, EmberMoveItem}};
 
-static DUPLICATE_TX: RoCell<mpsc::UnboundedSender<BodyDuplicateItem>> = RoCell::new();
-static MOVE_TX: RoCell<mpsc::UnboundedSender<BodyMoveItem>> = RoCell::new();
+static DUPLICATE_TX: RoCell<mpsc::UnboundedSender<EmberDuplicateItem>> = RoCell::new();
+static MOVE_TX: RoCell<mpsc::UnboundedSender<EmberMoveItem>> = RoCell::new();
 static TRASH_TX: RoCell<mpsc::UnboundedSender<UrlBuf>> = RoCell::new();
 static DELETE_TX: RoCell<mpsc::UnboundedSender<UrlBuf>> = RoCell::new();
 static DOWNLOAD_TX: RoCell<mpsc::UnboundedSender<UrlBuf>> = RoCell::new();
@@ -21,14 +21,14 @@ impl Pump {
 	where
 		U: Into<UrlBuf>,
 	{
-		DUPLICATE_TX.send(BodyDuplicateItem { from: from.into(), to: to.into() }).ok();
+		DUPLICATE_TX.send(EmberDuplicateItem { from: from.into(), to: to.into() }).ok();
 	}
 
 	pub fn push_move<U>(from: U, to: U)
 	where
 		U: Into<UrlBuf>,
 	{
-		MOVE_TX.send(BodyMoveItem { from: from.into(), to: to.into() }).ok();
+		MOVE_TX.send(EmberMoveItem { from: from.into(), to: to.into() }).ok();
 	}
 
 	pub fn push_trash<U>(target: U)

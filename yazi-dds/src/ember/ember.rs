@@ -119,8 +119,6 @@ impl<'a> Ember<'a> {
 	pub fn with_receiver(self, receiver: Id) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}
-
-	pub fn with_sender(self, sender: Id) -> Payload<'a> { Payload::new(self).with_sender(sender) }
 }
 
 impl<'a> IntoLua for Ember<'a> {

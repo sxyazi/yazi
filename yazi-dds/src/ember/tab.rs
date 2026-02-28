@@ -10,9 +10,9 @@ pub struct EmberTab {
 }
 
 impl EmberTab {
-	pub fn owned(id: Id) -> Ember<'static> { Self { id }.into() }
+	pub fn borrowed(id: Id) -> Ember<'static> { Self { id }.into() }
 
-	pub fn borrowed(id: Id) -> Ember<'static> { Self::owned(id) }
+	pub fn owned(id: Id) -> Ember<'static> { Self::borrowed(id) }
 }
 
 impl From<EmberTab> for Ember<'_> {
