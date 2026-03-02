@@ -4,7 +4,6 @@ yazi_macro::mod_flat!(icon layout pattern platform preset priority style utils y
 
 use std::io::{Read, Write};
 
-use toml::{Spanned, de::DeTable};
 use yazi_shared::{RoCell, SyncCell};
 use yazi_tty::TTY;
 
@@ -48,7 +47,7 @@ fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
 
 	if merge {
 		let theme_str = theme::Theme::read()?;
-		let theme = parse_recoverable(&theme_str)?;
+		let theme = toml::de::DeTable::parse(&theme_str)?;
 
 		let flavor_str = theme::Flavor::from_theme(&theme, &theme_str)?.read(light)?;
 
@@ -80,13 +79,6 @@ fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
 
 	TTY.reader().read_exact(&mut [0])?;
 	Ok(())
-}
-
-pub(crate) fn parse_recoverable<'a>(
-	input: &'a str,
-) -> Result<Spanned<DeTable<'a>>, toml::de::Error> {
-	let (table, errors) = DeTable::parse_recoverable(input);
-	if let Some(err) = errors.into_iter().next() { Err(err) } else { Ok(table) }
 }
 
 pub(crate) fn error_with_input<T>(

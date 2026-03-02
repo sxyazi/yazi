@@ -9,7 +9,7 @@ pub fn deserialize_over(input: TokenStream) -> TokenStream {
 	quote! {
 		impl #ident {
 			pub(crate) fn deserialize_over(self, input: &str) -> Result<Self, toml::de::Error> {
-				crate::error_with_input(self.deserialize_over_with(crate::parse_recoverable(input)?), input)
+				crate::error_with_input(self.deserialize_over_with(toml::de::DeTable::parse(input)?), input)
 			}
 		}
 	}
@@ -31,12 +31,15 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 
 					assignments.push(quote! {
 						if let Some(value) = table.remove(#field_name) {
+							if !matches!(value.get_ref(), toml::de::DeValue::Table(_)) {
+								_ = toml::Table::deserialize(value.into_deserializer())?;
+								return Err(serde::de::Error::custom(format!("expected top-level `{}` to be a TOML table", #field_name)));
+							}
+
 							let span = value.span();
-							let table = match value.into_inner() {
-								toml::de::DeValue::Table(table) => table,
-								_ => return Err(serde::de::Error::custom(format!("expected top-level `{}` to be a TOML table", #field_name))),
-							};
-							self.#field_ident = self.#field_ident.deserialize_over_with(toml::Spanned::new(span, table))?;
+							if let toml::de::DeValue::Table(table) = value.into_inner() {
+								self.#field_ident = self.#field_ident.deserialize_over_with(toml::Spanned::new(span, table))?;
+							}
 						}
 					});
 				}
@@ -52,8 +55,11 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 		impl #ident {
 			#[inline]
 			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
+				use serde::{Deserialize, de::IntoDeserializer};
+
 				let mut table = table.into_inner();
 				#(#assignments)*
+
 				Ok(self)
 			}
 		}
@@ -71,13 +77,12 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 				let mut assignments = Vec::with_capacity(fields.named.len());
 
 				for field in fields.named {
-					let (ty, field_ident) = (field.ty, field.ident);
+					let field_ident = field.ident;
 					let field_name = field_ident.as_ref().unwrap().to_string();
 
 					assignments.push(quote! {
 						if let Some(value) = table.remove(#field_name) {
-							let de = serde::de::IntoDeserializer::into_deserializer(value);
-							self.#field_ident = <#ty as serde::Deserialize>::deserialize(de)?;
+							self.#field_ident = <_>::deserialize(value.into_deserializer())?;
 						}
 					});
 				}
@@ -93,8 +98,11 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 		impl #ident {
 			#[inline]
 			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
+				use serde::{Deserialize, de::IntoDeserializer};
+
 				let mut table = table.into_inner();
 				#(#assignments)*
+
 				Ok(self)
 			}
 		}
