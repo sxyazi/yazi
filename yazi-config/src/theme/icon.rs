@@ -44,7 +44,7 @@ pub struct Icon {
 }
 
 impl Icon {
-	pub fn matches(&self, file: &File) -> Option<&I> {
+	pub fn matches(&self, file: &File, hovered: bool) -> Option<&I> {
 		if let Some(i) = self.match_by_glob(file) {
 			return Some(i);
 		}
@@ -65,6 +65,7 @@ impl Icon {
 			"sock" => file.is_sock(),
 			"exec" => file.is_exec(),
 			"sticky" => file.is_sticky(),
+			"hovered" => hovered,
 			_ => false,
 		};
 		self.conds.iter().find(|(c, _)| c.eval(f) == Some(true)).map(|(_, i)| i)
@@ -132,22 +133,15 @@ impl<'de> Deserialize<'de> for PatIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			url:          Pattern,
-			text:         String,
-			fg:           Option<Color>,
-			hovered_text: Option<String>,
+			url:  Pattern,
+			text: String,
+			fg:   Option<Color>,
 		}
 
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| {
-					(s.url, I {
-						text:         s.text,
-						style:        Style { fg: s.fg, ..Default::default() },
-						hovered_text: s.hovered_text,
-					})
-				})
+				.map(|s| (s.url, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
 				.collect(),
 		))
 	}
@@ -169,22 +163,15 @@ impl<'de> Deserialize<'de> for StrIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			name:         String,
-			text:         String,
-			fg:           Option<Color>,
-			hovered_text: Option<String>,
+			name: String,
+			text: String,
+			fg:   Option<Color>,
 		}
 
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| {
-					(s.name, I {
-						text:         s.text,
-						style:        Style { fg: s.fg, ..Default::default() },
-						hovered_text: s.hovered_text,
-					})
-				})
+				.map(|s| (s.name, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
 				.collect(),
 		))
 	}
@@ -206,22 +193,15 @@ impl<'de> Deserialize<'de> for CondIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			r#if:         Condition,
-			text:         String,
-			fg:           Option<Color>,
-			hovered_text: Option<String>,
+			r#if: Condition,
+			text: String,
+			fg:   Option<Color>,
 		}
 
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| {
-					(s.r#if, I {
-						text:         s.text,
-						style:        Style { fg: s.fg, ..Default::default() },
-						hovered_text: s.hovered_text,
-					})
-				})
+				.map(|s| (s.r#if, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
 				.collect(),
 		))
 	}
@@ -229,24 +209,94 @@ impl<'de> Deserialize<'de> for CondIcons {
 
 #[cfg(test)]
 mod tests {
+	use std::str::FromStr;
+
+	use yazi_fs::{File, cha::{Cha, ChaType}};
+	use yazi_shared::url::Url;
+
 	use super::*;
+
+	fn create_test_file(name: &str, cha_type: ChaType) -> File {
+		let url = Url::regular(name).to_owned();
+		File::from_dummy(url, Some(cha_type))
+	}
+
 	#[test]
-	fn test_icon_struct_with_hovered_text() {
-		let icon = I {
-			text:         "normal_icon".to_string(),
-			style:        Style::default(),
-			hovered_text: Some("hovered_icon".to_string()),
+	fn test_matches_hovered() {
+		// icon with hovered only
+		let icon = Icon {
+			conds: CondIcons(vec![(Condition::from_str("hovered").unwrap(), I {
+				text:  "hovered_icon".to_string(),
+				style: Style::default(),
+			})]),
+			..Default::default()
 		};
 
-		assert_eq!(icon.text, "normal_icon");
-		assert_eq!(icon.hovered_text, Some("hovered_icon".to_string()));
+		let file = create_test_file("test.txt", ChaType::File);
+
+		// should match when hovered
+		let result = icon.matches(&file, true);
+		assert!(result.is_some());
+		assert_eq!(result.unwrap().text, "hovered_icon");
+
+		// should not match when not hovered
+		let result = icon.matches(&file, false);
+		assert!(result.is_none());
 	}
 	#[test]
-	fn test_icon_struct_without_hovered_text() {
-		let icon =
-			I { text: "normal_icon".to_string(), style: Style::default(), hovered_text: None };
+	fn test_matches_dir_and_hovered_condition() {
+		// icon with dir and hovered
+		let icon = Icon {
+			conds: CondIcons(vec![(Condition::from_str("dir & hovered").unwrap(), I {
+				text:  "dir_hovered".to_string(),
+				style: Style::default(),
+			})]),
+			..Default::default()
+		};
 
-		assert_eq!(icon.text, "normal_icon");
-		assert_eq!(icon.hovered_text, None);
+		let dir_file = create_test_file("test_dir", ChaType::Dir);
+		let file = create_test_file("test.txt", ChaType::File);
+
+		// directory + hovered
+		let result = icon.matches(&dir_file, true);
+		assert!(result.is_some());
+		assert_eq!(result.unwrap().text, "dir_hovered");
+
+		// directory + not hovered
+		let result = icon.matches(&dir_file, false);
+		assert!(result.is_none());
+
+		// file + hovered isnt present
+		let result = icon.matches(&file, true);
+		assert!(result.is_none());
+	}
+	#[test]
+	fn test_matches_hovered_before_dir() {
+		// icon with hovered before dir
+		let icon = Icon {
+			conds: CondIcons(vec![
+				(Condition::from_str("dir & hovered").unwrap(), I {
+					text:  "dir_hovered".to_string(),
+					style: Style::default(),
+				}),
+				(Condition::from_str("dir").unwrap(), I {
+					text:  "dir_normal".to_string(),
+					style: Style::default(),
+				}),
+			]),
+			..Default::default()
+		};
+
+		let dir_file = create_test_file("test_dir", ChaType::Dir);
+
+		// hovered
+		let result = icon.matches(&dir_file, true);
+		assert!(result.is_some());
+		assert_eq!(result.unwrap().text, "dir_hovered");
+
+		// non-hovered
+		let result = icon.matches(&dir_file, false);
+		assert!(result.is_some());
+		assert_eq!(result.unwrap().text, "dir_normal");
 	}
 }

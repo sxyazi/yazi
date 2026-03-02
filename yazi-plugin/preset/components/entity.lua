@@ -26,12 +26,9 @@ function Entity:padding()
 end
 
 function Entity:icon()
-	local icon = self._file:icon()
+	local icon = self._file:icon(self._file.is_hovered)
 	if not icon then
 		return ""
-	elseif self._file.is_hovered then
-		local text = icon.hovered_text or icon.text
-		return text .. " "
 	else
 		return ui.Line(icon.text .. " "):style(icon.style)
 	end
