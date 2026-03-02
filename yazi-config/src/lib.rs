@@ -25,8 +25,8 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut keymap = Preset::keymap()?;
 
 	if merge {
-		yazi = yazi.deserialize_over(toml::Deserializer::parse(&yazi::Yazi::read()?)?)?;
-		keymap = keymap.deserialize_over(toml::Deserializer::parse(&keymap::Keymap::read()?)?)?;
+		yazi = yazi.deserialize_over(&yazi::Yazi::read()?)?;
+		keymap = keymap.deserialize_over(&keymap::Keymap::read()?)?;
 	}
 
 	YAZI.init(yazi.reshape()?);
@@ -43,17 +43,19 @@ pub fn init_flavor(light: bool) -> anyhow::Result<()> {
 }
 
 fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
-	let mut theme = Preset::theme(light)?;
+	let mut preset = Preset::theme(light)?;
 
 	if merge {
-		let shadow =
-			theme::Theme::deserialize_shadow(toml::Deserializer::parse(&theme::Theme::read()?)?)?;
-		let flavor = shadow.flavor.as_ref().map(theme::Flavor::from).unwrap_or_default().read(light)?;
-		theme = theme.deserialize_over(toml::Deserializer::parse(&flavor)?)?;
-		theme = theme.deserialize_over_with::<toml::Value>(shadow)?;
+		let theme_str = theme::Theme::read()?;
+		let theme = toml::de::DeTable::parse(&theme_str)?;
+
+		let flavor_str = theme::Flavor::from_theme(&theme, &theme_str)?.read(light)?;
+
+		preset = preset.deserialize_over(&flavor_str)?;
+		preset = error_with_input(preset.deserialize_over_with(theme), &theme_str)?;
 	}
 
-	THEME.init(theme.reshape(light)?);
+	THEME.init(preset.reshape(light)?);
 	Ok(())
 }
 
@@ -77,4 +79,14 @@ fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
 
 	TTY.reader().read_exact(&mut [0])?;
 	Ok(())
+}
+
+pub(crate) fn error_with_input<T>(
+	result: Result<T, toml::de::Error>,
+	input: &str,
+) -> Result<T, toml::de::Error> {
+	result.map_err(|mut err| {
+		err.set_input(Some(input));
+		err
+	})
 }

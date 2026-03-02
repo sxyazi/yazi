@@ -1,33 +1,30 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
-use toml::Value;
+use serde::{Deserialize, Serialize, de::IntoDeserializer};
+use toml::{Spanned, de::DeTable};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::Xdg;
 
+use crate::error_with_input;
+
 #[derive(Default, Deserialize, DeserializeOver2, Serialize)]
 pub struct Flavor {
+	#[serde(default)]
 	pub dark:  String,
+	#[serde(default)]
 	pub light: String,
 }
 
-impl From<&Value> for Flavor {
-	fn from(value: &Value) -> Self {
-		let mut me = Self::default();
-		if let Value::Table(t) = value {
-			if let Some(s) = t.get("dark").and_then(|v| v.as_str()) {
-				me.dark = s.to_owned();
-			}
-			if let Some(s) = t.get("light").and_then(|v| v.as_str()) {
-				me.light = s.to_owned();
-			}
-		}
-		me
-	}
-}
-
 impl Flavor {
+	pub(crate) fn from_theme(theme: &Spanned<DeTable>, input: &str) -> Result<Self, toml::de::Error> {
+		if let Some(value) = theme.get_ref().get("flavor").cloned() {
+			error_with_input(Self::deserialize(value.into_deserializer()), input)
+		} else {
+			Ok(Self::default())
+		}
+	}
+
 	pub(crate) fn read(&self, light: bool) -> Result<String> {
 		Ok(match if light { self.light.as_str() } else { self.dark.as_str() } {
 			"" => String::new(),
