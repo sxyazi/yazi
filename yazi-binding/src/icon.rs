@@ -6,6 +6,7 @@ use crate::{Style, cached_field};
 
 pub struct Icon {
 	inner: &'static yazi_config::Icon,
+
 	v_text:  Option<Value>,
 	v_style: Option<Value>,
 }
