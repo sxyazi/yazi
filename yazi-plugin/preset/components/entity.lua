@@ -30,7 +30,8 @@ function Entity:icon()
 	if not icon then
 		return ""
 	elseif self._file.is_hovered then
-		return icon.text .. " "
+		local text = icon.hovered_text or icon.text
+		return text .. " "
 	else
 		return ui.Line(icon.text .. " "):style(icon.style)
 	end

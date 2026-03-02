@@ -132,15 +132,22 @@ impl<'de> Deserialize<'de> for PatIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			url:  Pattern,
-			text: String,
-			fg:   Option<Color>,
+			url:          Pattern,
+			text:         String,
+			fg:           Option<Color>,
+			hovered_text: Option<String>,
 		}
 
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| (s.url, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
+				.map(|s| {
+					(s.url, I {
+						text:         s.text,
+						style:        Style { fg: s.fg, ..Default::default() },
+						hovered_text: s.hovered_text,
+					})
+				})
 				.collect(),
 		))
 	}
@@ -162,15 +169,22 @@ impl<'de> Deserialize<'de> for StrIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			name: String,
-			text: String,
-			fg:   Option<Color>,
+			name:         String,
+			text:         String,
+			fg:           Option<Color>,
+			hovered_text: Option<String>,
 		}
 
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| (s.name, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
+				.map(|s| {
+					(s.name, I {
+						text:         s.text,
+						style:        Style { fg: s.fg, ..Default::default() },
+						hovered_text: s.hovered_text,
+					})
+				})
 				.collect(),
 		))
 	}
@@ -192,16 +206,47 @@ impl<'de> Deserialize<'de> for CondIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			r#if: Condition,
-			text: String,
-			fg:   Option<Color>,
+			r#if:         Condition,
+			text:         String,
+			fg:           Option<Color>,
+			hovered_text: Option<String>,
 		}
 
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| (s.r#if, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
+				.map(|s| {
+					(s.r#if, I {
+						text:         s.text,
+						style:        Style { fg: s.fg, ..Default::default() },
+						hovered_text: s.hovered_text,
+					})
+				})
 				.collect(),
 		))
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	#[test]
+	fn test_icon_struct_with_hovered_text() {
+		let icon = I {
+			text:         "normal_icon".to_string(),
+			style:        Style::default(),
+			hovered_text: Some("hovered_icon".to_string()),
+		};
+
+		assert_eq!(icon.text, "normal_icon");
+		assert_eq!(icon.hovered_text, Some("hovered_icon".to_string()));
+	}
+	#[test]
+	fn test_icon_struct_without_hovered_text() {
+		let icon =
+			I { text: "normal_icon".to_string(), style: Style::default(), hovered_text: None };
+
+		assert_eq!(icon.text, "normal_icon");
+		assert_eq!(icon.hovered_text, None);
 	}
 }

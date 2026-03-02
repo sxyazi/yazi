@@ -7,8 +7,9 @@ use crate::{Style, cached_field};
 pub struct Icon {
 	inner: &'static yazi_config::Icon,
 
-	v_text:  Option<Value>,
-	v_style: Option<Value>,
+	v_text:         Option<Value>,
+	v_style:        Option<Value>,
+	v_hovered_text: Option<Value>,
 }
 
 impl Deref for Icon {
@@ -19,7 +20,7 @@ impl Deref for Icon {
 
 impl From<&'static yazi_config::Icon> for Icon {
 	fn from(icon: &'static yazi_config::Icon) -> Self {
-		Self { inner: icon, v_text: None, v_style: None }
+		Self { inner: icon, v_text: None, v_style: None, v_hovered_text: None }
 	}
 }
 
@@ -27,5 +28,8 @@ impl UserData for Icon {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		cached_field!(fields, text, |lua, me| lua.create_string(&me.text));
 		cached_field!(fields, style, |_, me| Ok(Style::from(me.style)));
+		cached_field!(fields, hovered_text, |lua, me| {
+			me.hovered_text.as_ref().map(|s| lua.create_string(s)).transpose()
+		});
 	}
 }
