@@ -79,22 +79,16 @@ function M:tidy(from, to, tmp)
 		fail("No files extracted from '%s'", from)
 	end
 
-	local only = #outs == 1
-	if only and not outs[1].cha.is_dir and require("archive").is_tar(outs[1].url) then
+	local only = #outs == 1 and outs[1]
+	if only and not only.cha.is_dir and require("archive").is_tar(outs[1].url) then
 		self:entry { args = { tostring(outs[1].url), tostring(to) } }
 		fs.remove("file", outs[1].url)
 		fs.remove("dir", tmp)
 		return
 	end
 
-	local target
-	if only then
-		target = to:join(outs[1].name)
-	else
-		target = to:join(self.trim_ext(from.name))
-	end
-
-	target = fs.unique(only and "file" or "dir", target)
+	local target = to:join(only and only.name or self.trim_ext(from.name))
+	target = fs.unique(only and not only.cha.is_dir and "file" or "dir", target)
 	if not target then
 		fail("Failed to determine a target for '%s'", from)
 	end

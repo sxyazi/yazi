@@ -1,12 +1,12 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use yazi_codegen::DeserializeOver1;
+use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shared::Layer;
 
 use super::{Chord, KeymapRules};
 
-#[derive(Deserialize, DeserializeOver1)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Keymap {
 	pub mgr:     KeymapRules,
 	pub tasks:   KeymapRules,

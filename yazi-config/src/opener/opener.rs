@@ -3,12 +3,14 @@ use std::{mem, ops::Deref};
 use anyhow::Result;
 use hashbrown::HashMap;
 use indexmap::IndexSet;
-use serde::Deserialize;
+use serde::{Deserialize, de::IntoDeserializer};
+use toml::{Spanned, de::DeTable};
+use yazi_codegen::DeserializeOver;
 
 use super::OpenerRule;
 use crate::check_for;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, DeserializeOver)]
 pub struct Opener(HashMap<String, Vec<OpenerRule>>);
 
 impl Deref for Opener {
@@ -56,12 +58,13 @@ impl Opener {
 		Ok(self)
 	}
 
-	pub(crate) fn deserialize_over<'de, D>(mut self, deserializer: D) -> Result<Self, D::Error>
-	where
-		D: serde::Deserializer<'de>,
-	{
-		let map: HashMap<String, Vec<OpenerRule>> = HashMap::deserialize(deserializer)?;
-		self.0.extend(map);
+	pub(crate) fn deserialize_over_with<'de>(
+		mut self,
+		table: Spanned<DeTable<'de>>,
+	) -> Result<Self, toml::de::Error> {
+		for (key, value) in table.into_inner() {
+			self.0.insert(key.into_inner().into_owned(), <_>::deserialize(value.into_deserializer())?);
+		}
 
 		Ok(self)
 	}

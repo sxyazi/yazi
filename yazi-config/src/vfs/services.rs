@@ -2,11 +2,13 @@ use std::ops::Deref;
 
 use anyhow::{Result, bail};
 use hashbrown::HashMap;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::IntoDeserializer};
+use toml::{Spanned, de::DeTable};
+use yazi_codegen::DeserializeOver;
 
 use crate::vfs::Service;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, DeserializeOver)]
 pub struct Services(HashMap<String, Service>);
 
 impl Deref for Services {
@@ -30,12 +32,13 @@ impl Services {
 		Ok(self)
 	}
 
-	pub(super) fn deserialize_over<'de, D>(mut self, deserializer: D) -> Result<Self, D::Error>
-	where
-		D: serde::Deserializer<'de>,
-	{
-		let map: HashMap<String, Service> = HashMap::deserialize(deserializer)?;
-		self.0.extend(map);
+	pub(super) fn deserialize_over_with<'de>(
+		mut self,
+		table: Spanned<DeTable<'de>>,
+	) -> Result<Self, toml::de::Error> {
+		for (key, value) in table.into_inner() {
+			self.0.insert(key.into_inner().into_owned(), <_>::deserialize(value.into_deserializer())?);
+		}
 
 		Ok(self)
 	}

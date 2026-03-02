@@ -1,40 +1,47 @@
 use proc_macro::TokenStream;
-use quote::{format_ident, quote};
-use syn::{Attribute, Data, DeriveInput, Fields, parse_macro_input};
+use quote::quote;
+use syn::{Data, DeriveInput, Fields, parse_macro_input};
+
+#[proc_macro_derive(DeserializeOver)]
+pub fn deserialize_over(input: TokenStream) -> TokenStream {
+	let DeriveInput { ident, .. } = parse_macro_input!(input as DeriveInput);
+
+	quote! {
+		impl #ident {
+			pub(crate) fn deserialize_over(self, input: &str) -> Result<Self, toml::de::Error> {
+				crate::error_with_input(self.deserialize_over_with(crate::parse_recoverable(input)?), input)
+			}
+		}
+	}
+	.into()
+}
 
 #[proc_macro_derive(DeserializeOver1)]
 pub fn deserialize_over1(input: TokenStream) -> TokenStream {
-	// Parse the input tokens into a syntax tree
-	let input = parse_macro_input!(input as DeriveInput);
+	let DeriveInput { ident, data, .. } = parse_macro_input!(input as DeriveInput);
 
-	// Get the name of the struct
-	let name = &input.ident;
-	let shadow_name = format_ident!("__{name}Shadow");
-
-	// Process the struct fields
-	let (shadow_fields, field_calls) = match &input.data {
-		Data::Struct(struct_) => match &struct_.fields {
+	let assignments = match data {
+		Data::Struct(struct_) => match struct_.fields {
 			Fields::Named(fields) => {
-				let mut shadow_fields = Vec::with_capacity(fields.named.len());
-				let mut field_calls = Vec::with_capacity(fields.named.len());
+				let mut assignments = Vec::with_capacity(fields.named.len());
 
-				for field in &fields.named {
-					let name = &field.ident;
-					let attrs: Vec<&Attribute> =
-						field.attrs.iter().filter(|&a| a.path().is_ident("serde")).collect();
+				for field in fields.named {
+					let field_ident = &field.ident;
+					let field_name = field_ident.as_ref().unwrap().to_string();
 
-					shadow_fields.push(quote! {
-							#(#attrs)*
-							pub(crate) #name: Option<toml::Value>
-					});
-					field_calls.push(quote! {
-						if let Some(value) = shadow.#name {
-							self.#name = self.#name.deserialize_over(value).map_err(serde::de::Error::custom)?;
+					assignments.push(quote! {
+						if let Some(value) = table.remove(#field_name) {
+							let span = value.span();
+							let table = match value.into_inner() {
+								toml::de::DeValue::Table(table) => table,
+								_ => return Err(serde::de::Error::custom(format!("expected top-level `{}` to be a TOML table", #field_name))),
+							};
+							self.#field_ident = self.#field_ident.deserialize_over_with(toml::Spanned::new(span, table))?;
 						}
 					});
 				}
 
-				(shadow_fields, field_calls)
+				assignments
 			}
 			_ => panic!("DeserializeOver1 only supports structs with named fields"),
 		},
@@ -42,34 +49,11 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 	};
 
 	quote! {
-		#[derive(serde::Deserialize)]
-		pub(crate) struct #shadow_name {
-			#(#shadow_fields),*
-		}
-
-		impl #name {
+		impl #ident {
 			#[inline]
-			pub(crate) fn deserialize_over<'de, D>(self, deserializer: D) -> Result<Self, D::Error>
-			where
-				D: serde::Deserializer<'de>,
-			{
-				self.deserialize_over_with::<D>(Self::deserialize_shadow(deserializer)?)
-			}
-
-			#[inline]
-			pub(crate) fn deserialize_shadow<'de, D>(deserializer: D) -> Result<#shadow_name, D::Error>
-			where
-				D: serde::Deserializer<'de>,
-			{
-				#shadow_name::deserialize(deserializer)
-			}
-
-			#[inline]
-			pub(crate) fn deserialize_over_with<'de, D>(mut self, shadow: #shadow_name) -> Result<Self, D::Error>
-			where
-				D: serde::Deserializer<'de>,
-			{
-				#(#field_calls)*
+			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
+				let mut table = table.into_inner();
+				#(#assignments)*
 				Ok(self)
 			}
 		}
@@ -79,33 +63,26 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(DeserializeOver2)]
 pub fn deserialize_over2(input: TokenStream) -> TokenStream {
-	// Parse the input tokens into a syntax tree
-	let input = parse_macro_input!(input as DeriveInput);
+	let DeriveInput { ident, data, .. } = parse_macro_input!(input as DeriveInput);
 
-	// Get the name of the struct
-	let name = &input.ident;
-	let shadow_name = format_ident!("__{name}Shadow");
-
-	// Process the struct fields
-	let (shadow_fields, field_assignments) = match &input.data {
-		Data::Struct(struct_) => match &struct_.fields {
+	let assignments = match data {
+		Data::Struct(struct_) => match struct_.fields {
 			Fields::Named(fields) => {
-				let mut shadow_fields = Vec::with_capacity(fields.named.len());
-				let mut field_assignments = Vec::with_capacity(fields.named.len());
+				let mut assignments = Vec::with_capacity(fields.named.len());
 
-				for field in &fields.named {
-					let (ty, name) = (&field.ty, &field.ident);
-					shadow_fields.push(quote! {
-						pub(crate) #name: Option<#ty>
-					});
-					field_assignments.push(quote! {
-						if let Some(value) = shadow.#name {
-							self.#name = value;
+				for field in fields.named {
+					let (ty, field_ident) = (field.ty, field.ident);
+					let field_name = field_ident.as_ref().unwrap().to_string();
+
+					assignments.push(quote! {
+						if let Some(value) = table.remove(#field_name) {
+							let de = serde::de::IntoDeserializer::into_deserializer(value);
+							self.#field_ident = <#ty as serde::Deserialize>::deserialize(de)?;
 						}
 					});
 				}
 
-				(shadow_fields, field_assignments)
+				assignments
 			}
 			_ => panic!("DeserializeOver2 only supports structs with named fields"),
 		},
@@ -113,32 +90,12 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 	};
 
 	quote! {
-		#[derive(serde::Deserialize)]
-		pub(crate) struct #shadow_name {
-			#(#shadow_fields),*
-		}
-
-		impl #name {
+		impl #ident {
 			#[inline]
-			pub(crate) fn deserialize_over<'de, D>(mut self, deserializer: D) -> Result<Self, D::Error>
-			where
-				D: serde::Deserializer<'de>
-			{
-				Ok(self.deserialize_over_with(Self::deserialize_shadow(deserializer)?))
-			}
-
-			#[inline]
-			pub(crate) fn deserialize_shadow<'de, D>(deserializer: D) -> Result<#shadow_name, D::Error>
-			where
-				D: serde::Deserializer<'de>
-			{
-				#shadow_name::deserialize(deserializer)
-			}
-
-			#[inline]
-			pub(crate) fn deserialize_over_with(mut self, shadow: #shadow_name) -> Self {
-				#(#field_assignments)*
-				self
+			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
+				let mut table = table.into_inner();
+				#(#assignments)*
+				Ok(self)
 			}
 		}
 	}

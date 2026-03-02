@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use yazi_codegen::DeserializeOver1;
+use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
 
 use crate::{mgr, open, opener, plugin, popup, preview, tasks, which};
 
-#[derive(Deserialize, DeserializeOver1)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Yazi {
 	pub mgr:     mgr::Mgr,
 	pub preview: preview::Preview,

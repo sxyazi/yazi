@@ -3,13 +3,13 @@ use std::io;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use tokio::sync::OnceCell;
-use yazi_codegen::DeserializeOver1;
+use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
 
 use super::Service;
 use crate::{Preset, vfs::Services};
 
-#[derive(Deserialize, Serialize, DeserializeOver1)]
+#[derive(Deserialize, Serialize, DeserializeOver, DeserializeOver1)]
 pub struct Vfs {
 	pub services: Services,
 }
@@ -19,11 +19,9 @@ impl Vfs {
 		pub static LOADED: OnceCell<Vfs> = OnceCell::const_new();
 
 		async fn init() -> io::Result<Vfs> {
-			tokio::task::spawn_blocking(|| {
-				Preset::vfs()?.deserialize_over(toml::Deserializer::parse(&Vfs::read()?)?)?.reshape()
-			})
-			.await?
-			.map_err(io::Error::other)
+			tokio::task::spawn_blocking(|| Preset::vfs()?.deserialize_over(&Vfs::read()?)?.reshape())
+				.await?
+				.map_err(io::Error::other)
 		}
 
 		LOADED.get_or_try_init(init).await
