@@ -2,13 +2,13 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
-use yazi_codegen::{DeserializeOver1, DeserializeOver2};
+use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2};
 use yazi_fs::{Xdg, ok_or_not_found};
 
 use super::{Filetype, Flavor, Icon};
 use crate::{Style, normalize_path};
 
-#[derive(Deserialize, DeserializeOver1)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Theme {
 	pub flavor:    Flavor,
 	pub app:       App,
