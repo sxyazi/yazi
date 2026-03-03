@@ -267,11 +267,5 @@ macro_rules! impl_file_methods {
 			use yazi_fs::FsHash64;
 			Ok(me.hash_u64())
 		});
-
-		$methods.add_method("icon", |_, me, hovered: Option<bool>| {
-			use $crate::Icon;
-			// TODO: use a cache
-			Ok(yazi_config::THEME.icon.matches(me, hovered.unwrap_or(false)).map(Icon::from))
-		});
 	};
 }

@@ -65,6 +65,9 @@ impl File {
 			}
 		})
 	}
+
+	#[inline]
+	fn is_hovered(&self) -> bool { self.idx == self.folder.cursor }
 }
 
 impl UserData for File {
@@ -73,7 +76,7 @@ impl UserData for File {
 		cached_field!(fields, bare, |_, me| Ok(yazi_binding::File::new(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
-		fields.add_field_method_get("is_hovered", |_, me| Ok(me.idx == me.folder.cursor));
+		fields.add_field_method_get("is_hovered", |_, me| Ok(me.is_hovered()));
 		fields.add_field_method_get("in_current", |_, me| Ok(ptr::eq(&*me.folder, &me.tab.current)));
 		fields.add_field_method_get("in_preview", |_, me| {
 			Ok(me.idx == me.folder.cursor && me.tab.hovered().is_some_and(|f| f.url == me.folder.url))
@@ -83,6 +86,11 @@ impl UserData for File {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		yazi_binding::impl_file_methods!(methods);
 
+		methods.add_method("icon", |_, me, ()| {
+			use yazi_binding::Icon;
+			// TODO: use a cache
+			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()).map(Icon::from))
+		});
 		methods.add_method("size", |_, me, ()| {
 			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })
 		});
