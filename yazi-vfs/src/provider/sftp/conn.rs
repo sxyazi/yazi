@@ -3,6 +3,7 @@ use std::{io, sync::Arc, time::Duration};
 use russh::keys::PrivateKeyWithHashAlg;
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
+use yazi_shared::{format_duration, timestamp_us};
 
 #[derive(Clone, Copy)]
 pub(super) struct Conn {
@@ -169,18 +170,21 @@ impl Conn {
 			},
 		)?;
 
-		if !self.config.skip_cert_validation {
-			// TODO: Also validate the certificate cryptographically: https://docs.rs/russh/latest/russh/keys/struct.Certificate.html#method.validate
-			// however, this would require fetching CAs, which could require additional config and complexity
-
+		if !self.config.no_cert_verify {
 			cert.verify_signature().map_err(|e| {
 				russh::Error::InvalidConfig(format!("Certificate signature verification failed: {e}"))
 			})?;
-			let unix_timestamp = std::time::UNIX_EPOCH.elapsed().unwrap_or_default().as_secs();
-			if !(cert.valid_after() <= unix_timestamp && unix_timestamp <= cert.valid_before()) {
-				return Err(russh::Error::InvalidConfig(
-					"Certificate is not valid at this time".to_owned(),
-				));
+			let unix_timestamp = timestamp_us() / 1_000_000;
+			if unix_timestamp < cert.valid_after() {
+				return Err(russh::Error::InvalidConfig(format!(
+					"Certificate will be valid in {}",
+					format_duration(Duration::from_secs(cert.valid_after() - unix_timestamp))
+				)));
+			} else if unix_timestamp > cert.valid_before() {
+				return Err(russh::Error::InvalidConfig(format!(
+					"Certificate expired {} ago",
+					format_duration(Duration::from_secs(unix_timestamp - cert.valid_before()))
+				)));
 			}
 		}
 
