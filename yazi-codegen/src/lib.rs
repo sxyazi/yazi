@@ -53,7 +53,6 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 
 	quote! {
 		impl #ident {
-			#[inline]
 			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
 				use serde::{Deserialize, de::IntoDeserializer};
 
@@ -96,7 +95,6 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 
 	quote! {
 		impl #ident {
-			#[inline]
 			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
 				use serde::{Deserialize, de::IntoDeserializer};
 

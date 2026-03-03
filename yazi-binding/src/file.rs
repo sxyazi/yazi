@@ -90,5 +90,11 @@ impl UserData for File {
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		impl_file_methods!(methods);
+
+		methods.add_method("icon", |_, me, ()| {
+			use crate::Icon;
+			// TODO: use a cache
+			Ok(yazi_config::THEME.icon.matches(me, false).map(Icon::from))
+		});
 	}
 }

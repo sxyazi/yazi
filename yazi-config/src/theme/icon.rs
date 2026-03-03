@@ -44,7 +44,7 @@ pub struct Icon {
 }
 
 impl Icon {
-	pub fn matches(&self, file: &File) -> Option<&I> {
+	pub fn matches(&self, file: &File, hovered: bool) -> Option<&I> {
 		if let Some(i) = self.match_by_glob(file) {
 			return Some(i);
 		}
@@ -65,6 +65,7 @@ impl Icon {
 			"sock" => file.is_sock(),
 			"exec" => file.is_exec(),
 			"sticky" => file.is_sticky(),
+			"hovered" => hovered,
 			_ => false,
 		};
 		self.conds.iter().find(|(c, _)| c.eval(f) == Some(true)).map(|(_, i)| i)
