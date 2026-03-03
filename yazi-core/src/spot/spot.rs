@@ -15,10 +15,10 @@ pub struct Spot {
 }
 
 impl Spot {
-	pub fn go(&mut self, file: File, mime: Symbol<str>) {
+	pub fn go(&mut self, file: File, mime: Symbol<str>, urls: Option<Vec<UrlBuf>>) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
-		} else if self.same_lock(&file, &mime) {
+		} else if urls.is_none() && self.same_lock(&file, &mime) {
 			return;
 		}
 
@@ -27,7 +27,7 @@ impl Spot {
 		};
 
 		self.abort();
-		self.ct = Some(isolate::spot(&spotter.run, file, mime, self.skip));
+		self.ct = Some(isolate::spot(&spotter.run, file, mime, self.skip, urls));
 	}
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }
