@@ -23,7 +23,7 @@ impl Widget for Preview<'_> {
 
 		for w in &lock.data {
 			let rect = w.area().transform(|p| self.core.mgr.area(p));
-			if win.intersects(rect) {
+			if rect.intersection(win) == rect {
 				w.clone().render(rect, buf);
 			}
 		}
