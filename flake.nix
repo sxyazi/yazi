@@ -32,7 +32,7 @@
         rev = self.shortRev or self.dirtyShortRev or "dirty";
         date = self.lastModifiedDate or self.lastModified or "19700101";
         version =
-          (builtins.fromTOML (builtins.readFile ./yazi-fm/Cargo.toml)).package.version
+          (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.version
           + "pre${builtins.substring 0 8 date}_${rev}";
       in
       {

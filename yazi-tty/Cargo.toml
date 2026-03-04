@@ -1,12 +1,13 @@
 [package]
-name        = "yazi-tty"
-version     = "26.2.2"
-edition     = "2024"
-license     = "MIT"
-authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi TTY access layer"
-homepage    = "https://yazi-rs.github.io"
-repository  = "https://github.com/sxyazi/yazi"
+name                   = "yazi-tty"
+description            = "Yazi TTY access layer"
+version.workspace      = true
+edition.workspace      = true
+license.workspace      = true
+authors.workspace      = true
+homepage.workspace     = true
+repository.workspace   = true
+rust-version.workspace = true
 
 [lints]
 workspace = true

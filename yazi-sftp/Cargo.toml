@@ -1,12 +1,13 @@
 [package]
-name        = "yazi-sftp"
-version     = "26.2.2"
-edition     = "2024"
-license     = "MIT"
-authors     = [ "AspectUnk", "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi SFTP client"
-homepage    = "https://yazi-rs.github.io"
-repository  = "https://github.com/sxyazi/yazi"
+name                   = "yazi-sftp"
+description            = "Yazi SFTP client"
+authors                = [ "AspectUnk", "sxyazi <sxyazi@gmail.com>" ]
+version.workspace      = true
+edition.workspace      = true
+license.workspace      = true
+homepage.workspace     = true
+repository.workspace   = true
+rust-version.workspace = true
 
 [lints]
 workspace = true
