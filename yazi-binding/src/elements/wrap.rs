@@ -18,6 +18,10 @@ impl Wrap {
 	}
 }
 
+impl From<Wrap> for Option<ratatui::widgets::Wrap> {
+	fn from(value: Wrap) -> Self { value.0 }
+}
+
 impl From<ratatui::widgets::Wrap> for Wrap {
 	fn from(value: ratatui::widgets::Wrap) -> Self { Self(Some(value)) }
 }
@@ -50,5 +54,15 @@ impl FromLua for Wrap {
 				message: Some("invalid value for Wrap".to_string()),
 			})?,
 		}))
+	}
+}
+
+impl IntoLua for Wrap {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		match self.0 {
+			None => 0.into_lua(lua),
+			Some(ratatui::widgets::Wrap { trim: false }) => 1.into_lua(lua),
+			Some(ratatui::widgets::Wrap { trim: true }) => 2.into_lua(lua),
+		}
 	}
 }

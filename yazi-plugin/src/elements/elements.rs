@@ -1,18 +1,21 @@
 use std::borrow::Cow;
 
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, ObjectLike, Table, Value};
+use ansi_to_tui::IntoText;
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span}, runtime};
-use yazi_config::LAYOUT;
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span, Wrap}, runtime};
+use yazi_config::{LAYOUT, YAZI};
 use yazi_proxy::AppProxy;
 use yazi_shared::replace_to_printable;
+use yazi_shim::ratatui::line_count;
 use yazi_term::YIELD_TO_SUBPROCESS;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"area" => area(lua)?,
+			b"height" => height(lua)?,
 			b"hide" => hide(lua)?,
 			b"printable" => printable(lua)?,
 			b"redraw" => redraw(lua)?,
@@ -37,6 +40,21 @@ pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 			b"preview" => Rect(layout.preview),
 			b"progress" => Rect(layout.progress),
 			_ => Err(format!("unknown area: {}", s.display()).into_lua_err())?,
+		})
+	})?;
+
+	f.into_lua(lua)
+}
+
+pub(super) fn height(lua: &Lua) -> mlua::Result<Value> {
+	let f = lua.create_function(|_, (s, opts): (mlua::String, Table)| {
+		let width = opts.raw_get("width")?;
+		let wrap: Wrap = opts.raw_get("wrap")?;
+
+		Ok(if opts.raw_get("ansi")? {
+			line_count(s.to_string_lossy().to_text().into_lua_err()?, width, YAZI.preview.indent(), wrap)
+		} else {
+			line_count(s.to_string_lossy(), width, YAZI.preview.indent(), wrap)
 		})
 	})?;
 

@@ -11,6 +11,7 @@ function M:peek(job)
 		return require("code"):peek(job)
 	end
 
+	local wrap = rt.preview.wrap
 	local limit = job.area.h
 	local i, lines = 0, ""
 	repeat
@@ -21,7 +22,7 @@ function M:peek(job)
 			break
 		end
 
-		i = i + 1
+		i = i + ui.height(next, { width = job.area.w, ansi = true, wrap = wrap })
 		if i > job.skip then
 			lines = lines .. next
 		end
@@ -32,10 +33,7 @@ function M:peek(job)
 		ya.emit("peek", { math.max(0, i - limit), only_if = job.file.url, upper_bound = true })
 	else
 		lines = lines:gsub("\t", string.rep(" ", rt.preview.tab_size))
-		ya.preview_widget(
-			job,
-			ui.Text.parse(lines):area(job.area):wrap(rt.preview.wrap == "yes" and ui.Wrap.YES or ui.Wrap.NO)
-		)
+		ya.preview_widget(job, ui.Text.parse(lines):area(job.area):wrap(wrap))
 	end
 end
 
