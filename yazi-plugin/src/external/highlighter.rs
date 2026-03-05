@@ -1,4 +1,4 @@
-use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::OnceLock};
+use std::{io::Cursor, path::{Path, PathBuf}, sync::OnceLock};
 
 use anyhow::{Result, anyhow};
 use ratatui::{layout::Size, text::{Line, Span, Text}};
@@ -7,6 +7,7 @@ use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 use yazi_config::{THEME, YAZI, preview::PreviewWrap};
 use yazi_fs::provider::{Provider, local::Local};
 use yazi_shared::{Ids, errors::PeekError, push_printable_char};
+use yazi_shim::ratatui::line_count;
 
 static INCR: Ids = Ids::new();
 static SYNTECT: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
@@ -16,7 +17,6 @@ pub struct Highlighter {
 }
 
 impl Highlighter {
-	#[inline]
 	pub fn new<P>(path: P) -> Self
 	where
 		P: Into<PathBuf>,
@@ -40,10 +40,10 @@ impl Highlighter {
 		(theme, syntaxes)
 	}
 
-	#[inline]
 	pub fn abort() { INCR.next(); }
 
 	pub async fn highlight(&self, skip: usize, size: Size) -> Result<Text<'static>, PeekError> {
+		let indent = YAZI.preview.indent();
 		let mut reader = BufReader::new(Local::regular(&self.path).open().await?);
 
 		let syntax = Self::find_syntax(&self.path, &mut reader).await;
@@ -60,26 +60,20 @@ impl Highlighter {
 				return Err("Binary file".into());
 			}
 
-			if !plain && (buf.len() > 5000 || Self::contains_control_chars(&buf)) {
+			let remaining = Self::normalize_control_chars(&mut buf);
+			if !plain && (remaining || buf.len() > 5000) {
 				plain = true;
-				drop(mem::take(&mut before));
-			}
-
-			if buf.ends_with(b"\r\n") {
-				buf.pop();
-				buf.pop();
-				buf.push(b'\n');
+				before.clear();
 			}
 
 			i += if i >= skip {
-				buf.iter_mut().for_each(Self::carriage_return_to_line_feed);
 				after.push(String::from_utf8_lossy(&buf).into_owned());
-				Self::line_height(&after[after.len() - 1], size.width)
+				line_count(&**after.last().unwrap(), size.width, &indent, YAZI.preview.wrap)
 			} else if !plain {
 				before.push(String::from_utf8_lossy(&buf).into_owned());
-				Self::line_height(&before[before.len() - 1], size.width)
-			} else if YAZI.preview.wrap == PreviewWrap::Yes {
-				Self::line_height(&String::from_utf8_lossy(&buf), size.width)
+				line_count(&**before.last().unwrap(), size.width, &indent, YAZI.preview.wrap)
+			} else if YAZI.preview.wrap != PreviewWrap::No {
+				line_count(String::from_utf8_lossy(&buf), size.width, &indent, YAZI.preview.wrap)
 			} else {
 				1
 			};
@@ -166,42 +160,22 @@ impl Highlighter {
 		}
 	}
 
-	fn line_height(s: &str, width: u16) -> usize {
-		if YAZI.preview.wrap != PreviewWrap::Yes {
-			return 1;
+	fn normalize_control_chars(buf: &mut Vec<u8>) -> bool {
+		if buf.ends_with(b"\r\n") {
+			buf.pop();
+			buf.pop();
+			buf.push(b'\n');
 		}
 
-		let pad = YAZI
-			.preview
-			.tab_size
-			.checked_sub(1)
-			.map(|n| s.bytes().filter(|&b| b == b'\t').count() * n as usize)
-			.map(|n| yazi_config::preview::Preview::indent_with(n))
-			.unwrap_or_default();
-
-		let line = Line {
-			spans: vec![Span { content: pad, style: Default::default() }, Span {
-				content: Cow::Borrowed(s),
-				..Default::default()
-			}],
-			..Default::default()
-		};
-
-		ratatui::widgets::Paragraph::new(line)
-			.wrap(ratatui::widgets::Wrap { trim: false })
-			.line_count(width)
-	}
-
-	#[inline(always)]
-	fn contains_control_chars(buf: &[u8]) -> bool {
-		buf.iter().any(|&b| b.is_ascii_control() && !matches!(b, b'\t' | b'\n' | b'\r'))
-	}
-
-	#[inline(always)]
-	fn carriage_return_to_line_feed(b: &mut u8) {
-		if *b == b'\r' {
-			*b = b'\n';
+		let mut remaining = false;
+		for b in buf.iter_mut() {
+			if *b == b'\r' {
+				*b = b'\n';
+			} else {
+				remaining |= matches!(b, 0..=0x08 | 0x0B..=0x1F | 0x7F);
+			}
 		}
+		remaining
 	}
 
 	fn merge_highlight_lines(s: &[String], tab_size: u8) -> String {

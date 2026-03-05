@@ -34,6 +34,7 @@ yazi-vfs      = { path = "../yazi-vfs", version = "26.2.2" }
 yazi-widgets  = { path = "../yazi-widgets", version = "26.2.2" }
 
 # External dependencies
+ansi-to-tui   = { workspace = true }
 anyhow        = { workspace = true }
 futures       = { workspace = true }
 hashbrown     = { workspace = true }

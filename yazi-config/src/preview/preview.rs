@@ -1,4 +1,4 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -8,9 +8,6 @@ use yazi_shared::{SStr, timestamp_us};
 
 use super::PreviewWrap;
 use crate::normalize_path;
-
-#[rustfmt::skip]
-const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];
 
 #[derive(Debug, Deserialize, DeserializeOver2, Serialize)]
 pub struct Preview {
@@ -34,10 +31,15 @@ impl Preview {
 		self.cache_dir.join(format!("{prefix}-{}", timestamp_us()))
 	}
 
-	pub fn indent(&self) -> SStr { Self::indent_with(self.tab_size as usize) }
+	pub fn indent(&self) -> SStr {
+		#[rustfmt::skip]
+		const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];
 
-	pub fn indent_with(n: usize) -> SStr {
-		if let Some(s) = TABS.get(n) { Cow::Borrowed(s) } else { Cow::Owned(" ".repeat(n)) }
+		if let Some(&s) = TABS.get(self.tab_size as usize) {
+			s.into()
+		} else {
+			" ".repeat(self.tab_size as usize).into()
+		}
 	}
 }
 
