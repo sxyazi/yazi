@@ -11,7 +11,10 @@ where
 
 fn line_count_impl(mut text: Text<'_>, mut width: u16, indent: &str, wrap: Option<Wrap>) -> usize {
 	width = width.max(1);
-	let Some(wrap) = wrap else { return 1 };
+
+	let Some(wrap) = wrap else {
+		return Paragraph::new(text).line_count(width);
+	};
 
 	if indent.len() == 1 {
 		return Paragraph::new(text).wrap(wrap).line_count(width);
