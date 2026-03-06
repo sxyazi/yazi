@@ -1,5 +1,3 @@
---- @sync peek
-
 local M = {}
 
 local selected = ya.sync(function()

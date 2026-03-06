@@ -2,24 +2,24 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local files, err = self.list_archive({ "-p", tostring(job.file.path) }, job.skip, limit)
+	local items, err = self.list_archive({ "-p", tostring(job.file.path) }, job.skip, limit)
 
-	local first = (#files == 1 and files[1]) or (#files == 0 and M.list_if_only_one(job.file.path))
-	if first and M.should_decompress_tar(first) then
-		files, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
+	local first = (#items == 1 and items[1]) or (#items == 0 and M.list_if_only_one(job.file.path))
+	if first and M.should_decompress_tar(job.file, first) then
+		items, err = self.list_compressed_tar({ "-p", tostring(job.file.path) }, job.skip, limit)
 	end
 
 	if err then
 		return ya.preview_widget(job, err)
-	elseif job.skip > 0 and #files < job.skip + limit then
-		return ya.emit("peek", { math.max(0, #files - limit), only_if = job.file.url, upper_bound = true })
-	elseif #files == 0 then
-		files = { M.make_file { path = job.file.url.stem } }
+	elseif job.skip > 0 and #items < job.skip + limit then
+		return ya.emit("peek", { math.max(0, #items - limit), only_if = job.file.url, upper_bound = true })
+	elseif #items == 0 then
+		items = { M.make_item { path = job.file.url.stem } }
 	end
 
 	local left, right = {}, {}
-	for i = job.skip + 1, #files do
-		local f = files[i]
+	for i = job.skip + 1, #items do
+		local f = items[i]
 		local icon = File({
 			url = Url(f.path),
 			cha = Cha { mode = tonumber(f.is_dir and "40700" or "100644", 8) },
@@ -101,11 +101,11 @@ function M.spawn_7z_piped(src_args, dst_args)
 	return src, dst, last_err
 end
 
----List files in an archive
+---List items in an archive
 ---@param args table
 ---@param skip integer
 ---@param limit integer
----@return table files
+---@return table items
 ---@return Error? err
 function M.list_archive(args, skip, limit)
 	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", "-xr!__MACOSX", table.unpack(args) }
@@ -113,17 +113,17 @@ function M.list_archive(args, skip, limit)
 		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local files, err = M.parse_7z_slt(child, skip, limit)
+	local items, err = M.parse_7z_slt(child, skip, limit)
 	child:start_kill()
 
-	return files, err
+	return items, err
 end
 
----List files in a compressed tarball
+---List items in a compressed tarball
 ---@param args table
 ---@param skip integer
 ---@param limit integer
----@return table files
+---@return table items
 ---@return Error? err
 function M.list_compressed_tar(args, skip, limit)
 	local src, dst = M.spawn_7z_piped(
@@ -134,30 +134,33 @@ function M.list_compressed_tar(args, skip, limit)
 		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local files, err = M.parse_7z_slt(dst, skip, limit)
+	local items, err = M.parse_7z_slt(dst, skip, limit)
 	src:start_kill()
 	dst:start_kill()
 
-	return files, err
+	return items, err
 end
 
 ---@param path Path
 ---@return table?
 function M.list_if_only_one(path)
 	-- For certain compressed tarballs (e.g. .tar.xz),
-	-- 7-zip doesn't print a .tar file if -slt is specified, so we are not doing that here
+	-- 7-zip doesn't print a .tar item if -slt is specified, so we are not doing that here
 	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
 	if not child then
 		return
 	end
 
-	local files = {}
-	while #files < 2 do
+	local items = {}
+	while #items < 2 do
 		local next, event = child:read_line()
 		if event == 0 then
-			local attr, size, packed_size, path = next:sub(20):match("([^ ]+) +(%d+) +(%d+) +([^\r\n]+)")
-			if path then
-				files[#files + 1] = M.make_file { path = path, size = size, packed_size = packed_size, attr = attr }
+			local attr = next:sub(21, 25)
+			local size = next:sub(27, 38):gsub("^%s+", "")
+			local packed_size = next:sub(40, 51):gsub("^%s+", "")
+			local path = next:sub(54):gsub("\r?\n$", "")
+			if path ~= "" then
+				items[#items + 1] = M.make_item { path = path, size = size, packed_size = packed_size, attr = attr }
 			end
 		elseif event ~= 1 then
 			break
@@ -165,8 +168,8 @@ function M.list_if_only_one(path)
 	end
 
 	child:start_kill()
-	if #files == 1 then
-		return files[1]
+	if #items == 1 then
+		return items[1]
 	end
 end
 
@@ -215,18 +218,28 @@ function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
 function M.is_tar(path) return M.list_meta { "-p", tostring(path) } == "tar" end
 
-function M.make_file(t)
+function M.make_item(t)
 	t = t or {}
 	t.path = type(t.path or "") == "string" and Path.os(t.path or "") or t.path
 	t.size = tonumber(t.size) or 0
 	t.packed_size = tonumber(t.packed_size) or 0
 	t.attr = t.attr or ""
 	t.folder = t.folder or ""
+	t.depth = tonumber(t.depth) or 0
 	return t
 end
 
-function M.should_decompress_tar(file)
-	return file.packed_size <= 1024 * 1024 * 1024 and (file.path.ext or ""):lower() == "tar"
+---@param file File
+---@param item table
+---@return boolean
+function M.should_decompress_tar(file, item)
+	if (item.path.ext or ""):lower() ~= "tar" then
+		return false
+	elseif item.packed_size > 0 then
+		return item.packed_size <= 1024 * 1024 * 1024
+	else
+		return file.cha.len <= 100 * 1024 * 1024
+	end
 end
 
 -- Parse the output of a "7z l -slt" command.
@@ -234,15 +247,15 @@ end
 ---@param child Child
 ---@param skip integer
 ---@param limit integer
----@return table files
+---@return table items
 ---@return Error? err
 function M.parse_7z_slt(child, skip, limit)
-	local files, tops, parents, err = { M.make_file() }, {}, {}, nil
+	local items, tops, parents, err = { M.make_item() }, {}, {}, nil
 	local key, value, empty, stderr = "", "", Path.os(""), {}
 	repeat
 		local next, event = child:read_line()
 		if event == 1 and M.is_encrypted(next) then
-			err = Err("File list in this archive is encrypted")
+			err = Err("File list of the archive is encrypted")
 			break
 		elseif event == 1 then
 			stderr[#stderr + 1] = next
@@ -252,53 +265,53 @@ function M.parse_7z_slt(child, skip, limit)
 		end
 
 		if next == "\n" or next == "\r\n" then
-			if files[#files].path ~= empty then
-				M.treelize(files, tops, parents)
-				M.pop_dup_dir(files, parents, false)
-				files[#files + 1] = M.make_file()
+			if items[#items].path ~= empty then
+				M.treelize(items, tops, parents)
+				M.pop_dup_dir(items, parents, false)
+				items[#items + 1] = M.make_item()
 			end
 			goto continue
 		end
 
 		key, value = next:match("^(%u[%a ]+) = (.-)[\r\n]+")
 		if key == "Path" then
-			files[#files].path = Path.os(value)
+			items[#items].path = Path.os(value)
 		elseif key == "Size" then
-			files[#files].size = tonumber(value) or 0
+			items[#items].size = tonumber(value) or 0
 		elseif key == "Packed Size" then
-			files[#files].packed_size = tonumber(value) or 0
+			items[#items].packed_size = tonumber(value) or 0
 		elseif key == "Attributes" then
-			files[#files].attr = value
+			items[#items].attr = value
 		elseif key == "Folder" then
-			files[#files].folder = value
+			items[#items].folder = value
 		end
 
 		::continue::
-	until #files - 1 > skip + limit
+	until #items - 1 > skip + limit
 
-	if files[#files].path == empty then
-		files[#files] = nil
+	if items[#items].path == empty then
+		items[#items] = nil
 	else
-		M.treelize(files, tops, parents)
+		M.treelize(items, tops, parents)
 	end
 
-	M.pop_dup_dir(files, parents, #files <= skip + limit)
-	if #files > skip + limit then
-		files[#files] = nil
+	M.pop_dup_dir(items, parents, #items <= skip + limit)
+	if #items > skip + limit then
+		items[#items] = nil
 	end
 
 	if #stderr ~= 0 then
-		err = Err("7-zip errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
+		err = Err("7-zip errored out while listing items, stderr: %s", table.concat(stderr, "\n"))
 	end
-	return files, err
+	return items, err
 end
 
----Convert a flat list of files into a tree structure
----@param files table
+---Convert a flat list of items into a tree structure
+---@param items table
 ---@param tops Path[]
 ---@param parents table<string, boolean>
-function M.treelize(files, tops, parents)
-	local f = table.remove(files)
+function M.treelize(items, tops, parents)
+	local f = table.remove(items)
 	while #tops > 0 and not f.path:starts_with(tops[#tops]) do
 		tops[#tops] = nil
 	end
@@ -308,37 +321,37 @@ function M.treelize(files, tops, parents)
 		buf[#buf + 1], it = it, it.parent
 	end
 	for i = #buf, 1, -1 do
-		files[#files + 1] = M.make_file { path = buf[i], depth = #tops, is_dir = true }
+		items[#items + 1] = M.make_item { path = buf[i], depth = #tops, is_dir = true }
 		tops[#tops + 1] = buf[i]
-		M.pop_dup_dir(files, parents, false)
+		M.pop_dup_dir(items, parents, false)
 	end
 
 	f.depth = #tops
 	f.is_dir = f.folder == "+" or f.attr:sub(1, 1) == "D"
 
 	if not f.is_dir then
-		files[#files + 1] = f
+		items[#items + 1] = f
 	elseif f.path ~= tops[#tops] then
-		files[#files + 1], tops[#tops + 1] = f, f.path
+		items[#items + 1], tops[#tops + 1] = f, f.path
 	end
 end
 
----@param files table
+---@param items table
 ---@param parents table<string, boolean>
 ---@param eof boolean
-function M.pop_dup_dir(files, parents, eof)
-	local n, i = #files, eof and #files or #files - 1
-	if not files[i] or not files[i].is_dir then
+function M.pop_dup_dir(items, parents, eof)
+	local n, i = #items, eof and #items or #items - 1
+	if not items[i] or not items[i].is_dir then
 		return
 	end
 
-	local p = tostring(files[i].path)
+	local p = tostring(items[i].path)
 	if not parents[p] then
 		parents[p] = true
 	elseif eof then
-		files[n] = nil
-	elseif not files[n].path:starts_with(files[i].path) then
-		files[i], files[n] = files[n], nil
+		items[n] = nil
+	elseif not items[n].path:starts_with(items[i].path) then
+		items[i], items[n] = items[n], nil
 	end
 end
 
