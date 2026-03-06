@@ -6238,6 +6238,7 @@ name = "yazi-vfs"
 version = "26.2.2"
 dependencies = [
  "anyhow",
+ "chrono",
  "deadpool",
  "either",
  "futures",

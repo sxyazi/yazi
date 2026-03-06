@@ -3,7 +3,7 @@ use std::{io, sync::Arc, time::Duration};
 use russh::keys::PrivateKeyWithHashAlg;
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
-use yazi_shared::{format_duration, timestamp_us};
+use yazi_shared::timestamp_us;
 
 #[derive(Clone, Copy)]
 pub(super) struct Conn {
@@ -175,15 +175,22 @@ impl Conn {
 				russh::Error::InvalidConfig(format!("Certificate signature verification failed: {e}"))
 			})?;
 			let unix_timestamp = timestamp_us() / 1_000_000;
-			if unix_timestamp < cert.valid_after() {
+
+			if unix_timestamp < cert.valid_after() || unix_timestamp > cert.valid_before() {
+				let format_time = |ts: u64| {
+					i64::try_from(ts)
+						.ok()
+						.and_then(chrono::DateTime::from_timestamp_secs)
+						.map(|dt| dt.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string())
+						.unwrap_or_else(|| "unknown date".to_string())
+				};
+
+				let start = format_time(cert.valid_after());
+				let end = format_time(cert.valid_before());
+
 				return Err(russh::Error::InvalidConfig(format!(
-					"Certificate will be valid in {}",
-					format_duration(Duration::from_secs(cert.valid_after() - unix_timestamp))
-				)));
-			} else if unix_timestamp > cert.valid_before() {
-				return Err(russh::Error::InvalidConfig(format!(
-					"Certificate expired {} ago",
-					format_duration(Duration::from_secs(unix_timestamp - cert.valid_before()))
+					"Certificate is invalid. The validity range is {} to {}",
+					start, end
 				)));
 			}
 		}
