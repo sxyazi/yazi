@@ -1,61 +1,46 @@
+--- @sync peek
+
 local M = {}
 
+local selected = ya.sync(function()
+	local urls = {}
+	for _, u in pairs(cx.active.selected) do
+		urls[#urls + 1] = u
+	end
+	return urls
+end)
+
 function M:spot(job)
-	self.size = 0
-	self.done = 0
-	self.total = #job.files
-	self.last = 0
-	self:spot_render(job, false)
-	local sizes = {}
-	for _, url in ipairs(job.files) do
-		local cha = fs.cha(url)
-		if cha and not cha.is_dir then
-			self.size = self.size + cha.len
-			self.done = self.done + 1
-			self:spot_render(job, false)
-		else
-			local it = fs.calc_size(url)
-			local sub = 0
-			while true do
-				local next = it:recv()
-				if next then
-					sub = sub + next
-					self.size = self.size + next
-					self:spot_render(job, false)
-				else
-					break
-				end
-			end
-			self.done = self.done + 1
-			if cha and cha.is_dir then
-				sizes[url.urn] = sub
+	self.sum, self.sizes, self.last, self.selected = 0, {}, 0, selected()
+	self:spot_multi(job, false)
+
+	for _, u in ipairs(self.selected) do
+		local it, size = fs.calc_size(u), 0
+		while true do
+			local next = it:recv()
+			if next then
+				size, self.sum = size + next, self.sum + next
+				self:spot_multi(job, false)
+			else
+				self.sizes[u], size = size, 0
+				break
 			end
 		end
 	end
 
-	if next(sizes) then
-		local first = job.files[1]
-		local parent = first.parent
-		if parent then
-			local op = fs.op("size", { url = parent, sizes = sizes })
-			ya.emit("update_files", { op = op })
-		end
-	end
-	self:spot_render(job, true)
+	self:spot_multi(job, true)
 end
 
-function M:spot_render(job, comp)
+function M:spot_multi(job, comp)
 	local now = ya.time()
 	if not comp and now < self.last + 0.1 then
 		return
 	end
 
-	local progress = string.format("%d/%d", self.done, self.total)
 	local rows = {
-		ui.Row({ "Selected" }):style(ui.Style():fg("green")),
-		ui.Row { " Count:", tostring(self.total) },
-		ui.Row { " Size:", ya.readable_size(self.size) .. (comp and "" or " (?)") },
-		ui.Row { " Progress:", comp and "Done" or progress },
+		ui.Row({ "Multi" }):style(ui.Style():fg("green")),
+		ui.Row { "  Count:", string.format("%d items", #self.selected) },
+		ui.Row { "  Size:", ya.readable_size(self.sum) .. (comp and "" or " (?)") },
 	}
 
 	ya.spot_table(
@@ -68,7 +53,21 @@ function M:spot_render(job, comp)
 			:cell_style(th.spot.tbl_cell)
 			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
+
+	self:update_sizes()
 	self.last = now
+end
+
+function M:update_sizes()
+	local parents = {}
+	for url, size in pairs(self.sizes) do
+		local p = url.parent
+		parents[p] = parents[p] or {}
+		parents[p][url.urn] = size
+	end
+	for parent, sizes in pairs(parents) do
+		ya.emit("update_files", { op = fs.op("size", { url = parent, sizes = sizes }) })
+	end
 end
 
 return M

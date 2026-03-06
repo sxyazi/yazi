@@ -2,9 +2,9 @@ use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmS
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
-use yazi_binding::{File, Id, Url};
+use yazi_binding::{File, Id};
 use yazi_dds::Sendable;
-use yazi_shared::{Ids, event::Action, pool::Symbol, url::UrlBuf};
+use yazi_shared::{Ids, event::Action, pool::Symbol};
 
 use super::slim_lua;
 use crate::loader::LOADER;
@@ -16,7 +16,6 @@ pub fn spot(
 	file: yazi_fs::File,
 	mime: Symbol<str>,
 	skip: usize,
-	urls: Option<Vec<UrlBuf>>,
 ) -> CancellationToken {
 	let ct = CancellationToken::new();
 	let (ct1, ct2) = (ct.clone(), ct.clone());
@@ -45,13 +44,6 @@ pub fn spot(
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),
 			])?;
-			if let Some(urls) = urls {
-				let files = lua.create_table_with_capacity(urls.len(), 0)?;
-				for (i, url) in urls.into_iter().enumerate() {
-					files.raw_set(i + 1, Url::new(url))?;
-				}
-				job.raw_set("files", files)?;
-			}
 
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
 		};

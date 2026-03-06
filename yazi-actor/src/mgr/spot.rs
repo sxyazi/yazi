@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_macro::succ;
+use yazi_macro::{act, succ};
 use yazi_parser::mgr::SpotOpt;
 use yazi_shared::{data::Data, pool::InternStr};
 
@@ -13,12 +13,13 @@ impl Actor for Spot {
 	const NAME: &str = "spot";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+		act!(mgr:escape_visual, cx)?;
 		let Some(hovered) = cx.hovered().cloned() else { succ!() };
 
-		let (mime, urls) = if cx.tab().selected.len() >= 2 {
-			("multi/selected".intern(), Some(cx.tab().selected.values().cloned().collect()))
+		let mime = if cx.tab().selected.is_empty() {
+			cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default()
 		} else {
-			(cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default(), None)
+			"multi/unknown".intern()
 		};
 
 		// if !self.active().spot.same_file(&hovered, &mime) {
@@ -31,7 +32,7 @@ impl Actor for Spot {
 			cx.tab_mut().spot.skip = 0;
 		}
 
-		cx.tab_mut().spot.go(hovered, mime, urls);
+		cx.tab_mut().spot.go(hovered, mime);
 		succ!();
 	}
 }
