@@ -39,7 +39,7 @@ function M:spot_multi(job, comp)
 
 	local rows = {
 		ui.Row({ "Multi" }):style(ui.Style():fg("green")),
-		ui.Row { "  Count:", string.format("%d items", #self.selected) },
+		ui.Row { "  Count:", string.format("%d selected", #self.selected) },
 		ui.Row { "  Size:", ya.readable_size(self.sum) .. (comp and "" or " (?)") },
 	}
 
