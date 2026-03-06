@@ -105,6 +105,9 @@ fetchers = [
 	{ id = "mime", url = "remote://*", run = "mime.remote", prio = "high" },
 ]
 spotters = [
+	# Multi-file
+	{ mime = "multi/*", run = "multi" },
+	# Folder
 	{ url = "*/", run = "folder" },
 	# Code
 	{ mime = "text/*", run = "code" },

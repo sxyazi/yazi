@@ -1,7 +1,7 @@
 use anyhow::Result;
-use yazi_macro::succ;
+use yazi_macro::{act, succ};
 use yazi_parser::mgr::SpotOpt;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, pool::InternStr};
 
 use crate::{Actor, Ctx};
 
@@ -13,9 +13,15 @@ impl Actor for Spot {
 	const NAME: &str = "spot";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+		act!(mgr:escape_visual, cx)?;
 		let Some(hovered) = cx.hovered().cloned() else { succ!() };
 
-		let mime = cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default();
+		let mime = if cx.tab().selected.is_empty() {
+			cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default()
+		} else {
+			"multi/unknown".intern()
+		};
+
 		// if !self.active().spot.same_file(&hovered, &mime) {
 		// self.active_mut().spot.reset();
 		// }

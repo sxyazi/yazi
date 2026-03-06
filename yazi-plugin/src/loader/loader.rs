@@ -44,6 +44,7 @@ impl Default for Loader {
 			("mime.dir".to_owned(), preset!("plugins/mime-dir").into()),
 			("mime.local".to_owned(), preset!("plugins/mime-local").into()),
 			("mime.remote".to_owned(), preset!("plugins/mime-remote").into()),
+			("multi".to_owned(), preset!("plugins/multi").into()),
 			("noop".to_owned(), preset!("plugins/noop").into()),
 			("null".to_owned(), preset!("plugins/null").into()),
 			("pdf".to_owned(), preset!("plugins/pdf").into()),
