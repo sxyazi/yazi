@@ -1,14 +1,19 @@
-use std::{io, sync::Arc, time::Duration};
+use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
 use russh::keys::PrivateKeyWithHashAlg;
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
-use yazi_shared::timestamp_us;
 
 #[derive(Clone, Copy)]
 pub(super) struct Conn {
 	pub(super) name:   &'static str,
 	pub(super) config: &'static ServiceSftp,
+}
+
+macro_rules! cfg_err {
+	($($args:tt)*) => {
+		russh::Error::InvalidConfig(format!($($args)*))
+	};
 }
 
 impl russh::client::Handler for Conn {
@@ -102,7 +107,7 @@ impl Conn {
 		pref: Arc<russh::client::Config>,
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
 		let Some(password) = &self.config.password else {
-			return Err(russh::Error::InvalidConfig("Password not provided".to_owned()));
+			return Err(cfg_err!("Password not provided"));
 		};
 
 		let mut session =
@@ -111,7 +116,7 @@ impl Conn {
 		if session.authenticate_password(&self.config.user, password).await?.success() {
 			Ok(session)
 		} else {
-			Err(russh::Error::InvalidConfig("Password authentication failed".to_owned()))
+			Err(cfg_err!("Password authentication failed"))
 		}
 	}
 
@@ -121,14 +126,13 @@ impl Conn {
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
 		let key_file = &self.config.key_file;
 		if key_file.as_os_str().is_empty() {
-			return Err(russh::Error::InvalidConfig("Key file not provided".to_owned()));
+			return Err(cfg_err!("Key file not provided"));
 		};
 
 		let key = Local::regular(key_file)
 			.read_to_string()
 			.await
-			.map_err(|e| russh::Error::InvalidConfig(format!("Failed to read key file: {e}")))?;
-
+			.map_err(|e| cfg_err!("Failed to read key file: {e}"))?;
 		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
 
 		let mut session =
@@ -144,11 +148,7 @@ impl Conn {
 			)
 			.await?;
 
-		if result.success() {
-			Ok(session)
-		} else {
-			Err(russh::Error::InvalidConfig("Public key authentication failed".to_owned()))
-		}
+		if result.success() { Ok(session) } else { Err(cfg_err!("Public key authentication failed")) }
 	}
 
 	async fn connect_by_key_and_cert(
@@ -157,62 +157,52 @@ impl Conn {
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
 		let key_file = &self.config.key_file;
 		if key_file.as_os_str().is_empty() {
-			return Err(russh::Error::InvalidConfig("Key file not provided".to_owned()));
+			return Err(cfg_err!("Key file not provided"));
 		};
+
 		let cert_file = &self.config.cert_file;
 		if cert_file.as_os_str().is_empty() {
-			return Err(russh::Error::InvalidConfig("Cert file not provided".to_owned()));
+			return Err(cfg_err!("Cert file not provided"));
 		};
 
-		let cert = russh::keys::load_openssh_certificate(cert_file).map_err(
-			|e: russh::keys::ssh_key::Error| {
-				russh::Error::InvalidConfig(format!("Failed to read cert file: {e}"))
-			},
-		)?;
-
-		if !self.config.no_cert_verify {
-			cert.verify_signature().map_err(|e| {
-				russh::Error::InvalidConfig(format!("Certificate signature verification failed: {e}"))
-			})?;
-			let unix_timestamp = timestamp_us() / 1_000_000;
-
-			if unix_timestamp < cert.valid_after() || unix_timestamp > cert.valid_before() {
-				let format_time = |ts: u64| {
-					i64::try_from(ts)
-						.ok()
-						.and_then(chrono::DateTime::from_timestamp_secs)
-						.map(|dt| dt.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string())
-						.unwrap_or_else(|| "unknown date".to_string())
-				};
-
-				let start = format_time(cert.valid_after());
-				let end = format_time(cert.valid_before());
-
-				return Err(russh::Error::InvalidConfig(format!(
-					"Certificate is invalid. The validity range is {} to {}",
-					start, end
-				)));
-			}
-		}
-
+		// Decode the key and cert files
 		let key = Local::regular(key_file)
 			.read_to_string()
 			.await
-			.map_err(|e| russh::Error::InvalidConfig(format!("Failed to read key file: {e}")))?;
-
+			.map_err(|e| cfg_err!("Failed to read key file: {e}"))?;
 		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
+
+		let cert = Local::regular(cert_file)
+			.read_to_string()
+			.await
+			.map_err(|e| cfg_err!("Failed to read cert file: {e}"))?;
+		let cert = russh::keys::Certificate::from_openssh(&cert)?;
+
+		// Verify the certificate
+		if !self.config.no_cert_verify {
+			cert
+				.verify_signature()
+				.map_err(|e| cfg_err!("Certificate signature verification failed: {e}"))?;
+
+			let now: chrono::DateTime<chrono::Local> = SystemTime::now().into();
+			let start: chrono::DateTime<chrono::Local> = cert.valid_after_time().into();
+			let end: chrono::DateTime<chrono::Local> = cert.valid_before_time().into();
+			if now < start || now > end {
+				return Err(cfg_err!(
+					"Certificate is out of the validity range of '{}' to '{}'",
+					start.to_rfc2822(),
+					end.to_rfc2822()
+				));
+			}
+		}
 
 		let mut session =
 			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
 
-		let result = session.authenticate_openssh_cert(&self.config.user, Arc::new(key), cert).await?;
-
-		if result.success() {
+		if session.authenticate_openssh_cert(&self.config.user, Arc::new(key), cert).await?.success() {
 			Ok(session)
 		} else {
-			Err(russh::Error::InvalidConfig(
-				"Public key with certificate authentication failed".to_owned(),
-			))
+			Err(cfg_err!("Public key with certificate authentication failed"))
 		}
 	}
 
@@ -222,7 +212,7 @@ impl Conn {
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
 		let identity_agent = &self.config.identity_agent;
 		if identity_agent.as_os_str().is_empty() {
-			return Err(russh::Error::InvalidConfig("Identity agent not provided".to_owned()));
+			return Err(cfg_err!("Identity agent not provided"));
 		};
 
 		#[cfg(unix)]
@@ -233,7 +223,7 @@ impl Conn {
 
 		let keys = agent.request_identities().await?;
 		if keys.is_empty() {
-			return Err(russh::Error::InvalidConfig("No keys found in SSH agent".to_owned()));
+			return Err(cfg_err!("No keys found in SSH agent"));
 		}
 
 		let mut session =
@@ -249,6 +239,6 @@ impl Conn {
 			}
 		}
 
-		Err(russh::Error::InvalidConfig("Public key authentication via agent failed".to_owned()))
+		Err(cfg_err!("Public key authentication via agent failed"))
 	}
 }
