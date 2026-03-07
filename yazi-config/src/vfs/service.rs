@@ -53,6 +53,11 @@ impl ServiceSftp {
 				.ok_or_else(|| io::Error::other("key_file must be either empty or an absolute path"))?;
 		}
 
+		if !self.cert_file.as_os_str().is_empty() {
+			self.cert_file = normalize_path(mem::take(&mut self.cert_file))
+				.ok_or_else(|| io::Error::other("cert_file must be either empty or an absolute path"))?;
+		}
+
 		self.identity_agent = if self.identity_agent.as_os_str().is_empty() {
 			std::env::var_os("SSH_AUTH_SOCK")
 				.map(PathBuf::from)
