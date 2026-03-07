@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Custom tab name ([#3666])
 - New `--in` for `search` action to set search directory ([#3696])
 - Multi-file spotter ([#3733])
+- Certificate authentication for SFTP VFS provider ([#3716])
 - New `hovered` condition specifying different icons for hovered files ([#3728])
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
 - New `sort_fallback` option to control fallback sorting behavior ([#3077])
@@ -1672,6 +1673,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3689]: https://github.com/sxyazi/yazi/pull/3689
 [#3696]: https://github.com/sxyazi/yazi/pull/3696
 [#3708]: https://github.com/sxyazi/yazi/pull/3708
+[#3716]: https://github.com/sxyazi/yazi/pull/3716
 [#3725]: https://github.com/sxyazi/yazi/pull/3725
 [#3728]: https://github.com/sxyazi/yazi/pull/3728
 [#3733]: https://github.com/sxyazi/yazi/pull/3733
