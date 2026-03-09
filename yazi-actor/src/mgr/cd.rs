@@ -50,7 +50,6 @@ impl Actor for Cd {
 
 		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
 		act!(mgr:displace, cx)?;
-		cx.source = yazi_shared::Source::Ind;
 		act!(mgr:hidden, cx)?;
 		act!(mgr:sort, cx).ok();
 		act!(mgr:hover, cx)?;
