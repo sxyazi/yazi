@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `fs.access()` API to access the filesystem ([#3668])
 - New `relay-notify-push` DDS event to customize the notification handler ([#3642])
 - New `ind-app-title` DDS event to customize the app title ([#3684])
+- New `ind-hidden` and `key-hidden` DDS events to change hidden status in Lua ([#3748])
 - New `marker_symbol` option to specify the symbol used for marking files ([#3689])
 - New `fs.unique()` creates a unique file or directory ([#3677])
 - New `download` DDS event fires when remote files are downloaded ([#3687])
@@ -1678,3 +1679,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3728]: https://github.com/sxyazi/yazi/pull/3728
 [#3733]: https://github.com/sxyazi/yazi/pull/3733
 [#3744]: https://github.com/sxyazi/yazi/pull/3744
+[#3748]: https://github.com/sxyazi/yazi/pull/3748
