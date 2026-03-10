@@ -1,6 +1,6 @@
-use mlua::{IntoLuaMulti, UserData, UserDataMethods, Value};
+use mlua::{IntoLuaMulti, UserData, UserDataFields, UserDataMethods, Value};
 
-use crate::Error;
+use crate::{Cha, Error};
 
 pub enum SizeCalculator {
 	Local(yazi_fs::provider::local::SizeCalculator),
@@ -8,11 +8,20 @@ pub enum SizeCalculator {
 }
 
 impl UserData for SizeCalculator {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("cha", |_, me| {
+			Ok(Cha(match me {
+				Self::Local(c) => c.cha(),
+				Self::Remote(c) => c.cha(),
+			}))
+		});
+	}
+
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
 			let next = match &mut *me {
-				Self::Local(it) => it.next().await,
-				Self::Remote(it) => it.next().await,
+				Self::Local(c) => c.next().await,
+				Self::Remote(c) => c.next().await,
 			};
 
 			match next {

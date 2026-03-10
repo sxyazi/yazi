@@ -12,10 +12,11 @@ impl Actions {
 	pub(super) fn debug() -> Result<String, std::fmt::Error> {
 		let mut s = String::new();
 		writeln!(s, "\nYazi")?;
-		writeln!(s, "    Version: {}", Self::version())?;
-		writeln!(s, "    Debug  : {}", cfg!(debug_assertions))?;
-		writeln!(s, "    Triple : {}", Self::triple())?;
-		writeln!(s, "    Rustc  : {}", Self::rustc())?;
+		writeln!(s, "    Version  : {}", Self::version())?;
+		writeln!(s, "    Debug    : {}", cfg!(debug_assertions))?;
+		writeln!(s, "    Triple   : {}", Self::triple())?;
+		writeln!(s, "    Rustc    : {}", Self::rustc())?;
+		writeln!(s, "    Backtrace: {:?}", env::var_os("RUST_BACKTRACE"))?;
 
 		writeln!(s, "\nYa")?;
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;

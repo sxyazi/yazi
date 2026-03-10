@@ -55,7 +55,7 @@ function M:spot(job)
 
 	local url = job.file.url
 	local it = fs.calc_size(url)
-	while true do
+	while it do
 		local next = it:recv()
 		if next then
 			self.size = self.size + next
