@@ -1,14 +1,14 @@
 use std::{collections::VecDeque, io, time::{Duration, Instant}};
 
 use either::Either;
-use yazi_fs::provider::{DirReader, FileHolder};
+use yazi_fs::{cha::Cha, provider::{DirReader, FileHolder}};
 use yazi_shared::url::{AsUrl, UrlBuf};
 
 use super::ReadDir;
 
 pub enum SizeCalculator {
-	File(Option<u64>),
-	Dir(VecDeque<Either<UrlBuf, ReadDir>>),
+	File(Option<u64>, Cha),
+	Dir(VecDeque<Either<UrlBuf, ReadDir>>, Cha),
 }
 
 impl SizeCalculator {
@@ -19,10 +19,16 @@ impl SizeCalculator {
 		let url = url.as_url();
 		let cha = super::symlink_metadata(url).await?;
 		Ok(if cha.is_dir() {
-			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]))
+			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]), cha)
 		} else {
-			Self::File(Some(cha.len))
+			Self::File(Some(cha.len), cha)
 		})
+	}
+
+	pub fn cha(&self) -> Cha {
+		match *self {
+			Self::File(_, cha) | Self::Dir(_, cha) => cha,
+		}
 	}
 
 	pub async fn total<U>(url: U) -> io::Result<u64>
@@ -39,8 +45,8 @@ impl SizeCalculator {
 
 	pub async fn next(&mut self) -> io::Result<Option<u64>> {
 		Ok(match self {
-			Self::File(size) => size.take(),
-			Self::Dir(buf) => Self::next_chunk(buf).await,
+			Self::File(size, _) => size.take(),
+			Self::Dir(buf, _) => Self::next_chunk(buf).await,
 		})
 	}
 

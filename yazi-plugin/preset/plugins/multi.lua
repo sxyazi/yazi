@@ -14,13 +14,15 @@ function M:spot(job)
 
 	for _, u in ipairs(self.selected) do
 		local it, size = fs.calc_size(u), 0
-		while true do
+		while it do
 			local next = it:recv()
 			if next then
 				size, self.sum = size + next, self.sum + next
 				self:spot_multi(job, false)
+			elseif it.cha.is_dir then
+				self.sizes[u] = size
+				break
 			else
-				self.sizes[u], size = size, 0
 				break
 			end
 		end

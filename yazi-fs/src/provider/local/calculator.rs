@@ -3,27 +3,35 @@ use std::{collections::VecDeque, future::poll_fn, io, mem, path::{Path, PathBuf}
 use either::Either;
 use tokio::task::JoinHandle;
 
+use crate::cha::Cha;
+
 type Task = Either<PathBuf, std::fs::ReadDir>;
 
 pub enum SizeCalculator {
-	Idle((VecDeque<Task>, Option<u64>)),
-	Pending(JoinHandle<(VecDeque<Task>, Option<u64>)>),
+	Idle((VecDeque<Task>, Option<u64>), Cha),
+	Pending(JoinHandle<(VecDeque<Task>, Option<u64>)>, Cha),
 }
 
 impl SizeCalculator {
 	pub async fn new(path: &Path) -> io::Result<Self> {
 		let p = path.to_owned();
 		tokio::task::spawn_blocking(move || {
-			let meta = std::fs::symlink_metadata(&p)?;
-			if !meta.is_dir() {
-				return Ok(Self::Idle((VecDeque::new(), Some(meta.len()))));
+			let cha = Cha::new(p.file_name().unwrap_or_default(), std::fs::symlink_metadata(&p)?);
+			if !cha.is_dir() {
+				return Ok(Self::Idle((VecDeque::new(), Some(cha.len)), cha));
 			}
 
 			let mut buf = VecDeque::from([Either::Right(std::fs::read_dir(&p)?)]);
 			let size = Self::next_chunk(&mut buf);
-			Ok(Self::Idle((buf, size)))
+			Ok(Self::Idle((buf, size), cha))
 		})
 		.await?
+	}
+
+	pub fn cha(&self) -> Cha {
+		match *self {
+			Self::Idle(_, cha) | Self::Pending(_, cha) => cha,
+		}
 	}
 
 	pub async fn total(path: &Path) -> io::Result<u64> {
@@ -39,7 +47,7 @@ impl SizeCalculator {
 		poll_fn(|cx| {
 			loop {
 				match self {
-					Self::Idle((buf, size)) => {
+					Self::Idle((buf, size), cha) => {
 						if let Some(s) = size.take() {
 							return Poll::Ready(Ok(Some(s)));
 						} else if buf.is_empty() {
@@ -47,13 +55,16 @@ impl SizeCalculator {
 						}
 
 						let mut buf = mem::take(buf);
-						*self = Self::Pending(tokio::task::spawn_blocking(move || {
-							let size = Self::next_chunk(&mut buf);
-							(buf, size)
-						}));
+						*self = Self::Pending(
+							tokio::task::spawn_blocking(move || {
+								let size = Self::next_chunk(&mut buf);
+								(buf, size)
+							}),
+							*cha,
+						);
 					}
-					Self::Pending(handle) => {
-						*self = Self::Idle(ready!(Pin::new(handle).poll(cx))?);
+					Self::Pending(handle, cha) => {
+						*self = Self::Idle(ready!(Pin::new(handle).poll(cx))?, *cha);
 					}
 				}
 			}
