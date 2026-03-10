@@ -5,6 +5,9 @@ pub enum SparkKind {
 	// app:title
 	IndAppTitle,
 
+	// mgr:hidden
+	KeyHidden,
+	IndHidden,
 	// mgr:sort
 	KeySort,
 	IndSort,
@@ -27,6 +30,9 @@ impl AsRef<str> for SparkKind {
 			// app:title
 			Self::IndAppTitle => "ind-app-title",
 
+			// mgr:hidden
+			Self::KeyHidden => "key-hidden",
+			Self::IndHidden => "ind-hidden",
 			// mgr:sort
 			Self::KeySort => "key-sort",
 			Self::IndSort => "ind-sort",
