@@ -26,7 +26,7 @@ pub enum Spark<'a> {
 	// Mgr
 	Arrow(yazi_parser::ArrowOpt),
 	Back(yazi_parser::VoidOpt),
-	BulkRename(yazi_parser::VoidOpt),
+	BulkRename(yazi_parser::mgr::BulkRenameOpt),
 	Cd(yazi_parser::mgr::CdOpt),
 	Close(yazi_parser::mgr::CloseOpt),
 	Copy(yazi_parser::mgr::CopyOpt),
@@ -341,7 +341,6 @@ try_from_spark!(
 	app:bootstrap,
 	app:focus,
 	mgr:back,
-	mgr:bulk_rename,
 	mgr:enter,
 	mgr:escape_filter,
 	mgr:escape_find,
@@ -378,6 +377,7 @@ try_from_spark!(yazi_parser::confirm::ShowOpt, confirm:show);
 try_from_spark!(yazi_parser::help::ToggleOpt, help:toggle);
 try_from_spark!(yazi_parser::input::CloseOpt, input:close);
 try_from_spark!(yazi_widgets::input::InputOpt, input:show);
+try_from_spark!(yazi_parser::mgr::BulkRenameOpt, mgr:bulk_rename);
 try_from_spark!(yazi_parser::mgr::CdOpt, mgr:cd);
 try_from_spark!(yazi_parser::mgr::CloseOpt, mgr:close);
 try_from_spark!(yazi_parser::mgr::CopyOpt, mgr:copy);

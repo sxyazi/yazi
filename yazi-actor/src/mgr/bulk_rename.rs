@@ -3,14 +3,14 @@ use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
 use hashbrown::HashMap;
-use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
+use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
-use yazi_parser::VoidOpt;
+use yazi_parser::mgr::BulkRenameOpt;
 use yazi_proxy::{AppProxy, NotifyProxy, TasksProxy};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_term::YIELD_TO_SUBPROCESS;
@@ -23,11 +23,11 @@ use crate::{Actor, Ctx};
 pub struct BulkRename;
 
 impl Actor for BulkRename {
-	type Options = VoidOpt;
+	type Options = BulkRenameOpt;
 
 	const NAME: &str = "bulk_rename";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let Some(opener) = Self::opener() else {
 			succ!(NotifyProxy::push_warn("Bulk rename", "No text opener found"));
 		};
@@ -79,7 +79,7 @@ impl Actor for BulkRename {
 				.map(|(i, s)| Tuple::new(i, s))
 				.collect();
 
-			Self::r#do(root, old, new, selected).await
+			Self::r#do(root, old, new, selected, opt.no_prompt).await
 		});
 		succ!();
 	}
@@ -91,6 +91,7 @@ impl BulkRename {
 		old: Vec<Tuple>,
 		new: Vec<Tuple>,
 		selected: Vec<UrlBuf>,
+		no_prompt: bool,
 	) -> Result<()> {
 		terminal_clear(TTY.writer())?;
 		if old.len() != new.len() {
@@ -108,19 +109,18 @@ impl BulkRename {
 			return Ok(());
 		}
 
-		{
+		if !no_prompt {
 			let mut w = TTY.lockout();
 			for (old, new) in &todo {
 				writeln!(w, "{} -> {}", old.display(), new.display())?;
 			}
 			write!(w, "Continue to rename? (y/N): ")?;
 			w.flush()?;
-		}
-
-		let mut buf = [0; 10];
-		_ = TTY.reader().read(&mut buf)?;
-		if buf[0] != b'y' && buf[0] != b'Y' {
-			return Ok(());
+			let mut buf = [0; 10];
+			_ = TTY.reader().read(&mut buf)?;
+			if buf[0] != b'y' && buf[0] != b'Y' {
+				return Ok(());
+			}
 		}
 
 		let permit = WATCHER.acquire().await.unwrap();
