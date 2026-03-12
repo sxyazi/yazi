@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 - New `hey` DDS event fires when static messages are restored from persistence ([#3725])
 - New `cx.which` API to access the which component state ([#3617])
+- New experimental `ya.co()` API that creates a coroutine ([#3757])
 
 ### Changed
 
@@ -1680,3 +1681,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3733]: https://github.com/sxyazi/yazi/pull/3733
 [#3744]: https://github.com/sxyazi/yazi/pull/3744
 [#3748]: https://github.com/sxyazi/yazi/pull/3748
+[#3757]: https://github.com/sxyazi/yazi/pull/3757
