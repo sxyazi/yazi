@@ -45,7 +45,7 @@ function M:spot_base(_, selected)
 			while it do
 				local next, now = it:recv(), ya.time()
 				if not next then
-					self.sizes[url] = it.cha.is_dir and size
+					self.sizes[url] = it.cha.is_dir and size or nil
 					break
 				elseif now >= last + 0.1 then
 					last, size, sum = now, size + next, sum + next

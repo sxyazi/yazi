@@ -50,7 +50,7 @@ function M:seek(job)
 end
 
 function M:spot(job)
-	local i = 0
+	local i, url = 0, job.file.url
 	for rows in self:spot_base(job) do
 		i, rows[#rows + 1] = i + 1, ui.Row {}
 		ya.spot_table(
@@ -64,6 +64,9 @@ function M:spot(job)
 				:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 		)
 	end
+	if self.size then
+		ya.emit("update_files", { op = fs.op("size", { url = url.parent, sizes = { [url.urn] = self.size } }) })
+	end
 end
 
 function M:spot_base(job)
@@ -74,6 +77,7 @@ function M:spot_base(job)
 		}
 	end
 
+	self.size = nil
 	return ya.co(function()
 		yield("0B (?)")
 
@@ -94,6 +98,7 @@ function M:spot_base(job)
 			end
 		end
 
+		self.size = size
 		yield(ya.readable_size(size))
 	end)
 end
