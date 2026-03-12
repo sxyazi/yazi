@@ -12,6 +12,27 @@ use super::Utils;
 use crate::loader::LOADER;
 
 impl Utils {
+	pub(super) fn co(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, f: Function| {
+			let thread = lua.create_thread(f)?;
+			lua.create_async_function(move |lua, args: MultiValue| {
+				let thread = thread.clone();
+				async move {
+					loop {
+						let values: MultiValue = thread.resume(&args)?;
+						if let Some(Value::LightUserData(ud)) = values.get(0)
+							&& *ud == Lua::poll_pending()
+						{
+							lua.yield_with::<()>(values).await?;
+						} else {
+							return Ok(values);
+						}
+					}
+				}
+			})
+		})
+	}
+
 	pub(super) fn sync(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, f: Function| {
 			let mut rt = runtime_mut!(lua)?;

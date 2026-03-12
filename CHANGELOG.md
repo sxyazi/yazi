@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
 - New `hey` DDS event fires when static messages are restored from persistence ([#3725])
 - New `cx.which` API to access the which component state ([#3617])
+- New experimental `ya.co()` API that creates a coroutine ([#1234])
 
 ### Changed
 
