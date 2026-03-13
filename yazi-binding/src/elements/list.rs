@@ -1,9 +1,7 @@
-use mlua::{ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Text};
-
-const EXPECTED: &str = "expected a table of strings, Texts, Lines or Spans";
 
 // --- List
 #[derive(Clone, Debug, Default)]
@@ -15,12 +13,7 @@ pub struct List {
 
 impl List {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, seq): (Table, Table)| {
-			let mut items = Vec::with_capacity(seq.raw_len());
-			for v in seq.sequence_values::<Value>() {
-				items.push(Text::try_from(v?).map_err(|_| EXPECTED.into_lua_err())?);
-			}
-
+		let new = lua.create_function(|_, (_, items): (Table, Vec<Text>)| {
 			Ok(Self { inner: ratatui::widgets::List::new(items), ..Default::default() })
 		})?;
 

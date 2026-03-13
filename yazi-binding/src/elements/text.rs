@@ -1,7 +1,7 @@
 use std::{any::TypeId, mem};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Line, Span, Wrap};
@@ -21,7 +21,7 @@ pub struct Text {
 
 impl Text {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
+		let new = lua.create_function(|_, (_, text): (Table, Self)| Ok(text))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
 			Ok(Self { inner: code.as_bytes().into_text().into_lua_err()?, ..Default::default() })
@@ -38,26 +38,6 @@ impl Text {
 		} else {
 			ratatui::widgets::Paragraph::from(self).render(rect, buf);
 		}
-	}
-}
-
-impl TryFrom<Value> for Text {
-	type Error = mlua::Error;
-
-	fn try_from(value: Value) -> mlua::Result<Self> {
-		let inner = match value {
-			Value::Table(tb) => return Self::try_from(tb),
-			Value::String(s) => s.to_string_lossy().into(),
-			Value::UserData(ud) => match ud.type_id() {
-				Some(t) if t == TypeId::of::<Line>() => ud.take::<Line>()?.inner.into(),
-				Some(t) if t == TypeId::of::<Span>() => ud.take::<Span>()?.0.into(),
-				Some(t) if t == TypeId::of::<Self>() => return ud.take(),
-				Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.into_string().into(),
-				_ => Err(EXPECTED.into_lua_err())?,
-			},
-			_ => Err(EXPECTED.into_lua_err())?,
-		};
-		Ok(Self { inner, ..Default::default() })
 	}
 }
 
@@ -99,6 +79,24 @@ impl From<Text> for ratatui::widgets::Paragraph<'static> {
 			p = p.wrap(wrap);
 		}
 		p.scroll((value.scroll.y, value.scroll.x))
+	}
+}
+
+impl FromLua for Text {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		let inner = match value {
+			Value::Table(tb) => return Self::try_from(tb),
+			Value::String(s) => s.to_string_lossy().into(),
+			Value::UserData(ud) => match ud.type_id() {
+				Some(t) if t == TypeId::of::<Line>() => ud.take::<Line>()?.inner.into(),
+				Some(t) if t == TypeId::of::<Span>() => ud.take::<Span>()?.0.into(),
+				Some(t) if t == TypeId::of::<Self>() => return ud.take(),
+				Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.into_string().into(),
+				_ => Err(EXPECTED.into_lua_err())?,
+			},
+			_ => Err(EXPECTED.into_lua_err())?,
+		};
+		Ok(Self { inner, ..Default::default() })
 	}
 }
 

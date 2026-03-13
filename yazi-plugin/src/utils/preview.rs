@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Error, elements::{Area, Renderable, Text}};
 use yazi_config::YAZI;
 use yazi_fs::FsUrl;
@@ -41,10 +41,7 @@ impl Utils {
 			let mut lock = PreviewLock::try_from(t)?;
 			lock.data = match value {
 				Value::Nil => vec![],
-				Value::Table(tbl) => tbl
-					.sequence_values::<AnyUserData>()
-					.map(|ud| ud.and_then(Renderable::try_from))
-					.collect::<mlua::Result<_>>()?,
+				Value::Table(tbl) => tbl.sequence_values::<Renderable>().collect::<mlua::Result<_>>()?,
 				Value::UserData(ud) => match Renderable::try_from(&ud) {
 					Ok(r) => vec![r],
 					Err(e) => {

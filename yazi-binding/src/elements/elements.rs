@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLua, Lua, Value};
+use mlua::{IntoLua, Lua, Value};
 use tracing::error;
 
 use super::Renderable;
@@ -42,22 +42,17 @@ where
 {
 	match value {
 		Value::Table(tbl) => {
-			for widget in tbl.sequence_values::<AnyUserData>() {
-				let Ok(widget) = widget else {
-					error!("Failed to convert to renderable UserData: {}", widget.unwrap_err());
-					continue;
-				};
-
-				match Renderable::try_from(widget) {
+			for widget in tbl.sequence_values::<Renderable>() {
+				match widget {
 					Ok(w) => w.render_with(buf, trans),
-					Err(e) => error!("{e}"),
+					Err(e) => error!("Failed to convert to renderable elements: {e}"),
 				}
 			}
 		}
-		Value::UserData(ud) => match Renderable::try_from(ud) {
+		Value::UserData(ud) => match Renderable::try_from(&ud) {
 			Ok(w) => w.render_with(buf, trans),
-			Err(e) => error!("{e}"),
+			Err(e) => error!("Failed to convert to renderable element: {e}"),
 		},
-		_ => error!("Expected a renderable UserData, or a table of them, got: {value:?}"),
+		_ => error!("Expected a renderable element, or a table of them, got: {value:?}"),
 	}
 }

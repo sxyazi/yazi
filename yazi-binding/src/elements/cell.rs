@@ -1,8 +1,6 @@
-use mlua::{ExternalError, FromLua};
+use mlua::{FromLua, Lua, Value};
 
 use super::Text;
-
-const EXPECTED: &str = "expected a table of strings, Texts, Lines or Spans";
 
 #[derive(Clone, Debug)]
 pub struct Cell {
@@ -14,7 +12,7 @@ impl From<Cell> for ratatui::widgets::Cell<'static> {
 }
 
 impl FromLua for Cell {
-	fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
-		Ok(Self { text: Text::try_from(value).map_err(|_| EXPECTED.into_lua_err())?.inner })
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(Self { text: Text::from_lua(value, lua)?.inner })
 	}
 }

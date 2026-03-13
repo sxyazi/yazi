@@ -1,4 +1,4 @@
-use mlua::{IntoLua, Lua, Table};
+use mlua::{IntoLua, Lua, Table, Value};
 use yazi_binding::{Cha, File, Id, Path, Url};
 
 pub(super) struct FilesOp(yazi_fs::FilesOp);
@@ -42,7 +42,7 @@ impl FilesOp {
 }
 
 impl IntoLua for FilesOp {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<mlua::Value> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua.create_any_userdata(self.0)?.into_lua(lua)
 	}
 }

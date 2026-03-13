@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Value};
+use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, Value};
 
 use super::{Pos, Rect};
 
@@ -70,7 +70,7 @@ impl TryFrom<AnyUserData> for Area {
 }
 
 impl FromLua for Area {
-	fn from_lua(value: Value, _: &mlua::Lua) -> mlua::Result<Self> {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
 			Value::UserData(ud) => Self::try_from(ud),
 			_ => Err(EXPECTED.into_lua_err()),
@@ -79,7 +79,7 @@ impl FromLua for Area {
 }
 
 impl IntoLua for Area {
-	fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		match self {
 			Self::Pos(pos) => pos.into_lua(lua),
 			Self::Rect(rect) => rect.into_lua(lua),

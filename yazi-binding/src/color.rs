@@ -1,14 +1,12 @@
 use std::str::FromStr;
 
-use mlua::{ExternalError, ExternalResult, UserData, Value};
+use mlua::{ExternalError, ExternalResult, FromLua, Lua, UserData, Value};
 
 #[derive(Clone, Copy, Default)]
 pub struct Color(pub ratatui::style::Color);
 
-impl TryFrom<Value> for Color {
-	type Error = mlua::Error;
-
-	fn try_from(value: Value) -> Result<Self, Self::Error> {
+impl FromLua for Color {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(Self(match value {
 			Value::String(s) => ratatui::style::Color::from_str(&s.to_str()?).into_lua_err()?,
 			Value::UserData(ud) => ud.borrow::<Self>()?.0,
