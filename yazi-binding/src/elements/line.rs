@@ -1,7 +1,7 @@
 use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
@@ -29,7 +29,7 @@ impl DerefMut for Line {
 
 impl Line {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
+		let new = lua.create_function(|_, (_, line): (Table, Self)| Ok(line))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
 			let code = code.as_bytes();
@@ -52,30 +52,6 @@ impl Line {
 
 	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		self.inner.render(rect, buf);
-	}
-}
-
-impl TryFrom<Value> for Line {
-	type Error = mlua::Error;
-
-	fn try_from(value: Value) -> Result<Self, Self::Error> {
-		Ok(Self {
-			inner: match value {
-				Value::Table(tb) => return Self::try_from(tb),
-				Value::String(s) => s.to_string_lossy().into(),
-				Value::UserData(ud) => {
-					if let Ok(Span(span)) = ud.take() {
-						span.into()
-					} else if let Ok(line) = ud.take() {
-						return Ok(line);
-					} else {
-						Err(EXPECTED.into_lua_err())?
-					}
-				}
-				_ => Err(EXPECTED.into_lua_err())?,
-			},
-			..Default::default()
-		})
 	}
 }
 
@@ -108,6 +84,28 @@ impl From<Line> for ratatui::text::Line<'static> {
 	fn from(value: Line) -> Self { value.inner }
 }
 
+impl FromLua for Line {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		Ok(Self {
+			inner: match value {
+				Value::Table(tb) => return Self::try_from(tb),
+				Value::String(s) => s.to_string_lossy().into(),
+				Value::UserData(ud) => {
+					if let Ok(Span(span)) = ud.take() {
+						span.into()
+					} else if let Ok(line) = ud.take() {
+						return Ok(line);
+					} else {
+						Err(EXPECTED.into_lua_err())?
+					}
+				}
+				_ => Err(EXPECTED.into_lua_err())?,
+			},
+			..Default::default()
+		})
+	}
+}
+
 impl UserData for Line {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
@@ -122,7 +120,7 @@ impl UserData for Line {
 		methods.add_method("visible", |_, me, ()| {
 			Ok(me.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
 		});
-		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {
+		methods.add_function_mut("truncate", |lua, (ud, t): (AnyUserData, Table)| {
 			let mut me = ud.borrow_mut::<Self>()?;
 
 			let max = t.raw_get("max")?;
@@ -134,7 +132,7 @@ impl UserData for Line {
 			let ellipsis = match t.raw_get::<Value>("ellipsis")? {
 				Value::Nil => (1, ratatui::text::Span::raw("…")),
 				v => {
-					let mut span = Span::try_from(v)?;
+					let mut span = Span::from_lua(v, lua)?;
 					(span.truncate(max), span.0)
 				}
 			};

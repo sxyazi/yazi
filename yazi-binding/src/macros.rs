@@ -117,6 +117,7 @@ macro_rules! impl_style_method {
 macro_rules! impl_style_shorthands {
 	($methods:ident, $($field:tt).+) => {
 		$methods.add_function_mut("fg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+			use mlua::FromLua;
 			use ratatui::style::Modifier;
 
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
@@ -128,12 +129,13 @@ macro_rules! impl_style_shorthands {
 					me.fg.map($crate::Color).into_lua(lua)
 				}
 				_ => {
-					me.fg = Some($crate::Color::try_from(value)?.0);
+					me.fg = Some($crate::Color::from_lua(value, lua)?.0);
 					ud.into_lua(lua)
 				}
 			}
 		});
 		$methods.add_function_mut("bg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+			use mlua::FromLua;
 			use ratatui::style::Modifier;
 
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
@@ -145,7 +147,7 @@ macro_rules! impl_style_shorthands {
 					me.bg.map($crate::Color).into_lua(lua)
 				}
 				_ => {
-					me.bg = Some($crate::Color::try_from(value)?.0);
+					me.bg = Some($crate::Color::from_lua(value, lua)?.0);
 					ud.into_lua(lua)
 				}
 			}

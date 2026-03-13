@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Cell;
 
@@ -36,10 +36,8 @@ impl From<Row> for ratatui::widgets::Row<'static> {
 	}
 }
 
-impl TryFrom<Value> for Row {
-	type Error = mlua::Error;
-
-	fn try_from(value: Value) -> Result<Self, Self::Error> {
+impl FromLua for Row {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
 			Value::UserData(ud) => {
 				if let Ok(row) = ud.take() {

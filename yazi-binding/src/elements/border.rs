@@ -78,14 +78,14 @@ impl UserData for Border {
 		});
 		methods.add_function_mut(
 			"title",
-			|_, (ud, line, position): (AnyUserData, Value, Option<u8>)| {
+			|_, (ud, line, position): (AnyUserData, Line, Option<u8>)| {
 				let position = if position == Some(Borders::BOTTOM.bits()) {
 					ratatui::widgets::TitlePosition::Bottom
 				} else {
 					ratatui::widgets::TitlePosition::Top
 				};
 
-				ud.borrow_mut::<Self>()?.titles.push((position, Line::try_from(line)?.inner));
+				ud.borrow_mut::<Self>()?.titles.push((position, line.inner));
 				Ok(ud)
 			},
 		);

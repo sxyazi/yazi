@@ -1,10 +1,8 @@
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, UserData, Value};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, Value};
 use ratatui::widgets::StatefulWidget;
 
 use super::{Area, Row};
 use crate::{Style, elements::Constraint};
-
-const EXPECTED: &str = "expected a table of Rows";
 
 // --- Table
 #[derive(Clone, Debug, Default)]
@@ -33,12 +31,7 @@ pub struct Table {
 
 impl Table {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, seq): (mlua::Table, mlua::Table)| {
-			let mut rows = Vec::with_capacity(seq.raw_len());
-			for v in seq.sequence_values::<Value>() {
-				rows.push(Row::try_from(v?).map_err(|_| EXPECTED.into_lua_err())?);
-			}
-
+		let new = lua.create_function(|_, (_, rows): (mlua::Table, Vec<Row>)| {
 			Ok(Self { rows, ..Default::default() })
 		})?;
 
@@ -101,12 +94,12 @@ impl UserData for Table {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 
-		methods.add_function_mut("header", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.header = Some(Row::try_from(value)?.into());
+		methods.add_function_mut("header", |_, (ud, header): (AnyUserData, Row)| {
+			ud.borrow_mut::<Self>()?.header = Some(header.into());
 			Ok(ud)
 		});
-		methods.add_function_mut("footer", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.footer = Some(Row::try_from(value)?.into());
+		methods.add_function_mut("footer", |_, (ud, footer): (AnyUserData, Row)| {
+			ud.borrow_mut::<Self>()?.footer = Some(footer.into());
 			Ok(ud)
 		});
 		methods.add_function_mut("widths", |_, (ud, widths): (AnyUserData, Vec<Constraint>)| {

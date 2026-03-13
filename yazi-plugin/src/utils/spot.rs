@@ -36,9 +36,9 @@ impl Utils {
 	}
 
 	pub(super) fn spot_widgets(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (t, widgets): (Table, Vec<AnyUserData>)| {
+		lua.create_function(|_, (t, widgets): (Table, Vec<Renderable>)| {
 			let mut lock = SpotLock::try_from(t)?;
-			lock.data = widgets.into_iter().map(Renderable::try_from).collect::<mlua::Result<_>>()?;
+			lock.data = widgets;
 
 			MgrProxy::update_spotted(UpdateSpottedOpt { lock });
 			Ok(())

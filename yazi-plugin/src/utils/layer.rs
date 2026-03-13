@@ -56,7 +56,7 @@ impl Utils {
 				value: t.raw_get("value").unwrap_or_default(),
 				cursor: None, // TODO
 				obscure: t.raw_get("obscure")?,
-				position: Pos::new_input(t.raw_get("pos")?)?.into(),
+				position: t.raw_get::<Pos>("pos")?.with_height(3).into(),
 				realtime,
 				completion: false,
 			}));
@@ -77,22 +77,15 @@ impl Utils {
 	}
 
 	pub(super) fn confirm(lua: &Lua) -> mlua::Result<Function> {
-		fn body(t: &Table) -> mlua::Result<ratatui::widgets::Paragraph<'static>> {
-			Ok(match t.raw_get::<Value>("body")? {
-				Value::Nil => Default::default(),
-				v => Text::try_from(v)?.into(),
-			})
-		}
-
 		lua.create_async_function(|lua, t: Table| async move {
 			if runtime!(lua)?.blocking {
 				return Err("Cannot call `ya.confirm()` while main thread is blocked".into_lua_err());
 			}
 
 			let result = ConfirmProxy::show(ConfirmCfg {
-				position: Pos::try_from(t.raw_get::<Value>("pos")?)?.into(),
-				title:    Line::try_from(t.raw_get::<Value>("title")?)?.into(),
-				body:     body(&t)?,
+				position: t.raw_get::<Pos>("pos")?.into(),
+				title:    t.raw_get::<Line>("title")?.into(),
+				body:     t.raw_get::<Option<Text>>("body")?.unwrap_or_default().into(),
 				list:     Default::default(), // TODO
 			});
 

@@ -1,6 +1,6 @@
 use std::any::TypeId;
 
-use mlua::{AnyUserData, ExternalError};
+use mlua::{AnyUserData, ExternalError, FromLua, Lua, Value};
 
 use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
 use crate::{Error, elements::Area};
@@ -81,15 +81,9 @@ impl TryFrom<&AnyUserData> for Renderable {
 			Some(t) if t == TypeId::of::<Border>() => Self::Border(ud.take()?),
 			Some(t) if t == TypeId::of::<Gauge>() => Self::Gauge(Box::new(ud.take()?)),
 			Some(t) if t == TypeId::of::<Table>() => Self::Table(Box::new(ud.take()?)),
-			_ => Err(format!("expected a UserData of renderable element, not: {ud:#?}").into_lua_err())?,
+			_ => Err(format!("expected a renderable userdata, not: {ud:#?}").into_lua_err())?,
 		})
 	}
-}
-
-impl TryFrom<AnyUserData> for Renderable {
-	type Error = mlua::Error;
-
-	fn try_from(ud: AnyUserData) -> Result<Self, Self::Error> { Self::try_from(&ud) }
 }
 
 impl From<Error> for Renderable {
@@ -99,5 +93,14 @@ impl From<Error> for Renderable {
 			wrap: ratatui::widgets::Wrap { trim: false }.into(),
 			..Default::default()
 		})
+	}
+}
+
+impl FromLua for Renderable {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::UserData(ud) => Self::try_from(&ud),
+			_ => Err(format!("expected a renderable userdata, not: {value:#?}").into_lua_err()),
+		}
 	}
 }

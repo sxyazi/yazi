@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ops::{Deref, DerefMut}};
 
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 const EXPECTED: &str = "expected a string or Span";
@@ -19,7 +19,7 @@ impl DerefMut for Span {
 
 impl Span {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
+		let new = lua.create_function(|_, (_, span): (Table, Self)| Ok(span))?;
 
 		let span = lua.create_table()?;
 		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
@@ -58,10 +58,8 @@ impl Span {
 	}
 }
 
-impl TryFrom<Value> for Span {
-	type Error = mlua::Error;
-
-	fn try_from(value: Value) -> Result<Self, Self::Error> {
+impl FromLua for Span {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(Self(match value {
 			Value::String(s) => s.to_string_lossy().into(),
 			Value::UserData(ud) => {
