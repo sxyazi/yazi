@@ -1,6 +1,7 @@
 use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Value};
+use ratatui::widgets::Widget;
 
 use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
 use crate::{Error, elements::Area};
@@ -46,19 +47,6 @@ impl Renderable {
 		self
 	}
 
-	pub fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-		match self {
-			Self::Line(line) => line.render(rect, buf),
-			Self::Text(text) => text.render(rect, buf),
-			Self::List(list) => list.render(rect, buf),
-			Self::Bar(bar) => bar.render(rect, buf),
-			Self::Clear(clear) => clear.render(rect, buf),
-			Self::Border(border) => border.render(rect, buf),
-			Self::Gauge(gauge) => gauge.render(rect, buf),
-			Self::Table(table) => table.render(rect, buf),
-		}
-	}
-
 	pub fn render_with<T>(self, buf: &mut ratatui::buffer::Buffer, trans: T)
 	where
 		T: FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
@@ -93,6 +81,42 @@ impl From<Error> for Renderable {
 			wrap: ratatui::widgets::Wrap { trim: false }.into(),
 			..Default::default()
 		})
+	}
+}
+
+impl Widget for Renderable {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		match self {
+			Self::Line(line) => line.render(rect, buf),
+			Self::Text(text) => text.render(rect, buf),
+			Self::List(list) => list.render(rect, buf),
+			Self::Bar(bar) => bar.render(rect, buf),
+			Self::Clear(clear) => clear.render(rect, buf),
+			Self::Border(border) => border.render(rect, buf),
+			Self::Gauge(gauge) => gauge.render(rect, buf),
+			Self::Table(table) => table.render(rect, buf),
+		}
+	}
+}
+
+impl Widget for &Renderable {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		match self {
+			Renderable::Line(line) => line.render(rect, buf),
+			Renderable::Text(text) => text.render(rect, buf),
+			Renderable::List(list) => (&**list).render(rect, buf),
+			Renderable::Bar(bar) => bar.render(rect, buf),
+			Renderable::Clear(clear) => clear.render(rect, buf),
+			Renderable::Border(border) => border.render(rect, buf),
+			Renderable::Gauge(gauge) => (&**gauge).render(rect, buf),
+			Renderable::Table(table) => (&**table).render(rect, buf),
+		}
 	}
 }
 

@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, Value};
-use ratatui::widgets::StatefulWidget;
+use ratatui::widgets::{StatefulWidget, Widget};
 
 use super::{Area, Row};
 use crate::{Style, elements::Constraint};
@@ -47,7 +47,30 @@ impl Table {
 		if row.cells.is_empty() { None } else { Some(&row.cells[col.min(row.cells.len() - 1)].text) }
 	}
 
-	pub(super) fn render(mut self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+	pub fn len(&self) -> usize { self.rows.len() }
+
+	pub fn select(&mut self, idx: Option<usize>) {
+		self
+			.state
+			.select(idx.map(|i| if self.rows.is_empty() { 0 } else { i.min(self.rows.len() - 1) }));
+	}
+
+	pub fn selected(&self) -> Option<usize> {
+		if self.rows.is_empty() { None } else { Some(self.state.selected()?.min(self.rows.len() - 1)) }
+	}
+}
+
+impl TryFrom<AnyUserData> for Table {
+	type Error = mlua::Error;
+
+	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Widget for Table {
+	fn render(mut self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
 		let mut table = ratatui::widgets::Table::new(self.rows, self.widths)
 			.column_spacing(self.column_spacing)
 			.style(self.style)
@@ -68,26 +91,17 @@ impl Table {
 			table = table.block(block);
 		}
 
-		table.render(rect, buf, &mut self.state);
-	}
-
-	pub fn len(&self) -> usize { self.rows.len() }
-
-	pub fn select(&mut self, idx: Option<usize>) {
-		self
-			.state
-			.select(idx.map(|i| if self.rows.is_empty() { 0 } else { i.min(self.rows.len() - 1) }));
-	}
-
-	pub fn selected(&self) -> Option<usize> {
-		if self.rows.is_empty() { None } else { Some(self.state.selected()?.min(self.rows.len() - 1)) }
+		StatefulWidget::render(table, rect, buf, &mut self.state);
 	}
 }
 
-impl TryFrom<AnyUserData> for Table {
-	type Error = mlua::Error;
-
-	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> { value.take() }
+impl Widget for &Table {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		self.clone().render(rect, buf);
+	}
 }
 
 impl UserData for Table {

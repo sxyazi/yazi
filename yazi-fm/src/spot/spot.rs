@@ -18,7 +18,7 @@ impl Widget for Spot<'_> {
 		for w in &lock.data {
 			let rect = w.area().transform(|p| self.core.mgr.area(p));
 			if rect.intersection(win) == rect {
-				w.clone().render(rect, buf);
+				w.render(rect, buf);
 			}
 		}
 	}
