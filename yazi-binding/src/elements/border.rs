@@ -42,8 +42,13 @@ impl Border {
 		border.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		border.into_lua(lua)
 	}
+}
 
-	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+impl Widget for Border {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
 		let mut block = ratatui::widgets::Block::default()
 			.borders(self.edge.0)
 			.border_type(self.r#type)
@@ -51,12 +56,21 @@ impl Border {
 
 		for title in self.titles {
 			block = match title {
-				(ratatui::widgets::TitlePosition::Top, line) => block.title(line),
-				(ratatui::widgets::TitlePosition::Bottom, line) => block.title(line),
+				(ratatui::widgets::TitlePosition::Top, line) => block.title_top(line),
+				(ratatui::widgets::TitlePosition::Bottom, line) => block.title_bottom(line),
 			};
 		}
 
 		block.render(rect, buf);
+	}
+}
+
+impl Widget for &Border {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		self.clone().render(rect, buf);
 	}
 }
 

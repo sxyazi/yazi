@@ -49,10 +49,6 @@ impl Line {
 		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		line.into_lua(lua)
 	}
-
-	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-		self.inner.render(rect, buf);
-	}
 }
 
 impl TryFrom<Table> for Line {
@@ -82,6 +78,24 @@ impl TryFrom<Table> for Line {
 
 impl From<Line> for ratatui::text::Line<'static> {
 	fn from(value: Line) -> Self { value.inner }
+}
+
+impl Widget for Line {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		(&self).render(rect, buf);
+	}
+}
+
+impl Widget for &Line {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		(&self.inner).render(rect, buf);
+	}
 }
 
 impl FromLua for Line {
