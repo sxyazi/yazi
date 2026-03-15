@@ -56,8 +56,8 @@ impl Widget for Border {
 
 		for title in self.titles {
 			block = match title {
-				(ratatui::widgets::TitlePosition::Top, line) => block.title(line),
-				(ratatui::widgets::TitlePosition::Bottom, line) => block.title(line),
+				(ratatui::widgets::TitlePosition::Top, line) => block.title_top(line),
+				(ratatui::widgets::TitlePosition::Bottom, line) => block.title_bottom(line),
 			};
 		}
 
