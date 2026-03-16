@@ -73,11 +73,10 @@ rules = [
 	{ mime = "image/*", use = [ "open", "reveal" ] },
 	# Media
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
+	# Code
+	{ mime = "application/{json,ndjson,javascript,wine-extension-ini}", use = [ "edit", "reveal" ] },
 	# Archive
 	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract", "reveal" ] },
-	# JSON
-	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
-	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
 	# Empty file
 	{ mime = "inode/empty", use = [ "edit", "reveal" ] },
 	# Virtual file system
