@@ -21,7 +21,7 @@ impl Actor for Reflow {
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
 
-		let result = Lives::scope(&cx.core, || {
+		let result = Lives::scope(cx.core, || {
 			let comps = (opt.reflow)((Position::ORIGIN, size).into())?;
 
 			for v in comps.sequence_values::<Value>() {

@@ -17,7 +17,7 @@ pub(super) fn init_lua() -> Result<()> {
 }
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
-	lua.set_app_data(Runtime::new());
+	lua.set_app_data(Runtime::default());
 
 	// Base
 	let globals = lua.globals();

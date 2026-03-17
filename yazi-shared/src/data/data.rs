@@ -185,7 +185,7 @@ impl TryFrom<Data> for StrandBuf {
 		Ok(match value {
 			Data::String(s) => s.into_owned().into(),
 			Data::Path(p) => p.into_strand(),
-			Data::Bytes(b) => StrandBuf::Bytes(b),
+			Data::Bytes(b) => Self::Bytes(b),
 			_ => bail!("cannot convert to StrandBuf"),
 		})
 	}
@@ -198,7 +198,7 @@ impl TryFrom<&Data> for StrandBuf {
 		Ok(match value {
 			Data::String(s) => s.to_string().into(),
 			Data::Path(p) => p.into_strand(),
-			Data::Bytes(b) => StrandBuf::Bytes(b.clone()),
+			Data::Bytes(b) => Self::Bytes(b.clone()),
 			_ => bail!("cannot convert to StrandBuf"),
 		})
 	}

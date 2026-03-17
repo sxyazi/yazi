@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use hashbrown::{HashMap, hash_map::EntryRef};
 use mlua::Function;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Runtime {
 	frames:       VecDeque<RuntimeFrame>,
 	blocks:       HashMap<String, Vec<Function>>,
@@ -17,14 +17,8 @@ pub struct RuntimeFrame {
 }
 
 impl Runtime {
-	pub fn new() -> Self { Self { frames: <_>::default(), blocks: <_>::default(), blocking: false } }
-
 	pub fn new_isolate(id: &str) -> Self {
-		Self {
-			frames:   VecDeque::from([RuntimeFrame { id: id.to_owned() }]),
-			blocks:   <_>::default(),
-			blocking: false,
-		}
+		Self { frames: VecDeque::from([RuntimeFrame { id: id.to_owned() }]), ..Default::default() }
 	}
 
 	pub fn push(&mut self, id: &str) { self.frames.push_back(RuntimeFrame { id: id.to_owned() }); }
@@ -54,7 +48,7 @@ impl Runtime {
 	}
 
 	pub fn put_block(&mut self, f: &Function) -> Option<usize> {
-		let Some(cur) = self.frames.back().filter(|f| f.id != "init") else { return None };
+		let cur = self.frames.back().filter(|f| f.id != "init")?;
 		Some(match self.blocks.entry_ref(&cur.id) {
 			EntryRef::Occupied(mut oe) => {
 				oe.get_mut().push(f.clone());

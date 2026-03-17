@@ -54,10 +54,8 @@ impl Signals {
 			CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => {
 				Event::Key(key).emit()
 			}
-			CrosstermEvent::Mouse(mouse) => {
-				if YAZI.mgr.mouse_events.get().contains(mouse.kind.into()) {
-					Event::Mouse(mouse).emit();
-				}
+			CrosstermEvent::Mouse(mouse) if YAZI.mgr.mouse_events.get().contains(mouse.kind.into()) => {
+				Event::Mouse(mouse).emit()
 			}
 			CrosstermEvent::Resize(..) => Event::Resize.emit(),
 			CrosstermEvent::FocusGained => Event::Focus.emit(),

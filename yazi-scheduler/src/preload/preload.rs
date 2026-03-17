@@ -62,6 +62,6 @@ impl Preload {
 			Priority::High => HIGH,
 		};
 
-		_ = self.tx.try_send(r#in.into(), priority);
+		_ = self.tx.try_send(r#in, priority);
 	}
 }

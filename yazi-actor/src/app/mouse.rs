@@ -25,7 +25,7 @@ impl Actor for Mouse {
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let area = yazi_binding::elements::Rect::from(size);
 
-		let result = Lives::scope(&cx.core, move || {
+		let result = Lives::scope(cx.core, move || {
 			let root = runtime_scope!(LUA, "root", {
 				LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)
 			})?;

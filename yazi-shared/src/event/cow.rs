@@ -23,7 +23,7 @@ impl Deref for ActionCow {
 }
 
 impl From<ActionCow> for () {
-	fn from(_: ActionCow) -> Self { () }
+	fn from(_: ActionCow) -> Self {}
 }
 
 impl From<Action> for ActionCow {
