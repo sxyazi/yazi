@@ -17,7 +17,7 @@ pub fn compose(
 
 			// Call
 			b"emit" => Utils::emit(lua)?,
-			b"mgr_emit" => Utils::mgr_emit(lua)?,
+			b"exec" => Utils::exec(lua)?,
 
 			// Image
 			b"image_info" => Utils::image_info(lua)?,

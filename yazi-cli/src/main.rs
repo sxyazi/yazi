@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(package shared);
+yazi_macro::mod_pub!(dds package shared);
 
 yazi_macro::mod_flat!(args);
 
@@ -44,9 +44,7 @@ async fn run() -> anyhow::Result<()> {
 		Command::Emit(cmd) => {
 			yazi_boot::init_default();
 			yazi_dds::init();
-			if let Err(e) =
-				yazi_dds::Client::shot("dds-emit", CommandPub::receiver()?, &cmd.body()?).await
-			{
+			if let Err(e) = dds::Dds::shot("dds-emit", CommandPub::receiver()?, &cmd.body()?).await {
 				errln!("Cannot emit command: {e}")?;
 				std::process::exit(1);
 			}
@@ -55,9 +53,22 @@ async fn run() -> anyhow::Result<()> {
 		Command::EmitTo(cmd) => {
 			yazi_boot::init_default();
 			yazi_dds::init();
-			if let Err(e) = yazi_dds::Client::shot("dds-emit", cmd.receiver, &cmd.body()?).await {
+			if let Err(e) = dds::Dds::shot("dds-emit", cmd.receiver, &cmd.body()?).await {
 				errln!("Cannot emit command: {e}")?;
 				std::process::exit(1);
+			}
+		}
+
+		Command::Exec(cmd) => {
+			yazi_boot::init_default();
+			yazi_dds::init();
+
+			match dds::Dds::exec(cmd).await {
+				Ok(data) => outln!("{}", serde_json::to_string(&data)?)?,
+				Err(e) => {
+					errln!("Cannot execute command: {e}")?;
+					std::process::exit(1);
+				}
 			}
 		}
 
@@ -77,8 +88,7 @@ async fn run() -> anyhow::Result<()> {
 		Command::Pub(cmd) => {
 			yazi_boot::init_default();
 			yazi_dds::init();
-			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, CommandPub::receiver()?, &cmd.body()?).await
-			{
+			if let Err(e) = dds::Dds::shot(&cmd.kind, CommandPub::receiver()?, &cmd.body()?).await {
 				errln!("Cannot send message: {e}")?;
 				std::process::exit(1);
 			}
@@ -87,7 +97,7 @@ async fn run() -> anyhow::Result<()> {
 		Command::PubTo(cmd) => {
 			yazi_boot::init_default();
 			yazi_dds::init();
-			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, cmd.receiver, &cmd.body()?).await {
+			if let Err(e) = dds::Dds::shot(&cmd.kind, cmd.receiver, &cmd.body()?).await {
 				errln!("Cannot send message: {e}")?;
 				std::process::exit(1);
 			}
@@ -96,7 +106,7 @@ async fn run() -> anyhow::Result<()> {
 		Command::Sub(cmd) => {
 			yazi_boot::init_default();
 			yazi_dds::init();
-			yazi_dds::Client::draw(cmd.kinds.split(',').collect()).await?;
+			dds::Dds::draw(cmd.kinds.split(',').collect()).await?;
 
 			tokio::signal::ctrl_c().await?;
 		}

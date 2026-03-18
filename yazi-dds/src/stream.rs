@@ -1,13 +1,13 @@
 use tokio::io::{BufReader, Lines, ReadHalf, WriteHalf};
 
-pub(super) struct Stream;
+pub struct Stream;
 
 use tokio::io::AsyncBufReadExt;
 
 #[cfg(unix)]
-pub(super) type ClientReader = Lines<BufReader<ReadHalf<tokio::net::UnixStream>>>;
+pub type ClientReader = Lines<BufReader<ReadHalf<tokio::net::UnixStream>>>;
 #[cfg(not(unix))]
-pub(super) type ClientReader = Lines<BufReader<ReadHalf<tokio::net::TcpStream>>>;
+pub type ClientReader = Lines<BufReader<ReadHalf<tokio::net::TcpStream>>>;
 
 #[cfg(unix)]
 pub(super) type ClientWriter = WriteHalf<tokio::net::UnixStream>;
@@ -21,14 +21,14 @@ pub(super) type ServerListener = tokio::net::TcpListener;
 
 impl Stream {
 	#[cfg(unix)]
-	pub(super) async fn connect() -> std::io::Result<(ClientReader, ClientWriter)> {
+	pub async fn connect() -> std::io::Result<(ClientReader, ClientWriter)> {
 		let stream = tokio::net::UnixStream::connect(Self::socket_file()).await?;
 		let (reader, writer) = tokio::io::split(stream);
 		Ok((BufReader::new(reader).lines(), writer))
 	}
 
 	#[cfg(not(unix))]
-	pub(super) async fn connect() -> std::io::Result<(ClientReader, ClientWriter)> {
+	pub async fn connect() -> std::io::Result<(ClientReader, ClientWriter)> {
 		let stream = tokio::net::TcpStream::connect("127.0.0.1:33581").await?;
 		let (reader, writer) = tokio::io::split(stream);
 		Ok((BufReader::new(reader).lines(), writer))

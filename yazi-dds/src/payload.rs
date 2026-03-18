@@ -16,7 +16,7 @@ pub struct Payload<'a> {
 }
 
 impl<'a> Payload<'a> {
-	pub(super) fn new(body: Ember<'a>) -> Self { Self { receiver: Id(0), sender: *ID, body } }
+	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id(0), sender: *ID, body } }
 
 	pub(super) fn flush(&self) -> Result<()> {
 		writeln!(std::io::stdout(), "{self}")?;

@@ -1,6 +1,6 @@
-use std::{iter, mem, str::FromStr};
+use std::{mem, str::FromStr};
 
-use anyhow::{Context, Result, bail};
+use anyhow::Result;
 use hashbrown::{HashMap, HashSet};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
@@ -9,7 +9,7 @@ use tracing::error;
 use yazi_macro::try_format;
 use yazi_shared::{Id, RoCell};
 
-use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberBye, EmberHey, EmberHi}};
+use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberHey}};
 
 pub static ID: RoCell<Id> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<Id, Peer>>> = RoCell::new();
@@ -77,96 +77,6 @@ impl Client {
 		});
 	}
 
-	/// Connect to an existing server to send a single message.
-	pub async fn shot(kind: &str, receiver: Id, body: &str) -> Result<()> {
-		Ember::validate(kind)?;
-
-		let payload = try_format!(
-			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
-			Payload::new(EmberHi::borrowed(iter::empty())),
-			Payload::new(EmberBye::borrowed())
-		)?;
-
-		let (mut lines, mut writer) = Stream::connect().await?;
-		writer.write_all(payload.as_bytes()).await?;
-		writer.flush().await?;
-		drop(writer);
-
-		let (mut peers, mut version) = Default::default();
-		while let Ok(Some(line)) = lines.next_line().await {
-			match line.split(',').next() {
-				Some("hey") => {
-					if let Ok(Ember::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
-						(peers, version) = (hey.peers, Some(hey.version));
-					}
-				}
-				Some("bye") => break,
-				_ => {}
-			}
-		}
-
-		if version.as_deref() != Some(EmberHi::version()) {
-			bail!(
-				"Incompatible version (Ya {}, Yazi {}). Restart all `ya` and `yazi` processes if you upgrade either one.",
-				EmberHi::version(),
-				version.as_deref().unwrap_or("Unknown")
-			);
-		}
-
-		match (receiver, peers.get(&receiver).map(|p| p.able(kind))) {
-			// Send to all receivers
-			(Id(0), _) if peers.is_empty() => {
-				bail!("No receiver found. Check if any receivers are running.")
-			}
-			(Id(0), _) if peers.values().all(|p| !p.able(kind)) => {
-				bail!("No receiver has the ability to receive `{kind}` messages.")
-			}
-			(Id(0), _) => {}
-
-			// Send to a specific receiver
-			(_, Some(true)) => {}
-			(_, Some(false)) => {
-				bail!("Receiver `{receiver}` does not have the ability to receive `{kind}` messages.")
-			}
-			(_, None) => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
-		}
-
-		Ok(())
-	}
-
-	/// Connect to an existing server and listen in on the messages that are being
-	/// sent by other yazi instances:
-	///   - If no server is running, fail right away;
-	///   - If a server is closed, attempt to reconnect forever.
-	pub async fn draw(kinds: HashSet<&str>) -> Result<()> {
-		async fn make(kinds: &HashSet<&str>) -> Result<ClientReader> {
-			let (lines, mut writer) = Stream::connect().await?;
-			let hi = Payload::new(EmberHi::borrowed(kinds.iter().copied()));
-			writer.write_all(try_format!("{hi}\n")?.as_bytes()).await?;
-			writer.flush().await?;
-			Ok(lines)
-		}
-
-		let mut lines = make(&kinds).await.context("No running Yazi instance found")?;
-		loop {
-			match lines.next_line().await? {
-				Some(s) => {
-					let kind = s.split(',').next();
-					if matches!(kind, Some(kind) if kinds.contains(kind)) {
-						println!("{s}");
-					}
-				}
-				None => loop {
-					time::sleep(time::Duration::from_secs(1)).await;
-					if let Ok(new) = make(&kinds).await {
-						lines = new;
-						break;
-					}
-				},
-			}
-		}
-	}
-
 	pub(super) fn push<'a>(payload: impl Into<Payload<'a>>) -> Result<()> {
 		Ok(QUEUE_TX.send(try_format!("{}\n", payload.into())?)?)
 	}
@@ -221,5 +131,5 @@ impl Client {
 impl Peer {
 	pub(super) fn new(abilities: &HashSet<String>) -> Self { Self { abilities: abilities.clone() } }
 
-	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
+	pub fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
 }

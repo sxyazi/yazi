@@ -18,9 +18,13 @@ pub struct EmberHi<'a> {
 impl<'a> EmberHi<'a> {
 	pub fn borrowed<I>(abilities: I) -> Ember<'a>
 	where
-		I: Iterator<Item = &'a str>,
+		I: IntoIterator<Item = &'a str>,
 	{
-		Self { abilities: abilities.map(Into::into).collect(), version: Self::version().into() }.into()
+		Self {
+			abilities: abilities.into_iter().map(Into::into).collect(),
+			version:   Self::version().into(),
+		}
+		.into()
 	}
 
 	pub fn version() -> &'static str {
