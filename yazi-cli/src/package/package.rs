@@ -28,19 +28,19 @@ impl Package {
 		Ok(())
 	}
 
-	pub(crate) async fn delete_many(&mut self, uses: &[String]) -> Result<()> {
+	pub(crate) async fn delete_many(&mut self, uses: &[String], force: bool) -> Result<()> {
 		for u in uses {
-			let r = self.delete(u).await;
+			let r = self.delete(u, force).await;
 			self.save().await?;
 			r?;
 		}
 		Ok(())
 	}
 
-	pub(crate) async fn install(&mut self) -> Result<()> {
+	pub(crate) async fn install(&mut self, force: bool) -> Result<()> {
 		macro_rules! go {
 			($dep:expr) => {
-				let r = $dep.install().await;
+				let r = $dep.install(force).await;
 				self.save().await?;
 				r?;
 			};
@@ -55,11 +55,11 @@ impl Package {
 		Ok(())
 	}
 
-	pub(crate) async fn upgrade_many(&mut self, uses: &[String]) -> Result<()> {
+	pub(crate) async fn upgrade_many(&mut self, uses: &[String], force: bool) -> Result<()> {
 		macro_rules! go {
 			($dep:expr) => {
 				if uses.is_empty() || uses.contains(&$dep.r#use) {
-					let r = $dep.upgrade().await;
+					let r = $dep.upgrade(force).await;
 					self.save().await?;
 					r?;
 				}
@@ -107,7 +107,7 @@ impl Package {
 			)
 		}
 
-		dep.add().await?;
+		dep.add(false).await?;
 		if dep.is_flavor {
 			self.flavors.push(dep);
 		} else {
@@ -116,12 +116,12 @@ impl Package {
 		Ok(())
 	}
 
-	async fn delete(&mut self, r#use: &str) -> Result<()> {
+	async fn delete(&mut self, r#use: &str, force: bool) -> Result<()> {
 		let Some(dep) = self.identical(&Dependency::from_str(r#use)?).cloned() else {
 			bail!("`{}` was not found in package.toml", r#use)
 		};
 
-		dep.delete().await?;
+		dep.delete(force).await?;
 		if dep.is_flavor {
 			self.flavors.retain(|d| !d.identical(&dep));
 		} else {
