@@ -121,11 +121,12 @@ impl<'de> serde::Deserializer<'de> for &Data {
 		visitor.visit_str(self.try_into().map_err(Error::custom)?)
 	}
 
-	fn deserialize_string<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+	fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		Err(Error::custom("string not supported"))
+		let s: &str = self.try_into().map_err(Error::custom)?;
+		visitor.visit_string(s.to_owned())
 	}
 
 	fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -135,11 +136,12 @@ impl<'de> serde::Deserializer<'de> for &Data {
 		visitor.visit_bytes(self.try_into().map_err(Error::custom)?)
 	}
 
-	fn deserialize_byte_buf<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+	fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		Err(Error::custom("byte buf not supported"))
+		let bytes: &[u8] = self.try_into().map_err(Error::custom)?;
+		visitor.visit_byte_buf(bytes.to_vec())
 	}
 
 	fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -188,7 +190,7 @@ impl<'de> serde::Deserializer<'de> for &Data {
 		match self {
 			Data::List(l) => visitor.visit_seq(DataSeqAccess { iter: l.iter() }),
 			Data::Bytes(b) => visitor.visit_seq(DataByteSeqAccess { iter: b.iter() }),
-			_ => Err(Error::custom("seq not supported")),
+			_ => Err(Error::custom("not a sequence")),
 		}
 	}
 
@@ -215,8 +217,11 @@ impl<'de> serde::Deserializer<'de> for &Data {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let Data::Dict(d) = self else { return Err(Error::custom("map not supported")) };
-		visitor.visit_map(DataMapAccess { iter: d.iter(), value: None })
+		if let Data::Dict(d) = self {
+			visitor.visit_map(DataMapAccess { iter: d.iter(), value: None })
+		} else {
+			Err(Error::custom("not a map"))
+		}
 	}
 
 	fn deserialize_struct<V>(
@@ -242,7 +247,7 @@ impl<'de> serde::Deserializer<'de> for &Data {
 	{
 		match self {
 			Data::String(s) => visitor.visit_enum((&**s).into_deserializer()),
-			_ => Err(Error::custom("enum not supported")),
+			_ => Err(Error::custom("not an enum")),
 		}
 	}
 
