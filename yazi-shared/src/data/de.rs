@@ -158,7 +158,10 @@ impl<'de> serde::Deserializer<'de> for &Data {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		visitor.visit_unit()
+		match self {
+			Data::Nil => visitor.visit_unit(),
+			_ => Err(Error::custom("expected unit")),
+		}
 	}
 
 	fn deserialize_unit_struct<V>(
@@ -169,7 +172,10 @@ impl<'de> serde::Deserializer<'de> for &Data {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		visitor.visit_unit()
+		match self {
+			Data::Nil => visitor.visit_unit(),
+			_ => Err(Error::custom("expected unit struct")),
+		}
 	}
 
 	fn deserialize_newtype_struct<V>(
@@ -316,9 +322,10 @@ impl<'de> MapAccess<'de> for DataMapAccess<'_> {
 		self.value = Some(value);
 
 		match key {
-			DataKey::String(s) => seed.deserialize((&**s).into_deserializer()).map(Some),
-			DataKey::Integer(i) => seed.deserialize((*i).into_deserializer()).map(Some),
 			DataKey::Boolean(b) => seed.deserialize((*b).into_deserializer()).map(Some),
+			DataKey::Integer(i) => seed.deserialize((*i).into_deserializer()).map(Some),
+			DataKey::Number(n) => seed.deserialize((*n).into_deserializer()).map(Some),
+			DataKey::String(s) => seed.deserialize((&**s).into_deserializer()).map(Some),
 			DataKey::Id(id) => seed.deserialize(id.get().into_deserializer()).map(Some),
 			_ => Err(Error::custom("unsupported map key type")),
 		}
