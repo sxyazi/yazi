@@ -5773,6 +5773,7 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "crossterm 0.29.0",
+ "hashbrown 0.16.1",
  "serde",
  "serde_json",
  "tokio",

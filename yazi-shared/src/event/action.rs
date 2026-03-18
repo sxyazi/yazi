@@ -98,6 +98,10 @@ impl Action {
 
 	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.get(name).unwrap_or(false) }
 
+	pub fn any<T: 'static>(&self, name: impl Into<DataKey>) -> Option<&T> {
+		self.args.get(&name.into())?.as_any()
+	}
+
 	pub fn first<'a, T>(&'a self) -> Result<T>
 	where
 		T: TryFrom<&'a Data>,

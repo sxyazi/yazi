@@ -29,7 +29,7 @@ impl App {
 		macro_rules! drain_events {
 			() => {
 				for event in events.drain(..) {
-					Dispatcher::new(&mut app).dispatch(event)?;
+					Dispatcher::new(&mut app).dispatch(event);
 
 					need_render = NEED_RENDER.load(Ordering::Relaxed);
 					if need_render == 0 {

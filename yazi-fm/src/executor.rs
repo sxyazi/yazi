@@ -14,7 +14,6 @@ impl<'a> Executor<'a> {
 	#[inline]
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
-	#[inline]
 	pub(super) fn execute(&mut self, action: ActionCow) -> Result<Data> {
 		match action.layer {
 			Layer::App => self.app(action),

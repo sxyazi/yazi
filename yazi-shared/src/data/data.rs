@@ -7,9 +7,10 @@ use serde::{Deserialize, Serialize};
 use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{UrlBuf, UrlCow}};
 
 // --- Data
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Data {
+	#[default]
 	Nil,
 	Boolean(bool),
 	Integer(i64),
@@ -212,6 +213,13 @@ impl Data {
 	pub fn as_str(&self) -> Option<&str> {
 		match self {
 			Self::String(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_any<T: 'static>(&self) -> Option<&T> {
+		match self {
+			Self::Any(b) => (&**b).as_any().downcast_ref::<T>(),
 			_ => None,
 		}
 	}

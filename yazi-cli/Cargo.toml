@@ -34,6 +34,7 @@ yazi-shim   = { path = "../yazi-shim", version = "26.2.2" }
 anyhow     = { workspace = true }
 clap       = { workspace = true }
 crossterm  = { workspace = true }
+hashbrown  = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 tokio      = { workspace = true }
