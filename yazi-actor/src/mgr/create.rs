@@ -7,6 +7,7 @@ use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -22,7 +23,7 @@ impl Actor for Create {
 		let mut input = InputProxy::show(InputCfg::create(opt.dir));
 
 		tokio::spawn(async move {
-			let Some(Ok(name)) = input.recv().await else { return };
+			let Some(InputEvent::Submit(name)) = input.recv().await else { return };
 			if name.is_empty() {
 				return;
 			}

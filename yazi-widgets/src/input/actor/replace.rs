@@ -29,7 +29,7 @@ impl Input {
 			(Some(_), Some((len, _))) => snap.value.replace_range(start..start + len, &s),
 		}
 
-		self.snaps.tag(self.limit).then(|| self.flush_value());
+		self.snaps.tag(self.limit).then(|| self.flush_type());
 		succ!(render!());
 	}
 }

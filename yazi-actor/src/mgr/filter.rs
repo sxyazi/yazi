@@ -8,7 +8,7 @@ use yazi_macro::succ;
 use yazi_parser::mgr::FilterOpt;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data};
-use yazi_widgets::input::InputError;
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -26,9 +26,9 @@ impl Actor for Filter {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));
 			pin!(rx);
 
-			while let Some(result) = rx.next().await {
-				let done = result.is_ok();
-				let (Ok(s) | Err(InputError::Typed(s))) = result else { continue };
+			while let Some(event) = rx.next().await {
+				let done = event.is_submit();
+				let (InputEvent::Submit(s) | InputEvent::Type(s)) = event else { continue };
 
 				MgrProxy::filter_do(FilterOpt { query: s.into(), case: opt.case, done });
 			}

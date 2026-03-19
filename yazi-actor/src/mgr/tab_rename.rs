@@ -6,6 +6,7 @@ use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::TabRenameOpt;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::data::Data;
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -30,7 +31,7 @@ impl Actor for TabRename {
 			InputCfg::tab_rename().with_value(opt.name.unwrap_or(Cow::Borrowed(&pref.name))),
 		);
 		tokio::spawn(async move {
-			if let Some(Ok(name)) = input.recv().await {
+			if let Some(InputEvent::Submit(name)) = input.recv().await {
 				MgrProxy::tab_rename(tab, name);
 			}
 		});

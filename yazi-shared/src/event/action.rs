@@ -65,6 +65,13 @@ impl Action {
 		self
 	}
 
+	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl Into<Data>>) -> Self {
+		if let Some(value) = value {
+			self.args.insert(name.into(), value.into());
+		}
+		self
+	}
+
 	pub fn with_seq<I>(mut self, values: I) -> Self
 	where
 		I: IntoIterator,

@@ -1,3 +1,3 @@
 yazi_macro::mod_pub!(actor parser);
 
-yazi_macro::mod_flat!(error input mode op snap snaps widget);
+yazi_macro::mod_flat!(event input mode op opt separator snap snaps widget);

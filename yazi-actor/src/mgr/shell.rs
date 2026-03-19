@@ -6,6 +6,7 @@ use yazi_macro::{act, succ};
 use yazi_parser::{mgr::ShellOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::{InputProxy, TasksProxy};
 use yazi_shared::data::Data;
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -29,7 +30,7 @@ impl Actor for Shell {
 		tokio::spawn(async move {
 			if let Some(mut rx) = input {
 				match rx.recv().await {
-					Some(Ok(e)) => opt.run = Cow::Owned(e),
+					Some(InputEvent::Submit(e)) => opt.run = Cow::Owned(e),
 					_ => return,
 				}
 			}
