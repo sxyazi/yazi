@@ -6229,7 +6229,6 @@ dependencies = [
  "parking_lot",
  "ratatui",
  "tokio",
- "tracing",
  "unicode-width",
  "yazi-adapter",
  "yazi-config",

@@ -22,7 +22,6 @@ yazi-tty     = { path = "../yazi-tty", version = "26.2.2" }
 # External dependencies
 anyhow        = { workspace = true }
 base64        = { workspace = true }
-tracing       = { workspace = true }
 crossterm     = { workspace = true }
 futures       = { workspace = true }
 mlua          = { workspace = true }
