@@ -45,7 +45,7 @@ impl Input {
 		}
 
 		act!(r#move, self)?;
-		self.flush_value();
+		self.flush_type();
 		succ!(render!());
 	}
 

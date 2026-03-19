@@ -41,6 +41,10 @@ impl Input {
 				n_cur + pad - max
 			}
 		};
+
+		if n_cur != o_cur {
+			self.flush_trigger(false);
+		}
 		succ!();
 	}
 }

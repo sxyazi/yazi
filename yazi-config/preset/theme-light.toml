@@ -207,7 +207,7 @@ inactive = {}
 
 # Icons
 icon_file    = ""
-icon_folder  = ""
+icon_folder  = ""
 icon_command = ""
 
 # : }}}
