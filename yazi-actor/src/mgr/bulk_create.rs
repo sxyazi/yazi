@@ -1,35 +1,26 @@
-use crate::{Actor, Ctx};
+use std::{io::{Read, Write}, path::Path};
+
 use anyhow::{Result, anyhow, bail};
 use scopeguard::defer;
-use std::{
-	io::{Read, Write},
-	path::Path,
-};
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
-use yazi_fs::{
-	File, FilesOp, Splatter,
-	provider::{
-		Provider,
-		local::{Gate, Local},
-	},
-};
+use yazi_fs::{File, FilesOp, Splatter, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, MgrProxy, NotifyProxy, TasksProxy};
-use yazi_shared::{
-	data::Data,
-	terminal_clear,
-	url::{AsUrl, UrlBuf, UrlCow, UrlLike},
-};
+use yazi_shared::{data::Data, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
+
+use crate::{Actor, Ctx};
 pub struct BulkCreate;
 impl Actor for BulkCreate {
 	type Options = VoidOpt;
+
 	const NAME: &str = "bulk_create";
+
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(opener) = Self::opener() else {
 			succ!(NotifyProxy::push_warn("Bulk create", "No text opener found"));
@@ -105,9 +96,11 @@ impl BulkCreate {
 		}
 		Ok(())
 	}
+
 	fn opener() -> Option<&'static OpenerRule> {
 		YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
 	}
+
 	async fn create_one(new: &UrlBuf, dir: bool) -> Result<UrlBuf> {
 		if dir {
 			provider::create_dir_all(new).await?;
@@ -134,6 +127,7 @@ impl BulkCreate {
 			bail!("Failed to retrieve file info");
 		}
 	}
+
 	async fn output_failed(failed: Vec<(Entry, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
 		terminal_clear(&mut *stdout)?;
@@ -149,7 +143,7 @@ impl BulkCreate {
 }
 struct Entry {
 	name: String,
-	dir: bool,
+	dir:  bool,
 }
 impl Entry {
 	fn parse(s: &str) -> Option<Self> {
