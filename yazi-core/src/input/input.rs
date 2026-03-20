@@ -1,9 +1,6 @@
-use std::{ops::{Deref, DerefMut}, rc::Rc};
+use std::ops::{Deref, DerefMut};
 
-use tokio::sync::mpsc::UnboundedSender;
 use yazi_config::popup::Position;
-use yazi_shared::Ids;
-use yazi_widgets::input::InputError;
 
 #[derive(Default)]
 pub struct Input {
@@ -12,10 +9,6 @@ pub struct Input {
 	pub visible:  bool,
 	pub title:    String,
 	pub position: Position,
-
-	// Typing
-	pub tx:     Option<UnboundedSender<Result<String, InputError>>>,
-	pub ticket: Rc<Ids>,
 }
 
 impl Deref for Input {

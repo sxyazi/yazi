@@ -65,6 +65,13 @@ impl Action {
 		self
 	}
 
+	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl Into<Data>>) -> Self {
+		if let Some(value) = value {
+			self.args.insert(name.into(), value.into());
+		}
+		self
+	}
+
 	pub fn with_seq<I>(mut self, values: I) -> Self
 	where
 		I: IntoIterator,
@@ -97,6 +104,10 @@ impl Action {
 	pub fn str(&self, name: impl Into<DataKey>) -> &str { self.get(name).unwrap_or_default() }
 
 	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.get(name).unwrap_or(false) }
+
+	pub fn any<T: 'static>(&self, name: impl Into<DataKey>) -> Option<&T> {
+		self.args.get(&name.into())?.as_any()
+	}
 
 	pub fn first<'a, T>(&'a self) -> Result<T>
 	where

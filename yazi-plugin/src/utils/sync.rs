@@ -20,7 +20,7 @@ impl Utils {
 				async move {
 					loop {
 						let values: MultiValue = thread.resume(args)?;
-						if let Some(Value::LightUserData(ud)) = values.get(0)
+						if let Some(Value::LightUserData(ud)) = values.front()
 							&& *ud == Lua::poll_pending()
 						{
 							args = lua.yield_with(values).await?;

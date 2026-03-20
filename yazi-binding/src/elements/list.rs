@@ -22,9 +22,23 @@ impl List {
 
 		list.into_lua(lua)
 	}
+}
 
-	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-		self.inner.render(rect, buf);
+impl Widget for List {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		(&self).render(rect, buf);
+	}
+}
+
+impl Widget for &List {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		(&self.inner).render(rect, buf);
 	}
 }
 

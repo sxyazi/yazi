@@ -10,7 +10,7 @@ impl Widget for &Input {
 	where
 		Self: Sized,
 	{
-		crate::Clear::default().render(area, buf);
+		crate::Clear.render(area, buf);
 
 		Line::styled(self.display(), THEME.input.value).render(area, buf);
 

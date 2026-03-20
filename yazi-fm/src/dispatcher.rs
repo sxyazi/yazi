@@ -2,10 +2,11 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use crossterm::event::{KeyEvent, MouseEvent};
+use tokio::sync::mpsc;
 use tracing::warn;
 use yazi_actor::Ctx;
 use yazi_config::keymap::Key;
-use yazi_macro::{act, emit, succ};
+use yazi_macro::{act, emit};
 use yazi_shared::{data::Data, event::{ActionCow, Event, NEED_RENDER}};
 use yazi_widgets::input::InputMode;
 
@@ -20,7 +21,7 @@ impl<'a> Dispatcher<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn dispatch(&mut self, event: Event) -> Result<()> {
+	pub(super) fn dispatch(&mut self, event: Event) {
 		let result = match event {
 			Event::Call(action) => self.dispatch_call(action),
 			Event::Seq(actions) => self.dispatch_seq(actions),
@@ -32,64 +33,71 @@ impl<'a> Dispatcher<'a> {
 			Event::Paste(str) => self.dispatch_paste(str),
 		};
 
-		if let Err(err) = result {
-			warn!("Event dispatch error: {err:?}");
+		if let Err(e) = &result {
+			warn!("Event dispatch error: {e:?}");
+		}
+	}
+
+	fn dispatch_call(&mut self, action: ActionCow) -> Result<()> {
+		let tx = action.any::<mpsc::UnboundedSender<Result<Data>>>("__reply").cloned();
+		let result = Executor::new(self.app).execute(action);
+
+		if let Err(e) = &result {
+			warn!("Call dispatch error: {e:?}");
+		}
+		if let Some(tx) = tx {
+			tx.send(result).ok();
 		}
 		Ok(())
 	}
 
 	#[inline]
-	fn dispatch_call(&mut self, action: ActionCow) -> Result<Data> {
-		Executor::new(self.app).execute(action)
-	}
-
-	#[inline]
-	fn dispatch_seq(&mut self, mut actions: Vec<ActionCow>) -> Result<Data> {
+	fn dispatch_seq(&mut self, mut actions: Vec<ActionCow>) -> Result<()> {
 		if let Some(last) = actions.pop() {
 			self.dispatch_call(last)?;
 		}
 		if !actions.is_empty() {
 			emit!(Seq(actions));
 		}
-		succ!();
+		Ok(())
 	}
 
 	#[inline]
-	fn dispatch_render(&mut self, partial: bool) -> Result<Data> {
+	fn dispatch_render(&mut self, partial: bool) -> Result<()> {
 		if partial {
 			_ = NEED_RENDER.compare_exchange(0, 2, Ordering::Relaxed, Ordering::Relaxed);
 		} else {
 			NEED_RENDER.store(1, Ordering::Relaxed);
 		}
-		succ!()
+		Ok(())
 	}
 
 	#[inline]
-	fn dispatch_key(&mut self, key: KeyEvent) -> Result<Data> {
+	fn dispatch_key(&mut self, key: KeyEvent) -> Result<()> {
 		Router::new(self.app).route(Key::from(key))?;
-		succ!();
+		Ok(())
 	}
 
 	#[inline]
-	fn dispatch_mouse(&mut self, mouse: MouseEvent) -> Result<Data> {
+	fn dispatch_mouse(&mut self, mouse: MouseEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
-		act!(app:mouse, cx, mouse)
+		act!(app:mouse, cx, mouse).map(|_| ())
 	}
 
 	#[inline]
-	fn dispatch_resize(&mut self) -> Result<Data> {
+	fn dispatch_resize(&mut self) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
-		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _)
+		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _).map(|_| ())
 	}
 
 	#[inline]
-	fn dispatch_focus(&mut self) -> Result<Data> {
+	fn dispatch_focus(&mut self) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
-		act!(app:focus, cx)
+		act!(app:focus, cx).map(|_| ())
 	}
 
 	#[inline]
-	fn dispatch_paste(&mut self, str: String) -> Result<Data> {
+	fn dispatch_paste(&mut self, str: String) -> Result<()> {
 		if self.app.core.input.visible {
 			let input = &mut self.app.core.input;
 			if input.mode() == InputMode::Insert {
@@ -98,6 +106,6 @@ impl<'a> Dispatcher<'a> {
 				input.replace_str(&str)?;
 			}
 		}
-		succ!();
+		Ok(())
 	}
 }

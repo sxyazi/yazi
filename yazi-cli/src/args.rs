@@ -17,10 +17,12 @@ pub(super) struct Args {
 
 #[derive(Subcommand)]
 pub(super) enum Command {
-	/// Emit a command to be executed by the current instance.
+	/// Emit an action to be executed by the current instance.
 	Emit(CommandEmit),
-	/// Emit a command to be executed by the specified instance.
+	/// Emit an action to be executed by the specified instance.
 	EmitTo(CommandEmitTo),
+	/// Execute an action on the current instance and print its result.
+	Exec(CommandExec),
 	/// Manage packages.
 	#[command(subcommand)]
 	Pkg(CommandPkg),
@@ -34,9 +36,9 @@ pub(super) enum Command {
 
 #[derive(clap::Args)]
 pub(super) struct CommandEmit {
-	/// Name of the command.
+	/// Name of the action.
 	pub(super) name: String,
-	/// Arguments of the command.
+	/// Arguments of the action.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
 	pub(super) args: Vec<OsString>,
 }
@@ -45,11 +47,20 @@ pub(super) struct CommandEmit {
 pub(super) struct CommandEmitTo {
 	/// Receiver ID.
 	pub(super) receiver: Id,
-	/// Name of the command.
+	/// Name of the action.
 	pub(super) name:     String,
-	/// Arguments of the command.
+	/// Arguments of the action.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
 	pub(super) args:     Vec<OsString>,
+}
+
+#[derive(clap::Args)]
+pub(super) struct CommandExec {
+	/// Name of the action.
+	pub(super) name: String,
+	/// Arguments of the action.
+	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+	pub(super) args: Vec<OsString>,
 }
 
 #[derive(Subcommand)]
@@ -156,6 +167,29 @@ macro_rules! impl_emit_body {
 	};
 }
 
+macro_rules! impl_exec_body {
+	($name:ident) => {
+		impl $name {
+			#[allow(dead_code)]
+			pub(super) fn body(self, reply_to: Id) -> Result<String> {
+				#[derive(serde::Serialize)]
+				#[serde(untagged)]
+				enum Elem {
+					Id(Id),
+					Name(String),
+					Arg(Vec<u8>),
+				}
+
+				let action: Vec<_> = [Elem::Id(reply_to), Elem::Name(self.name)]
+					.into_iter()
+					.chain(self.args.into_iter().map(|s| Elem::Arg(s.into_encoded_bytes())))
+					.collect();
+				Ok(serde_json::to_string(&action)?)
+			}
+		}
+	};
+}
+
 macro_rules! impl_pub_body {
 	($name:ident) => {
 		impl $name {
@@ -177,6 +211,8 @@ macro_rules! impl_pub_body {
 
 impl_emit_body!(CommandEmit);
 impl_emit_body!(CommandEmitTo);
+
+impl_exec_body!(CommandExec);
 
 impl_pub_body!(CommandPub);
 impl_pub_body!(CommandPubTo);

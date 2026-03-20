@@ -31,14 +31,6 @@ impl Text {
 		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		text.into_lua(lua)
 	}
-
-	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-		if self.wrap.is_none() && self.scroll == Default::default() {
-			self.inner.render(rect, buf);
-		} else {
-			ratatui::widgets::Paragraph::from(self).render(rect, buf);
-		}
-	}
 }
 
 impl TryFrom<Table> for Text {
@@ -79,6 +71,32 @@ impl From<Text> for ratatui::widgets::Paragraph<'static> {
 			p = p.wrap(wrap);
 		}
 		p.scroll((value.scroll.y, value.scroll.x))
+	}
+}
+
+impl Widget for Text {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		if self.wrap.is_none() && self.scroll == Default::default() {
+			self.inner.render(rect, buf);
+		} else {
+			ratatui::widgets::Paragraph::from(self).render(rect, buf);
+		}
+	}
+}
+
+impl Widget for &Text {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		if self.wrap.is_none() && self.scroll == Default::default() {
+			(&self.inner).render(rect, buf);
+		} else {
+			ratatui::widgets::Paragraph::from(self.clone()).render(rect, buf);
+		}
 	}
 }
 

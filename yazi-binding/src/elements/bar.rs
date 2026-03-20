@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, Value};
-use ratatui::widgets::Borders;
+use ratatui::widgets::{Borders, Widget};
 
 use super::{Area, Edge};
 
@@ -21,8 +21,22 @@ impl Bar {
 		bar.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		bar.into_lua(lua)
 	}
+}
 
-	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+impl Widget for Bar {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		(&self).render(rect, buf);
+	}
+}
+
+impl Widget for &Bar {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
 		if rect.area() == 0 {
 			return;
 		}

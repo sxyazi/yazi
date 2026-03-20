@@ -7,9 +7,10 @@ use serde::{Deserialize, Serialize};
 use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{UrlBuf, UrlCow}};
 
 // --- Data
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Data {
+	#[default]
 	Nil,
 	Boolean(bool),
 	Integer(i64),
@@ -185,7 +186,7 @@ impl TryFrom<Data> for StrandBuf {
 		Ok(match value {
 			Data::String(s) => s.into_owned().into(),
 			Data::Path(p) => p.into_strand(),
-			Data::Bytes(b) => StrandBuf::Bytes(b),
+			Data::Bytes(b) => Self::Bytes(b),
 			_ => bail!("cannot convert to StrandBuf"),
 		})
 	}
@@ -198,7 +199,7 @@ impl TryFrom<&Data> for StrandBuf {
 		Ok(match value {
 			Data::String(s) => s.to_string().into(),
 			Data::Path(p) => p.into_strand(),
-			Data::Bytes(b) => StrandBuf::Bytes(b.clone()),
+			Data::Bytes(b) => Self::Bytes(b.clone()),
 			_ => bail!("cannot convert to StrandBuf"),
 		})
 	}
@@ -212,6 +213,13 @@ impl Data {
 	pub fn as_str(&self) -> Option<&str> {
 		match self {
 			Self::String(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_any<T: 'static>(&self) -> Option<&T> {
+		match self {
+			Self::Any(b) => (&**b).as_any().downcast_ref::<T>(),
 			_ => None,
 		}
 	}
@@ -239,239 +247,6 @@ impl Data {
 		} else {
 			bail!("Failed to downcast Data into {}", std::any::type_name::<T>())
 		}
-	}
-}
-
-impl<'de> serde::Deserializer<'de> for &Data {
-	type Error = serde::de::value::Error;
-
-	fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("any not supported"))
-	}
-
-	fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_bool(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_i8(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_i16(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_i32(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_i64(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_u8(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_u16(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_u32(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_u64(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_f32(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_f64(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_char<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("not a char"))
-	}
-
-	fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_str(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_string<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("string not supported"))
-	}
-
-	fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_bytes(self.try_into().map_err(serde::de::Error::custom)?)
-	}
-
-	fn deserialize_byte_buf<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("byte buf not supported"))
-	}
-
-	fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		match self {
-			Data::Nil => visitor.visit_none(),
-			_ => visitor.visit_some(self),
-		}
-	}
-
-	fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_unit()
-	}
-
-	fn deserialize_unit_struct<V>(
-		self,
-		_name: &'static str,
-		visitor: V,
-	) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_unit()
-	}
-
-	fn deserialize_newtype_struct<V>(
-		self,
-		_name: &'static str,
-		visitor: V,
-	) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		visitor.visit_newtype_struct(self)
-	}
-
-	fn deserialize_seq<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("seq not supported"))
-	}
-
-	fn deserialize_tuple<V>(self, _len: usize, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("tuple not supported"))
-	}
-
-	fn deserialize_tuple_struct<V>(
-		self,
-		_name: &'static str,
-		_len: usize,
-		_visitor: V,
-	) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("tuple struct not supported"))
-	}
-
-	fn deserialize_map<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("map not supported"))
-	}
-
-	fn deserialize_struct<V>(
-		self,
-		_name: &'static str,
-		_fields: &'static [&'static str],
-		_visitor: V,
-	) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("struct not supported"))
-	}
-
-	fn deserialize_enum<V>(
-		self,
-		_name: &'static str,
-		_variants: &'static [&'static str],
-		_visitor: V,
-	) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("enum not supported"))
-	}
-
-	fn deserialize_identifier<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("identifier not supported"))
-	}
-
-	fn deserialize_ignored_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
-	where
-		V: serde::de::Visitor<'de>,
-	{
-		Err(serde::de::Error::custom("ignored any not supported"))
 	}
 }
 

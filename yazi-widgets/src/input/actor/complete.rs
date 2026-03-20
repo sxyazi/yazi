@@ -4,13 +4,7 @@ use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_shared::data::Data;
 
-use crate::input::{Input, parser::CompleteOpt};
-
-#[cfg(windows)]
-const SEPARATOR: [char; 2] = ['/', '\\'];
-
-#[cfg(not(windows))]
-const SEPARATOR: char = std::path::MAIN_SEPARATOR;
+use crate::input::{Input, SEPARATOR, parser::CompleteOpt};
 
 impl Input {
 	pub fn complete(&mut self, opt: CompleteOpt) -> Result<Data> {
@@ -30,7 +24,7 @@ impl Input {
 		snap.value = new;
 
 		act!(r#move, self, delta)?;
-		self.flush_value();
+		self.flush_type();
 		succ!(render!());
 	}
 }

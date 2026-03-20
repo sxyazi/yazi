@@ -20,7 +20,7 @@ impl Utils {
 			if !s.is_empty() {
 				s.push(' ');
 			}
-			Utils::format_one(&mut s, value)?;
+			Self::format_one(&mut s, value)?;
 		}
 		Ok(s)
 	}

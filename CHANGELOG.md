@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Certificate authentication for SFTP VFS provider ([#3716])
 - New `hovered` condition specifying different icons for hovered files ([#3728])
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
+- New `ya.exec()` API and `ya exec` subcommand to execute an action and await its result ([#3780])
 - New `sort_fallback` option to control fallback sorting behavior ([#3077])
 - New `fs.access()` API to access the filesystem ([#3668])
 - New `relay-notify-push` DDS event to customize the notification handler ([#3642])
@@ -55,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Improved
 
 - Reduce memory allocations by using Lua 5.5 external strings ([#3634])
+- Reuse previewed and spotted widgets when possible ([#3765])
 
 ## [v26.1.22]
 
@@ -1682,3 +1684,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3744]: https://github.com/sxyazi/yazi/pull/3744
 [#3748]: https://github.com/sxyazi/yazi/pull/3748
 [#3757]: https://github.com/sxyazi/yazi/pull/3757
+[#3765]: https://github.com/sxyazi/yazi/pull/3765
+[#3780]: https://github.com/sxyazi/yazi/pull/3780

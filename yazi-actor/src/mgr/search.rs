@@ -10,6 +10,7 @@ use yazi_parser::{VoidOpt, mgr::{CdSource, SearchOpt, SearchOptVia}};
 use yazi_plugin::external;
 use yazi_proxy::{InputProxy, MgrProxy, NotifyProxy};
 use yazi_shared::{data::Data, url::{AsUrl, UrlLike}};
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -29,7 +30,7 @@ impl Actor for Search {
 			InputProxy::show(InputCfg::search(opt.via.into_str()).with_value(&*opt.subject));
 
 		tokio::spawn(async move {
-			if let Some(Ok(subject)) = input.recv().await {
+			if let Some(InputEvent::Submit(subject)) = input.recv().await {
 				opt.subject = Cow::Owned(subject);
 				MgrProxy::search_do(opt);
 			}

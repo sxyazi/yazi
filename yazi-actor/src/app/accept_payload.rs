@@ -29,7 +29,7 @@ impl Actor for AcceptPayload {
 		drop(lock);
 
 		let kind = kind.to_owned();
-		succ!(Lives::scope(&cx.core, || {
+		succ!(Lives::scope(cx.core, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
 				if let Err(e) = runtime_scope!(LUA, &id, cb.call::<()>(body.clone())) {

@@ -8,7 +8,7 @@ use yazi_macro::succ;
 use yazi_parser::mgr::{FindDoOpt, FindOpt};
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data};
-use yazi_widgets::input::InputError;
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -26,7 +26,7 @@ impl Actor for Find {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));
 			pin!(rx);
 
-			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
+			while let Some(InputEvent::Submit(s) | InputEvent::Type(s)) = rx.next().await {
 				MgrProxy::find_do(FindDoOpt { query: s.into(), prev: opt.prev, case: opt.case });
 			}
 		});

@@ -17,8 +17,22 @@ impl Clear {
 
 		clear.into_lua(lua)
 	}
+}
 
-	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+impl Widget for Clear {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
+		(&self).render(rect, buf);
+	}
+}
+
+impl Widget for &Clear {
+	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	where
+		Self: Sized,
+	{
 		yazi_widgets::Clear.render(rect, buf);
 	}
 }

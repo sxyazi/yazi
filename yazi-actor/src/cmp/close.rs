@@ -23,6 +23,7 @@ impl Actor for Close {
 
 		cmp.caches.clear();
 		cmp.ticket = Default::default();
+		cmp.handle.take().map(|h| h.abort());
 		succ!(render!(mem::replace(&mut cmp.visible, false)));
 	}
 }

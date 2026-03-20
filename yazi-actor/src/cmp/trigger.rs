@@ -1,4 +1,4 @@
-use std::mem;
+use std::{io, mem};
 
 use anyhow::Result;
 use yazi_fs::{path::clean_url, provider::{DirReader, FileHolder}};
@@ -18,25 +18,23 @@ impl Actor for Trigger {
 	const NAME: &str = "trigger";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		let cmp = &mut cx.cmp;
-		if let Some(t) = opt.ticket {
-			if t < cmp.ticket {
-				succ!();
-			}
-			cmp.ticket = t;
+		if opt.ticket.is_some_and(|t| t != cx.cmp.ticket) {
+			succ!();
+		} else if opt.ticket.is_none() {
+			cx.cmp.ticket = cx.input.ticket.current();
 		}
 
+		cx.cmp.handle.take().map(|h| h.abort());
 		let Some((parent, word)) = Self::split_url(&opt.word) else {
 			return act!(cmp:close, cx, false);
 		};
 
-		if cmp.caches.contains_key(&parent) {
-			let ticket = cmp.ticket;
+		let ticket = cx.cmp.ticket;
+		if cx.cmp.caches.contains_key(&parent) {
 			return act!(cmp:show, cx, ShowOpt { cache: vec![], cache_name: parent, word, ticket });
 		}
 
-		let ticket = cmp.ticket;
-		tokio::spawn(async move {
+		cx.cmp.handle = Some(tokio::spawn(async move {
 			let mut dir = provider::read_dir(&parent).await?;
 			let mut cache = vec![];
 
@@ -58,10 +56,10 @@ impl Actor for Trigger {
 				CmpProxy::show(ShowOpt { cache, cache_name: parent, word, ticket });
 			}
 
-			Ok::<_, anyhow::Error>(())
-		});
+			Ok::<_, io::Error>(())
+		}));
 
-		succ!(render!(mem::replace(&mut cmp.visible, false)));
+		succ!(render!(mem::replace(&mut cx.cmp.visible, false)));
 	}
 }
 

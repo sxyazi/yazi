@@ -24,7 +24,7 @@ impl UserData for Fd {
 			}
 		});
 		methods.add_async_method_mut("write_all", |lua, mut me, src: mlua::String| async move {
-			match me.0.write_all(&*src.as_bytes()).await {
+			match me.0.write_all(&src.as_bytes()).await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 			}

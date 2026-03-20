@@ -22,7 +22,7 @@ impl Input {
 		snap.value.replace_range(start..end, &casefied);
 		snap.op = InputOp::None;
 		snap.cursor = range.start;
-		self.snaps.tag(self.limit).then(|| self.flush_value());
+		self.snaps.tag(self.limit).then(|| self.flush_type());
 
 		act!(r#move, self)?;
 		succ!(render!());

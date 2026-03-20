@@ -11,7 +11,7 @@ use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, provider};
-use yazi_widgets::input::InputError;
+use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -70,7 +70,7 @@ impl Cd {
 
 			while let Some(result) = rx.next().await {
 				match result {
-					Ok(s) => {
+					InputEvent::Submit(s) => {
 						let Ok(url) = UrlBuf::try_from(s).map(expand_url) else { return };
 						let Ok(url) = provider::absolute(&url).await else { return };
 						let url = clean_url(url);
@@ -85,7 +85,7 @@ impl Cd {
 						}
 						MgrProxy::reveal(url);
 					}
-					Err(InputError::Completed(before, ticket)) => {
+					InputEvent::Trigger(before, ticket) => {
 						CmpProxy::trigger(before, ticket);
 					}
 					_ => break,
