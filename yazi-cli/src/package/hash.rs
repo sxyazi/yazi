@@ -46,7 +46,7 @@ impl Dependency {
 		if self.hash != self.hash().await? {
 			bail!(
 				"You have modified the contents of the `{}` {}. For safety, the operation has been aborted.
-Please manually delete it from `{}` and re-run the command.",
+Please manually delete it from `{}` and re-run the command, or use `--discard` to discard those local changes.",
 				self.name,
 				if self.is_flavor { "flavor" } else { "plugin" },
 				self.target().display()

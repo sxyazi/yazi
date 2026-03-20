@@ -8,7 +8,7 @@ use super::Dependency;
 use crate::shared::{copy_and_seal, maybe_exists};
 
 impl Dependency {
-	pub(super) async fn deploy(&mut self) -> Result<()> {
+	pub(super) async fn deploy(&mut self, discard: bool) -> Result<()> {
 		let from = self.local().join(&self.child);
 
 		self.header("Deploying package `{name}`")?;
@@ -16,7 +16,7 @@ impl Dependency {
 
 		let to = self.target();
 		let exists = maybe_exists(&to).await;
-		if exists {
+		if exists && !discard {
 			self.hash_check().await?;
 		}
 

@@ -4,7 +4,7 @@ use super::{Dependency, Git};
 use crate::shared::must_exists;
 
 impl Dependency {
-	pub(super) async fn add(&mut self) -> Result<()> {
+	pub(super) async fn add(&mut self, discard: bool) -> Result<()> {
 		self.header("Upgrading package `{name}`")?;
 
 		let path = self.local();
@@ -14,7 +14,7 @@ impl Dependency {
 			Git::clone(&self.remote(), &path).await?;
 		};
 
-		self.deploy().await?;
+		self.deploy(discard).await?;
 		self.rev = Git::revision(&path).await?;
 		Ok(())
 	}

@@ -77,17 +77,27 @@ pub(super) enum CommandPkg {
 	Delete {
 		/// Packages to delete.
 		#[arg(index = 1, num_args = 1..)]
-		ids: Vec<String>,
+		ids:     Vec<String>,
+		/// Discard local changes made to packages while deleting.
+		#[arg(long)]
+		discard: bool,
 	},
 	/// Install all packages.
-	Install,
+	Install {
+		/// Discard local changes made to packages while installing.
+		#[arg(long)]
+		discard: bool,
+	},
 	/// List all packages.
 	List,
 	/// Upgrade all packages.
 	Upgrade {
 		/// Packages to upgrade, upgrade all if unspecified.
 		#[arg(index = 1, num_args = 0..)]
-		ids: Vec<String>,
+		ids:     Vec<String>,
+		/// Discard local changes made to packages while upgrading.
+		#[arg(long)]
+		discard: bool,
 	},
 }
 
