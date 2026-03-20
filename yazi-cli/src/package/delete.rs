@@ -6,22 +6,18 @@ use super::Dependency;
 use crate::shared::{maybe_exists, remove_sealed};
 
 impl Dependency {
-	pub(super) async fn delete(&self, force: bool) -> Result<()> {
+	pub(super) async fn delete(&self, overwrite: bool) -> Result<()> {
 		self.header("Deleting package `{name}`")?;
 
 		let dir = self.target();
 		if !maybe_exists(&dir).await {
 			return Ok(outln!("Not found, skipping")?);
-		}
-
-		if force {
-			outln!("Warning: skipping local modification check for `{}`", self.name)?;
-		} else {
+		} else if !overwrite {
 			self.hash_check().await?;
 		}
+
 		self.delete_assets().await?;
 		self.delete_sources().await?;
-
 		Ok(())
 	}
 

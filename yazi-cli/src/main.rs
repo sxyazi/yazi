@@ -78,10 +78,10 @@ async fn run() -> anyhow::Result<()> {
 			let mut pkg = package::Package::load().await?;
 			match cmd {
 				CommandPkg::Add { ids } => pkg.add_many(&ids).await?,
-				CommandPkg::Delete { ids, force } => pkg.delete_many(&ids, force).await?,
-				CommandPkg::Install { force } => pkg.install(force).await?,
+				CommandPkg::Delete { ids, overwrite } => pkg.delete_many(&ids, overwrite).await?,
+				CommandPkg::Install { overwrite } => pkg.install(overwrite).await?,
 				CommandPkg::List => pkg.print()?,
-				CommandPkg::Upgrade { ids, force } => pkg.upgrade_many(&ids, force).await?,
+				CommandPkg::Upgrade { ids, overwrite } => pkg.upgrade_many(&ids, overwrite).await?,
 			}
 		}
 

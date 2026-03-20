@@ -8,7 +8,7 @@ use super::Dependency;
 use crate::shared::{copy_and_seal, maybe_exists};
 
 impl Dependency {
-	pub(super) async fn deploy(&mut self, force: bool) -> Result<()> {
+	pub(super) async fn deploy(&mut self, overwrite: bool) -> Result<()> {
 		let from = self.local().join(&self.child);
 
 		self.header("Deploying package `{name}`")?;
@@ -16,12 +16,8 @@ impl Dependency {
 
 		let to = self.target();
 		let exists = maybe_exists(&to).await;
-		if exists {
-			if force {
-				outln!("Warning: skipping local modification check for `{}`", self.name)?;
-			} else {
-				self.hash_check().await?;
-			}
+		if exists && !overwrite {
+			self.hash_check().await?;
 		}
 
 		Local::regular(&to).create_dir_all().await?;

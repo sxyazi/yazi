@@ -44,11 +44,11 @@ impl Dds {
 	}
 
 	pub(super) fn ensure_version(version: Option<&str>) -> Result<()> {
-		if version.as_deref() != Some(EmberHi::version()) {
+		if version != Some(EmberHi::version()) {
 			bail!(
 				"Incompatible version (Ya {}, Yazi {}). Restart all `ya` and `yazi` processes if you upgrade either one.",
 				EmberHi::version(),
-				version.as_deref().unwrap_or("Unknown")
+				version.unwrap_or("Unknown")
 			);
 		}
 		Ok(())

@@ -219,7 +219,7 @@ impl Data {
 
 	pub fn as_any<T: 'static>(&self) -> Option<&T> {
 		match self {
-			Self::Any(b) => (&**b).as_any().downcast_ref::<T>(),
+			Self::Any(b) => (**b).as_any().downcast_ref::<T>(),
 			_ => None,
 		}
 	}
