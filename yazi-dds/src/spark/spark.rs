@@ -341,6 +341,7 @@ try_from_spark!(
 	app:bootstrap,
 	app:focus,
 	mgr:back,
+	mgr:bulk_create,
 	mgr:bulk_rename,
 	mgr:enter,
 	mgr:escape_filter,

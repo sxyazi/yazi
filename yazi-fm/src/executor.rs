@@ -116,6 +116,7 @@ impl<'a> Executor<'a> {
 		on!(hardlink);
 		on!(remove);
 		on!(remove_do);
+		on!(bulk_create); 
 		on!(create);
 		on!(rename);
 		on!(copy);

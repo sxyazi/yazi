@@ -1,33 +1,24 @@
+use crate::{Actor, Ctx};
+use anyhow::{Result, anyhow, bail};
+use scopeguard::defer;
 use std::{
-	hash::Hash,
 	io::{Read, Write},
-	ops::Deref,
 	path::Path,
 };
-
-use anyhow::{Result, anyhow};
-use crossterm::{execute, style::Print};
-use hashbrown::HashMap;
-use scopeguard::defer;
-use tokio::io::AsyncWriteExt;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
-use yazi_dds::Pubsub;
 use yazi_fs::{
-	File, FilesOp, Splatter, max_common_root,
-	path::skip_url,
+	File, FilesOp, Splatter,
 	provider::{
-		FileBuilder, Provider,
+		Provider,
 		local::{Gate, Local},
 	},
 };
-use yazi_macro::{err, succ};
+use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::VoidOpt;
-use yazi_proxy::{AppProxy, NotifyProxy, TasksProxy};
+use yazi_proxy::{AppProxy, MgrProxy, NotifyProxy, TasksProxy};
 use yazi_shared::{
 	data::Data,
-	path::PathDyn,
-	strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike},
 	terminal_clear,
 	url::{AsUrl, UrlBuf, UrlCow, UrlLike},
 };
@@ -35,41 +26,18 @@ use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
-
-use crate::{Actor, Ctx};
-
-pub struct BulkRename;
-
-impl Actor for BulkRename {
+pub struct BulkCreate;
+impl Actor for BulkCreate {
 	type Options = VoidOpt;
-
-	const NAME: &str = "bulk_rename";
-
+	const NAME: &str = "bulk_create";
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(opener) = Self::opener() else {
-			succ!(NotifyProxy::push_warn("Bulk rename", "No text opener found"));
+			succ!(NotifyProxy::push_warn("Bulk create", "No text opener found"));
 		};
-
-		let selected: Vec<_> = cx.tab().selected_or_hovered().cloned().collect();
-		if selected.is_empty() {
-			succ!(NotifyProxy::push_warn("Bulk rename", "No files selected"));
-		}
-
-		let root = max_common_root(&selected);
-		let old: Vec<_> =
-			selected.iter().enumerate().map(|(i, u)| Tuple::new(i, skip_url(u, root))).collect();
-
 		let cwd = cx.cwd().clone();
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk");
-			Gate::default()
-				.write(true)
-				.create_new(true)
-				.open(&tmp)
-				.await?
-				.write_all(old.join(Strand::Utf8("\n")).encoded_bytes())
-				.await?;
-
+			_ = Gate::default().write(true).create_new(true).open(&tmp).await?;
 			defer! {
 				let tmp = tmp.clone();
 				tokio::spawn(async move {
@@ -77,249 +45,118 @@ impl Actor for BulkRename {
 				});
 			}
 			TasksProxy::process_exec(
-				cwd.into(),
+				cwd.clone().into(),
 				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
 				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
 				opener.block,
 				opener.orphan,
 			)
 			.await;
-
 			let _permit = Permit::new(YIELD_TO_SUBPROCESS.acquire().await.unwrap(), AppProxy::resume());
 			AppProxy::stop().await;
-
-			let new: Vec<_> = Local::regular(&tmp)
-				.read_to_string()
-				.await?
-				.lines()
-				.take(old.len())
-				.enumerate()
-				.map(|(i, s)| Tuple::new(i, s))
-				.collect();
-
-			Self::r#do(root, old, new, selected).await
+			let todo: Vec<_> =
+				Local::regular(&tmp).read_to_string().await?.lines().filter_map(Entry::parse).collect();
+			Self::r#do(cwd, todo).await
 		});
-		succ!();
+		succ!()
 	}
 }
-
-impl BulkRename {
-	async fn r#do(
-		root: usize,
-		old: Vec<Tuple>,
-		new: Vec<Tuple>,
-		selected: Vec<UrlBuf>,
-	) -> Result<()> {
+impl BulkCreate {
+	async fn r#do(cwd: UrlBuf, todo: Vec<Entry>) -> Result<()> {
 		terminal_clear(TTY.writer())?;
-		if old.len() != new.len() {
-			#[rustfmt::skip]
-			let s = format!("Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len());
-			execute!(TTY.writer(), Print(s))?;
-
-			TTY.reader().read_exact(&mut [0])?;
-			return Ok(());
-		}
-
-		let (old, new) = old.into_iter().zip(new).filter(|(o, n)| o != n).unzip();
-		let todo = Self::prioritized_paths(old, new);
 		if todo.is_empty() {
 			return Ok(());
 		}
-
 		{
 			let mut w = TTY.lockout();
-			for (old, new) in &todo {
-				writeln!(w, "{} -> {}", old.display(), new.display())?;
+			for entry in &todo {
+				writeln!(w, "{}", entry.name)?;
 			}
-			write!(w, "Continue to rename? (y/N): ")?;
+			write!(w, "Continue to create? (y/N): ")?;
 			w.flush()?;
 		}
-
 		let mut buf = [0; 10];
 		_ = TTY.reader().read(&mut buf)?;
 		if buf[0] != b'y' && buf[0] != b'Y' {
 			return Ok(());
 		}
-
-		let permit = WATCHER.acquire().await.unwrap();
-		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
-		for (o, n) in todo {
-			let (Ok(old), Ok(new)) =
-				(Self::replace_url(&selected[o.0], root, &o), Self::replace_url(&selected[n.0], root, &n))
-			else {
-				failed.push((o, n, anyhow!("Invalid new or old file name")));
+		let _permit = WATCHER.acquire().await.unwrap();
+		let mut failed = Vec::new();
+		let mut reveal = None;
+		for entry in todo {
+			let Ok(new) = cwd.try_join(&entry.name) else {
+				failed.push((entry, anyhow!("Invalid path")));
 				continue;
 			};
-
-			if maybe_exists(&new).await && !provider::must_identical(&old, &new).await {
-				failed.push((o, n, anyhow!("Destination already exists")));
-			} else if let Err(e) = provider::rename(&old, &new).await {
-				failed.push((o, n, e.into()));
-			} else if let Ok(f) = File::new(new).await {
-				succeeded.insert(old, f);
-			} else {
-				failed.push((o, n, anyhow!("Failed to retrieve file info")));
+			if maybe_exists(&new).await {
+				failed.push((entry, anyhow!("Destination already exists")));
+				continue;
+			}
+			match Self::create_one(&new, entry.dir).await {
+				Ok(real) => reveal = Some(real),
+				Err(e) => failed.push((entry, e)),
 			}
 		}
-
-		if !succeeded.is_empty() {
-			let it = succeeded.iter().map(|(o, n)| (o.as_url(), n.url.as_url()));
-			err!(Pubsub::pub_after_bulk(it));
-			FilesOp::rename(succeeded);
+		if let Some(url) = reveal {
+			MgrProxy::reveal(&url);
 		}
-		drop(permit);
-
 		if !failed.is_empty() {
 			Self::output_failed(failed).await?;
 		}
 		Ok(())
 	}
-
 	fn opener() -> Option<&'static OpenerRule> {
 		YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
 	}
-
-	fn replace_url(url: &UrlBuf, take: usize, rep: &StrandBuf) -> Result<UrlBuf> {
-		Ok(url.try_replace(take, PathDyn::with(url.kind(), rep)?)?.into_owned())
+	async fn create_one(new: &UrlBuf, dir: bool) -> Result<UrlBuf> {
+		if dir {
+			provider::create_dir_all(new).await?;
+		} else if let Ok(real) = provider::casefold(new).await
+			&& let Some((parent, urn)) = real.pair()
+		{
+			ok_or_not_found!(provider::remove_file(new).await);
+			FilesOp::Deleting(parent.into(), [urn.into()].into()).emit();
+			provider::create(new).await?;
+		} else if let Some(parent) = new.parent() {
+			provider::create_dir_all(parent).await.ok();
+			ok_or_not_found!(provider::remove_file(new).await);
+			provider::create(new).await?;
+		} else {
+			bail!("Cannot create file at root");
+		}
+		if let Ok(real) = provider::casefold(new).await
+			&& let Some((parent, urn)) = real.pair()
+		{
+			let file = File::new(&real).await?;
+			FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()).emit();
+			Ok(real)
+		} else {
+			bail!("Failed to retrieve file info");
+		}
 	}
-
-	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {
+	async fn output_failed(failed: Vec<(Entry, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
 		terminal_clear(&mut *stdout)?;
-
-		writeln!(stdout, "Failed to rename:")?;
-		for (old, new, err) in failed {
-			writeln!(stdout, "{} -> {}: {err}", old.display(), new.display())?;
+		writeln!(stdout, "Failed to create:")?;
+		for (entry, err) in failed {
+			writeln!(stdout, "{}: {err}", entry.name)?;
 		}
 		writeln!(stdout, "\nPress ENTER to exit")?;
-
 		stdout.flush()?;
 		TTY.reader().read_exact(&mut [0])?;
 		Ok(())
 	}
-
-	fn prioritized_paths(old: Vec<Tuple>, new: Vec<Tuple>) -> Vec<(Tuple, Tuple)> {
-		let orders: HashMap<_, _> = old.iter().enumerate().map(|(i, t)| (t, i)).collect();
-		let mut incomes: HashMap<_, _> = old.iter().map(|t| (t, false)).collect();
-		let mut todos: HashMap<_, _> = old
-			.iter()
-			.zip(new)
-			.map(|(o, n)| {
-				incomes.get_mut(&n).map(|b| *b = true);
-				(o, n)
-			})
-			.collect();
-
-		let mut sorted = Vec::with_capacity(old.len());
-		while !todos.is_empty() {
-			// Paths that are non-incomes and don't need to be prioritized in this round
-			let mut outcomes: Vec<_> = incomes.iter().filter(|&(_, b)| !b).map(|(&t, _)| t).collect();
-			outcomes.sort_unstable_by(|a, b| orders[b].cmp(&orders[a]));
-
-			// If there're no outcomes, it means there are cycles in the renaming
-			if outcomes.is_empty() {
-				let mut remain: Vec<_> = todos.into_iter().map(|(o, n)| (o.clone(), n)).collect();
-				remain.sort_unstable_by(|(a, _), (b, _)| orders[a].cmp(&orders[b]));
-				sorted.reverse();
-				sorted.extend(remain);
-				return sorted;
-			}
-
-			for old in outcomes {
-				let Some(new) = todos.remove(old) else { unreachable!() };
-				incomes.remove(&old);
-				incomes.get_mut(&new).map(|b| *b = false);
-				sorted.push((old.clone(), new));
-			}
+}
+struct Entry {
+	name: String,
+	dir: bool,
+}
+impl Entry {
+	fn parse(s: &str) -> Option<Self> {
+		let s = s.trim();
+		if s.is_empty() {
+			return None;
 		}
-		sorted.reverse();
-		sorted
-	}
-}
-
-// --- Tuple
-#[derive(Clone, Debug)]
-struct Tuple(usize, StrandBuf);
-
-impl Deref for Tuple {
-	type Target = StrandBuf;
-
-	fn deref(&self) -> &Self::Target {
-		&self.1
-	}
-}
-
-impl PartialEq for Tuple {
-	fn eq(&self, other: &Self) -> bool {
-		self.1 == other.1
-	}
-}
-
-impl Eq for Tuple {}
-
-impl Hash for Tuple {
-	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-		self.1.hash(state);
-	}
-}
-
-impl AsStrand for &Tuple {
-	fn as_strand(&self) -> Strand<'_> {
-		self.1.as_strand()
-	}
-}
-
-impl Tuple {
-	fn new(index: usize, inner: impl Into<StrandBuf>) -> Self {
-		Self(index, inner.into())
-	}
-}
-
-// --- Tests
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn test_sort() {
-		fn cmp(input: &[(&str, &str)], expected: &[(&str, &str)]) {
-			let sorted = BulkRename::prioritized_paths(
-				input.iter().map(|&(o, _)| Tuple::new(0, o)).collect(),
-				input.iter().map(|&(_, n)| Tuple::new(0, n)).collect(),
-			);
-			let sorted: Vec<_> =
-				sorted.iter().map(|(o, n)| (o.to_str().unwrap(), n.to_str().unwrap())).collect();
-			assert_eq!(sorted, expected);
-		}
-
-		#[rustfmt::skip]
-		cmp(
-			&[("2", "3"), ("1", "2"), ("3", "4")],
-			&[("3", "4"), ("2", "3"), ("1", "2")]
-		);
-
-		#[rustfmt::skip]
-		cmp(
-			&[("1", "3"), ("2", "3"), ("3", "4")],
-			&[("3", "4"), ("1", "3"), ("2", "3")]
-		);
-
-		#[rustfmt::skip]
-		cmp(
-			&[("2", "1"), ("1", "2")],
-			&[("2", "1"), ("1", "2")]
-		);
-
-		#[rustfmt::skip]
-		cmp(
-			&[("3", "2"), ("2", "1"), ("1", "3"), ("a", "b"), ("b", "c")],
-			&[("b", "c"), ("a", "b"), ("3", "2"), ("2", "1"), ("1", "3")]
-		);
-
-		#[rustfmt::skip]
-		cmp(
-			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
-			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
-		);
+		Some(Self { dir: s.ends_with('/') || s.ends_with('\\'), name: s.to_owned() })
 	}
 }
