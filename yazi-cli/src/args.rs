@@ -78,13 +78,13 @@ pub(super) enum CommandPkg {
 		/// Packages to delete.
 		#[arg(index = 1, num_args = 1..)]
 		ids:     Vec<String>,
-		/// Discard any local changes made to packages.
+		/// Discard local changes made to packages while deleting.
 		#[arg(long)]
 		discard: bool,
 	},
 	/// Install all packages.
 	Install {
-		/// Discard any local changes made to packages.
+		/// Discard local changes made to packages while installing.
 		#[arg(long)]
 		discard: bool,
 	},
@@ -95,7 +95,7 @@ pub(super) enum CommandPkg {
 		/// Packages to upgrade, upgrade all if unspecified.
 		#[arg(index = 1, num_args = 0..)]
 		ids:     Vec<String>,
-		/// Discard any local changes made to packages.
+		/// Discard local changes made to packages while upgrading.
 		#[arg(long)]
 		discard: bool,
 	},
