@@ -96,7 +96,7 @@ pub(super) enum CommandPkg {
 		#[arg(index = 1, num_args = 0..)]
 		ids:     Vec<String>,
 		/// Discard any local changes made to packages.
-		#[arg(short, long)]
+		#[arg(long)]
 		discard: bool,
 	},
 }
