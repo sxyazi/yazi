@@ -105,7 +105,10 @@ impl Image {
 		// DynamicImage::resize() behavior.
 		let (w, h) = {
 			let ratio = (w as f64 / img.width() as f64).min(h as f64 / img.height() as f64);
-			((img.width() as f64 * ratio).round() as u32, (img.height() as f64 * ratio).round() as u32)
+			(
+				(img.width() as f64 * ratio).round().max(1.0) as u32,
+				(img.height() as f64 * ratio).round().max(1.0) as u32,
+			)
 		};
 
 		let img = match img.pixel_type() {
