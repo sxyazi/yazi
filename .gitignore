@@ -12,3 +12,4 @@ result-*
 .vscode/
 
 *.snap
+.planning/
