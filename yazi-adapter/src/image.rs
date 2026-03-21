@@ -101,6 +101,13 @@ impl Image {
 	}
 
 	fn fir_resize(img: DynamicImage, w: u32, h: u32, alg: ResizeAlg) -> anyhow::Result<DynamicImage> {
+		// Preserve aspect ratio: fit within (w, h) bounds, matching the old
+		// DynamicImage::resize() behavior.
+		let (w, h) = {
+			let ratio = (w as f64 / img.width() as f64).min(h as f64 / img.height() as f64);
+			((img.width() as f64 * ratio).round() as u32, (img.height() as f64 * ratio).round() as u32)
+		};
+
 		let img = match img.pixel_type() {
 			Some(_) => img,
 			None => {
