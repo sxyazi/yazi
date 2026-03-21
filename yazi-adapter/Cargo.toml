@@ -25,6 +25,7 @@ ansi-to-tui = { workspace = true }
 anyhow      = { workspace = true }
 base64      = { workspace = true }
 crossterm   = { workspace = true }
+fast_image_resize = { version = "6.0.0", features = ["image"] }
 image       = { version = "0.25.10", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
 moxcms      = "0.8.1"
 palette     = { version = "0.7.6", default-features = false }
