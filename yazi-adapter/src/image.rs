@@ -197,3 +197,49 @@ impl Image {
 		}
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use image::RgbImage;
+
+	#[test]
+	fn test_linear_light_gray_midpoint() {
+		// 50/50 mix of black and white pixels in a 4x4 checkerboard pattern.
+		// Averaging in sRGB space gives (0+255)/2 = 128.
+		// Averaging in linear-light space gives (0.0+1.0)/2 = 0.5,
+		// which maps back to sRGB ~186 via the gamma curve.
+		let black = image::Rgb([0u8, 0, 0]);
+		let white = image::Rgb([255u8, 255, 255]);
+		let mut img = RgbImage::new(4, 4);
+		for y in 0..4 {
+			for x in 0..4 {
+				let pixel = if (x + y) % 2 == 0 { white } else { black };
+				img.put_pixel(x, y, pixel);
+			}
+		}
+		let img = DynamicImage::from(img);
+
+		// Downscale to 1x1 using Lanczos3 (default filter)
+		let alg = ResizeAlg::Convolution(fast_image_resize::FilterType::Lanczos3);
+		let result = Image::fir_resize(img, 1, 1, alg).expect("fir_resize should succeed");
+
+		// Extract the single pixel
+		let rgb = result.to_rgb8();
+		let pixel = rgb.get_pixel(0, 0);
+
+		// Linear-light-correct downscaling of a 50/50 black+white checkerboard
+		// should yield ~186, because linear 0.5 maps to sRGB ~186.
+		//
+		// If we got ~128, the linearization pipeline is broken (sRGB-space averaging).
+		let tolerance = 5u8;
+		let expected = 186u8;
+		for (i, &channel) in pixel.0.iter().enumerate() {
+			assert!(
+				channel.abs_diff(expected) <= tolerance,
+				"channel {i}: expected ~{expected} (+/-{tolerance}), got {channel}. \
+				 A value near 128 means sRGB linearization is not working."
+			);
+		}
+	}
+}

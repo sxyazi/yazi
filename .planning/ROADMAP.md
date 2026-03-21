@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md — Replace resize pipeline with linear-light fast_image_resize (dependency + code + verification)
+- [x] 01-01-PLAN.md — Replace resize pipeline with linear-light fast_image_resize (dependency + code + verification)
 
 ### Phase 2: Verification
 **Goal**: The implementation is confirmed correct across all image types, protocols, and edge cases, with at least one automated correctness test
@@ -46,7 +46,10 @@ Plans:
   2. RGBA PNG with transparency displays without color fringing on transparent edges in IIP/WezTerm
   3. EXIF-rotated JPEG (phone photo) previews with correct orientation and no quality regression
   4. `cargo test --workspace` passes with the new test included
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 02-01-PLAN.md — Add linear-light correctness unit test and visual verification checklist
 
 ## Progress
 
@@ -56,4 +59,4 @@ Phases execute in numeric order: 1 -> 2
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Implementation | 0/1 | Planned | - |
-| 2. Verification | 0/TBD | Not started | - |
+| 2. Verification | 0/1 | Planned | - |
