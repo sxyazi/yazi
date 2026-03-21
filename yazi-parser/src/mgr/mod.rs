@@ -1,4 +1,5 @@
 yazi_macro::mod_flat!(
+	bulk_exit
 	cd
 	close
 	copy
