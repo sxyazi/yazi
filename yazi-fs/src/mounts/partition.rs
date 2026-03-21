@@ -25,7 +25,7 @@ impl Partition {
 	// and should be polled for changes.
 	pub fn soundless(&self) -> bool {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
-		matches!(b, b"fuse.rclone")
+		matches!(b, b"fuse.rclone" | b"nfs4")
 	}
 
 	#[rustfmt::skip]
