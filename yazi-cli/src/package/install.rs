@@ -4,7 +4,7 @@ use super::{Dependency, Git};
 use crate::shared::must_exists;
 
 impl Dependency {
-	pub(super) async fn install(&mut self) -> Result<()> {
+	pub(super) async fn install(&mut self, discard: bool) -> Result<()> {
 		self.header("Fetching package `{name}`")?;
 
 		let path = self.local();
@@ -18,7 +18,7 @@ impl Dependency {
 			Git::checkout(&path, self.rev.trim_start_matches('=')).await?;
 		}
 
-		self.deploy().await?;
+		self.deploy(discard).await?;
 		if self.rev.is_empty() {
 			self.rev = Git::revision(&path).await?;
 		}

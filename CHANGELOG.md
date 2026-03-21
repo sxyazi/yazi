@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `ind-app-title` DDS event to customize the app title ([#3684])
 - New `ind-hidden` and `key-hidden` DDS events to change hidden status in Lua ([#3748])
 - New `marker_symbol` option to specify the symbol used for marking files ([#3689])
+- New `--discard` for `ya pkg` that discard local changes made to packages ([#3781])
+- New `bulk_exit` action that customizes the prompt for bulk operations ([#3792])
 - New `fs.unique()` creates a unique file or directory ([#3677])
 - New `download` DDS event fires when remote files are downloaded ([#3687])
 - New `ind-which-activate` DDS event to change the which component behavior ([#3608])
@@ -1686,3 +1688,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3757]: https://github.com/sxyazi/yazi/pull/3757
 [#3765]: https://github.com/sxyazi/yazi/pull/3765
 [#3780]: https://github.com/sxyazi/yazi/pull/3780
+[#3781]: https://github.com/sxyazi/yazi/pull/3781
+[#3792]: https://github.com/sxyazi/yazi/pull/3792
