@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use image::{DynamicImage, ImageDecoder, ImageError, ImageReader, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
+use fast_image_resize::images::Image as FirImage;
+use fast_image_resize::{IntoImageView, ResizeAlg, ResizeOptions, Resizer, create_srgb_mapper};
+use image::{DynamicImage, ImageDecoder, ImageError, ImageReader, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
 use yazi_emulator::Dimension;
@@ -18,7 +20,7 @@ impl Image {
 
 		let buf = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
-				img = img.resize(w, h, Self::filter());
+				img = Self::fir_resize(img, w, h, Self::resize_alg())?;
 			}
 			if orientation != Orientation::NoTransforms {
 				img.apply_orientation(orientation);
@@ -33,7 +35,7 @@ impl Image {
 				img.write_with_encoder(encoder)?;
 			}
 
-			Ok::<_, ImageError>(buf)
+			Ok::<_, anyhow::Error>(buf)
 		})
 		.await??;
 
@@ -51,14 +53,14 @@ impl Image {
 
 		let img = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
-				img = img.resize(w, h, Self::filter())
+				img = Self::fir_resize(img, w, h, Self::resize_alg())?;
 			}
 			if orientation != Orientation::NoTransforms {
 				img.apply_orientation(orientation);
 			}
-			img
+			Ok::<_, anyhow::Error>(img)
 		})
-		.await?;
+		.await??;
 
 		Ok(img)
 	}
@@ -83,14 +85,83 @@ impl Image {
 			.unwrap_or(rect)
 	}
 
-	fn filter() -> FilterType {
+	fn resize_alg() -> ResizeAlg {
+		use fast_image_resize::FilterType;
 		match YAZI.preview.image_filter.as_str() {
-			"nearest" => FilterType::Nearest,
-			"triangle" => FilterType::Triangle,
-			"catmull-rom" => FilterType::CatmullRom,
-			"gaussian" => FilterType::Gaussian,
-			"lanczos3" => FilterType::Lanczos3,
-			_ => FilterType::Triangle,
+			"nearest" => ResizeAlg::Nearest,
+			"triangle" => ResizeAlg::Convolution(FilterType::Bilinear),
+			"catmull-rom" => ResizeAlg::Convolution(FilterType::CatmullRom),
+			"gaussian" => ResizeAlg::Convolution(FilterType::Gaussian),
+			"lanczos3" => ResizeAlg::Convolution(FilterType::Lanczos3),
+			other => {
+				tracing::warn!("unknown image_filter {other:?}, falling back to lanczos3");
+				ResizeAlg::Convolution(FilterType::Lanczos3)
+			}
+		}
+	}
+
+	fn fir_resize(img: DynamicImage, w: u32, h: u32, alg: ResizeAlg) -> anyhow::Result<DynamicImage> {
+		let img = match img.pixel_type() {
+			Some(_) => img,
+			None => {
+				tracing::debug!("converting exotic pixel type to rgb8 for resize");
+				img.to_rgb8().into()
+			}
+		};
+
+		let pixel_type = img
+			.pixel_type()
+			.ok_or_else(|| anyhow::anyhow!("unsupported pixel type for fast_image_resize"))?;
+
+		if matches!(alg, ResizeAlg::Nearest) {
+			let mut dst = FirImage::new(w, h, pixel_type);
+			let mut resizer = Resizer::new();
+			resizer.resize(&img, &mut dst, &ResizeOptions::new().resize_alg(alg))?;
+			return Self::reconstruct(w, h, pixel_type, dst.into_vec());
+		}
+
+		let mapper = create_srgb_mapper();
+
+		// sRGB -> linear
+		let mut linear_src = FirImage::new(img.width(), img.height(), pixel_type);
+		mapper.forward_map(&img, &mut linear_src)?;
+
+		// Resize in linear light
+		let mut dst = FirImage::new(w, h, pixel_type);
+		let mut resizer = Resizer::new();
+		let opts = ResizeOptions::new().resize_alg(alg);
+		resizer.resize(&linear_src, &mut dst, &opts)?;
+
+		// linear -> sRGB
+		let mut srgb_dst = FirImage::new(w, h, pixel_type);
+		mapper.backward_map(&dst, &mut srgb_dst)?;
+
+		Self::reconstruct(w, h, pixel_type, srgb_dst.into_vec())
+	}
+
+	fn reconstruct(
+		w: u32,
+		h: u32,
+		pixel_type: fast_image_resize::PixelType,
+		buf: Vec<u8>,
+	) -> anyhow::Result<DynamicImage> {
+		use anyhow::Context;
+		use fast_image_resize::PixelType;
+		use image::{GrayAlphaImage, GrayImage, RgbImage, RgbaImage};
+		match pixel_type {
+			PixelType::U8 => {
+				Ok(GrayImage::from_raw(w, h, buf).context("gray reconstruct")?.into())
+			}
+			PixelType::U8x2 => {
+				Ok(GrayAlphaImage::from_raw(w, h, buf).context("graya reconstruct")?.into())
+			}
+			PixelType::U8x3 => {
+				Ok(RgbImage::from_raw(w, h, buf).context("rgb reconstruct")?.into())
+			}
+			PixelType::U8x4 => {
+				Ok(RgbaImage::from_raw(w, h, buf).context("rgba reconstruct")?.into())
+			}
+			_ => Err(anyhow::anyhow!("unexpected pixel type {pixel_type:?}")),
 		}
 	}
 
