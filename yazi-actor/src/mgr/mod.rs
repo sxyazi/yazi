@@ -1,6 +1,7 @@
 yazi_macro::mod_flat!(
 	arrow
 	back
+	bulk_exit
 	bulk_rename
 	cd
 	close

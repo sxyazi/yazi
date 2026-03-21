@@ -124,6 +124,7 @@ impl<'a> Executor<'a> {
 		on!(linemode);
 		on!(search);
 		on!(search_do);
+		on!(bulk_exit);
 		on!(bulk_rename);
 
 		// Filter
