@@ -27,7 +27,7 @@ impl Batcher {
 	{
 		let Some(path) = target.as_url().as_local() else { return };
 		if let Some(value) = self.pending.lock().get_mut(path) {
-			*value = Some(decision);
+			*value = value.or(Some(decision));
 		}
 	}
 }
