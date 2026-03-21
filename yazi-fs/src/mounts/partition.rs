@@ -25,7 +25,7 @@ impl Partition {
 	// and should be polled for changes.
 	pub fn soundless(&self) -> bool {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
-		matches!(b, b"fuse.rclone")
+		matches!(b, b"fuse.rclone" | b"nfs4")
 	}
 
 	#[rustfmt::skip]
@@ -43,6 +43,26 @@ impl Partition {
 		{
 			false
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::Partition;
+
+	#[test]
+	fn soundless_mount_types_include_nfs4() {
+		let partition =
+			Partition { fstype: Some("nfs4".into()), ..Default::default() };
+		assert!(partition.soundless());
+
+		let partition =
+			Partition { fstype: Some("fuse.rclone".into()), ..Default::default() };
+		assert!(partition.soundless());
+
+		let partition =
+			Partition { fstype: Some("ext4".into()), ..Default::default() };
+		assert!(!partition.soundless());
 	}
 }
 
