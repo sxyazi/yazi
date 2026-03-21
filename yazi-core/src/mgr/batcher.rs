@@ -1,11 +1,12 @@
 use std::{path::{Path, PathBuf}, sync::Arc};
 
+use hashbrown::HashMap;
 use parking_lot::Mutex;
 use yazi_shared::url::AsUrl;
 
 #[derive(Clone, Default)]
 pub struct Batcher {
-	pending: Arc<Mutex<(PathBuf, Option<bool>)>>,
+	pending: Arc<Mutex<HashMap<PathBuf, Option<bool>>>>,
 }
 
 impl Batcher {
@@ -13,26 +14,20 @@ impl Batcher {
 	where
 		T: Into<PathBuf>,
 	{
-		*self.pending.lock() = (target.into(), None);
+		self.pending.lock().insert(target.into(), None);
 	}
 
 	pub fn drain(&self, target: &Path) -> Option<bool> {
-		let mut pending = self.pending.lock();
-		if pending.0 != target {
-			return None;
-		}
-
-		pending.0 = PathBuf::default();
-		pending.1.take()
+		self.pending.lock().remove(target).flatten()
 	}
 
 	pub fn decide<T>(&self, target: T, decision: bool)
 	where
 		T: AsUrl,
 	{
-		let mut pending = self.pending.lock();
-		if target.as_url() == pending.0.as_url() {
-			pending.1 = Some(decision);
+		let Some(path) = target.as_url().as_local() else { return };
+		if let Some(value) = self.pending.lock().get_mut(path) {
+			*value = Some(decision);
 		}
 	}
 }

@@ -46,7 +46,6 @@ impl Actor for BulkRename {
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk");
 
-			batcher.prime(&tmp);
 			Gate::default()
 				.write(true)
 				.create_new(true)
@@ -62,6 +61,8 @@ impl Actor for BulkRename {
 					Local::regular(&tmp).remove_file().await
 				});
 			}
+
+			batcher.prime(&tmp);
 			TasksProxy::process_exec(
 				cwd.into(),
 				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
