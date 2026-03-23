@@ -50,9 +50,17 @@ impl LineIterBuilder {
 }
 
 fn parse_ansi_text<'text>(s: &'text str) -> Result<Text<'text>, ansi_to_tui::Error> {
-	// SAFETY: ansi_to_tui::to_text() returns slices into the input text data.
-	// The public API ties that borrow to the temporary method receiver instead of
-	// the original `&str`, so we widen it back to `'text`, which is the lifetime of
-	// the source string stored by `LineIter`.
-	unsafe { Ok(std::mem::transmute::<Text<'_>, Text<'text>>(s.to_text()?)) }
+	let text = s.to_text()?;
+	debug_assert!(
+		text.lines.iter().flat_map(|l| l.spans.iter()).all(|span| {
+			matches!(span.content, std::borrow::Cow::Borrowed(_))
+		}),
+		"ansi_to_tui produced Cow::Owned content; the transmute below is unsound"
+	);
+	// SAFETY: The zero-copy parser creates Spans whose content borrows from the
+	// input bytes.  The trait method's `'_` lifetime is tied to the method receiver
+	// (`&&'text str`) rather than to the underlying string data (`&'text str`), so
+	// we widen it back to `'text` here.  The debug_assert above verifies in debug
+	// builds that all Spans indeed contain Cow::Borrowed content.
+	unsafe { Ok(std::mem::transmute::<Text<'_>, Text<'text>>(text)) }
 }

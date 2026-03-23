@@ -67,8 +67,14 @@ impl<'lend, 'text> Iterator for SpanIter<'lend, 'text> {
 				}
 
 				let span = spans.next()?;
-				let Cow::Borrowed(content) = span.content else {
-					unreachable!("SpanIter only stores borrowed text")
+				let content = match &span.content {
+					Cow::Borrowed(s) => *s,
+					// Owned content cannot be safely projected to 'text: the String lives
+					// only as long as `span` (a local variable), so grapheme references
+					// would dangle after this loop iteration.  Skip the span rather than
+					// panic.  In normal usage every Span contains Cow::Borrowed text, so
+					// this branch is unreachable when the code is used correctly.
+					Cow::Owned(_) => continue,
 				};
 				*current = Some(CurrentSpan {
 					style:     line_style.patch(span.style),
