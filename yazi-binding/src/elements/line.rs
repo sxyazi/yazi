@@ -51,6 +51,12 @@ impl Line {
 	}
 }
 
+impl From<ratatui::text::Line<'static>> for Line {
+	fn from(value: ratatui::text::Line<'static>) -> Self {
+		Self { inner: value, ..Default::default() }
+	}
+}
+
 impl TryFrom<Table> for Line {
 	type Error = mlua::Error;
 
