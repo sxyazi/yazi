@@ -16,9 +16,14 @@ workspace = true
 yazi-macro = { path = "../yazi-macro", version = "26.2.2" }
 
 # External dependencies
+ansi-to-tui = { workspace = true }
 crossterm = { workspace = true }
 ratatui   = { workspace = true }
 twox-hash = { workspace = true }
+unicode-width = { workspace = true }
+
+[dependencies.unicode-segmentation]
+version = "1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

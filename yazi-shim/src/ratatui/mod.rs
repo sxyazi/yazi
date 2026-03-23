@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(paragraph);
+yazi_macro::mod_flat!(builder line span wrapper);

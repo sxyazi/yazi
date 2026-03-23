@@ -16,7 +16,7 @@ impl Utils {
 			let mut lock = PreviewLock::try_from(t)?;
 
 			let path = lock.url.as_url().unified_path();
-			let inner = match Highlighter::new(path).highlight(lock.skip, area.size()).await {
+			let inner = match Highlighter::oneshot(path, lock.skip, area.size()).await {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
 				Err(e @ PeekError::Unexpected(_)) => {
