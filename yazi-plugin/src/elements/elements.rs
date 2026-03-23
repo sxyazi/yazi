@@ -1,22 +1,22 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, iter};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, Permit, PermitRef, elements::{Line, Rect, Span, Wrap}, runtime};
-use yazi_config::{LAYOUT, YAZI};
+use yazi_config::LAYOUT;
 use yazi_proxy::AppProxy;
 use yazi_shared::replace_to_printable;
-use yazi_shim::ratatui::line_count;
+use yazi_shim::ratatui::LineIter;
 use yazi_term::YIELD_TO_SUBPROCESS;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"area" => area(lua)?,
-			b"height" => height(lua)?,
 			b"hide" => hide(lua)?,
+			b"lines" => lines(lua)?,
 			b"printable" => printable(lua)?,
 			b"redraw" => redraw(lua)?,
 			b"render" => render(lua)?,
@@ -46,21 +46,6 @@ pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 	f.into_lua(lua)
 }
 
-pub(super) fn height(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|_, (s, opts): (mlua::String, Table)| {
-		let width = opts.raw_get("width")?;
-		let wrap: Wrap = opts.raw_get("wrap")?;
-
-		Ok(if opts.raw_get("ansi")? {
-			line_count(s.to_string_lossy().to_text().into_lua_err()?, width, YAZI.preview.indent(), wrap)
-		} else {
-			line_count(s.to_string_lossy(), width, YAZI.preview.indent(), wrap)
-		})
-	})?;
-
-	f.into_lua(lua)
-}
-
 pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_async_function(|lua, ()| async move {
 		if runtime!(lua)?.blocking {
@@ -76,6 +61,31 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 
 		lua.set_named_registry_value("HIDE_PERMIT", Permit::new(permit, AppProxy::resume()))?;
 		lua.named_registry_value::<AnyUserData>("HIDE_PERMIT")
+	})?;
+
+	f.into_lua(lua)
+}
+
+pub(super) fn lines(lua: &Lua) -> mlua::Result<Value> {
+	let f = lua.create_function(|lua, (s, opts): (mlua::String, Table)| {
+		let b = s.as_bytes();
+		let s = &*String::from_utf8_lossy(&b);
+
+		let tab_size = opts.raw_get("tab_size")?;
+		let mut it = if opts.raw_get("ansi")? {
+			LineIter::parsed(s.to_text().into_lua_err()?.lines, tab_size)
+		} else {
+			LineIter::source(&s, tab_size)
+		};
+
+		if let Some(wrap) = *opts.raw_get::<Wrap>("wrap")? {
+			it = it.wrapped(wrap, opts.raw_get("width")?);
+		}
+
+		lua.create_sequence_from(iter::from_fn(|| {
+			let (spans, align) = it.next()?;
+			Some(Line::from(spans.into_static_line().alignment(align)))
+		}))
 	})?;
 
 	f.into_lua(lua)

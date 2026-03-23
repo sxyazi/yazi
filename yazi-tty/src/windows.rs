@@ -1,5 +1,4 @@
 // Copied from https://github.com/rust-lang/rust/blob/master/library/std/src/sys/pal/windows/stdio.rs
-
 use std::{mem::MaybeUninit, os::windows::io::RawHandle, str};
 
 use windows_sys::Win32::{Globalization::{CP_UTF8, MB_ERR_INVALID_CHARS, MultiByteToWideChar}, System::Console::WriteConsoleW};

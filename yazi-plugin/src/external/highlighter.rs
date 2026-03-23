@@ -1,30 +1,147 @@
-use std::{io::Cursor, path::{Path, PathBuf}, sync::OnceLock};
+use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::OnceLock};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result, bail};
 use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
-use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
-use yazi_config::{THEME, YAZI, preview::PreviewWrap};
-use yazi_fs::provider::{Provider, local::Local};
-use yazi_shared::{Ids, errors::PeekError, push_printable_char};
-use yazi_shim::ratatui::line_count;
+use yazi_config::{THEME, YAZI};
+use yazi_shared::{Id, Ids, errors::PeekError, replace_to_printable};
+use yazi_shim::ratatui::LineIter;
 
 static INCR: Ids = Ids::new();
 static SYNTECT: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
 
 pub struct Highlighter {
-	path: PathBuf,
+	path:   PathBuf,
+	reader: BufReader<std::fs::File>,
+
+	skip:   usize,
+	size:   Size,
+	ticket: Id,
+
+	theme:    &'static Theme,
+	syntaxes: &'static SyntaxSet,
+	inner:    Option<HighlightLines<'static>>,
+	syntax:   Option<&'static SyntaxReference>,
 }
 
 impl Highlighter {
-	pub fn new<P>(path: P) -> Self
+	pub async fn oneshot<P>(path: P, skip: usize, size: Size) -> Result<Text<'static>, PeekError>
 	where
 		P: Into<PathBuf>,
 	{
-		Self { path: path.into() }
+		let path = path.into();
+		tokio::task::spawn_blocking(move || Self::make(path, skip, size)?.highlight()).await?
 	}
 
-	pub fn init() -> (&'static Theme, &'static SyntaxSet) {
+	fn make<P>(path: P, skip: usize, size: Size) -> Result<Self>
+	where
+		P: Into<PathBuf>,
+	{
+		let path = path.into();
+		let (theme, syntaxes) = Self::load();
+
+		Ok(Self {
+			reader: BufReader::new(std::fs::File::open(&path)?),
+			path,
+
+			skip,
+			size,
+			ticket: INCR.current(),
+
+			theme,
+			syntaxes,
+			inner: None,
+			syntax: None,
+		})
+	}
+
+	pub fn abort() { INCR.next(); }
+
+	fn highlight(mut self) -> Result<Text<'static>, PeekError> {
+		self.load_syntax()?;
+		let mut plain = self.syntax.is_none();
+
+		let mut i = 0;
+		let mut buf = vec![];
+		let mut lines = Vec::with_capacity(self.size.height as usize);
+		let mut inspected = 0u16;
+		while self.reader.read_until(b'\n', &mut buf).is_ok_and(|n| n > 0) {
+			if Self::is_binary(&buf, &mut inspected) {
+				return Err("Binary file".into());
+			}
+
+			let remaining = Self::normalize_control_chars(&mut buf);
+			if remaining || buf.len() > 5000 {
+				plain = true;
+			}
+
+			self.ensure_not_cancelled()?;
+			if plain && !self.process_plain(&buf, &mut i, &mut lines)? {
+				break;
+			} else if !plain && !self.process_hyper(&buf, &mut i, &mut lines)? {
+				break;
+			}
+			buf.clear();
+		}
+
+		if self.skip > 0 && i < self.skip + self.size.height as usize {
+			return Err(PeekError::Exceed(i.saturating_sub(self.size.height as _)));
+		}
+
+		Ok(Text::from(lines))
+	}
+
+	fn process_plain(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+		let b = replace_to_printable(buf, true, YAZI.preview.tab_size, false);
+		let s = String::from_utf8_lossy(&b);
+
+		let mut it = LineIter::source(&s, YAZI.preview.tab_size);
+		if let Some(wrap) = YAZI.preview.wrap.into() {
+			it = it.wrapped(wrap, self.size.width);
+		}
+
+		while let Some((spans, _)) = it.next() {
+			*i += 1;
+			if *i > self.skip + self.size.height as usize {
+				return Ok(false);
+			} else if *i > self.skip {
+				lines.push(spans.into_static_line());
+			}
+			self.ensure_not_cancelled()?;
+		}
+		Ok(true)
+	}
+
+	fn process_hyper(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+		let Some(syntax) = self.syntax else { bail!("No syntax") };
+		let h = self.inner.get_or_insert_with(|| HighlightLines::new(syntax, self.theme));
+
+		let s = String::from_utf8_lossy(buf);
+		let line = Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?);
+
+		let mut it = LineIter::parsed(vec![line], YAZI.preview.tab_size);
+		if let Some(wrap) = YAZI.preview.wrap.into() {
+			it = it.wrapped(wrap, self.size.width);
+		}
+
+		while let Some((spans, _)) = it.next() {
+			*i += 1;
+			if *i > self.skip + self.size.height as usize {
+				return Ok(false);
+			} else if *i > self.skip {
+				lines.push(spans.into_static_line());
+			}
+			self.ensure_not_cancelled()?;
+		}
+		Ok(true)
+	}
+
+	#[inline]
+	fn ensure_not_cancelled(&self) -> Result<(), PeekError> {
+		if self.ticket != INCR.current() { Err("Highlighting cancelled".into()) } else { Ok(()) }
+	}
+
+	fn load() -> (&'static Theme, &'static SyntaxSet) {
 		let f = || {
 			let theme = std::fs::File::open(&THEME.mgr.syntect_theme)
 				.map_err(LoadingError::Io)
@@ -40,114 +157,24 @@ impl Highlighter {
 		(theme, syntaxes)
 	}
 
-	pub fn abort() { INCR.next(); }
-
-	pub async fn highlight(&self, skip: usize, size: Size) -> Result<Text<'static>, PeekError> {
-		let indent = YAZI.preview.indent();
-		let mut reader = BufReader::new(Local::regular(&self.path).open().await?);
-
-		let syntax = Self::find_syntax(&self.path, &mut reader).await;
-		let mut plain = syntax.is_err();
-
-		let mut before = Vec::with_capacity(if plain { 0 } else { skip });
-		let mut after = Vec::with_capacity(size.height as _);
-
-		let mut i = 0;
-		let mut buf = vec![];
-		let mut inspected = 0u16;
-		while reader.read_until(b'\n', &mut buf).await.is_ok_and(|n| n > 0) {
-			if Self::is_binary(&buf, &mut inspected) {
-				return Err("Binary file".into());
-			}
-
-			let remaining = Self::normalize_control_chars(&mut buf);
-			if !plain && (remaining || buf.len() > 5000) {
-				plain = true;
-				before.clear();
-			}
-
-			i += if i >= skip {
-				after.push(String::from_utf8_lossy(&buf).into_owned());
-				line_count(&**after.last().unwrap(), size.width, &indent, YAZI.preview.wrap)
-			} else if !plain {
-				before.push(String::from_utf8_lossy(&buf).into_owned());
-				line_count(&**before.last().unwrap(), size.width, &indent, YAZI.preview.wrap)
-			} else if YAZI.preview.wrap != PreviewWrap::No {
-				line_count(String::from_utf8_lossy(&buf), size.width, &indent, YAZI.preview.wrap)
-			} else {
-				1
-			};
-
-			buf.clear();
-			if i > skip + size.height as usize {
-				break;
-			}
+	fn load_syntax(&mut self) -> Result<()> {
+		let name = self.path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
+		if let Some(s) = self.syntaxes.find_syntax_by_extension(&name) {
+			self.syntax = Some(s);
+			return Ok(());
 		}
 
-		if skip > 0 && i < skip + size.height as usize {
-			return Err(PeekError::Exceed(i.saturating_sub(size.height as _)));
-		}
-
-		Ok(if plain {
-			Text::from(Self::merge_highlight_lines(&after, YAZI.preview.tab_size))
-		} else {
-			Self::highlight_with(before, after, syntax.unwrap()).await?
-		})
-	}
-
-	async fn highlight_with(
-		before: Vec<String>,
-		after: Vec<String>,
-		syntax: &'static SyntaxReference,
-	) -> Result<Text<'static>, PeekError> {
-		let ticket = INCR.current();
-
-		tokio::task::spawn_blocking(move || {
-			let (theme, syntaxes) = Self::init();
-			let mut h = HighlightLines::new(syntax, theme);
-
-			for line in before {
-				if ticket != INCR.current() {
-					return Err("Highlighting cancelled".into());
-				}
-				h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-			}
-
-			let indent = YAZI.preview.indent();
-			let mut lines = Vec::with_capacity(after.len());
-			for line in after {
-				if ticket != INCR.current() {
-					return Err("Highlighting cancelled".into());
-				}
-
-				let regions = h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-				lines.push(Self::to_line_widget(regions, &indent));
-			}
-
-			Ok(Text::from(lines))
-		})
-		.await?
-	}
-
-	async fn find_syntax(
-		path: &Path,
-		reader: &mut BufReader<tokio::fs::File>,
-	) -> Result<&'static SyntaxReference> {
-		let (_, syntaxes) = Self::init();
-		let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
-		if let Some(s) = syntaxes.find_syntax_by_extension(&name) {
-			return Ok(s);
-		}
-
-		let ext = path.extension().map(|e| e.to_string_lossy()).unwrap_or_default();
-		if let Some(s) = syntaxes.find_syntax_by_extension(&ext) {
-			return Ok(s);
+		let ext = self.path.extension().map(|e| e.to_string_lossy()).unwrap_or_default();
+		if let Some(s) = self.syntaxes.find_syntax_by_extension(&ext) {
+			self.syntax = Some(s);
+			return Ok(());
 		}
 
 		let mut line = String::new();
-		reader.read_line(&mut line).await?;
-		reader.rewind().await?;
-		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
+		self.reader.read_line(&mut line)?;
+		self.reader.rewind()?;
+		self.syntax = self.syntaxes.find_syntax_by_first_line(&line);
+		Ok(())
 	}
 
 	#[inline(always)]
@@ -177,50 +204,35 @@ impl Highlighter {
 		}
 		remaining
 	}
-
-	fn merge_highlight_lines(s: &[String], tab_size: u8) -> String {
-		let mut buf = Vec::new();
-		buf.reserve_exact(s.iter().map(|s| s.len()).sum::<usize>() | 15);
-
-		for &b in s.iter().flat_map(|s| s.as_bytes()) {
-			push_printable_char(&mut buf, b, true, tab_size, false);
-		}
-		unsafe { String::from_utf8_unchecked(buf) }
-	}
 }
 
 impl Highlighter {
-	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>, indent: &str) -> Line<'static> {
-		let spans: Vec<_> = regions
-			.into_iter()
-			.map(|(style, s)| {
-				let mut modifier = ratatui::style::Modifier::empty();
-				if style.font_style.contains(highlighting::FontStyle::BOLD) {
-					modifier |= ratatui::style::Modifier::BOLD;
-				}
-				if style.font_style.contains(highlighting::FontStyle::ITALIC) {
-					modifier |= ratatui::style::Modifier::ITALIC;
-				}
-				if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
-					modifier |= ratatui::style::Modifier::UNDERLINED;
-				}
+	fn to_line_widget<'a>(regions: Vec<(highlighting::Style, &'a str)>) -> Line<'a> {
+		Line::from_iter(regions.into_iter().map(|(style, s)| {
+			let mut modifier = ratatui::style::Modifier::empty();
+			if style.font_style.contains(highlighting::FontStyle::BOLD) {
+				modifier |= ratatui::style::Modifier::BOLD;
+			}
+			if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+				modifier |= ratatui::style::Modifier::ITALIC;
+			}
+			if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+				modifier |= ratatui::style::Modifier::UNDERLINED;
+			}
 
-				Span {
-					content: s.replace('\t', indent).into(),
-					style:   ratatui::style::Style {
-						fg: Self::to_ansi_color(style.foreground),
-						// bg: Self::to_ansi_color(style.background),
-						add_modifier: modifier,
-						..Default::default()
-					},
-				}
-			})
-			.collect();
-
-		Line::from(spans)
+			Span {
+				content: s.into(),
+				style:   ratatui::style::Style {
+					fg: Self::to_ansi_color(style.foreground),
+					// bg: Self::to_ansi_color(style.background),
+					add_modifier: modifier,
+					..Default::default()
+				},
+			}
+		}))
 	}
 
-	// Copy from https://github.com/sharkdp/bat/blob/master/src/terminal.rs
+	// Copied from https://github.com/sharkdp/bat/blob/master/src/terminal.rs
 	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
 		if color.a == 0 {
 			// Themes can specify one of the user-configurable terminal colors by

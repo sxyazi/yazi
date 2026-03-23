@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Reduce memory allocations by using Lua 5.5 external strings ([#3634])
 - Reuse previewed and spotted widgets when possible ([#3765])
+- Avoid unnecessary allocations in code highlighting ([#3804])
 
 ## [v26.1.22]
 
@@ -1690,3 +1691,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3780]: https://github.com/sxyazi/yazi/pull/3780
 [#3781]: https://github.com/sxyazi/yazi/pull/3781
 [#3792]: https://github.com/sxyazi/yazi/pull/3792
+[#3804]: https://github.com/sxyazi/yazi/pull/3804
