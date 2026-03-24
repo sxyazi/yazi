@@ -1,10 +1,8 @@
 // Copied from https://github.com/ratatui/ratatui/blob/main/ratatui-widgets/src/reflow.rs
 use std::{collections::VecDeque, mem};
 
-use ratatui::layout::Alignment;
+use ratatui::{layout::Alignment, text::StyledGrapheme};
 use unicode_width::UnicodeWidthStr;
-
-use crate::ratatui::StyledGrapheme;
 
 pub trait LineComposer<'a> {
 	fn next_line<'lend>(&'lend mut self) -> Option<WrappedLine<'lend, 'a>>;

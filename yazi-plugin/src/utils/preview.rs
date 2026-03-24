@@ -1,6 +1,5 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Error, elements::{Area, Renderable, Text}};
-use yazi_config::YAZI;
 use yazi_fs::FsUrl;
 use yazi_parser::mgr::{PreviewLock, UpdatePeekedOpt};
 use yazi_proxy::MgrProxy;
@@ -24,12 +23,7 @@ impl Utils {
 				}
 			};
 
-			lock.data = vec![Renderable::Text(Text {
-				area,
-				inner,
-				wrap: YAZI.preview.wrap.into(),
-				scroll: Default::default(),
-			})];
+			lock.data = vec![Renderable::Text(Text { area, inner, ..Default::default() })];
 
 			MgrProxy::update_peeked(UpdatePeekedOpt { lock });
 			().into_lua_multi(&lua)
