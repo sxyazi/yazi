@@ -7,7 +7,7 @@ Status = {
 	_inc = 1000,
 	_left = {
 		{ "mode", id = 1, order = 1000 },
-		{ "size", id = 2, order = 2000 },
+		{ "length", id = 2, order = 2000 },
 		{ "name", id = 3, order = 3000 },
 	},
 	_right = {
@@ -47,9 +47,9 @@ function Status:mode()
 	}
 end
 
-function Status:size()
+function Status:length()
 	local h = self._current.hovered
-	local size = h and (h:size() or h.cha.len) or 0
+	local size = h and h.cha.len or 0
 
 	local style = self:style()
 	return ui.Line {
