@@ -71,9 +71,12 @@ pub(super) fn lines(lua: &Lua) -> mlua::Result<Value> {
 		let b = s.as_bytes();
 		let s = &*String::from_utf8_lossy(&b);
 
+		let parsed;
 		let tab_size = opts.raw_get("tab_size")?;
+
 		let mut it = if opts.raw_get("ansi")? {
-			LineIter::parsed(s.to_text().into_lua_err()?.lines, tab_size)
+			parsed = s.to_text().into_lua_err()?.lines;
+			LineIter::parsed(&parsed, tab_size)
 		} else {
 			LineIter::source(&s, tab_size)
 		};

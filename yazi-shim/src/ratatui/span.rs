@@ -1,14 +1,18 @@
-use std::{borrow::Cow, slice::Iter, vec::IntoIter};
+use std::slice::Iter;
 
-use ratatui::{style::Style, text::{Line, Span}};
+use ratatui::{style::Style, text::{Line, Span, StyledGrapheme}};
 use unicode_segmentation::{Graphemes, UnicodeSegmentation};
-
-use crate::ratatui::StyledGrapheme;
 
 #[allow(private_interfaces)]
 pub enum SpanIter<'lend, 'text> {
+	Span {
+		style:        Style,
+		graphemes:    Graphemes<'text>,
+		tab_size:     u8,
+		pending_tabs: u8,
+	},
 	Line {
-		spans:         IntoIter<Span<'text>>,
+		spans:         Iter<'lend, Span<'text>>,
 		line_style:    Style,
 		current:       Option<CurrentSpan<'text>>,
 		tab_size:      u8,
@@ -19,10 +23,14 @@ pub enum SpanIter<'lend, 'text> {
 }
 
 impl<'lend, 'text> SpanIter<'lend, 'text> {
-	pub(super) fn new(line: Line<'text>, tab_size: u8) -> Self {
+	pub(super) fn from_span(source: &'text str, style: Style, tab_size: u8) -> Self {
+		Self::Span { style, graphemes: source.graphemes(true), tab_size, pending_tabs: 0 }
+	}
+
+	pub(super) fn from_line(spans: &'lend [Span<'text>], line_style: Style, tab_size: u8) -> Self {
 		Self::Line {
-			spans: line.spans.into_iter(),
-			line_style: line.style,
+			spans: spans.iter(),
+			line_style,
 			current: None,
 			tab_size,
 			pending_tabs: 0,
@@ -31,16 +39,34 @@ impl<'lend, 'text> SpanIter<'lend, 'text> {
 	}
 
 	pub fn into_static_line(self) -> Line<'static> {
-		Line::from_iter(self.map(|g| Span { style: g.style, content: g.symbol.into_owned().into() }))
+		Line::from_iter(self.map(|g| Span { style: g.style, content: g.symbol.to_owned().into() }))
 	}
 }
 
-impl<'lend, 'text> Iterator for SpanIter<'lend, 'text> {
+impl<'lend, 'text> Iterator for SpanIter<'lend, 'text>
+where
+	'lend: 'text,
+{
 	type Item = StyledGrapheme<'text>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		match self {
-			Self::Wrapped(inner) => inner.next().cloned(),
+			Self::Span { style, graphemes, tab_size, pending_tabs } => {
+				if *pending_tabs > 0 {
+					*pending_tabs -= 1;
+					return Some(StyledGrapheme::new(" ", *style));
+				}
+
+				loop {
+					let symbol = graphemes.next()?;
+					if symbol != "\t" {
+						return Some(StyledGrapheme::new(symbol, *style));
+					} else if let Some(n) = tab_size.checked_sub(1) {
+						*pending_tabs = n;
+						return Some(StyledGrapheme::new(" ", *style));
+					}
+				}
+			}
 			Self::Line { spans, line_style, current, tab_size, pending_tabs, pending_style } => loop {
 				if *pending_tabs > 0 {
 					*pending_tabs -= 1;
@@ -48,54 +74,31 @@ impl<'lend, 'text> Iterator for SpanIter<'lend, 'text> {
 				}
 
 				if let Some(span) = current
-					&& let Some(symbol) = span.next_symbol()
+					&& let Some(symbol) = span.graphemes.next()
 				{
-					if symbol == "\t" {
-						if *tab_size == 0 {
-							continue;
-						}
-
-						*pending_tabs = tab_size.saturating_sub(1);
-						*pending_style = span.style();
-						return Some(StyledGrapheme::new(" ", span.style()));
+					if symbol != "\t" {
+						return Some(StyledGrapheme::new(symbol, span.style));
+					} else if let Some(n) = tab_size.checked_sub(1) {
+						*pending_tabs = n;
+						*pending_style = span.style;
+						return Some(StyledGrapheme::new(" ", span.style));
 					}
-
-					return Some(StyledGrapheme::new(symbol, span.style()));
+					continue;
 				}
 
 				let span = spans.next()?;
-				*current = Some(match span.content {
-					Cow::Borrowed(content) => CurrentSpan::Borrowed {
-						style:     line_style.patch(span.style),
-						graphemes: content.graphemes(true),
-					},
-					Cow::Owned(content) => CurrentSpan::Owned {
-						style:     line_style.patch(span.style),
-						graphemes: content.graphemes(true).map(str::to_owned).collect::<Vec<_>>().into_iter(),
-					},
+				*current = Some(CurrentSpan {
+					style:     line_style.patch(span.style),
+					graphemes: span.content.graphemes(true),
 				});
 			},
+			Self::Wrapped(inner) => inner.next().cloned(),
 		}
 	}
 }
 
 // --- CurrentSpan
-enum CurrentSpan<'text> {
-	Borrowed { style: Style, graphemes: Graphemes<'text> },
-	Owned { style: Style, graphemes: IntoIter<String> },
-}
-
-impl<'text> CurrentSpan<'text> {
-	fn style(&self) -> Style {
-		match self {
-			Self::Borrowed { style, .. } | Self::Owned { style, .. } => *style,
-		}
-	}
-
-	fn next_symbol(&mut self) -> Option<Cow<'text, str>> {
-		match self {
-			Self::Borrowed { graphemes, .. } => graphemes.next().map(Cow::Borrowed),
-			Self::Owned { graphemes, .. } => graphemes.next().map(Cow::Owned),
-		}
-	}
+struct CurrentSpan<'text> {
+	style:     Style,
+	graphemes: Graphemes<'text>,
 }

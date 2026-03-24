@@ -8,7 +8,6 @@ use yazi_shared::{Id, Ids, errors::PeekError, replace_to_printable};
 use yazi_shim::ratatui::LineIter;
 
 static INCR: Ids = Ids::new();
-static SYNTECT: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
 
 pub struct Highlighter {
 	path:   PathBuf,
@@ -37,8 +36,10 @@ impl Highlighter {
 	where
 		P: Into<PathBuf>,
 	{
+		static CACHE: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
+
 		let path = path.into();
-		let (theme, syntaxes) = Self::load();
+		let (theme, syntaxes) = CACHE.get_or_init(Self::load);
 
 		Ok(Self {
 			reader: BufReader::new(std::fs::File::open(&path)?),
@@ -117,9 +118,9 @@ impl Highlighter {
 		let h = self.inner.get_or_insert_with(|| HighlightLines::new(syntax, self.theme));
 
 		let s = String::from_utf8_lossy(buf);
-		let line = Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?);
+		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 
-		let mut it = LineIter::parsed(vec![line], YAZI.preview.tab_size);
+		let mut it = LineIter::parsed(&line, YAZI.preview.tab_size);
 		if let Some(wrap) = YAZI.preview.wrap.into() {
 			it = it.wrapped(wrap, self.size.width);
 		}
@@ -141,20 +142,15 @@ impl Highlighter {
 		if self.ticket != INCR.current() { Err("Highlighting cancelled".into()) } else { Ok(()) }
 	}
 
-	fn load() -> (&'static Theme, &'static SyntaxSet) {
-		let f = || {
-			let theme = std::fs::File::open(&THEME.mgr.syntect_theme)
-				.map_err(LoadingError::Io)
-				.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
-				.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuilt::ansi_theme())));
+	fn load() -> (Theme, SyntaxSet) {
+		let theme = std::fs::File::open(&THEME.mgr.syntect_theme)
+			.map_err(LoadingError::Io)
+			.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
+			.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuilt::ansi_theme())));
 
-			let syntaxes = dumps::from_uncompressed_data(yazi_prebuilt::syntaxes());
+		let syntaxes = dumps::from_uncompressed_data(yazi_prebuilt::syntaxes());
 
-			(theme.unwrap(), syntaxes.unwrap())
-		};
-
-		let (theme, syntaxes) = SYNTECT.get_or_init(f);
-		(theme, syntaxes)
+		(theme.unwrap(), syntaxes.unwrap())
 	}
 
 	fn load_syntax(&mut self) -> Result<()> {
