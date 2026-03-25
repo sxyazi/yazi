@@ -3,6 +3,7 @@ yazi_macro::mod_flat!(
 	bootstrap
 	deprecate
 	focus
+	lua
 	mouse
 	plugin
 	plugin_do

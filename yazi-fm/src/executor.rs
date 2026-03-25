@@ -45,6 +45,7 @@ impl<'a> Executor<'a> {
 		on!(plugin);
 		on!(plugin_do);
 		on!(update_progress);
+		on!(lua);
 		on!(deprecate);
 		on!(quit);
 
@@ -156,6 +157,8 @@ impl<'a> Executor<'a> {
 			"help" => act!(help:toggle, cx, Layer::Mgr),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
+			// Lua
+			"lua" => act!(app:lua, cx, action),
 			_ => succ!(),
 		}
 	}
@@ -186,6 +189,8 @@ impl<'a> Executor<'a> {
 			"help" => act!(help:toggle, cx, Layer::Tasks),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
+			// Lua
+			"lua" => act!(app:lua, cx, action),
 			_ => succ!(),
 		}
 	}
@@ -211,6 +216,8 @@ impl<'a> Executor<'a> {
 			"help" => act!(help:toggle, cx, Layer::Spot),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
+			// Lua
+			"lua" => act!(app:lua, cx, action),
 			_ => succ!(),
 		}
 	}
@@ -235,6 +242,8 @@ impl<'a> Executor<'a> {
 			"help" => act!(help:toggle, cx, Layer::Pick),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
+			// Lua
+			"lua" => act!(app:lua, cx, action),
 			_ => succ!(),
 		}
 	}
@@ -262,6 +271,8 @@ impl<'a> Executor<'a> {
 					"help" => return act!(help:toggle, cx, Layer::Input),
 					// Plugin
 					"plugin" => return act!(app:plugin, cx, action),
+					// Lua
+					"lua" => return act!(app:lua, cx, action),
 					_ => {}
 				}
 			}
@@ -312,6 +323,8 @@ impl<'a> Executor<'a> {
 			"close" => act!(help:toggle, cx, Layer::Help),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
+			// Lua
+			"lua" => act!(app:lua, cx, action),
 			_ => succ!(),
 		}
 	}
@@ -337,6 +350,8 @@ impl<'a> Executor<'a> {
 			"help" => act!(help:toggle, cx, Layer::Cmp),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
+			// Lua
+			"lua" => act!(app:lua, cx, action),
 			_ => succ!(),
 		}
 	}

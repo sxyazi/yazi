@@ -12,6 +12,7 @@ pub enum Spark<'a> {
 	AppBootstrap(yazi_parser::VoidOpt),
 	AppDeprecate(yazi_parser::app::DeprecateOpt),
 	AppFocus(yazi_parser::VoidOpt),
+	AppLua(yazi_parser::app::LuaOpt),
 	AppMouse(yazi_parser::app::MouseOpt),
 	AppPlugin(yazi_parser::app::PluginOpt),
 	AppPluginDo(yazi_parser::app::PluginOpt),
@@ -194,6 +195,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppBootstrap(b) => b.into_lua(lua),
 			Self::AppDeprecate(b) => b.into_lua(lua),
 			Self::AppFocus(b) => b.into_lua(lua),
+			Self::AppLua(b) => b.into_lua(lua),
 			Self::AppMouse(b) => b.into_lua(lua),
 			Self::AppPlugin(b) => b.into_lua(lua),
 			Self::AppPluginDo(b) => b.into_lua(lua),
@@ -364,6 +366,7 @@ try_from_spark!(
 // App
 try_from_spark!(yazi_parser::ArrowOpt, mgr:arrow, mgr:tab_swap);
 try_from_spark!(yazi_parser::app::DeprecateOpt, app:deprecate);
+try_from_spark!(yazi_parser::app::LuaOpt, app:lua);
 try_from_spark!(yazi_parser::app::MouseOpt, app:mouse);
 try_from_spark!(yazi_parser::app::PluginOpt, app:plugin, app:plugin_do);
 try_from_spark!(yazi_parser::app::QuitOpt, app:quit, mgr:quit);

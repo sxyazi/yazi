@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Custom tab name ([#3666])
 - New `--in` for `search` action to set search directory ([#3696])
 - Multi-file spotter ([#3733])
+- Vim-like `lua` action that runs an inline Lua snippet ([#1234])
 - Certificate authentication for SFTP VFS provider ([#3716])
 - New `hovered` condition specifying different icons for hovered files ([#3728])
 - Allow using `ps.sub()` in `init.lua` directly without a plugin ([#3638])
