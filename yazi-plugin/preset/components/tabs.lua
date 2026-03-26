@@ -26,9 +26,9 @@ function Tabs:redraw()
 		local name = ui.truncate(string.format(" %d %s ", i, cx.tabs[i].name), { max = max })
 		if i == cx.tabs.idx then
 			lines[#lines + 1] = ui.Line {
-				ui.Span(th.tabs.sep_inner.open):style(th.tabs.inactive),
+				ui.Span(th.tabs.sep_inner.open):fg(th.tabs.active:bg()):bg(th.tabs.inactive:bg()),
 				ui.Span(name):style(th.tabs.active),
-				ui.Span(th.tabs.sep_inner.close):style(th.tabs.inactive),
+				ui.Span(th.tabs.sep_inner.close):fg(th.tabs.active:bg()):bg(th.tabs.inactive:bg()),
 			}
 		else
 			lines[#lines + 1] = ui.Line(name):style(th.tabs.inactive)
