@@ -3,11 +3,12 @@ local M = {}
 function M.msg(job, s) ya.preview_widget(job, ui.Text(ui.Line(s):reverse()):area(job.area):wrap(ui.Wrap.YES)) end
 
 function M:peek(job)
-	if not job.file.url:starts_with("/proc/") then
+	local url = job.file.url
+	if not url:starts_with("/sys/") and not url:starts_with("/proc/") then
 		return self.msg(job, "Empty file")
 	end
 
-	local fd, err = fs.access():read(true):open(job.file.url)
+	local fd, err = fs.access():read(true):open(url)
 	if not fd then
 		return self.msg(job, "Failed to open file: " .. err)
 	end
@@ -20,7 +21,7 @@ function M:peek(job)
 	elseif lines.n == 0 then
 		self.msg(job, "Empty file")
 	elseif job.skip > 0 and lines.n < job.skip + job.area.h then
-		ya.emit("peek", { math.max(0, lines.n - job.area.h), only_if = job.file.url, upper_bound = true })
+		ya.emit("peek", { math.max(0, lines.n - job.area.h), only_if = url, upper_bound = true })
 	else
 		ya.preview_widget(job, ui.Text(lines):area(job.area))
 	end
