@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Escape;
 
 impl Actor for Escape {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		if cx.help.keyword().is_none() {
 			return act!(help:toggle, cx, cx.help.layer);
 		}

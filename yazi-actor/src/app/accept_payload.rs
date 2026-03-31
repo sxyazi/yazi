@@ -13,7 +13,7 @@ use crate::{Actor, Ctx};
 pub struct AcceptPayload;
 
 impl Actor for AcceptPayload {
-	type Options = Payload<'static>;
+	type Form = Payload<'static>;
 
 	const NAME: &str = "accept_payload";
 

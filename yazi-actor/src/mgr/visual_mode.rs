@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct VisualMode;
 
 impl Actor for VisualMode {
-	type Options = VisualModeForm;
+	type Form = VisualModeForm;
 
 	const NAME: &str = "visual_mode";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
 		let idx = tab.current.cursor;

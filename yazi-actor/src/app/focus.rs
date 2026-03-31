@@ -9,9 +9,9 @@ use crate::Actor;
 pub struct Focus;
 
 impl Actor for Focus {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "focus";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> { act!(mgr:refresh, cx) }
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> { act!(mgr:refresh, cx) }
 }

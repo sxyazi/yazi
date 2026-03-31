@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Back;
 
 impl Actor for Back {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "back";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		if let Some(u) = cx.tab_mut().backstack.shift_backward().cloned() {
 			act!(mgr:cd, cx, (u, CdSource::Back))?;
 		}

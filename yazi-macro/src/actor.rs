@@ -25,12 +25,12 @@ macro_rules! act {
 	}};
 
 	($layer:ident : $name:ident, $cx:ident, $action:expr) => {
-		<act!($layer:$name) as yazi_actor::Actor>::Options::try_from($action)
+		<act!($layer:$name) as yazi_actor::Actor>::Form::try_from($action)
 			.map_err(anyhow::Error::from)
 			.and_then(|opt| act!(@impl $layer:$name, $cx, opt))
 	};
 	($layer:ident : $name:ident, $cx:ident) => {
-		act!($layer:$name, $cx, <<act!($layer:$name) as yazi_actor::Actor>::Options as Default>::default())
+		act!($layer:$name, $cx, <<act!($layer:$name) as yazi_actor::Actor>::Form as Default>::default())
 	};
 	($layer:ident : $name:ident) => {
 		paste::paste! { yazi_actor::$layer::[<$name:camel>] }

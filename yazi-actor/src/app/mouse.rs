@@ -15,11 +15,11 @@ use crate::{Actor, Ctx};
 pub struct Mouse;
 
 impl Actor for Mouse {
-	type Options = MouseForm;
+	type Form = MouseForm;
 
 	const NAME: &str = "mouse";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let event = yazi_binding::MouseEvent::from(opt.event);
 
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };

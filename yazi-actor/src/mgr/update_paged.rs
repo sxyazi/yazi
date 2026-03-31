@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct UpdatePaged;
 
 impl Actor for UpdatePaged {
-	type Options = UpdatePagedForm;
+	type Form = UpdatePagedForm;
 
 	const NAME: &str = "update_paged";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.only_if.is_some_and(|u| u != *cx.cwd()) {
 			succ!();
 		}

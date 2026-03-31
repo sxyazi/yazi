@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct UpdatePeeked;
 
 impl Actor for UpdatePeeked {
-	type Options = UpdatePeekedForm;
+	type Form = UpdatePeekedForm;
 
 	const NAME: &str = "update_peeked";
 
-	fn act(cx: &mut Ctx, form: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered().map(|h| &h.url) else {
 			succ!(cx.tab_mut().preview.reset());
 		};

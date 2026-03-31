@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct ProcessOpen;
 
 impl Actor for ProcessOpen {
-	type Options = ProcessOpenForm;
+	type Form = ProcessOpenForm;
 
 	const NAME: &str = "process_open";
 
-	fn act(cx: &mut Ctx, form: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let done = cx.tasks.scheduler.process_open(form.opt);
 
 		if let Some(replier) = form.replier {

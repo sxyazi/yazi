@@ -12,11 +12,11 @@ use crate::Actor;
 pub struct Title;
 
 impl Actor for Title {
-	type Options = TitleForm;
+	type Form = TitleForm;
 
 	const NAME: &str = "title";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let s = opt.value.unwrap_or_else(|| format!("Yazi: {}", cx.tab().name()).into());
 		execute!(TTY.writer(), SetTitle(&s))?;
 
@@ -24,7 +24,7 @@ impl Actor for Title {
 		succ!()
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndAppTitle),
 			_ => None,

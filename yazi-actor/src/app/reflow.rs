@@ -13,11 +13,11 @@ use crate::{Actor, Ctx};
 pub struct Reflow;
 
 impl Actor for Reflow {
-	type Options = ReflowForm;
+	type Form = ReflowForm;
 
 	const NAME: &str = "reflow";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
 

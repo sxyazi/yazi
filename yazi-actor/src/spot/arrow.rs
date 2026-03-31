@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Arrow;
 
 impl Actor for Arrow {
-	type Options = ArrowForm;
+	type Form = ArrowForm;
 
 	const NAME: &str = "arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let spot = &mut cx.tab_mut().spot;
 		let Some(lock) = &mut spot.lock else { succ!() };
 

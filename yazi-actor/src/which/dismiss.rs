@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Dismiss;
 
 impl Actor for Dismiss {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "dismiss";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		succ!(cx.which.dismiss(None));
 	}
 }

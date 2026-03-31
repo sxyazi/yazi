@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Filter;
 
 impl Actor for Filter {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "filter";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let help = &mut cx.help;
 
 		help.in_filter = Some(Default::default());

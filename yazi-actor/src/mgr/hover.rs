@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Hover;
 
 impl Actor for Hover {
-	type Options = HoverForm;
+	type Form = HoverForm;
 
 	const NAME: &str = "hover";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = tab!(cx);
 
 		// Parent should always track CWD

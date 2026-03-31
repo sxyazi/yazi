@@ -19,11 +19,11 @@ use crate::{Actor, Ctx};
 pub struct Search;
 
 impl Actor for Search {
-	type Options = SearchForm;
+	type Form = SearchForm;
 
 	const NAME: &str = "search";
 
-	fn act(cx: &mut Ctx, Self::Options { mut opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { mut opt }: Self::Form) -> Result<Data> {
 		if let Some(handle) = cx.tab_mut().search.take() {
 			handle.abort();
 		}
@@ -45,11 +45,11 @@ impl Actor for Search {
 pub struct SearchDo;
 
 impl Actor for SearchDo {
-	type Options = SearchForm;
+	type Form = SearchForm;
 
 	const NAME: &str = "search_do";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		if let Some(handle) = tab.search.take() {
 			handle.abort();
@@ -103,11 +103,11 @@ impl Actor for SearchDo {
 pub struct SearchStop;
 
 impl Actor for SearchStop {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "search_stop";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		if let Some(handle) = tab.search.take() {
 			handle.abort();

@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct UpdateSucceed;
 
 impl Actor for UpdateSucceed {
-	type Options = UpdateSucceedForm;
+	type Form = UpdateSucceedForm;
 
 	const NAME: &str = "update_succeed";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.urls.is_empty() {
 			succ!();
 		}

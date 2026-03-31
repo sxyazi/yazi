@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Leave;
 
 impl Actor for Leave {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "leave";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let url = cx
 			.hovered()
 			.and_then(|h| h.url.parent())

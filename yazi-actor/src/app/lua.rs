@@ -11,11 +11,11 @@ use crate::{Actor, Ctx, lives::Lives};
 pub struct Lua;
 
 impl Actor for Lua {
-	type Options = LuaForm;
+	type Form = LuaForm;
 
 	const NAME: &str = "lua";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let chunk = LUA.load(&*opt.code).set_name("anonymous");
 		let result = Lives::scope(cx.core, || {
 			runtime_scope!(LUA, "inline", Sendable::value_to_data(&LUA, chunk.eval()?))

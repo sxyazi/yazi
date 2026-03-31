@@ -14,11 +14,11 @@ use crate::{Actor, Ctx};
 pub struct Trigger;
 
 impl Actor for Trigger {
-	type Options = TriggerForm;
+	type Form = TriggerForm;
 
 	const NAME: &str = "trigger";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.ticket.is_some_and(|t| t != cx.cmp.ticket) {
 			succ!();
 		} else if opt.ticket.is_none() {

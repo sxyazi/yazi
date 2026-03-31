@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Arrow;
 
 impl Actor for Arrow {
-	type Options = ArrowForm;
+	type Form = ArrowForm;
 
 	const NAME: &str = "arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let confirm = &mut cx.core.confirm;
 
 		let area = cx.core.mgr.area(confirm.position);

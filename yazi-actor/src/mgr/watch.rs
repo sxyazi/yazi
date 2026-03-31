@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Watch;
 
 impl Actor for Watch {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "watch";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let it = iter::once(cx.core.mgr.tabs.active().cwd())
 			.chain(cx.core.mgr.tabs.parent().map(|p| &p.url))
 			.chain(cx.core.mgr.tabs.hovered().filter(|h| h.is_dir()).map(|h| &h.url));

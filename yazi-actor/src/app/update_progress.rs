@@ -9,11 +9,11 @@ use crate::Actor;
 pub struct UpdateProgress;
 
 impl Actor for UpdateProgress {
-	type Options = UpdateProgressForm;
+	type Form = UpdateProgressForm;
 
 	const NAME: &str = "update_progress";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		// Update the progress of all tasks.
 		let tasks = &mut cx.tasks;
 		let progressed = tasks.summary != opt.summary;

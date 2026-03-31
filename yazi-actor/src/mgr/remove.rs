@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Remove;
 
 impl Actor for Remove {
-	type Options = RemoveForm;
+	type Form = RemoveForm;
 
 	const NAME: &str = "remove";
 
-	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, mut opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		opt.targets = if opt.hovered {
@@ -48,11 +48,11 @@ impl Actor for Remove {
 pub struct RemoveDo;
 
 impl Actor for RemoveDo {
-	type Options = RemoveForm;
+	type Form = RemoveForm;
 
 	const NAME: &str = "remove_do";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.mgr;
 
 		mgr.tabs.iter_mut().for_each(|t| {

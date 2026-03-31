@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct FindArrow;
 
 impl Actor for FindArrow {
-	type Options = FindArrowForm;
+	type Form = FindArrowForm;
 
 	const NAME: &str = "find_arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		let Some(finder) = &mut tab.finder else { succ!() };
 

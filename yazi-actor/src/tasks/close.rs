@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Close;
 
 impl Actor for Close {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tasks = &mut cx.tasks;
 		if !tasks.visible {
 			succ!();

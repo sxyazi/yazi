@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Linemode;
 
 impl Actor for Linemode {
-	type Options = LinemodeForm;
+	type Form = LinemodeForm;
 
 	const NAME: &str = "linemode";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
 		if opt.new != tab.pref.linemode {

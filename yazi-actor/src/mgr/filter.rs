@@ -16,11 +16,11 @@ use crate::{Actor, Ctx};
 pub struct Filter;
 
 impl Actor for Filter {
-	type Options = FilterForm;
+	type Form = FilterForm;
 
 	const NAME: &str = "filter";
 
-	fn act(_: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(_: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let input = InputProxy::show(InputCfg::filter());
 
 		tokio::spawn(async move {

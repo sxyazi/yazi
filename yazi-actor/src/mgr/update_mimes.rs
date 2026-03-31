@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct UpdateMimes;
 
 impl Actor for UpdateMimes {
-	type Options = UpdateMimesForm;
+	type Form = UpdateMimesForm;
 
 	const NAME: &str = "update_mimes";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let linked = LINKED.read();
 		let updates = opt
 			.updates

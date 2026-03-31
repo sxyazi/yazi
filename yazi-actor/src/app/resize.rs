@@ -9,11 +9,11 @@ use crate::Actor;
 pub struct Resize;
 
 impl Actor for Resize {
-	type Options = ReflowForm;
+	type Form = ReflowForm;
 
 	const NAME: &str = "resize";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(app:reflow, cx, opt)?;
 
 		cx.current_mut().arrow(0);

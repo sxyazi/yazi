@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Cancel;
 
 impl Actor for Cancel {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "cancel";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tasks = &mut cx.tasks;
 
 		let id = tasks.scheduler.ongoing.lock().get_id(tasks.cursor);

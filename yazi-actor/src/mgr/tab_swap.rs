@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct TabSwap;
 
 impl Actor for TabSwap {
-	type Options = ArrowForm;
+	type Form = ArrowForm;
 
 	const NAME: &str = "tab_swap";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tabs = cx.tabs_mut();
 
 		let new = opt.step.add(tabs.cursor, tabs.len(), 0);

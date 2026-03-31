@@ -18,11 +18,11 @@ use crate::{Actor, Ctx};
 pub struct Cd;
 
 impl Actor for Cd {
-	type Options = CdForm;
+	type Form = CdForm;
 
 	const NAME: &str = "cd";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 		if opt.interactive {
 			return Self::cd_interactive(cx);

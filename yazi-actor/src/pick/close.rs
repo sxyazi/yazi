@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Close;
 
 impl Actor for Close {
-	type Options = CloseForm;
+	type Form = CloseForm;
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let pick = &mut cx.pick;
 		if let Some(cb) = pick.callback.take() {
 			_ = cb.send(if opt.submit { Some(pick.cursor) } else { None });

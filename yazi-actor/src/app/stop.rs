@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Stop;
 
 impl Actor for Stop {
-	type Options = StopForm;
+	type Form = StopForm;
 
 	const NAME: &str = "stop";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		cx.active_mut().preview.reset_image();
 
 		// We need to destroy the `term` first before stopping the `signals`

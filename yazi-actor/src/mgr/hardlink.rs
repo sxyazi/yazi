@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Hardlink;
 
 impl Actor for Hardlink {
-	type Options = HardlinkForm;
+	type Form = HardlinkForm;
 
 	const NAME: &str = "hardlink";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;
 		let tab = &mgr.tabs[cx.tab];
 

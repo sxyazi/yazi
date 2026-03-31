@@ -12,11 +12,11 @@ const MAX_TABS: usize = 9;
 pub struct TabCreate;
 
 impl Actor for TabCreate {
-	type Options = TabCreateForm;
+	type Form = TabCreateForm;
 
 	const NAME: &str = "tab_create";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if cx.tabs().len() >= MAX_TABS {
 			succ!(NotifyProxy::push_warn(
 				"Too many tabs",

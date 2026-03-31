@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct UpdateYanked;
 
 impl Actor for UpdateYanked {
-	type Options = UpdateYankedForm<'static>;
+	type Form = UpdateYankedForm<'static>;
 
 	const NAME: &str = "update_yanked";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.urls.is_empty() && cx.mgr.yanked.is_empty() {
 			succ!();
 		}

@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Swipe;
 
 impl Actor for Swipe {
-	type Options = ArrowForm;
+	type Form = ArrowForm;
 
 	const NAME: &str = "swipe";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:arrow, cx, opt)?;
 		act!(mgr:spot, cx)
 	}

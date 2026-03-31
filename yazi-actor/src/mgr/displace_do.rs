@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct DisplaceDo;
 
 impl Actor for DisplaceDo {
-	type Options = DisplaceDoForm;
+	type Form = DisplaceDoForm;
 
 	const NAME: &str = "displace_do";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		if cx.cwd() != opt.from {
 			succ!()
 		}

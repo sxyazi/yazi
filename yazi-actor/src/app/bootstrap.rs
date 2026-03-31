@@ -10,11 +10,11 @@ use crate::Actor;
 pub struct Bootstrap;
 
 impl Actor for Bootstrap {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "bootstrap";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		cx.mgr.tabs.resize_with(BOOT.files.len(), Default::default);
 
 		for (i, file) in BOOT.files.iter().enumerate().rev() {

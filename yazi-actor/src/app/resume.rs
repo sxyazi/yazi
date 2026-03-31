@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Resume;
 
 impl Actor for Resume {
-	type Options = ResumeForm;
+	type Form = ResumeForm;
 
 	const NAME: &str = "resume";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		cx.active_mut().preview.reset();
 		*cx.term = Some(Term::start()?);
 

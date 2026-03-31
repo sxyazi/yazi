@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Show;
 
 impl Actor for Show {
-	type Options = ShowForm;
+	type Form = ShowForm;
 
 	const NAME: &str = "show";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(confirm:close, cx)?;
 
 		let confirm = &mut cx.confirm;

@@ -13,11 +13,11 @@ use crate::{Actor, Ctx};
 pub struct TabRename;
 
 impl Actor for TabRename {
-	type Options = TabRenameForm;
+	type Form = TabRenameForm;
 
 	const NAME: &str = "tab_rename";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab().id;
 		let pref = &mut cx.tab_mut().pref;
 

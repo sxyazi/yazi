@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct TabSwitch;
 
 impl Actor for TabSwitch {
-	type Options = TabSwitchForm;
+	type Form = TabSwitchForm;
 
 	const NAME: &str = "tab_switch";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tabs = cx.tabs_mut();
 		let idx = if opt.relative {
 			opt.step.saturating_add_unsigned(tabs.cursor).rem_euclid(tabs.len() as _) as _

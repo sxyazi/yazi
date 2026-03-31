@@ -17,11 +17,11 @@ use crate::{Actor, Ctx};
 pub struct Inspect;
 
 impl Actor for Inspect {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "inspect";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let ongoing = cx.tasks.scheduler.ongoing.clone();
 		let Some(id) = ongoing.lock().get_id(cx.tasks.cursor) else {
 			succ!();

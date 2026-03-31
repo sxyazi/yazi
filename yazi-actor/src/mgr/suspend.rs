@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Suspend;
 
 impl Actor for Suspend {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "suspend";
 
-	fn act(_: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(_: &mut Ctx, _: Self::Form) -> Result<Data> {
 		#[cfg(unix)]
 		if !yazi_shared::session_leader() {
 			unsafe {

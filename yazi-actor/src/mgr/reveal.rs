@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Reveal;
 
 impl Actor for Reveal {
-	type Options = RevealForm;
+	type Form = RevealForm;
 
 	const NAME: &str = "reveal";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let Some((parent, child)) = opt.target.pair() else { succ!() };
 
 		// Cd to the parent directory

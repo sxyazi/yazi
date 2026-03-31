@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct BulkExit;
 
 impl Actor for BulkExit {
-	type Options = BulkExitForm;
+	type Form = BulkExitForm;
 
 	const NAME: &str = "bulk_exit";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		cx.mgr.batcher.decide(opt.target, opt.accept);
 		succ!();
 	}

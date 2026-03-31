@@ -15,11 +15,11 @@ use crate::{Actor, Ctx};
 pub struct Rename;
 
 impl Actor for Rename {
-	type Options = RenameForm;
+	type Form = RenameForm;
 
 	const NAME: &str = "rename";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		if !opt.hovered && !cx.tab().selected.is_empty() {

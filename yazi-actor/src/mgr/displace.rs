@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct Displace;
 
 impl Actor for Displace {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "displace";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		if cx.cwd().is_absolute() {
 			succ!();
 		}

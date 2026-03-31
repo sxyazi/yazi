@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Peek;
 
 impl Actor for Peek {
-	type Options = PeekForm;
+	type Form = PeekForm;
 
 	const NAME: &str = "peek";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered().cloned() else {
 			succ!(cx.tab_mut().preview.reset());
 		};

@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Escape;
 
 impl Actor for Escape {
-	type Options = EscapeForm;
+	type Form = EscapeForm;
 
 	const NAME: &str = "escape";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.is_empty() {
 			_ = act!(mgr:escape_find, cx)? != false
 				|| act!(mgr:escape_visual, cx)? != false
@@ -46,11 +46,11 @@ impl Actor for Escape {
 pub struct EscapeFind;
 
 impl Actor for EscapeFind {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_find";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		succ!(render_and!(cx.tab_mut().finder.take().is_some()))
 	}
 }
@@ -59,11 +59,11 @@ impl Actor for EscapeFind {
 pub struct EscapeVisual;
 
 impl Actor for EscapeVisual {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_visual";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
 		let select = tab.mode.is_select();
@@ -91,11 +91,11 @@ impl Actor for EscapeVisual {
 pub struct EscapeFilter;
 
 impl Actor for EscapeFilter {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_filter";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		if cx.current_mut().files.filter().is_none() {
 			succ!(false);
 		}
@@ -110,11 +110,11 @@ impl Actor for EscapeFilter {
 pub struct EscapeSelect;
 
 impl Actor for EscapeSelect {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_select";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		if tab.selected.is_empty() {
 			succ!(false);
@@ -134,11 +134,11 @@ impl Actor for EscapeSelect {
 pub struct EscapeSearch;
 
 impl Actor for EscapeSearch {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_search";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let b = cx.cwd().is_search();
 		act!(mgr:search_stop, cx)?;
 		succ!(render_and!(b));

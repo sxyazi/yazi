@@ -16,11 +16,11 @@ use crate::{Actor, Ctx};
 pub struct Find;
 
 impl Actor for Find {
-	type Options = FindForm;
+	type Form = FindForm;
 
 	const NAME: &str = "find";
 
-	fn act(_: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(_: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let input = InputProxy::show(InputCfg::find(opt.prev));
 
 		tokio::spawn(async move {

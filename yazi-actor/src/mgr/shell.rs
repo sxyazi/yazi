@@ -14,11 +14,11 @@ use crate::{Actor, Ctx};
 pub struct Shell;
 
 impl Actor for Shell {
-	type Options = ShellForm;
+	type Form = ShellForm;
 
 	const NAME: &str = "shell";
 
-	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, mut opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		let cwd = opt.cwd.take().unwrap_or(cx.cwd().into()).into_owned();

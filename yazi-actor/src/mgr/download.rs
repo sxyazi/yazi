@@ -16,11 +16,11 @@ use crate::{Actor, Ctx};
 pub struct Download;
 
 impl Actor for Download {
-	type Options = DownloadForm;
+	type Form = DownloadForm;
 
 	const NAME: &str = "download";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().clone();
 		let scheduler = cx.tasks.scheduler.clone();
 

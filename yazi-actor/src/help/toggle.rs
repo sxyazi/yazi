@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Toggle;
 
 impl Actor for Toggle {
-	type Options = ToggleForm;
+	type Form = ToggleForm;
 
 	const NAME: &str = "toggle";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let help = &mut cx.help;
 
 		help.visible = !help.visible;

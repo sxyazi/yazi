@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Yank;
 
 impl Actor for Yank {
-	type Options = YankForm;
+	type Form = YankForm;
 
 	const NAME: &str = "yank";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		cx.mgr.yanked =

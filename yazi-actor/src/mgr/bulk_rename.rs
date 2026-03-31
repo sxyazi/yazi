@@ -24,11 +24,11 @@ use crate::{Actor, Ctx};
 pub struct BulkRename;
 
 impl Actor for BulkRename {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "bulk_rename";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let Some(opener) = Self::opener() else {
 			succ!(NotifyProxy::push_warn("Bulk rename", "No text opener found"));
 		};

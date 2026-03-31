@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct ToggleAll;
 
 impl Actor for ToggleAll {
-	type Options = ToggleAllForm;
+	type Form = ToggleAllForm;
 
 	const NAME: &str = "toggle_all";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		use either::Either::*;
 		let tab = cx.tab_mut();
 

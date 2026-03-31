@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct Seek;
 
 impl Actor for Seek {
-	type Options = SeekForm;
+	type Form = SeekForm;
 
 	const NAME: &str = "seek";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered() else {
 			succ!(cx.tab_mut().preview.reset());
 		};

@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct UpdateFiles;
 
 impl Actor for UpdateFiles {
-	type Options = UpdateFilesForm;
+	type Form = UpdateFilesForm;
 
 	const NAME: &str = "update_files";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let revision = cx.current().files.revision;
 		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.chdir(u)).collect();
 

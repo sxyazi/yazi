@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Upload;
 
 impl Actor for Upload {
-	type Options = UploadForm;
+	type Form = UploadForm;
 
 	const NAME: &str = "upload";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		for url in opt.urls {
 			cx.tasks.scheduler.file_upload(url.into_owned());
 		}

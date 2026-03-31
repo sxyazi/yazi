@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Follow;
 
 impl Actor for Follow {
-	type Options = VoidForm;
+	type Form = VoidForm;
 
 	const NAME: &str = "follow";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let Some(file) = cx.hovered() else { succ!() };
 		let Some(link_to) = &file.link_to else { succ!() };
 		let Some(parent) = file.url.parent() else { succ!() };

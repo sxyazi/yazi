@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct TabClose;
 
 impl Actor for TabClose {
-	type Options = TabCloseForm;
+	type Form = TabCloseForm;
 
 	const NAME: &str = "tab_close";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let len = cx.tabs().len();
 		if len < 2 || opt.idx >= len {
 			succ!();

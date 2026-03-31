@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Paste;
 
 impl Actor for Paste {
-	type Options = PasteForm;
+	type Form = PasteForm;
 
 	const NAME: &str = "paste";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;
 		let tab = &mgr.tabs[cx.tab];
 

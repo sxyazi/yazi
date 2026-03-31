@@ -14,11 +14,11 @@ use crate::{Actor, Ctx};
 pub struct Create;
 
 impl Actor for Create {
-	type Options = CreateForm;
+	type Form = CreateForm;
 
 	const NAME: &str = "create";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().to_owned();
 		let mut input = InputProxy::show(InputCfg::create(opt.dir));
 

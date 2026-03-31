@@ -14,11 +14,11 @@ use crate::{Actor, Ctx};
 pub struct Tick;
 
 impl Actor for Tick {
-	type Options = TickForm;
+	type Form = TickForm;
 
 	const NAME: &str = "tick";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		cx.notify.ticker.take().map(|h| h.abort());
 
 		let Dimension { rows, columns, .. } = Dimension::available();
