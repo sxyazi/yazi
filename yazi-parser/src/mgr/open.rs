@@ -1,35 +1,28 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_core::mgr::OpenOpt;
+use yazi_shared::event::ActionCow;
 
 #[derive(Clone, Debug)]
-pub struct OpenOpt {
-	pub cwd:         Option<UrlCow<'static>>,
-	pub targets:     Vec<UrlCow<'static>>,
-	pub interactive: bool,
-	pub hovered:     bool,
+pub struct OpenForm {
+	pub opt: OpenOpt,
 }
 
-impl TryFrom<ActionCow> for OpenOpt {
+impl From<OpenOpt> for OpenForm {
+	fn from(opt: OpenOpt) -> Self { Self { opt } }
+}
+
+impl TryFrom<ActionCow> for OpenForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = a.take_any2("opt") {
-			return opt;
-		}
-
-		Ok(Self {
-			cwd:         a.take("cwd").ok(),
-			targets:     a.take_seq(),
-			interactive: a.bool("interactive"),
-			hovered:     a.bool("hovered"),
-		})
+		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
 	}
 }
 
-impl FromLua for OpenOpt {
+impl FromLua for OpenForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for OpenOpt {
+impl IntoLua for OpenForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

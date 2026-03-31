@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::tasks::ProcessOpenOpt;
+use yazi_parser::tasks::ProcessOpenForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,11 +8,19 @@ use crate::{Actor, Ctx};
 pub struct ProcessOpen;
 
 impl Actor for ProcessOpen {
-	type Options = ProcessOpenOpt;
+	type Options = ProcessOpenForm;
 
 	const NAME: &str = "process_open";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		succ!(cx.tasks.scheduler.process_open(opt));
+	fn act(cx: &mut Ctx, form: Self::Options) -> Result<Data> {
+		let done = cx.tasks.scheduler.process_open(form.opt);
+
+		if let Some(replier) = form.replier {
+			tokio::spawn(async move {
+				replier.send(Ok(done.future().await.into())).ok();
+			});
+		}
+
+		succ!();
 	}
 }

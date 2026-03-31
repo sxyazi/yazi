@@ -1,8 +1,9 @@
 use anyhow::Result;
 use yazi_boot::ARGS;
+use yazi_core::mgr::OpenDoOpt;
 use yazi_fs::File;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::{OpenDoOpt, OpenOpt};
+use yazi_parser::mgr::OpenForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::data::Data;
 use yazi_vfs::VfsFile;
@@ -12,11 +13,11 @@ use crate::{Actor, Ctx, mgr::Quit};
 pub struct Open;
 
 impl Actor for Open {
-	type Options = OpenOpt;
+	type Options = OpenForm;
 
 	const NAME: &str = "open";
 
-	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { mut opt }: Self::Options) -> Result<Data> {
 		if !opt.interactive && ARGS.chooser_file.is_some() {
 			succ!(if !opt.targets.is_empty() {
 				Quit::with_selected(opt.targets)

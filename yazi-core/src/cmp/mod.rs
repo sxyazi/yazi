@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(cmp);
+yazi_macro::mod_flat!(cmp item opt);

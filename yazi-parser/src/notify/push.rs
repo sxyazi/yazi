@@ -1,72 +1,30 @@
-use std::{str::FromStr, time::Duration};
-
-use anyhow::anyhow;
-use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
-use serde::{Deserialize, Serialize};
-use serde_with::{DurationSecondsWithFrac, serde_as};
-use yazi_binding::SER_OPT;
-use yazi_config::{Style, THEME};
+use mlua::{FromLua, IntoLua, Lua, Value};
+use yazi_core::notify::MessageOpt;
 use yazi_shared::event::ActionCow;
 
-#[serde_as]
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PushOpt {
-	pub title:   String,
-	pub content: String,
-	#[serde(default)]
-	pub level:   PushLevel,
-	#[serde_as(as = "DurationSecondsWithFrac<f64>")]
-	pub timeout: Duration,
+#[derive(Clone, Debug)]
+pub struct PushForm {
+	pub opt: MessageOpt,
 }
 
-impl TryFrom<ActionCow> for PushOpt {
+impl From<MessageOpt> for PushForm {
+	fn from(opt: MessageOpt) -> Self { Self { opt } }
+}
+
+impl TryFrom<ActionCow> for PushForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		a.take_any("opt").ok_or_else(|| anyhow!("Invalid 'opt' in NotifyOpt"))
+		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
 	}
 }
 
-impl FromLua for PushOpt {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
-}
-
-impl IntoLua for PushOpt {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
-}
-
-// --- Level
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum PushLevel {
-	#[default]
-	Info,
-	Warn,
-	Error,
-}
-
-impl PushLevel {
-	pub fn icon(self) -> &'static str {
-		match self {
-			Self::Info => &THEME.notify.icon_info,
-			Self::Warn => &THEME.notify.icon_warn,
-			Self::Error => &THEME.notify.icon_error,
-		}
-	}
-
-	pub fn style(self) -> Style {
-		match self {
-			Self::Info => THEME.notify.title_info,
-			Self::Warn => THEME.notify.title_warn,
-			Self::Error => THEME.notify.title_error,
-		}
+impl FromLua for PushForm {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(Self { opt: MessageOpt::from_lua(value, lua)? })
 	}
 }
 
-impl FromStr for PushLevel {
-	type Err = serde::de::value::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Self::deserialize(serde::de::value::StrDeserializer::new(s))
-	}
+impl IntoLua for PushForm {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.opt.into_lua(lua) }
 }

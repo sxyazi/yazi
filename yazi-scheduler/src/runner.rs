@@ -266,6 +266,8 @@ impl Runner {
 			HookIn::Cut(r#in) => self.hook.cut(r#in).await,
 			HookIn::Delete(r#in) => self.hook.delete(r#in).await,
 			HookIn::Trash(r#in) => self.hook.trash(r#in).await,
+			HookIn::Link(r#in) => self.hook.link(r#in).await,
+			HookIn::Hardlink(r#in) => self.hook.hardlink(r#in).await,
 			HookIn::Download(r#in) => self.hook.download(r#in).await,
 			HookIn::Upload(r#in) => self.hook.upload(r#in).await,
 		}

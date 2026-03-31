@@ -1,14 +1,16 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Error, elements::{Area, Renderable, Text}};
+use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::FsUrl;
-use yazi_parser::mgr::{PreviewLock, UpdatePeekedOpt};
-use yazi_proxy::MgrProxy;
-use yazi_shared::{errors::PeekError, url::AsUrl};
+use yazi_runner::previewer::PeekError;
+use yazi_shared::url::AsUrl;
 
 use super::Utils;
-use crate::external::Highlighter;
 
 impl Utils {
+	// TODO:
+	// return (Text?, PeekError?) instead of (String, usize?) to align with other
+	// APIs, and allow users to use the Text for more flexible preview
 	pub(super) fn preview_code(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
 			let area: Area = t.raw_get("area")?;
@@ -17,15 +19,15 @@ impl Utils {
 			let path = lock.url.as_url().unified_path();
 			let inner = match Highlighter::oneshot(path, lock.skip, area.size()).await {
 				Ok(text) => text,
-				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
-				Err(e @ PeekError::Unexpected(_)) => {
-					return e.to_string().into_lua_multi(&lua);
+				Err(e @ PeekError::Exceeded(max)) => return (e, max).into_lua_multi(&lua),
+				Err(e) => {
+					return e.into_lua_multi(&lua);
 				}
 			};
 
 			lock.data = vec![Renderable::Text(Text { area, inner, ..Default::default() })];
 
-			MgrProxy::update_peeked(UpdatePeekedOpt { lock });
+			MgrProxy::update_peeked(lock);
 			().into_lua_multi(&lua)
 		})
 	}
@@ -52,7 +54,7 @@ impl Utils {
 				_ => Err("preview widget must be a renderable element or a table of them".into_lua_err())?,
 			};
 
-			MgrProxy::update_peeked(UpdatePeekedOpt { lock });
+			MgrProxy::update_peeked(lock);
 			Ok(())
 		})
 	}

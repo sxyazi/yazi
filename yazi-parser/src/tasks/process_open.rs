@@ -1,34 +1,30 @@
-use std::ffi::OsString;
-
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{CompletionToken, event::ActionCow, url::UrlCow};
+use tokio::sync::mpsc;
+use yazi_scheduler::process::ProcessOpt;
+use yazi_shared::{data::Data, event::ActionCow};
 
-// --- Exec
 #[derive(Clone, Debug)]
-pub struct ProcessOpenOpt {
-	pub cwd:    UrlCow<'static>,
-	pub cmd:    OsString,
-	pub args:   Vec<UrlCow<'static>>,
-	pub block:  bool,
-	pub orphan: bool,
-	pub done:   Option<CompletionToken>,
-
-	pub spread: bool, // TODO: remove
+pub struct ProcessOpenForm {
+	pub opt:     ProcessOpt,
+	pub replier: Option<mpsc::UnboundedSender<anyhow::Result<Data>>>,
 }
 
-impl TryFrom<ActionCow> for ProcessOpenOpt {
+impl TryFrom<ActionCow> for ProcessOpenForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		a.take_any("opt").ok_or_else(|| anyhow!("Missing 'opt' in ProcessOpenOpt"))
+		Ok(Self {
+			opt:     a.take_any("opt").ok_or_else(|| anyhow!("Invalid 'opt' in ProcessOpenForm"))?,
+			replier: a.take_replier(),
+		})
 	}
 }
 
-impl FromLua for ProcessOpenOpt {
+impl FromLua for ProcessOpenForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for ProcessOpenOpt {
+impl IntoLua for ProcessOpenForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

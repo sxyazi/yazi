@@ -4,11 +4,13 @@ use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
+use yazi_core::mgr::SearchVia;
 use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::{CdSource, SearchOpt, SearchOptVia}};
+use yazi_parser::{VoidOpt, mgr::{CdSource, SearchForm}};
 use yazi_plugin::external;
-use yazi_proxy::{InputProxy, MgrProxy, NotifyProxy};
+use yazi_proxy::{InputProxy, MgrProxy};
+use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::{AsUrl, UrlLike}};
 use yazi_widgets::input::InputEvent;
 
@@ -17,11 +19,11 @@ use crate::{Actor, Ctx};
 pub struct Search;
 
 impl Actor for Search {
-	type Options = SearchOpt;
+	type Options = SearchForm;
 
 	const NAME: &str = "search";
 
-	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { mut opt }: Self::Options) -> Result<Data> {
 		if let Some(handle) = cx.tab_mut().search.take() {
 			handle.abort();
 		}
@@ -43,11 +45,11 @@ impl Actor for Search {
 pub struct SearchDo;
 
 impl Actor for SearchDo {
-	type Options = SearchOpt;
+	type Options = SearchForm;
 
 	const NAME: &str = "search_do";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();
 		if let Some(handle) = tab.search.take() {
 			handle.abort();
@@ -61,19 +63,19 @@ impl Actor for SearchDo {
 
 		tab.search = Some(tokio::spawn(async move {
 			let rx = match opt.via {
-				SearchOptVia::Rg => external::rg(external::RgOpt {
+				SearchVia::Rg => external::rg(external::RgOpt {
 					cwd: cwd.clone(),
 					hidden,
 					subject: opt.subject.into_owned(),
 					args: opt.args,
 				}),
-				SearchOptVia::Rga => external::rga(external::RgaOpt {
+				SearchVia::Rga => external::rga(external::RgaOpt {
 					cwd: cwd.clone(),
 					hidden,
 					subject: opt.subject.into_owned(),
 					args: opt.args,
 				}),
-				SearchOptVia::Fd => external::fd(external::FdOpt {
+				SearchVia::Fd => external::fd(external::FdOpt {
 					cwd: cwd.clone(),
 					hidden,
 					subject: opt.subject.into_owned(),

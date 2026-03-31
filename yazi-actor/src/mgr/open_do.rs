@@ -2,8 +2,9 @@ use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_config::{YAZI, popup::PickCfg};
 use yazi_macro::succ;
-use yazi_parser::{mgr::OpenDoOpt, tasks::ProcessOpenOpt};
+use yazi_parser::mgr::OpenDoForm;
 use yazi_proxy::{PickProxy, TasksProxy};
+use yazi_scheduler::process::ProcessOpt;
 use yazi_shared::{data::Data, url::UrlCow};
 
 use crate::{Actor, Ctx};
@@ -11,11 +12,11 @@ use crate::{Actor, Ctx};
 pub struct OpenDo;
 
 impl Actor for OpenDo {
-	type Options = OpenDoOpt;
+	type Options = OpenDoForm;
 
 	const NAME: &str = "open_do";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
 		let targets: Vec<_> = opt
 			.targets
 			.into_iter()
@@ -42,13 +43,12 @@ impl Actor for OpenDo {
 			[UrlCow::default()].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
 			if let Some(choice) = pick.await {
-				TasksProxy::open_shell_compat(ProcessOpenOpt {
+				TasksProxy::open_shell_compat(ProcessOpt {
 					cwd:    opt.cwd,
 					cmd:    openers[choice].run.clone().into(),
 					args:   urls,
 					block:  openers[choice].block,
 					orphan: openers[choice].orphan,
-					done:   None,
 					spread: openers[choice].spread,
 				});
 			}
@@ -67,13 +67,12 @@ impl OpenDo {
 			}
 		}
 		for (opener, args) in openers {
-			cx.tasks.open_shell_compat(ProcessOpenOpt {
+			cx.tasks.open_shell_compat(ProcessOpt {
 				cwd: cwd.clone(),
 				cmd: opener.run.clone().into(),
 				args,
 				block: opener.block,
 				orphan: opener.orphan,
-				done: None,
 				spread: opener.spread,
 			});
 		}

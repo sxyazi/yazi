@@ -7,8 +7,8 @@ use super::{Message, NOTIFY_SPACING};
 
 #[derive(Default)]
 pub struct Notify {
-	pub tick_handle: Option<JoinHandle<()>>,
-	pub messages:    Vec<Message>,
+	pub ticker:   Option<JoinHandle<()>>,
+	pub messages: Vec<Message>,
 }
 
 impl Notify {

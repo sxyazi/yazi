@@ -8,7 +8,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FsHash64;
-use yazi_plugin::isolate;
+use yazi_runner::RUNNER;
 
 use crate::{HIGH, LOW, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadOut}};
 
@@ -41,7 +41,7 @@ impl Preload {
 		}
 
 		let hash = task.target.hash_u64();
-		let (ok, err) = isolate::preload(&task.plugin.run, task.target, ct).await?;
+		let (ok, err) = RUNNER.preload(&task.plugin.run, task.target, ct).await?;
 
 		if !ok {
 			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.plugin.idx));

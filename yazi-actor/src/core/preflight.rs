@@ -1,7 +1,8 @@
 use anyhow::Result;
 use mlua::{ErrorContext, ExternalError, IntoLua, Value};
 use yazi_binding::runtime_scope;
-use yazi_dds::{LOCAL, spark::{Spark, SparkKind}};
+use yazi_dds::LOCAL;
+use yazi_parser::spark::{Spark, SparkKind};
 use yazi_plugin::LUA;
 
 use crate::{Ctx, lives::Lives};

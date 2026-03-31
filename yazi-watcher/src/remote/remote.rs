@@ -5,11 +5,10 @@ use notify::Result;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{File, FilesOp};
-use yazi_proxy::MgrProxy;
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
-use crate::{Reporter, WATCHER, Watchee};
+use crate::{MgrProxy, Reporter, WATCHER, Watchee};
 
 pub(crate) struct Remote;
 

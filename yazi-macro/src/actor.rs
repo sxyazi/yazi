@@ -2,7 +2,7 @@
 macro_rules! act {
 	(@pre $layer:ident : $name:ident, $cx:ident, $opt:ident) => {
 		if let Some(hook) = <act!($layer:$name) as yazi_actor::Actor>::hook($cx, &$opt) {
-			<act!(core:preflight)>::act($cx, (hook, yazi_dds::spark!($layer:$name, $opt))).map(|spark| spark.try_into().unwrap())
+			<act!(core:preflight)>::act($cx, (hook, yazi_parser::spark!($layer:$name, $opt))).map(|spark| spark.try_into().unwrap())
 		} else {
 			Ok($opt)
 		}

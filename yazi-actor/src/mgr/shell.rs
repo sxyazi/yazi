@@ -3,8 +3,9 @@ use std::borrow::Cow;
 use anyhow::Result;
 use yazi_config::popup::InputCfg;
 use yazi_macro::{act, succ};
-use yazi_parser::{mgr::ShellOpt, tasks::ProcessOpenOpt};
+use yazi_parser::mgr::ShellOpt;
 use yazi_proxy::{InputProxy, TasksProxy};
+use yazi_scheduler::process::ProcessOpt;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
 
@@ -38,13 +39,12 @@ impl Actor for Shell {
 				return;
 			}
 
-			TasksProxy::open_shell_compat(ProcessOpenOpt {
+			TasksProxy::open_shell_compat(ProcessOpt {
 				cwd:    cwd.into(),
 				cmd:    opt.run.to_string().into(),
 				args:   selected,
 				block:  opt.block,
 				orphan: opt.orphan,
-				done:   None,
 				spread: true,
 			});
 		});

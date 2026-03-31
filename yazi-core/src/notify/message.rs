@@ -1,14 +1,14 @@
 use std::time::{Duration, Instant};
 
 use unicode_width::UnicodeWidthStr;
-use yazi_parser::notify::{PushLevel, PushOpt};
 
 use super::NOTIFY_BORDER;
+use crate::notify::{MessageLevel, MessageOpt};
 
 pub struct Message {
 	pub title:   String,
 	pub content: String,
-	pub level:   PushLevel,
+	pub level:   MessageLevel,
 	pub timeout: Duration,
 
 	pub instant:   Instant,
@@ -16,8 +16,8 @@ pub struct Message {
 	pub max_width: usize,
 }
 
-impl From<PushOpt> for Message {
-	fn from(opt: PushOpt) -> Self {
+impl From<MessageOpt> for Message {
+	fn from(opt: MessageOpt) -> Self {
 		let title = opt.title.lines().next().unwrap_or_default();
 		let title_width = title.width() + (opt.level.icon().width() + /* Space */ 1);
 
@@ -36,6 +36,12 @@ impl From<PushOpt> for Message {
 	}
 }
 
+impl PartialEq for Message {
+	fn eq(&self, other: &Self) -> bool {
+		self.level == other.level && self.content == other.content && self.title == other.title
+	}
+}
+
 impl Message {
 	pub fn height(&self, width: u16) -> usize {
 		let lines = ratatui::widgets::Paragraph::new(self.content.as_str())
@@ -43,11 +49,5 @@ impl Message {
 			.line_count(width.saturating_sub(NOTIFY_BORDER));
 
 		lines + NOTIFY_BORDER as usize
-	}
-}
-
-impl PartialEq for Message {
-	fn eq(&self, other: &Self) -> bool {
-		self.level == other.level && self.content == other.content && self.title == other.title
 	}
 }

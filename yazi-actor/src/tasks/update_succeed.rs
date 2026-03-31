@@ -13,6 +13,21 @@ impl Actor for UpdateSucceed {
 	const NAME: &str = "update_succeed";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+		if opt.urls.is_empty() {
+			succ!();
+		}
+
+		// FIXME: todo!();
+		// if opt.track
+		// 	&& opt.batch == cx.tasks.scheduler.batch.current()
+		// 	&& let Some((parent, urn)) = opt.urls[0].pair()
+		// 	&& parent == *cx.cwd()
+		// {
+		// 	cx.tasks.scheduler.batch.next();
+		// 	cx.current_mut().trace = Some(urn.into());
+		// 	act!(mgr:hover, cx)?;
+		// }
+
 		cx.mgr.watcher.report(opt.urls);
 		succ!();
 	}

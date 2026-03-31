@@ -1,10 +1,12 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{Id, event::ActionCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct UpdateSucceedOpt {
-	pub urls: Vec<UrlBuf>,
+	pub id:    Id,
+	pub urls:  Vec<UrlBuf>,
+	pub track: bool,
 }
 
 impl TryFrom<ActionCow> for UpdateSucceedOpt {
@@ -15,7 +17,7 @@ impl TryFrom<ActionCow> for UpdateSucceedOpt {
 			bail!("Invalid 'urls' in UpdateSucceedOpt");
 		};
 
-		Ok(Self { urls })
+		Ok(Self { id: a.first()?, urls, track: a.get("track").unwrap_or_default() })
 	}
 }
 

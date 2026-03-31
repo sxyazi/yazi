@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(spot);
+yazi_macro::mod_flat!(lock spot);

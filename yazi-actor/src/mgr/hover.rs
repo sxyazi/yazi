@@ -22,18 +22,20 @@ impl Actor for Hover {
 		}
 
 		// Repos CWD
-		tab.current.repos(opt.urn.as_ref().map(Into::into));
+		render!(tab.current.repos(opt.urn.as_ref().map(Into::into)));
 
 		// Turn on tracing
 		if let (Some(h), Some(u)) = (tab.hovered(), opt.urn)
 			&& h.urn() == u
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
-			// At this point, it's intuitive to track the location of the file regardless.
+			// At this point, it's intuitive to track the file location regardless.
 			tab.current.trace = Some(u.clone());
+			// cx.tasks.scheduler.batch.next();// FIXME: clear user action
 		}
 
 		// Publish through DDS
+		let tab = tab!(cx);
 		err!(Pubsub::pub_after_hover(tab.id, tab.hovered().map(|h| &h.url)));
 		succ!();
 	}

@@ -1,5 +1,6 @@
 use anyhow::Result;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
+use indexmap::IndexSet;
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
@@ -160,7 +161,7 @@ impl Pubsub {
 
 	pub_after!(rename(tab: Id, from: &UrlBuf, to: &UrlBuf), (tab, from, to));
 
-	pub_after!(@yank(cut: bool, urls: &HashSet<UrlBufCov>), (cut, urls));
+	pub_after!(@yank(cut: bool, urls: &IndexSet<UrlBufCov>), (cut, urls));
 
 	pub_after!(duplicate(items: Vec<EmberDuplicateItem>), (&items), (items));
 

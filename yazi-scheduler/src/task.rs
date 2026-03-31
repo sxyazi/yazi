@@ -16,14 +16,11 @@ pub struct Task {
 }
 
 impl Task {
-	pub(super) fn new<T>(id: Id, name: String) -> Self
-	where
-		T: Into<TaskProg> + Default,
-	{
+	pub(super) fn new(id: Id, name: String, prog: TaskProg) -> Self {
 		Self {
 			id,
 			name,
-			prog: T::default().into(),
+			prog,
 			hook: None,
 			done: Default::default(),
 
@@ -41,5 +38,8 @@ impl Task {
 		}
 	}
 
-	pub(super) fn set_hook(&mut self, hook: impl Into<HookIn>) { self.hook = Some(hook.into()); }
+	pub(super) fn with_hook(&mut self, hook: impl Into<HookIn>) -> &mut Self {
+		self.hook = Some(hook.into().with_id(self.id));
+		self
+	}
 }

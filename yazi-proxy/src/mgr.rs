@@ -1,5 +1,5 @@
+use yazi_core::{mgr::{DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt}, spot::SpotLock};
 use yazi_macro::{emit, relay};
-use yazi_parser::mgr::{DisplaceDoOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt, UpdatePeekedOpt, UpdateSpottedOpt};
 use yazi_shared::{Id, SStr, url::UrlBuf};
 
 pub struct MgrProxy;
@@ -13,7 +13,7 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:cd, [target.into()]).with("raw", true)));
 	}
 
-	pub fn displace_do(tab: Id, opt: DisplaceDoOpt) {
+	pub fn displace_do(tab: Id, opt: DisplaceOpt) {
 		emit!(Call(relay!(mgr:displace_do).with("tab", tab).with_any("opt", opt)));
 	}
 
@@ -31,10 +31,6 @@ impl MgrProxy {
 
 	pub fn open_do(opt: OpenDoOpt) {
 		emit!(Call(relay!(mgr:open_do).with_any("opt", opt)));
-	}
-
-	pub fn refresh() {
-		emit!(Call(relay!(mgr:refresh)));
 	}
 
 	pub fn remove_do(targets: Vec<UrlBuf>, permanently: bool) {
@@ -55,26 +51,7 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:tab_rename, [name.into()]).with("tab", tab)));
 	}
 
-	pub fn update_paged_by(page: usize, only_if: &UrlBuf) {
-		emit!(Call(relay!(mgr:update_paged, [page]).with("only-if", only_if)));
-	}
-
-	pub fn update_peeked(opt: UpdatePeekedOpt) {
-		emit!(Call(relay!(mgr:update_peeked).with_any("opt", opt)));
-	}
-
-	pub fn update_spotted(opt: UpdateSpottedOpt) {
-		emit!(Call(relay!(mgr:update_spotted).with_any("opt", opt)));
-	}
-
-	pub fn upload<I>(urls: I)
-	where
-		I: IntoIterator<Item = UrlBuf>,
-	{
-		emit!(Call(relay!(mgr:upload).with_seq(urls)));
-	}
-
-	pub fn watch() {
-		emit!(Call(relay!(mgr:watch)));
+	pub fn update_spotted(lock: SpotLock) {
+		emit!(Call(relay!(mgr:update_spotted).with_any("lock", lock)));
 	}
 }

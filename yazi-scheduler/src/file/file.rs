@@ -9,7 +9,7 @@ use yazi_shared::{path::PathCow, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, maybe_exists, provider::{self, DirEntry}, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskOps, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut}, ok_or_not_found, progress_or_break};
+use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink}, ok_or_not_found, progress_or_break};
 
 pub(crate) struct File {
 	ops: TaskOps,
@@ -33,7 +33,9 @@ impl File {
 				.context("Cannot determine unique destination name")?;
 		}
 
-		self.ops.out(id, HookInOutCopy::from(&task));
+		self.ops.out(id, HookInOutCopy::new(&task.from, &task.to));
+		TasksProxy::update_succeed(id, [&task.to], true);
+
 		super::traverse::<FileOutCopy, _, _, _, _, _>(
 			task,
 			async |dir| match provider::create_dir(dir).await {
@@ -96,7 +98,9 @@ impl File {
 				.context("Cannot determine unique destination name")?;
 		}
 
-		self.ops.out(id, HookInOutCut::from(&task));
+		self.ops.out(id, HookInOutCut::new(&task.from, &task.to));
+		TasksProxy::update_succeed(id, [&task.to], true);
+
 		if !task.follow && ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok() {
 			return Ok(self.ops.out(id, FileOutCut::Succ));
 		}
@@ -186,7 +190,9 @@ impl File {
 				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
-		Ok(self.requeue(task, NORMAL))
+		self.ops.out(task.id, HookInOutLink::new(&task.from, &task.to));
+		self.requeue(task, NORMAL);
+		Ok(())
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
@@ -232,6 +238,7 @@ impl File {
 				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
+		self.ops.out(task.id, HookInOutHardlink::new(&task.from, &task.to));
 		super::traverse::<FileOutHardlink, _, _, _, _, _>(
 			task,
 			async |dir| match provider::create_dir(dir).await {

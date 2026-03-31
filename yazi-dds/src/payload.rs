@@ -6,7 +6,7 @@ use yazi_boot::BOOT;
 use yazi_macro::{emit, relay};
 use yazi_shared::{Id, event::ActionCow};
 
-use crate::{ID, ember::Ember, spark::Spark};
+use crate::{ID, ember::Ember};
 
 #[derive(Clone, Debug)]
 pub struct Payload<'a> {
@@ -16,7 +16,7 @@ pub struct Payload<'a> {
 }
 
 impl<'a> Payload<'a> {
-	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id(0), sender: *ID, body } }
+	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id::ZERO, sender: *ID, body } }
 
 	pub(super) fn flush(&self) -> Result<()> {
 		writeln!(std::io::stdout(), "{self}")?;
@@ -73,17 +73,6 @@ impl FromStr for Payload<'static> {
 
 impl<'a> From<Ember<'a>> for Payload<'a> {
 	fn from(value: Ember<'a>) -> Self { Self::new(value) }
-}
-
-impl<'a> TryFrom<Spark<'a>> for Payload<'a> {
-	type Error = ();
-
-	fn try_from(value: Spark<'a>) -> Result<Self, Self::Error> {
-		match value {
-			Spark::AppAcceptPayload(payload) => Ok(payload),
-			_ => Err(()),
-		}
-	}
 }
 
 impl TryFrom<ActionCow> for Payload<'_> {

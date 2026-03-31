@@ -1,8 +1,9 @@
 use anyhow::Result;
+use mlua::ObjectLike;
 use yazi_config::YAZI;
-use yazi_macro::succ;
+use yazi_macro::{act, succ};
 use yazi_parser::mgr::SeekOpt;
-use yazi_plugin::isolate;
+use yazi_runner::{plugin::PluginOpt, previewer::SeekJob};
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -27,7 +28,10 @@ impl Actor for Seek {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		isolate::seek_sync(&previewer.run, hovered.clone(), opt.units);
-		succ!();
+		let job = SeekJob { file: hovered.clone(), units: opt.units };
+		let opt = PluginOpt::new_callback(&*previewer.run.name, move |_, plugin| {
+			plugin.call_method("seek", job)
+		});
+		act!(app:plugin, cx, opt)
 	}
 }

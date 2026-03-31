@@ -2,9 +2,10 @@ use std::io;
 
 use hashbrown::HashMap;
 use tokio::task::JoinHandle;
-use yazi_parser::cmp::CmpItem;
 use yazi_shared::{Id, url::UrlBuf};
 use yazi_widgets::Scrollable;
+
+use crate::cmp::CmpItem;
 
 #[derive(Default)]
 pub struct Cmp {

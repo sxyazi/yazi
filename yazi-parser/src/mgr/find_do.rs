@@ -1,35 +1,24 @@
-use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_fs::FilterCase;
-use yazi_shared::{SStr, event::ActionCow};
+use yazi_core::mgr::FindDoOpt;
+use yazi_shared::event::ActionCow;
 
 #[derive(Clone, Debug)]
-pub struct FindDoOpt {
-	pub query: SStr,
-	pub prev:  bool,
-	pub case:  FilterCase,
+pub struct FindDoForm {
+	pub opt: FindDoOpt,
 }
 
-impl TryFrom<ActionCow> for FindDoOpt {
+impl TryFrom<ActionCow> for FindDoForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = a.take_any2("opt") {
-			return opt;
-		}
-
-		let Ok(query) = a.take_first() else {
-			bail!("Invalid 'query' in FindDoOpt");
-		};
-
-		Ok(Self { query, prev: a.bool("previous"), case: FilterCase::from(&*a) })
+		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
 	}
 }
 
-impl FromLua for FindDoOpt {
+impl FromLua for FindDoForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for FindDoOpt {
+impl IntoLua for FindDoForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

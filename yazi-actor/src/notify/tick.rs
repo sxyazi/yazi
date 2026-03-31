@@ -19,7 +19,7 @@ impl Actor for Tick {
 	const NAME: &str = "tick";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		cx.notify.tick_handle.take().map(|h| h.abort());
+		cx.notify.ticker.take().map(|h| h.abort());
 
 		let Dimension { rows, columns, .. } = Dimension::available();
 		let area = Notify::available(Rect { x: 0, y: 0, width: columns, height: rows });
@@ -55,7 +55,7 @@ impl Actor for Tick {
 			succ!(render!());
 		};
 
-		cx.notify.tick_handle = Some(tokio::spawn(async move {
+		cx.notify.ticker = Some(tokio::spawn(async move {
 			tokio::time::sleep(interval).await;
 			NotifyProxy::tick(interval);
 		}));

@@ -5,6 +5,8 @@ use mlua::{ExternalError, IntoLua, Lua, MultiValue, Table, Value};
 use ordered_float::OrderedFloat;
 use yazi_shared::{data::{Data, DataKey}, replace_cow};
 
+use crate::ember;
+
 pub struct Sendable;
 
 impl Sendable {
@@ -55,8 +57,8 @@ impl Sendable {
 				Some(t) if t == TypeId::of::<yazi_fs::FilesOp>() => {
 					Data::Any(Box::new(ud.take::<yazi_fs::FilesOp>()?))
 				}
-				Some(t) if t == TypeId::of::<yazi_parser::mgr::UpdateYankedIter>() => {
-					Data::Any(Box::new(ud.take::<yazi_parser::mgr::UpdateYankedIter>()?.into_opt(lua)?))
+				Some(t) if t == TypeId::of::<ember::EmberYankIter>() => {
+					Data::Any(Box::new(ud.take::<ember::EmberYankIter>()?.collect(lua)?))
 				}
 				Some(t) if t == TypeId::of::<yazi_binding::ChordCow>() => {
 					Data::Any(Box::new(ud.take::<yazi_binding::ChordCow>()?))
@@ -102,7 +104,7 @@ impl Sendable {
 				}
 
 				try_cast!(|v: yazi_fs::FilesOp| lua.create_any_userdata(v));
-				try_cast!(|v: yazi_parser::mgr::UpdateYankedOpt| v.into_lua(lua));
+				try_cast!(|v: ember::EmberYank| v.into_lua(lua));
 				try_cast!(|v: yazi_binding::ChordCow| v.into_lua(lua));
 				Err("unsupported DataAny included".into_lua_err())?
 			}
@@ -146,7 +148,7 @@ impl Sendable {
 				}
 
 				try_cast!(|v: yazi_fs::FilesOp| lua.create_any_userdata(v));
-				try_cast!(|v: yazi_parser::mgr::UpdateYankedOpt| v.into_lua(lua));
+				try_cast!(|v: ember::EmberYank| v.into_lua(lua));
 				try_cast!(|v: yazi_binding::ChordCow| v.into_lua(lua));
 				Err("unsupported DataAny included".into_lua_err())?
 			}

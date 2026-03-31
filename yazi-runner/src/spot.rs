@@ -1,0 +1,65 @@
+use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmState};
+use tokio::{runtime::Handle, select};
+use tokio_util::sync::CancellationToken;
+use tracing::error;
+use yazi_binding::{File, Id};
+use yazi_dds::Sendable;
+use yazi_shared::{Ids, event::Action, pool::Symbol};
+
+use crate::{Runner, loader::LOADER};
+
+static IDS: Ids = Ids::new();
+
+impl Runner {
+	pub fn spot(
+		&'static self,
+		action: &'static Action,
+		file: yazi_fs::File,
+		mime: Symbol<str>,
+		skip: usize,
+	) -> CancellationToken {
+		let ct = CancellationToken::new();
+		let (ct1, ct2) = (ct.clone(), ct.clone());
+
+		tokio::task::spawn_blocking(move || {
+			let future = async {
+				LOADER.ensure(&action.name, |_| ()).await.into_lua_err()?;
+
+				let lua = self.spawn(&action.name)?;
+				lua.set_hook(
+					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
+					move |_, dbg| {
+						if ct1.is_cancelled() && dbg.source().what != "C" {
+							Err("Spot task cancelled".into_lua_err())
+						} else {
+							Ok(VmState::Continue)
+						}
+					},
+				)?;
+
+				let plugin = LOADER.load(&lua, &action.name).await?;
+				let job = lua.create_table_from([
+					("id", Id(IDS.next()).into_lua(&lua)?),
+					("args", Sendable::args_to_table_ref(&lua, &action.args)?.into_lua(&lua)?),
+					("file", File::new(file).into_lua(&lua)?),
+					("mime", mime.into_lua(&lua)?),
+					("skip", skip.into_lua(&lua)?),
+				])?;
+
+				if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
+			};
+
+			Handle::current().block_on(async {
+				select! {
+					_ = ct2.cancelled() => {},
+					Err(e) = future => if !e.to_string().contains("Spot task cancelled") {
+						error!("{e}");
+					},
+					else => {}
+				}
+			});
+		});
+
+		ct
+	}
+}

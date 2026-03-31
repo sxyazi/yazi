@@ -2,9 +2,10 @@ use tokio_util::sync::CancellationToken;
 use yazi_config::YAZI;
 use yazi_fs::File;
 use yazi_macro::render;
-use yazi_parser::mgr::SpotLock;
-use yazi_plugin::isolate;
+use yazi_runner::RUNNER;
 use yazi_shared::{pool::Symbol, url::UrlBuf};
+
+use crate::spot::SpotLock;
 
 #[derive(Default)]
 pub struct Spot {
@@ -27,7 +28,7 @@ impl Spot {
 		};
 
 		self.abort();
-		self.ct = Some(isolate::spot(&spotter.run, file, mime, self.skip));
+		self.ct = Some(RUNNER.spot(&spotter.run, file, mime, self.skip));
 	}
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }

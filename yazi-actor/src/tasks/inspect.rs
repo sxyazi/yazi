@@ -7,7 +7,7 @@ use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_binding::Permit;
 use yazi_macro::succ;
 use yazi_parser::VoidOpt;
-use yazi_proxy::AppProxy;
+use yazi_scheduler::AppProxy;
 use yazi_shared::{data::Data, terminal_clear};
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::TTY;
@@ -22,7 +22,7 @@ impl Actor for Inspect {
 	const NAME: &str = "inspect";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
-		let ongoing = cx.tasks.ongoing().clone();
+		let ongoing = cx.tasks.scheduler.ongoing.clone();
 		let Some(id) = ongoing.lock().get_id(cx.tasks.cursor) else {
 			succ!();
 		};

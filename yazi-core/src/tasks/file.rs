@@ -1,4 +1,4 @@
-use hashbrown::HashSet;
+use indexmap::IndexSet;
 use tracing::debug;
 use yazi_shared::url::{UrlBuf, UrlBufCov, UrlLike};
 
@@ -34,7 +34,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_link(&self, src: &HashSet<UrlBufCov>, dest: &UrlBuf, relative: bool, force: bool) {
+	pub fn file_link(&self, src: &IndexSet<UrlBufCov>, dest: &UrlBuf, relative: bool, force: bool) {
 		for u in src {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
 				debug!("file_link: cannot join {u:?} with {dest:?}");
@@ -48,7 +48,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_hardlink(&self, src: &HashSet<UrlBufCov>, dest: &UrlBuf, force: bool, follow: bool) {
+	pub fn file_hardlink(&self, src: &IndexSet<UrlBufCov>, dest: &UrlBuf, force: bool, follow: bool) {
 		for u in src {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
 				debug!("file_hardlink: cannot join {u:?} with {dest:?}");

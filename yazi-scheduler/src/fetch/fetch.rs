@@ -7,8 +7,7 @@ use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FsHash64;
-use yazi_plugin::isolate;
-use yazi_shared::event::ActionCow;
+use yazi_runner::RUNNER;
 
 use crate::{HIGH, LOW, TaskOp, TaskOps, fetch::{FetchIn, FetchOutFetch}};
 
@@ -31,18 +30,19 @@ impl Fetch {
 	}
 
 	pub(crate) async fn fetch(&self, task: FetchIn) -> Result<(), FetchOutFetch> {
+		let (id, plugin) = (task.id, task.plugin);
 		let hashes: Vec<_> = task.targets.iter().map(|f| f.hash_u64()).collect();
-		let (state, err) = isolate::fetch(ActionCow::from(&task.plugin.run), task.targets).await?;
+		let (state, err) = RUNNER.fetch(task.into()).await?;
 
 		let mut loaded = self.loaded.lock();
 		for (_, h) in hashes.into_iter().enumerate().filter(|&(i, _)| !state.get(i)) {
-			loaded.get_mut(&h).map(|x| *x &= !(1 << task.plugin.idx));
+			loaded.get_mut(&h).map(|x| *x &= !(1 << plugin.idx));
 		}
 		if let Some(e) = err {
-			error!("Error when running fetcher `{}`:\n{e}", task.plugin.run.name);
+			error!("Error when running fetcher `{}`:\n{e}", plugin.run.name);
 		}
 
-		Ok(self.ops.out(task.id, FetchOutFetch::Succ))
+		Ok(self.ops.out(id, FetchOutFetch::Succ))
 	}
 }
 

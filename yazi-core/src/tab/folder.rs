@@ -4,9 +4,10 @@ use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
 use yazi_macro::err;
-use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_widgets::{Scrollable, Step};
+
+use crate::MgrProxy;
 
 pub struct Folder {
 	pub url:   UrlBuf,
@@ -79,7 +80,7 @@ impl Folder {
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 		}
 
-		self.trace = self.trace.take_if(|_| !self.files.is_empty() || self.stage.is_loading());
+		self.trace.take_if(|_| self.files.is_empty() && !self.stage.is_loading());
 		self.repos(None);
 
 		(&stage, revision) != (&self.stage, self.files.revision)

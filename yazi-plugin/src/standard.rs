@@ -8,15 +8,16 @@ use yazi_shared::RoCell;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
 
-pub(super) fn init_lua() -> Result<()> {
-	LUA.init(Lua::new());
+pub(super) fn standard_lua() -> Result<Lua> {
+	let lua = Lua::new();
 
-	stage_1(&LUA).context("Lua setup failed")?;
-	stage_2(&LUA).context("Lua runtime failed")?;
-	Ok(())
+	stage_1(&lua).context("Lua setup failed")?;
+	stage_2(&lua).context("Lua runtime failed")?;
+
+	Ok(lua)
 }
 
-fn stage_1(lua: &'static Lua) -> Result<()> {
+fn stage_1(lua: &Lua) -> Result<()> {
 	lua.set_app_data(Runtime::default());
 
 	// Base
@@ -30,11 +31,11 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 
 	yazi_binding::Error::install(lua)?;
 	yazi_binding::Cha::install(lua)?;
-	crate::loader::install(lua)?;
 	crate::process::install(lua)?;
 	yazi_binding::File::install(lua)?;
 	yazi_binding::Url::install(lua)?;
 	yazi_binding::Path::install(lua)?;
+	yazi_runner::loader::install(lua)?;
 
 	// Addons
 	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
@@ -60,7 +61,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	Ok(())
 }
 
-fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
+fn stage_2(lua: &Lua) -> mlua::Result<()> {
 	lua.load(preset!("setup")).set_name("setup.lua").exec()?;
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 

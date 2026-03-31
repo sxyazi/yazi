@@ -1,7 +1,5 @@
 use hashbrown::{HashMap, hash_map::Entry};
-use ordered_float::OrderedFloat;
 use yazi_config::YAZI;
-use yazi_parser::app::TaskSummary;
 use yazi_shared::{CompletionToken, Id, Ids};
 
 use super::Task;
@@ -13,14 +11,11 @@ pub struct Ongoing {
 }
 
 impl Ongoing {
-	pub(super) fn add<T>(&mut self, name: String) -> &mut Task
-	where
-		T: Into<TaskProg> + Default,
-	{
+	pub(super) fn add(&mut self, name: String, prog: TaskProg) -> &mut Task {
 		static IDS: Ids = Ids::new();
 
 		let id = IDS.next();
-		self.inner.entry(id).insert(Task::new::<T>(id, name)).into_mut()
+		self.inner.entry(id).insert(Task::new(id, name, prog)).into_mut()
 	}
 
 	pub(super) fn cancel(&mut self, id: Id) -> Option<HookIn> {
@@ -82,38 +77,4 @@ impl Ongoing {
 
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.len() == 0 }
-
-	pub fn summary(&self) -> TaskSummary {
-		let mut summary = TaskSummary::default();
-		let mut percent_sum = 0.0f64;
-		let mut percent_count = 0;
-
-		for task in self.values() {
-			let s: TaskSummary = task.prog.into();
-			if s.total == 0 && !task.prog.failed() {
-				continue;
-			}
-
-			summary.total += 1;
-			if let Some(p) = s.percent {
-				percent_sum += p.0 as f64;
-				percent_count += 1;
-			}
-
-			if task.prog.running() {
-				continue;
-			} else if task.prog.success() {
-				summary.success += 1;
-			} else {
-				summary.failed += 1;
-			}
-		}
-
-		summary.percent = if percent_count == 0 {
-			None
-		} else {
-			Some(OrderedFloat((percent_sum / percent_count as f64) as f32))
-		};
-		summary
-	}
 }

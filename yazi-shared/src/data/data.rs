@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{UrlBuf, UrlCow}};
+use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{Url, UrlBuf, UrlCow}};
 
 // --- Data
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -65,6 +65,10 @@ impl From<Id> for Data {
 	fn from(value: Id) -> Self { Self::Id(value) }
 }
 
+impl From<Url<'_>> for Data {
+	fn from(value: Url) -> Self { Self::Url(value.into()) }
+}
+
 impl From<UrlBuf> for Data {
 	fn from(value: UrlBuf) -> Self { Self::Url(value) }
 }
@@ -105,10 +109,7 @@ impl TryFrom<Data> for SStr {
 	type Error = anyhow::Error;
 
 	fn try_from(value: Data) -> Result<Self, Self::Error> {
-		match value {
-			Data::String(s) => Ok(s),
-			_ => bail!("not a string"),
-		}
+		value.into_sstr().ok_or_else(|| anyhow!("not a string"))
 	}
 }
 
@@ -123,14 +124,19 @@ impl<'a> TryFrom<&'a Data> for Cow<'a, str> {
 	}
 }
 
-impl TryFrom<Data> for HashMap<DataKey, Data> {
+impl TryFrom<&Data> for String {
+	type Error = anyhow::Error;
+
+	fn try_from(value: &Data) -> Result<Self, Self::Error> {
+		value.try_into().map(|s: &str| s.to_owned())
+	}
+}
+
+impl TryFrom<Data> for String {
 	type Error = anyhow::Error;
 
 	fn try_from(value: Data) -> Result<Self, Self::Error> {
-		match value {
-			Data::Dict(d) => Ok(d),
-			_ => bail!("not a dict"),
-		}
+		SStr::try_from(value).map(|s| s.into_owned())
 	}
 }
 
@@ -139,6 +145,17 @@ impl TryFrom<&Data> for HashMap<DataKey, Data> {
 
 	fn try_from(_: &Data) -> Result<Self, Self::Error> {
 		bail!("cannot take ownership of dict from &Data");
+	}
+}
+
+impl TryFrom<Data> for HashMap<DataKey, Data> {
+	type Error = anyhow::Error;
+
+	fn try_from(value: Data) -> Result<Self, Self::Error> {
+		match value {
+			Data::Dict(d) => Ok(d),
+			_ => bail!("not a dict"),
+		}
 	}
 }
 
@@ -224,7 +241,7 @@ impl Data {
 		}
 	}
 
-	pub fn into_string(self) -> Option<SStr> {
+	pub fn into_sstr(self) -> Option<SStr> {
 		match self {
 			Self::String(s) => Some(s),
 			_ => None,
@@ -278,7 +295,7 @@ macro_rules! impl_into_number {
 					Data::Integer(i) if *i == (*i as $t as _) => *i as $t,
 					Data::Number(n) if *n == (*n as $t as _) => *n as $t,
 					Data::String(s) => s.parse()?,
-					Data::Id(i) if i.0 == (i.0 as $t as _) => i.0 as $t,
+					Data::Id(i) if i.get() == (i.get() as $t as _) => i.get() as $t,
 					_ => bail!("not a number"),
 				})
 			}

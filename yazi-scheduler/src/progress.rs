@@ -1,7 +1,6 @@
 use serde::Serialize;
-use yazi_parser::app::TaskSummary;
 
-use crate::{fetch::FetchProg, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
+use crate::{TaskSummary, fetch::FetchProg, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(tag = "kind")]

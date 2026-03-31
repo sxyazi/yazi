@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_dds::spark::SparkKind;
+use yazi_parser::spark::SparkKind;
 use yazi_shared::data::Data;
 
 use crate::Ctx;

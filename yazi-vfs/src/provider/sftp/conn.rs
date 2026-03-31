@@ -1,6 +1,6 @@
 use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
-use russh::keys::PrivateKeyWithHashAlg;
+use russh::keys::{PrivateKeyWithHashAlg, agent::AgentIdentity};
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
 
@@ -221,24 +221,33 @@ impl Conn {
 		let mut agent =
 			russh::keys::agent::client::AgentClient::connect_named_pipe(identity_agent).await?;
 
-		let keys = agent.request_identities().await?;
-		if keys.is_empty() {
+		let identities = agent.request_identities().await?;
+		if identities.is_empty() {
 			return Err(cfg_err!("No keys found in SSH agent"));
 		}
 
 		let mut session =
 			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
 
-		for key in keys {
+		for identity in identities {
 			let hash_alg = session.best_supported_rsa_hash().await?.flatten();
-			match session.authenticate_publickey_with(&self.config.user, key, hash_alg, &mut agent).await
-			{
+			let result = match identity {
+				AgentIdentity::PublicKey { key, .. } => {
+					session.authenticate_publickey_with(&self.config.user, key, hash_alg, &mut agent).await
+				}
+				AgentIdentity::Certificate { certificate, .. } => {
+					session
+						.authenticate_certificate_with(&self.config.user, certificate, hash_alg, &mut agent)
+						.await
+				}
+			};
+			match result {
 				Ok(result) if result.success() => return Ok(session),
 				Ok(result) => tracing::debug!("Identity agent authentication failed: {result:?}"),
 				Err(e) => tracing::error!("Identity agent authentication error: {e}"),
 			}
 		}
 
-		Err(cfg_err!("Public key authentication via agent failed"))
+		Err(cfg_err!("Identity agent authentication failed"))
 	}
 }

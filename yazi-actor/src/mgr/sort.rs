@@ -1,9 +1,8 @@
 use anyhow::Result;
 use yazi_core::tab::Folder;
-use yazi_dds::spark::SparkKind;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::mgr::SortOpt;
+use yazi_parser::{mgr::SortOpt, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};

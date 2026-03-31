@@ -1,78 +1,31 @@
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
-use tokio::sync::mpsc;
-use yazi_config::{KEYMAP, keymap::{ChordCow, Key}};
+use mlua::{FromLua, IntoLua, Lua, Value};
+use yazi_config::keymap::Key;
+use yazi_core::which::WhichOpt;
 use yazi_shared::{Layer, event::ActionCow};
 
 #[derive(Clone, Debug)]
-pub struct ActivateOpt {
-	pub tx:     Option<mpsc::UnboundedSender<Option<yazi_binding::ChordCow>>>,
-	pub cands:  Vec<ChordCow>,
-	pub silent: bool,
-	pub times:  usize,
+pub struct ActivateForm {
+	pub opt: WhichOpt,
 }
 
-impl TryFrom<ActionCow> for ActivateOpt {
+impl From<(Layer, Key)> for ActivateForm {
+	fn from(value: (Layer, Key)) -> Self { Self { opt: value.into() } }
+}
+
+impl TryFrom<ActionCow> for ActivateForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = a.take_any2("opt") {
-			return opt;
-		}
-
-		Ok(Self {
-			tx:     a.take_any2("tx").transpose()?,
-			cands:  a.take_any_iter::<yazi_binding::ChordCow>().map(Into::into).collect(),
-			silent: a.bool("silent"),
-			times:  a.get("times").unwrap_or(0),
-		})
+		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
 	}
 }
 
-impl From<(Layer, Key)> for ActivateOpt {
-	fn from((layer, key): (Layer, Key)) -> Self {
-		Self {
-			tx:     None,
-			cands:  KEYMAP
-				.get(layer)
-				.iter()
-				.filter(|c| c.on.len() > 1 && c.on[0] == key)
-				.map(Into::into)
-				.collect(),
-			times:  1,
-			silent: false,
-		}
+impl FromLua for ActivateForm {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(Self { opt: WhichOpt::from_lua(value, lua)? })
 	}
 }
 
-impl FromLua for ActivateOpt {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		let Value::Table(t) = value else {
-			return Err("expected a table".into_lua_err());
-		};
-
-		Ok(Self {
-			tx:     t.raw_get::<yazi_binding::MpscUnboundedTx<_>>("tx").ok().map(|t| t.0),
-			cands:  t
-				.raw_get::<Table>("cands")?
-				.sequence_values::<yazi_binding::ChordCow>()
-				.map(|c| c.map(Into::into))
-				.collect::<mlua::Result<Vec<_>>>()?,
-			times:  t.raw_get("times").unwrap_or_default(),
-			silent: t.raw_get("silent")?,
-		})
-	}
-}
-
-impl IntoLua for ActivateOpt {
-	#[rustfmt::skip]
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua
-			.create_table_from([
-				("tx", self.tx.map(yazi_binding::MpscUnboundedTx).into_lua(lua)?),
-				("cands", lua.create_sequence_from(self.cands.into_iter().map(yazi_binding::ChordCow))?.into_lua(lua)?),
-				("times", self.times.into_lua(lua)?),
-				("silent", self.silent.into_lua(lua)?),
-			])?
-			.into_lua(lua)
-	}
+impl IntoLua for ActivateForm {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.opt.into_lua(lua) }
 }
