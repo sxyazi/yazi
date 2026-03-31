@@ -3,7 +3,7 @@ local M = {}
 function M.msg(job, s) ya.preview_widget(job, ui.Text(ui.Line(s):reverse()):area(job.area):wrap(ui.Wrap.YES)) end
 
 function M:peek(job)
-	if not job.file.url:starts_with("/proc/") then
+	if not (job.file.url:starts_with("/proc/") or job.file.url:starts_with("/sys/")) then
 		return self.msg(job, "Empty file")
 	end
 
