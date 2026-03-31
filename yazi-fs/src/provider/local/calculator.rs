@@ -153,9 +153,11 @@ fn systemic_mounts_from(root: &Path, mounts: &str) -> SystemicMounts {
 			let dist = unmangle_octal(it.next()?);
 			let fstype = unmangle_octal(it.next()?);
 			let dist = PathBuf::from(dist.as_ref());
-			(Partition { fstype: Some(fstype.into_owned().into()), ..Default::default() }.systemic()
-				&& (dist == root || dist.starts_with(root)))
-			.then_some(dist)
+			let systemic = Partition { fstype: Some(fstype.into_owned().into()), ..Default::default() }
+				.systemic();
+			let descendant = dist == root || dist.starts_with(root);
+
+			(systemic && descendant).then_some(dist)
 		})
 		.collect()
 }
@@ -165,6 +167,7 @@ fn unmangle_octal(s: &str) -> std::borrow::Cow<'_, str> {
 	use yazi_shared::replace_cow;
 
 	let mut s = std::borrow::Cow::Borrowed(s);
+	// `/proc/mounts` escapes tabs, newlines, spaces, `#`, and `\` using octal sequences.
 	for (a, b) in
 		[(r"\011", "\t"), (r"\012", "\n"), (r"\040", " "), (r"\043", "#"), (r"\134", r"\")]
 	{
