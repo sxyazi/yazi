@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct Push;
 
 impl Actor for Push {
-	type Options = PushForm;
+	type Form = PushForm;
 
 	const NAME: &str = "push";
 
-	fn act(cx: &mut Ctx, form: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let instant = Instant::now();
 
 		let mut msg = Message::from(form.opt);
@@ -28,7 +28,7 @@ impl Actor for Push {
 		succ!();
 	}
 
-	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Relay => Some(SparkKind::RelayNotifyPush),
 			_ => None,

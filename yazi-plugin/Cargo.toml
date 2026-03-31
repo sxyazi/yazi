@@ -52,6 +52,3 @@ unicode-width = { workspace = true }
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
 uzers = { workspace = true }
-
-[target."cfg(windows)".dependencies]
-windows-sys = { version = "0.61.2", features = [ "Win32_System_JobObjects" ] }

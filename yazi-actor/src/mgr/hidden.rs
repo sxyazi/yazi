@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::FolderStage;
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::{mgr::HiddenOpt, spark::SparkKind};
+use yazi_parser::{mgr::HiddenForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Hidden;
 
 impl Actor for Hidden {
-	type Options = HiddenOpt;
+	type Form = HiddenForm;
 
 	const NAME: &str = "hidden";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let state = opt.state.bool(cx.tab().pref.show_hidden);
 		cx.tab_mut().pref.show_hidden = state;
 
@@ -51,7 +51,7 @@ impl Actor for Hidden {
 		succ!()
 	}
 
-	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndHidden),
 			Source::Key => Some(SparkKind::KeyHidden),

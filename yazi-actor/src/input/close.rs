@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::CloseOpt;
+use yazi_parser::input::CloseForm;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
 
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Close;
 
 impl Actor for Close {
-	type Options = CloseOpt;
+	type Form = CloseForm;
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let input = &mut cx.input;
 		input.visible = false;
 		input.ticket.next();

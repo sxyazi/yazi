@@ -6,13 +6,13 @@ use yazi_vfs::provider;
 use crate::mgr::CdSource;
 
 #[derive(Debug)]
-pub struct RevealOpt {
+pub struct RevealForm {
 	pub target:   UrlBuf,
 	pub source:   CdSource,
 	pub no_dummy: bool,
 }
 
-impl From<ActionCow> for RevealOpt {
+impl From<ActionCow> for RevealForm {
 	fn from(mut a: ActionCow) -> Self {
 		let mut target = a.take_first().unwrap_or_default();
 
@@ -30,18 +30,18 @@ impl From<ActionCow> for RevealOpt {
 	}
 }
 
-impl From<UrlBuf> for RevealOpt {
+impl From<UrlBuf> for RevealForm {
 	fn from(target: UrlBuf) -> Self { Self { target, source: CdSource::Reveal, no_dummy: false } }
 }
 
-impl From<(UrlBuf, CdSource)> for RevealOpt {
+impl From<(UrlBuf, CdSource)> for RevealForm {
 	fn from((target, source): (UrlBuf, CdSource)) -> Self { Self { target, source, no_dummy: false } }
 }
 
-impl FromLua for RevealOpt {
+impl FromLua for RevealForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for RevealOpt {
+impl IntoLua for RevealForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

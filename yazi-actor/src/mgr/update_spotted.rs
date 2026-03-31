@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct UpdateSpotted;
 
 impl Actor for UpdateSpotted {
-	type Options = UpdateSpottedForm;
+	type Form = UpdateSpottedForm;
 
 	const NAME: &str = "update_spotted";
 
-	fn act(cx: &mut Ctx, mut form: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, mut form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		let Some(hovered) = tab.hovered().map(|h| &h.url) else {
 			succ!(tab.spot.reset());

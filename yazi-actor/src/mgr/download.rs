@@ -6,7 +6,7 @@ use hashbrown::HashSet;
 use yazi_core::mgr::OpenOpt;
 use yazi_fs::{File, FsScheme, provider::{Provider, local::Local}};
 use yazi_macro::succ;
-use yazi_parser::mgr::DownloadOpt;
+use yazi_parser::mgr::DownloadForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::{UrlCow, UrlLike}};
 use yazi_vfs::VfsFile;
@@ -16,11 +16,11 @@ use crate::{Actor, Ctx};
 pub struct Download;
 
 impl Actor for Download {
-	type Options = DownloadOpt;
+	type Form = DownloadForm;
 
 	const NAME: &str = "download";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().clone();
 		let scheduler = cx.tasks.scheduler.clone();
 

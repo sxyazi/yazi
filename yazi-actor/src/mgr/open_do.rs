@@ -12,11 +12,11 @@ use crate::{Actor, Ctx};
 pub struct OpenDo;
 
 impl Actor for OpenDo {
-	type Options = OpenDoForm;
+	type Form = OpenDoForm;
 
 	const NAME: &str = "open_do";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let targets: Vec<_> = opt
 			.targets
 			.into_iter()

@@ -4,7 +4,7 @@ use anyhow::Result;
 use yazi_core::cmp::{CmpItem, CmpOpt};
 use yazi_fs::{path::clean_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
-use yazi_parser::cmp::TriggerOpt;
+use yazi_parser::cmp::TriggerForm;
 use yazi_proxy::CmpProxy;
 use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
@@ -14,11 +14,11 @@ use crate::{Actor, Ctx};
 pub struct Trigger;
 
 impl Actor for Trigger {
-	type Options = TriggerOpt;
+	type Form = TriggerForm;
 
 	const NAME: &str = "trigger";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.ticket.is_some_and(|t| t != cx.cmp.ticket) {
 			succ!();
 		} else if opt.ticket.is_none() {

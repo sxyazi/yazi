@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Show;
 
 impl Actor for Show {
-	type Options = InputOpt;
+	type Form = InputOpt;
 
 	const NAME: &str = "show";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(input:close, cx)?;
 
 		let input = &mut cx.input;

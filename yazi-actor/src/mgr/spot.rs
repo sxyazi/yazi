@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Spot;
 
 impl Actor for Spot {
-	type Options = SpotOpt;
+	type Form = SpotOpt;
 
 	const NAME: &str = "spot";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 		let Some(hovered) = cx.hovered().cloned() else { succ!() };
 

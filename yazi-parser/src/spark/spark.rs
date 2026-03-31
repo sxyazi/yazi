@@ -5,119 +5,119 @@ use crate::{spark::SparkKind, try_from_spark};
 #[derive(Debug)]
 pub enum Spark<'a> {
 	// Void
-	Void(crate::VoidOpt),
+	Void(crate::VoidForm),
 
 	// App
 	AppAcceptPayload(yazi_dds::Payload<'a>),
-	AppBootstrap(crate::VoidOpt),
-	AppDeprecate(crate::app::DeprecateOpt),
-	AppFocus(crate::VoidOpt),
-	AppLua(crate::app::LuaOpt),
-	AppMouse(crate::app::MouseOpt),
+	AppBootstrap(crate::VoidForm),
+	AppDeprecate(crate::app::DeprecateForm),
+	AppFocus(crate::VoidForm),
+	AppLua(crate::app::LuaForm),
+	AppMouse(crate::app::MouseForm),
 	AppPlugin(crate::app::PluginForm),
 	AppPluginDo(crate::app::PluginForm),
 	AppQuit(crate::app::QuitForm),
-	AppReflow(crate::app::ReflowOpt),
-	AppResize(crate::app::ReflowOpt),
-	AppResume(crate::app::ResumeOpt),
-	AppStop(crate::app::StopOpt),
-	AppTitle(crate::app::TitleOpt),
-	AppUpdateProgress(crate::app::UpdateProgressOpt),
+	AppReflow(crate::app::ReflowForm),
+	AppResize(crate::app::ReflowForm),
+	AppResume(crate::app::ResumeForm),
+	AppStop(crate::app::StopForm),
+	AppTitle(crate::app::TitleForm),
+	AppUpdateProgress(crate::app::UpdateProgressForm),
 
 	// Mgr
-	Arrow(crate::ArrowOpt),
-	Back(crate::VoidOpt),
-	BulkExit(crate::mgr::BulkExitOpt),
-	BulkRename(crate::VoidOpt),
-	Cd(crate::mgr::CdOpt),
+	Arrow(crate::ArrowForm),
+	Back(crate::VoidForm),
+	BulkExit(crate::mgr::BulkExitForm),
+	BulkRename(crate::VoidForm),
+	Cd(crate::mgr::CdForm),
 	Close(crate::mgr::CloseForm),
-	Copy(crate::mgr::CopyOpt),
-	Create(crate::mgr::CreateOpt),
-	Displace(crate::VoidOpt),
+	Copy(crate::mgr::CopyForm),
+	Create(crate::mgr::CreateForm),
+	Displace(crate::VoidForm),
 	DisplaceDo(crate::mgr::DisplaceDoForm),
-	Download(crate::mgr::DownloadOpt),
-	Enter(crate::VoidOpt),
-	Escape(crate::mgr::EscapeOpt),
-	EscapeFilter(crate::VoidOpt),
-	EscapeFind(crate::VoidOpt),
-	EscapeSearch(crate::VoidOpt),
-	EscapeSelect(crate::VoidOpt),
-	EscapeVisual(crate::VoidOpt),
+	Download(crate::mgr::DownloadForm),
+	Enter(crate::VoidForm),
+	Escape(crate::mgr::EscapeForm),
+	EscapeFilter(crate::VoidForm),
+	EscapeFind(crate::VoidForm),
+	EscapeSearch(crate::VoidForm),
+	EscapeSelect(crate::VoidForm),
+	EscapeVisual(crate::VoidForm),
 	Filter(crate::mgr::FilterForm),
 	FilterDo(crate::mgr::FilterForm),
-	Find(crate::mgr::FindOpt),
-	FindArrow(crate::mgr::FindArrowOpt),
+	Find(crate::mgr::FindForm),
+	FindArrow(crate::mgr::FindArrowForm),
 	FindDo(crate::mgr::FindDoForm),
-	Follow(crate::VoidOpt),
-	Forward(crate::VoidOpt),
-	Hardlink(crate::mgr::HardlinkOpt),
-	Hidden(crate::mgr::HiddenOpt),
-	Hover(crate::mgr::HoverOpt),
-	Leave(crate::VoidOpt),
-	Linemode(crate::mgr::LinemodeOpt),
-	Link(crate::mgr::LinkOpt),
+	Follow(crate::VoidForm),
+	Forward(crate::VoidForm),
+	Hardlink(crate::mgr::HardlinkForm),
+	Hidden(crate::mgr::HiddenForm),
+	Hover(crate::mgr::HoverForm),
+	Leave(crate::VoidForm),
+	Linemode(crate::mgr::LinemodeForm),
+	Link(crate::mgr::LinkForm),
 	Open(crate::mgr::OpenForm),
 	OpenDo(crate::mgr::OpenDoForm),
-	Paste(crate::mgr::PasteOpt),
-	Peek(crate::mgr::PeekOpt),
+	Paste(crate::mgr::PasteForm),
+	Peek(crate::mgr::PeekForm),
 	Quit(crate::app::QuitForm),
-	Refresh(crate::VoidOpt),
-	Remove(crate::mgr::RemoveOpt),
-	RemoveDo(crate::mgr::RemoveOpt),
-	Rename(crate::mgr::RenameOpt),
-	Reveal(crate::mgr::RevealOpt),
+	Refresh(crate::VoidForm),
+	Remove(crate::mgr::RemoveForm),
+	RemoveDo(crate::mgr::RemoveForm),
+	Rename(crate::mgr::RenameForm),
+	Reveal(crate::mgr::RevealForm),
 	Search(crate::mgr::SearchForm),
 	SearchDo(crate::mgr::SearchForm),
-	SearchStop(crate::VoidOpt),
-	Seek(crate::mgr::SeekOpt),
-	Shell(crate::mgr::ShellOpt),
-	Sort(crate::mgr::SortOpt),
+	SearchStop(crate::VoidForm),
+	Seek(crate::mgr::SeekForm),
+	Shell(crate::mgr::ShellForm),
+	Sort(crate::mgr::SortForm),
 	Spot(crate::mgr::SpotOpt),
-	Stash(crate::mgr::StashOpt),
-	Suspend(crate::VoidOpt),
-	TabClose(crate::mgr::TabCloseOpt),
-	TabCreate(crate::mgr::TabCreateOpt),
-	TabRename(crate::mgr::TabRenameOpt),
-	TabSwap(crate::ArrowOpt),
-	TabSwitch(crate::mgr::TabSwitchOpt),
-	Toggle(crate::mgr::ToggleOpt),
-	ToggleAll(crate::mgr::ToggleAllOpt),
-	Unyank(crate::VoidOpt),
-	UpdateFiles(crate::mgr::UpdateFilesOpt),
-	UpdateMimes(crate::mgr::UpdateMimesOpt),
-	UpdatePaged(crate::mgr::UpdatePagedOpt),
+	Stash(crate::mgr::StashForm),
+	Suspend(crate::VoidForm),
+	TabClose(crate::mgr::TabCloseForm),
+	TabCreate(crate::mgr::TabCreateForm),
+	TabRename(crate::mgr::TabRenameForm),
+	TabSwap(crate::ArrowForm),
+	TabSwitch(crate::mgr::TabSwitchForm),
+	Toggle(crate::mgr::ToggleForm),
+	ToggleAll(crate::mgr::ToggleAllForm),
+	Unyank(crate::VoidForm),
+	UpdateFiles(crate::mgr::UpdateFilesForm),
+	UpdateMimes(crate::mgr::UpdateMimesForm),
+	UpdatePaged(crate::mgr::UpdatePagedForm),
 	UpdatePeeked(crate::mgr::UpdatePeekedForm),
 	UpdateSpotted(crate::mgr::UpdateSpottedForm),
-	UpdateYanked(crate::mgr::UpdateYankedOpt<'a>),
-	Upload(crate::mgr::UploadOpt),
-	VisualMode(crate::mgr::VisualModeOpt),
-	Watch(crate::VoidOpt),
-	Yank(crate::mgr::YankOpt),
+	UpdateYanked(crate::mgr::UpdateYankedForm<'a>),
+	Upload(crate::mgr::UploadForm),
+	VisualMode(crate::mgr::VisualModeForm),
+	Watch(crate::VoidForm),
+	Yank(crate::mgr::YankForm),
 
 	// Cmp
-	CmpArrow(crate::ArrowOpt),
-	CmpClose(crate::cmp::CloseOpt),
+	CmpArrow(crate::ArrowForm),
+	CmpClose(crate::cmp::CloseForm),
 	CmpShow(crate::cmp::ShowForm),
-	CmpTrigger(crate::cmp::TriggerOpt),
+	CmpTrigger(crate::cmp::TriggerForm),
 
 	// Confirm
-	ConfirmArrow(crate::ArrowOpt),
-	ConfirmClose(crate::confirm::CloseOpt),
-	ConfirmShow(Box<crate::confirm::ShowOpt>),
+	ConfirmArrow(crate::ArrowForm),
+	ConfirmClose(crate::confirm::CloseForm),
+	ConfirmShow(Box<crate::confirm::ShowForm>),
 
 	// Help
-	HelpArrow(crate::ArrowOpt),
-	HelpEscape(crate::VoidOpt),
-	HelpFilter(crate::VoidOpt),
-	HelpToggle(crate::help::ToggleOpt),
+	HelpArrow(crate::ArrowForm),
+	HelpEscape(crate::VoidForm),
+	HelpFilter(crate::VoidForm),
+	HelpToggle(crate::help::ToggleForm),
 
 	// Input
 	InputBackspace(yazi_widgets::input::parser::BackspaceOpt),
 	InputBackward(yazi_widgets::input::parser::BackwardOpt),
-	InputClose(crate::input::CloseOpt),
+	InputClose(crate::input::CloseForm),
 	InputComplete(yazi_widgets::input::parser::CompleteOpt),
 	InputDelete(yazi_widgets::input::parser::DeleteOpt),
-	InputEscape(crate::VoidOpt),
+	InputEscape(crate::VoidForm),
 	InputForward(yazi_widgets::input::parser::ForwardOpt),
 	InputInsert(yazi_widgets::input::parser::InsertOpt),
 	InputKill(yazi_widgets::input::parser::KillOpt),
@@ -127,32 +127,32 @@ pub enum Spark<'a> {
 
 	// Notify
 	NotifyPush(crate::notify::PushForm),
-	NotifyTick(crate::notify::TickOpt),
+	NotifyTick(crate::notify::TickForm),
 
 	// Pick
-	PickArrow(crate::ArrowOpt),
-	PickClose(crate::pick::CloseOpt),
-	PickShow(crate::pick::ShowOpt),
+	PickArrow(crate::ArrowForm),
+	PickClose(crate::pick::CloseForm),
+	PickShow(crate::pick::ShowForm),
 
 	// Spot
-	SpotArrow(crate::ArrowOpt),
-	SpotClose(crate::VoidOpt),
-	SpotCopy(crate::spot::CopyOpt),
-	SpotSwipe(crate::ArrowOpt),
+	SpotArrow(crate::ArrowForm),
+	SpotClose(crate::VoidForm),
+	SpotCopy(crate::spot::CopyForm),
+	SpotSwipe(crate::ArrowForm),
 
 	// Tasks
-	TasksArrow(crate::ArrowOpt),
-	TasksCancel(crate::VoidOpt),
-	TasksClose(crate::VoidOpt),
-	TasksInspect(crate::VoidOpt),
+	TasksArrow(crate::ArrowForm),
+	TasksCancel(crate::VoidForm),
+	TasksClose(crate::VoidForm),
+	TasksInspect(crate::VoidForm),
 	TasksOpenShellCompat(crate::tasks::ProcessOpenForm),
 	TasksProcessOpen(crate::tasks::ProcessOpenForm),
-	TasksShow(crate::VoidOpt),
-	TasksUpdateSucceed(crate::tasks::UpdateSucceedOpt),
+	TasksShow(crate::VoidForm),
+	TasksUpdateSucceed(crate::tasks::UpdateSucceedForm),
 
 	// Which
 	WhichActivate(crate::which::ActivateForm),
-	WhichDismiss(crate::VoidOpt),
+	WhichDismiss(crate::VoidForm),
 }
 
 impl<'a> Spark<'a> {
@@ -341,7 +341,7 @@ impl<'a> IntoLua for Spark<'a> {
 }
 
 try_from_spark!(
-	crate::VoidOpt,
+	crate::VoidForm,
 	app:bootstrap,
 	app:focus,
 	mgr:back,
@@ -364,76 +364,76 @@ try_from_spark!(
 );
 
 // App
-try_from_spark!(crate::ArrowOpt, mgr:arrow, mgr:tab_swap);
-try_from_spark!(crate::app::DeprecateOpt, app:deprecate);
-try_from_spark!(crate::app::LuaOpt, app:lua);
-try_from_spark!(crate::app::MouseOpt, app:mouse);
+try_from_spark!(crate::ArrowForm, mgr:arrow, mgr:tab_swap);
+try_from_spark!(crate::app::DeprecateForm, app:deprecate);
+try_from_spark!(crate::app::LuaForm, app:lua);
+try_from_spark!(crate::app::MouseForm, app:mouse);
 try_from_spark!(crate::app::PluginForm, app:plugin, app:plugin_do);
 try_from_spark!(crate::app::QuitForm, app:quit, mgr:quit);
-try_from_spark!(crate::app::ReflowOpt, app:reflow, app:resize);
-try_from_spark!(crate::app::ResumeOpt, app:resume);
-try_from_spark!(crate::app::StopOpt, app:stop);
-try_from_spark!(crate::app::TitleOpt, app:title);
-try_from_spark!(crate::app::UpdateProgressOpt, app:update_progress);
-try_from_spark!(crate::cmp::CloseOpt, cmp:close);
+try_from_spark!(crate::app::ReflowForm, app:reflow, app:resize);
+try_from_spark!(crate::app::ResumeForm, app:resume);
+try_from_spark!(crate::app::StopForm, app:stop);
+try_from_spark!(crate::app::TitleForm, app:title);
+try_from_spark!(crate::app::UpdateProgressForm, app:update_progress);
+try_from_spark!(crate::cmp::CloseForm, cmp:close);
 try_from_spark!(crate::cmp::ShowForm, cmp:show);
-try_from_spark!(crate::cmp::TriggerOpt, cmp:trigger);
-try_from_spark!(crate::confirm::CloseOpt, confirm:close);
-try_from_spark!(crate::confirm::ShowOpt, confirm:show);
-try_from_spark!(crate::help::ToggleOpt, help:toggle);
-try_from_spark!(crate::input::CloseOpt, input:close);
-try_from_spark!(crate::mgr::BulkExitOpt, mgr:bulk_exit);
-try_from_spark!(crate::mgr::CdOpt, mgr:cd);
+try_from_spark!(crate::cmp::TriggerForm, cmp:trigger);
+try_from_spark!(crate::confirm::CloseForm, confirm:close);
+try_from_spark!(crate::confirm::ShowForm, confirm:show);
+try_from_spark!(crate::help::ToggleForm, help:toggle);
+try_from_spark!(crate::input::CloseForm, input:close);
+try_from_spark!(crate::mgr::BulkExitForm, mgr:bulk_exit);
+try_from_spark!(crate::mgr::CdForm, mgr:cd);
 try_from_spark!(crate::mgr::CloseForm, mgr:close);
-try_from_spark!(crate::mgr::CopyOpt, mgr:copy);
-try_from_spark!(crate::mgr::CreateOpt, mgr:create);
+try_from_spark!(crate::mgr::CopyForm, mgr:copy);
+try_from_spark!(crate::mgr::CreateForm, mgr:create);
 try_from_spark!(crate::mgr::DisplaceDoForm, mgr:displace_do);
-try_from_spark!(crate::mgr::DownloadOpt, mgr:download);
-try_from_spark!(crate::mgr::EscapeOpt, mgr:escape);
+try_from_spark!(crate::mgr::DownloadForm, mgr:download);
+try_from_spark!(crate::mgr::EscapeForm, mgr:escape);
 try_from_spark!(crate::mgr::FilterForm, mgr:filter, mgr:filter_do);
-try_from_spark!(crate::mgr::FindArrowOpt, mgr:find_arrow);
+try_from_spark!(crate::mgr::FindArrowForm, mgr:find_arrow);
 try_from_spark!(crate::mgr::FindDoForm, mgr:find_do);
-try_from_spark!(crate::mgr::FindOpt, mgr:find);
-try_from_spark!(crate::mgr::HardlinkOpt, mgr:hardlink);
-try_from_spark!(crate::mgr::HiddenOpt, mgr:hidden);
-try_from_spark!(crate::mgr::HoverOpt, mgr:hover);
-try_from_spark!(crate::mgr::LinemodeOpt, mgr:linemode);
-try_from_spark!(crate::mgr::LinkOpt, mgr:link);
+try_from_spark!(crate::mgr::FindForm, mgr:find);
+try_from_spark!(crate::mgr::HardlinkForm, mgr:hardlink);
+try_from_spark!(crate::mgr::HiddenForm, mgr:hidden);
+try_from_spark!(crate::mgr::HoverForm, mgr:hover);
+try_from_spark!(crate::mgr::LinemodeForm, mgr:linemode);
+try_from_spark!(crate::mgr::LinkForm, mgr:link);
 try_from_spark!(crate::mgr::OpenDoForm, mgr:open_do);
 try_from_spark!(crate::mgr::OpenForm, mgr:open);
-try_from_spark!(crate::mgr::PasteOpt, mgr:paste);
-try_from_spark!(crate::mgr::PeekOpt, mgr:peek);
-try_from_spark!(crate::mgr::RemoveOpt, mgr:remove, mgr:remove_do);
-try_from_spark!(crate::mgr::RenameOpt, mgr:rename);
-try_from_spark!(crate::mgr::RevealOpt, mgr:reveal);
+try_from_spark!(crate::mgr::PasteForm, mgr:paste);
+try_from_spark!(crate::mgr::PeekForm, mgr:peek);
+try_from_spark!(crate::mgr::RemoveForm, mgr:remove, mgr:remove_do);
+try_from_spark!(crate::mgr::RenameForm, mgr:rename);
+try_from_spark!(crate::mgr::RevealForm, mgr:reveal);
 try_from_spark!(crate::mgr::SearchForm, mgr:search, mgr:search_do);
-try_from_spark!(crate::mgr::SeekOpt, mgr:seek);
-try_from_spark!(crate::mgr::ShellOpt, mgr:shell);
-try_from_spark!(crate::mgr::SortOpt, mgr:sort);
+try_from_spark!(crate::mgr::SeekForm, mgr:seek);
+try_from_spark!(crate::mgr::ShellForm, mgr:shell);
+try_from_spark!(crate::mgr::SortForm, mgr:sort);
 try_from_spark!(crate::mgr::SpotOpt, mgr:spot);
-try_from_spark!(crate::mgr::StashOpt, mgr:stash);
-try_from_spark!(crate::mgr::TabCloseOpt, mgr:tab_close);
-try_from_spark!(crate::mgr::TabCreateOpt, mgr:tab_create);
-try_from_spark!(crate::mgr::TabRenameOpt, mgr:tab_rename);
-try_from_spark!(crate::mgr::TabSwitchOpt, mgr:tab_switch);
-try_from_spark!(crate::mgr::ToggleAllOpt, mgr:toggle_all);
-try_from_spark!(crate::mgr::ToggleOpt, mgr:toggle);
-try_from_spark!(crate::mgr::UpdateFilesOpt, mgr:update_files);
-try_from_spark!(crate::mgr::UpdateMimesOpt, mgr:update_mimes);
-try_from_spark!(crate::mgr::UpdatePagedOpt, mgr:update_paged);
+try_from_spark!(crate::mgr::StashForm, mgr:stash);
+try_from_spark!(crate::mgr::TabCloseForm, mgr:tab_close);
+try_from_spark!(crate::mgr::TabCreateForm, mgr:tab_create);
+try_from_spark!(crate::mgr::TabRenameForm, mgr:tab_rename);
+try_from_spark!(crate::mgr::TabSwitchForm, mgr:tab_switch);
+try_from_spark!(crate::mgr::ToggleAllForm, mgr:toggle_all);
+try_from_spark!(crate::mgr::ToggleForm, mgr:toggle);
+try_from_spark!(crate::mgr::UpdateFilesForm, mgr:update_files);
+try_from_spark!(crate::mgr::UpdateMimesForm, mgr:update_mimes);
+try_from_spark!(crate::mgr::UpdatePagedForm, mgr:update_paged);
 try_from_spark!(crate::mgr::UpdatePeekedForm, mgr:update_peeked);
 try_from_spark!(crate::mgr::UpdateSpottedForm, mgr:update_spotted);
-try_from_spark!(crate::mgr::UpdateYankedOpt<'a>, mgr:update_yanked);
-try_from_spark!(crate::mgr::UploadOpt, mgr:upload);
-try_from_spark!(crate::mgr::VisualModeOpt, mgr:visual_mode);
-try_from_spark!(crate::mgr::YankOpt, mgr:yank);
+try_from_spark!(crate::mgr::UpdateYankedForm<'a>, mgr:update_yanked);
+try_from_spark!(crate::mgr::UploadForm, mgr:upload);
+try_from_spark!(crate::mgr::VisualModeForm, mgr:visual_mode);
+try_from_spark!(crate::mgr::YankForm, mgr:yank);
 try_from_spark!(crate::notify::PushForm, notify:push);
-try_from_spark!(crate::notify::TickOpt, notify:tick);
-try_from_spark!(crate::pick::CloseOpt, pick:close);
-try_from_spark!(crate::pick::ShowOpt, pick:show);
-try_from_spark!(crate::spot::CopyOpt, spot:copy);
+try_from_spark!(crate::notify::TickForm, notify:tick);
+try_from_spark!(crate::pick::CloseForm, pick:close);
+try_from_spark!(crate::pick::ShowForm, pick:show);
+try_from_spark!(crate::spot::CopyForm, spot:copy);
 try_from_spark!(crate::tasks::ProcessOpenForm, tasks:process_open);
-try_from_spark!(crate::tasks::UpdateSucceedOpt, tasks:update_succeed);
+try_from_spark!(crate::tasks::UpdateSucceedForm, tasks:update_succeed);
 try_from_spark!(crate::which::ActivateForm, which:activate);
 try_from_spark!(yazi_dds::Payload<'a>, app:accept_payload);
 try_from_spark!(yazi_widgets::input::InputOpt, input:show);

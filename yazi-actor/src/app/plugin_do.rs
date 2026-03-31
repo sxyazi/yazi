@@ -16,11 +16,11 @@ use crate::{Actor, Ctx, lives::Lives};
 pub struct PluginDo;
 
 impl Actor for PluginDo {
-	type Options = PluginForm;
+	type Form = PluginForm;
 
 	const NAME: &str = "plugin_do";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let loader = LOADER.read();
 		let Some(chunk) = loader.get(&*opt.id) else {
 			succ!(warn!("plugin `{}` not found", opt.id));

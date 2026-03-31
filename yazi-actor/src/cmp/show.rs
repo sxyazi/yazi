@@ -13,11 +13,11 @@ const LIMIT: usize = 30;
 pub struct Show;
 
 impl Actor for Show {
-	type Options = ShowForm;
+	type Form = ShowForm;
 
 	const NAME: &str = "show";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let cmp = &mut cx.cmp;
 		if cmp.ticket != opt.ticket {
 			succ!();

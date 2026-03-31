@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::{CdSource, TabCreateOpt};
+use yazi_parser::mgr::{CdSource, TabCreateForm};
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
@@ -12,11 +12,11 @@ const MAX_TABS: usize = 9;
 pub struct TabCreate;
 
 impl Actor for TabCreate {
-	type Options = TabCreateOpt;
+	type Form = TabCreateForm;
 
 	const NAME: &str = "tab_create";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if cx.tabs().len() >= MAX_TABS {
 			succ!(NotifyProxy::push_warn(
 				"Too many tabs",

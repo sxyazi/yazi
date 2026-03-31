@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::{VoidOpt, mgr::EscapeOpt};
+use yazi_parser::{VoidForm, mgr::EscapeForm};
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Escape;
 
 impl Actor for Escape {
-	type Options = EscapeOpt;
+	type Form = EscapeForm;
 
 	const NAME: &str = "escape";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		if opt.is_empty() {
 			_ = act!(mgr:escape_find, cx)? != false
 				|| act!(mgr:escape_visual, cx)? != false
@@ -23,19 +23,19 @@ impl Actor for Escape {
 			succ!();
 		}
 
-		if opt.contains(EscapeOpt::FIND) {
+		if opt.contains(EscapeForm::FIND) {
 			act!(mgr:escape_find, cx)?;
 		}
-		if opt.contains(EscapeOpt::VISUAL) {
+		if opt.contains(EscapeForm::VISUAL) {
 			act!(mgr:escape_visual, cx)?;
 		}
-		if opt.contains(EscapeOpt::FILTER) {
+		if opt.contains(EscapeForm::FILTER) {
 			act!(mgr:escape_filter, cx)?;
 		}
-		if opt.contains(EscapeOpt::SELECT) {
+		if opt.contains(EscapeForm::SELECT) {
 			act!(mgr:escape_select, cx)?;
 		}
-		if opt.contains(EscapeOpt::SEARCH) {
+		if opt.contains(EscapeForm::SEARCH) {
 			act!(mgr:escape_search, cx)?;
 		}
 		succ!();
@@ -46,11 +46,11 @@ impl Actor for Escape {
 pub struct EscapeFind;
 
 impl Actor for EscapeFind {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_find";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		succ!(render_and!(cx.tab_mut().finder.take().is_some()))
 	}
 }
@@ -59,11 +59,11 @@ impl Actor for EscapeFind {
 pub struct EscapeVisual;
 
 impl Actor for EscapeVisual {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_visual";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
 		let select = tab.mode.is_select();
@@ -91,11 +91,11 @@ impl Actor for EscapeVisual {
 pub struct EscapeFilter;
 
 impl Actor for EscapeFilter {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_filter";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		if cx.current_mut().files.filter().is_none() {
 			succ!(false);
 		}
@@ -110,11 +110,11 @@ impl Actor for EscapeFilter {
 pub struct EscapeSelect;
 
 impl Actor for EscapeSelect {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_select";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		if tab.selected.is_empty() {
 			succ!(false);
@@ -134,11 +134,11 @@ impl Actor for EscapeSelect {
 pub struct EscapeSearch;
 
 impl Actor for EscapeSearch {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "escape_search";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let b = cx.cwd().is_search();
 		act!(mgr:search_stop, cx)?;
 		succ!(render_and!(b));

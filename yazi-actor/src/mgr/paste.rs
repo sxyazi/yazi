@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::PasteOpt;
+use yazi_parser::mgr::PasteForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Paste;
 
 impl Actor for Paste {
-	type Options = PasteOpt;
+	type Form = PasteForm;
 
 	const NAME: &str = "paste";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;
 		let tab = &mgr.tabs[cx.tab];
 

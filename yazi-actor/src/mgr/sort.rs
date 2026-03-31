@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::{mgr::SortOpt, spark::SparkKind};
+use yazi_parser::{mgr::SortForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Sort;
 
 impl Actor for Sort {
-	type Options = SortOpt;
+	type Form = SortForm;
 
 	const NAME: &str = "sort";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let pref = &mut cx.tab_mut().pref;
 		pref.sort_by = opt.by.unwrap_or(pref.sort_by);
 		pref.sort_reverse = opt.reverse.unwrap_or(pref.sort_reverse);
@@ -58,7 +58,7 @@ impl Actor for Sort {
 		succ!();
 	}
 
-	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndSort),
 			Source::Key => Some(SparkKind::KeySort),

@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::ObjectLike;
 use yazi_config::YAZI;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::SeekOpt;
+use yazi_parser::mgr::SeekForm;
 use yazi_runner::{plugin::PluginOpt, previewer::SeekJob};
 use yazi_shared::data::Data;
 
@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct Seek;
 
 impl Actor for Seek {
-	type Options = SeekOpt;
+	type Form = SeekForm;
 
 	const NAME: &str = "seek";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered() else {
 			succ!(cx.tab_mut().preview.reset());
 		};

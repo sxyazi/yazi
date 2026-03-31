@@ -14,11 +14,11 @@ use crate::{Actor, Ctx};
 pub struct Quit;
 
 impl Actor for Quit {
-	type Options = QuitForm;
+	type Form = QuitForm;
 
 	const NAME: &str = "quit";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let ongoing = cx.tasks.scheduler.ongoing.clone();
 		let (left, left_names) = {
 			let ongoing = ongoing.lock();
@@ -58,7 +58,7 @@ impl Actor for Quit {
 		succ!();
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
 		Some(SparkKind::KeyQuit).filter(|_| cx.source().is_key())
 	}
 }

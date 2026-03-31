@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::tasks::Tasks;
 use yazi_macro::{render, succ};
-use yazi_parser::ArrowOpt;
+use yazi_parser::ArrowForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Arrow;
 
 impl Actor for Arrow {
-	type Options = ArrowOpt;
+	type Form = ArrowForm;
 
 	const NAME: &str = "arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tasks = &mut cx.tasks;
 
 		let old = tasks.cursor;

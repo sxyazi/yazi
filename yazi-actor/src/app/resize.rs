@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::act;
-use yazi_parser::app::ReflowOpt;
+use yazi_parser::app::ReflowForm;
 use yazi_shared::data::Data;
 
 use crate::Actor;
@@ -9,11 +9,11 @@ use crate::Actor;
 pub struct Resize;
 
 impl Actor for Resize {
-	type Options = ReflowOpt;
+	type Form = ReflowForm;
 
 	const NAME: &str = "resize";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(app:reflow, cx, opt)?;
 
 		cx.current_mut().arrow(0);

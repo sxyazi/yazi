@@ -4,7 +4,7 @@ use yazi_shared::event::ActionCow;
 
 bitflags! {
 	#[derive(Debug)]
-	pub struct EscapeOpt: u8 {
+	pub struct EscapeForm: u8 {
 		const FIND   = 0b00001;
 		const VISUAL = 0b00010;
 		const FILTER = 0b00100;
@@ -13,7 +13,7 @@ bitflags! {
 	}
 }
 
-impl From<ActionCow> for EscapeOpt {
+impl From<ActionCow> for EscapeForm {
 	fn from(a: ActionCow) -> Self {
 		a.args.iter().fold(Self::empty(), |acc, (k, v)| {
 			match (k.as_str().unwrap_or(""), v.try_into().unwrap_or(false)) {
@@ -29,10 +29,10 @@ impl From<ActionCow> for EscapeOpt {
 	}
 }
 
-impl FromLua for EscapeOpt {
+impl FromLua for EscapeForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for EscapeOpt {
+impl IntoLua for EscapeForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

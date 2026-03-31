@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct FilterDo;
 
 impl Actor for FilterDo {
-	type Options = FilterForm;
+	type Form = FilterForm;
 
 	const NAME: &str = "filter_do";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };
 
 		let hovered = cx.hovered().map(|f| f.urn().into());

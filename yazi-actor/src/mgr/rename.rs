@@ -3,7 +3,7 @@ use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, err, ok_or_not_found, succ};
-use yazi_parser::mgr::RenameOpt;
+use yazi_parser::mgr::RenameForm;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
 use yazi_shared::{Id, data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
@@ -15,11 +15,11 @@ use crate::{Actor, Ctx};
 pub struct Rename;
 
 impl Actor for Rename {
-	type Options = RenameOpt;
+	type Form = RenameForm;
 
 	const NAME: &str = "rename";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		if !opt.hovered && !cx.tab().selected.is_empty() {

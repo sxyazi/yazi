@@ -5,11 +5,11 @@ use yazi_shared::{event::ActionCow, url::UrlCow};
 use yazi_vfs::provider;
 
 #[derive(Debug)]
-pub struct TabCreateOpt {
+pub struct TabCreateForm {
 	pub url: Option<UrlCow<'static>>,
 }
 
-impl From<ActionCow> for TabCreateOpt {
+impl From<ActionCow> for TabCreateForm {
 	fn from(mut a: ActionCow) -> Self {
 		if a.bool("current") {
 			return Self { url: None };
@@ -33,10 +33,10 @@ impl From<ActionCow> for TabCreateOpt {
 	}
 }
 
-impl FromLua for TabCreateOpt {
+impl FromLua for TabCreateForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for TabCreateOpt {
+impl IntoLua for TabCreateForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

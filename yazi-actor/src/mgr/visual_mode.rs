@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use anyhow::Result;
 use yazi_core::tab::Mode;
 use yazi_macro::{render, succ};
-use yazi_parser::mgr::VisualModeOpt;
+use yazi_parser::mgr::VisualModeForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct VisualMode;
 
 impl Actor for VisualMode {
-	type Options = VisualModeOpt;
+	type Form = VisualModeForm;
 
 	const NAME: &str = "visual_mode";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
 		let idx = tab.current.cursor;

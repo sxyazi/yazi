@@ -1,7 +1,7 @@
 use std::mem;
 
 use mlua::{UserData, Value};
-use yazi_binding::{cached_field, cached_field_mut};
+use crate::{cached_field, cached_field_mut};
 
 use super::Status;
 

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::UpdateMimesOpt;
+use yazi_parser::mgr::UpdateMimesForm;
 use yazi_shared::{data::Data, pool::InternStr, url::{AsUrl, UrlCov}};
 use yazi_watcher::local::LINKED;
 
@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct UpdateMimes;
 
 impl Actor for UpdateMimes {
-	type Options = UpdateMimesOpt;
+	type Form = UpdateMimesForm;
 
 	const NAME: &str = "update_mimes";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let linked = LINKED.read();
 		let updates = opt
 			.updates

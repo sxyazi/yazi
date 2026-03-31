@@ -7,7 +7,7 @@ use yazi_config::YAZI;
 use crate::{LOW, Ongoing, TaskOp, TaskOps, TaskOut, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
 
 #[derive(Clone)]
-pub struct Runner {
+pub struct Worker {
 	pub(super) file:    Arc<File>,
 	pub(super) plugin:  Arc<Plugin>,
 	pub fetch:          Arc<Fetch>,
@@ -20,7 +20,7 @@ pub struct Runner {
 	pub ongoing: Arc<Mutex<Ongoing>>,
 }
 
-impl Runner {
+impl Worker {
 	pub(super) fn make() -> (Self, Vec<JoinHandle<()>>) {
 		let (file_tx, file_rx) = async_priority_channel::unbounded();
 		let (plugin_tx, plugin_rx) = async_priority_channel::unbounded();

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render_and, succ};
-use yazi_parser::mgr::ToggleOpt;
+use yazi_parser::mgr::ToggleForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlCow};
 
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Toggle;
 
 impl Actor for Toggle {
-	type Options = ToggleOpt;
+	type Form = ToggleForm;
 
 	const NAME: &str = "toggle";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		let Some(url) = opt.url.or(tab.current.hovered().map(|h| UrlCow::from(&h.url))) else {
 			succ!();

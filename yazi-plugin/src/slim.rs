@@ -16,7 +16,7 @@ pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	yazi_binding::Path::install(&lua)?;
 
 	yazi_binding::Error::install(&lua)?;
-	crate::process::install(&lua)?;
+	yazi_binding::process::install(&lua)?;
 	yazi_runner::loader::install(&lua)?;
 
 	// Addons

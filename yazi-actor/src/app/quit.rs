@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Quit;
 
 impl Actor for Quit {
-	type Options = QuitForm;
+	type Form = QuitForm;
 
 	const NAME: &str = "quit";
 
-	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		cx.tasks.shutdown();
 		cx.mgr.shutdown();
 

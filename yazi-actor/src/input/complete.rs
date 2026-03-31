@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Complete;
 
 impl Actor for Complete {
-	type Options = CompleteOpt;
+	type Form = CompleteOpt;
 
 	const NAME: &str = "complete";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let input = &mut cx.input;
 		if !input.visible || input.ticket.current() != opt.ticket {
 			succ!();

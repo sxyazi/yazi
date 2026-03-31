@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Activate;
 
 impl Actor for Activate {
-	type Options = ActivateForm;
+	type Form = ActivateForm;
 
 	const NAME: &str = "activate";
 
-	fn act(cx: &mut Ctx, Self::Options { mut opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { mut opt }: Self::Form) -> Result<Data> {
 		opt.cands.retain(|c| c.on.len() > opt.times);
 		WhichSorter::default().sort(&mut opt.cands);
 
@@ -31,7 +31,7 @@ impl Actor for Activate {
 		succ!(render!());
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Unknown => Some(SparkKind::IndWhichActivate),
 			_ => None,

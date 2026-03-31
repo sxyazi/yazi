@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::{execute, terminal::SetTitle};
 use yazi_actor::Ctx;
 use yazi_macro::succ;
-use yazi_parser::{app::TitleOpt, spark::SparkKind};
+use yazi_parser::{app::TitleForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 use yazi_term::TermState;
 use yazi_tty::TTY;
@@ -12,11 +12,11 @@ use crate::Actor;
 pub struct Title;
 
 impl Actor for Title {
-	type Options = TitleOpt;
+	type Form = TitleForm;
 
 	const NAME: &str = "title";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let s = opt.value.unwrap_or_else(|| format!("Yazi: {}", cx.tab().name()).into());
 		execute!(TTY.writer(), SetTitle(&s))?;
 
@@ -24,7 +24,7 @@ impl Actor for Title {
 		succ!()
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndAppTitle),
 			_ => None,

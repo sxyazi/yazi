@@ -11,11 +11,11 @@ use crate::{Actor, Ctx};
 pub struct Plugin;
 
 impl Actor for Plugin {
-	type Options = PluginForm;
+	type Form = PluginForm;
 
 	const NAME: &str = "plugin";
 
-	fn act(cx: &mut Ctx, Self::Options { mut opt }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { mut opt }: Self::Form) -> Result<Data> {
 		let mut hits = false;
 		if let Some(chunk) = LOADER.read().get(&*opt.id) {
 			hits = true;

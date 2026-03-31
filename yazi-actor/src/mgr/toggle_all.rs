@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::mgr::ToggleAllOpt;
+use yazi_parser::mgr::ToggleAllForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct ToggleAll;
 
 impl Actor for ToggleAll {
-	type Options = ToggleAllOpt;
+	type Form = ToggleAllForm;
 
 	const NAME: &str = "toggle_all";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		use either::Either::*;
 		let tab = cx.tab_mut();
 

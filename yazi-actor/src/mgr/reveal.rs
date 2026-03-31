@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::RevealOpt;
+use yazi_parser::mgr::RevealForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Reveal;
 
 impl Actor for Reveal {
-	type Options = RevealOpt;
+	type Form = RevealForm;
 
 	const NAME: &str = "reveal";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let Some((parent, child)) = opt.target.pair() else { succ!() };
 
 		// Cd to the parent directory

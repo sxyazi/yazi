@@ -9,11 +9,11 @@ pub struct OpenShellCompat;
 
 // TODO: remove
 impl Actor for OpenShellCompat {
-	type Options = ProcessOpenForm;
+	type Form = ProcessOpenForm;
 
 	const NAME: &str = "open_shell_compat";
 
-	fn act(cx: &mut Ctx, Self::Options { opt, .. }: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt, .. }: Self::Form) -> Result<Data> {
 		succ!(cx.tasks.open_shell_compat(opt));
 	}
 }

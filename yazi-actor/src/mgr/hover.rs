@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_dds::Pubsub;
 use yazi_macro::{err, render, succ, tab};
-use yazi_parser::mgr::HoverOpt;
+use yazi_parser::mgr::HoverForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Hover;
 
 impl Actor for Hover {
-	type Options = HoverOpt;
+	type Form = HoverForm;
 
 	const NAME: &str = "hover";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = tab!(cx);
 
 		// Parent should always track CWD

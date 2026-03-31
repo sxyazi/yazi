@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::{CWD, Files, FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 use yazi_watcher::MgrProxy;
@@ -12,11 +12,11 @@ use crate::{Actor, Ctx};
 pub struct Refresh;
 
 impl Actor for Refresh {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "refresh";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		CWD.set(cx.cwd(), Self::cwd_changed);
 
 		if let Some(p) = cx.parent() {

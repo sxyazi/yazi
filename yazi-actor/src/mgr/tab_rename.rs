@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::Result;
 use yazi_config::popup::InputCfg;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::TabRenameOpt;
+use yazi_parser::mgr::TabRenameForm;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
@@ -13,11 +13,11 @@ use crate::{Actor, Ctx};
 pub struct TabRename;
 
 impl Actor for TabRename {
-	type Options = TabRenameOpt;
+	type Form = TabRenameForm;
 
 	const NAME: &str = "tab_rename";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		let tab = cx.tab().id;
 		let pref = &mut cx.tab_mut().pref;
 

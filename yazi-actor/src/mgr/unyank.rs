@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,11 +8,11 @@ use crate::{Actor, Ctx};
 pub struct Unyank;
 
 impl Actor for Unyank {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "unyank";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let repeek = cx.hovered().is_some_and(|f| f.is_dir() && cx.mgr.yanked.contains_in(&f.url));
 		cx.mgr.yanked.clear();
 

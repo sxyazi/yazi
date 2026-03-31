@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::CopyOpt;
+use yazi_parser::mgr::CopyForm;
 use yazi_shared::{data::Data, strand::ToStrand, url::UrlLike};
 use yazi_widgets::CLIPBOARD;
 
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct Copy;
 
 impl Actor for Copy {
-	type Options = CopyOpt;
+	type Form = CopyForm;
 
 	const NAME: &str = "copy";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		let mut s = Vec::<u8>::new();
