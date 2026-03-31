@@ -17,7 +17,6 @@ yazi-adapter = { path = "../yazi-adapter", version = "26.2.2" }
 yazi-dds     = { path = "../yazi-dds", version = "26.2.2" }
 yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
 yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
-yazi-proxy   = { path = "../yazi-proxy", version = "26.2.2" }
 yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
 yazi-vfs     = { path = "../yazi-vfs", version = "26.2.2" }
 

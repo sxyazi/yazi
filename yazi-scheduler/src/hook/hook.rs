@@ -4,10 +4,9 @@ use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use yazi_dds::Pump;
 use yazi_fs::ok_or_not_found;
-use yazi_proxy::TasksProxy;
 use yazi_vfs::provider;
 
-use crate::{Ongoing, TaskOp, TaskOps, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInTrash, HookInUpload}};
+use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink, HookInTrash, HookInUpload}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
@@ -31,7 +30,7 @@ impl Hook {
 		}
 
 		let result = ok_or_not_found(provider::remove_dir_clean(&task.from).await);
-		TasksProxy::update_succeed([&task.to, &task.from]);
+		TasksProxy::update_succeed(task.id, [&task.to, &task.from], false);
 		Pump::push_move(task.from, task.to);
 
 		self.ops.out(task.id, FileOutCut::Clean(result));
@@ -39,7 +38,7 @@ impl Hook {
 
 	pub(crate) async fn copy(&self, task: HookInOutCopy) {
 		if self.ongoing.lock().intact(task.id) {
-			TasksProxy::update_succeed([&task.to]);
+			TasksProxy::update_succeed(task.id, [&task.to], false);
 			Pump::push_duplicate(task.from, task.to);
 		}
 
@@ -52,7 +51,7 @@ impl Hook {
 		}
 
 		let result = ok_or_not_found(provider::remove_dir_all(&task.target).await);
-		TasksProxy::update_succeed([&task.target]);
+		TasksProxy::update_succeed(task.id, [&task.target], false);
 		Pump::push_delete(task.target);
 
 		self.ops.out(task.id, FileOutDelete::Clean(result));
@@ -61,16 +60,32 @@ impl Hook {
 	pub(crate) async fn trash(&self, task: HookInTrash) {
 		let intact = self.ongoing.lock().intact(task.id);
 		if intact {
-			TasksProxy::update_succeed([&task.target]);
+			TasksProxy::update_succeed(task.id, [&task.target], false);
 			Pump::push_trash(task.target);
 		}
 		self.ops.out(task.id, FileOutTrash::Clean);
 	}
 
+	pub(crate) async fn link(&self, task: HookInOutLink) {
+		if self.ongoing.lock().intact(task.id) {
+			TasksProxy::update_succeed(task.id, [&task.to], true);
+		}
+
+		self.ops.out(task.id, FileOutLink::Clean);
+	}
+
+	pub(crate) async fn hardlink(&self, task: HookInOutHardlink) {
+		if self.ongoing.lock().intact(task.id) {
+			TasksProxy::update_succeed(task.id, [&task.to], true);
+		}
+
+		self.ops.out(task.id, FileOutHardlink::Clean);
+	}
+
 	pub(crate) async fn download(&self, task: HookInDownload) {
 		let intact = self.ongoing.lock().intact(task.id);
 		if intact {
-			TasksProxy::update_succeed([&task.target]);
+			TasksProxy::update_succeed(task.id, [&task.target], false);
 			Pump::push_download(task.target);
 		}
 		self.ops.out(task.id, FileOutDownload::Clean);
@@ -79,7 +94,7 @@ impl Hook {
 	pub(crate) async fn upload(&self, task: HookInUpload) {
 		let intact = self.ongoing.lock().intact(task.id);
 		if intact {
-			TasksProxy::update_succeed([task.target]);
+			TasksProxy::update_succeed(task.id, [task.target], false);
 		}
 		self.ops.out(task.id, FileOutUpload::Clean);
 	}

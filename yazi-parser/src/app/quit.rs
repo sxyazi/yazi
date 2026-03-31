@@ -1,36 +1,31 @@
-use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
+use mlua::{FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_binding::SER_OPT;
-use yazi_shared::{event::ActionCow, strand::StrandBuf};
+use yazi_core::app::QuitOpt;
+use yazi_shared::event::ActionCow;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct QuitOpt {
-	pub code:        i32,
-	#[serde(skip)]
-	pub selected:    Option<StrandBuf>,
-	pub no_cwd_file: bool,
+pub struct QuitForm {
+	pub opt: QuitOpt,
 }
 
-impl TryFrom<ActionCow> for QuitOpt {
+impl From<QuitOpt> for QuitForm {
+	fn from(opt: QuitOpt) -> Self { Self { opt } }
+}
+
+impl TryFrom<ActionCow> for QuitForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = a.take_any2("opt") {
-			return opt;
-		}
-
-		Ok(Self {
-			code:        a.get("code").unwrap_or_default(),
-			selected:    None,
-			no_cwd_file: a.bool("no-cwd-file"),
-		})
+		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
 	}
 }
 
-impl FromLua for QuitOpt {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
+impl FromLua for QuitForm {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(Self { opt: <_>::from_lua(value, lua)? })
+	}
 }
 
-impl IntoLua for QuitOpt {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
+impl IntoLua for QuitForm {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.opt.into_lua(lua) }
 }

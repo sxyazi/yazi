@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_boot::ARGS;
 use yazi_fs::provider::{Provider, local::Local};
-use yazi_parser::app::QuitOpt;
+use yazi_parser::app::QuitForm;
 use yazi_shared::{data::Data, strand::{StrandBuf, StrandLike, ToStrand}};
 use yazi_term::Term;
 
@@ -10,11 +10,11 @@ use crate::{Actor, Ctx};
 pub struct Quit;
 
 impl Actor for Quit {
-	type Options = QuitOpt;
+	type Options = QuitForm;
 
 	const NAME: &str = "quit";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
 		cx.tasks.shutdown();
 		cx.mgr.shutdown();
 

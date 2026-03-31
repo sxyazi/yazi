@@ -1,21 +1,24 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use yazi_core::app::QuitOpt;
 use yazi_shared::event::ActionCow;
 
-use crate::app::QuitOpt;
-
 #[derive(Debug, Default)]
-pub struct CloseOpt(pub QuitOpt);
-
-impl TryFrom<ActionCow> for CloseOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { a.try_into().map(Self) }
+pub struct CloseForm {
+	pub opt: QuitOpt,
 }
 
-impl FromLua for CloseOpt {
+impl TryFrom<ActionCow> for CloseForm {
+	type Error = anyhow::Error;
+
+	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
+	}
+}
+
+impl FromLua for CloseForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for CloseOpt {
+impl IntoLua for CloseForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

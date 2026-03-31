@@ -1,8 +1,9 @@
 use std::{mem, ops::ControlFlow};
 
 use anyhow::Result;
+use yazi_core::cmp::CmpItem;
 use yazi_macro::{render, succ};
-use yazi_parser::cmp::{CmpItem, ShowOpt};
+use yazi_parser::cmp::ShowForm;
 use yazi_shared::{data::Data, path::{AsPath, PathDyn}, strand::StrandLike};
 
 use crate::{Actor, Ctx};
@@ -12,11 +13,11 @@ const LIMIT: usize = 30;
 pub struct Show;
 
 impl Actor for Show {
-	type Options = ShowOpt;
+	type Options = ShowForm;
 
 	const NAME: &str = "show";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
 		let cmp = &mut cx.cmp;
 		if cmp.ticket != opt.ticket {
 			succ!();

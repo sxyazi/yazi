@@ -28,6 +28,7 @@ impl Actor for Arrow {
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;
 
+		// cx.tasks.scheduler.batch.next();  // FIXME: clear user action
 		succ!(render!());
 	}
 }

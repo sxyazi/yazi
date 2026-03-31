@@ -1,5 +1,6 @@
 use serde::Serialize;
-use yazi_parser::app::TaskSummary;
+
+use crate::TaskSummary;
 
 // --- Block
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]

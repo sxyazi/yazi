@@ -5,9 +5,11 @@ use serde::{Deserialize, Serialize};
 #[derive(
 	Clone, Copy, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize,
 )]
-pub struct Id(pub u64);
+pub struct Id(u64);
 
 impl Id {
+	pub const ZERO: Self = Self(0);
+
 	#[inline]
 	pub const fn get(&self) -> u64 { self.0 }
 

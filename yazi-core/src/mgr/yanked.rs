@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use hashbrown::HashSet;
+use indexmap::IndexSet;
 use yazi_dds::Pubsub;
 use yazi_fs::FilesOp;
 use yazi_macro::err;
@@ -9,27 +10,36 @@ use yazi_shared::url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlLike};
 #[derive(Debug, Default)]
 pub struct Yanked {
 	pub cut: bool,
-	urls:    HashSet<UrlBufCov>,
+	urls:    IndexSet<UrlBufCov>,
 
 	version:  u64,
 	revision: u64,
 }
 
 impl Deref for Yanked {
-	type Target = HashSet<UrlBufCov>;
+	type Target = IndexSet<UrlBufCov>;
 
 	fn deref(&self) -> &Self::Target { &self.urls }
 }
 
 impl Yanked {
-	pub fn new(cut: bool, urls: HashSet<UrlBufCov>) -> Self {
+	pub fn new(cut: bool, urls: IndexSet<UrlBufCov>) -> Self {
 		Self { cut, urls, ..Default::default() }
 	}
 
-	pub fn remove<'a>(&mut self, url: impl Into<Url<'a>>) {
-		if self.urls.remove(&UrlCov::new(url)) {
-			self.revision += 1;
+	pub fn remove_many<'a, I, T>(&mut self, urls: I)
+	where
+		I: IntoIterator<Item = T>,
+		T: Into<UrlCov<'a>>,
+	{
+		let urls: HashSet<_> = urls.into_iter().map(Into::into).collect();
+		if urls.is_empty() {
+			return;
 		}
+
+		let old = self.urls.len();
+		self.urls.retain(|u| !urls.contains(&UrlCov::new(u)));
+		self.revision += (old != self.urls.len()) as u64;
 	}
 
 	pub fn clear(&mut self) {

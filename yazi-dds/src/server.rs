@@ -125,7 +125,7 @@ impl Server {
 			}
 		}
 
-		let bye = EmberBye::borrowed().with_receiver(id).with_sender(Id(0));
+		let bye = EmberBye::borrowed().with_receiver(id).with_sender(Id::ZERO);
 		if let Ok(s) = try_format!("{bye}") {
 			writer.write_all(s.as_bytes()).await.ok();
 			writer.flush().await.ok();

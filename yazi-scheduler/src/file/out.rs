@@ -169,6 +169,7 @@ impl FileOutCutDo {
 pub(crate) enum FileOutLink {
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<anyhow::Error> for FileOutLink {
@@ -186,6 +187,9 @@ impl FileOutLink {
 					prog.state = Some(false);
 					task.log(reason);
 				}
+				Self::Clean => {
+					prog.cleaned = Some(true);
+				}
 			}
 		} else if let TaskProg::FileCopy(prog) = &mut task.prog {
 			match self {
@@ -196,6 +200,7 @@ impl FileOutLink {
 					prog.failed_files += 1;
 					task.log(reason);
 				}
+				Self::Clean => {}
 			}
 		} else if let TaskProg::FileCut(prog) = &mut task.prog {
 			match self {
@@ -206,6 +211,7 @@ impl FileOutLink {
 					prog.failed_files += 1;
 					task.log(reason);
 				}
+				Self::Clean => {}
 			}
 		}
 	}
@@ -218,6 +224,7 @@ pub(crate) enum FileOutHardlink {
 	Deform(String),
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<anyhow::Error> for FileOutHardlink {
@@ -246,6 +253,9 @@ impl FileOutHardlink {
 			Self::Fail(reason) => {
 				prog.collected = Some(false);
 				task.log(reason);
+			}
+			Self::Clean => {
+				prog.cleaned = Some(true);
 			}
 		}
 	}

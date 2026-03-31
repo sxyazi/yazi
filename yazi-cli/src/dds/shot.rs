@@ -57,13 +57,13 @@ impl Dds {
 	pub(super) fn ensure_ability(peers: &HashMap<Id, Peer>, kind: &str, receiver: Id) -> Result<()> {
 		match (receiver, peers.get(&receiver).map(|p| p.able(kind))) {
 			// Send to all receivers
-			(Id(0), _) if peers.is_empty() => {
+			(Id::ZERO, _) if peers.is_empty() => {
 				bail!("No receiver found. Check if any receivers are running.")
 			}
-			(Id(0), _) if peers.values().all(|p| !p.able(kind)) => {
+			(Id::ZERO, _) if peers.values().all(|p| !p.able(kind)) => {
 				bail!("No receiver has the ability to receive `{kind}` messages.")
 			}
-			(Id(0), _) => Ok(()),
+			(Id::ZERO, _) => Ok(()),
 
 			// Send to a specific receiver
 			(_, Some(true)) => Ok(()),

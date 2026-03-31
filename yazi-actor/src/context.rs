@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use anyhow::{Result, anyhow};
-use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}, tasks::Tasks};
+use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}};
 use yazi_fs::File;
 use yazi_shared::{Id, Source, event::Action, url::UrlBuf};
 use yazi_term::Term;
@@ -118,9 +118,6 @@ impl<'a> Ctx<'a> {
 	pub fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
 		self.tab_mut().hovered_folder_mut()
 	}
-
-	#[inline]
-	pub fn tasks(&self) -> &Tasks { &self.tasks }
 
 	#[inline]
 	pub fn source(&self) -> Source { if self.level != 1 { Source::Ind } else { self.source } }

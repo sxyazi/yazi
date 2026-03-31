@@ -4,8 +4,8 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Va
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
 use yazi_config::{keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
-use yazi_parser::notify::PushOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
 use yazi_shared::{Debounce, Layer};
 
@@ -94,7 +94,7 @@ impl Utils {
 	}
 
 	pub(super) fn notify(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, opt: PushOpt| Ok(NotifyProxy::push(opt)))
+		lua.create_function(|_, opt: MessageOpt| Ok(NotifyProxy::push(opt)))
 	}
 
 	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {

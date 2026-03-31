@@ -82,6 +82,10 @@ impl PartialEq<str> for Symbol<str> {
 	fn eq(&self, other: &str) -> bool { self.as_ref() == other }
 }
 
+impl PartialEq<&str> for Symbol<str> {
+	fn eq(&self, other: &&str) -> bool { self.as_ref() == *other }
+}
+
 impl PartialEq<[u8]> for Symbol<[u8]> {
 	fn eq(&self, other: &[u8]) -> bool { self.as_ref() == other }
 }

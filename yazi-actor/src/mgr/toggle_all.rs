@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::ToggleAllOpt;
-use yazi_proxy::NotifyProxy;
+use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};

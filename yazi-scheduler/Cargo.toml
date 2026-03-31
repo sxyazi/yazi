@@ -18,9 +18,7 @@ yazi-config  = { path = "../yazi-config", version = "26.2.2" }
 yazi-dds     = { path = "../yazi-dds", version = "26.2.2" }
 yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
 yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
-yazi-parser  = { path = "../yazi-parser", version = "26.2.2" }
-yazi-plugin  = { path = "../yazi-plugin", version = "26.2.2" }
-yazi-proxy   = { path = "../yazi-proxy", version = "26.2.2" }
+yazi-runner  = { path = "../yazi-runner", version = "26.2.2" }
 yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
 yazi-term    = { path = "../yazi-term", version = "26.2.2" }
 yazi-vfs     = { path = "../yazi-vfs", version = "26.2.2" }

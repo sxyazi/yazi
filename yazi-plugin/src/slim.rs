@@ -1,11 +1,7 @@
 use mlua::{IntoLua, Lua};
-use yazi_binding::Runtime;
 use yazi_macro::plugin_preset as preset;
 
-pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
-	let lua = Lua::new();
-	lua.set_app_data(Runtime::new_isolate(name));
-
+pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	// Base
 	let globals = lua.globals();
 	globals.raw_set("ui", crate::elements::compose())?;
@@ -20,11 +16,11 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	yazi_binding::Path::install(&lua)?;
 
 	yazi_binding::Error::install(&lua)?;
-	crate::loader::install(&lua)?;
 	crate::process::install(&lua)?;
+	yazi_runner::loader::install(&lua)?;
 
 	// Addons
 	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
 
-	Ok(lua)
+	Ok(())
 }

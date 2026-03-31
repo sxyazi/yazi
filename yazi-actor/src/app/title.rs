@@ -1,9 +1,8 @@
 use anyhow::Result;
 use crossterm::{execute, terminal::SetTitle};
 use yazi_actor::Ctx;
-use yazi_dds::spark::SparkKind;
 use yazi_macro::succ;
-use yazi_parser::app::TitleOpt;
+use yazi_parser::{app::TitleOpt, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 use yazi_term::TermState;
 use yazi_tty::TTY;

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(sorter which);
+yazi_macro::mod_flat!(opt sorter which);

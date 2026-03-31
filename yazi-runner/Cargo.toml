@@ -1,0 +1,34 @@
+[package]
+name                   = "yazi-runner"
+description            = "Yazi Lua runner"
+version.workspace      = true
+edition.workspace      = true
+license.workspace      = true
+authors.workspace      = true
+homepage.workspace     = true
+repository.workspace   = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+yazi-binding = { path = "../yazi-binding", version = "26.2.2" }
+yazi-boot    = { path = "../yazi-boot", version = "26.2.2" }
+yazi-config  = { path = "../yazi-config", version = "26.2.2" }
+yazi-dds     = { path = "../yazi-dds", version = "26.2.2" }
+yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
+yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
+yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
+
+# External dependencies
+anyhow      = { workspace = true }
+dyn-clone   = { workspace = true }
+hashbrown   = { workspace = true }
+mlua        = { workspace = true }
+parking_lot = { workspace = true }
+serde       = { workspace = true }
+thiserror   = { workspace = true }
+tokio       = { workspace = true }
+tokio-util  = { workspace = true }
+tracing     = { workspace = true }

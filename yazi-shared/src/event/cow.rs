@@ -1,6 +1,7 @@
 use std::{iter, ops::Deref};
 
 use anyhow::Result;
+use tokio::sync::mpsc;
 
 use super::Action;
 use crate::data::{Data, DataKey};
@@ -101,6 +102,13 @@ impl ActionCow {
 		match self {
 			Self::Owned(c) => Box::new(c.take_any_iter()),
 			Self::Borrowed(_) => Box::new(iter::empty()),
+		}
+	}
+
+	pub fn take_replier(&mut self) -> Option<mpsc::UnboundedSender<anyhow::Result<Data>>> {
+		match self {
+			Self::Owned(c) => c.take_replier(),
+			Self::Borrowed(_) => None,
 		}
 	}
 }

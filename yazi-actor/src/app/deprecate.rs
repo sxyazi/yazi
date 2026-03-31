@@ -1,6 +1,7 @@
 use anyhow::Result;
+use yazi_core::notify::{MessageLevel, MessageOpt};
 use yazi_macro::act;
-use yazi_parser::{app::DeprecateOpt, notify::{PushLevel, PushOpt}};
+use yazi_parser::app::DeprecateOpt;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -13,10 +14,10 @@ impl Actor for Deprecate {
 	const NAME: &str = "deprecate";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		act!(notify:push, cx, PushOpt {
+		act!(notify:push, cx, MessageOpt {
 			title:   "Deprecated API".to_owned(),
 			content: opt.content.into_owned(),
-			level:   PushLevel::Warn,
+			level:   MessageLevel::Warn,
 			timeout: std::time::Duration::from_secs(20),
 		})
 	}

@@ -1,6 +1,7 @@
 use anyhow::Result;
+use yazi_core::mgr::DisplaceOpt;
 use yazi_macro::succ;
-use yazi_parser::{VoidOpt, mgr::DisplaceDoOpt};
+use yazi_parser::VoidOpt;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 use yazi_vfs::provider;
@@ -22,7 +23,7 @@ impl Actor for Displace {
 		let tab = cx.tab().id;
 		let from = cx.cwd().to_owned();
 		tokio::spawn(async move {
-			MgrProxy::displace_do(tab, DisplaceDoOpt {
+			MgrProxy::displace_do(tab, DisplaceOpt {
 				to: provider::canonicalize(&from).await.map_err(Into::into),
 				from,
 			});

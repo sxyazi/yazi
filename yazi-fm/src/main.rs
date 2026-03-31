@@ -34,6 +34,8 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_watcher::init();
 
+	yazi_runner::init(yazi_plugin::slim_lua);
+
 	yazi_plugin::init()?;
 
 	yazi_dds::serve();

@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::{CdSource, TabCreateOpt};
-use yazi_proxy::NotifyProxy;
+use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};

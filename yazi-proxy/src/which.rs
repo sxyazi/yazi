@@ -1,14 +1,14 @@
 use tokio::sync::mpsc;
 use yazi_config::keymap::ChordCow;
+use yazi_core::which::WhichOpt;
 use yazi_macro::{emit, relay};
-use yazi_parser::which::ActivateOpt;
 
 pub struct WhichProxy;
 
 impl WhichProxy {
 	pub async fn activate(cands: Vec<ChordCow>, silent: bool) -> Option<ChordCow> {
 		let (tx, mut rx) = mpsc::unbounded_channel();
-		emit!(Call(relay!(which:activate).with_any("opt", ActivateOpt {
+		emit!(Call(relay!(which:activate).with_any("opt", WhichOpt {
 			tx: Some(tx),
 			cands,
 			silent,

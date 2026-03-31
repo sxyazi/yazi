@@ -18,7 +18,7 @@ impl Actor for UpdateYanked {
 			succ!();
 		}
 
-		cx.mgr.yanked = Yanked::new(opt.cut, opt.urls.into_owned());
+		cx.mgr.yanked = Yanked::new(opt.cut, opt.0.urls.into_owned());
 		succ!(render!());
 	}
 }

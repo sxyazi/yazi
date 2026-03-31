@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_fs::Filter;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::FilterOpt;
+use yazi_parser::mgr::FilterForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -9,11 +9,11 @@ use crate::{Actor, Ctx};
 pub struct FilterDo;
 
 impl Actor for FilterDo {
-	type Options = FilterOpt;
+	type Options = FilterForm;
 
 	const NAME: &str = "filter_do";
 
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Options { opt }: Self::Options) -> Result<Data> {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };
 
 		let hovered = cx.hovered().map(|f| f.urn().into());

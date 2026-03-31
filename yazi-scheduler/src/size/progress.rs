@@ -1,5 +1,6 @@
 use serde::Serialize;
-use yazi_parser::app::TaskSummary;
+
+use crate::TaskSummary;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct SizeProg {

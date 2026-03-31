@@ -2,22 +2,22 @@ use std::time::Duration;
 
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use tokio_util::sync::CancellationToken;
 use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
 use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
-use yazi_parser::mgr::PreviewLock;
-use yazi_plugin::{external::Highlighter, isolate};
+use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
 use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFiles, VfsFilesOp};
+
+use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
 
 #[derive(Default)]
 pub struct Preview {
 	pub lock: Option<PreviewLock>,
 	pub skip: usize,
 
-	previewer_ct:    Option<CancellationToken>,
+	handle:          Option<JoinHandle<()>>,
 	pub folder_lock: Option<UrlBuf>,
 	folder_loader:   Option<JoinHandle<()>>,
 }
@@ -35,7 +35,16 @@ impl Preview {
 		};
 
 		self.abort();
-		self.previewer_ct = isolate::peek(&previewer.run, file, mime, self.skip);
+		let job = PeekJob { action: &previewer.run, file, mime, skip: self.skip };
+
+		self.handle = Some(tokio::spawn(async move {
+			let mut rx = RUNNER.peek(&job).await;
+			match rx.recv().await.unwrap_or(Err(PeekError::Cancelled)) {
+				Ok(()) | Err(PeekError::Cancelled) => {}
+				Err(PeekError::ShouldSync) => AppProxy::plugin_peek(job),
+				Err(e) => MgrProxy::update_peeked_error(job, e.to_string()),
+			}
+		}));
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, mime: Symbol<str>, force: bool) {
@@ -71,7 +80,7 @@ impl Preview {
 	}
 
 	pub fn abort(&mut self) {
-		self.previewer_ct.take().map(|ct| ct.cancel());
+		self.handle.take().map(|ct| ct.abort());
 		Highlighter::abort();
 	}
 

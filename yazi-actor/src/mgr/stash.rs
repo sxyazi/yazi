@@ -1,7 +1,6 @@
 use anyhow::Result;
-use yazi_dds::spark::SparkKind;
 use yazi_macro::succ;
-use yazi_parser::mgr::StashOpt;
+use yazi_parser::{mgr::StashOpt, spark::SparkKind};
 use yazi_shared::{Source, data::Data, url::{AsUrl, UrlLike}};
 
 use crate::{Actor, Ctx};

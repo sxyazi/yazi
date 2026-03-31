@@ -19,8 +19,8 @@ impl Actor for UpdatePaged {
 
 		let targets = cx.current().paginate(opt.page.unwrap_or(cx.current().page));
 		if !targets.is_empty() {
-			cx.tasks().fetch_paged(targets, &cx.mgr.mimetype);
-			cx.tasks().preload_paged(targets, &cx.mgr.mimetype);
+			cx.tasks.fetch_paged(targets, &cx.mgr.mimetype);
+			cx.tasks.preload_paged(targets, &cx.mgr.mimetype);
 		}
 		succ!();
 	}

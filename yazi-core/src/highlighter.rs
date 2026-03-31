@@ -1,10 +1,11 @@
 use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::OnceLock};
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use yazi_config::{THEME, YAZI};
-use yazi_shared::{Id, Ids, errors::PeekError, replace_to_printable};
+use yazi_runner::previewer::PeekError;
+use yazi_shared::{Id, Ids, replace_to_printable};
 use yazi_shim::ratatui::LineIter;
 
 static INCR: Ids = Ids::new();
@@ -68,7 +69,7 @@ impl Highlighter {
 		let mut inspected = 0u16;
 		while self.reader.read_until(b'\n', &mut buf).is_ok_and(|n| n > 0) {
 			if Self::is_binary(&buf, &mut inspected) {
-				return Err("Binary file".into());
+				Err(anyhow!("Binary file"))?;
 			}
 
 			let remaining = Self::normalize_control_chars(&mut buf);
@@ -86,7 +87,7 @@ impl Highlighter {
 		}
 
 		if self.skip > 0 && i < self.skip + self.size.height as usize {
-			return Err(PeekError::Exceed(i.saturating_sub(self.size.height as _)));
+			return Err(PeekError::Exceeded(i.saturating_sub(self.size.height as _)));
 		}
 
 		Ok(Text::from(lines))
@@ -139,7 +140,7 @@ impl Highlighter {
 
 	#[inline]
 	fn ensure_not_cancelled(&self) -> Result<(), PeekError> {
-		if self.ticket != INCR.current() { Err("Highlighting cancelled".into()) } else { Ok(()) }
+		if self.ticket != INCR.current() { Err(anyhow!("Highlighting cancelled"))? } else { Ok(()) }
 	}
 
 	fn load() -> (Theme, SyntaxSet) {

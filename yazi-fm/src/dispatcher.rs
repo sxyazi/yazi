@@ -2,12 +2,11 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use crossterm::event::{KeyEvent, MouseEvent};
-use tokio::sync::mpsc;
 use tracing::warn;
 use yazi_actor::Ctx;
 use yazi_config::keymap::Key;
 use yazi_macro::{act, emit};
-use yazi_shared::{data::Data, event::{ActionCow, Event, NEED_RENDER}};
+use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
 use yazi_widgets::input::InputMode;
 
 use crate::{Executor, Router, app::App};
@@ -39,7 +38,7 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_call(&mut self, action: ActionCow) -> Result<()> {
-		let tx = action.any::<mpsc::UnboundedSender<Result<Data>>>("__reply").cloned();
+		let tx = action.replier().cloned();
 		let result = Executor::new(self.app).execute(action);
 
 		if let Err(e) = &result {

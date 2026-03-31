@@ -1,5 +1,6 @@
 use serde::Serialize;
-use yazi_parser::app::TaskSummary;
+
+use crate::TaskSummary;
 
 // --- Copy
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
@@ -110,7 +111,8 @@ impl FileProgCut {
 // --- Link
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgLink {
-	pub state: Option<bool>,
+	pub state:   Option<bool>,
+	pub cleaned: Option<bool>,
 }
 
 impl From<FileProgLink> for TaskSummary {
@@ -127,13 +129,13 @@ impl From<FileProgLink> for TaskSummary {
 impl FileProgLink {
 	pub fn cooked(self) -> bool { self.state == Some(true) }
 
-	pub fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() || (self.cleaned.is_none() && self.cooked()) }
 
-	pub fn success(self) -> bool { self.cooked() }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
 
-	pub fn failed(self) -> bool { self.state == Some(false) }
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.state == Some(false) }
 
-	pub fn cleaned(self) -> Option<bool> { None }
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -145,6 +147,7 @@ pub struct FileProgHardlink {
 	pub success:   u32,
 	pub failed:    u32,
 	pub collected: Option<bool>,
+	pub cleaned:   Option<bool>,
 }
 
 impl From<FileProgHardlink> for TaskSummary {
@@ -162,14 +165,16 @@ impl FileProgHardlink {
 	pub fn cooked(self) -> bool { self.collected == Some(true) && self.success == self.total }
 
 	pub fn running(self) -> bool {
-		self.collected.is_none() || self.success + self.failed != self.total
+		self.collected.is_none()
+			|| self.success + self.failed != self.total
+			|| (self.cleaned.is_none() && self.cooked())
 	}
 
-	pub fn success(self) -> bool { self.cooked() }
+	pub fn success(self) -> bool { self.cleaned == Some(true) && self.cooked() }
 
-	pub fn failed(self) -> bool { self.collected == Some(false) }
+	pub fn failed(self) -> bool { self.cleaned == Some(false) || self.collected == Some(false) }
 
-	pub fn cleaned(self) -> Option<bool> { None }
+	pub fn cleaned(self) -> Option<bool> { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

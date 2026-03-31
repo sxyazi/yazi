@@ -1,9 +1,10 @@
 use std::{io, mem};
 
 use anyhow::Result;
+use yazi_core::cmp::{CmpItem, CmpOpt};
 use yazi_fs::{path::clean_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
-use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
+use yazi_parser::cmp::TriggerOpt;
 use yazi_proxy::CmpProxy;
 use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::provider;
@@ -31,7 +32,7 @@ impl Actor for Trigger {
 
 		let ticket = cx.cmp.ticket;
 		if cx.cmp.caches.contains_key(&parent) {
-			return act!(cmp:show, cx, ShowOpt { cache: vec![], cache_name: parent, word, ticket });
+			return act!(cmp:show, cx, CmpOpt { cache: vec![], cache_name: parent, word, ticket });
 		}
 
 		cx.cmp.handle = Some(tokio::spawn(async move {
@@ -53,7 +54,7 @@ impl Actor for Trigger {
 			if !cache.is_empty() {
 				cache
 					.sort_unstable_by(|a, b| natsort(a.name.encoded_bytes(), b.name.encoded_bytes(), false));
-				CmpProxy::show(ShowOpt { cache, cache_name: parent, word, ticket });
+				CmpProxy::show(CmpOpt { cache, cache_name: parent, word, ticket });
 			}
 
 			Ok::<_, io::Error>(())

@@ -59,11 +59,9 @@ impl Actor for RemoveDo {
 			t.selected.remove_many(&opt.targets);
 		});
 
-		for u in &opt.targets {
-			mgr.yanked.remove(u);
-		}
-
+		mgr.yanked.remove_many(&opt.targets);
 		mgr.yanked.catchup_revision(false);
+
 		cx.tasks.file_remove(opt.targets, opt.permanently);
 		succ!();
 	}

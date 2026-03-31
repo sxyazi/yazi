@@ -15,7 +15,7 @@ impl Actor for Cancel {
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let tasks = &mut cx.tasks;
 
-		let id = tasks.ongoing().lock().get_id(tasks.cursor);
+		let id = tasks.scheduler.ongoing.lock().get_id(tasks.cursor);
 		if id.map(|id| tasks.scheduler.cancel(id)) != Some(true) {
 			succ!();
 		}
