@@ -26,7 +26,6 @@ yazi-dds       = { path = "../yazi-dds", version = "26.2.2" }
 yazi-emulator  = { path = "../yazi-emulator", version = "26.2.2" }
 yazi-fs        = { path = "../yazi-fs", version = "26.2.2" }
 yazi-macro     = { path = "../yazi-macro", version = "26.2.2" }
-yazi-parser    = { path = "../yazi-parser", version = "26.2.2" }
 yazi-proxy     = { path = "../yazi-proxy", version = "26.2.2" }
 yazi-runner    = { path = "../yazi-runner", version = "26.2.2" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.2.2" }
@@ -40,16 +39,12 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
 ansi-to-tui   = { workspace = true }
 anyhow        = { workspace = true }
 futures       = { workspace = true }
-hashbrown     = { workspace = true }
 mlua          = { workspace = true }
-parking_lot   = { workspace = true }
 paste         = { workspace = true }
 ratatui       = { workspace = true }
 serde_json    = { workspace = true }
-syntect       = { workspace = true }
 tokio         = { workspace = true }
 tokio-stream  = { workspace = true }
-tokio-util    = { workspace = true }
 tracing       = { workspace = true }
 twox-hash     = { workspace = true }
 unicode-width = { workspace = true }

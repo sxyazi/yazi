@@ -34,15 +34,11 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
 anyhow        = { workspace = true }
 bitflags      = { workspace = true }
 crossterm     = { workspace = true }
-dyn-clone     = { workspace = true }
 hashbrown     = { workspace = true }
-indexmap      = { workspace = true }
 mlua          = { workspace = true }
-ordered-float = { workspace = true }
 paste         = { workspace = true }
 ratatui       = { workspace = true }
 serde         = { workspace = true }
-serde_with    = { workspace = true }
 tokio         = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]

@@ -1,6 +1,6 @@
 use yazi_shared::{Id, url::UrlBuf};
 
-use crate::{Task, TaskProg, file::FileInCopy};
+use crate::{Task, TaskProg};
 
 #[derive(Debug)]
 pub(crate) enum HookIn {

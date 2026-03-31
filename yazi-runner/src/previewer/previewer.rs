@@ -6,18 +6,11 @@ use crate::{Runner, loader::LOADER, previewer::{PeekError, PeekJob}};
 impl Runner {
 	pub async fn peek(&'static self, job: &PeekJob) -> mpsc::Receiver<Result<(), PeekError>> {
 		let (tx, rx) = mpsc::channel(1);
-
-		select! {
-			_ = tx.closed() => {},
-			r = LOADER.ensure(&job.action.name, |c| c.sync_peek) => {
-				match r {
-					Ok(true) => _ = tx.try_send(Err(PeekError::ShouldSync)),
-					Ok(false) => self.peek_do(job, tx),
-					Err(e) => _ = tx.try_send(Err(e.into())),
-				}
-			},
+		match LOADER.ensure(&job.action.name, |c| c.sync_peek).await {
+			Ok(true) => _ = tx.try_send(Err(PeekError::ShouldSync)),
+			Ok(false) => self.peek_do(job, tx),
+			Err(e) => _ = tx.try_send(Err(e.into())),
 		}
-
 		rx
 	}
 

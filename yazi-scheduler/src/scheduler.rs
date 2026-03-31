@@ -154,7 +154,7 @@ impl Scheduler {
 		}
 
 		self.file.submit(FileInDownload { id, target, cha: None, retry: 0, done: done.clone() }, LOW);
-		done.clone()
+		done
 	}
 
 	pub fn file_upload(&self, target: UrlBuf) {

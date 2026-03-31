@@ -67,7 +67,6 @@ scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
 serde_json          = "1.0.149"
 serde_with          = "3.18.0"
-strum               = { version = "0.28.0", features = [ "derive" ] }
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror           = "2.0.18"
 tokio               = { version = "1.50.0", features = [ "full" ] }

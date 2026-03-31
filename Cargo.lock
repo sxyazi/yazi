@@ -3365,7 +3365,7 @@ dependencies = [
  "kasuari",
  "lru",
  "serde",
- "strum 0.27.2",
+ "strum",
  "thiserror 2.0.18",
  "unicode-segmentation",
  "unicode-truncate",
@@ -3430,7 +3430,7 @@ dependencies = [
  "line-clipping",
  "ratatui-core",
  "serde",
- "strum 0.27.2",
+ "strum",
  "time",
  "unicode-segmentation",
  "unicode-width",
@@ -4227,16 +4227,7 @@ version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
 dependencies = [
- "strum_macros 0.27.2",
-]
-
-[[package]]
-name = "strum"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9628de9b8791db39ceda2b119bbe13134770b56c138ec1d3af810d045c04f9bd"
-dependencies = [
- "strum_macros 0.28.0",
+ "strum_macros",
 ]
 
 [[package]]
@@ -4244,18 +4235,6 @@ name = "strum_macros"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab85eea0270ee17587ed4156089e10b9e6880ee688791d45a905f5b1ca36f664"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -5748,16 +5727,13 @@ version = "26.2.2"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
- "dyn-clone",
  "hashbrown 0.16.1",
  "indexmap 2.13.0",
  "mlua",
- "ordered-float 5.2.0",
  "parking_lot",
  "ratatui",
  "serde",
  "serde_with",
- "strum 0.28.0",
  "syntect",
  "tokio",
  "tokio-stream",
@@ -5804,7 +5780,6 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
- "yazi-widgets",
 ]
 
 [[package]]
@@ -5924,15 +5899,11 @@ dependencies = [
  "anyhow",
  "bitflags 2.11.0",
  "crossterm 0.29.0",
- "dyn-clone",
  "hashbrown 0.16.1",
- "indexmap 2.13.0",
  "mlua",
- "ordered-float 5.2.0",
  "paste",
  "ratatui",
  "serde",
- "serde_with",
  "tokio",
  "yazi-binding",
  "yazi-boot",
@@ -5955,17 +5926,13 @@ dependencies = [
  "ansi-to-tui",
  "anyhow",
  "futures",
- "hashbrown 0.16.1",
  "libc",
  "mlua",
- "parking_lot",
  "paste",
  "ratatui",
  "serde_json",
- "syntect",
  "tokio",
  "tokio-stream",
- "tokio-util",
  "tracing",
  "twox-hash",
  "unicode-width",
@@ -5980,7 +5947,6 @@ dependencies = [
  "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
- "yazi-parser",
  "yazi-proxy",
  "yazi-runner",
  "yazi-scheduler",
@@ -6001,9 +5967,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 name = "yazi-proxy"
 version = "26.2.2"
 dependencies = [
- "mlua",
  "tokio",
- "yazi-binding",
  "yazi-config",
  "yazi-core",
  "yazi-macro",

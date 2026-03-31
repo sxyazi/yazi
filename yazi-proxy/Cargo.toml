@@ -13,7 +13,6 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-binding   = { path = "../yazi-binding", version = "26.2.2" }
 yazi-config    = { path = "../yazi-config", version = "26.2.2" }
 yazi-core      = { path = "../yazi-core", version = "26.2.2" }
 yazi-macro     = { path = "../yazi-macro", version = "26.2.2" }
@@ -23,5 +22,4 @@ yazi-shared    = { path = "../yazi-shared", version = "26.2.2" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
 
 # External dependencies
-mlua  = { workspace = true }
 tokio = { workspace = true }
