@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::mgr::UploadOpt;
+use yazi_parser::mgr::UploadForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Upload;
 
 impl Actor for Upload {
-	type Options = UploadOpt;
+	type Options = UploadForm;
 
 	const NAME: &str = "upload";
 

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::PasteOpt;
+use yazi_parser::mgr::PasteForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Paste;
 
 impl Actor for Paste {
-	type Options = PasteOpt;
+	type Options = PasteForm;
 
 	const NAME: &str = "paste";
 

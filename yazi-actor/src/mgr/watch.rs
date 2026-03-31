@@ -2,7 +2,7 @@ use std::iter;
 
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -10,7 +10,7 @@ use crate::{Actor, Ctx};
 pub struct Watch;
 
 impl Actor for Watch {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "watch";
 

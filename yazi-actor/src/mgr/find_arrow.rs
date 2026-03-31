@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::FindArrowOpt;
+use yazi_parser::mgr::FindArrowForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct FindArrow;
 
 impl Actor for FindArrow {
-	type Options = FindArrowOpt;
+	type Options = FindArrowForm;
 
 	const NAME: &str = "find_arrow";
 

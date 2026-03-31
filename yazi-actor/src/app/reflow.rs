@@ -5,7 +5,7 @@ use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_config::LAYOUT;
 use yazi_macro::{render, succ};
-use yazi_parser::app::ReflowOpt;
+use yazi_parser::app::ReflowForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -13,7 +13,7 @@ use crate::{Actor, Ctx};
 pub struct Reflow;
 
 impl Actor for Reflow {
-	type Options = ReflowOpt;
+	type Options = ReflowForm;
 
 	const NAME: &str = "reflow";
 

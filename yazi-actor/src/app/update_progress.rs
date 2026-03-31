@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::{act, render, render_partial, succ};
-use yazi_parser::app::UpdateProgressOpt;
+use yazi_parser::app::UpdateProgressForm;
 use yazi_shared::data::Data;
 
 use crate::Actor;
@@ -9,7 +9,7 @@ use crate::Actor;
 pub struct UpdateProgress;
 
 impl Actor for UpdateProgress {
-	type Options = UpdateProgressOpt;
+	type Options = UpdateProgressForm;
 
 	const NAME: &str = "update_progress";
 

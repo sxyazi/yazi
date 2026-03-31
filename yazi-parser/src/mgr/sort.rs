@@ -5,7 +5,7 @@ use yazi_fs::{SortBy, SortFallback};
 use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct SortOpt {
+pub struct SortForm {
 	pub by:        Option<SortBy>,
 	pub reverse:   Option<bool>,
 	pub dir_first: Option<bool>,
@@ -14,7 +14,7 @@ pub struct SortOpt {
 	pub fallback:  Option<SortFallback>,
 }
 
-impl TryFrom<ActionCow> for SortOpt {
+impl TryFrom<ActionCow> for SortForm {
 	type Error = anyhow::Error;
 
 	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
@@ -29,10 +29,10 @@ impl TryFrom<ActionCow> for SortOpt {
 	}
 }
 
-impl FromLua for SortOpt {
+impl FromLua for SortForm {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
-impl IntoLua for SortOpt {
+impl IntoLua for SortForm {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
 }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::mgr::HardlinkOpt;
+use yazi_parser::mgr::HardlinkForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Hardlink;
 
 impl Actor for Hardlink {
-	type Options = HardlinkOpt;
+	type Options = HardlinkForm;
 
 	const NAME: &str = "hardlink";
 

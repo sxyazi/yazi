@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{ok_or_not_found, succ};
-use yazi_parser::mgr::CreateOpt;
+use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
@@ -14,7 +14,7 @@ use crate::{Actor, Ctx};
 pub struct Create;
 
 impl Actor for Create {
-	type Options = CreateOpt;
+	type Options = CreateForm;
 
 	const NAME: &str = "create";
 

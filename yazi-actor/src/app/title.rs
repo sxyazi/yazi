@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::{execute, terminal::SetTitle};
 use yazi_actor::Ctx;
 use yazi_macro::succ;
-use yazi_parser::{app::TitleOpt, spark::SparkKind};
+use yazi_parser::{app::TitleForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 use yazi_term::TermState;
 use yazi_tty::TTY;
@@ -12,7 +12,7 @@ use crate::Actor;
 pub struct Title;
 
 impl Actor for Title {
-	type Options = TitleOpt;
+	type Options = TitleForm;
 
 	const NAME: &str = "title";
 

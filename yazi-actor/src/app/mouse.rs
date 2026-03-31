@@ -6,7 +6,7 @@ use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
 use yazi_config::YAZI;
 use yazi_macro::succ;
-use yazi_parser::app::MouseOpt;
+use yazi_parser::app::MouseForm;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
 
@@ -15,7 +15,7 @@ use crate::{Actor, Ctx};
 pub struct Mouse;
 
 impl Actor for Mouse {
-	type Options = MouseOpt;
+	type Options = MouseForm;
 
 	const NAME: &str = "mouse";
 

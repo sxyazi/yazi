@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_boot::BOOT;
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::CdSource};
+use yazi_parser::{VoidForm, mgr::CdSource};
 use yazi_shared::{data::Data, strand::StrandLike, url::UrlLike};
 
 use crate::Actor;
@@ -10,7 +10,7 @@ use crate::Actor;
 pub struct Bootstrap;
 
 impl Actor for Bootstrap {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "bootstrap";
 

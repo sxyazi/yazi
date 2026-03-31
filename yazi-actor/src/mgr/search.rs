@@ -7,7 +7,7 @@ use yazi_config::popup::InputCfg;
 use yazi_core::mgr::SearchVia;
 use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::{CdSource, SearchForm}};
+use yazi_parser::{VoidForm, mgr::{CdSource, SearchForm}};
 use yazi_plugin::external;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_scheduler::NotifyProxy;
@@ -103,7 +103,7 @@ impl Actor for SearchDo {
 pub struct SearchStop;
 
 impl Actor for SearchStop {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "search_stop";
 

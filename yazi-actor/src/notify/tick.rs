@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use yazi_core::notify::Notify;
 use yazi_emulator::Dimension;
 use yazi_macro::{render, render_partial, succ};
-use yazi_parser::notify::TickOpt;
+use yazi_parser::notify::TickForm;
 use yazi_proxy::NotifyProxy;
 use yazi_shared::data::Data;
 
@@ -14,7 +14,7 @@ use crate::{Actor, Ctx};
 pub struct Tick;
 
 impl Actor for Tick {
-	type Options = TickOpt;
+	type Options = TickForm;
 
 	const NAME: &str = "tick";
 

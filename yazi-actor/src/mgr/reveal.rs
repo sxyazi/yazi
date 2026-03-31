@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::RevealOpt;
+use yazi_parser::mgr::RevealForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct Reveal;
 
 impl Actor for Reveal {
-	type Options = RevealOpt;
+	type Options = RevealForm;
 
 	const NAME: &str = "reveal";
 

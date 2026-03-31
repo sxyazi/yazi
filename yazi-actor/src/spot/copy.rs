@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::spot::CopyOpt;
+use yazi_parser::spot::CopyForm;
 use yazi_shared::data::Data;
 use yazi_widgets::CLIPBOARD;
 
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct Copy;
 
 impl Actor for Copy {
-	type Options = CopyOpt;
+	type Options = CopyForm;
 
 	const NAME: &str = "copy";
 

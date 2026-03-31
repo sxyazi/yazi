@@ -10,7 +10,7 @@ use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
@@ -24,7 +24,7 @@ use crate::{Actor, Ctx};
 pub struct BulkRename;
 
 impl Actor for BulkRename {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "bulk_rename";
 

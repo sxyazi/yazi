@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::UpdateFilesOpt;
+use yazi_parser::mgr::UpdateFilesForm;
 use yazi_shared::{data::Data, url::UrlLike};
 use yazi_watcher::local::LINKED;
 
@@ -11,7 +11,7 @@ use crate::{Actor, Ctx};
 pub struct UpdateFiles;
 
 impl Actor for UpdateFiles {
-	type Options = UpdateFilesOpt;
+	type Options = UpdateFilesForm;
 
 	const NAME: &str = "update_files";
 

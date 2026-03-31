@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::act;
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
 use crate::Actor;
@@ -9,7 +9,7 @@ use crate::Actor;
 pub struct Focus;
 
 impl Actor for Focus {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "focus";
 

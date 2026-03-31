@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::mgr::Yanked;
 use yazi_macro::{act, render};
-use yazi_parser::mgr::YankOpt;
+use yazi_parser::mgr::YankForm;
 use yazi_shared::{data::Data, url::UrlBufCov};
 
 use crate::{Actor, Ctx};
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct Yank;
 
 impl Actor for Yank {
-	type Options = YankOpt;
+	type Options = YankForm;
 
 	const NAME: &str = "yank";
 

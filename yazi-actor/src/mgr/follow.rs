@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_fs::path::clean_url;
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::CdSource};
+use yazi_parser::{VoidForm, mgr::CdSource};
 use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct Follow;
 
 impl Actor for Follow {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "follow";
 

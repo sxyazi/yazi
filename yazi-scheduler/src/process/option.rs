@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use yazi_shared::url::UrlCow;
 
-// TODO: remove in favor of ShellOpt
+// TODO: remove in favor of ShellForm
 #[derive(Clone, Debug)]
 pub struct ProcessOpt {
 	pub cwd:    UrlCow<'static>,

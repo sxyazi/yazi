@@ -3,16 +3,16 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Debug)]
-pub struct LinemodeOpt {
+pub struct LinemodeForm {
 	pub new: SStr,
 }
 
-impl TryFrom<ActionCow> for LinemodeOpt {
+impl TryFrom<ActionCow> for LinemodeForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
 		let Ok(new) = a.take_first::<SStr>() else {
-			bail!("a string argument is required for LinemodeOpt");
+			bail!("a string argument is required for LinemodeForm");
 		};
 
 		if new.is_empty() || new.len() > 20 {
@@ -23,10 +23,10 @@ impl TryFrom<ActionCow> for LinemodeOpt {
 	}
 }
 
-impl FromLua for LinemodeOpt {
+impl FromLua for LinemodeForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for LinemodeOpt {
+impl IntoLua for LinemodeForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

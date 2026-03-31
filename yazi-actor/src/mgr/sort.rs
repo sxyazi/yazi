@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::{mgr::SortOpt, spark::SparkKind};
+use yazi_parser::{mgr::SortForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
@@ -10,7 +10,7 @@ use crate::{Actor, Ctx};
 pub struct Sort;
 
 impl Actor for Sort {
-	type Options = SortOpt;
+	type Options = SortForm;
 
 	const NAME: &str = "sort";
 

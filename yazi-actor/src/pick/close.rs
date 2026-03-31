@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::pick::CloseOpt;
+use yazi_parser::pick::CloseForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Close;
 
 impl Actor for Close {
-	type Options = CloseOpt;
+	type Options = CloseForm;
 
 	const NAME: &str = "close";
 

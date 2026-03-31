@@ -2,12 +2,12 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug)]
-pub struct ToggleOpt {
+pub struct ToggleForm {
 	pub url:   Option<UrlCow<'static>>,
 	pub state: Option<bool>,
 }
 
-impl From<ActionCow> for ToggleOpt {
+impl From<ActionCow> for ToggleForm {
 	fn from(mut a: ActionCow) -> Self {
 		Self {
 			url:   a.take_first().ok(),
@@ -20,10 +20,10 @@ impl From<ActionCow> for ToggleOpt {
 	}
 }
 
-impl FromLua for ToggleOpt {
+impl FromLua for ToggleForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for ToggleOpt {
+impl IntoLua for ToggleForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

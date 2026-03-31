@@ -5631,6 +5631,7 @@ dependencies = [
  "crossterm 0.29.0",
  "futures",
  "hashbrown 0.16.1",
+ "libc",
  "mlua",
  "paste",
  "ratatui",

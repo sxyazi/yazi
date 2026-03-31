@@ -2,14 +2,14 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{event::ActionCow, url::UrlCow};
 
 #[derive(Debug, Default)]
-pub struct PeekOpt {
+pub struct PeekForm {
 	pub skip:        Option<usize>,
 	pub force:       bool,
 	pub only_if:     Option<UrlCow<'static>>,
 	pub upper_bound: bool,
 }
 
-impl From<ActionCow> for PeekOpt {
+impl From<ActionCow> for PeekForm {
 	fn from(mut a: ActionCow) -> Self {
 		Self {
 			skip:        a.first().ok(),
@@ -20,14 +20,14 @@ impl From<ActionCow> for PeekOpt {
 	}
 }
 
-impl From<bool> for PeekOpt {
+impl From<bool> for PeekForm {
 	fn from(force: bool) -> Self { Self { force, ..Default::default() } }
 }
 
-impl FromLua for PeekOpt {
+impl FromLua for PeekForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for PeekOpt {
+impl IntoLua for PeekForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

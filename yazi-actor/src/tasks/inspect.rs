@@ -6,7 +6,7 @@ use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_binding::Permit;
 use yazi_macro::succ;
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_scheduler::AppProxy;
 use yazi_shared::{data::Data, terminal_clear};
 use yazi_term::YIELD_TO_SUBPROCESS;
@@ -17,7 +17,7 @@ use crate::{Actor, Ctx};
 pub struct Inspect;
 
 impl Actor for Inspect {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "inspect";
 

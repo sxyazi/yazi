@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::{CdSource, TabCreateOpt};
+use yazi_parser::mgr::{CdSource, TabCreateForm};
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
@@ -12,7 +12,7 @@ const MAX_TABS: usize = 9;
 pub struct TabCreate;
 
 impl Actor for TabCreate {
-	type Options = TabCreateOpt;
+	type Options = TabCreateForm;
 
 	const NAME: &str = "tab_create";
 

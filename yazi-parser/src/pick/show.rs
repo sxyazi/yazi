@@ -5,31 +5,31 @@ use yazi_config::popup::PickCfg;
 use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
-pub struct ShowOpt {
+pub struct ShowForm {
 	pub cfg: PickCfg,
 	pub tx:  mpsc::UnboundedSender<Option<usize>>,
 }
 
-impl TryFrom<ActionCow> for ShowOpt {
+impl TryFrom<ActionCow> for ShowForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
 		let Some(cfg) = a.take_any("cfg") else {
-			bail!("Invalid 'cfg' in ShowOpt");
+			bail!("Invalid 'cfg' in ShowForm");
 		};
 
 		let Some(tx) = a.take_any("tx") else {
-			bail!("Invalid 'tx' in ShowOpt");
+			bail!("Invalid 'tx' in ShowForm");
 		};
 
 		Ok(Self { cfg, tx })
 	}
 }
 
-impl FromLua for ShowOpt {
+impl FromLua for ShowForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for ShowOpt {
+impl IntoLua for ShowForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

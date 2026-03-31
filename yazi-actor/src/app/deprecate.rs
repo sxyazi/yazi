@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::notify::{MessageLevel, MessageOpt};
 use yazi_macro::act;
-use yazi_parser::app::DeprecateOpt;
+use yazi_parser::app::DeprecateForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct Deprecate;
 
 impl Actor for Deprecate {
-	type Options = DeprecateOpt;
+	type Options = DeprecateForm;
 
 	const NAME: &str = "deprecate";
 

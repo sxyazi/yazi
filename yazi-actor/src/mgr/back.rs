@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::CdSource};
+use yazi_parser::{VoidForm, mgr::CdSource};
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Back;
 
 impl Actor for Back {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "back";
 

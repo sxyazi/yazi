@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_dds::Pubsub;
 use yazi_macro::{err, render, succ};
-use yazi_parser::ArrowOpt;
+use yazi_parser::ArrowForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct TabSwap;
 
 impl Actor for TabSwap {
-	type Options = ArrowOpt;
+	type Options = ArrowForm;
 
 	const NAME: &str = "tab_swap";
 

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::{mgr::StashOpt, spark::SparkKind};
+use yazi_parser::{mgr::StashForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data, url::{AsUrl, UrlLike}};
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Stash;
 
 impl Actor for Stash {
-	type Options = StashOpt;
+	type Options = StashForm;
 
 	const NAME: &str = "stash";
 

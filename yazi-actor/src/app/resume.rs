@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::app::ResumeOpt;
+use yazi_parser::app::ResumeForm;
 use yazi_shared::data::Data;
 use yazi_term::Term;
 
@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct Resume;
 
 impl Actor for Resume {
-	type Options = ResumeOpt;
+	type Options = ResumeForm;
 
 	const NAME: &str = "resume";
 

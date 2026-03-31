@@ -4,30 +4,30 @@ use yazi_fs::FilesOp;
 use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
-pub struct UpdateFilesOpt {
+pub struct UpdateFilesForm {
 	pub op: FilesOp,
 }
 
-impl TryFrom<ActionCow> for UpdateFilesOpt {
+impl TryFrom<ActionCow> for UpdateFilesForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
 		let Some(op) = a.take_any("op") else {
-			bail!("Invalid 'op' in UpdateFilesOpt");
+			bail!("Invalid 'op' in UpdateFilesForm");
 		};
 
 		Ok(Self { op })
 	}
 }
 
-impl From<FilesOp> for UpdateFilesOpt {
+impl From<FilesOp> for UpdateFilesForm {
 	fn from(op: FilesOp) -> Self { Self { op } }
 }
 
-impl FromLua for UpdateFilesOpt {
+impl FromLua for UpdateFilesForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for UpdateFilesOpt {
+impl IntoLua for UpdateFilesForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

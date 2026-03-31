@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Filter;
 
 impl Actor for Filter {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "filter";
 

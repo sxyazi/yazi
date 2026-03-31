@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::help::ToggleOpt;
+use yazi_parser::help::ToggleForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Toggle;
 
 impl Actor for Toggle {
-	type Options = ToggleOpt;
+	type Options = ToggleForm;
 
 	const NAME: &str = "toggle";
 

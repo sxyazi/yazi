@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::TabCloseOpt;
+use yazi_parser::mgr::TabCloseForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct TabClose;
 
 impl Actor for TabClose {
-	type Options = TabCloseOpt;
+	type Options = TabCloseForm;
 
 	const NAME: &str = "tab_close";
 

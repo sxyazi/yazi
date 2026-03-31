@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::mgr::PeekOpt;
+use yazi_parser::mgr::PeekForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Peek;
 
 impl Actor for Peek {
-	type Options = PeekOpt;
+	type Options = PeekForm;
 
 	const NAME: &str = "peek";
 

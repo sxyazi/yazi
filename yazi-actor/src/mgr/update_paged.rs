@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::mgr::UpdatePagedOpt;
+use yazi_parser::mgr::UpdatePagedForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct UpdatePaged;
 
 impl Actor for UpdatePaged {
-	type Options = UpdatePagedOpt;
+	type Options = UpdatePagedForm;
 
 	const NAME: &str = "update_paged";
 

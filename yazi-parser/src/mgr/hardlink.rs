@@ -2,19 +2,19 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
-pub struct HardlinkOpt {
+pub struct HardlinkForm {
 	pub force:  bool,
 	pub follow: bool,
 }
 
-impl From<ActionCow> for HardlinkOpt {
+impl From<ActionCow> for HardlinkForm {
 	fn from(a: ActionCow) -> Self { Self { force: a.bool("force"), follow: a.bool("follow") } }
 }
 
-impl FromLua for HardlinkOpt {
+impl FromLua for HardlinkForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for HardlinkOpt {
+impl IntoLua for HardlinkForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

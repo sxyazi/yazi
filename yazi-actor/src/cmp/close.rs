@@ -2,7 +2,7 @@ use std::mem;
 
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::cmp::CloseOpt;
+use yazi_parser::cmp::CloseForm;
 use yazi_shared::data::Data;
 use yazi_widgets::input::parser::CompleteOpt;
 
@@ -11,7 +11,7 @@ use crate::{Actor, Ctx};
 pub struct Close;
 
 impl Actor for Close {
-	type Options = CloseOpt;
+	type Options = CloseForm;
 
 	const NAME: &str = "close";
 

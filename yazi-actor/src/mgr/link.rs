@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::mgr::LinkOpt;
+use yazi_parser::mgr::LinkForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Link;
 
 impl Actor for Link {
-	type Options = LinkOpt;
+	type Options = LinkForm;
 
 	const NAME: &str = "link";
 

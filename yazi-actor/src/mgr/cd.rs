@@ -7,7 +7,7 @@ use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, path::{clean_url, expand_url}};
 use yazi_macro::{act, err, render, succ};
-use yazi_parser::mgr::CdOpt;
+use yazi_parser::mgr::CdForm;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, provider};
@@ -18,7 +18,7 @@ use crate::{Actor, Ctx};
 pub struct Cd;
 
 impl Actor for Cd {
-	type Options = CdOpt;
+	type Options = CdForm;
 
 	const NAME: &str = "cd";
 

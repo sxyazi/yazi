@@ -31,7 +31,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 
 	yazi_binding::Error::install(lua)?;
 	yazi_binding::Cha::install(lua)?;
-	crate::process::install(lua)?;
+	yazi_binding::process::install(lua)?;
 	yazi_binding::File::install(lua)?;
 	yazi_binding::Url::install(lua)?;
 	yazi_binding::Path::install(lua)?;

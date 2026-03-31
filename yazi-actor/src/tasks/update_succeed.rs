@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::tasks::UpdateSucceedOpt;
+use yazi_parser::tasks::UpdateSucceedForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct UpdateSucceed;
 
 impl Actor for UpdateSucceed {
-	type Options = UpdateSucceedOpt;
+	type Options = UpdateSucceedForm;
 
 	const NAME: &str = "update_succeed";
 

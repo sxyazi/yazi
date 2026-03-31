@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_config::popup::ConfirmCfg;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::RemoveOpt;
+use yazi_parser::mgr::RemoveForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::data::Data;
 
@@ -10,7 +10,7 @@ use crate::{Actor, Ctx};
 pub struct Remove;
 
 impl Actor for Remove {
-	type Options = RemoveOpt;
+	type Options = RemoveForm;
 
 	const NAME: &str = "remove";
 
@@ -48,7 +48,7 @@ impl Actor for Remove {
 pub struct RemoveDo;
 
 impl Actor for RemoveDo {
-	type Options = RemoveOpt;
+	type Options = RemoveForm;
 
 	const NAME: &str = "remove_do";
 

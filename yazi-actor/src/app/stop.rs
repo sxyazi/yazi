@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_parser::app::StopOpt;
+use yazi_parser::app::StopForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Stop;
 
 impl Actor for Stop {
-	type Options = StopOpt;
+	type Options = StopForm;
 
 	const NAME: &str = "stop";
 

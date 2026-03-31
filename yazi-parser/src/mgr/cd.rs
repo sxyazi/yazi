@@ -5,13 +5,13 @@ use yazi_shared::{event::ActionCow, url::{Url, UrlBuf}};
 use yazi_vfs::provider;
 
 #[derive(Debug)]
-pub struct CdOpt {
+pub struct CdForm {
 	pub target:      UrlBuf,
 	pub interactive: bool,
 	pub source:      CdSource,
 }
 
-impl From<ActionCow> for CdOpt {
+impl From<ActionCow> for CdForm {
 	fn from(mut a: ActionCow) -> Self {
 		let mut target = a.take_first().unwrap_or_default();
 
@@ -33,21 +33,21 @@ impl From<ActionCow> for CdOpt {
 	}
 }
 
-impl From<(UrlBuf, CdSource)> for CdOpt {
+impl From<(UrlBuf, CdSource)> for CdForm {
 	fn from((target, source): (UrlBuf, CdSource)) -> Self {
 		Self { target, interactive: false, source }
 	}
 }
 
-impl From<(Url<'_>, CdSource)> for CdOpt {
+impl From<(Url<'_>, CdSource)> for CdForm {
 	fn from((target, source): (Url, CdSource)) -> Self { Self::from((target.to_owned(), source)) }
 }
 
-impl FromLua for CdOpt {
+impl FromLua for CdForm {
 	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
-impl IntoLua for CdOpt {
+impl IntoLua for CdForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::mgr::DisplaceOpt;
 use yazi_macro::succ;
-use yazi_parser::VoidOpt;
+use yazi_parser::VoidForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 use yazi_vfs::provider;
@@ -11,7 +11,7 @@ use crate::{Actor, Ctx};
 pub struct Displace;
 
 impl Actor for Displace {
-	type Options = VoidOpt;
+	type Options = VoidForm;
 
 	const NAME: &str = "displace";
 

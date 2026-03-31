@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::FolderStage;
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::{mgr::HiddenOpt, spark::SparkKind};
+use yazi_parser::{mgr::HiddenForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
@@ -10,7 +10,7 @@ use crate::{Actor, Ctx};
 pub struct Hidden;
 
 impl Actor for Hidden {
-	type Options = HiddenOpt;
+	type Options = HiddenForm;
 
 	const NAME: &str = "hidden";
 

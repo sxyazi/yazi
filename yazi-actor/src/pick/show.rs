@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::pick::ShowOpt;
+use yazi_parser::pick::ShowForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct Show;
 
 impl Actor for Show {
-	type Options = ShowOpt;
+	type Options = ShowForm;
 
 	const NAME: &str = "show";
 

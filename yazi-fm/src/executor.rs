@@ -51,14 +51,14 @@ impl<'a> Executor<'a> {
 
 		match &*action.name {
 			"resize" => act!(app:resize, cx, crate::Root::reflow as fn(_) -> _),
-			"resume" => act!(app:resume, cx, yazi_parser::app::ResumeOpt {
+			"resume" => act!(app:resume, cx, yazi_parser::app::ResumeForm {
 				tx: self.app.signals.tx.clone(),
-				token: action.take_any("token").context("Invalid 'token' in ResumeOpt")?,
+				token: action.take_any("token").context("Invalid 'token' in ResumeForm")?,
 				reflow: crate::Root::reflow,
 			}),
-			"stop" => act!(app:stop, cx, yazi_parser::app::StopOpt {
+			"stop" => act!(app:stop, cx, yazi_parser::app::StopForm {
 				tx: self.app.signals.tx.clone(),
-				token: action.take_any("token").context("Invalid 'token' in StopOpt")?,
+				token: action.take_any("token").context("Invalid 'token' in StopForm")?,
 			}),
 			_ => succ!(),
 		}

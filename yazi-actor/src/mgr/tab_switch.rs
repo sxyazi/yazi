@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::TabSwitchOpt;
+use yazi_parser::mgr::TabSwitchForm;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -8,7 +8,7 @@ use crate::{Actor, Ctx};
 pub struct TabSwitch;
 
 impl Actor for TabSwitch {
-	type Options = TabSwitchOpt;
+	type Options = TabSwitchForm;
 
 	const NAME: &str = "tab_switch";
 
