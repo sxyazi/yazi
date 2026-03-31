@@ -3,7 +3,7 @@ use yazi_core::tab::Folder;
 use yazi_dds::spark::SparkKind;
 use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::mgr::SortOpt;
+use yazi_parser::mgr::{SortBoolState, SortOpt};
 use yazi_shared::{Source, data::Data};
 
 use crate::{Actor, Ctx};
@@ -18,10 +18,10 @@ impl Actor for Sort {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let pref = &mut cx.tab_mut().pref;
 		pref.sort_by = opt.by.unwrap_or(pref.sort_by);
-		pref.sort_reverse = opt.reverse.unwrap_or(pref.sort_reverse);
-		pref.sort_dir_first = opt.dir_first.unwrap_or(pref.sort_dir_first);
+		pref.sort_reverse = opt.reverse.unwrap_or_default().bool(pref.sort_reverse);
+		pref.sort_dir_first = opt.dir_first.unwrap_or_default().bool(pref.sort_dir_first);
 		pref.sort_sensitive = opt.sensitive.unwrap_or(pref.sort_sensitive);
-		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
+		pref.sort_translit = opt.translit.unwrap_or_default().bool(pref.sort_translit);
 		pref.sort_fallback = opt.fallback.unwrap_or(pref.sort_fallback);
 
 		let sorter = FilesSorter::from(&*pref);
@@ -59,7 +59,15 @@ impl Actor for Sort {
 		succ!();
 	}
 
-	fn hook(cx: &Ctx, _: &Self::Options) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, opt: &Self::Options) -> Option<SparkKind> {
+		let has_toggle = [opt.reverse, opt.dir_first, opt.translit]
+			.iter()
+			.any(|f| matches!(f, Some(SortBoolState::Toggle)));
+
+		if has_toggle {
+			return None;
+		}
+
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndSort),
 			Source::Key => Some(SparkKind::KeySort),
