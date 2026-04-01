@@ -38,7 +38,7 @@ impl<'a> Encode<'a> {
 				match self.0.0.kind() {
 					SchemeKind::Regular => Ok(()),
 					SchemeKind::Search | SchemeKind::Archive => w!(0, 0),
-					SchemeKind::Sftp => {
+					SchemeKind::S3 | SchemeKind::Sftp => {
 						w!(self.0.0.loc().name().is_some() as usize, self.0.0.loc().name().is_some() as usize)
 					}
 				}
@@ -57,6 +57,7 @@ impl Display for Encode<'_> {
 			Url::Archive { domain, .. } => {
 				write!(f, "archive://{}{}/", Self::domain(domain), self.ports())
 			}
+			Url::S3 { domain, .. } => write!(f, "s3://{}{}/", Self::domain(domain), self.ports()),
 			Url::Sftp { domain, .. } => write!(f, "sftp://{}{}/", Self::domain(domain), self.ports()),
 		}
 	}

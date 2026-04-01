@@ -26,6 +26,7 @@ deadpool    = { version = "0.13.0", default-features = false, features = [ "mana
 either      = { workspace = true }
 futures     = { workspace = true }
 hashbrown   = { workspace = true }
+object_store = { version = "0.12.5", default-features = false, features = [ "aws" ] }
 parking_lot = { workspace = true }
 russh       = { workspace = true }
 tokio       = { workspace = true }

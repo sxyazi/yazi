@@ -39,6 +39,10 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 			loc:    LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
 			domain: domain.intern(),
 		},
+		Url::S3 { domain, .. } => UrlBuf::S3 {
+			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+			domain: domain.intern(),
+		},
 		Url::Sftp { domain, .. } => UrlBuf::Sftp {
 			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
 			domain: domain.intern(),

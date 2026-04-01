@@ -15,6 +15,9 @@ impl FsScheme for SchemeRef<'_> {
 			Self::Archive { domain, .. } => Some(
 				Xdg::cache_dir().join(format!("archive-{}", yazi_shared::scheme::Encode::domain(domain))),
 			),
+			Self::S3 { domain, .. } => {
+				Some(Xdg::cache_dir().join(format!("s3-{}", yazi_shared::scheme::Encode::domain(domain))))
+			}
 			Self::Sftp { domain, .. } => {
 				Some(Xdg::cache_dir().join(format!("sftp-{}", yazi_shared::scheme::Encode::domain(domain))))
 			}

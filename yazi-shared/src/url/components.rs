@@ -59,6 +59,7 @@ impl<'a> Components<'a> {
 			Url::Regular(_) => SchemeRef::Regular { uri, urn },
 			Url::Search { domain, .. } => SchemeRef::Search { domain, uri, urn },
 			Url::Archive { domain, .. } => SchemeRef::Archive { domain, uri, urn },
+			Url::S3 { domain, .. } => SchemeRef::S3 { domain, uri, urn },
 			Url::Sftp { domain, .. } => SchemeRef::Sftp { domain, uri, urn },
 		}
 	}
@@ -85,6 +86,9 @@ impl<'a> Components<'a> {
 			}
 			Url::Archive { domain, .. } => {
 				Url::Archive { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), domain }
+			}
+			Url::S3 { domain, .. } => {
+				Url::S3 { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), domain }
 			}
 			Url::Sftp { domain, .. } => {
 				Url::Sftp { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), domain }

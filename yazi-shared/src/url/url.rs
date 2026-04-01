@@ -12,6 +12,7 @@ pub enum Url<'a> {
 	Regular(Loc<'a>),
 	Search { loc: Loc<'a>, domain: &'a str },
 	Archive { loc: Loc<'a>, domain: &'a str },
+	S3 { loc: Loc<'a, &'a typed_path::UnixPath>, domain: &'a str },
 	Sftp { loc: Loc<'a, &'a typed_path::UnixPath>, domain: &'a str },
 }
 
@@ -63,6 +64,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
 			Self::Search { loc, domain } => Self::Search { loc: Loc::zeroed(loc.base()), domain },
 			Self::Archive { loc, domain } => Self::Archive { loc: Loc::zeroed(loc.base()), domain },
+			Self::S3 { loc, domain } => Self::S3 { loc: Loc::bare(loc.base()), domain },
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.base()), domain },
 		}
 	}
@@ -82,6 +84,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.extension()?.as_strand(),
 			Self::Search { loc, .. } => loc.extension()?.as_strand(),
 			Self::Archive { loc, .. } => loc.extension()?.as_strand(),
+			Self::S3 { loc, .. } => loc.extension()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
 		})
 	}
@@ -92,6 +95,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.has_base(),
 			Self::Search { loc, .. } => loc.has_base(),
 			Self::Archive { loc, .. } => loc.has_base(),
+			Self::S3 { loc, .. } => loc.has_base(),
 			Self::Sftp { loc, .. } => loc.has_base(),
 		}
 	}
@@ -105,6 +109,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.has_trail(),
 			Self::Search { loc, .. } => loc.has_trail(),
 			Self::Archive { loc, .. } => loc.has_trail(),
+			Self::S3 { loc, .. } => loc.has_trail(),
 			Self::Sftp { loc, .. } => loc.has_trail(),
 		}
 	}
@@ -118,7 +123,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn is_internal(self) -> bool {
 		match self {
-			Self::Regular(_) | Self::Sftp { .. } => true,
+			Self::Regular(_) | Self::S3 { .. } | Self::Sftp { .. } => true,
 			Self::Search { .. } => !self.uri().is_empty(),
 			Self::Archive { .. } => false,
 		}
@@ -136,6 +141,7 @@ impl<'a> Url<'a> {
 			Self::Regular(_) => SchemeKind::Regular,
 			Self::Search { .. } => SchemeKind::Search,
 			Self::Archive { .. } => SchemeKind::Archive,
+			Self::S3 { .. } => SchemeKind::S3,
 			Self::Sftp { .. } => SchemeKind::Sftp,
 		}
 	}
@@ -146,6 +152,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.as_path(),
 			Self::Search { loc, .. } => loc.as_path(),
 			Self::Archive { loc, .. } => loc.as_path(),
+			Self::S3 { loc, .. } => loc.as_path(),
 			Self::Sftp { loc, .. } => loc.as_path(),
 		}
 	}
@@ -156,6 +163,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.file_name()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Archive { loc, .. } => loc.file_name()?.as_strand(),
+			Self::S3 { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
 		})
 	}
@@ -189,6 +197,7 @@ impl<'a> Url<'a> {
 			}
 
 			// SFTP
+			Self::S3 { loc, domain } => Self::S3 { loc: Loc::bare(loc.parent()?), domain },
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.parent()?), domain },
 		})
 	}
@@ -205,6 +214,7 @@ impl<'a> Url<'a> {
 			Self::Regular(_) => SchemeRef::Regular { uri, urn },
 			Self::Search { domain, .. } => SchemeRef::Search { domain, uri, urn },
 			Self::Archive { domain, .. } => SchemeRef::Archive { domain, uri, urn },
+			Self::S3 { domain, .. } => SchemeRef::S3 { domain, uri, urn },
 			Self::Sftp { domain, .. } => SchemeRef::Sftp { domain, uri, urn },
 		}
 	}
@@ -215,6 +225,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.file_stem()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Archive { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::S3 { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
 		})
 	}
@@ -248,6 +259,7 @@ impl<'a> Url<'a> {
 				Self::Archive { loc: Loc::new(loc.trail(), loc.base(), loc.base()), domain }
 			}
 
+			Self::S3 { loc, domain } => Self::S3 { loc: Loc::bare(loc.trail()), domain },
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.trail()), domain },
 		}
 	}
@@ -258,7 +270,7 @@ impl<'a> Url<'a> {
 				let (base, rest, urn) = loc.triple();
 				(base.as_path(), rest.as_path(), urn.as_path())
 			}
-			Self::Sftp { loc, .. } => {
+			Self::S3 { loc, .. } | Self::Sftp { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
 				(base.as_path(), rest.as_path(), urn.as_path())
 			}
@@ -295,6 +307,9 @@ impl<'a> Url<'a> {
 				domain: domain.intern(),
 			},
 
+			Self::S3 { domain, .. } => {
+				UrlBuf::S3 { loc: joined.into_unix()?.into(), domain: domain.intern() }
+			}
 			Self::Sftp { domain, .. } => {
 				UrlBuf::Sftp { loc: joined.into_unix()?.into(), domain: domain.intern() }
 			}
@@ -328,6 +343,10 @@ impl<'a> Url<'a> {
 				loc:    LocBuf::<std::path::PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
 				domain: domain.intern(),
 			},
+			Self::S3 { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::S3 {
+				loc:    LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
+				domain: domain.intern(),
+			},
 			Self::Sftp { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Sftp {
 				loc:    LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
 				domain: domain.intern(),
@@ -339,6 +358,10 @@ impl<'a> Url<'a> {
 			},
 			Self::Archive { domain, .. } => UrlBuf::Archive {
 				loc:    LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
+				domain: domain.intern(),
+			},
+			Self::S3 { domain, .. } => UrlBuf::S3 {
+				loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
 				domain: domain.intern(),
 			},
 			Self::Sftp { domain, .. } => UrlBuf::Sftp {
@@ -370,6 +393,9 @@ impl<'a> Url<'a> {
 			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
 				Some(prefix).filter(|_| a == b).ok_or(Exotic)
 			}
+			(U::S3 { domain: a, .. }, U::S3 { domain: b, .. }) => {
+				Some(prefix).filter(|_| a == b).ok_or(Exotic)
+			}
 			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
 				Some(prefix).filter(|_| a == b).ok_or(Exotic)
 			}
@@ -393,12 +419,20 @@ impl<'a> Url<'a> {
 			}
 
 			// Independent virtual file space
+			(U::Regular(_), U::S3 { .. }) => Err(Exotic),
+			(U::Search { .. }, U::S3 { .. }) => Err(Exotic),
+			(U::Archive { .. }, U::S3 { .. }) => Err(Exotic),
+			(U::S3 { .. }, U::Regular(_)) => Err(Exotic),
+			(U::S3 { .. }, U::Search { .. }) => Err(Exotic),
+			(U::S3 { .. }, U::Archive { .. }) => Err(Exotic),
+			(U::S3 { .. }, U::Sftp { .. }) => Err(Exotic),
 			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
 			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
 			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
 			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
 			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
 			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+			(U::Sftp { .. }, U::S3 { .. }) => Err(Exotic),
 		}
 	}
 
@@ -414,6 +448,9 @@ impl<'a> Url<'a> {
 			(U::Regular(_), U::Regular(_)) => Ok(suffix),
 			(U::Search { .. }, U::Search { .. }) => Ok(suffix),
 			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
+				Some(suffix).filter(|_| a == b).ok_or(Exotic)
+			}
+			(U::S3 { domain: a, .. }, U::S3 { domain: b, .. }) => {
 				Some(suffix).filter(|_| a == b).ok_or(Exotic)
 			}
 			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
@@ -439,12 +476,20 @@ impl<'a> Url<'a> {
 			}
 
 			// Independent virtual file space
+			(U::Regular(_), U::S3 { .. }) => Err(Exotic),
+			(U::Search { .. }, U::S3 { .. }) => Err(Exotic),
+			(U::Archive { .. }, U::S3 { .. }) => Err(Exotic),
+			(U::S3 { .. }, U::Regular(_)) => Err(Exotic),
+			(U::S3 { .. }, U::Search { .. }) => Err(Exotic),
+			(U::S3 { .. }, U::Archive { .. }) => Err(Exotic),
+			(U::S3 { .. }, U::Sftp { .. }) => Err(Exotic),
 			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
 			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
 			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
 			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
 			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
 			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+			(U::Sftp { .. }, U::S3 { .. }) => Err(Exotic),
 		}
 	}
 
@@ -454,6 +499,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.uri().as_path(),
 			Self::Search { loc, .. } => loc.uri().as_path(),
 			Self::Archive { loc, .. } => loc.uri().as_path(),
+			Self::S3 { loc, .. } => loc.uri().as_path(),
 			Self::Sftp { loc, .. } => loc.uri().as_path(),
 		}
 	}
@@ -464,6 +510,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.urn().as_path(),
 			Self::Search { loc, .. } => loc.urn().as_path(),
 			Self::Archive { loc, .. } => loc.urn().as_path(),
+			Self::S3 { loc, .. } => loc.urn().as_path(),
 			Self::Sftp { loc, .. } => loc.urn().as_path(),
 		}
 	}

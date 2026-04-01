@@ -52,6 +52,9 @@ where
 	V: AsUrl,
 {
 	let (from, to) = (from.as_url(), to.as_url());
+	if matches!(from, Url::S3 { .. }) {
+		return super::s3::copy_impl(from, to, attrs).await;
+	}
 
 	match (from.kind().is_local(), to.kind().is_local()) {
 		(true, true) => Local::new(from).await?.copy(to.loc(), attrs).await,
@@ -73,6 +76,9 @@ where
 	A: Into<Attrs>,
 {
 	let (from, to) = (from.as_url(), to.as_url());
+	if matches!(from, Url::S3 { .. }) {
+		return Ok(super::s3::copy_with_progress_impl(from.to_owned(), to.to_owned(), attrs.into()));
+	}
 
 	match (from.kind().is_local(), to.kind().is_local()) {
 		(true, true) => Local::new(from).await?.copy_with_progress(to.loc(), attrs),
@@ -262,6 +268,7 @@ where
 	match url.as_url() {
 		Url::Regular(_) | Url::Search { .. } => yazi_fs::provider::local::try_absolute(url),
 		Url::Archive { .. } => None, // TODO
+		Url::S3 { .. } => crate::provider::s3::try_absolute(url),
 		Url::Sftp { .. } => crate::provider::sftp::try_absolute(url),
 	}
 }

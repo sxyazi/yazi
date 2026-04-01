@@ -7,6 +7,7 @@ use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBu
 #[derive(Clone)]
 pub(super) enum Providers<'a> {
 	Local(yazi_fs::provider::local::Local<'a>),
+	S3(super::s3::S3<'a>),
 	Sftp(super::sftp::Sftp<'a>),
 }
 
@@ -20,6 +21,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn absolute(&self) -> io::Result<Self::UrlCow> {
 		match self {
 			Self::Local(p) => p.absolute().await,
+			Self::S3(p) => p.absolute().await,
 			Self::Sftp(p) => p.absolute().await,
 		}
 	}
@@ -27,6 +29,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn canonicalize(&self) -> io::Result<UrlBuf> {
 		match self {
 			Self::Local(p) => p.canonicalize().await,
+			Self::S3(p) => p.canonicalize().await,
 			Self::Sftp(p) => p.canonicalize().await,
 		}
 	}
@@ -34,6 +37,7 @@ impl<'a> Provider for Providers<'a> {
 	fn capabilities(&self) -> Capabilities {
 		match self {
 			Self::Local(p) => p.capabilities(),
+			Self::S3(p) => p.capabilities(),
 			Self::Sftp(p) => p.capabilities(),
 		}
 	}
@@ -41,6 +45,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn casefold(&self) -> io::Result<UrlBuf> {
 		match self {
 			Self::Local(p) => p.casefold().await,
+			Self::S3(p) => p.casefold().await,
 			Self::Sftp(p) => p.casefold().await,
 		}
 	}
@@ -51,6 +56,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.copy(to, attrs).await,
+			Self::S3(p) => p.copy(to, attrs).await,
 			Self::Sftp(p) => p.copy(to, attrs).await,
 		}
 	}
@@ -62,6 +68,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.copy_with_progress(to, attrs),
+			Self::S3(p) => p.copy_with_progress(to, attrs),
 			Self::Sftp(p) => p.copy_with_progress(to, attrs),
 		}
 	}
@@ -69,6 +76,9 @@ impl<'a> Provider for Providers<'a> {
 	async fn create(&self) -> io::Result<Self::File> {
 		Ok(match self {
 			Self::Local(p) => p.create().await?.into(),
+			Self::S3(_) => {
+				Err(io::Error::new(io::ErrorKind::Unsupported, "S3 provider is read-only"))?
+			}
 			Self::Sftp(p) => p.create().await?.into(),
 		})
 	}
@@ -76,6 +86,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn create_dir(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.create_dir().await,
+			Self::S3(p) => p.create_dir().await,
 			Self::Sftp(p) => p.create_dir().await,
 		}
 	}
@@ -83,6 +94,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn create_dir_all(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.create_dir_all().await,
+			Self::S3(p) => p.create_dir_all().await,
 			Self::Sftp(p) => p.create_dir_all().await,
 		}
 	}
@@ -90,6 +102,9 @@ impl<'a> Provider for Providers<'a> {
 	async fn create_new(&self) -> io::Result<Self::File> {
 		Ok(match self {
 			Self::Local(p) => p.create_new().await?.into(),
+			Self::S3(_) => {
+				Err(io::Error::new(io::ErrorKind::Unsupported, "S3 provider is read-only"))?
+			}
 			Self::Sftp(p) => p.create_new().await?.into(),
 		})
 	}
@@ -100,6 +115,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.hard_link(to).await,
+			Self::S3(p) => p.hard_link(to).await,
 			Self::Sftp(p) => p.hard_link(to).await,
 		}
 	}
@@ -107,6 +123,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn metadata(&self) -> io::Result<Cha> {
 		match self {
 			Self::Local(p) => p.metadata().await,
+			Self::S3(p) => p.metadata().await,
 			Self::Sftp(p) => p.metadata().await,
 		}
 	}
@@ -119,6 +136,7 @@ impl<'a> Provider for Providers<'a> {
 			K::Archive => {
 				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
 			}
+			K::S3 => Self::Me::S3(super::s3::S3::new(url).await?),
 			K::Sftp => Self::Me::Sftp(super::sftp::Sftp::new(url).await?),
 		})
 	}
@@ -126,6 +144,10 @@ impl<'a> Provider for Providers<'a> {
 	async fn open(&self) -> io::Result<Self::File> {
 		Ok(match self {
 			Self::Local(p) => p.open().await?.into(),
+			Self::S3(_) => Err(io::Error::new(
+				io::ErrorKind::Unsupported,
+				"S3 provider does not expose file handles",
+			))?,
 			Self::Sftp(p) => p.open().await?.into(),
 		})
 	}
@@ -133,6 +155,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
 		Ok(match self {
 			Self::Local(p) => Self::ReadDir::Local(p.read_dir().await?),
+			Self::S3(p) => Self::ReadDir::S3(p.read_dir().await?),
 			Self::Sftp(p) => Self::ReadDir::Sftp(p.read_dir().await?),
 		})
 	}
@@ -140,6 +163,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn read_link(&self) -> io::Result<PathBufDyn> {
 		match self {
 			Self::Local(p) => p.read_link().await,
+			Self::S3(p) => p.read_link().await,
 			Self::Sftp(p) => p.read_link().await,
 		}
 	}
@@ -147,6 +171,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn remove_dir(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.remove_dir().await,
+			Self::S3(p) => p.remove_dir().await,
 			Self::Sftp(p) => p.remove_dir().await,
 		}
 	}
@@ -154,6 +179,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn remove_dir_all(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.remove_dir_all().await,
+			Self::S3(p) => p.remove_dir_all().await,
 			Self::Sftp(p) => p.remove_dir_all().await,
 		}
 	}
@@ -161,6 +187,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn remove_file(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.remove_file().await,
+			Self::S3(p) => p.remove_file().await,
 			Self::Sftp(p) => p.remove_file().await,
 		}
 	}
@@ -171,6 +198,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.rename(to).await,
+			Self::S3(p) => p.rename(to).await,
 			Self::Sftp(p) => p.rename(to).await,
 		}
 	}
@@ -182,6 +210,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.symlink(original, is_dir).await,
+			Self::S3(p) => p.symlink(original, is_dir).await,
 			Self::Sftp(p) => p.symlink(original, is_dir).await,
 		}
 	}
@@ -192,6 +221,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.symlink_dir(original).await,
+			Self::S3(p) => p.symlink_dir(original).await,
 			Self::Sftp(p) => p.symlink_dir(original).await,
 		}
 	}
@@ -202,6 +232,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.symlink_file(original).await,
+			Self::S3(p) => p.symlink_file(original).await,
 			Self::Sftp(p) => p.symlink_file(original).await,
 		}
 	}
@@ -209,6 +240,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn symlink_metadata(&self) -> io::Result<Cha> {
 		match self {
 			Self::Local(p) => p.symlink_metadata().await,
+			Self::S3(p) => p.symlink_metadata().await,
 			Self::Sftp(p) => p.symlink_metadata().await,
 		}
 	}
@@ -216,6 +248,7 @@ impl<'a> Provider for Providers<'a> {
 	async fn trash(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.trash().await,
+			Self::S3(p) => p.trash().await,
 			Self::Sftp(p) => p.trash().await,
 		}
 	}
@@ -223,6 +256,7 @@ impl<'a> Provider for Providers<'a> {
 	fn url(&self) -> Url<'_> {
 		match self {
 			Self::Local(p) => p.url(),
+			Self::S3(p) => p.url(),
 			Self::Sftp(p) => p.url(),
 		}
 	}
@@ -233,6 +267,7 @@ impl<'a> Provider for Providers<'a> {
 	{
 		match self {
 			Self::Local(p) => p.write(contents).await,
+			Self::S3(p) => p.write(contents).await,
 			Self::Sftp(p) => p.write(contents).await,
 		}
 	}

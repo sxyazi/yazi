@@ -20,6 +20,9 @@ impl Display for Encode<'_> {
 			Url::Archive { domain, .. } => {
 				write!(f, "archive~://{}{}/{loc}", E::domain(domain), E::ports((*self).into()))
 			}
+			Url::S3 { domain, .. } => {
+				write!(f, "s3~://{}{}/{loc}", E::domain(domain), E::ports((*self).into()))
+			}
 			Url::Sftp { domain, .. } => {
 				write!(f, "sftp~://{}{}/{loc}", E::domain(domain), E::ports((*self).into()))
 			}

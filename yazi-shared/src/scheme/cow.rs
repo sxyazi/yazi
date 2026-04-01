@@ -57,6 +57,16 @@ impl<'a> SchemeCow<'a> {
 		}
 	}
 
+	pub fn s3<T>(domain: T, uri: usize, urn: usize) -> Self
+	where
+		T: Into<Cow<'a, str>>,
+	{
+		match domain.into() {
+			Cow::Borrowed(domain) => SchemeRef::S3 { domain, uri, urn }.into(),
+			Cow::Owned(domain) => Scheme::S3 { domain: domain.intern(), uri, urn }.into(),
+		}
+	}
+
 	pub fn sftp<T>(domain: T, uri: usize, urn: usize) -> Self
 	where
 		T: Into<Cow<'a, str>>,
@@ -80,6 +90,7 @@ impl<'a> SchemeCow<'a> {
 			SchemeKind::Regular => ("".into(), None, None),
 			SchemeKind::Search => Self::decode_param(&bytes[skip..], &mut skip)?,
 			SchemeKind::Archive => Self::decode_param(&bytes[skip..], &mut skip)?,
+			SchemeKind::S3 => Self::decode_param(&bytes[skip..], &mut skip)?,
 			SchemeKind::Sftp => Self::decode_param(&bytes[skip..], &mut skip)?,
 		};
 
@@ -92,6 +103,7 @@ impl<'a> SchemeCow<'a> {
 			SchemeKind::Regular => Self::regular(uri, urn),
 			SchemeKind::Search => Self::search(domain, uri, urn),
 			SchemeKind::Archive => Self::archive(domain, uri, urn),
+			SchemeKind::S3 => Self::s3(domain, uri, urn),
 			SchemeKind::Sftp => Self::sftp(domain, uri, urn),
 		};
 
@@ -154,6 +166,11 @@ impl<'a> SchemeCow<'a> {
 				(uri, urn)
 			}
 			SchemeKind::Archive => (uri.unwrap_or(0), urn.unwrap_or(0)),
+			SchemeKind::S3 => {
+				let uri = uri.unwrap_or(path.name().is_some() as usize);
+				let urn = urn.unwrap_or(path.name().is_some() as usize);
+				(uri, urn)
+			}
 			SchemeKind::Sftp => {
 				let uri = uri.unwrap_or(path.name().is_some() as usize);
 				let urn = urn.unwrap_or(path.name().is_some() as usize);
@@ -167,6 +184,7 @@ impl<'a> SchemeCow<'a> {
 			Url::Regular(loc) => (loc.file_name().is_some() as usize, loc.file_name().is_some() as usize),
 			Url::Search { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 			Url::Archive { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::S3 { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 			Url::Sftp { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 		}
 	}

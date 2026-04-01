@@ -10,6 +10,7 @@ pub enum Scheme {
 	Regular { uri: usize, urn: usize },
 	Search { domain: Symbol<str>, uri: usize, urn: usize },
 	Archive { domain: Symbol<str>, uri: usize, urn: usize },
+	S3 { domain: Symbol<str>, uri: usize, urn: usize },
 	Sftp { domain: Symbol<str>, uri: usize, urn: usize },
 }
 
@@ -26,9 +27,10 @@ impl Scheme {
 	pub fn into_domain(self) -> Option<Symbol<str>> {
 		match self {
 			Self::Regular { .. } => None,
-			Self::Search { domain, .. } | Self::Archive { domain, .. } | Self::Sftp { domain, .. } => {
-				Some(domain)
-			}
+			Self::Search { domain, .. }
+			| Self::Archive { domain, .. }
+			| Self::S3 { domain, .. }
+			| Self::Sftp { domain, .. } => Some(domain),
 		}
 	}
 
@@ -38,6 +40,7 @@ impl Scheme {
 			Self::Regular { .. } => Self::Regular { uri, urn },
 			Self::Search { domain, .. } => Self::Search { domain, uri, urn },
 			Self::Archive { domain, .. } => Self::Archive { domain, uri, urn },
+			Self::S3 { domain, .. } => Self::S3 { domain, uri, urn },
 			Self::Sftp { domain, .. } => Self::Sftp { domain, uri, urn },
 		}
 	}

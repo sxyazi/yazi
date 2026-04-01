@@ -16,6 +16,7 @@ impl AsScheme for Scheme {
 			Self::Regular { uri, urn } => SchemeRef::Regular { uri, urn },
 			Self::Search { ref domain, uri, urn } => SchemeRef::Search { domain, uri, urn },
 			Self::Archive { ref domain, uri, urn } => SchemeRef::Archive { domain, uri, urn },
+			Self::S3 { ref domain, uri, urn } => SchemeRef::S3 { domain, uri, urn },
 			Self::Sftp { ref domain, uri, urn } => SchemeRef::Sftp { domain, uri, urn },
 		}
 	}

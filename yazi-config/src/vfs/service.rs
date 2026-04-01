@@ -7,7 +7,19 @@ use crate::normalize_path;
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum Service {
+	S3(ServiceS3),
 	Sftp(ServiceSftp),
+}
+
+impl TryFrom<&'static Service> for &'static ServiceS3 {
+	type Error = &'static str;
+
+	fn try_from(value: &'static Service) -> Result<Self, Self::Error> {
+		match value {
+			Service::S3(p) => Ok(p),
+			_ => Err("expected s3 service"),
+		}
+	}
 }
 
 impl TryFrom<&'static Service> for &'static ServiceSftp {
@@ -16,6 +28,7 @@ impl TryFrom<&'static Service> for &'static ServiceSftp {
 	fn try_from(value: &'static Service) -> Result<Self, Self::Error> {
 		match value {
 			Service::Sftp(p) => Ok(p),
+			_ => Err("expected sftp service"),
 		}
 	}
 }
@@ -23,9 +36,46 @@ impl TryFrom<&'static Service> for &'static ServiceSftp {
 impl Service {
 	pub(super) fn reshape(&mut self) -> io::Result<()> {
 		match self {
+			Self::S3(p) => p.reshape(),
 			Self::Sftp(p) => p.reshape(),
 		}
 	}
+}
+
+// --- S3
+#[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ServiceS3 {
+	pub region:            Option<String>,
+	pub endpoint:          Option<String>,
+	pub access_key_id:     Option<String>,
+	pub secret_access_key: Option<String>,
+	pub session_token:     Option<String>,
+	#[serde(default)]
+	pub force_path_style:  bool,
+	#[serde(default)]
+	pub allow_http:        bool,
+}
+
+impl ServiceS3 {
+	fn reshape(&mut self) -> io::Result<()> {
+		self.region = trim_option(self.region.take());
+		self.endpoint = self.endpoint.take().and_then(|s| {
+			let s = s.trim().trim_end_matches('/').to_owned();
+			(!s.is_empty()).then_some(s)
+		});
+		self.access_key_id = trim_option(self.access_key_id.take());
+		self.secret_access_key = trim_option(self.secret_access_key.take());
+		self.session_token = trim_option(self.session_token.take());
+
+		Ok(())
+	}
+}
+
+fn trim_option(value: Option<String>) -> Option<String> {
+	value.and_then(|s| {
+		let s = s.trim().to_owned();
+		(!s.is_empty()).then_some(s)
+	})
 }
 
 // --- SFTP

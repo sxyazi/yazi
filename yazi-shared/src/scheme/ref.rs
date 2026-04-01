@@ -7,6 +7,7 @@ pub enum SchemeRef<'a> {
 	Regular { uri: usize, urn: usize },
 	Search { domain: &'a str, uri: usize, urn: usize },
 	Archive { domain: &'a str, uri: usize, urn: usize },
+	S3 { domain: &'a str, uri: usize, urn: usize },
 	Sftp { domain: &'a str, uri: usize, urn: usize },
 }
 
@@ -18,6 +19,7 @@ impl Deref for SchemeRef<'_> {
 			Self::Regular { .. } => &SchemeKind::Regular,
 			Self::Search { .. } => &SchemeKind::Search,
 			Self::Archive { .. } => &SchemeKind::Archive,
+			Self::S3 { .. } => &SchemeKind::S3,
 			Self::Sftp { .. } => &SchemeKind::Sftp,
 		}
 	}
@@ -49,9 +51,10 @@ impl<'a> SchemeRef<'a> {
 	pub const fn domain(self) -> Option<&'a str> {
 		match self {
 			Self::Regular { .. } => None,
-			Self::Search { domain, .. } | Self::Archive { domain, .. } | Self::Sftp { domain, .. } => {
-				Some(domain)
-			}
+			Self::Search { domain, .. }
+			| Self::Archive { domain, .. }
+			| Self::S3 { domain, .. }
+			| Self::Sftp { domain, .. } => Some(domain),
 		}
 	}
 
@@ -60,6 +63,7 @@ impl<'a> SchemeRef<'a> {
 			Self::Regular { .. } => SchemeKind::Regular,
 			Self::Search { .. } => SchemeKind::Search,
 			Self::Archive { .. } => SchemeKind::Archive,
+			Self::S3 { .. } => SchemeKind::S3,
 			Self::Sftp { .. } => SchemeKind::Sftp,
 		}
 	}
@@ -69,6 +73,7 @@ impl<'a> SchemeRef<'a> {
 			Self::Regular { uri, urn } => (uri, urn),
 			Self::Search { uri, urn, .. } => (uri, urn),
 			Self::Archive { uri, urn, .. } => (uri, urn),
+			Self::S3 { uri, urn, .. } => (uri, urn),
 			Self::Sftp { uri, urn, .. } => (uri, urn),
 		}
 	}
@@ -78,6 +83,7 @@ impl<'a> SchemeRef<'a> {
 			Self::Regular { uri, urn } => Scheme::Regular { uri, urn },
 			Self::Search { domain, uri, urn } => Scheme::Search { domain: domain.intern(), uri, urn },
 			Self::Archive { domain, uri, urn } => Scheme::Archive { domain: domain.intern(), uri, urn },
+			Self::S3 { domain, uri, urn } => Scheme::S3 { domain: domain.intern(), uri, urn },
 			Self::Sftp { domain, uri, urn } => Scheme::Sftp { domain: domain.intern(), uri, urn },
 		}
 	}
@@ -87,6 +93,7 @@ impl<'a> SchemeRef<'a> {
 			Self::Regular { .. } => Self::Regular { uri, urn },
 			Self::Search { domain, .. } => Self::Search { domain, uri, urn },
 			Self::Archive { domain, .. } => Self::Archive { domain, uri, urn },
+			Self::S3 { domain, .. } => Self::S3 { domain, uri, urn },
 			Self::Sftp { domain, .. } => Self::Sftp { domain, uri, urn },
 		}
 	}

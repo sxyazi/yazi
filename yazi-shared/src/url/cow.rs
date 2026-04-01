@@ -11,6 +11,7 @@ pub enum UrlCow<'a> {
 	Regular(LocCow<'a>),
 	Search { loc: LocCow<'a>, domain: SymbolCow<'a, str> },
 	Archive { loc: LocCow<'a>, domain: SymbolCow<'a, str> },
+	S3 { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, domain: SymbolCow<'a, str> },
 	Sftp { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, domain: SymbolCow<'a, str> },
 }
 
@@ -25,6 +26,7 @@ impl<'a> From<Url<'a>> for UrlCow<'a> {
 			Url::Regular(loc) => Self::Regular(loc.into()),
 			Url::Search { loc, domain } => Self::Search { loc: loc.into(), domain: domain.into() },
 			Url::Archive { loc, domain } => Self::Archive { loc: loc.into(), domain: domain.into() },
+			Url::S3 { loc, domain } => Self::S3 { loc: loc.into(), domain: domain.into() },
 			Url::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.into() },
 		}
 	}
@@ -45,6 +47,7 @@ impl From<UrlBuf> for UrlCow<'_> {
 			UrlBuf::Archive { loc, domain } => {
 				Self::Archive { loc: loc.into(), domain: domain.into() }
 			}
+			UrlBuf::S3 { loc, domain } => Self::S3 { loc: loc.into(), domain: domain.into() },
 			UrlBuf::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.into() },
 		}
 	}
@@ -153,6 +156,10 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathDyn<'a>)> for UrlCow<'a> {
 				loc:    Loc::with(path.as_os()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for archive scheme"))?,
 			},
+			SchemeKind::S3 => Self::S3 {
+				loc:    Loc::with(path.as_unix()?, uri, urn)?.into(),
+				domain: domain.ok_or_else(|| anyhow!("missing domain for s3 scheme"))?,
+			},
 			SchemeKind::Sftp => Self::Sftp {
 				loc:    Loc::with(path.as_unix()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
@@ -179,6 +186,10 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathBufDyn)> for UrlCow<'a> {
 			SchemeKind::Archive => Self::Archive {
 				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for archive scheme"))?,
+			},
+			SchemeKind::S3 => Self::S3 {
+				loc:    LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(),
+				domain: domain.ok_or_else(|| anyhow!("missing domain for s3 scheme"))?,
 			},
 			SchemeKind::Sftp => Self::Sftp {
 				loc:    LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(),
@@ -210,6 +221,7 @@ impl<'a> UrlCow<'a> {
 			Self::Regular(loc) => loc.is_owned(),
 			Self::Search { loc, .. } => loc.is_owned(),
 			Self::Archive { loc, .. } => loc.is_owned(),
+			Self::S3 { loc, .. } => loc.is_owned(),
 			Self::Sftp { loc, .. } => loc.is_owned(),
 		}
 	}
@@ -223,9 +235,13 @@ impl<'a> UrlCow<'a> {
 			Self::Archive { loc, domain } => {
 				UrlBuf::Archive { loc: loc.into_owned(), domain: domain.into() }
 			}
+			Self::S3 { loc, domain } => {
+				UrlBuf::S3 { loc: loc.into_owned(), domain: domain.into() }
+			}
 			Self::Sftp { loc, domain } => {
 				UrlBuf::Sftp { loc: loc.into_owned(), domain: domain.into() }
 			}
+
 		}
 	}
 
@@ -248,6 +264,12 @@ impl<'a> UrlCow<'a> {
 				}
 				SymbolCow::Owned(domain) => (Scheme::Archive { domain, uri, urn }.into(), loc.into_path()),
 			},
+			Self::S3 { loc, domain } => match domain {
+				SymbolCow::Borrowed(domain) => {
+					(SchemeRef::S3 { domain, uri, urn }.into(), loc.into_path())
+				}
+				SymbolCow::Owned(domain) => (Scheme::S3 { domain, uri, urn }.into(), loc.into_path()),
+			},
 			Self::Sftp { loc, domain } => match domain {
 				SymbolCow::Borrowed(domain) => {
 					(SchemeRef::Sftp { domain, uri, urn }.into(), loc.into_path())
@@ -269,6 +291,9 @@ impl<'a> UrlCow<'a> {
 			}
 			UrlCow::Archive { loc, domain } => {
 				UrlCow::Archive { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
+			}
+			UrlCow::S3 { loc, domain } => {
+				UrlCow::S3 { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
 			}
 			UrlCow::Sftp { loc, domain } => {
 				UrlCow::Sftp { loc: loc.into_owned().into(), domain: domain.into_owned().into() }

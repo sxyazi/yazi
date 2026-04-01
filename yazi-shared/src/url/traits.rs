@@ -39,6 +39,7 @@ impl AsUrl for UrlBuf {
 			Self::Regular(loc) => Url::Regular(loc.as_loc()),
 			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
 			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
+			Self::S3 { loc, domain } => Url::S3 { loc: loc.as_loc(), domain },
 			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
 		}
 	}
@@ -60,6 +61,7 @@ impl AsUrl for UrlCow<'_> {
 			Self::Regular(loc) => Url::Regular(loc.as_loc()),
 			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
 			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
+			Self::S3 { loc, domain } => Url::S3 { loc: loc.as_loc(), domain },
 			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
 		}
 	}

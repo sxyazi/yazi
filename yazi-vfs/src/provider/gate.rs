@@ -49,6 +49,9 @@ impl FileBuilder for Gate {
 			SchemeKind::Archive => {
 				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
 			}
+			SchemeKind::S3 => {
+				Err(io::Error::new(io::ErrorKind::Unsupported, "S3 provider does not expose file handles"))?
+			}
 			SchemeKind::Sftp => self.build::<super::sftp::Gate>().open(url).await?.into(),
 		})
 	}

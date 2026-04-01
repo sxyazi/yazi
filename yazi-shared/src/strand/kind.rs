@@ -22,6 +22,7 @@ impl From<SchemeKind> for StrandKind {
 			SchemeKind::Regular => Self::Os,
 			SchemeKind::Search => Self::Os,
 			SchemeKind::Archive => Self::Os,
+			SchemeKind::S3 => Self::Bytes,
 			SchemeKind::Sftp => Self::Bytes,
 		}
 	}

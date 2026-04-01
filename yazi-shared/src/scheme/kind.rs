@@ -9,6 +9,7 @@ pub enum SchemeKind {
 	Regular,
 	Search,
 	Archive,
+	S3,
 	Sftp,
 }
 
@@ -21,6 +22,7 @@ where
 			SchemeRef::Regular { .. } => Self::Regular,
 			SchemeRef::Search { .. } => Self::Search,
 			SchemeRef::Archive { .. } => Self::Archive,
+			SchemeRef::S3 { .. } => Self::S3,
 			SchemeRef::Sftp { .. } => Self::Sftp,
 		}
 	}
@@ -34,6 +36,7 @@ impl TryFrom<&[u8]> for SchemeKind {
 			b"regular" => Ok(Self::Regular),
 			b"search" => Ok(Self::Search),
 			b"archive" => Ok(Self::Archive),
+			b"s3" => Ok(Self::S3),
 			b"sftp" => Ok(Self::Sftp),
 			_ => bail!("invalid scheme kind: {}", String::from_utf8_lossy(value)),
 		}
@@ -45,7 +48,7 @@ impl SchemeKind {
 	pub fn is_local(self) -> bool {
 		match self {
 			Self::Regular | Self::Search => true,
-			Self::Archive | Self::Sftp => false,
+			Self::Archive | Self::S3 | Self::Sftp => false,
 		}
 	}
 
@@ -53,7 +56,7 @@ impl SchemeKind {
 	pub fn is_remote(self) -> bool {
 		match self {
 			Self::Regular | Self::Search | Self::Archive => false,
-			Self::Sftp => true,
+			Self::S3 | Self::Sftp => true,
 		}
 	}
 
@@ -61,7 +64,7 @@ impl SchemeKind {
 	pub fn is_virtual(self) -> bool {
 		match self {
 			Self::Regular | Self::Search => false,
-			Self::Archive | Self::Sftp => true,
+			Self::Archive | Self::S3 | Self::Sftp => true,
 		}
 	}
 
