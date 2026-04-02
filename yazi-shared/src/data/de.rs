@@ -1,6 +1,6 @@
 use serde::{Deserializer, de::{self, Error, IntoDeserializer, MapAccess, SeqAccess}};
 
-use crate::data::{Data, DataKey, KeyDeserializer};
+use crate::data::{BytesDeserializer, Data, DataKey, KeyDeserializer};
 
 impl<'de> Deserializer<'de> for &'de Data {
 	type Error = de::value::Error;
@@ -20,7 +20,7 @@ impl<'de> Deserializer<'de> for &'de Data {
 			Data::Id(i) => visitor.visit_u64(i.get()),
 			Data::Url(u) => u.into_deserializer().deserialize_any(visitor),
 			Data::Path(_) => Err(Error::custom("path not supported")),
-			Data::Bytes(b) => visitor.visit_borrowed_bytes(b),
+			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_any(visitor),
 			Data::Any(_) => Err(Error::custom("any not supported")),
 		}
 	}
@@ -135,7 +135,10 @@ impl<'de> Deserializer<'de> for &'de Data {
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_bytes(self.try_into().map_err(Error::custom)?)
+		match self {
+			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_bytes(visitor),
+			_ => Err(Error::custom("not bytes")),
+		}
 	}
 
 	fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -196,7 +199,7 @@ impl<'de> Deserializer<'de> for &'de Data {
 	{
 		match self {
 			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.iter() }),
-			Data::Bytes(b) => visitor.visit_seq(ByteSeqDeserializer { iter: b.iter() }),
+			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_seq(visitor),
 			_ => Err(Error::custom("not a sequence")),
 		}
 	}
@@ -292,24 +295,6 @@ impl<'de> SeqAccess<'de> for SeqDeserializer<'de> {
 		T: de::DeserializeSeed<'de>,
 	{
 		self.iter.next().map(|value| seed.deserialize(value)).transpose()
-	}
-
-	fn size_hint(&self) -> Option<usize> { Some(self.iter.len()) }
-}
-
-// --- ByteSeq
-struct ByteSeqDeserializer<'a> {
-	iter: std::slice::Iter<'a, u8>,
-}
-
-impl<'de> SeqAccess<'de> for ByteSeqDeserializer<'de> {
-	type Error = de::value::Error;
-
-	fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
-	where
-		T: de::DeserializeSeed<'de>,
-	{
-		self.iter.next().map(|value| seed.deserialize((*value).into_deserializer())).transpose()
 	}
 
 	fn size_hint(&self) -> Option<usize> { Some(self.iter.len()) }

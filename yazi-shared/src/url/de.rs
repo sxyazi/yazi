@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use serde::{Deserializer, de::{self, IntoDeserializer, MapAccess, value::SeqDeserializer}};
+use serde::{Deserializer, de::{self, IntoDeserializer, MapAccess}};
 
-use crate::{pool::SymbolCow, scheme::SchemeLike, url::UrlCow};
+use crate::{data::BytesDeserializer, pool::SymbolCow, scheme::SchemeLike, url::UrlCow};
 
 pub struct UrlDeserializer<'a>(pub(super) UrlCow<'a>);
 
@@ -95,10 +95,7 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 			return seed.deserialize(urn.into_deserializer());
 		}
 		if let Some(path) = self.path.take() {
-			return match path {
-				Cow::Borrowed(bytes) => seed.deserialize(SeqDeserializer::new(bytes.iter().copied())),
-				Cow::Owned(bytes) => seed.deserialize(SeqDeserializer::new(bytes.into_iter())),
-			};
+			return seed.deserialize(BytesDeserializer(path));
 		}
 
 		Err(de::Error::custom("value missing for key"))

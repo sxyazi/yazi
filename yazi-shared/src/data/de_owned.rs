@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserializer, de::{self, Error, IntoDeserializer, MapAccess, SeqAccess}};
 
-use crate::data::{Data, DataKey, KeyDeserializer};
+use crate::data::{BytesDeserializer, Data, DataKey, KeyDeserializer};
 
 impl<'de> Deserializer<'de> for Data {
 	type Error = de::value::Error;
@@ -23,7 +23,7 @@ impl<'de> Deserializer<'de> for Data {
 			Data::Id(i) => visitor.visit_u64(i.get()),
 			Data::Url(u) => u.into_deserializer().deserialize_any(visitor),
 			Data::Path(_) => Err(Error::custom("path not supported")),
-			Data::Bytes(b) => visitor.visit_byte_buf(b),
+			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_any(visitor),
 			Data::Any(_) => Err(Error::custom("any not supported")),
 		}
 	}
@@ -141,7 +141,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Bytes(b) => visitor.visit_byte_buf(b),
+			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_bytes(visitor),
 			_ => Err(Error::custom("not bytes")),
 		}
 	}
@@ -204,7 +204,7 @@ impl<'de> Deserializer<'de> for Data {
 	{
 		match self {
 			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
-			Data::Bytes(b) => visitor.visit_seq(ByteSeqDeserializer { iter: b.into_iter() }),
+			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_seq(visitor),
 			_ => Err(Error::custom("not a sequence")),
 		}
 	}
@@ -300,24 +300,6 @@ impl<'de> SeqAccess<'de> for SeqDeserializer {
 		T: de::DeserializeSeed<'de>,
 	{
 		self.iter.next().map(|value| seed.deserialize(value)).transpose()
-	}
-
-	fn size_hint(&self) -> Option<usize> { Some(self.iter.len()) }
-}
-
-// --- ByteSeq
-struct ByteSeqDeserializer {
-	iter: std::vec::IntoIter<u8>,
-}
-
-impl<'de> SeqAccess<'de> for ByteSeqDeserializer {
-	type Error = de::value::Error;
-
-	fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
-	where
-		T: de::DeserializeSeed<'de>,
-	{
-		self.iter.next().map(|value| seed.deserialize(value.into_deserializer())).transpose()
 	}
 
 	fn size_hint(&self) -> Option<usize> { Some(self.iter.len()) }
