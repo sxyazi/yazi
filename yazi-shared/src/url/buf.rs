@@ -1,9 +1,9 @@
 use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
 
-use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::Scheme, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlLike}};
+use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::{Scheme, SchemeLike}, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
 
 #[derive(Clone, Eq)]
 pub enum UrlBuf {
@@ -203,9 +203,61 @@ impl<'de> Deserialize<'de> for UrlBuf {
 	where
 		D: serde::Deserializer<'de>,
 	{
-		let s = String::deserialize(deserializer)?;
-		Self::try_from(s).map_err(serde::de::Error::custom)
+		struct Visitor;
+
+		impl<'de> de::Visitor<'de> for Visitor {
+			type Value = UrlBuf;
+
+			fn expecting(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+				formatter.write_str("a Url or URL string")
+			}
+
+			fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				UrlBuf::from_str(value).map_err(E::custom)
+			}
+
+			fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				UrlBuf::try_from(value).map_err(E::custom)
+			}
+
+			fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+			where
+				D: de::Deserializer<'de>,
+			{
+				#[derive(Deserialize)]
+				struct Shadow {
+					#[serde(flatten)]
+					scheme: Scheme,
+					path:   Vec<u8>,
+				}
+
+				let Shadow { scheme, path } = Deserialize::deserialize(deserializer)?;
+				let path = PathBufDyn::with(scheme.kind(), path).map_err(de::Error::custom)?;
+
+				UrlBuf::try_from((scheme, path)).map_err(de::Error::custom)
+			}
+		}
+
+		deserializer.deserialize_string(Visitor)
 	}
+}
+
+impl<'de> IntoDeserializer<'de, de::value::Error> for UrlBuf {
+	type Deserializer = UrlDeserializer<'de>;
+
+	fn into_deserializer(self) -> Self::Deserializer { UrlDeserializer(self.into()) }
+}
+
+impl<'de> IntoDeserializer<'de, de::value::Error> for &'de UrlBuf {
+	type Deserializer = UrlDeserializer<'de>;
+
+	fn into_deserializer(self) -> Self::Deserializer { UrlDeserializer(self.into()) }
 }
 
 // --- Tests

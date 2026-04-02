@@ -1,6 +1,7 @@
-use std::{hash::{Hash, Hasher}, marker::PhantomData, mem::ManuallyDrop, ops::Deref, str};
+use std::{borrow::Cow, hash::{Hash, Hasher}, marker::PhantomData, mem::ManuallyDrop, ops::Deref, str};
 
 use hashbrown::hash_map::RawEntryMut;
+use serde::Deserialize;
 
 use crate::pool::{Pool, SYMBOLS, SymbolPtr, compute_hash};
 
@@ -130,6 +131,15 @@ impl std::fmt::Debug for Symbol<[u8]> {
 impl std::fmt::Debug for Symbol<str> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "Symbol<str>({:?})", self.as_ref())
+	}
+}
+
+impl<'de> Deserialize<'de> for Symbol<str> {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		Cow::<str>::deserialize(deserializer).map(Pool::<str>::intern)
 	}
 }
 

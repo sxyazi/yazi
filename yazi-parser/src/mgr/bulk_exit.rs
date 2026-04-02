@@ -1,23 +1,19 @@
-use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{event::ActionCow, url::UrlCow};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct BulkExitForm {
+	#[serde(alias = "0")]
 	pub target: UrlCow<'static>,
+	#[serde(default)]
 	pub accept: bool,
 }
 
 impl TryFrom<ActionCow> for BulkExitForm {
 	type Error = anyhow::Error;
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Ok(target) = a.take_first::<UrlCow>() else {
-			bail!("invalid target in BulkExitForm");
-		};
-
-		Ok(Self { target, accept: a.bool("accept") })
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for BulkExitForm {

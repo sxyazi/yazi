@@ -4,7 +4,6 @@ use anyhow::Result;
 
 use crate::path::{AsPath, PathBufDyn, PathDyn, PathDynError, PathKind};
 
-// --- PathCow
 #[derive(Debug)]
 pub enum PathCow<'a> {
 	Borrowed(PathDyn<'a>),
@@ -45,6 +44,13 @@ impl PartialEq<&str> for PathCow<'_> {
 }
 
 impl<'a> PathCow<'a> {
+	pub fn into_encoded_bytes(self) -> Cow<'a, [u8]> {
+		match self {
+			Self::Borrowed(p) => Cow::Borrowed(p.encoded_bytes()),
+			Self::Owned(p) => Cow::Owned(p.into_encoded_bytes()),
+		}
+	}
+
 	pub fn into_owned(self) -> PathBufDyn {
 		match self {
 			Self::Borrowed(p) => p.to_owned(),

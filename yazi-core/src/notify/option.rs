@@ -4,15 +4,17 @@ use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSecondsWithFrac, serde_as};
 use yazi_binding::SER_OPT;
-use yazi_shared::{data::Data, event::ActionCow};
+use yazi_shared::event::ActionCow;
 
 use crate::notify::MessageLevel;
 
 #[serde_as]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct MessageOpt {
-	pub title:   String,
+	#[serde(alias = "0")]
 	pub content: String,
+	#[serde(alias = "1")]
+	pub title:   String,
 	#[serde(default)]
 	pub level:   MessageLevel,
 	#[serde_as(as = "DurationSecondsWithFrac<f64>")]
@@ -22,14 +24,7 @@ pub struct MessageOpt {
 impl TryFrom<ActionCow> for MessageOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		Ok(Self {
-			title:   a.take_second()?,
-			content: a.take_first()?,
-			level:   <_>::deserialize(a.get::<&Data>("level")?)?,
-			timeout: <_>::deserialize(a.get::<&Data>("timeout")?)?,
-		})
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for MessageOpt {

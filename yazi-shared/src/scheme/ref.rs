@@ -13,7 +13,6 @@ pub enum SchemeRef<'a> {
 impl Deref for SchemeRef<'_> {
 	type Target = SchemeKind;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target {
 		match self {
 			Self::Regular { .. } => &SchemeKind::Regular,
@@ -42,13 +41,11 @@ impl From<SchemeRef<'_>> for Scheme {
 }
 
 impl<'a> SchemeRef<'a> {
-	#[inline]
 	pub fn covariant(self, other: impl AsScheme) -> bool {
 		let other = other.as_scheme();
 		if self.is_virtual() || other.is_virtual() { self == other } else { true }
 	}
 
-	#[inline]
 	pub const fn domain(self) -> Option<&'a str> {
 		match self {
 			Self::Regular { .. } => None,
@@ -58,7 +55,6 @@ impl<'a> SchemeRef<'a> {
 		}
 	}
 
-	#[inline]
 	pub const fn kind(self) -> SchemeKind {
 		match self {
 			Self::Regular { .. } => SchemeKind::Regular,
@@ -68,7 +64,6 @@ impl<'a> SchemeRef<'a> {
 		}
 	}
 
-	#[inline]
 	pub const fn ports(self) -> (usize, usize) {
 		match self {
 			Self::Regular { uri, urn } => (uri, urn),
@@ -96,6 +91,5 @@ impl<'a> SchemeRef<'a> {
 		}
 	}
 
-	#[inline]
 	pub const fn zeroed(self) -> Self { self.with_ports(0, 0) }
 }

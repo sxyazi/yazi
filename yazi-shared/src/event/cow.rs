@@ -1,6 +1,7 @@
 use std::{iter, ops::Deref};
 
 use anyhow::Result;
+use serde::de::DeserializeOwned;
 use tokio::sync::mpsc;
 
 use super::Action;
@@ -36,6 +37,16 @@ impl From<&'static Action> for ActionCow {
 }
 
 impl ActionCow {
+	pub fn deserialize<T>(self) -> Result<T, serde::de::value::Error>
+	where
+		T: DeserializeOwned,
+	{
+		match self {
+			Self::Owned(c) => T::deserialize(c),
+			Self::Borrowed(c) => T::deserialize(c),
+		}
+	}
+
 	pub fn take<'a, T>(&mut self, name: impl Into<DataKey>) -> Result<T>
 	where
 		T: TryFrom<Data> + TryFrom<&'a Data>,

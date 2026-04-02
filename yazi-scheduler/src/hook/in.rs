@@ -71,7 +71,7 @@ impl HookInOutCopy {
 
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileCopy(_) = &task.prog {
-			task.hook = Some(HookIn::from(self).with_id(task.id));
+			task.with_hook(self);
 		}
 	}
 }
@@ -94,7 +94,7 @@ impl HookInOutCut {
 
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileCut(_) = &task.prog {
-			task.hook = Some(HookIn::from(self).with_id(task.id));
+			task.with_hook(self);
 		}
 	}
 }
@@ -150,7 +150,7 @@ impl HookInOutLink {
 
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileLink(_) = &task.prog {
-			task.hook = Some(HookIn::from(self).with_id(task.id));
+			task.with_hook(self);
 		}
 	}
 }
@@ -174,7 +174,7 @@ impl HookInOutHardlink {
 
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileHardlink(_) = &task.prog {
-			task.hook = Some(HookIn::from(self).with_id(task.id));
+			task.with_hook(self);
 		}
 	}
 }

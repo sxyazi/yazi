@@ -1,8 +1,10 @@
 use anyhow::{Result, bail};
+use strum::IntoStaticStr;
 
 use crate::{BytesExt, scheme::{AsScheme, SchemeRef}};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
 pub enum SchemeKind {
 	Regular,
 	Search,
@@ -40,16 +42,6 @@ impl TryFrom<&[u8]> for SchemeKind {
 
 impl SchemeKind {
 	#[inline]
-	pub const fn as_str(self) -> &'static str {
-		match self {
-			Self::Regular => "regular",
-			Self::Search => "search",
-			Self::Archive => "archive",
-			Self::Sftp => "sftp",
-		}
-	}
-
-	#[inline]
 	pub fn is_local(self) -> bool {
 		match self {
 			Self::Regular | Self::Search => true,
@@ -74,8 +66,8 @@ impl SchemeKind {
 	}
 
 	#[inline]
-	pub(super) const fn offset(self, tilde: bool) -> usize {
-		3 + self.as_str().len() + tilde as usize
+	pub(super) fn offset(self, tilde: bool) -> usize {
+		3 + Into::<&str>::into(self).len() + tilde as usize
 	}
 
 	pub fn parse(bytes: &[u8]) -> Result<Option<(Self, bool)>> {

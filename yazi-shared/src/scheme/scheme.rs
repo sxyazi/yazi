@@ -1,8 +1,11 @@
 use std::hash::{Hash, Hasher};
 
+use serde::Deserialize;
+
 use crate::{pool::Symbol, scheme::{AsScheme, SchemeRef}};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Scheme {
 	Regular { uri: usize, urn: usize },
 	Search { domain: Symbol<str>, uri: usize, urn: usize },
