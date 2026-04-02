@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 
-use crate::{Id, SStr, path::PathBufDyn, url::{UrlBuf, UrlCow}};
+use crate::{Id, SStr, path::PathBufDyn, url::UrlBuf};
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(untagged)]
@@ -29,15 +29,6 @@ impl DataKey {
 	pub fn as_str(&self) -> Option<&str> {
 		match self {
 			Self::String(s) => Some(s),
-			_ => None,
-		}
-	}
-
-	pub fn into_url(self) -> Option<UrlCow<'static>> {
-		match self {
-			Self::String(s) => s.try_into().ok(),
-			Self::Url(u) => Some(u.into()),
-			Self::Bytes(b) => b.try_into().ok(),
 			_ => None,
 		}
 	}
@@ -80,3 +71,6 @@ impl From<&'static str> for DataKey {
 impl From<String> for DataKey {
 	fn from(value: String) -> Self { Self::String(Cow::Owned(value)) }
 }
+
+impl_into_integer!(DataKey, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, crate::Id);
+impl_into_number!(DataKey, f32, f64);

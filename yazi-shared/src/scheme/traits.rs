@@ -48,6 +48,8 @@ where
 {
 	fn kind(&self) -> SchemeKind { *self.as_scheme() }
 
+	fn ports(&self) -> (usize, usize) { self.as_scheme().ports() }
+
 	fn domain(&self) -> Option<&str> { self.as_scheme().domain() }
 
 	fn covariant(&self, other: impl AsScheme) -> bool { self.as_scheme().covariant(other) }

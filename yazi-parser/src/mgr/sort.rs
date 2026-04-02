@@ -6,8 +6,10 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct SortForm {
+	#[serde(alias = "0")]
 	pub by:        Option<SortBy>,
 	pub reverse:   Option<bool>,
+	#[serde(alias = "dir-first")]
 	pub dir_first: Option<bool>,
 	pub sensitive: Option<bool>,
 	pub translit:  Option<bool>,
@@ -17,16 +19,7 @@ pub struct SortForm {
 impl TryFrom<ActionCow> for SortForm {
 	type Error = anyhow::Error;
 
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
-		Ok(Self {
-			by:        a.first().ok().map(str::parse).transpose()?,
-			reverse:   a.get("reverse").ok(),
-			dir_first: a.get("dir-first").ok(),
-			sensitive: a.get("sensitive").ok(),
-			translit:  a.get("translit").ok(),
-			fallback:  a.get("fallback").ok().map(str::parse).transpose()?,
-		})
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for SortForm {

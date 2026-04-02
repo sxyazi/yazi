@@ -1,23 +1,17 @@
-use anyhow::bail;
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{data::{Data, DataKey}, event::ActionCow};
+use serde::Deserialize;
+use yazi_shared::{SStr, event::ActionCow, url::UrlCow};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct UpdateMimesForm {
-	pub updates: HashMap<DataKey, Data>,
+	pub updates: HashMap<UrlCow<'static>, SStr>,
 }
 
 impl TryFrom<ActionCow> for UpdateMimesForm {
 	type Error = anyhow::Error;
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Ok(updates) = a.take("updates") else {
-			bail!("Invalid 'updates' in UpdateMimesForm");
-		};
-
-		Ok(Self { updates })
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for UpdateMimesForm {

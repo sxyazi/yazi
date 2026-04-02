@@ -2,34 +2,30 @@ use std::{borrow::Cow, hash::{Hash, Hasher}, path::PathBuf};
 
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Deserializer, Serialize};
+use typed_path::{UnixPath, UnixPathBuf};
 
-use crate::{loc::{Loc, LocBuf}, path::{PathBufDyn, PathCow, PathDyn}, pool::SymbolCow, scheme::{AsScheme, Scheme, SchemeCow, SchemeKind, SchemeRef}, url::{AsUrl, Url, UrlBuf}};
+use crate::{loc::{Loc, LocBuf, LocCow}, path::{PathBufDyn, PathCow, PathDyn}, pool::SymbolCow, scheme::{AsScheme, Scheme, SchemeCow, SchemeKind, SchemeRef}, url::{AsUrl, Url, UrlBuf}};
 
 #[derive(Clone, Debug)]
 pub enum UrlCow<'a> {
-	Regular(LocBuf),
-	Search { loc: LocBuf, domain: SymbolCow<'a, str> },
-	Archive { loc: LocBuf, domain: SymbolCow<'a, str> },
-	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, domain: SymbolCow<'a, str> },
-
-	RegularRef(Loc<'a>),
-	SearchRef { loc: Loc<'a>, domain: SymbolCow<'a, str> },
-	ArchiveRef { loc: Loc<'a>, domain: SymbolCow<'a, str> },
-	SftpRef { loc: Loc<'a, &'a typed_path::UnixPath>, domain: SymbolCow<'a, str> },
+	Regular(LocCow<'a>),
+	Search { loc: LocCow<'a>, domain: SymbolCow<'a, str> },
+	Archive { loc: LocCow<'a>, domain: SymbolCow<'a, str> },
+	Sftp { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, domain: SymbolCow<'a, str> },
 }
 
 // FIXME: remove
 impl Default for UrlCow<'_> {
-	fn default() -> Self { Self::RegularRef(Default::default()) }
+	fn default() -> Self { Self::Regular(Default::default()) }
 }
 
 impl<'a> From<Url<'a>> for UrlCow<'a> {
 	fn from(value: Url<'a>) -> Self {
 		match value {
-			Url::Regular(loc) => Self::RegularRef(loc),
-			Url::Search { loc, domain } => Self::SearchRef { loc, domain: domain.into() },
-			Url::Archive { loc, domain } => Self::ArchiveRef { loc, domain: domain.into() },
-			Url::Sftp { loc, domain } => Self::SftpRef { loc, domain: domain.into() },
+			Url::Regular(loc) => Self::Regular(loc.into()),
+			Url::Search { loc, domain } => Self::Search { loc: loc.into(), domain: domain.into() },
+			Url::Archive { loc, domain } => Self::Archive { loc: loc.into(), domain: domain.into() },
+			Url::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.into() },
 		}
 	}
 }
@@ -44,10 +40,12 @@ where
 impl From<UrlBuf> for UrlCow<'_> {
 	fn from(value: UrlBuf) -> Self {
 		match value {
-			UrlBuf::Regular(loc) => Self::Regular(loc),
-			UrlBuf::Search { loc, domain } => Self::Search { loc, domain: domain.into() },
-			UrlBuf::Archive { loc, domain } => Self::Archive { loc, domain: domain.into() },
-			UrlBuf::Sftp { loc, domain } => Self::Sftp { loc, domain: domain.into() },
+			UrlBuf::Regular(loc) => Self::Regular(loc.into()),
+			UrlBuf::Search { loc, domain } => Self::Search { loc: loc.into(), domain: domain.into() },
+			UrlBuf::Archive { loc, domain } => {
+				Self::Archive { loc: loc.into(), domain: domain.into() }
+			}
+			UrlBuf::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.into() },
 		}
 	}
 }
@@ -146,17 +144,17 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathDyn<'a>)> for UrlCow<'a> {
 		let (uri, urn) = scheme.as_scheme().ports();
 		let domain = scheme.into_domain();
 		Ok(match kind {
-			SchemeKind::Regular => Self::RegularRef(Loc::bare(path.as_os()?)),
-			SchemeKind::Search => Self::SearchRef {
-				loc:    Loc::with(path.as_os()?, uri, urn)?,
+			SchemeKind::Regular => Self::Regular(Loc::bare(path.as_os()?).into()),
+			SchemeKind::Search => Self::Search {
+				loc:    Loc::with(path.as_os()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for search scheme"))?,
 			},
-			SchemeKind::Archive => Self::ArchiveRef {
-				loc:    Loc::with(path.as_os()?, uri, urn)?,
+			SchemeKind::Archive => Self::Archive {
+				loc:    Loc::with(path.as_os()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for archive scheme"))?,
 			},
-			SchemeKind::Sftp => Self::SftpRef {
-				loc:    Loc::with(path.as_unix()?, uri, urn)?,
+			SchemeKind::Sftp => Self::Sftp {
+				loc:    Loc::with(path.as_unix()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
 			},
 		})
@@ -171,17 +169,19 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathBufDyn)> for UrlCow<'a> {
 		let (uri, urn) = scheme.as_scheme().ports();
 		let domain = scheme.into_domain();
 		Ok(match kind {
-			SchemeKind::Regular => Self::Regular(path.into_os()?.into()),
+			SchemeKind::Regular => {
+				Self::Regular(LocBuf::<std::path::PathBuf>::from(path.into_os()?).into())
+			}
 			SchemeKind::Search => Self::Search {
-				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?,
+				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for search scheme"))?,
 			},
 			SchemeKind::Archive => Self::Archive {
-				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?,
+				loc:    LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for archive scheme"))?,
 			},
 			SchemeKind::Sftp => Self::Sftp {
-				loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.try_into()?, uri, urn)?,
+				loc:    LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
 			},
 		})
@@ -207,75 +207,75 @@ impl Hash for UrlCow<'_> {
 impl<'a> UrlCow<'a> {
 	pub fn is_owned(&self) -> bool {
 		match self {
-			Self::Regular(_) | Self::Search { .. } | Self::Archive { .. } | Self::Sftp { .. } => true,
-			Self::RegularRef(_)
-			| Self::SearchRef { .. }
-			| Self::ArchiveRef { .. }
-			| Self::SftpRef { .. } => false,
+			Self::Regular(loc) => loc.is_owned(),
+			Self::Search { loc, .. } => loc.is_owned(),
+			Self::Archive { loc, .. } => loc.is_owned(),
+			Self::Sftp { loc, .. } => loc.is_owned(),
 		}
 	}
 
 	pub fn into_owned(self) -> UrlBuf {
 		match self {
-			Self::Regular(loc) => UrlBuf::Regular(loc),
-			Self::Search { loc, domain } => UrlBuf::Search { loc, domain: domain.into() },
-			Self::Archive { loc, domain } => UrlBuf::Archive { loc, domain: domain.into() },
-			Self::Sftp { loc, domain } => UrlBuf::Sftp { loc, domain: domain.into() },
-
-			Self::RegularRef(loc) => UrlBuf::Regular(loc.into()),
-			Self::SearchRef { loc, domain } => {
-				UrlBuf::Search { loc: loc.into(), domain: domain.into() }
+			Self::Regular(loc) => UrlBuf::Regular(loc.into_owned()),
+			Self::Search { loc, domain } => {
+				UrlBuf::Search { loc: loc.into_owned(), domain: domain.into() }
 			}
-			Self::ArchiveRef { loc, domain } => {
-				UrlBuf::Archive { loc: loc.into(), domain: domain.into() }
+			Self::Archive { loc, domain } => {
+				UrlBuf::Archive { loc: loc.into_owned(), domain: domain.into() }
 			}
-			Self::SftpRef { loc, domain } => UrlBuf::Sftp { loc: loc.into(), domain: domain.into() },
+			Self::Sftp { loc, domain } => {
+				UrlBuf::Sftp { loc: loc.into_owned(), domain: domain.into() }
+			}
 		}
 	}
 
-	pub fn into_scheme(self) -> SchemeCow<'a> {
+	pub fn into_pair(self) -> (SchemeCow<'a>, PathCow<'a>) {
 		let (uri, urn) = self.as_url().scheme().ports();
 		match self {
-			Self::Regular(_) => Scheme::Regular { uri, urn }.into(),
-			Self::RegularRef(_) => SchemeRef::Regular { uri, urn }.into(),
-			Self::Search { domain, .. } | Self::SearchRef { domain, .. } => match domain {
-				SymbolCow::Borrowed(domain) => SchemeRef::Search { domain, uri, urn }.into(),
-				SymbolCow::Owned(domain) => Scheme::Search { domain, uri, urn }.into(),
+			Self::Regular(loc) => match loc {
+				LocCow::Borrowed(_) => (SchemeRef::Regular { uri, urn }.into(), loc.into_path()),
+				LocCow::Owned(_) => (Scheme::Regular { uri, urn }.into(), loc.into_path()),
 			},
-			Self::Archive { domain, .. } | Self::ArchiveRef { domain, .. } => match domain {
-				SymbolCow::Borrowed(domain) => SchemeRef::Archive { domain, uri, urn }.into(),
-				SymbolCow::Owned(domain) => Scheme::Archive { domain, uri, urn }.into(),
+			Self::Search { loc, domain } => match domain {
+				SymbolCow::Borrowed(domain) => {
+					(SchemeRef::Search { domain, uri, urn }.into(), loc.into_path())
+				}
+				SymbolCow::Owned(domain) => (Scheme::Search { domain, uri, urn }.into(), loc.into_path()),
 			},
-			Self::Sftp { domain, .. } | Self::SftpRef { domain, .. } => match domain {
-				SymbolCow::Borrowed(domain) => SchemeRef::Sftp { domain, uri, urn }.into(),
-				SymbolCow::Owned(domain) => Scheme::Sftp { domain, uri, urn }.into(),
+			Self::Archive { loc, domain } => match domain {
+				SymbolCow::Borrowed(domain) => {
+					(SchemeRef::Archive { domain, uri, urn }.into(), loc.into_path())
+				}
+				SymbolCow::Owned(domain) => (Scheme::Archive { domain, uri, urn }.into(), loc.into_path()),
+			},
+			Self::Sftp { loc, domain } => match domain {
+				SymbolCow::Borrowed(domain) => {
+					(SchemeRef::Sftp { domain, uri, urn }.into(), loc.into_path())
+				}
+				SymbolCow::Owned(domain) => (Scheme::Sftp { domain, uri, urn }.into(), loc.into_path()),
 			},
 		}
 	}
+
+	pub fn into_scheme(self) -> SchemeCow<'a> { self.into_pair().0 }
+
+	pub fn into_path(self) -> PathCow<'a> { self.into_pair().1 }
 
 	pub fn into_static(self) -> UrlCow<'static> {
 		match self {
-			UrlCow::Regular(loc) => UrlCow::Regular(loc),
-			UrlCow::Search { loc, domain } => UrlCow::Search { loc, domain: domain.into_owned().into() },
+			UrlCow::Regular(loc) => UrlCow::Regular(loc.into_owned().into()),
+			UrlCow::Search { loc, domain } => {
+				UrlCow::Search { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
+			}
 			UrlCow::Archive { loc, domain } => {
-				UrlCow::Archive { loc, domain: domain.into_owned().into() }
+				UrlCow::Archive { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
 			}
-			UrlCow::Sftp { loc, domain } => UrlCow::Sftp { loc, domain: domain.into_owned().into() },
-
-			UrlCow::RegularRef(loc) => UrlCow::Regular(loc.into()),
-			UrlCow::SearchRef { loc, domain } => {
-				UrlCow::Search { loc: loc.into(), domain: domain.into_owned().into() }
-			}
-			UrlCow::ArchiveRef { loc, domain } => {
-				UrlCow::Archive { loc: loc.into(), domain: domain.into_owned().into() }
-			}
-			UrlCow::SftpRef { loc, domain } => {
-				UrlCow::Sftp { loc: loc.into(), domain: domain.into_owned().into() }
+			UrlCow::Sftp { loc, domain } => {
+				UrlCow::Sftp { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
 			}
 		}
 	}
 
-	#[inline]
 	pub fn to_owned(&self) -> UrlBuf { self.as_url().into() }
 }
 

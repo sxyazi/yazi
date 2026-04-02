@@ -78,9 +78,8 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner().into(),
-			Self::RegularRef(loc) | Self::SearchRef { loc, .. } => loc.as_inner().into(),
-			Self::Archive { .. } | Self::ArchiveRef { .. } | Self::Sftp { .. } | Self::SftpRef { .. } => {
+			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner(),
+			Self::Archive { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}

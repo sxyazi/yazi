@@ -136,7 +136,7 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 		let b = self.input.get(..len).ok_or(Error::serde("string not enough"))?;
 
 		self.input = &self.input[len..];
-		visitor.visit_str(str::from_utf8(b).map_err(|e| Error::serde(e.to_string()))?)
+		visitor.visit_borrowed_str(str::from_utf8(b).map_err(|e| Error::serde(e.to_string()))?)
 	}
 
 	fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -156,7 +156,7 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 		let b = self.input.get(4..4 + len).ok_or(Error::serde("bytes not enough"))?;
 
 		self.input = &self.input[4 + len..];
-		visitor.visit_bytes(b)
+		visitor.visit_borrowed_bytes(b)
 	}
 
 	fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>

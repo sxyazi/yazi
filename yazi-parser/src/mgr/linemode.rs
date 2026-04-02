@@ -1,25 +1,25 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{SStr, event::ActionCow};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct LinemodeForm {
+	#[serde(alias = "0")]
 	pub new: SStr,
 }
 
 impl TryFrom<ActionCow> for LinemodeForm {
 	type Error = anyhow::Error;
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Ok(new) = a.take_first::<SStr>() else {
-			bail!("a string argument is required for LinemodeForm");
-		};
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		let me: Self = a.deserialize()?;
 
-		if new.is_empty() || new.len() > 20 {
+		if me.new.is_empty() || me.new.len() > 20 {
 			bail!("Linemode must be between 1 and 20 characters long");
 		}
 
-		Ok(Self { new })
+		Ok(me)
 	}
 }
 

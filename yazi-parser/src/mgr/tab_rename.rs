@@ -1,25 +1,27 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{SStr, event::ActionCow};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct TabRenameForm {
+	#[serde(alias = "0")]
 	pub name:        Option<SStr>,
+	#[serde(default)]
 	pub interactive: bool,
 }
 
 impl TryFrom<ActionCow> for TabRenameForm {
 	type Error = anyhow::Error;
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let name = a.take_first().ok();
-		let interactive = a.bool("interactive");
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		let me: Self = a.deserialize()?;
 
-		if name.is_none() && !interactive {
+		if me.name.is_none() && !me.interactive {
 			bail!("either name or interactive must be specified in TabRenameForm");
 		}
 
-		Ok(Self { name, interactive })
+		Ok(me)
 	}
 }
 

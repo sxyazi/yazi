@@ -19,7 +19,6 @@ impl Actor for UpdateMimes {
 		let updates = opt
 			.updates
 			.into_iter()
-			.flat_map(|(key, value)| key.into_url().zip(value.into_sstr()))
 			.filter(|(url, mime)| cx.mgr.mimetype.get(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(u.as_url()) {

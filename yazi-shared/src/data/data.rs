@@ -267,53 +267,5 @@ impl Data {
 	}
 }
 
-// --- Macros
-macro_rules! impl_into_integer {
-	($t:ty) => {
-		impl TryFrom<&Data> for $t {
-			type Error = anyhow::Error;
-
-			fn try_from(value: &Data) -> Result<Self, Self::Error> {
-				Ok(match value {
-					Data::Integer(i) => <$t>::try_from(*i)?,
-					Data::String(s) => s.parse()?,
-					Data::Id(i) => <$t>::try_from(i.get())?,
-					_ => bail!("not an integer"),
-				})
-			}
-		}
-	};
-}
-
-macro_rules! impl_into_number {
-	($t:ty) => {
-		impl TryFrom<&Data> for $t {
-			type Error = anyhow::Error;
-
-			fn try_from(value: &Data) -> Result<Self, Self::Error> {
-				Ok(match value {
-					Data::Integer(i) if *i == (*i as $t as _) => *i as $t,
-					Data::Number(n) if *n == (*n as $t as _) => *n as $t,
-					Data::String(s) => s.parse()?,
-					Data::Id(i) if i.get() == (i.get() as $t as _) => i.get() as $t,
-					_ => bail!("not a number"),
-				})
-			}
-		}
-	};
-}
-
-impl_into_integer!(i8);
-impl_into_integer!(i16);
-impl_into_integer!(i32);
-impl_into_integer!(i64);
-impl_into_integer!(isize);
-impl_into_integer!(u8);
-impl_into_integer!(u16);
-impl_into_integer!(u32);
-impl_into_integer!(u64);
-impl_into_integer!(usize);
-impl_into_integer!(crate::Id);
-
-impl_into_number!(f32);
-impl_into_number!(f64);
+impl_into_integer!(Data, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, crate::Id);
+impl_into_number!(Data, f32, f64);

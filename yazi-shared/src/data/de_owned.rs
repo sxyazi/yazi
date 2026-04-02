@@ -1,8 +1,10 @@
+use std::borrow::Cow;
+
 use serde::{Deserializer, de::{self, Error, IntoDeserializer, MapAccess, SeqAccess}};
 
 use crate::data::{Data, DataKey, KeyDeserializer};
 
-impl<'de> Deserializer<'de> for &'de Data {
+impl<'de> Deserializer<'de> for Data {
 	type Error = de::value::Error;
 
 	fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -11,16 +13,17 @@ impl<'de> Deserializer<'de> for &'de Data {
 	{
 		match self {
 			Data::Nil => visitor.visit_unit(),
-			Data::Boolean(b) => visitor.visit_bool(*b),
-			Data::Integer(i) => visitor.visit_i64(*i),
-			Data::Number(n) => visitor.visit_f64(*n),
-			Data::String(s) => visitor.visit_borrowed_str(s),
-			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.iter() }),
-			Data::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.iter(), value: None }),
+			Data::Boolean(b) => visitor.visit_bool(b),
+			Data::Integer(i) => visitor.visit_i64(i),
+			Data::Number(n) => visitor.visit_f64(n),
+			Data::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
+			Data::String(Cow::Owned(s)) => visitor.visit_string(s),
+			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
+			Data::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
 			Data::Id(i) => visitor.visit_u64(i.get()),
 			Data::Url(u) => u.into_deserializer().deserialize_any(visitor),
 			Data::Path(_) => Err(Error::custom("path not supported")),
-			Data::Bytes(b) => visitor.visit_borrowed_bytes(b),
+			Data::Bytes(b) => visitor.visit_byte_buf(b),
 			Data::Any(_) => Err(Error::custom("any not supported")),
 		}
 	}
@@ -29,84 +32,84 @@ impl<'de> Deserializer<'de> for &'de Data {
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_bool(self.try_into().map_err(Error::custom)?)
+		visitor.visit_bool((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_i8(self.try_into().map_err(Error::custom)?)
+		visitor.visit_i8((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_i16(self.try_into().map_err(Error::custom)?)
+		visitor.visit_i16((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_i32(self.try_into().map_err(Error::custom)?)
+		visitor.visit_i32((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_i64(self.try_into().map_err(Error::custom)?)
+		visitor.visit_i64((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_u8(self.try_into().map_err(Error::custom)?)
+		visitor.visit_u8((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_u16(self.try_into().map_err(Error::custom)?)
+		visitor.visit_u16((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_u32(self.try_into().map_err(Error::custom)?)
+		visitor.visit_u32((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_u64(self.try_into().map_err(Error::custom)?)
+		visitor.visit_u64((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_f32(self.try_into().map_err(Error::custom)?)
+		visitor.visit_f32((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_f64(self.try_into().map_err(Error::custom)?)
+		visitor.visit_f64((&self).try_into().map_err(Error::custom)?)
 	}
 
 	fn deserialize_char<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		let s: &str = self.try_into().map_err(Error::custom)?;
+		let s: &str = (&self).try_into().map_err(Error::custom)?;
 		let mut chars = s.chars();
 		match (chars.next(), chars.next()) {
 			(Some(ch), None) => visitor.visit_char(ch),
@@ -118,24 +121,29 @@ impl<'de> Deserializer<'de> for &'de Data {
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_borrowed_str(self.try_into().map_err(Error::custom)?)
+		match self {
+			Data::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
+			Data::String(Cow::Owned(s)) => visitor.visit_string(s),
+			Data::Url(u) => visitor.visit_newtype_struct(u.into_deserializer()),
+			_ => Err(Error::custom("not a string")),
+		}
 	}
 
 	fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		match self {
-			Data::Url(u) => visitor.visit_newtype_struct(u.into_deserializer()),
-			_ => self.deserialize_str(visitor),
-		}
+		self.deserialize_str(visitor)
 	}
 
 	fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_bytes(self.try_into().map_err(Error::custom)?)
+		match self {
+			Data::Bytes(b) => visitor.visit_byte_buf(b),
+			_ => Err(Error::custom("not bytes")),
+		}
 	}
 
 	fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -151,7 +159,7 @@ impl<'de> Deserializer<'de> for &'de Data {
 	{
 		match self {
 			Data::Nil => visitor.visit_none(),
-			_ => visitor.visit_some(self),
+			other => visitor.visit_some(other),
 		}
 	}
 
@@ -195,8 +203,8 @@ impl<'de> Deserializer<'de> for &'de Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.iter() }),
-			Data::Bytes(b) => visitor.visit_seq(ByteSeqDeserializer { iter: b.iter() }),
+			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
+			Data::Bytes(b) => visitor.visit_seq(ByteSeqDeserializer { iter: b.into_iter() }),
 			_ => Err(Error::custom("not a sequence")),
 		}
 	}
@@ -225,8 +233,8 @@ impl<'de> Deserializer<'de> for &'de Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.iter(), value: None }),
-			Data::Url(u) => u.into_deserializer().deserialize_map(visitor),
+			Data::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
+			Data::Url(u) => Deserializer::deserialize_map(u.into_deserializer(), visitor),
 			_ => Err(Error::custom("not a map")),
 		}
 	}
@@ -253,7 +261,7 @@ impl<'de> Deserializer<'de> for &'de Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::String(s) => visitor.visit_enum((&**s).into_deserializer()),
+			Data::String(s) => visitor.visit_enum(s.into_deserializer()),
 			_ => Err(Error::custom("not an enum")),
 		}
 	}
@@ -273,18 +281,18 @@ impl<'de> Deserializer<'de> for &'de Data {
 	}
 }
 
-impl<'de> IntoDeserializer<'de, de::value::Error> for &'de Data {
+impl<'de> IntoDeserializer<'de, de::value::Error> for Data {
 	type Deserializer = Self;
 
 	fn into_deserializer(self) -> Self::Deserializer { self }
 }
 
 // --- Seq
-struct SeqDeserializer<'a> {
-	iter: std::slice::Iter<'a, Data>,
+struct SeqDeserializer {
+	iter: std::vec::IntoIter<Data>,
 }
 
-impl<'de> SeqAccess<'de> for SeqDeserializer<'de> {
+impl<'de> SeqAccess<'de> for SeqDeserializer {
 	type Error = de::value::Error;
 
 	fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
@@ -298,30 +306,30 @@ impl<'de> SeqAccess<'de> for SeqDeserializer<'de> {
 }
 
 // --- ByteSeq
-struct ByteSeqDeserializer<'a> {
-	iter: std::slice::Iter<'a, u8>,
+struct ByteSeqDeserializer {
+	iter: std::vec::IntoIter<u8>,
 }
 
-impl<'de> SeqAccess<'de> for ByteSeqDeserializer<'de> {
+impl<'de> SeqAccess<'de> for ByteSeqDeserializer {
 	type Error = de::value::Error;
 
 	fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
 	where
 		T: de::DeserializeSeed<'de>,
 	{
-		self.iter.next().map(|value| seed.deserialize((*value).into_deserializer())).transpose()
+		self.iter.next().map(|value| seed.deserialize(value.into_deserializer())).transpose()
 	}
 
 	fn size_hint(&self) -> Option<usize> { Some(self.iter.len()) }
 }
 
 // --- Map
-struct MapDeserializer<'a> {
-	iter:  hashbrown::hash_map::Iter<'a, DataKey, Data>,
-	value: Option<&'a Data>,
+struct MapDeserializer {
+	iter:  hashbrown::hash_map::IntoIter<DataKey, Data>,
+	value: Option<Data>,
 }
 
-impl<'de> MapAccess<'de> for MapDeserializer<'de> {
+impl<'de> MapAccess<'de> for MapDeserializer {
 	type Error = de::value::Error;
 
 	fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
@@ -331,7 +339,7 @@ impl<'de> MapAccess<'de> for MapDeserializer<'de> {
 		let Some((key, value)) = self.iter.next() else { return Ok(None) };
 		self.value = Some(value);
 
-		seed.deserialize(KeyDeserializer::Borrowed(key)).map(Some)
+		seed.deserialize(KeyDeserializer::Owned(key)).map(Some)
 	}
 
 	fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Self::Error>

@@ -5,22 +5,18 @@ use yazi_shared::{event::ActionCow, strand::StrandBuf};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct QuitOpt {
+	#[serde(default)]
 	pub code:        i32,
 	#[serde(skip)]
 	pub selected:    Option<StrandBuf>,
+	#[serde(default, alias = "no-cwd-file")]
 	pub no_cwd_file: bool,
 }
 
 impl TryFrom<ActionCow> for QuitOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
-		Ok(Self {
-			code:        a.get("code").unwrap_or_default(),
-			selected:    None,
-			no_cwd_file: a.bool("no-cwd-file"),
-		})
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for QuitOpt {

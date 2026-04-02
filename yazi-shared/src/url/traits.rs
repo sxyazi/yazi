@@ -61,11 +61,6 @@ impl AsUrl for UrlCow<'_> {
 			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
 			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
 			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
-
-			Self::RegularRef(loc) => Url::Regular(*loc),
-			Self::SearchRef { loc, domain } => Url::Search { loc: *loc, domain },
-			Self::ArchiveRef { loc, domain } => Url::Archive { loc: *loc, domain },
-			Self::SftpRef { loc, domain } => Url::Sftp { loc: *loc, domain },
 		}
 	}
 }
