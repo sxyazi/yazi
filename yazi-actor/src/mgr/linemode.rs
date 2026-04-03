@@ -12,11 +12,11 @@ impl Actor for Linemode {
 
 	const NAME: &str = "linemode";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
-		if opt.new != tab.pref.linemode {
-			tab.pref.linemode = opt.new.into_owned();
+		if form.new != tab.pref.linemode {
+			tab.pref.linemode = form.new.into_owned();
 			render!();
 		}
 

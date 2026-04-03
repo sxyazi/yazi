@@ -13,7 +13,7 @@ impl Actor for Arrow {
 
 	const NAME: &str = "arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		succ!(render!(cx.pick.scroll(opt.step)));
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		succ!(render!(cx.pick.scroll(form.step)));
 	}
 }

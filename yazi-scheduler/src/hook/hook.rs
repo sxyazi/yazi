@@ -30,7 +30,7 @@ impl Hook {
 		}
 
 		let result = ok_or_not_found(provider::remove_dir_clean(&task.from).await);
-		TasksProxy::update_succeed(task.id, [&task.to, &task.from], false);
+		TasksProxy::update_succeed(task.id, [&task.to, &task.from], true);
 		Pump::push_move(task.from, task.to);
 
 		self.ops.out(task.id, FileOutCut::Clean(result));
@@ -38,7 +38,7 @@ impl Hook {
 
 	pub(crate) async fn copy(&self, task: HookInOutCopy) {
 		if self.ongoing.lock().intact(task.id) {
-			TasksProxy::update_succeed(task.id, [&task.to], false);
+			TasksProxy::update_succeed(task.id, [&task.to], true);
 			Pump::push_duplicate(task.from, task.to);
 		}
 

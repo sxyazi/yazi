@@ -3,9 +3,8 @@ use std::{borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
 use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, de};
-use tokio::sync::mpsc;
 
-use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}};
+use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}, event::Replier};
 
 #[derive(Clone, Debug, Default)]
 pub struct Action {
@@ -89,7 +88,7 @@ impl Action {
 		self
 	}
 
-	pub fn with_replier(mut self, tx: mpsc::UnboundedSender<anyhow::Result<Data>>) -> Self {
+	pub fn with_replier(mut self, tx: Replier) -> Self {
 		self.args.insert("replier".into(), Data::Any(Box::new(tx)));
 		self
 	}
@@ -115,9 +114,7 @@ impl Action {
 		self.args.get(&name.into())?.as_any()
 	}
 
-	pub fn replier(&self) -> Option<&mpsc::UnboundedSender<anyhow::Result<Data>>> {
-		self.any("replier")
-	}
+	pub fn replier(&self) -> Option<&Replier> { self.any("replier") }
 
 	pub fn first<'a, T>(&'a self) -> Result<T>
 	where
@@ -210,9 +207,7 @@ impl Action {
 		(0..self.len()).filter_map(|i| self.args.remove(&DataKey::from(i))?.into_any())
 	}
 
-	pub fn take_replier(&mut self) -> Option<mpsc::UnboundedSender<anyhow::Result<Data>>> {
-		self.take_any("replier")
-	}
+	pub fn take_replier(&mut self) -> Option<Replier> { self.take_any("replier") }
 
 	// Parse
 	pub fn parse_args<I>(words: I, last: Option<String>) -> Result<HashMap<DataKey, Data>>

@@ -12,12 +12,12 @@ impl Actor for Complete {
 
 	const NAME: &str = "complete";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let input = &mut cx.input;
-		if !input.visible || input.ticket.current() != opt.ticket {
+		if !input.visible || input.ticket.current() != form.ticket {
 			succ!();
 		}
 
-		act!(complete, input, opt)
+		act!(complete, input, form)
 	}
 }

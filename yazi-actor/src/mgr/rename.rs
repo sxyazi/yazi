@@ -19,17 +19,17 @@ impl Actor for Rename {
 
 	const NAME: &str = "rename";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		if !opt.hovered && !cx.tab().selected.is_empty() {
+		if !form.hovered && !cx.tab().selected.is_empty() {
 			return act!(mgr:bulk_rename, cx);
 		}
 
 		let Some(hovered) = cx.hovered() else { succ!() };
 
-		let name = Self::empty_url_part(&hovered.url, &opt.empty);
-		let cursor = match opt.cursor.as_ref() {
+		let name = Self::empty_url_part(&hovered.url, &form.empty);
+		let cursor = match form.cursor.as_ref() {
 			"start" => Some(0),
 			"before_ext" => name
 				.chars()
@@ -54,7 +54,7 @@ impl Actor for Rename {
 				return;
 			};
 
-			if opt.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
+			if form.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
 				Self::r#do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
 				Self::r#do(tab, old, new).await.ok();

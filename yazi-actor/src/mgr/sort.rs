@@ -14,14 +14,14 @@ impl Actor for Sort {
 
 	const NAME: &str = "sort";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let pref = &mut cx.tab_mut().pref;
-		pref.sort_by = opt.by.unwrap_or(pref.sort_by);
-		pref.sort_reverse = opt.reverse.unwrap_or(pref.sort_reverse);
-		pref.sort_dir_first = opt.dir_first.unwrap_or(pref.sort_dir_first);
-		pref.sort_sensitive = opt.sensitive.unwrap_or(pref.sort_sensitive);
-		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
-		pref.sort_fallback = opt.fallback.unwrap_or(pref.sort_fallback);
+		pref.sort_by = form.by.unwrap_or(pref.sort_by);
+		pref.sort_reverse = form.reverse.unwrap_or(pref.sort_reverse);
+		pref.sort_dir_first = form.dir_first.unwrap_or(pref.sort_dir_first);
+		pref.sort_sensitive = form.sensitive.unwrap_or(pref.sort_sensitive);
+		pref.sort_translit = form.translit.unwrap_or(pref.sort_translit);
+		pref.sort_fallback = form.fallback.unwrap_or(pref.sort_fallback);
 
 		let sorter = FilesSorter::from(&*pref);
 		let hovered = cx.hovered().map(|f| f.urn().to_owned());

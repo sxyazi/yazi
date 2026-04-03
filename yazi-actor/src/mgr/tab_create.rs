@@ -16,7 +16,7 @@ impl Actor for TabCreate {
 
 	const NAME: &str = "tab_create";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		if cx.tabs().len() >= MAX_TABS {
 			succ!(NotifyProxy::push_warn(
 				"Too many tabs",
@@ -25,7 +25,7 @@ impl Actor for TabCreate {
 		}
 
 		let mut tab = Tab::default();
-		let (cd, url) = if let Some(wd) = opt.url {
+		let (cd, url) = if let Some(wd) = form.url {
 			(true, wd.into_owned())
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();

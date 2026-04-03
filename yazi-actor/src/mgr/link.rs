@@ -12,12 +12,12 @@ impl Actor for Link {
 
 	const NAME: &str = "link";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;
 		let tab = &mgr.tabs[cx.tab];
 
 		if !mgr.yanked.cut {
-			cx.core.tasks.file_link(&mgr.yanked, tab.cwd(), opt.relative, opt.force);
+			cx.core.tasks.file_link(&mgr.yanked, tab.cwd(), form.relative, form.force);
 		}
 
 		succ!();

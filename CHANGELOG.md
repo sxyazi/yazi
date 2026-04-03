@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Custom tab name ([#3666])
 - New `--in` for `search` action to set search directory ([#3696])
+- Hover cursor over the new file after copying/cutting/linking/hardlinking ([#3846])
 - Multi-file spotter ([#3733])
 - Vim-like `lua` action that runs an inline Lua snippet ([#3813])
 - Certificate authentication for SFTP VFS provider ([#3716])
@@ -1694,3 +1695,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3792]: https://github.com/sxyazi/yazi/pull/3792
 [#3804]: https://github.com/sxyazi/yazi/pull/3804
 [#3813]: https://github.com/sxyazi/yazi/pull/3813
+[#3846]: https://github.com/sxyazi/yazi/pull/3846

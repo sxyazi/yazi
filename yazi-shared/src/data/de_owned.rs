@@ -12,19 +12,19 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Nil => visitor.visit_unit(),
-			Data::Boolean(b) => visitor.visit_bool(b),
-			Data::Integer(i) => visitor.visit_i64(i),
-			Data::Number(n) => visitor.visit_f64(n),
-			Data::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
-			Data::String(Cow::Owned(s)) => visitor.visit_string(s),
-			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
-			Data::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
-			Data::Id(i) => visitor.visit_u64(i.get()),
-			Data::Url(u) => u.into_deserializer().deserialize_any(visitor),
-			Data::Path(_) => Err(Error::custom("path not supported")),
-			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_any(visitor),
-			Data::Any(_) => Err(Error::custom("any not supported")),
+			Self::Nil => visitor.visit_unit(),
+			Self::Boolean(b) => visitor.visit_bool(b),
+			Self::Integer(i) => visitor.visit_i64(i),
+			Self::Number(n) => visitor.visit_f64(n),
+			Self::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
+			Self::String(Cow::Owned(s)) => visitor.visit_string(s),
+			Self::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
+			Self::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
+			Self::Id(i) => visitor.visit_u64(i.get()),
+			Self::Url(u) => u.into_deserializer().deserialize_any(visitor),
+			Self::Path(_) => Err(Error::custom("path not supported")),
+			Self::Bytes(b) => BytesDeserializer(b.into()).deserialize_any(visitor),
+			Self::Any(_) => Err(Error::custom("any not supported")),
 		}
 	}
 
@@ -122,9 +122,9 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
-			Data::String(Cow::Owned(s)) => visitor.visit_string(s),
-			Data::Url(u) => visitor.visit_newtype_struct(u.into_deserializer()),
+			Self::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
+			Self::String(Cow::Owned(s)) => visitor.visit_string(s),
+			Self::Url(u) => visitor.visit_newtype_struct(u.into_deserializer()),
 			_ => Err(Error::custom("not a string")),
 		}
 	}
@@ -141,7 +141,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_bytes(visitor),
+			Self::Bytes(b) => BytesDeserializer(b.into()).deserialize_bytes(visitor),
 			_ => Err(Error::custom("not bytes")),
 		}
 	}
@@ -158,7 +158,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Nil => visitor.visit_none(),
+			Self::Nil => visitor.visit_none(),
 			other => visitor.visit_some(other),
 		}
 	}
@@ -168,7 +168,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Nil => visitor.visit_unit(),
+			Self::Nil => visitor.visit_unit(),
 			_ => Err(Error::custom("expected unit")),
 		}
 	}
@@ -182,7 +182,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Nil => visitor.visit_unit(),
+			Self::Nil => visitor.visit_unit(),
 			_ => Err(Error::custom("expected unit struct")),
 		}
 	}
@@ -203,8 +203,8 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
-			Data::Bytes(b) => BytesDeserializer(b.into()).deserialize_seq(visitor),
+			Self::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
+			Self::Bytes(b) => BytesDeserializer(b.into()).deserialize_seq(visitor),
 			_ => Err(Error::custom("not a sequence")),
 		}
 	}
@@ -233,8 +233,8 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
-			Data::Url(u) => Deserializer::deserialize_map(u.into_deserializer(), visitor),
+			Self::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
+			Self::Url(u) => Deserializer::deserialize_map(u.into_deserializer(), visitor),
 			_ => Err(Error::custom("not a map")),
 		}
 	}
@@ -261,7 +261,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Data::String(s) => visitor.visit_enum(s.into_deserializer()),
+			Self::String(s) => visitor.visit_enum(s.into_deserializer()),
 			_ => Err(Error::custom("not an enum")),
 		}
 	}

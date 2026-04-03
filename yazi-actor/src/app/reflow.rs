@@ -17,12 +17,12 @@ impl Actor for Reflow {
 
 	const NAME: &str = "reflow";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
 
 		let result = Lives::scope(cx.core, || {
-			let comps = (opt.reflow)((Position::ORIGIN, size).into())?;
+			let comps = (form.reflow)((Position::ORIGIN, size).into())?;
 
 			for v in comps.sequence_values::<Value>() {
 				let Value::Table(t) = v? else {

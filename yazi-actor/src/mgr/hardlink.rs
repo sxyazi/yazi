@@ -12,12 +12,12 @@ impl Actor for Hardlink {
 
 	const NAME: &str = "hardlink";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;
 		let tab = &mgr.tabs[cx.tab];
 
 		if !mgr.yanked.cut {
-			cx.core.tasks.file_hardlink(&mgr.yanked, tab.cwd(), opt.force, opt.follow);
+			cx.core.tasks.file_hardlink(&mgr.yanked, tab.cwd(), form.force, form.follow);
 		}
 
 		succ!();

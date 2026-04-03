@@ -13,10 +13,10 @@ impl Actor for Deprecate {
 
 	const NAME: &str = "deprecate";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(notify:push, cx, MessageOpt {
 			title:   "Deprecated API".to_owned(),
-			content: opt.content.into_owned(),
+			content: form.content.into_owned(),
 			level:   MessageLevel::Warn,
 			timeout: std::time::Duration::from_secs(20),
 		})

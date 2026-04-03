@@ -13,11 +13,11 @@ impl Actor for Copy {
 
 	const NAME: &str = "copy";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		let mut s = Vec::<u8>::new();
-		let mut it = if opt.hovered {
+		let mut it = if form.hovered {
 			Box::new(cx.hovered().map(|h| &h.url).into_iter())
 		} else {
 			cx.tab().selected_or_hovered()
@@ -25,23 +25,23 @@ impl Actor for Copy {
 		.peekable();
 
 		while let Some(u) = it.next() {
-			match opt.r#type.as_ref() {
+			match form.r#type.as_ref() {
 				// TODO: rename to "url"
 				"path" => {
-					s.extend_from_slice(&opt.separator.transform(&u.to_strand()));
+					s.extend_from_slice(&form.separator.transform(&u.to_strand()));
 				}
 				"dirname" => {
 					if let Some(p) = u.parent() {
-						s.extend_from_slice(&opt.separator.transform(&p.to_strand()));
+						s.extend_from_slice(&form.separator.transform(&p.to_strand()));
 					}
 				}
 				"filename" => {
-					s.extend_from_slice(&opt.separator.transform(&u.name().unwrap_or_default()));
+					s.extend_from_slice(&form.separator.transform(&u.name().unwrap_or_default()));
 				}
 				"name_without_ext" => {
-					s.extend_from_slice(&opt.separator.transform(&u.stem().unwrap_or_default()));
+					s.extend_from_slice(&form.separator.transform(&u.stem().unwrap_or_default()));
 				}
-				_ => bail!("Unknown copy type: {}", opt.r#type),
+				_ => bail!("Unknown copy type: {}", form.r#type),
 			};
 			if it.peek().is_some() {
 				s.push(b'\n');
@@ -49,8 +49,8 @@ impl Actor for Copy {
 		}
 
 		// Copy the CWD path regardless even if the directory is empty
-		if s.is_empty() && opt.r#type == "dirname" {
-			s.extend_from_slice(&opt.separator.transform(&cx.cwd().to_strand()));
+		if s.is_empty() && form.r#type == "dirname" {
+			s.extend_from_slice(&form.separator.transform(&cx.cwd().to_strand()));
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));

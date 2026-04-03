@@ -14,9 +14,9 @@ impl Actor for UpdateMimes {
 
 	const NAME: &str = "update_mimes";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let linked = LINKED.read();
-		let updates = opt
+		let updates = form
 			.updates
 			.into_iter()
 			.filter(|(url, mime)| cx.mgr.mimetype.get(url) != Some(mime))

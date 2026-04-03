@@ -12,8 +12,8 @@ impl Actor for Swipe {
 
 	const NAME: &str = "swipe";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		act!(mgr:arrow, cx, opt)?;
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		act!(mgr:arrow, cx, form)?;
 		act!(mgr:spot, cx)
 	}
 }

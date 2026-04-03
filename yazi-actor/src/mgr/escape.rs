@@ -13,8 +13,8 @@ impl Actor for Escape {
 
 	const NAME: &str = "escape";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		if opt.is_empty() {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		if form.is_empty() {
 			_ = act!(mgr:escape_find, cx)? != false
 				|| act!(mgr:escape_visual, cx)? != false
 				|| act!(mgr:escape_filter, cx)? != false
@@ -23,19 +23,19 @@ impl Actor for Escape {
 			succ!();
 		}
 
-		if opt.contains(EscapeForm::FIND) {
+		if form.contains(EscapeForm::FIND) {
 			act!(mgr:escape_find, cx)?;
 		}
-		if opt.contains(EscapeForm::VISUAL) {
+		if form.contains(EscapeForm::VISUAL) {
 			act!(mgr:escape_visual, cx)?;
 		}
-		if opt.contains(EscapeForm::FILTER) {
+		if form.contains(EscapeForm::FILTER) {
 			act!(mgr:escape_filter, cx)?;
 		}
-		if opt.contains(EscapeForm::SELECT) {
+		if form.contains(EscapeForm::SELECT) {
 			act!(mgr:escape_select, cx)?;
 		}
-		if opt.contains(EscapeForm::SEARCH) {
+		if form.contains(EscapeForm::SEARCH) {
 			act!(mgr:escape_search, cx)?;
 		}
 		succ!();

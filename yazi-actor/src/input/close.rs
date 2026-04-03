@@ -13,14 +13,14 @@ impl Actor for Close {
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let input = &mut cx.input;
 		input.visible = false;
 		input.ticket.next();
 
 		if let Some(tx) = input.tx.take() {
 			let value = input.snap().value.clone();
-			_ = tx.send(if opt.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
+			_ = tx.send(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
 		}
 
 		act!(cmp:close, cx)?;

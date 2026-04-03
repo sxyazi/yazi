@@ -12,8 +12,8 @@ impl Actor for BulkExit {
 
 	const NAME: &str = "bulk_exit";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		cx.mgr.batcher.decide(opt.target, opt.accept);
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		cx.mgr.batcher.decide(form.target, form.accept);
 		succ!();
 	}
 }

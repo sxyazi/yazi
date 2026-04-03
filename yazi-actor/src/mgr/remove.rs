@@ -14,30 +14,30 @@ impl Actor for Remove {
 
 	const NAME: &str = "remove";
 
-	fn act(cx: &mut Ctx, mut opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, mut form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		opt.targets = if opt.hovered {
+		form.targets = if form.hovered {
 			cx.hovered().map_or(vec![], |h| vec![h.url.clone()])
 		} else {
 			cx.tab().selected_or_hovered().cloned().collect()
 		};
 
-		if opt.targets.is_empty() {
+		if form.targets.is_empty() {
 			succ!();
-		} else if opt.force {
-			return act!(mgr:remove_do, cx, opt);
+		} else if form.force {
+			return act!(mgr:remove_do, cx, form);
 		}
 
-		let confirm = ConfirmProxy::show(if opt.permanently {
-			ConfirmCfg::delete(&opt.targets)
+		let confirm = ConfirmProxy::show(if form.permanently {
+			ConfirmCfg::delete(&form.targets)
 		} else {
-			ConfirmCfg::trash(&opt.targets)
+			ConfirmCfg::trash(&form.targets)
 		});
 
 		tokio::spawn(async move {
 			if confirm.await {
-				MgrProxy::remove_do(opt.targets, opt.permanently);
+				MgrProxy::remove_do(form.targets, form.permanently);
 			}
 		});
 		succ!();
@@ -52,17 +52,17 @@ impl Actor for RemoveDo {
 
 	const NAME: &str = "remove_do";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.mgr;
 
 		mgr.tabs.iter_mut().for_each(|t| {
-			t.selected.remove_many(&opt.targets);
+			t.selected.remove_many(&form.targets);
 		});
 
-		mgr.yanked.remove_many(&opt.targets);
+		mgr.yanked.remove_many(&form.targets);
 		mgr.yanked.catchup_revision(false);
 
-		cx.tasks.file_remove(opt.targets, opt.permanently);
+		cx.tasks.file_remove(form.targets, form.permanently);
 		succ!();
 	}
 }

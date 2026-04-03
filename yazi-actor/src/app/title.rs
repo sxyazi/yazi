@@ -16,15 +16,15 @@ impl Actor for Title {
 
 	const NAME: &str = "title";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		let s = opt.value.unwrap_or_else(|| format!("Yazi: {}", cx.tab().name()).into());
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		let s = form.value.unwrap_or_else(|| format!("Yazi: {}", cx.tab().name()).into());
 		execute!(TTY.writer(), SetTitle(&s))?;
 
 		yazi_term::STATE.set(TermState { title: !s.is_empty(), ..yazi_term::STATE.get() });
 		succ!()
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndAppTitle),
 			_ => None,

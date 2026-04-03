@@ -18,7 +18,7 @@ impl From<&Ongoing> for TaskSummary {
 		let mut percent_count = 0;
 
 		for task in value.values() {
-			let s: TaskSummary = task.prog.into();
+			let s: Self = task.prog.into();
 			if s.total == 0 && !task.prog.failed() {
 				continue;
 			}

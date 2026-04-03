@@ -12,18 +12,18 @@ impl Actor for Paste {
 
 	const NAME: &str = "paste";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;
 		let tab = &mgr.tabs[cx.tab];
 
 		let dest = tab.cwd();
 		if mgr.yanked.cut {
-			cx.core.tasks.file_cut(&mgr.yanked, dest, opt.force);
+			cx.core.tasks.file_cut(&mgr.yanked, dest, form.force);
 
 			mgr.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(&*mgr.yanked));
 			act!(mgr:unyank, cx)
 		} else {
-			succ!(cx.core.tasks.file_copy(&mgr.yanked, dest, opt.force, opt.follow));
+			succ!(cx.core.tasks.file_copy(&mgr.yanked, dest, form.force, form.follow));
 		}
 	}
 }

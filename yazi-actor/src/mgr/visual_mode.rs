@@ -15,11 +15,11 @@ impl Actor for VisualMode {
 
 	const NAME: &str = "visual_mode";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
 		let idx = tab.current.cursor;
-		if opt.unset {
+		if form.unset {
 			tab.mode = Mode::Unset(idx, BTreeSet::from([idx]));
 		} else {
 			tab.mode = Mode::Select(idx, BTreeSet::from([idx]));

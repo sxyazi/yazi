@@ -13,13 +13,13 @@ impl Actor for Toggle {
 
 	const NAME: &str = "toggle";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
-		let Some(url) = opt.url.or(tab.current.hovered().map(|h| UrlCow::from(&h.url))) else {
+		let Some(url) = form.url.or(tab.current.hovered().map(|h| UrlCow::from(&h.url))) else {
 			succ!();
 		};
 
-		let b = match opt.state {
+		let b = match form.state {
 			Some(true) => render_and!(tab.selected.add(&url)),
 			Some(false) => render_and!(tab.selected.remove(&url)) | true,
 			None => render_and!(tab.selected.remove(&url) || tab.selected.add(&url)),

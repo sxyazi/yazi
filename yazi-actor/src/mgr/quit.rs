@@ -58,7 +58,7 @@ impl Actor for Quit {
 		succ!();
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {
 		Some(SparkKind::KeyQuit).filter(|_| cx.source().is_key())
 	}
 }

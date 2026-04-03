@@ -13,8 +13,8 @@ impl Actor for Resize {
 
 	const NAME: &str = "resize";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		act!(app:reflow, cx, opt)?;
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		act!(app:reflow, cx, form)?;
 
 		cx.current_mut().arrow(0);
 		cx.parent_mut().map(|f| f.arrow(0));

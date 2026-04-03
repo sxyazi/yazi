@@ -12,12 +12,12 @@ impl Actor for TabSwitch {
 
 	const NAME: &str = "tab_switch";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tabs = cx.tabs_mut();
-		let idx = if opt.relative {
-			opt.step.saturating_add_unsigned(tabs.cursor).rem_euclid(tabs.len() as _) as _
+		let idx = if form.relative {
+			form.step.saturating_add_unsigned(tabs.cursor).rem_euclid(tabs.len() as _) as _
 		} else {
-			opt.step as usize
+			form.step as usize
 		};
 
 		if idx == tabs.cursor || idx >= tabs.len() {

@@ -31,7 +31,7 @@ impl Actor for Activate {
 		succ!(render!());
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Unknown => Some(SparkKind::IndWhichActivate),
 			_ => None,

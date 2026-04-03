@@ -13,11 +13,11 @@ impl Actor for Yank {
 
 	const NAME: &str = "yank";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
 		cx.mgr.yanked =
-			Yanked::new(opt.cut, cx.tab().selected_or_hovered().cloned().map(UrlBufCov).collect());
+			Yanked::new(form.cut, cx.tab().selected_or_hovered().cloned().map(UrlBufCov).collect());
 		render!(cx.mgr.yanked.catchup_revision(true));
 
 		act!(mgr:escape_select, cx)

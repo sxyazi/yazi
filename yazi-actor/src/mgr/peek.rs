@@ -12,7 +12,7 @@ impl Actor for Peek {
 
 	const NAME: &str = "peek";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered().cloned() else {
 			succ!(cx.tab_mut().preview.reset());
 		};
@@ -33,13 +33,13 @@ impl Actor for Peek {
 			cx.tab_mut().preview.folder_lock = None;
 		}
 
-		if matches!(opt.only_if, Some(u) if u != hovered.url) {
+		if matches!(form.only_if, Some(u) if u != hovered.url) {
 			succ!();
 		}
 
-		if let Some(skip) = opt.skip {
+		if let Some(skip) = form.skip {
 			let preview = &mut cx.tab_mut().preview;
-			if opt.upper_bound {
+			if form.upper_bound {
 				preview.skip = preview.skip.min(skip);
 			} else {
 				preview.skip = skip;
@@ -47,9 +47,9 @@ impl Actor for Peek {
 		}
 
 		if hovered.is_dir() {
-			cx.tab_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), mime, opt.force);
+			cx.tab_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), mime, form.force);
 		} else {
-			cx.tab_mut().preview.go(hovered, mime, opt.force);
+			cx.tab_mut().preview.go(hovered, mime, form.force);
 		}
 		succ!();
 	}

@@ -3,10 +3,10 @@ use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventK
 use futures::StreamExt;
 use tokio::{select, sync::mpsc};
 use yazi_config::YAZI;
-use yazi_shared::{CompletionToken, event::Event};
+use yazi_shared::event::{Event, Replier};
 
 pub(super) struct Signals {
-	pub(super) tx: mpsc::UnboundedSender<(bool, CompletionToken)>,
+	pub(super) tx: mpsc::UnboundedSender<(bool, Replier)>,
 }
 
 impl Signals {
@@ -65,7 +65,7 @@ impl Signals {
 		}
 	}
 
-	fn spawn(mut rx: mpsc::UnboundedReceiver<(bool, CompletionToken)>) -> Result<()> {
+	fn spawn(mut rx: mpsc::UnboundedReceiver<(bool, Replier)>) -> Result<()> {
 		#[cfg(unix)]
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGTSTP};
 
@@ -90,9 +90,9 @@ impl Signals {
 				if let Some(t) = &mut term {
 					select! {
 						biased;
-						Some((state, token)) = rx.recv() => {
+						Some((state, replier)) = rx.recv() => {
 							term = term.filter(|_| state);
-							token.complete(true);
+							replier.send(Ok(().into())).ok();
 						},
 						Some(n) = sys.next() => if !Self::handle_sys(n) { return },
 						Some(Ok(e)) = t.next() => Self::handle_term(e)
@@ -100,9 +100,9 @@ impl Signals {
 				} else {
 					select! {
 						biased;
-						Some((state, token)) = rx.recv() => {
+						Some((state, replier)) = rx.recv() => {
 							term = state.then(EventStream::new);
-							token.complete(true);
+							replier.send(Ok(().into())).ok();
 						},
 						Some(n) = sys.next() => if !Self::handle_sys(n) { return },
 					}

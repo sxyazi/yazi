@@ -12,10 +12,10 @@ impl Actor for Close {
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let pick = &mut cx.pick;
 		if let Some(cb) = pick.callback.take() {
-			_ = cb.send(if opt.submit { Some(pick.cursor) } else { None });
+			_ = cb.send(if form.submit { Some(pick.cursor) } else { None });
 		}
 
 		pick.cursor = 0;

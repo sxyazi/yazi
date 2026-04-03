@@ -1,21 +1,20 @@
+use tokio::sync::mpsc;
 use yazi_macro::{emit, relay};
-use yazi_shared::{CompletionToken, Id, SStr, url::UrlBuf};
+use yazi_shared::{Id, SStr, url::UrlBuf};
 
 pub struct AppProxy;
 
 impl AppProxy {
-	// FIXME: use replier instead of token
 	pub async fn stop() {
-		let token = CompletionToken::default();
-		emit!(Call(relay!(app:stop).with_any("token", token.clone())));
-		token.future().await;
+		let (tx, mut rx) = mpsc::unbounded_channel();
+		emit!(Call(relay!(app:stop).with_replier(tx)));
+		rx.recv().await;
 	}
 
-	// FIXME: use replier instead of token
 	pub async fn resume() {
-		let token = CompletionToken::default();
-		emit!(Call(relay!(app:resume).with_any("token", token.clone())));
-		token.future().await;
+		let (tx, mut rx) = mpsc::unbounded_channel();
+		emit!(Call(relay!(app:resume).with_replier(tx)));
+		rx.recv().await;
 	}
 }
 

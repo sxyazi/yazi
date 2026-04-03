@@ -12,7 +12,7 @@ impl Actor for Spot {
 
 	const NAME: &str = "spot";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 		let Some(hovered) = cx.hovered().cloned() else { succ!() };
 
@@ -26,7 +26,7 @@ impl Actor for Spot {
 		// self.active_mut().spot.reset();
 		// }
 
-		if let Some(skip) = opt.skip {
+		if let Some(skip) = form.skip {
 			cx.tab_mut().spot.skip = skip;
 		} else if !cx.tab().spot.same_url(&hovered.url) {
 			cx.tab_mut().spot.skip = 0;

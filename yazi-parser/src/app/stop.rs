@@ -1,11 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::mpsc;
-use yazi_shared::CompletionToken;
+use yazi_shared::event::Replier;
 
 #[derive(Debug)]
 pub struct StopForm {
-	pub tx:    mpsc::UnboundedSender<(bool, CompletionToken)>,
-	pub token: CompletionToken,
+	pub tx:      mpsc::UnboundedSender<(bool, Replier)>,
+	pub replier: Replier,
 }
 
 impl FromLua for StopForm {
