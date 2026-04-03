@@ -78,8 +78,8 @@ impl Folder {
 		};
 
 		self.trace.take_if(|_| self.files.is_empty() && !self.stage.is_loading());
-		self.repos(None);
 		self.arrow(-(deleted.into_iter().filter(|&i| i < self.cursor).count() as isize));
+		self.repos(None);
 
 		(&stage, revision) != (&self.stage, self.files.revision)
 	}
