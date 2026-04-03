@@ -1,7 +1,6 @@
-use std::str::FromStr;
-
 use anyhow::bail;
 use serde::Deserialize;
+use strum::{EnumString, IntoStaticStr};
 use yazi_shared::{SStr, event::ActionCow, url::{UrlCow, UrlLike}};
 
 #[derive(Clone, Debug)]
@@ -39,28 +38,11 @@ impl TryFrom<ActionCow> for SearchOpt {
 }
 
 // Via
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, EnumString, Eq, IntoStaticStr, PartialEq)]
 #[serde(rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum SearchVia {
 	Rg,
 	Rga,
 	Fd,
-}
-
-impl FromStr for SearchVia {
-	type Err = serde::de::value::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Self::deserialize(serde::de::value::StrDeserializer::new(s))
-	}
-}
-
-impl SearchVia {
-	pub fn into_str(self) -> &'static str {
-		match self {
-			Self::Rg => "rg",
-			Self::Rga => "rga",
-			Self::Fd => "fd",
-		}
-	}
 }

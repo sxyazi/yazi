@@ -268,11 +268,11 @@ impl<'de> Deserializer<'de> for &'de Data {
 		Err(Error::custom("identifier not supported"))
 	}
 
-	fn deserialize_ignored_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+	fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		Err(Error::custom("ignored any not supported"))
+		visitor.visit_unit()
 	}
 }
 

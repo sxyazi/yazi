@@ -28,8 +28,7 @@ impl Actor for Search {
 			handle.abort();
 		}
 
-		let mut input =
-			InputProxy::show(InputCfg::search(opt.via.into_str()).with_value(&*opt.subject));
+		let mut input = InputProxy::show(InputCfg::search(opt.via.into()).with_value(&*opt.subject));
 
 		tokio::spawn(async move {
 			if let Some(InputEvent::Submit(subject)) = input.recv().await {

@@ -50,7 +50,7 @@ foldhash            = "0.2.0"
 futures             = "0.3.32"
 globset             = "0.4.18"
 hashbrown           = { version = "0.16.1", features = [ "serde" ] }
-indexmap            = { version = "2.13.0", features = [ "serde" ] }
+indexmap            = { version = "2.13.1", features = [ "serde" ] }
 libc                = "0.2.184"
 lru                 = "0.16.3"
 mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }

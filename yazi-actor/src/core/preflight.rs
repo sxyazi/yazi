@@ -12,7 +12,7 @@ pub struct Preflight;
 impl Preflight {
 	pub fn act<'a>(cx: &mut Ctx, opt: (SparkKind, Spark<'a>)) -> Result<Spark<'a>> {
 		let kind = opt.0;
-		let Some(handlers) = LOCAL.read().get(kind.as_ref()).filter(|&m| !m.is_empty()).cloned() else {
+		let Some(handlers) = LOCAL.read().get(kind.into()).filter(|&m| !m.is_empty()).cloned() else {
 			return Ok(opt.1);
 		};
 

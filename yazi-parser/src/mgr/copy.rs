@@ -1,7 +1,8 @@
-use std::{borrow::Cow, str::FromStr};
+use std::borrow::Cow;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
+use strum::EnumString;
 use yazi_shared::{SStr, event::ActionCow, strand::AsStrand};
 
 #[derive(Debug)]
@@ -30,20 +31,13 @@ impl IntoLua for CopyForm {
 }
 
 // --- Separator
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, EnumString, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum CopySeparator {
 	#[default]
 	Auto,
 	Unix,
-}
-
-impl FromStr for CopySeparator {
-	type Err = serde::de::value::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Self::deserialize(serde::de::value::StrDeserializer::new(s))
-	}
 }
 
 impl CopySeparator {

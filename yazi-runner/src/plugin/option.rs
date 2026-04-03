@@ -1,10 +1,11 @@
-use std::{borrow::Cow, fmt, fmt::Debug, str::FromStr};
+use std::{borrow::Cow, fmt, fmt::Debug};
 
 use anyhow::bail;
 use dyn_clone::DynClone;
 use hashbrown::HashMap;
 use mlua::{Lua, Table};
 use serde::Deserialize;
+use strum::EnumString;
 use yazi_shared::{SStr, data::{Data, DataKey}, event::{Action, ActionCow}};
 
 #[derive(Clone, Debug, Default)]
@@ -57,21 +58,14 @@ impl PluginOpt {
 }
 
 // --- Mode
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, EnumString, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum PluginMode {
 	#[default]
 	Auto,
 	Sync,
 	Async,
-}
-
-impl FromStr for PluginMode {
-	type Err = serde::de::value::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Self::deserialize(serde::de::value::StrDeserializer::new(s))
-	}
 }
 
 impl PluginMode {

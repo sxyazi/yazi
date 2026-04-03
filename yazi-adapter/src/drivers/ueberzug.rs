@@ -8,6 +8,7 @@ use tracing::{debug, warn};
 use yazi_config::YAZI;
 use yazi_emulator::Dimension;
 use yazi_shared::{LOG_LEVEL, RoCell, env_exists};
+use yazi_shim::strum::IntoStr;
 
 use crate::Adapter;
 
@@ -86,7 +87,7 @@ impl Ueberzug {
 
 	fn create_demon(adapter: Adapter) -> Result<Child> {
 		let result = Command::new("ueberzugpp")
-			.args(["layer", "-so", &adapter.to_string()])
+			.args(["layer", "-so", adapter.into_str()])
 			.env("SPDLOG_LEVEL", if LOG_LEVEL.get().is_none() { "" } else { "debug" })
 			.kill_on_drop(true)
 			.stdin(Stdio::piped())

@@ -1,14 +1,16 @@
-use std::{env, fmt::Display, path::PathBuf};
+use std::{env, path::PathBuf};
 
 use anyhow::Result;
 use ratatui::layout::Rect;
+use strum::{Display, IntoStaticStr};
 use tracing::warn;
 use yazi_emulator::{Emulator, TMUX};
 use yazi_shared::env_exists;
 
 use crate::{Adapters, SHOWN, drivers};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, Eq, IntoStaticStr, PartialEq)]
+#[strum(serialize_all = "kebab-case")]
 pub enum Adapter {
 	Kgp,
 	KgpOld,
@@ -19,20 +21,6 @@ pub enum Adapter {
 	X11,
 	Wayland,
 	Chafa,
-}
-
-impl Display for Adapter {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Kgp => write!(f, "kgp"),
-			Self::KgpOld => write!(f, "kgp-old"),
-			Self::Iip => write!(f, "iip"),
-			Self::Sixel => write!(f, "sixel"),
-			Self::X11 => write!(f, "x11"),
-			Self::Wayland => write!(f, "wayland"),
-			Self::Chafa => write!(f, "chafa"),
-		}
-	}
 }
 
 impl Adapter {

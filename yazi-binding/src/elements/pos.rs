@@ -1,6 +1,7 @@
 use std::{ops::Deref, str::FromStr};
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use yazi_shim::strum::IntoStr;
 
 use super::Pad;
 
@@ -82,7 +83,7 @@ impl Pos {
 impl UserData for Pos {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
 		// TODO: cache
-		fields.add_field_method_get("1", |_, me| Ok(me.origin.to_string()));
+		fields.add_field_method_get("1", |_, me| Ok(me.origin.into_str()));
 		fields.add_field_method_get("x", |_, me| Ok(me.offset.x));
 		fields.add_field_method_get("y", |_, me| Ok(me.offset.y));
 		fields.add_field_method_get("w", |_, me| Ok(me.offset.width));

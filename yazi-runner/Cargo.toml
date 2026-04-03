@@ -28,6 +28,7 @@ hashbrown   = { workspace = true }
 mlua        = { workspace = true }
 parking_lot = { workspace = true }
 serde       = { workspace = true }
+strum       = { workspace = true }
 thiserror   = { workspace = true }
 tokio       = { workspace = true }
 tokio-util  = { workspace = true }
