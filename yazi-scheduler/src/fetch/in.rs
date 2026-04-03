@@ -10,7 +10,7 @@ pub(crate) struct FetchIn {
 }
 
 impl From<FetchIn> for FetchJob {
-	fn from(value: FetchIn) -> Self { FetchJob { action: &value.plugin.run, files: value.targets } }
+	fn from(value: FetchIn) -> Self { Self { action: &value.plugin.run, files: value.targets } }
 }
 
 impl FetchIn {

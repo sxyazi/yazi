@@ -13,7 +13,7 @@ impl Actor for Hover {
 
 	const NAME: &str = "hover";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = tab!(cx);
 
 		// Parent should always track CWD
@@ -22,16 +22,16 @@ impl Actor for Hover {
 		}
 
 		// Repos CWD
-		render!(tab.current.repos(opt.urn.as_ref().map(Into::into)));
+		render!(tab.current.repos(form.urn.as_ref().map(Into::into)));
 
 		// Turn on tracing
-		if let (Some(h), Some(u)) = (tab.hovered(), opt.urn)
+		if let (Some(h), Some(u)) = (tab.hovered(), form.urn)
 			&& h.urn() == u
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the file location regardless.
 			tab.current.trace = Some(u.clone());
-			// cx.tasks.scheduler.batch.next();// FIXME: clear user action
+			cx.tasks.scheduler.behavior.reset();
 		}
 
 		// Publish through DDS

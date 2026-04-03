@@ -13,13 +13,13 @@ impl Actor for Copy {
 
 	const NAME: &str = "copy";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let spot = &cx.tab().spot;
 		let Some(lock) = &spot.lock else { succ!() };
 		let Some(table) = lock.table() else { succ!() };
 
 		let mut s = String::new();
-		match opt.r#type.as_ref() {
+		match form.r#type.as_ref() {
 			"cell" => {
 				let Some(cell) = table.selected_cell() else { succ!() };
 				s = cell.to_string();

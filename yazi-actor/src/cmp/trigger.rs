@@ -18,15 +18,15 @@ impl Actor for Trigger {
 
 	const NAME: &str = "trigger";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		if opt.ticket.is_some_and(|t| t != cx.cmp.ticket) {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		if form.ticket.is_some_and(|t| t != cx.cmp.ticket) {
 			succ!();
-		} else if opt.ticket.is_none() {
+		} else if form.ticket.is_none() {
 			cx.cmp.ticket = cx.input.ticket.current();
 		}
 
 		cx.cmp.handle.take().map(|h| h.abort());
-		let Some((parent, word)) = Self::split_url(&opt.word) else {
+		let Some((parent, word)) = Self::split_url(&form.word) else {
 			return act!(cmp:close, cx, false);
 		};
 

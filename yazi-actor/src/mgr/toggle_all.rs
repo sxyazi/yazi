@@ -13,18 +13,18 @@ impl Actor for ToggleAll {
 
 	const NAME: &str = "toggle_all";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		use either::Either::*;
 		let tab = cx.tab_mut();
 
 		let it = tab.current.files.iter().map(|f| &f.url);
-		let either = match opt.state {
-			Some(true) if opt.urls.is_empty() => Left((vec![], it.collect())),
-			Some(true) => Right((vec![], opt.urls)),
-			Some(false) if opt.urls.is_empty() => Left((it.collect(), vec![])),
-			Some(false) => Right((opt.urls, vec![])),
-			None if opt.urls.is_empty() => Left(it.partition(|&u| tab.selected.contains(u))),
-			None => Right(opt.urls.into_iter().partition(|u| tab.selected.contains(u))),
+		let either = match form.state {
+			Some(true) if form.urls.is_empty() => Left((vec![], it.collect())),
+			Some(true) => Right((vec![], form.urls)),
+			Some(false) if form.urls.is_empty() => Left((it.collect(), vec![])),
+			Some(false) => Right((form.urls, vec![])),
+			None if form.urls.is_empty() => Left(it.partition(|&u| tab.selected.contains(u))),
+			None => Right(form.urls.into_iter().partition(|u| tab.selected.contains(u))),
 		};
 
 		let warn = match either {

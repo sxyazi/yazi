@@ -15,7 +15,7 @@ impl Actor for Seek {
 
 	const NAME: &str = "seek";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered() else {
 			succ!(cx.tab_mut().preview.reset());
 		};
@@ -28,7 +28,7 @@ impl Actor for Seek {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		let job = SeekJob { file: hovered.clone(), units: opt.units };
+		let job = SeekJob { file: hovered.clone(), units: form.units };
 		let opt = PluginOpt::new_callback(&*previewer.run.name, move |_, plugin| {
 			plugin.call_method("seek", job)
 		});

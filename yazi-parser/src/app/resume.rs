@@ -1,13 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use ratatui::layout::Rect;
 use tokio::sync::mpsc;
-use yazi_shared::CompletionToken;
+use yazi_shared::event::Replier;
 
 #[derive(Debug)]
 pub struct ResumeForm {
-	pub tx:     mpsc::UnboundedSender<(bool, CompletionToken)>,
-	pub token:  CompletionToken,
-	pub reflow: fn(Rect) -> mlua::Result<Table>,
+	pub tx:      mpsc::UnboundedSender<(bool, Replier)>,
+	pub reflow:  fn(Rect) -> mlua::Result<Table>,
+	pub replier: Replier,
 }
 
 impl FromLua for ResumeForm {

@@ -19,7 +19,7 @@ impl TryFrom<ActionCow> for StashForm {
 }
 
 impl From<CdForm> for StashForm {
-	fn from(opt: CdForm) -> Self { Self { target: opt.target, source: opt.source } }
+	fn from(form: CdForm) -> Self { Self { target: form.target, source: form.source } }
 }
 
 impl FromLua for StashForm {

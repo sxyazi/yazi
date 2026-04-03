@@ -18,7 +18,7 @@ impl Actor for Tick {
 
 	const NAME: &str = "tick";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		cx.notify.ticker.take().map(|h| h.abort());
 
 		let Dimension { rows, columns, .. } = Dimension::available();
@@ -35,7 +35,7 @@ impl Actor for Tick {
 			} else if m.percent < 100 {
 				m.percent += 20;
 			} else {
-				m.timeout = m.timeout.saturating_sub(opt.interval);
+				m.timeout = m.timeout.saturating_sub(form.interval);
 			}
 		}
 

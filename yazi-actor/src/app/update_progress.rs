@@ -13,11 +13,11 @@ impl Actor for UpdateProgress {
 
 	const NAME: &str = "update_progress";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		// Update the progress of all tasks.
 		let tasks = &mut cx.tasks;
-		let progressed = tasks.summary != opt.summary;
-		tasks.summary = opt.summary;
+		let progressed = tasks.summary != form.summary;
+		tasks.summary = form.summary;
 
 		// If the task manager is visible, update the snaps with a full render.
 		if tasks.visible {

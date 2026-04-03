@@ -20,15 +20,15 @@ impl Actor for Find {
 
 	const NAME: &str = "find";
 
-	fn act(_: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		let input = InputProxy::show(InputCfg::find(opt.prev));
+	fn act(_: &mut Ctx, form: Self::Form) -> Result<Data> {
+		let input = InputProxy::show(InputCfg::find(form.prev));
 
 		tokio::spawn(async move {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));
 			pin!(rx);
 
 			while let Some(InputEvent::Submit(s) | InputEvent::Type(s)) = rx.next().await {
-				MgrProxy::find_do(FindDoOpt { query: s.into(), prev: opt.prev, case: opt.case });
+				MgrProxy::find_do(FindDoOpt { query: s.into(), prev: form.prev, case: form.case });
 			}
 		});
 		succ!();

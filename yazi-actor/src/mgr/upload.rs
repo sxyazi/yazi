@@ -12,8 +12,8 @@ impl Actor for Upload {
 
 	const NAME: &str = "upload";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		for url in opt.urls {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		for url in form.urls {
 			cx.tasks.scheduler.file_upload(url.into_owned());
 		}
 		succ!();

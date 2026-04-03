@@ -12,15 +12,15 @@ impl Actor for Stash {
 
 	const NAME: &str = "stash";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		if opt.target.is_absolute() && opt.target.is_internal() {
-			cx.tab_mut().backstack.push(opt.target.as_url());
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		if form.target.is_absolute() && form.target.is_internal() {
+			cx.tab_mut().backstack.push(form.target.as_url());
 		}
 
 		succ!()
 	}
 
-	fn hook(cx: &Ctx, _opt: &Self::Form) -> Option<SparkKind> {
+	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {
 		match cx.source() {
 			Source::Ind => Some(SparkKind::IndStash),
 			Source::Relay => Some(SparkKind::RelayStash),

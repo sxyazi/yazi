@@ -12,12 +12,12 @@ impl Actor for FindArrow {
 
 	const NAME: &str = "find_arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 		let Some(finder) = &mut tab.finder else { succ!() };
 
 		render!(finder.catchup(&tab.current));
-		let offset = if opt.prev {
+		let offset = if form.prev {
 			finder.prev(&tab.current.files, tab.current.cursor, false)
 		} else {
 			finder.next(&tab.current.files, tab.current.cursor, false)

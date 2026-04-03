@@ -1,16 +1,16 @@
-use std::{ops::Deref, sync::{Arc, atomic::{AtomicU64, Ordering}}, time::Duration};
+use std::{ops::Deref, sync::Arc, time::Duration};
 
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_runner::plugin::PluginOpt;
 use yazi_shared::{CompletionToken, Id, Throttle, url::{UrlBuf, UrlLike}};
 
-use crate::{HIGH, LOW, NORMAL, Worker, Task, TaskProg, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskProg, Worker, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
 
 pub struct Scheduler {
-	pub worker:      Worker,
-	pub user_action: AtomicU64,
-	handles:         Vec<JoinHandle<()>>,
+	pub worker:   Worker,
+	pub behavior: Behavior,
+	handles:      Vec<JoinHandle<()>>,
 }
 
 impl Deref for Scheduler {
@@ -22,7 +22,7 @@ impl Deref for Scheduler {
 impl Scheduler {
 	pub fn serve() -> Self {
 		let (worker, handles) = Worker::make();
-		Self { worker, user_action: AtomicU64::new(0), handles }
+		Self { worker, behavior: Behavior::new(), handles }
 	}
 
 	fn add<T, R>(&self, name: String, map: impl FnOnce(&mut Task) -> R) -> R
@@ -30,14 +30,11 @@ impl Scheduler {
 		T: Into<TaskProg> + Default,
 	{
 		let prog = T::default().into();
-		let is_user = prog.is_user();
 
 		let mut ongoing = self.ongoing.lock();
 		let task = ongoing.add(name, prog);
 
-		if is_user {
-			self.user_action.store(task.id.get(), Ordering::Relaxed);
-		}
+		self.behavior.update(task.id);
 		map(task)
 	}
 

@@ -18,9 +18,9 @@ impl Actor for Create {
 
 	const NAME: &str = "create";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().to_owned();
-		let mut input = InputProxy::show(InputCfg::create(opt.dir));
+		let mut input = InputProxy::show(InputCfg::create(form.dir));
 
 		tokio::spawn(async move {
 			let Some(InputEvent::Submit(name)) = input.recv().await else { return };
@@ -32,14 +32,14 @@ impl Actor for Create {
 				return;
 			};
 
-			if !opt.force
+			if !form.force
 				&& maybe_exists(&new).await
 				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
 			{
 				return;
 			}
 
-			_ = Self::r#do(new, opt.dir || name.ends_with('/') || name.ends_with('\\')).await;
+			_ = Self::r#do(new, form.dir || name.ends_with('/') || name.ends_with('\\')).await;
 		});
 		succ!();
 	}

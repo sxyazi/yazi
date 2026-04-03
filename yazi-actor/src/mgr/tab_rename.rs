@@ -17,18 +17,18 @@ impl Actor for TabRename {
 
 	const NAME: &str = "tab_rename";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab().id;
 		let pref = &mut cx.tab_mut().pref;
 
-		if !opt.interactive {
-			pref.name = opt.name.unwrap_or_default().into_owned();
+		if !form.interactive {
+			pref.name = form.name.unwrap_or_default().into_owned();
 			act!(app:title, cx).ok();
 			succ!(render!());
 		}
 
 		let mut input = InputProxy::show(
-			InputCfg::tab_rename().with_value(opt.name.unwrap_or(Cow::Borrowed(&pref.name))),
+			InputCfg::tab_rename().with_value(form.name.unwrap_or(Cow::Borrowed(&pref.name))),
 		);
 		tokio::spawn(async move {
 			if let Some(InputEvent::Submit(name)) = input.recv().await {

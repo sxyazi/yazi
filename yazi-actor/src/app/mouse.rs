@@ -19,8 +19,8 @@ impl Actor for Mouse {
 
 	const NAME: &str = "mouse";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		let event = yazi_binding::MouseEvent::from(opt.event);
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		let event = yazi_binding::MouseEvent::from(form.event);
 
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let area = yazi_binding::elements::Rect::from(size);

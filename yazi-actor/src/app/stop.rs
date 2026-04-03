@@ -12,7 +12,7 @@ impl Actor for Stop {
 
 	const NAME: &str = "stop";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		cx.active_mut().preview.reset_image();
 
 		// We need to destroy the `term` first before stopping the `signals`
@@ -20,7 +20,7 @@ impl Actor for Stop {
 		// while the app is being suspended.
 		*cx.term = None;
 
-		opt.tx.send((false, opt.token))?;
+		form.tx.send((false, form.replier))?;
 
 		succ!();
 	}

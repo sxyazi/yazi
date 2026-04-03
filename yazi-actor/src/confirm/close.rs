@@ -12,8 +12,8 @@ impl Actor for Close {
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		cx.confirm.token.complete(opt.submit);
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		cx.confirm.token.complete(form.submit);
 		cx.confirm.visible = false;
 		succ!(render!());
 	}

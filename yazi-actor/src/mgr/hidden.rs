@@ -14,8 +14,8 @@ impl Actor for Hidden {
 
 	const NAME: &str = "hidden";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		let state = opt.state.bool(cx.tab().pref.show_hidden);
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		let state = form.state.bool(cx.tab().pref.show_hidden);
 		cx.tab_mut().pref.show_hidden = state;
 
 		let hovered = cx.hovered().map(|f| f.urn().to_owned());

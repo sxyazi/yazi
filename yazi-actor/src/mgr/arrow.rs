@@ -12,11 +12,14 @@ impl Actor for Arrow {
 
 	const NAME: &str = "arrow";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
-		if !tab.current.arrow(opt.step) {
+		if !tab.current.arrow(form.step) {
 			succ!();
 		}
+
+		// Retrace
+		tab.current.retrace();
 
 		// Visual selection
 		if let Some((start, items)) = tab.mode.visual_mut() {
@@ -28,7 +31,7 @@ impl Actor for Arrow {
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;
 
-		// cx.tasks.scheduler.batch.next();  // FIXME: clear user action
+		cx.tasks.scheduler.behavior.reset();
 		succ!(render!());
 	}
 }

@@ -63,6 +63,7 @@ impl Folder {
 			_ => {}
 		}
 
+		let mut deleted = vec![];
 		match op {
 			FilesOp::Full(_, files, _) => self.files.update_full(files),
 			FilesOp::Part(_, files, ticket) => self.files.update_part(files, ticket),
@@ -71,17 +72,14 @@ impl Folder {
 			FilesOp::IOErr(..) => self.files.update_ioerr(),
 
 			FilesOp::Creating(_, files) => self.files.update_creating(files),
-			FilesOp::Deleting(_, urns) => {
-				let deleted = self.files.update_deleting(urns);
-				let delta = deleted.into_iter().filter(|&i| i < self.cursor).count() as isize;
-				self.arrow(-delta);
-			}
+			FilesOp::Deleting(_, urns) => deleted = self.files.update_deleting(urns),
 			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
-		}
+		};
 
 		self.trace.take_if(|_| self.files.is_empty() && !self.stage.is_loading());
 		self.repos(None);
+		self.arrow(-(deleted.into_iter().filter(|&i| i < self.cursor).count() as isize));
 
 		(&stage, revision) != (&self.stage, self.files.revision)
 	}
@@ -101,9 +99,7 @@ impl Folder {
 			self.scroll(step)
 		};
 
-		self.trace = self.hovered().filter(|_| b).map(|h| h.urn().into()).or(self.trace.take());
 		b |= self.squeeze_offset();
-
 		self.sync_page(false);
 		b
 	}
@@ -114,17 +110,26 @@ impl Folder {
 		}
 
 		let new = self.files.position(urn).unwrap_or(self.cursor) as isize;
-		self.arrow(new - self.cursor as isize)
+		let b = self.arrow(new - self.cursor as isize);
+
+		self.retrace();
+		b
 	}
 
 	pub fn repos(&mut self, urn: Option<PathDyn>) -> bool {
 		if let Some(u) = urn {
 			self.hover(u)
-		} else if let Some(u) = &self.trace {
-			self.hover(u.clone().as_path())
+		} else if let Some(u) = self.trace.take() {
+			let b = self.hover(u.as_path());
+			self.trace = Some(u);
+			b
 		} else {
 			self.arrow(0)
 		}
+	}
+
+	pub fn retrace(&mut self) {
+		self.trace = self.hovered().map(|h| h.urn().into()).or(self.trace.take());
 	}
 
 	pub fn sync_page(&mut self, force: bool) {

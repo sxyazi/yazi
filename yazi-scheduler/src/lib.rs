@@ -2,7 +2,7 @@ mod macros;
 
 yazi_macro::mod_pub!(fetch file hook plugin preload process size);
 
-yazi_macro::mod_flat!(ongoing op out progress proxy scheduler snap summary task worker);
+yazi_macro::mod_flat!(behavior ongoing op out progress proxy scheduler snap summary task worker);
 
 const LOW: u8 = yazi_config::Priority::Low as u8;
 const NORMAL: u8 = yazi_config::Priority::Normal as u8;

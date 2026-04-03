@@ -2,10 +2,9 @@ use std::{iter, ops::Deref};
 
 use anyhow::Result;
 use serde::de::DeserializeOwned;
-use tokio::sync::mpsc;
 
 use super::Action;
-use crate::data::{Data, DataKey};
+use crate::{data::{Data, DataKey}, event::Replier};
 
 #[derive(Debug)]
 pub enum ActionCow {
@@ -116,7 +115,7 @@ impl ActionCow {
 		}
 	}
 
-	pub fn take_replier(&mut self) -> Option<mpsc::UnboundedSender<anyhow::Result<Data>>> {
+	pub fn take_replier(&mut self) -> Option<Replier> {
 		match self {
 			Self::Owned(c) => c.take_replier(),
 			Self::Borrowed(_) => None,

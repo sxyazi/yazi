@@ -22,14 +22,14 @@ impl Actor for Cd {
 
 	const NAME: &str = "cd";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
-		if opt.interactive {
+		if form.interactive {
 			return Self::cd_interactive(cx);
 		}
 
 		let tab = cx.tab_mut();
-		if opt.target == *tab.cwd() {
+		if form.target == *tab.cwd() {
 			succ!();
 		}
 
@@ -39,12 +39,12 @@ impl Actor for Cd {
 		}
 
 		// Current
-		let rep = tab.history.remove_or(&opt.target);
+		let rep = tab.history.remove_or(&form.target);
 		let rep = mem::replace(&mut tab.current, rep);
 		tab.history.insert(rep.url.clone(), rep);
 
 		// Parent
-		if let Some(parent) = opt.target.parent() {
+		if let Some(parent) = form.target.parent() {
 			tab.parent = Some(tab.history.remove_or(parent));
 		}
 
@@ -54,7 +54,7 @@ impl Actor for Cd {
 		act!(mgr:sort, cx).ok();
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
-		act!(mgr:stash, cx, opt).ok();
+		act!(mgr:stash, cx, form).ok();
 		act!(app:title, cx).ok();
 		succ!(render!());
 	}

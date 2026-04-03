@@ -12,18 +12,18 @@ impl Actor for Show {
 
 	const NAME: &str = "show";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(confirm:close, cx)?;
 
 		let confirm = &mut cx.confirm;
-		confirm.title = opt.cfg.title;
-		confirm.body = opt.cfg.body;
-		confirm.list = opt.cfg.list;
+		confirm.title = form.cfg.title;
+		confirm.body = form.cfg.body;
+		confirm.list = form.cfg.list;
 
-		confirm.position = opt.cfg.position;
+		confirm.position = form.cfg.position;
 		confirm.offset = 0;
 
-		confirm.token = opt.token;
+		confirm.token = form.token;
 		confirm.visible = true;
 
 		succ!(render!());

@@ -20,15 +20,15 @@ impl Actor for Download {
 
 	const NAME: &str = "download";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().clone();
 		let scheduler = cx.tasks.scheduler.clone();
 
 		tokio::spawn(async move {
-			Self::prepare(&opt.urls).await;
+			Self::prepare(&form.urls).await;
 
 			let mut wg1 = FuturesUnordered::new();
-			for url in opt.urls {
+			for url in form.urls {
 				let done = scheduler.file_download(url.to_owned());
 				wg1.push(async move { (done.future().await, url) });
 			}
@@ -58,7 +58,7 @@ impl Actor for Download {
 			if futures::future::join_all(wg2).await.into_iter().any(|b| !b) {
 				return;
 			}
-			if opt.open && !urls.is_empty() {
+			if form.open && !urls.is_empty() {
 				MgrProxy::open(OpenOpt {
 					cwd:         Some(cwd.into()),
 					targets:     urls,

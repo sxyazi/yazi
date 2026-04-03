@@ -37,6 +37,7 @@ debug = false
 [workspace.dependencies]
 ansi-to-tui         = "8.0.1"
 anyhow              = "1.0.102"
+arc-swap            = "1.9.0"
 base64              = "0.22.1"
 bitflags            = { version = "2.11.0", features = [ "serde" ] }
 chrono              = "0.4.44"

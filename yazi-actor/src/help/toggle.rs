@@ -12,11 +12,11 @@ impl Actor for Toggle {
 
 	const NAME: &str = "toggle";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let help = &mut cx.help;
 
 		help.visible = !help.visible;
-		help.layer = opt.layer;
+		help.layer = form.layer;
 
 		help.keyword = String::new();
 		help.in_filter = None;

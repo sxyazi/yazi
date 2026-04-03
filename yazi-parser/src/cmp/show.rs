@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_core::cmp::CmpOpt;
 use yazi_shared::event::ActionCow;
@@ -16,11 +16,7 @@ impl TryFrom<ActionCow> for ShowForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = a.take_any2("opt") {
-			opt
-		} else {
-			bail!("Invalid 'opt' in ShowForm");
-		}
+		Ok(Self { opt: a.take_any("opt").ok_or_else(|| anyhow!("Invalid 'opt' in ShowForm"))? })
 	}
 }
 

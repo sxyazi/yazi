@@ -1,13 +1,12 @@
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use tokio::sync::mpsc;
 use yazi_scheduler::process::ProcessOpt;
-use yazi_shared::{data::Data, event::ActionCow};
+use yazi_shared::event::{ActionCow, Replier};
 
 #[derive(Clone, Debug)]
 pub struct ProcessOpenForm {
 	pub opt:     ProcessOpt,
-	pub replier: Option<mpsc::UnboundedSender<anyhow::Result<Data>>>,
+	pub replier: Option<Replier>,
 }
 
 impl TryFrom<ActionCow> for ProcessOpenForm {

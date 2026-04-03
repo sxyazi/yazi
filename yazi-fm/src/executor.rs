@@ -53,12 +53,12 @@ impl<'a> Executor<'a> {
 			"resize" => act!(app:resize, cx, crate::Root::reflow as fn(_) -> _),
 			"resume" => act!(app:resume, cx, yazi_parser::app::ResumeForm {
 				tx: self.app.signals.tx.clone(),
-				token: action.take_any("token").context("Invalid 'token' in ResumeForm")?,
 				reflow: crate::Root::reflow,
+				replier: action.take_replier().context("Missing replier in ResumeForm")?,
 			}),
 			"stop" => act!(app:stop, cx, yazi_parser::app::StopForm {
 				tx: self.app.signals.tx.clone(),
-				token: action.take_any("token").context("Invalid 'token' in StopForm")?,
+				replier: action.take_replier().context("Missing replier in StopForm")?,
 			}),
 			_ => succ!(),
 		}

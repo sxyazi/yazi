@@ -15,9 +15,9 @@ impl Actor for Close {
 
 	const NAME: &str = "close";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let cmp = &mut cx.cmp;
-		if let Some(item) = cmp.selected().filter(|_| opt.submit).cloned() {
+		if let Some(item) = cmp.selected().filter(|_| form.submit).cloned() {
 			return act!(input:complete, cx, CompleteOpt { name: item.name, is_dir: item.is_dir, ticket: cmp.ticket });
 		}
 

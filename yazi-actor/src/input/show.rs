@@ -14,14 +14,14 @@ impl Actor for Show {
 
 	const NAME: &str = "show";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(input:close, cx)?;
 
 		let input = &mut cx.input;
 		input.visible = true;
-		input.title = opt.cfg.title.clone();
-		input.position = opt.cfg.position;
-		*input.deref_mut() = yazi_widgets::input::Input::new(opt)?;
+		input.title = form.cfg.title.clone();
+		input.position = form.cfg.position;
+		*input.deref_mut() = yazi_widgets::input::Input::new(form)?;
 
 		succ!(render!());
 	}

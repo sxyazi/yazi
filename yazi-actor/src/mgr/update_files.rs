@@ -15,11 +15,11 @@ impl Actor for UpdateFiles {
 
 	const NAME: &str = "update_files";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let revision = cx.current().files.revision;
-		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.chdir(u)).collect();
+		let linked: Vec<_> = LINKED.read().from_dir(form.op.cwd()).map(|u| form.op.chdir(u)).collect();
 
-		for op in [opt.op].into_iter().chain(linked) {
+		for op in [form.op].into_iter().chain(linked) {
 			cx.mgr.yanked.apply_op(&op);
 			Self::update_tab(cx, op).ok();
 		}

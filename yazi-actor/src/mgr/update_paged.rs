@@ -12,12 +12,12 @@ impl Actor for UpdatePaged {
 
 	const NAME: &str = "update_paged";
 
-	fn act(cx: &mut Ctx, opt: Self::Form) -> Result<Data> {
-		if opt.only_if.is_some_and(|u| u != *cx.cwd()) {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		if form.only_if.is_some_and(|u| u != *cx.cwd()) {
 			succ!();
 		}
 
-		let targets = cx.current().paginate(opt.page.unwrap_or(cx.current().page));
+		let targets = cx.current().paginate(form.page.unwrap_or(cx.current().page));
 		if !targets.is_empty() {
 			cx.tasks.fetch_paged(targets, &cx.mgr.mimetype);
 			cx.tasks.preload_paged(targets, &cx.mgr.mimetype);

@@ -78,7 +78,7 @@ pub(super) fn lines(lua: &Lua) -> mlua::Result<Value> {
 			parsed = s.to_text().into_lua_err()?.lines;
 			LineIter::parsed(&parsed, tab_size)
 		} else {
-			LineIter::source(&s, tab_size)
+			LineIter::source(s, tab_size)
 		};
 
 		if let Some(wrap) = *opts.raw_get::<Wrap>("wrap")? {

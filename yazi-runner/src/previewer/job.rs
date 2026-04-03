@@ -16,11 +16,11 @@ impl IntoLua for PeekJob {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
-				("args", Sendable::args_to_table_ref(&lua, &self.action.args)?.into_lua(&lua)?),
-				("file", File::new(self.file).into_lua(&lua)?),
-				("mime", self.mime.into_lua(&lua)?),
-				("skip", self.skip.into_lua(&lua)?),
+				("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
+				("args", Sendable::args_to_table_ref(lua, &self.action.args)?.into_lua(lua)?),
+				("file", File::new(self.file).into_lua(lua)?),
+				("mime", self.mime.into_lua(lua)?),
+				("skip", self.skip.into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}
@@ -37,9 +37,9 @@ impl IntoLua for SeekJob {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
-				("file", File::new(self.file).into_lua(&lua)?),
-				("units", self.units.into_lua(&lua)?),
+				("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
+				("file", File::new(self.file).into_lua(lua)?),
+				("units", self.units.into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}
