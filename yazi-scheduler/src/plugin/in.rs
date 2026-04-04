@@ -1,4 +1,6 @@
-use yazi_runner::plugin::PluginOpt;
+use std::ops::{Deref, DerefMut};
+
+use yazi_runner::entry::EntryJob;
 use yazi_shared::Id;
 
 #[derive(Debug)]
@@ -18,7 +20,14 @@ impl PluginIn {
 
 // --- Entry
 #[derive(Debug)]
-pub(crate) struct PluginInEntry {
-	pub(crate) id:  Id,
-	pub(crate) opt: PluginOpt,
+pub(crate) struct PluginInEntry(pub(crate) EntryJob);
+
+impl Deref for PluginInEntry {
+	type Target = EntryJob;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl DerefMut for PluginInEntry {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }

@@ -3,11 +3,12 @@ use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
 use yazi_binding::runtime_mut;
+use yazi_core::app::PluginMode;
 use yazi_dds::Sendable;
 use yazi_macro::succ;
 use yazi_parser::app::PluginForm;
 use yazi_plugin::LUA;
-use yazi_runner::{loader::{LOADER, Loader}, plugin::PluginMode};
+use yazi_runner::loader::{LOADER, Loader};
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
@@ -31,7 +32,7 @@ impl Actor for PluginDo {
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			succ!(cx.core.tasks.scheduler.plugin_entry(opt));
+			succ!(cx.core.tasks.scheduler.plugin_entry(opt.id, opt.args));
 		}
 
 		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);

@@ -1,24 +1,20 @@
-use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{Id, event::ActionCow, url::UrlBuf};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct UpdateSucceedForm {
+	#[serde(alias = "0")]
 	pub id:    Id,
 	pub urls:  Vec<UrlBuf>,
+	#[serde(default)]
 	pub track: bool,
 }
 
 impl TryFrom<ActionCow> for UpdateSucceedForm {
 	type Error = anyhow::Error;
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Some(urls) = a.take_any("urls") else {
-			bail!("Invalid 'urls' in UpdateSucceedForm");
-		};
-
-		Ok(Self { id: a.first()?, urls, track: a.get("track").unwrap_or_default() })
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for UpdateSucceedForm {

@@ -1,9 +1,10 @@
 use anyhow::Result;
 use mlua::ObjectLike;
 use yazi_config::YAZI;
+use yazi_core::app::PluginOpt;
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::SeekForm;
-use yazi_runner::{plugin::PluginOpt, previewer::SeekJob};
+use yazi_runner::previewer::SeekJob;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};

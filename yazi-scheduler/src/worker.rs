@@ -165,7 +165,7 @@ impl Worker {
 		tokio::spawn(async move {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
+					let id = r#in.id;
 					let Some(token) = me.ongoing.lock().get_token(id) else {
 						continue;
 					};

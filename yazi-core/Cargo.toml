@@ -31,6 +31,7 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
 # External dependencies
 anyhow        = { workspace = true }
 crossterm     = { workspace = true }
+dyn-clone     = { workspace = true }
 hashbrown     = { workspace = true }
 indexmap      = { workspace = true }
 mlua          = { workspace = true }

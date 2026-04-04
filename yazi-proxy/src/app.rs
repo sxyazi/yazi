@@ -1,6 +1,5 @@
-use yazi_core::app::QuitOpt;
+use yazi_core::app::{PluginOpt, QuitOpt};
 use yazi_macro::{emit, relay};
-use yazi_runner::plugin::PluginOpt;
 
 pub struct AppProxy;
 

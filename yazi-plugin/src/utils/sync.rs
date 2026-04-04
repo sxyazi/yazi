@@ -3,9 +3,9 @@ use futures::future::join_all;
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Table, Value, Variadic};
 use tokio::sync::mpsc;
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
-use yazi_core::AppProxy;
+use yazi_core::{AppProxy, app::PluginOpt};
 use yazi_dds::Sendable;
-use yazi_runner::{loader::LOADER, plugin::PluginOpt};
+use yazi_runner::loader::LOADER;
 use yazi_shared::{LOCAL_SET, data::Data};
 
 use super::Utils;

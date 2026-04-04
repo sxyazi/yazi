@@ -81,6 +81,15 @@ impl From<&str> for Data {
 	fn from(value: &str) -> Self { Self::String(Cow::Owned(value.to_owned())) }
 }
 
+impl<T> FromIterator<T> for Data
+where
+	T: Into<Data>,
+{
+	fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+		Self::List(iter.into_iter().map(Into::into).collect())
+	}
+}
+
 impl TryFrom<&Data> for bool {
 	type Error = anyhow::Error;
 

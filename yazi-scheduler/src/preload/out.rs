@@ -1,3 +1,5 @@
+use yazi_runner::preloader::PreloadError;
+
 use crate::{Task, TaskProg};
 
 #[derive(Debug)]
@@ -6,8 +8,8 @@ pub(crate) enum PreloadOut {
 	Fail(String),
 }
 
-impl From<mlua::Error> for PreloadOut {
-	fn from(value: mlua::Error) -> Self { Self::Fail(value.to_string()) }
+impl From<PreloadError> for PreloadOut {
+	fn from(value: PreloadError) -> Self { Self::Fail(value.to_string()) }
 }
 
 impl PreloadOut {
