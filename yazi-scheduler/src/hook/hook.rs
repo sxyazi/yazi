@@ -6,11 +6,12 @@ use yazi_dds::Pump;
 use yazi_fs::ok_or_not_found;
 use yazi_vfs::provider;
 
-use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink, HookInTrash, HookInUpload}};
+use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink, HookInPreload, HookInTrash, HookInUpload}, preload::{Preload, PreloadOut}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
 	ongoing: Arc<Mutex<Ongoing>>,
+	preload: Arc<Preload>,
 	tx:      async_priority_channel::Sender<HookIn, u8>,
 }
 
@@ -18,9 +19,10 @@ impl Hook {
 	pub(crate) fn new(
 		ops: &mpsc::UnboundedSender<TaskOp>,
 		ongoing: &Arc<Mutex<Ongoing>>,
+		preload: &Arc<Preload>,
 		tx: async_priority_channel::Sender<HookIn, u8>,
 	) -> Self {
-		Self { ops: ops.into(), ongoing: ongoing.clone(), tx }
+		Self { ops: ops.into(), ongoing: ongoing.clone(), preload: preload.clone(), tx }
 	}
 
 	// --- File
@@ -97,6 +99,15 @@ impl Hook {
 			TasksProxy::update_succeed(task.id, [task.target], false);
 		}
 		self.ops.out(task.id, FileOutUpload::Clean);
+	}
+
+	// --- Preload
+	pub(crate) async fn preload(&self, task: HookInPreload) {
+		if !self.ongoing.lock().intact(task.id) {
+			self.preload.loaded.lock().get_mut(&task.hash).map(|x| *x &= !(1 << task.idx));
+		}
+
+		self.ops.out(task.id, PreloadOut::Clean);
 	}
 }
 

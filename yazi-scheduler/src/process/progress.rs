@@ -11,9 +11,9 @@ pub struct ProcessProgBlock {
 impl From<ProcessProgBlock> for TaskSummary {
 	fn from(value: ProcessProgBlock) -> Self {
 		Self {
-			total:   (value.state == Some(false)) as u32,
+			total:   value.failed() as u32,
 			success: 0,
-			failed:  (value.state == Some(false)) as u32,
+			failed:  value.failed() as u32,
 			percent: value.percent().map(Into::into),
 		}
 	}
@@ -42,9 +42,9 @@ pub struct ProcessProgOrphan {
 impl From<ProcessProgOrphan> for TaskSummary {
 	fn from(value: ProcessProgOrphan) -> Self {
 		Self {
-			total:   (value.state == Some(false)) as u32,
+			total:   value.failed() as u32,
 			success: 0,
-			failed:  (value.state == Some(false)) as u32,
+			failed:  value.failed() as u32,
 			percent: value.percent().map(Into::into),
 		}
 	}
@@ -74,8 +74,8 @@ impl From<ProcessProgBg> for TaskSummary {
 	fn from(value: ProcessProgBg) -> Self {
 		Self {
 			total:   1,
-			success: (value.state == Some(true)) as u32,
-			failed:  (value.state == Some(false)) as u32,
+			success: value.success() as u32,
+			failed:  value.failed() as u32,
 			percent: value.percent().map(Into::into),
 		}
 	}

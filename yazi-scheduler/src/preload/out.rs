@@ -6,6 +6,7 @@ use crate::{Task, TaskProg};
 pub(crate) enum PreloadOut {
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<PreloadError> for PreloadOut {
@@ -22,6 +23,9 @@ impl PreloadOut {
 			Self::Fail(reason) => {
 				prog.state = Some(false);
 				task.log(reason);
+			}
+			Self::Clean => {
+				prog.cleaned = Some(true);
 			}
 		}
 	}

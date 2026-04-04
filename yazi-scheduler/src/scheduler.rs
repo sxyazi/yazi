@@ -3,10 +3,11 @@ use std::{ops::Deref, sync::Arc, time::Duration};
 use hashbrown::HashMap;
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
+use yazi_fs::FsHash64;
 use yazi_runner::entry::EntryJob;
 use yazi_shared::{CompletionToken, Id, SStr, Throttle, data::{Data, DataKey}, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskProg, Worker, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskProg, Worker, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
 
 pub struct Scheduler {
 	pub worker:   Worker,
@@ -202,9 +203,14 @@ impl Scheduler {
 
 	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
 		let name = format!("Run preloader `{}`", preloader.run.name);
-		let (id, done) = self.add::<PreloadProg, _>(name, |t| (t.id, t.done.clone()));
+		let hook = HookInPreload::new(preloader.idx, target.hash_u64());
 
-		self.preload.submit(PreloadIn { id, plugin: preloader, target: target.clone(), done });
+		let id = self.add_hooked::<PreloadProg, _>(name, hook, |t| t.id);
+		if let Some(prev) = self.preload.loading.lock().put(target.url.hash_u64(), id) {
+			self.cancel(prev);
+		}
+
+		self.preload.submit(PreloadIn { id, plugin: preloader, target: target.clone() });
 	}
 
 	pub fn prework_size(&self, targets: Vec<&UrlBuf>) {

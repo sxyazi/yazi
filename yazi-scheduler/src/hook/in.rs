@@ -12,6 +12,7 @@ pub(crate) enum HookIn {
 	Hardlink(HookInOutHardlink),
 	Download(HookInDownload),
 	Upload(HookInUpload),
+	Preload(HookInPreload),
 }
 
 impl_from_in!(
@@ -23,6 +24,7 @@ impl_from_in!(
 	Hardlink(HookInOutHardlink),
 	Download(HookInDownload),
 	Upload(HookInUpload),
+	Preload(HookInPreload),
 );
 
 impl HookIn {
@@ -36,6 +38,7 @@ impl HookIn {
 			Self::Hardlink(r#in) => r#in.id,
 			Self::Download(r#in) => r#in.id,
 			Self::Upload(r#in) => r#in.id,
+			Self::Preload(r#in) => r#in.id,
 		}
 	}
 
@@ -49,6 +52,7 @@ impl HookIn {
 			Self::Hardlink(r#in) => Self::Hardlink(HookInOutHardlink { id, ..r#in }),
 			Self::Download(r#in) => Self::Download(HookInDownload { id, ..r#in }),
 			Self::Upload(r#in) => Self::Upload(HookInUpload { id, ..r#in }),
+			Self::Preload(r#in) => Self::Preload(HookInPreload { id, ..r#in }),
 		}
 	}
 }
@@ -209,4 +213,16 @@ impl HookInUpload {
 	{
 		Self { id: Id::ZERO, target: target.into() }
 	}
+}
+
+// --- Preload
+#[derive(Debug)]
+pub(crate) struct HookInPreload {
+	pub(crate) id:   Id,
+	pub(crate) idx:  u8,
+	pub(crate) hash: u64,
+}
+
+impl HookInPreload {
+	pub(crate) fn new(idx: u8, hash: u64) -> Self { Self { id: Id::ZERO, idx, hash } }
 }

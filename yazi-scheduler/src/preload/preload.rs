@@ -8,7 +8,6 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FsHash64;
 use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
-use yazi_shared::CompletionToken;
 
 use crate::{HIGH, LOW, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadOut}};
 
@@ -17,7 +16,7 @@ pub struct Preload {
 	tx:  async_priority_channel::Sender<PreloadIn, u8>,
 
 	pub loaded:  Mutex<LruCache<u64, u16>>,
-	pub loading: Mutex<LruCache<u64, CompletionToken>>,
+	pub loading: Mutex<LruCache<u64, yazi_shared::Id>>,
 }
 
 impl Preload {
@@ -35,12 +34,7 @@ impl Preload {
 	}
 
 	pub(crate) async fn preload(&self, task: PreloadIn) -> Result<(), PreloadOut> {
-		let url_hash = task.target.url.hash_u64();
-		let file_hash = task.target.hash_u64();
-
-		if let Some(prev) = self.loading.lock().put(url_hash, task.done) {
-			prev.complete(false);
-		}
+		let hash = task.target.hash_u64();
 
 		let mut rx = RUNNER.preload(PreloadJob { action: &task.plugin.run, file: task.target }).await;
 		let state = match rx.recv().await.unwrap_or(Err(PreloadError::Cancelled)) {
@@ -50,7 +44,7 @@ impl Preload {
 		};
 
 		if !state.complete {
-			self.loaded.lock().get_mut(&file_hash).map(|x| *x &= !(1 << task.plugin.idx));
+			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.plugin.idx));
 		}
 		if let Some(e) = state.error {
 			error!("Error when running preloader `{}`:\n{e}", task.plugin.run.name);
