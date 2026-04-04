@@ -1,6 +1,6 @@
-yazi_macro::mod_pub!(fetcher loader plugin previewer);
+yazi_macro::mod_pub!(entry fetcher loader preloader previewer);
 
-yazi_macro::mod_flat!(entry preload runner spot);
+yazi_macro::mod_flat!(runner spot);
 
 pub static RUNNER: yazi_shared::RoCell<Runner> = yazi_shared::RoCell::new();
 

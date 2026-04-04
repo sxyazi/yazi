@@ -4,11 +4,10 @@ use anyhow::Result;
 use lru::LruCache;
 use parking_lot::Mutex;
 use tokio::sync::mpsc;
-use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FsHash64;
-use yazi_runner::RUNNER;
+use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
 
 use crate::{HIGH, LOW, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadOut}};
 
@@ -17,7 +16,7 @@ pub struct Preload {
 	tx:  async_priority_channel::Sender<PreloadIn, u8>,
 
 	pub loaded:  Mutex<LruCache<u64, u16>>,
-	pub loading: Mutex<LruCache<u64, CancellationToken>>,
+	pub loading: Mutex<LruCache<u64, yazi_shared::Id>>,
 }
 
 impl Preload {
@@ -35,18 +34,19 @@ impl Preload {
 	}
 
 	pub(crate) async fn preload(&self, task: PreloadIn) -> Result<(), PreloadOut> {
-		let ct = CancellationToken::new();
-		if let Some(ct) = self.loading.lock().put(task.target.url.hash_u64(), ct.clone()) {
-			ct.cancel();
-		}
-
 		let hash = task.target.hash_u64();
-		let (ok, err) = RUNNER.preload(&task.plugin.run, task.target, ct).await?;
 
-		if !ok {
+		let mut rx = RUNNER.preload(PreloadJob { action: &task.plugin.run, file: task.target }).await;
+		let state = match rx.recv().await.unwrap_or(Err(PreloadError::Cancelled)) {
+			Ok(state) => state,
+			Err(PreloadError::Cancelled) => Default::default(),
+			e @ Err(_) => e?,
+		};
+
+		if !state.complete {
 			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.plugin.idx));
 		}
-		if let Some(e) = err {
+		if let Some(e) = state.error {
 			error!("Error when running preloader `{}`:\n{e}", task.plugin.run.name);
 		}
 

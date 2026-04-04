@@ -2,11 +2,11 @@ use mlua::ObjectLike;
 use yazi_binding::{Error, elements::Renderable};
 use yazi_config::LAYOUT;
 use yazi_macro::{emit, relay};
-use yazi_runner::{plugin::PluginOpt, previewer::PeekJob};
+use yazi_runner::previewer::PeekJob;
 use yazi_scheduler::TaskSummary;
 use yazi_shared::url::AsUrl;
 
-use crate::tab::PreviewLock;
+use crate::{app::PluginOpt, tab::PreviewLock};
 
 pub struct AppProxy;
 

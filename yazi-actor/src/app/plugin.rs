@@ -1,8 +1,9 @@
 use anyhow::Result;
+use yazi_core::app::PluginMode;
 use yazi_macro::{act, succ};
 use yazi_parser::app::PluginForm;
 use yazi_proxy::AppProxy;
-use yazi_runner::{loader::LOADER, plugin::PluginMode};
+use yazi_runner::loader::LOADER;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
@@ -23,7 +24,7 @@ impl Actor for Plugin {
 		}
 
 		if opt.mode == PluginMode::Async {
-			succ!(cx.core.tasks.scheduler.plugin_entry(opt));
+			succ!(cx.core.tasks.scheduler.plugin_entry(opt.id, opt.args));
 		} else if opt.mode == PluginMode::Sync && hits {
 			return act!(app:plugin_do, cx, opt);
 		}

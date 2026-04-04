@@ -30,20 +30,18 @@ impl Worker {
 		let (process_tx, process_rx) = async_priority_channel::unbounded();
 		let (hook_tx, hook_rx) = async_priority_channel::unbounded();
 		let (op_tx, op_rx) = mpsc::unbounded_channel();
+
 		let ongoing = Arc::new(Mutex::new(Ongoing::default()));
+		let file = Arc::new(File::new(&op_tx, file_tx));
+		let plugin = Arc::new(Plugin::new(&op_tx, plugin_tx));
+		let fetch = Arc::new(Fetch::new(&op_tx, fetch_tx));
+		let preload = Arc::new(Preload::new(&op_tx, preload_tx));
+		let size = Arc::new(Size::new(&op_tx, size_tx));
+		let process = Arc::new(Process::new(&op_tx, process_tx));
+		let hook = Arc::new(Hook::new(&op_tx, &ongoing, &preload, hook_tx));
 
-		let me = Self {
-			file: Arc::new(File::new(&op_tx, file_tx)),
-			plugin: Arc::new(Plugin::new(&op_tx, plugin_tx)),
-			fetch: Arc::new(Fetch::new(&op_tx, fetch_tx)),
-			preload: Arc::new(Preload::new(&op_tx, preload_tx)),
-			size: Arc::new(Size::new(&op_tx, size_tx)),
-			process: Arc::new(Process::new(&op_tx, process_tx)),
-			hook: Arc::new(Hook::new(&op_tx, &ongoing, hook_tx)),
-
-			ops: TaskOps(op_tx),
-			ongoing,
-		};
+		let me =
+			Self { file, plugin, fetch, preload, size, process, hook, ops: TaskOps(op_tx), ongoing };
 
 		let handles = []
 			.into_iter()
@@ -165,7 +163,7 @@ impl Worker {
 		tokio::spawn(async move {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
+					let id = r#in.id;
 					let Some(token) = me.ongoing.lock().get_token(id) else {
 						continue;
 					};
@@ -270,6 +268,7 @@ impl Worker {
 			HookIn::Hardlink(r#in) => self.hook.hardlink(r#in).await,
 			HookIn::Download(r#in) => self.hook.download(r#in).await,
 			HookIn::Upload(r#in) => self.hook.upload(r#in).await,
+			HookIn::Preload(r#in) => self.hook.preload(r#in).await,
 		}
 	}
 

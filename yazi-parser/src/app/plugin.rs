@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_runner::plugin::PluginOpt;
+use yazi_core::app::PluginOpt;
 use yazi_shared::event::ActionCow;
 
 #[derive(Clone, Debug, Default)]

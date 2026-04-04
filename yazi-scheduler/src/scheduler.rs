@@ -1,11 +1,13 @@
 use std::{ops::Deref, sync::Arc, time::Duration};
 
+use hashbrown::HashMap;
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
-use yazi_runner::plugin::PluginOpt;
-use yazi_shared::{CompletionToken, Id, Throttle, url::{UrlBuf, UrlLike}};
+use yazi_fs::FsHash64;
+use yazi_runner::entry::EntryJob;
+use yazi_shared::{CompletionToken, Id, SStr, Throttle, data::{Data, DataKey}, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskProg, Worker, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskProg, Worker, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
 
 pub struct Scheduler {
 	pub worker:   Worker,
@@ -67,29 +69,28 @@ impl Scheduler {
 
 	pub fn file_cut(&self, from: UrlBuf, to: UrlBuf, force: bool) {
 		let name = format!("Cut {} to {}", from.display(), to.display());
-		let (id, done) = self.add::<FileProgCut, _>(name, |t| (t.id, t.done.clone()));
+		let id = self.add::<FileProgCut, _>(name, |t| t.id);
 
 		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
 			return self.ops.out(id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
 		}
 
 		let follow = !from.scheme().covariant(to.scheme());
-		self.file.submit(
-			FileInCut { id, from, to, force, cha: None, follow, retry: 0, drop: None, done },
-			LOW,
-		);
+		self
+			.file
+			.submit(FileInCut { id, from, to, force, cha: None, follow, retry: 0, drop: None }, LOW);
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
 		let name = format!("Copy {} to {}", from.display(), to.display());
-		let (id, done) = self.add::<FileProgCopy, _>(name, |t| (t.id, t.done.clone()));
+		let id = self.add::<FileProgCopy, _>(name, |t| t.id);
 
 		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
 			return self.ops.out(id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
 		}
 
 		let follow = follow || !from.scheme().covariant(to.scheme());
-		self.file.submit(FileInCopy { id, from, to, force, cha: None, follow, retry: 0, done }, LOW);
+		self.file.submit(FileInCopy { id, from, to, force, cha: None, follow, retry: 0 }, LOW);
 	}
 
 	pub fn file_link(&self, from: UrlBuf, to: UrlBuf, relative: bool, force: bool) {
@@ -150,7 +151,7 @@ impl Scheduler {
 			return done;
 		}
 
-		self.file.submit(FileInDownload { id, target, cha: None, retry: 0, done: done.clone() }, LOW);
+		self.file.submit(FileInDownload { id, target, cha: None, retry: 0 }, LOW);
 		done
 	}
 
@@ -158,20 +159,20 @@ impl Scheduler {
 		let name = format!("Upload {}", target.display());
 
 		let hook = HookInUpload::new(&target);
-		let (id, done) = self.add_hooked::<FileProgUpload, _>(name, hook, |t| (t.id, t.done.clone()));
+		let id = self.add_hooked::<FileProgUpload, _>(name, hook, |t| t.id);
 
 		if !target.kind().is_remote() {
 			return self.ops.out(id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		}
 
-		self.file.submit(FileInUpload { id, target, cha: None, cache: None, done }, LOW);
+		self.file.submit(FileInUpload { id, target, cha: None, cache: None }, LOW);
 	}
 
-	pub fn plugin_entry(&self, opt: PluginOpt) {
-		let name = format!("Run micro plugin `{}`", opt.id);
+	pub fn plugin_entry(&self, plugin: SStr, args: HashMap<DataKey, Data>) {
+		let name = format!("Run micro plugin `{plugin}`");
 		let id = self.add::<PluginProgEntry, _>(name, |t| t.id);
 
-		self.plugin.submit(PluginInEntry { id, opt }, NORMAL);
+		self.plugin.submit(PluginInEntry(EntryJob { id, args, plugin }), NORMAL);
 	}
 
 	pub fn fetch_paged(
@@ -202,7 +203,12 @@ impl Scheduler {
 
 	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
 		let name = format!("Run preloader `{}`", preloader.run.name);
-		let id = self.add::<PreloadProg, _>(name, |t| t.id);
+		let hook = HookInPreload::new(preloader.idx, target.hash_u64());
+
+		let id = self.add_hooked::<PreloadProg, _>(name, hook, |t| t.id);
+		if let Some(prev) = self.preload.loading.lock().put(target.url.hash_u64(), id) {
+			self.cancel(prev);
+		}
 
 		self.preload.submit(PreloadIn { id, plugin: preloader, target: target.clone() });
 	}

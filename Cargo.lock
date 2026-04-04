@@ -5767,6 +5767,7 @@ version = "26.2.2"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
+ "dyn-clone",
  "hashbrown 0.16.1",
  "indexmap 2.13.1",
  "mlua",

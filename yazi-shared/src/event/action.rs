@@ -65,6 +65,20 @@ impl Action {
 		self
 	}
 
+	pub fn with_list<I>(mut self, name: impl Into<DataKey>, values: I) -> Self
+	where
+		I: IntoIterator,
+		I::Item: Into<Data>,
+	{
+		self.args.insert(name.into(), values.into_iter().map(Into::into).collect());
+		self
+	}
+
+	pub fn with_any(mut self, name: impl Into<DataKey>, data: impl DataAny) -> Self {
+		self.args.insert(name.into(), Data::Any(Box::new(data)));
+		self
+	}
+
 	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl Into<Data>>) -> Self {
 		if let Some(value) = value {
 			self.args.insert(name.into(), value.into());
@@ -80,11 +94,6 @@ impl Action {
 		for (i, v) in values.into_iter().enumerate() {
 			self.args.insert(DataKey::Integer(i as i64), v.into());
 		}
-		self
-	}
-
-	pub fn with_any(mut self, name: impl Into<DataKey>, data: impl DataAny) -> Self {
-		self.args.insert(name.into(), Data::Any(Box::new(data)));
 		self
 	}
 

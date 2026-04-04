@@ -12,8 +12,8 @@ impl From<PluginProgEntry> for TaskSummary {
 	fn from(value: PluginProgEntry) -> Self {
 		Self {
 			total:   1,
-			success: (value.state == Some(true)) as u32,
-			failed:  (value.state == Some(false)) as u32,
+			success: value.success() as u32,
+			failed:  value.failed() as u32,
 			percent: value.percent().map(Into::into),
 		}
 	}

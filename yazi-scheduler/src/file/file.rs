@@ -9,7 +9,7 @@ use yazi_shared::{path::PathCow, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, maybe_exists, provider::{self, DirEntry}, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink}, ok_or_not_found, progress_or_break};
+use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink}, ok_or_not_found};
 
 pub(crate) struct File {
 	ops: TaskOps,
@@ -62,11 +62,11 @@ impl File {
 
 	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut it =
+		let mut rx =
 			ctx!(task, provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await)?;
 
 		loop {
-			match progress_or_break!(it, task.done) {
+			match rx.recv().await.unwrap_or(Ok(0)) {
 				Ok(0) => break,
 				Ok(n) => self.ops.out(task.id, FileOutCopyDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
@@ -154,11 +154,11 @@ impl File {
 
 	pub(crate) async fn cut_do(&self, mut task: FileInCut) -> Result<(), FileOutCutDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut it =
+		let mut rx =
 			ctx!(task, provider::copy_with_progress(&task.from, &task.to, task.cha.unwrap()).await)?;
 
 		loop {
-			match progress_or_break!(it, task.done) {
+			match rx.recv().await.unwrap_or(Ok(0)) {
 				Ok(0) => {
 					provider::remove_file(&task.from).await.ok();
 					break;
@@ -345,9 +345,9 @@ impl File {
 		let cache = ctx!(task, task.target.cache(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
-		let mut it = ctx!(task, provider::copy_with_progress(&task.target, &cache_tmp, cha).await)?;
+		let mut rx = ctx!(task, provider::copy_with_progress(&task.target, &cache_tmp, cha).await)?;
 		loop {
-			match progress_or_break!(it, task.done) {
+			match rx.recv().await.unwrap_or(Ok(0)) {
 				Ok(0) => {
 					Local::regular(&cache).remove_dir_all().await.ok();
 					ctx!(task, provider::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
@@ -420,7 +420,7 @@ impl File {
 
 		let tmp =
 			ctx!(task, Transaction::tmp(&task.target).await, "Cannot determine temporary upload path")?;
-		let mut it = ctx!(
+		let mut rx = ctx!(
 			task,
 			provider::copy_with_progress(cache, &tmp, Attrs {
 				mode:  Some(cha.mode),
@@ -432,7 +432,7 @@ impl File {
 		)?;
 
 		loop {
-			match progress_or_break!(it, task.done) {
+			match rx.recv().await.unwrap_or(Ok(0)) {
 				Ok(0) => {
 					let cha =
 						ctx!(task, Self::cha(&task.target, true, None).await, "Cannot stat original file")?;

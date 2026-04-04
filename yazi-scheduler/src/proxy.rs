@@ -27,8 +27,11 @@ impl TasksProxy {
 		I: IntoIterator,
 		I::Item: Into<UrlBuf>,
 	{
-		let urls: Vec<_> = urls.into_iter().map(Into::into).collect();
-		emit!(Call(relay!(tasks:update_succeed, [id]).with_any("urls", urls).with("track", track)));
+		emit!(Call(
+			relay!(tasks:update_succeed, [id])
+				.with_list("urls", urls.into_iter().map(Into::into))
+				.with("track", track)
+		));
 	}
 }
 

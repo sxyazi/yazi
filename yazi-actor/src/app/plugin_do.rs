@@ -3,11 +3,11 @@ use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
 use yazi_binding::runtime_mut;
-use yazi_dds::Sendable;
+use yazi_core::app::PluginMode;
 use yazi_macro::succ;
 use yazi_parser::app::PluginForm;
 use yazi_plugin::LUA;
-use yazi_runner::{loader::{LOADER, Loader}, plugin::PluginMode};
+use yazi_runner::{entry::EntryJob, loader::{LOADER, Loader}};
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
@@ -31,7 +31,7 @@ impl Actor for PluginDo {
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			succ!(cx.core.tasks.scheduler.plugin_entry(opt));
+			succ!(cx.core.tasks.scheduler.plugin_entry(opt.id, opt.args));
 		}
 
 		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);
@@ -47,8 +47,7 @@ impl Actor for PluginDo {
 			if let Some(cb) = opt.callback {
 				cb(&LUA, plugin)
 			} else {
-				let job = LUA.create_table_from([("args", Sendable::args_to_table(&LUA, opt.args)?)])?;
-				plugin.call_method("entry", job)
+				plugin.call_method("entry", EntryJob { args: opt.args, ..Default::default() })
 			}
 		});
 		if let Err(ref e) = result {

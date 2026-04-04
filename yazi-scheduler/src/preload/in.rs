@@ -7,7 +7,3 @@ pub(crate) struct PreloadIn {
 	pub(crate) plugin: &'static Preloader,
 	pub(crate) target: yazi_fs::File,
 }
-
-impl PreloadIn {
-	pub(crate) fn id(&self) -> Id { self.id }
-}
