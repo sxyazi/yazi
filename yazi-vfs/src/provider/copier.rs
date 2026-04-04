@@ -34,6 +34,7 @@ pub(super) fn copy_with_progress_impl(
 	rx
 }
 
+// --- ProgressiveCopier
 struct ProgressiveCopier {
 	from:  UrlBuf,
 	to:    UrlBuf,
@@ -92,6 +93,9 @@ impl ProgressiveCopier {
 			self.prog_tx.send(Ok(n)).await.ok();
 		}
 
+		if let Ok(None) = &mut result {
+			result = Ok(dist.take());
+		}
 		if let Ok(Some(file)) = &mut result {
 			file.set_attrs(self.attrs).await.ok();
 			file.shutdown().await.ok();
