@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use hashbrown::HashMap;
-use rand::{RngCore, SeedableRng, rngs::SmallRng};
+use rand::{Rng, make_rng, rngs::SmallRng};
 use yazi_shared::{natsort, path::PathBufDyn, translit::Transliterator, url::UrlLike};
 
 use crate::{File, SortBy, SortFallback};
@@ -72,7 +72,7 @@ impl FilesSorter {
 				self.fallback(a, b, self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len)))
 			}),
 			SortBy::Random => {
-				let mut rng = SmallRng::from_os_rng();
+				let mut rng = make_rng::<SmallRng>();
 				items.sort_unstable_by(|a, b| {
 					promote!(a, b);
 					self.cmp(rng.next_u64(), rng.next_u64())

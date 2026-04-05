@@ -45,3 +45,30 @@ macro_rules! impl_from_prog {
 		)*
 	};
 }
+
+#[macro_export]
+macro_rules! dispatch_progress {
+	($value:expr, $method:ident) => {
+		match $value {
+			// File
+			$crate::TaskProg::FileCopy(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileCut(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileLink(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileHardlink(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileDelete(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileTrash(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileDownload(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileUpload(p) => $crate::Progress::$method(p),
+			// Plugin
+			$crate::TaskProg::PluginEntry(p) => $crate::Progress::$method(p),
+			// Prework
+			$crate::TaskProg::Fetch(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::Preload(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::Size(p) => $crate::Progress::$method(p),
+			// Process
+			$crate::TaskProg::ProcessBlock(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::ProcessOrphan(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::ProcessBg(p) => $crate::Progress::$method(p),
+		}
+	};
+}

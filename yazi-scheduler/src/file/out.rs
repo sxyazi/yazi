@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::{Task, TaskProg};
+use crate::{CleanupState, Task, TaskProg};
 
 // --- Copy
 #[derive(Debug)]
@@ -41,7 +41,7 @@ impl FileOutCopy {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}
@@ -120,10 +120,10 @@ impl FileOutCut {
 				task.log(reason);
 			}
 			Self::Clean(Ok(())) => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 			Self::Clean(Err(reason)) => {
-				prog.cleaned = Some(false);
+				prog.cleaned = CleanupState::Failed;
 				task.log(format!("Failed cleaning up cut file: {reason:?}"));
 			}
 		}
@@ -188,7 +188,7 @@ impl FileOutLink {
 					task.log(reason);
 				}
 				Self::Clean => {
-					prog.cleaned = Some(true);
+					prog.cleaned = CleanupState::Success;
 				}
 			}
 		} else if let TaskProg::FileCopy(prog) = &mut task.prog {
@@ -255,7 +255,7 @@ impl FileOutHardlink {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}
@@ -316,10 +316,10 @@ impl FileOutDelete {
 				task.log(reason);
 			}
 			Self::Clean(Ok(())) => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 			Self::Clean(Err(reason)) => {
-				prog.cleaned = Some(false);
+				prog.cleaned = CleanupState::Failed;
 				task.log(format!("Failed cleaning up deleted file: {reason:?}"));
 			}
 		}
@@ -377,7 +377,7 @@ impl FileOutTrash {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}
@@ -418,7 +418,7 @@ impl FileOutDownload {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}
@@ -493,7 +493,7 @@ impl FileOutUpload {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}

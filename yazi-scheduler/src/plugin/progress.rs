@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::TaskSummary;
+use crate::{Progress, TaskSummary};
 
 // --- Entry
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
@@ -19,16 +19,10 @@ impl From<PluginProgEntry> for TaskSummary {
 	}
 }
 
-impl PluginProgEntry {
-	pub fn cooked(self) -> bool { self.state == Some(true) }
+impl Progress for PluginProgEntry {
+	fn running(self) -> bool { self.state.is_none() }
 
-	pub fn running(self) -> bool { self.state.is_none() }
+	fn cooked(self) -> bool { self.state == Some(true) }
 
-	pub fn success(self) -> bool { self.cooked() }
-
-	pub fn failed(self) -> bool { self.state == Some(false) }
-
-	pub fn cleaned(self) -> Option<bool> { None }
-
-	pub fn percent(self) -> Option<f32> { None }
+	fn failed(self) -> bool { self.state == Some(false) }
 }

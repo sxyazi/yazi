@@ -37,7 +37,7 @@ debug = false
 [workspace.dependencies]
 ansi-to-tui         = "8.0.1"
 anyhow              = "1.0.102"
-arc-swap            = "1.9.0"
+arc-swap            = "1.9.1"
 base64              = "0.22.1"
 bitflags            = { version = "2.11.0", features = [ "serde" ] }
 chrono              = "0.4.44"
@@ -60,10 +60,10 @@ ordered-float       = { version = "5.3.0", features = [ "serde" ] }
 parking_lot         = "0.12.5"
 paste               = "1.0.15"
 percent-encoding    = "2.3.2"
-rand                = { version = "0.9.2", default-features = false, features = [ "os_rng", "small_rng", "std" ] }
+rand                = { version = "0.10.0", default-features = false, features = [ "std", "sys_rng" ] }
 ratatui             = { version = "0.30.0", features = [ "serde", "unstable-rendered-line-info", "unstable-widget-ref" ] }
 regex               = "1.12.3"
-russh               = { version = "0.59.0", default-features = false, features = [ "ring", "rsa" ] }
+russh               = { version = "0.60.0", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
 serde_json          = "1.0.149"
@@ -71,7 +71,7 @@ serde_with          = "3.18.0"
 strum               = { version = "0.28.0", features = [ "derive" ] }
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror           = "2.0.18"
-tokio               = { version = "1.50.0", features = [ "full" ] }
+tokio               = { version = "1.51.0", features = [ "full" ] }
 tokio-stream        = "0.1.18"
 tokio-util          = "0.7.18"
 toml                = { version = "1.1.2" }

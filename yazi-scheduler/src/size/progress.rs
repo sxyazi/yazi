@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::TaskSummary;
+use crate::{Progress, TaskSummary};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct SizeProg {
@@ -18,16 +18,10 @@ impl From<SizeProg> for TaskSummary {
 	}
 }
 
-impl SizeProg {
-	pub fn cooked(self) -> bool { self.done }
+impl Progress for SizeProg {
+	fn running(self) -> bool { !self.done }
 
-	pub fn running(self) -> bool { !self.done }
+	fn cooked(self) -> bool { self.done }
 
-	pub fn success(self) -> bool { self.cooked() }
-
-	pub fn failed(self) -> bool { false }
-
-	pub fn cleaned(self) -> Option<bool> { None }
-
-	pub fn percent(self) -> Option<f32> { None }
+	fn failed(self) -> bool { false }
 }

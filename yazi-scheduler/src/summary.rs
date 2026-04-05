@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
 use serde::Serialize;
 
-use crate::Ongoing;
+use crate::{Ongoing, Progress};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct TaskSummary {

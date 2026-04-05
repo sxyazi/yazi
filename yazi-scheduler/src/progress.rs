@@ -1,7 +1,57 @@
 use serde::Serialize;
 
-use crate::{TaskSummary, fetch::FetchProg, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
+use crate::{CleanupState, TaskSummary, dispatch_progress, fetch::FetchProg, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
 
+pub trait Progress: Copy {
+	// Whether the task is still cooking or cleaning.
+	fn running(self) -> bool;
+
+	// Whether the task succeeded, regardless cleanup.
+	// For tasks without a cleanup, this is the same as `success()`.
+	fn cooked(self) -> bool;
+
+	// Whether the task fully succeeded, including cleanup if applicable.
+	fn success(self) -> bool {
+		match self.cleaned() {
+			None | Some(CleanupState::Success) => self.cooked(),
+			Some(CleanupState::Pending | CleanupState::Failed) => false,
+		}
+	}
+
+	// Whether the task fully failed.
+	//
+	// For tasks with a collect phase, e.g. gathering files to copy:
+	//   collect failed, or cleanup failed if applicable, regardless main work.
+	// For tasks without a collect phase:
+	//   main work failed, or cleanup failed if applicable.
+	fn failed(self) -> bool;
+
+	// Cleanup state if the task has a cleanup phase, otherwise `None`.
+	fn cleaned(self) -> Option<CleanupState> { None }
+
+	// Optional percentage for UI display.
+	fn percent(self) -> Option<f32> { None }
+
+	// Helper for tasks that are still cooking or cleaning.
+	fn cooking_or_cleaning(self, cooking: bool) -> bool {
+		cooking || (self.cooked() && self.cleaned() == Some(CleanupState::Pending))
+	}
+
+	// Helper for byte-based progress calculations used by file transfer tasks.
+	fn byte_percent(self, processed_bytes: u64, total_bytes: u64) -> f32 {
+		if self.success() {
+			100.0
+		} else if self.failed() {
+			0.0
+		} else if total_bytes != 0 {
+			99.99f32.min(processed_bytes as f32 / total_bytes as f32 * 100.0)
+		} else {
+			99.99
+		}
+	}
+}
+
+// --- TaskProg
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(tag = "kind")]
 pub enum TaskProg {
@@ -69,151 +119,21 @@ impl From<TaskProg> for TaskSummary {
 	}
 }
 
+impl Progress for TaskProg {
+	fn running(self) -> bool { dispatch_progress!(self, running) }
+
+	fn cooked(self) -> bool { dispatch_progress!(self, cooked) }
+
+	fn success(self) -> bool { dispatch_progress!(self, success) }
+
+	fn failed(self) -> bool { dispatch_progress!(self, failed) }
+
+	fn cleaned(self) -> Option<CleanupState> { dispatch_progress!(self, cleaned) }
+
+	fn percent(self) -> Option<f32> { dispatch_progress!(self, percent) }
+}
+
 impl TaskProg {
-	pub fn cooked(self) -> bool {
-		match self {
-			// File
-			Self::FileCopy(p) => p.cooked(),
-			Self::FileCut(p) => p.cooked(),
-			Self::FileLink(p) => p.cooked(),
-			Self::FileHardlink(p) => p.cooked(),
-			Self::FileDelete(p) => p.cooked(),
-			Self::FileTrash(p) => p.cooked(),
-			Self::FileDownload(p) => p.cooked(),
-			Self::FileUpload(p) => p.cooked(),
-			// Plugin
-			Self::PluginEntry(p) => p.cooked(),
-			// Prework
-			Self::Fetch(p) => p.cooked(),
-			Self::Preload(p) => p.cooked(),
-			Self::Size(p) => p.cooked(),
-			// Process
-			Self::ProcessBlock(p) => p.cooked(),
-			Self::ProcessOrphan(p) => p.cooked(),
-			Self::ProcessBg(p) => p.cooked(),
-		}
-	}
-
-	pub fn running(self) -> bool {
-		match self {
-			// File
-			Self::FileCopy(p) => p.running(),
-			Self::FileCut(p) => p.running(),
-			Self::FileLink(p) => p.running(),
-			Self::FileHardlink(p) => p.running(),
-			Self::FileDelete(p) => p.running(),
-			Self::FileTrash(p) => p.running(),
-			Self::FileDownload(p) => p.running(),
-			Self::FileUpload(p) => p.running(),
-			// Plugin
-			Self::PluginEntry(p) => p.running(),
-			// Prework
-			Self::Fetch(p) => p.running(),
-			Self::Preload(p) => p.running(),
-			Self::Size(p) => p.running(),
-			// Process
-			Self::ProcessBlock(p) => p.running(),
-			Self::ProcessOrphan(p) => p.running(),
-			Self::ProcessBg(p) => p.running(),
-		}
-	}
-
-	pub fn success(self) -> bool {
-		match self {
-			// File
-			Self::FileCopy(p) => p.success(),
-			Self::FileCut(p) => p.success(),
-			Self::FileLink(p) => p.success(),
-			Self::FileHardlink(p) => p.success(),
-			Self::FileDelete(p) => p.success(),
-			Self::FileTrash(p) => p.success(),
-			Self::FileDownload(p) => p.success(),
-			Self::FileUpload(p) => p.success(),
-			// Plugin
-			Self::PluginEntry(p) => p.success(),
-			// Prework
-			Self::Fetch(p) => p.success(),
-			Self::Preload(p) => p.success(),
-			Self::Size(p) => p.success(),
-			// Process
-			Self::ProcessBlock(p) => p.success(),
-			Self::ProcessOrphan(p) => p.success(),
-			Self::ProcessBg(p) => p.success(),
-		}
-	}
-
-	pub fn failed(self) -> bool {
-		match self {
-			// File
-			Self::FileCopy(p) => p.failed(),
-			Self::FileCut(p) => p.failed(),
-			Self::FileLink(p) => p.failed(),
-			Self::FileHardlink(p) => p.failed(),
-			Self::FileDelete(p) => p.failed(),
-			Self::FileTrash(p) => p.failed(),
-			Self::FileDownload(p) => p.failed(),
-			Self::FileUpload(p) => p.failed(),
-			// Plugin
-			Self::PluginEntry(p) => p.failed(),
-			// Prework
-			Self::Fetch(p) => p.failed(),
-			Self::Preload(p) => p.failed(),
-			Self::Size(p) => p.failed(),
-			// Process
-			Self::ProcessBlock(p) => p.failed(),
-			Self::ProcessOrphan(p) => p.failed(),
-			Self::ProcessBg(p) => p.failed(),
-		}
-	}
-
-	pub fn cleaned(self) -> Option<bool> {
-		match self {
-			// File
-			Self::FileCopy(p) => p.cleaned(),
-			Self::FileCut(p) => p.cleaned(),
-			Self::FileLink(p) => p.cleaned(),
-			Self::FileHardlink(p) => p.cleaned(),
-			Self::FileDelete(p) => p.cleaned(),
-			Self::FileTrash(p) => p.cleaned(),
-			Self::FileDownload(p) => p.cleaned(),
-			Self::FileUpload(p) => p.cleaned(),
-			// Plugin
-			Self::PluginEntry(p) => p.cleaned(),
-			// Prework
-			Self::Fetch(p) => p.cleaned(),
-			Self::Preload(p) => p.cleaned(),
-			Self::Size(p) => p.cleaned(),
-			// Process
-			Self::ProcessBlock(p) => p.cleaned(),
-			Self::ProcessOrphan(p) => p.cleaned(),
-			Self::ProcessBg(p) => p.cleaned(),
-		}
-	}
-
-	pub fn percent(self) -> Option<f32> {
-		match self {
-			// File
-			Self::FileCopy(p) => p.percent(),
-			Self::FileCut(p) => p.percent(),
-			Self::FileLink(p) => p.percent(),
-			Self::FileHardlink(p) => p.percent(),
-			Self::FileDelete(p) => p.percent(),
-			Self::FileTrash(p) => p.percent(),
-			Self::FileDownload(p) => p.percent(),
-			Self::FileUpload(p) => p.percent(),
-			// Plugin
-			Self::PluginEntry(p) => p.percent(),
-			// Prework
-			Self::Fetch(p) => p.percent(),
-			Self::Preload(p) => p.percent(),
-			Self::Size(p) => p.percent(),
-			// Process
-			Self::ProcessBlock(p) => p.percent(),
-			Self::ProcessOrphan(p) => p.percent(),
-			Self::ProcessBg(p) => p.percent(),
-		}
-	}
-
 	pub(crate) fn is_user(self) -> bool {
 		match self {
 			// File
