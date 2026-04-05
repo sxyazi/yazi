@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use tokio::{select, sync::mpsc, task::JoinHandle};
 use yazi_config::YAZI;
 
-use crate::{LOW, Ongoing, TaskOp, TaskOps, TaskOut, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
+use crate::{CleanupState, LOW, Ongoing, Progress, TaskOp, TaskOps, TaskOut, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
 
 #[derive(Clone)]
 pub struct Worker {
@@ -282,7 +282,7 @@ impl Worker {
 				op.out.reduce(task);
 				if !task.prog.cooked() && task.done.completed() != Some(false) {
 					continue; // Not cooked yet, also not canceled
-				} else if task.prog.cleaned() == Some(false) {
+				} else if task.prog.cleaned() == Some(CleanupState::Failed) {
 					continue; // Failed to clean up
 				} else if let Some(hook) = task.hook.take() {
 					me.hook.submit(hook, LOW);

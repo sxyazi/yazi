@@ -1,6 +1,6 @@
 use yazi_runner::preloader::PreloadError;
 
-use crate::{Task, TaskProg};
+use crate::{CleanupState, Task, TaskProg};
 
 #[derive(Debug)]
 pub(crate) enum PreloadOut {
@@ -25,7 +25,7 @@ impl PreloadOut {
 				task.log(reason);
 			}
 			Self::Clean => {
-				prog.cleaned = Some(true);
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}

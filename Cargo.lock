@@ -6058,6 +6058,7 @@ dependencies = [
  "ordered-float 5.3.0",
  "parking_lot",
  "serde",
+ "strum 0.28.0",
  "tokio",
  "tokio-util",
  "tracing",
