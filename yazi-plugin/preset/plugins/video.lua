@@ -58,8 +58,8 @@ function M:preload(job)
 
 	if percent ~= 0 then
 		cmd:arg { "-ss", math.floor(meta.format.duration * percent / 100) }
-    else
-	    cmd:arg { "-skip_frame", "nokey" }
+	else
+		cmd:arg { "-skip_frame", "nokey" }
 	end
 
 	cmd:arg { "-i", tostring(job.file.path) }
