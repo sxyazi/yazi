@@ -17,25 +17,33 @@ function M:setup()
 	end)
 end
 
-function M:entry(job)
+function M:init(job)
 	local from = job.args[1] and Url(job.args[1])
-	local to = job.args[2] ~= "" and Url(job.args[2]) or nil
+	local to = job.args[2] ~= "" and Url(job.args[2]) or from.parent
 	if not from then
 		fail("No URL provided")
+	elseif not to then
+		fail("Failed to determine target directory for '%s'", from)
 	end
+
+	self.job = { id = job.id, from = from, to = to }
+end
+
+function M:entry(job)
+	self:init(job)
 
 	local pwd, target, retry = "", nil, false
 	while true do
-		target, retry = self:try_with(from, pwd, to)
+		target, retry = self:try_with(pwd)
 		if not retry then
 			break
 		elseif not job.args.noisy then
-			fail("'%s' is password-protected, please extract it individually and enter the password", from)
+			fail("'%s' is password-protected, please extract it individually and enter the password", self.job.from)
 		end
 
 		local value, event = ya.input {
 			pos = { "top-center", y = 2, w = 50 },
-			title = string.format('Password for "%s":', from.name),
+			title = string.format('Password for "%s":', self.job.from.name),
 			obscure = true,
 		}
 		if event == 1 then
@@ -50,12 +58,8 @@ function M:entry(job)
 	end
 end
 
-function M:try_with(from, pwd, to)
-	to = to or from.parent
-	if not to then
-		fail("Invalid URL '%s'", from)
-	end
-
+function M:try_with(pwd)
+	local from, to = self.job.from, self.job.to
 	local tmp = fs.unique("dir", to:join(self.tmp_name(from)))
 	if not tmp then
 		fail("Failed to determine a temporary directory for %s", from)
@@ -73,7 +77,7 @@ function M:try_with(from, pwd, to)
 		return nil, true -- Need to retry
 	end
 
-	local target = self:tidy(from, to, tmp)
+	local target = self:tidy(tmp)
 	if not output then
 		fail("7zip failed to output when extracting '%s', error: %s", from, err)
 	elseif output.status.code ~= 0 then
@@ -83,7 +87,8 @@ function M:try_with(from, pwd, to)
 	end
 end
 
-function M:tidy(from, to, tmp)
+function M:tidy(tmp)
+	local from, to = self.job.from, self.job.to
 	local outs = fs.read_dir(tmp, { limit = 2 })
 	if not outs then
 		fail("Failed to read the temporary directory '%s' when extracting '%s'", tmp, from)
@@ -94,7 +99,7 @@ function M:tidy(from, to, tmp)
 
 	local only = #outs == 1 and outs[1]
 	if only and not only.cha.is_dir and require("archive").is_tar(only.url) then
-		self:entry { args = { tostring(only.url), tostring(to) } }
+		self:entry { id = self.job.id, args = { tostring(only.url), tostring(to) } }
 		fs.remove("file", only.url)
 		fs.remove("dir", tmp)
 		return
