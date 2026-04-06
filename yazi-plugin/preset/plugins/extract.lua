@@ -19,10 +19,12 @@ end
 
 function M:init(job)
 	local from = job.args[1] and Url(job.args[1])
-	local to = job.args[2] ~= "" and Url(job.args[2]) or from.parent
 	if not from then
 		fail("No URL provided")
-	elseif not to then
+	end
+
+	local to = job.args[2] ~= "" and Url(job.args[2]) or from.parent
+	if not to then
 		fail("Failed to determine target directory for '%s'", from)
 	end
 

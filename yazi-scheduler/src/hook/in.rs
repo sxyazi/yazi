@@ -364,7 +364,7 @@ impl TaskIn for HookInPreload {
 		self
 	}
 
-	fn title(&self) -> Cow<'_, str> { todo!() }
+	fn title(&self) -> Cow<'_, str> { format!("Hook: run {}-th preloader", self.idx).into() }
 }
 
 impl HookInPreload {

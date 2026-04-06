@@ -16,7 +16,6 @@ workspace = true
 yazi-config    = { path = "../yazi-config", version = "26.2.2" }
 yazi-core      = { path = "../yazi-core", version = "26.2.2" }
 yazi-macro     = { path = "../yazi-macro", version = "26.2.2" }
-yazi-runner    = { path = "../yazi-runner", version = "26.2.2" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.2.2" }
 yazi-shared    = { path = "../yazi-shared", version = "26.2.2" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
