@@ -27,6 +27,7 @@ futures       = { workspace = true }
 mlua          = { workspace = true }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
+serde_with    = { workspace = true }
 tokio         = { workspace = true }
 unicode-width = { workspace = true }
 

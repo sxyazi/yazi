@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(elements external fs pubsub runtime theme utils);
+yazi_macro::mod_pub!(elements external fs pubsub runtime tasks theme utils);
 
 yazi_macro::mod_flat!(slim standard);
 

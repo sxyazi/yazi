@@ -1,13 +1,11 @@
 use std::{ops::Deref, sync::Arc, time::Duration};
 
-use hashbrown::HashMap;
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_fs::FsHash64;
-use yazi_runner::entry::EntryJob;
-use yazi_shared::{CompletionToken, Id, SStr, Throttle, data::{Data, DataKey}, url::{UrlBuf, UrlLike}};
+use yazi_shared::{CompletionToken, Id, Throttle, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskProg, Worker, fetch::{FetchIn, FetchProg}, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload, FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::{PluginInEntry, PluginProgEntry}, preload::{PreloadIn, PreloadProg}, process::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::{SizeIn, SizeProg}};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt}, size::SizeIn};
 
 pub struct Scheduler {
 	pub worker:   Worker,
@@ -27,14 +25,13 @@ impl Scheduler {
 		Self { worker, behavior: Behavior::new(), handles }
 	}
 
-	fn add<T, R>(&self, name: String, map: impl FnOnce(&mut Task) -> R) -> R
+	fn add<T, R>(&self, r#in: &mut T, map: impl FnOnce(&mut Task) -> R) -> R
 	where
-		T: Into<TaskProg> + Default,
+		T: TaskIn,
+		T::Prog: Into<TaskProg> + Default,
 	{
-		let prog = T::default().into();
-
 		let mut ongoing = self.ongoing.lock();
-		let task = ongoing.add(name, prog);
+		let task = ongoing.add(r#in);
 
 		self.behavior.update(task.id);
 		map(task)
@@ -42,14 +39,15 @@ impl Scheduler {
 
 	fn add_hooked<T, R>(
 		&self,
-		name: String,
+		r#in: &mut T,
 		hook: impl Into<HookIn>,
 		map: impl FnOnce(&mut Task) -> R,
 	) -> R
 	where
-		T: Into<TaskProg> + Default,
+		T: TaskIn,
+		T::Prog: Into<TaskProg> + Default,
 	{
-		self.add::<T, R>(name, |t| map(t.with_hook(hook)))
+		self.add(r#in, |t| map(t.with_hook(hook)))
 	}
 
 	pub fn cancel(&self, id: Id) -> bool {
@@ -68,111 +66,115 @@ impl Scheduler {
 	}
 
 	pub fn file_cut(&self, from: UrlBuf, to: UrlBuf, force: bool) {
-		let name = format!("Cut {} to {}", from.display(), to.display());
-		let id = self.add::<FileProgCut, _>(name, |t| t.id);
-
-		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
-		}
-
 		let follow = !from.scheme().covariant(to.scheme());
-		self
-			.file
-			.submit(FileInCut { id, from, to, force, cha: None, follow, retry: 0, drop: None }, LOW);
+		let mut r#in =
+			FileInCut { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0, drop: None };
+
+		self.add(&mut r#in, |_| ());
+		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
+			self.ops.out(r#in.id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
+		} else {
+			self.file.submit(r#in, LOW);
+		}
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let name = format!("Copy {} to {}", from.display(), to.display());
-		let id = self.add::<FileProgCopy, _>(name, |t| t.id);
-
-		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
-		}
-
 		let follow = follow || !from.scheme().covariant(to.scheme());
-		self.file.submit(FileInCopy { id, from, to, force, cha: None, follow, retry: 0 }, LOW);
+		let mut r#in = FileInCopy { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0 };
+
+		self.add(&mut r#in, |_| ());
+		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
+			self.ops.out(r#in.id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
+		} else {
+			self.file.submit(r#in, LOW);
+		}
 	}
 
 	pub fn file_link(&self, from: UrlBuf, to: UrlBuf, relative: bool, force: bool) {
-		let name = format!("Link {} to {}", from.display(), to.display());
-		let id = self.add::<FileProgLink, _>(name, |t| t.id);
+		let mut r#in = FileInLink {
+			id: Id::ZERO,
+			from,
+			to,
+			force,
+			cha: None,
+			resolve: false,
+			relative,
+			delete: false,
+		};
 
-		self.file.submit(
-			FileInLink { id, from, to, force, cha: None, resolve: false, relative, delete: false },
-			LOW,
-		);
+		self.add(&mut r#in, |_| ());
+		self.file.submit(r#in, LOW);
 	}
 
 	pub fn file_hardlink(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let name = format!("Hardlink {} to {}", from.display(), to.display());
-		let id = self.add::<FileProgHardlink, _>(name, |t| t.id);
+		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, force, cha: None, follow };
+		self.add(&mut r#in, |_| ());
 
-		if !from.scheme().covariant(to.scheme()) {
+		if !r#in.from.scheme().covariant(r#in.to.scheme()) {
 			return self
 				.ops
-				.out(id, FileOutHardlink::Fail("Cannot hardlink cross filesystem".to_owned()));
+				.out(r#in.id, FileOutHardlink::Fail("Cannot hardlink cross filesystem".to_owned()));
 		}
 
-		if to.try_starts_with(&from).unwrap_or(false) && !to.covariant(&from) {
+		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
 			return self
 				.ops
-				.out(id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));
+				.out(r#in.id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));
 		}
 
-		self.file.submit(FileInHardlink { id, from, to, force, cha: None, follow }, LOW);
+		self.file.submit(r#in, LOW);
 	}
 
 	pub fn file_delete(&self, target: UrlBuf) {
-		let name = format!("Delete {}", target.display());
+		let mut r#in = FileInDelete { id: Id::ZERO, target, cha: None };
+		let hook = HookInDelete::new(&r#in.target);
 
-		let hook = HookInDelete::new(&target);
-		let id = self.add_hooked::<FileProgDelete, _>(name, hook, |t| t.id);
-
-		self.file.submit(FileInDelete { id, target, cha: None }, LOW);
+		self.add_hooked(&mut r#in, hook, |_| ());
+		self.file.submit(r#in, LOW);
 	}
 
 	pub fn file_trash(&self, target: UrlBuf) {
-		let name = format!("Trash {}", target.display());
+		let mut r#in = FileInTrash { id: Id::ZERO, target };
+		let hook = HookInTrash::new(&r#in.target);
 
-		let hook = HookInTrash::new(&target);
-		let id = self.add_hooked::<FileProgTrash, _>(name, hook, |t| t.id);
-
-		self.file.submit(FileInTrash { id, target }, LOW);
+		self.add_hooked(&mut r#in, hook, |_| ());
+		self.file.submit(r#in, LOW);
 	}
 
 	pub fn file_download(&self, target: UrlBuf) -> CompletionToken {
-		let name = format!("Download {}", target.display());
+		let mut r#in = FileInDownload { id: Id::ZERO, target, cha: None, retry: 0 };
+		let hook = HookInDownload::new(&r#in.target);
+		let done = self.add_hooked(&mut r#in, hook, |t| t.done.clone());
 
-		let hook = HookInDownload::new(&target);
-		let (id, done) = self.add_hooked::<FileProgDownload, _>(name, hook, |t| (t.id, t.done.clone()));
-
-		if !target.kind().is_remote() {
-			self.ops.out(id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
-			return done;
+		if r#in.target.kind().is_remote() {
+			self.file.submit(r#in, LOW);
+		} else {
+			self.ops.out(r#in.id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		}
-
-		self.file.submit(FileInDownload { id, target, cha: None, retry: 0 }, LOW);
 		done
 	}
 
 	pub fn file_upload(&self, target: UrlBuf) {
-		let name = format!("Upload {}", target.display());
+		let mut r#in = FileInUpload { id: Id::ZERO, target, cha: None, cache: None };
+		let hook = HookInUpload::new(&r#in.target);
+		self.add_hooked(&mut r#in, hook, |_| ());
 
-		let hook = HookInUpload::new(&target);
-		let id = self.add_hooked::<FileProgUpload, _>(name, hook, |t| t.id);
-
-		if !target.kind().is_remote() {
-			return self.ops.out(id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
+		if r#in.target.kind().is_remote() {
+			self.file.submit(r#in, LOW);
+		} else {
+			self.ops.out(r#in.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		}
-
-		self.file.submit(FileInUpload { id, target, cha: None, cache: None }, LOW);
 	}
 
-	pub fn plugin_entry(&self, plugin: SStr, args: HashMap<DataKey, Data>) {
-		let name = format!("Run micro plugin `{plugin}`");
-		let id = self.add::<PluginProgEntry, _>(name, |t| t.id);
+	pub fn plugin_entry(&self, mut r#in: PluginInEntry) -> Id {
+		if r#in.track {
+			self.behavior.reset();
+		}
 
-		self.plugin.submit(PluginInEntry(EntryJob { id, args, plugin }), NORMAL);
+		let id = self.add(&mut r#in, |t| t.id);
+		self.plugin.submit(r#in, NORMAL);
+
+		id
 	}
 
 	pub fn fetch_paged(
@@ -180,10 +182,11 @@ impl Scheduler {
 		fetcher: &'static Fetcher,
 		targets: Vec<yazi_fs::File>,
 	) -> CompletionToken {
-		let name = format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len());
-		let (id, done) = self.add::<FetchProg, _>(name, |t| (t.id, t.done.clone()));
+		let mut r#in = FetchIn { id: Id::ZERO, plugin: fetcher, targets };
 
-		self.fetch.submit(FetchIn { id, plugin: fetcher, targets });
+		let done = self.add(&mut r#in, |t| t.done.clone());
+		self.fetch.submit(r#in);
+
 		done
 	}
 
@@ -202,61 +205,55 @@ impl Scheduler {
 	}
 
 	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
-		let name = format!("Run preloader `{}`", preloader.run.name);
+		let mut r#in = PreloadIn { id: Id::ZERO, plugin: preloader, target: target.clone() };
 		let hook = HookInPreload::new(preloader.idx, target.hash_u64());
 
-		let id = self.add_hooked::<PreloadProg, _>(name, hook, |t| t.id);
-		if let Some(prev) = self.preload.loading.lock().put(target.url.hash_u64(), id) {
+		self.add_hooked(&mut r#in, hook, |_| ());
+		if let Some(prev) = self.preload.loading.lock().put(target.url.hash_u64(), r#in.id) {
 			self.cancel(prev);
 		}
 
-		self.preload.submit(PreloadIn { id, plugin: preloader, target: target.clone() });
+		self.preload.submit(r#in);
 	}
 
 	pub fn prework_size(&self, targets: Vec<&UrlBuf>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 
 		for target in targets {
-			let name = format!("Calculate the size of {}", target.display());
-			let id = self.add::<SizeProg, _>(name, |t| t.id);
+			let mut r#in =
+				SizeIn { id: Id::ZERO, target: target.clone(), throttle: throttle.clone() };
 
-			self.size.submit(SizeIn { id, target: target.clone(), throttle: throttle.clone() }, NORMAL);
+			self.add(&mut r#in, |_| ());
+			self.size.submit(r#in, NORMAL);
 		}
 	}
 
 	pub fn process_open(&self, opt: ProcessOpt) -> CompletionToken {
-		let name = {
-			let args = opt.args.iter().map(|a| a.display().to_string()).collect::<Vec<_>>().join(" ");
-			if args.is_empty() {
-				format!("Run {:?}", opt.cmd)
-			} else {
-				format!("Run {:?} with `{args}`", opt.cmd)
+		let mut r#in: ProcessIn = if opt.block {
+			ProcessInBlock { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }.into()
+		} else if opt.orphan {
+			ProcessInOrphan { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }.into()
+		} else {
+			ProcessInBg {
+				id:   Id::ZERO,
+				cwd:  opt.cwd,
+				cmd:  opt.cmd,
+				args: opt.args,
+				done: CompletionToken::default(),
+			}
+			.into()
+		};
+
+		let done = match &mut r#in {
+			ProcessIn::Block(r#in) => self.add(r#in, |t| t.done.clone()),
+			ProcessIn::Orphan(r#in) => self.add(r#in, |t| t.done.clone()),
+			ProcessIn::Bg(r#in) => {
+				r#in.done = self.add(r#in, |t| t.done.clone());
+				r#in.done.clone()
 			}
 		};
 
-		let (id, done) = if opt.block {
-			self.add::<ProcessProgBlock, _>(name, |t| (t.id, t.done.clone()))
-		} else if opt.orphan {
-			self.add::<ProcessProgOrphan, _>(name, |t| (t.id, t.done.clone()))
-		} else {
-			self.add::<ProcessProgBg, _>(name, |t| (t.id, t.done.clone()))
-		};
-
-		if opt.block {
-			self
-				.process
-				.submit(ProcessInBlock { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }, NORMAL);
-		} else if opt.orphan {
-			self
-				.process
-				.submit(ProcessInOrphan { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }, NORMAL);
-		} else {
-			self.process.submit(
-				ProcessInBg { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args, done: done.clone() },
-				NORMAL,
-			);
-		};
-
+		self.process.submit(r#in, NORMAL);
 		done
 	}
 }

@@ -82,6 +82,9 @@ pub fn compose(
 			#[cfg(unix)]
 			b"host_name" => Utils::host_name(lua)?,
 
+			// Task
+			b"task" => Utils::task(lua)?,
+
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)

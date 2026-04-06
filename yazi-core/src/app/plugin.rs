@@ -6,6 +6,7 @@ use hashbrown::HashMap;
 use mlua::{Lua, Table};
 use serde::Deserialize;
 use strum::EnumString;
+use yazi_scheduler::plugin::PluginInEntry;
 use yazi_shared::{SStr, data::{Data, DataKey}, event::{Action, ActionCow}};
 
 #[derive(Clone, Debug, Default)]
@@ -33,6 +34,12 @@ impl TryFrom<ActionCow> for PluginOpt {
 
 		let mode = a.str("mode").parse().unwrap_or_default();
 		Ok(Self { id: Self::normalize_id(id), args, mode, callback: a.take_any("callback") })
+	}
+}
+
+impl From<PluginOpt> for PluginInEntry {
+	fn from(value: PluginOpt) -> Self {
+		Self { plugin: value.id, args: value.args, ..Default::default() }
 	}
 }
 

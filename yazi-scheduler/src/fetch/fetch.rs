@@ -39,7 +39,7 @@ impl Fetch {
 			loaded.get_mut(&h).map(|x| *x &= !(1 << plugin.idx));
 		}
 		if let Some(e) = err {
-			error!("Error when running fetcher `{}`:\n{e}", plugin.run.name);
+			error!("Error when running fetcher '{}':\n{e}", plugin.run.name);
 		}
 
 		Ok(self.ops.out(id, FetchOutFetch::Succ))

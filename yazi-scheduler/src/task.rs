@@ -1,12 +1,12 @@
 use tokio::sync::mpsc;
 use yazi_shared::{CompletionToken, Id};
 
-use crate::{TaskProg, hook::HookIn};
+use crate::{TaskIn, TaskProg, hook::HookIn};
 
 #[derive(Debug)]
 pub struct Task {
 	pub id:          Id,
-	pub name:        String,
+	pub title:       String,
 	pub(crate) prog: TaskProg,
 	pub(crate) hook: Option<HookIn>,
 	pub done:        CompletionToken,
@@ -16,10 +16,10 @@ pub struct Task {
 }
 
 impl Task {
-	pub(super) fn new(id: Id, name: String, prog: TaskProg) -> Self {
+	pub(super) fn new(id: Id, title: String, prog: TaskProg) -> Self {
 		Self {
 			id,
-			name,
+			title,
 			prog,
 			hook: None,
 			done: Default::default(),
@@ -39,7 +39,10 @@ impl Task {
 	}
 
 	pub(super) fn with_hook(&mut self, hook: impl Into<HookIn>) -> &mut Self {
-		self.hook = Some(hook.into().with_id(self.id));
+		let mut hook = hook.into();
+		hook.with_id(self.id);
+
+		self.hook = Some(hook);
 		self
 	}
 }

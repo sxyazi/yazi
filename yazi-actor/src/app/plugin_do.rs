@@ -31,7 +31,7 @@ impl Actor for PluginDo {
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			succ!(cx.core.tasks.scheduler.plugin_entry(opt.id, opt.args));
+			succ!(cx.core.tasks.scheduler.plugin_entry(opt.into()));
 		}
 
 		let blocking = runtime_mut!(LUA)?.critical_push(&opt.id, true);

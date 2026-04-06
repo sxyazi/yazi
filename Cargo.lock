@@ -6102,6 +6102,7 @@ dependencies = [
  "paste",
  "ratatui",
  "serde",
+ "serde_with",
  "strum 0.28.0",
  "tokio",
  "yazi-binding",
@@ -6111,6 +6112,7 @@ dependencies = [
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",
+ "yazi-plugin",
  "yazi-runner",
  "yazi-scheduler",
  "yazi-shared",
@@ -6165,6 +6167,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 name = "yazi-proxy"
 version = "26.2.2"
 dependencies = [
+ "anyhow",
  "tokio",
  "yazi-config",
  "yazi-core",
@@ -6360,6 +6363,7 @@ dependencies = [
  "mlua",
  "parking_lot",
  "ratatui",
+ "serde_with",
  "tokio",
  "unicode-width",
  "yazi-adapter",

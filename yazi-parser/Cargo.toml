@@ -24,6 +24,7 @@ yazi-core      = { path = "../yazi-core", version = "26.2.2" }
 yazi-dds       = { path = "../yazi-dds", version = "26.2.2" }
 yazi-fs        = { path = "../yazi-fs", version = "26.2.2" }
 yazi-macro     = { path = "../yazi-macro", version = "26.2.2" }
+yazi-plugin    = { path = "../yazi-plugin", version = "26.2.2" }
 yazi-runner    = { path = "../yazi-runner", version = "26.2.2" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.2.2" }
 yazi-shared    = { path = "../yazi-shared", version = "26.2.2" }
@@ -31,16 +32,17 @@ yazi-vfs       = { path = "../yazi-vfs", version = "26.2.2" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
 
 # External dependencies
-anyhow    = { workspace = true }
-bitflags  = { workspace = true }
-crossterm = { workspace = true }
-hashbrown = { workspace = true }
-mlua      = { workspace = true }
-paste     = { workspace = true }
-ratatui   = { workspace = true }
-serde     = { workspace = true }
-strum     = { workspace = true }
-tokio     = { workspace = true }
+anyhow     = { workspace = true }
+bitflags   = { workspace = true }
+crossterm  = { workspace = true }
+hashbrown  = { workspace = true }
+mlua       = { workspace = true }
+paste      = { workspace = true }
+ratatui    = { workspace = true }
+serde      = { workspace = true }
+serde_with = { workspace = true }
+strum      = { workspace = true }
+tokio      = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

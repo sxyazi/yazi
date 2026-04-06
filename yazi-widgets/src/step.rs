@@ -1,8 +1,8 @@
 use std::{num::ParseIntError, str::FromStr};
 
-use yazi_shared::data::Data;
+use serde_with::DeserializeFromStr;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, DeserializeFromStr)]
 pub enum Step {
 	Top,
 	Bot,
@@ -31,18 +31,6 @@ impl FromStr for Step {
 			"next" => Self::Next,
 			s if s.ends_with('%') => Self::Percent(s[..s.len() - 1].parse()?),
 			s => Self::Offset(s.parse()?),
-		})
-	}
-}
-
-impl TryFrom<&Data> for Step {
-	type Error = ParseIntError;
-
-	fn try_from(value: &Data) -> Result<Self, Self::Error> {
-		Ok(match value {
-			Data::Integer(i) => Self::from(*i as isize),
-			Data::String(s) => s.parse()?,
-			_ => "".parse()?,
 		})
 	}
 }

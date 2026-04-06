@@ -24,7 +24,7 @@ impl Actor for Plugin {
 		}
 
 		if opt.mode == PluginMode::Async {
-			succ!(cx.core.tasks.scheduler.plugin_entry(opt.id, opt.args));
+			succ!(cx.core.tasks.scheduler.plugin_entry(opt.into()));
 		} else if opt.mode == PluginMode::Sync && hits {
 			return act!(app:plugin_do, cx, opt);
 		}
