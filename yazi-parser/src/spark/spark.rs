@@ -148,6 +148,7 @@ pub enum Spark<'a> {
 	TasksOpenShellCompat(crate::tasks::ProcessOpenForm),
 	TasksProcessOpen(crate::tasks::ProcessOpenForm),
 	TasksShow(crate::VoidForm),
+	TasksSpawn(crate::tasks::SpawnForm),
 	TasksUpdateSucceed(crate::tasks::UpdateSucceedForm),
 
 	// Which
@@ -331,6 +332,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::TasksOpenShellCompat(b) => b.into_lua(lua),
 			Self::TasksProcessOpen(b) => b.into_lua(lua),
 			Self::TasksShow(b) => b.into_lua(lua),
+			Self::TasksSpawn(b) => b.into_lua(lua),
 			Self::TasksUpdateSucceed(b) => b.into_lua(lua),
 
 			// Which
@@ -433,6 +435,7 @@ try_from_spark!(crate::pick::CloseForm, pick:close);
 try_from_spark!(crate::pick::ShowForm, pick:show);
 try_from_spark!(crate::spot::CopyForm, spot:copy);
 try_from_spark!(crate::tasks::ProcessOpenForm, tasks:process_open);
+try_from_spark!(crate::tasks::SpawnForm, tasks:spawn);
 try_from_spark!(crate::tasks::UpdateSucceedForm, tasks:update_succeed);
 try_from_spark!(crate::which::ActivateForm, which:activate);
 try_from_spark!(yazi_dds::Payload<'a>, app:accept_payload);

@@ -20,9 +20,9 @@ impl Actor for Quit {
 
 	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let ongoing = cx.tasks.scheduler.ongoing.clone();
-		let (left, left_names) = {
+		let (left, left_titles) = {
 			let ongoing = ongoing.lock();
-			(ongoing.len(), ongoing.values().take(11).map(|t| t.name.clone()).collect())
+			(ongoing.len(), ongoing.values().take(11).map(|t| t.title.clone()).collect())
 		};
 
 		if left == 0 {
@@ -31,7 +31,7 @@ impl Actor for Quit {
 
 		tokio::spawn(async move {
 			let mut i = 0;
-			let token = ConfirmProxy::show_sync(ConfirmCfg::quit(left, left_names));
+			let token = ConfirmProxy::show_sync(ConfirmCfg::quit(left, left_titles));
 			loop {
 				select! {
 					_ = time::sleep(Duration::from_millis(50)) => {

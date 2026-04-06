@@ -20,7 +20,7 @@ impl Plugin {
 	pub(crate) async fn entry(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
 		let id = task.id;
 
-		RUNNER.entry(task.0).await?;
+		RUNNER.entry(task.into_job()).await?;
 		Ok(self.ops.out(id, PluginOutEntry::Succ))
 	}
 }

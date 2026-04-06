@@ -1,4 +1,4 @@
-yazi_macro::mod_flat!(file prework process tasks);
+yazi_macro::mod_flat!(file option prework process tasks);
 
 pub const TASKS_BORDER: u16 = 2;
 pub const TASKS_PADDING: u16 = 2;

@@ -1,6 +1,8 @@
-use yazi_shared::{Id, url::UrlBuf};
+use std::borrow::Cow;
 
-use crate::{Task, TaskProg};
+use yazi_shared::{Id, url::{UrlBuf, UrlLike}};
+
+use crate::{Task, TaskIn, TaskProg};
 
 #[derive(Debug)]
 pub(crate) enum HookIn {
@@ -27,32 +29,49 @@ impl_from_in!(
 	Preload(HookInPreload),
 );
 
-impl HookIn {
-	pub(crate) fn id(&self) -> Id {
+impl TaskIn for HookIn {
+	type Prog = ();
+
+	fn id(&self) -> Id {
 		match self {
-			Self::Copy(r#in) => r#in.id,
-			Self::Cut(r#in) => r#in.id,
-			Self::Delete(r#in) => r#in.id,
-			Self::Trash(r#in) => r#in.id,
-			Self::Link(r#in) => r#in.id,
-			Self::Hardlink(r#in) => r#in.id,
-			Self::Download(r#in) => r#in.id,
-			Self::Upload(r#in) => r#in.id,
-			Self::Preload(r#in) => r#in.id,
+			Self::Copy(r#in) => r#in.id(),
+			Self::Cut(r#in) => r#in.id(),
+			Self::Delete(r#in) => r#in.id(),
+			Self::Trash(r#in) => r#in.id(),
+			Self::Link(r#in) => r#in.id(),
+			Self::Hardlink(r#in) => r#in.id(),
+			Self::Download(r#in) => r#in.id(),
+			Self::Upload(r#in) => r#in.id(),
+			Self::Preload(r#in) => r#in.id(),
 		}
 	}
 
-	pub(crate) fn with_id(self, id: Id) -> Self {
+	fn with_id(&mut self, id: Id) -> &mut Self {
 		match self {
-			Self::Copy(r#in) => Self::Copy(HookInOutCopy { id, ..r#in }),
-			Self::Cut(r#in) => Self::Cut(HookInOutCut { id, ..r#in }),
-			Self::Delete(r#in) => Self::Delete(HookInDelete { id, ..r#in }),
-			Self::Trash(r#in) => Self::Trash(HookInTrash { id, ..r#in }),
-			Self::Link(r#in) => Self::Link(HookInOutLink { id, ..r#in }),
-			Self::Hardlink(r#in) => Self::Hardlink(HookInOutHardlink { id, ..r#in }),
-			Self::Download(r#in) => Self::Download(HookInDownload { id, ..r#in }),
-			Self::Upload(r#in) => Self::Upload(HookInUpload { id, ..r#in }),
-			Self::Preload(r#in) => Self::Preload(HookInPreload { id, ..r#in }),
+			Self::Copy(r#in) => r#in.id = id,
+			Self::Cut(r#in) => r#in.id = id,
+			Self::Delete(r#in) => r#in.id = id,
+			Self::Trash(r#in) => r#in.id = id,
+			Self::Link(r#in) => r#in.id = id,
+			Self::Hardlink(r#in) => r#in.id = id,
+			Self::Download(r#in) => r#in.id = id,
+			Self::Upload(r#in) => r#in.id = id,
+			Self::Preload(r#in) => r#in.id = id,
+		}
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> {
+		match self {
+			Self::Copy(r#in) => r#in.title(),
+			Self::Cut(r#in) => r#in.title(),
+			Self::Delete(r#in) => r#in.title(),
+			Self::Trash(r#in) => r#in.title(),
+			Self::Link(r#in) => r#in.title(),
+			Self::Hardlink(r#in) => r#in.title(),
+			Self::Download(r#in) => r#in.title(),
+			Self::Upload(r#in) => r#in.title(),
+			Self::Preload(r#in) => r#in.title(),
 		}
 	}
 }
@@ -63,6 +82,21 @@ pub(crate) struct HookInOutCopy {
 	pub(crate) id:   Id,
 	pub(crate) from: UrlBuf,
 	pub(crate) to:   UrlBuf,
+}
+
+impl TaskIn for HookInOutCopy {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> {
+		format!("Hook: copy {} to {}", self.from.display(), self.to.display()).into()
+	}
 }
 
 impl HookInOutCopy {
@@ -88,6 +122,21 @@ pub(crate) struct HookInOutCut {
 	pub(crate) to:   UrlBuf,
 }
 
+impl TaskIn for HookInOutCut {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> {
+		format!("Hook: cut {} to {}", self.from.display(), self.to.display()).into()
+	}
+}
+
 impl HookInOutCut {
 	pub(crate) fn new<U>(from: U, to: U) -> Self
 	where
@@ -110,6 +159,19 @@ pub(crate) struct HookInDelete {
 	pub(crate) target: UrlBuf,
 }
 
+impl TaskIn for HookInDelete {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> { format!("Hook: delete {}", self.target.display()).into() }
+}
+
 impl HookInDelete {
 	pub(crate) fn new<U>(target: U) -> Self
 	where
@@ -124,6 +186,19 @@ impl HookInDelete {
 pub(crate) struct HookInTrash {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
+}
+
+impl TaskIn for HookInTrash {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> { format!("Hook: trash {}", self.target.display()).into() }
 }
 
 impl HookInTrash {
@@ -142,6 +217,21 @@ pub(crate) struct HookInOutLink {
 	#[allow(dead_code)]
 	pub(crate) from: UrlBuf,
 	pub(crate) to:   UrlBuf,
+}
+
+impl TaskIn for HookInOutLink {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> {
+		format!("Hook: link {} to {}", self.from.display(), self.to.display()).into()
+	}
 }
 
 impl HookInOutLink {
@@ -168,6 +258,21 @@ pub(crate) struct HookInOutHardlink {
 	pub(crate) to:   UrlBuf,
 }
 
+impl TaskIn for HookInOutHardlink {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> {
+		format!("Hook: hardlink {} to {}", self.from.display(), self.to.display()).into()
+	}
+}
+
 impl HookInOutHardlink {
 	pub(crate) fn new<U>(from: U, to: U) -> Self
 	where
@@ -190,6 +295,19 @@ pub(crate) struct HookInDownload {
 	pub(crate) target: UrlBuf,
 }
 
+impl TaskIn for HookInDownload {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> { format!("Hook: download {}", self.target.display()).into() }
+}
+
 impl HookInDownload {
 	pub(crate) fn new<U>(target: U) -> Self
 	where
@@ -204,6 +322,19 @@ impl HookInDownload {
 pub(crate) struct HookInUpload {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
+}
+
+impl TaskIn for HookInUpload {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> { format!("Hook: upload {}", self.target.display()).into() }
 }
 
 impl HookInUpload {
@@ -221,6 +352,19 @@ pub(crate) struct HookInPreload {
 	pub(crate) id:   Id,
 	pub(crate) idx:  u8,
 	pub(crate) hash: u64,
+}
+
+impl TaskIn for HookInPreload {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> { format!("Hook: run {}-th preloader", self.idx).into() }
 }
 
 impl HookInPreload {

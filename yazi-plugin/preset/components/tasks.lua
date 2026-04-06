@@ -29,7 +29,7 @@ function Tasks:redraw()
 			break
 		end
 
-		elements[#elements + 1] = ui.Line({ self:icon(snap), snap.name }):area(ui.Rect {
+		elements[#elements + 1] = ui.Line({ self:icon(snap), snap.title }):area(ui.Rect {
 			x = self._area.x,
 			y = y,
 			w = self._area.w,

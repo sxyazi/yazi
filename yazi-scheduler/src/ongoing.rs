@@ -3,7 +3,7 @@ use yazi_config::YAZI;
 use yazi_shared::{CompletionToken, Id, Ids};
 
 use super::Task;
-use crate::{TaskProg, hook::HookIn};
+use crate::{TaskIn, TaskProg, hook::HookIn};
 
 #[derive(Default)]
 pub struct Ongoing {
@@ -11,11 +11,18 @@ pub struct Ongoing {
 }
 
 impl Ongoing {
-	pub(super) fn add(&mut self, name: String, prog: TaskProg) -> &mut Task {
+	pub(super) fn add<T>(&mut self, r#in: &mut T) -> &mut Task
+	where
+		T: TaskIn,
+		T::Prog: Into<TaskProg> + Default,
+	{
 		static IDS: Ids = Ids::new();
-
 		let id = IDS.next();
-		self.inner.entry(id).insert(Task::new(id, name, prog)).into_mut()
+
+		let title = r#in.with_id(id).title().into_owned();
+		let prog = T::Prog::default().into();
+
+		self.inner.entry(id).insert(Task::new(id, title, prog)).into_mut()
 	}
 
 	pub(super) fn cancel(&mut self, id: Id) -> Option<HookIn> {

@@ -1,6 +1,6 @@
-use std::{num::ParseIntError, str::FromStr};
+use std::{fmt, num::ParseIntError, str::FromStr};
 
-use yazi_shared::data::Data;
+use serde::{Deserialize, Deserializer, de};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Step {
@@ -35,15 +35,57 @@ impl FromStr for Step {
 	}
 }
 
-impl TryFrom<&Data> for Step {
-	type Error = ParseIntError;
+impl<'de> Deserialize<'de> for Step {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		struct Visitor;
 
-	fn try_from(value: &Data) -> Result<Self, Self::Error> {
-		Ok(match value {
-			Data::Integer(i) => Self::from(*i as isize),
-			Data::String(s) => s.parse()?,
-			_ => "".parse()?,
-		})
+		impl de::Visitor<'_> for Visitor {
+			type Value = Step;
+
+			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+				formatter.write_str("a step string or integer offset")
+			}
+
+			fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				value.parse().map_err(E::custom)
+			}
+
+			fn visit_borrowed_str<E>(self, value: &'_ str) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				self.visit_str(value)
+			}
+
+			fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				self.visit_str(&value)
+			}
+
+			fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				isize::try_from(value).map(Self::Value::from).map_err(E::custom)
+			}
+
+			fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+			where
+				E: de::Error,
+			{
+				isize::try_from(value).map(Self::Value::from).map_err(E::custom)
+			}
+		}
+
+		deserializer.deserialize_any(Visitor)
 	}
 }
 

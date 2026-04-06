@@ -1,6 +1,10 @@
+use std::borrow::Cow;
+
 use yazi_config::plugin::Fetcher;
 use yazi_runner::fetcher::FetchJob;
 use yazi_shared::Id;
+
+use crate::{TaskIn, fetch::FetchProg};
 
 #[derive(Debug)]
 pub(crate) struct FetchIn {
@@ -9,10 +13,21 @@ pub(crate) struct FetchIn {
 	pub(crate) targets: Vec<yazi_fs::File>,
 }
 
-impl From<FetchIn> for FetchJob {
-	fn from(value: FetchIn) -> Self { Self { action: &value.plugin.run, files: value.targets } }
+impl TaskIn for FetchIn {
+	type Prog = FetchProg;
+
+	fn id(&self) -> Id { self.id }
+
+	fn with_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> {
+		format!("Run fetcher '{}' with {} target(s)", self.plugin.run.name, self.targets.len()).into()
+	}
 }
 
-impl FetchIn {
-	pub(crate) fn id(&self) -> Id { self.id }
+impl From<FetchIn> for FetchJob {
+	fn from(value: FetchIn) -> Self { Self { action: &value.plugin.run, files: value.targets } }
 }

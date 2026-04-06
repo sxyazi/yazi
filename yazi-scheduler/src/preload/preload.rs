@@ -47,7 +47,7 @@ impl Preload {
 			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.plugin.idx));
 		}
 		if let Some(e) = state.error {
-			error!("Error when running preloader `{}`:\n{e}", task.plugin.run.name);
+			error!("Error when running preloader '{}':\n{e}", task.plugin.run.name);
 		}
 
 		Ok(self.ops.out(task.id, PreloadOut::Succ))

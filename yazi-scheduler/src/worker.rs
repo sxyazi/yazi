@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use tokio::{select, sync::mpsc, task::JoinHandle};
 use yazi_config::YAZI;
 
-use crate::{CleanupState, LOW, Ongoing, Progress, TaskOp, TaskOps, TaskOut, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
+use crate::{CleanupState, LOW, Ongoing, Progress, TaskIn, TaskOp, TaskOps, TaskOut, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
 
 #[derive(Clone)]
 pub struct Worker {
