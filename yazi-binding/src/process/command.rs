@@ -1,12 +1,11 @@
 use std::{any::TypeId, ffi::OsStr, io, process::Stdio};
 
-use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use crate::Error;
 use yazi_shared::wtf8::FromWtf8;
 
 use super::{Child, output::Output};
-use crate::process::Status;
+use crate::{Error, process::Status};
 
 pub struct Command {
 	inner:  tokio::process::Command,
@@ -108,7 +107,7 @@ impl Command {
 }
 
 impl UserData for Command {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		#[inline]
 		fn make_stdio(v: Value) -> mlua::Result<Stdio> {
 			match v {

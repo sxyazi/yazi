@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 
 use super::Pad;
 
@@ -68,7 +68,7 @@ impl UserData for Rect {
 		fields.add_field_method_get("bottom", |_, me| Ok(me.bottom()));
 	}
 
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("pad", |_, me, pad: Pad| Ok(me.pad(pad)));
 		methods.add_method("contains", |_, me, Self(rect)| Ok(me.contains(rect.into())));
 	}

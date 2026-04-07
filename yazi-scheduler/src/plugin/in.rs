@@ -22,9 +22,9 @@ impl TaskIn for PluginIn {
 		}
 	}
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
-			Self::Entry(r#in) => _ = r#in.with_id(id),
+			Self::Entry(r#in) => _ = r#in.set_id(id),
 		}
 		self
 	}
@@ -53,7 +53,7 @@ impl TaskIn for PluginInEntry {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}

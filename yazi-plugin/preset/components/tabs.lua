@@ -16,8 +16,9 @@ function Tabs:redraw()
 		return {}
 	end
 
+	local style = self:style()
 	local lines = {
-		ui.Line(th.tabs.sep_outer.open):fg(th.tabs.inactive:bg()),
+		ui.Line(th.tabs.sep_outer.open):fg(style.inactive:bg()),
 	}
 
 	local pos = lines[1]:width()
@@ -26,21 +27,29 @@ function Tabs:redraw()
 		local name = ui.truncate(string.format(" %d %s ", i, cx.tabs[i].name), { max = max })
 		if i == cx.tabs.idx then
 			lines[#lines + 1] = ui.Line {
-				ui.Span(th.tabs.sep_inner.open):fg(th.tabs.active:bg()):bg(th.tabs.inactive:bg()),
-				ui.Span(name):style(th.tabs.active),
-				ui.Span(th.tabs.sep_inner.close):fg(th.tabs.active:bg()):bg(th.tabs.inactive:bg()),
+				ui.Span(th.tabs.sep_inner.open):fg(style.active:bg()):bg(style.inactive:bg()),
+				ui.Span(name):style(style.active),
+				ui.Span(th.tabs.sep_inner.close):fg(style.active:bg()):bg(style.inactive:bg()),
 			}
 		else
-			lines[#lines + 1] = ui.Line(name):style(th.tabs.inactive)
+			lines[#lines + 1] = ui.Line(name):style(style.inactive)
 		end
 		self._offsets[i], pos = pos, pos + lines[#lines]:width()
 	end
 
-	lines[#lines + 1] = ui.Line(th.tabs.sep_outer.close):fg(th.tabs.inactive:bg())
+	lines[#lines + 1] = ui.Line(th.tabs.sep_outer.close):fg(style.inactive:bg())
 	return ui.Line(lines):area(self._area)
 end
 
 function Tabs.height() return #cx.tabs > 1 and 1 or 0 end
+
+function Tabs:style()
+	local s = ui.Style():fg("reset"):bg("reset")
+	return {
+		active = s:patch(th.tabs.active),
+		inactive = s:patch(th.tabs.inactive),
+	}
+end
 
 function Tabs:inner_width()
 	local si, so = th.tabs.sep_inner, th.tabs.sep_outer

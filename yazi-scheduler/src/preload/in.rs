@@ -17,7 +17,7 @@ impl TaskIn for PreloadIn {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}

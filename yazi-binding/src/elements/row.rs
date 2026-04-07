@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 
 use super::Cell;
 
@@ -52,7 +52,7 @@ impl FromLua for Row {
 }
 
 impl UserData for Row {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, style);
 
 		methods.add_function_mut("height", |_, (ud, value): (AnyUserData, u16)| {

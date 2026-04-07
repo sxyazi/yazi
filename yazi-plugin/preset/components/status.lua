@@ -26,13 +26,13 @@ function Status:new(area, tab)
 end
 
 function Status:style()
-	local m = th.mode
+	local m, s = th.mode, ui.Style():fg("reset"):bg("reset")
 	if self._tab.mode.is_select then
-		return { main = m.select_main, alt = m.select_alt }
+		return { main = s:patch(m.select_main), alt = s:patch(m.select_alt) }
 	elseif self._tab.mode.is_unset then
-		return { main = m.unset_main, alt = m.unset_alt }
+		return { main = s:patch(m.unset_main), alt = s:patch(m.unset_alt) }
 	else
-		return { main = m.normal_main, alt = m.normal_alt }
+		return { main = s:patch(m.normal_main), alt = s:patch(m.normal_alt) }
 	end
 end
 

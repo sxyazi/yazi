@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{MetaMethod, UserData};
+use mlua::{MetaMethod, UserData, UserDataMethods};
 
 pub struct ImageInfo(yazi_adapter::ImageInfo);
 
@@ -28,7 +28,7 @@ impl UserData for ImageInfo {
 struct ImageFormat(yazi_adapter::ImageFormat);
 
 impl UserData for ImageFormat {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| {
 			use yazi_adapter::ImageFormat as F;
 
@@ -58,7 +58,7 @@ impl UserData for ImageFormat {
 struct ImageColor(yazi_adapter::ImageColor);
 
 impl UserData for ImageColor {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| {
 			use yazi_adapter::ImageColor as C;
 

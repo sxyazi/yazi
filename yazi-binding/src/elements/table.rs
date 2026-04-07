@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, Value};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
 use ratatui::widgets::{StatefulWidget, Widget};
 
 use super::{Area, Row};
@@ -105,7 +105,7 @@ impl Widget for &Table {
 }
 
 impl UserData for Table {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 
 		methods.add_function_mut("header", |_, (ud, header): (AnyUserData, Row)| {

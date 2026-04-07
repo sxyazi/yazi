@@ -117,37 +117,39 @@ macro_rules! impl_style_method {
 macro_rules! impl_style_shorthands {
 	($methods:ident, $($field:tt).+) => {
 		$methods.add_function_mut("fg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+			use $crate::elements::Color;
 			use mlua::FromLua;
 			use ratatui::style::Modifier;
 
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			match value {
-				mlua::Value::Boolean(true) if me.add_modifier.contains(Modifier::REVERSED) && !me.sub_modifier.contains(Modifier::REVERSED) => {
-					me.bg.map($crate::Color).into_lua(lua)
+				mlua::Value::Boolean(true) if me.has_modifier(Modifier::REVERSED) => {
+					me.bg.map(Color).into_lua(lua)
 				}
 				mlua::Value::Nil | mlua::Value::Boolean(_) => {
-					me.fg.map($crate::Color).into_lua(lua)
+					me.fg.map(Color).into_lua(lua)
 				}
 				_ => {
-					me.fg = Some($crate::Color::from_lua(value, lua)?.0);
+					me.fg = Some(Color::from_lua(value, lua)?.0);
 					ud.into_lua(lua)
 				}
 			}
 		});
 		$methods.add_function_mut("bg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+			use $crate::elements::Color;
 			use mlua::FromLua;
 			use ratatui::style::Modifier;
 
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			match value {
-				mlua::Value::Boolean(true) if me.add_modifier.contains(Modifier::REVERSED) && !me.sub_modifier.contains(Modifier::REVERSED) => {
-					me.fg.map($crate::Color).into_lua(lua)
+				mlua::Value::Boolean(true) if me.has_modifier(Modifier::REVERSED) => {
+					me.fg.map(Color).into_lua(lua)
 				}
 				mlua::Value::Nil | mlua::Value::Boolean(_) => {
-					me.bg.map($crate::Color).into_lua(lua)
+					me.bg.map(Color).into_lua(lua)
 				}
 				_ => {
-					me.bg = Some($crate::Color::from_lua(value, lua)?.0);
+					me.bg = Some(Color::from_lua(value, lua)?.0);
 					ud.into_lua(lua)
 				}
 			}

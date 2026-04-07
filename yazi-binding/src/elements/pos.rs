@@ -1,6 +1,6 @@
 use std::{ops::Deref, str::FromStr};
 
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use yazi_shim::strum::IntoStr;
 
 use super::Pad;
@@ -90,7 +90,7 @@ impl UserData for Pos {
 		fields.add_field_method_get("h", |_, me| Ok(me.offset.height));
 	}
 
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_function_mut("pad", |_, (ud, pad): (AnyUserData, Pad)| {
 			ud.borrow_mut::<Self>()?.pad = pad;
 			Ok(ud)

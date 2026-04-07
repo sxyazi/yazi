@@ -19,7 +19,7 @@ impl Ongoing {
 		static IDS: Ids = Ids::new();
 		let id = IDS.next();
 
-		let title = r#in.with_id(id).title().into_owned();
+		let title = r#in.set_id(id).title().into_owned();
 		let prog = T::Prog::default().into();
 
 		self.inner.entry(id).insert(Task::new(id, title, prog)).into_mut()
