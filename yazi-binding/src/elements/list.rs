@@ -1,4 +1,4 @@
-use mlua::{IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Text};
@@ -43,7 +43,7 @@ impl Widget for &List {
 }
 
 impl UserData for List {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 	}
 }

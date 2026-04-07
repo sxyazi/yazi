@@ -96,6 +96,7 @@ function Entity:redraw()
 	return ui.Line(lines):style(self:style())
 end
 
+---@return ui.Style
 function Entity:style()
 	local s = self._file:style() or ui.Style()
 	if not self._file.is_hovered then
@@ -109,6 +110,7 @@ function Entity:style()
 	end
 end
 
+---@return ui.Style?
 function Entity:style_rev()
 	local s = self:style()
 	local bg = s:bg(true)

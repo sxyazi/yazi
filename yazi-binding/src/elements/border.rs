@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::{Borders, Widget};
 
 use super::{Area, Edge};
@@ -75,7 +75,7 @@ impl Widget for &Border {
 }
 
 impl UserData for Border {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 

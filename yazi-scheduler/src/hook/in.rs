@@ -46,7 +46,7 @@ impl TaskIn for HookIn {
 		}
 	}
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
 			Self::Copy(r#in) => r#in.id = id,
 			Self::Cut(r#in) => r#in.id = id,
@@ -89,7 +89,7 @@ impl TaskIn for HookInOutCopy {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -127,7 +127,7 @@ impl TaskIn for HookInOutCut {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -164,7 +164,7 @@ impl TaskIn for HookInDelete {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -193,7 +193,7 @@ impl TaskIn for HookInTrash {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -224,7 +224,7 @@ impl TaskIn for HookInOutLink {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -263,7 +263,7 @@ impl TaskIn for HookInOutHardlink {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -300,7 +300,7 @@ impl TaskIn for HookInDownload {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -329,7 +329,7 @@ impl TaskIn for HookInUpload {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -359,7 +359,7 @@ impl TaskIn for HookInPreload {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}

@@ -7,7 +7,7 @@ pub(crate) trait TaskIn {
 
 	fn id(&self) -> Id;
 
-	fn with_id(&mut self, id: Id) -> &mut Self;
+	fn set_id(&mut self, id: Id) -> &mut Self;
 
 	fn title(&self) -> Cow<'_, str>;
 }

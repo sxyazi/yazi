@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, Value};
+use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataMethods, Value};
 use paste::paste;
 
 use super::{Lives, PtrCell};
@@ -38,7 +38,7 @@ impl Core {
 }
 
 impl UserData for Core {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: mlua::String| {
 			macro_rules! reuse {
 				($key:ident, $value:expr) => {

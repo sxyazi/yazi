@@ -50,24 +50,24 @@ impl TaskIn for FileIn {
 		}
 	}
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
-			Self::Copy(r#in) => _ = r#in.with_id(id),
-			Self::CopyDo(r#in) => _ = r#in.with_id(id),
-			Self::Cut(r#in) => _ = r#in.with_id(id),
-			Self::CutDo(r#in) => _ = r#in.with_id(id),
-			Self::Link(r#in) => _ = r#in.with_id(id),
-			Self::LinkDo(r#in) => _ = r#in.with_id(id),
-			Self::Hardlink(r#in) => _ = r#in.with_id(id),
-			Self::HardlinkDo(r#in) => _ = r#in.with_id(id),
-			Self::Delete(r#in) => _ = r#in.with_id(id),
-			Self::DeleteDo(r#in) => _ = r#in.with_id(id),
-			Self::Trash(r#in) => _ = r#in.with_id(id),
-			Self::TrashDo(r#in) => _ = r#in.with_id(id),
-			Self::Download(r#in) => _ = r#in.with_id(id),
-			Self::DownloadDo(r#in) => _ = r#in.with_id(id),
-			Self::Upload(r#in) => _ = r#in.with_id(id),
-			Self::UploadDo(r#in) => _ = r#in.with_id(id),
+			Self::Copy(r#in) => _ = r#in.set_id(id),
+			Self::CopyDo(r#in) => _ = r#in.set_id(id),
+			Self::Cut(r#in) => _ = r#in.set_id(id),
+			Self::CutDo(r#in) => _ = r#in.set_id(id),
+			Self::Link(r#in) => _ = r#in.set_id(id),
+			Self::LinkDo(r#in) => _ = r#in.set_id(id),
+			Self::Hardlink(r#in) => _ = r#in.set_id(id),
+			Self::HardlinkDo(r#in) => _ = r#in.set_id(id),
+			Self::Delete(r#in) => _ = r#in.set_id(id),
+			Self::DeleteDo(r#in) => _ = r#in.set_id(id),
+			Self::Trash(r#in) => _ = r#in.set_id(id),
+			Self::TrashDo(r#in) => _ = r#in.set_id(id),
+			Self::Download(r#in) => _ = r#in.set_id(id),
+			Self::DownloadDo(r#in) => _ = r#in.set_id(id),
+			Self::Upload(r#in) => _ = r#in.set_id(id),
+			Self::UploadDo(r#in) => _ = r#in.set_id(id),
 		}
 		self
 	}
@@ -145,7 +145,7 @@ impl TaskIn for FileInCopy {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -188,7 +188,7 @@ impl TaskIn for FileInCut {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -240,7 +240,7 @@ impl TaskIn for FileInLink {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -266,7 +266,7 @@ impl TaskIn for FileInHardlink {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -289,7 +289,7 @@ impl TaskIn for FileInDelete {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -309,7 +309,7 @@ impl TaskIn for FileInTrash {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -331,7 +331,7 @@ impl TaskIn for FileInDownload {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -353,7 +353,7 @@ impl TaskIn for FileInUpload {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}

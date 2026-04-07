@@ -25,11 +25,11 @@ impl TaskIn for ProcessIn {
 		}
 	}
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
-			Self::Block(r#in) => _ = r#in.with_id(id),
-			Self::Orphan(r#in) => _ = r#in.with_id(id),
-			Self::Bg(r#in) => _ = r#in.with_id(id),
+			Self::Block(r#in) => _ = r#in.set_id(id),
+			Self::Orphan(r#in) => _ = r#in.set_id(id),
+			Self::Bg(r#in) => _ = r#in.set_id(id),
 		};
 		self
 	}
@@ -57,7 +57,7 @@ impl TaskIn for ProcessInBlock {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -85,7 +85,7 @@ impl TaskIn for ProcessInOrphan {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}
@@ -114,7 +114,7 @@ impl TaskIn for ProcessInBg {
 
 	fn id(&self) -> Id { self.id }
 
-	fn with_id(&mut self, id: Id) -> &mut Self {
+	fn set_id(&mut self, id: Id) -> &mut Self {
 		self.id = id;
 		self
 	}

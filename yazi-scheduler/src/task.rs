@@ -40,7 +40,7 @@ impl Task {
 
 	pub(super) fn with_hook(&mut self, hook: impl Into<HookIn>) -> &mut Self {
 		let mut hook = hook.into();
-		hook.with_id(self.id);
+		hook.set_id(self.id);
 
 		self.hook = Some(hook);
 		self
