@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Upgrade Lua to 5.5 ([#3633])
 - Change preset <kbd>t</kbd> for creating tabs to <kbd>t</kbd> ⇒ <kbd>t</kbd> to avoid conflict with new <kbd>t</kbd> ⇒ <kbd>r</kbd> for renaming tabs ([#3666])
+- Make `ui.Style` immutable ([#3862])
 - Remove `title_format` in favor of new `ind-app-title` DDS event for flexible title customization ([#3684])
 - Remove `micro_workers` and `macro_workers` in favor of finer control over concurrent workers ([#3661])
 
@@ -1697,3 +1698,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3813]: https://github.com/sxyazi/yazi/pull/3813
 [#3846]: https://github.com/sxyazi/yazi/pull/3846
 [#3854]: https://github.com/sxyazi/yazi/pull/3854
+[#3862]: https://github.com/sxyazi/yazi/pull/3862
