@@ -3,7 +3,7 @@ use std::ops::Deref;
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 use yazi_fs::FilesOp;
-use yazi_shared::{timestamp_us, url::{Url, UrlBuf, UrlBufCov, UrlCov}};
+use yazi_shared::{timestamp_us, url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlCovMapExt}};
 
 #[derive(Default)]
 pub struct Selected {
@@ -66,7 +66,7 @@ impl Selected {
 		self.inner.extend(urls.iter().enumerate().map(|(i, u)| (u.into(), now + i as u64)));
 
 		for u in parents {
-			*self.parents.entry_ref(&UrlCov::new(u)).or_default() += self.inner.len() - len;
+			*self.parents.get_or_insert_default(UrlCov::new(u)) += self.inner.len() - len;
 		}
 		urls.len()
 	}

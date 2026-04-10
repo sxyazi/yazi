@@ -1,14 +1,19 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PasteForm {
+	#[serde(default)]
 	pub force:  bool,
+	#[serde(default)]
 	pub follow: bool,
 }
 
-impl From<ActionCow> for PasteForm {
-	fn from(a: ActionCow) -> Self { Self { force: a.bool("force"), follow: a.bool("follow") } }
+impl TryFrom<ActionCow> for PasteForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for PasteForm {

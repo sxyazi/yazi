@@ -1,35 +1,45 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_boot::BOOT;
 use yazi_fs::path::{clean_url, expand_url};
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 use yazi_vfs::provider;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct TabCreateForm {
-	pub url: Option<UrlCow<'static>>,
+	#[serde(alias = "0")]
+	pub target:  Option<UrlBuf>,
+	#[serde(default)]
+	pub current: bool,
+	#[serde(default)]
+	pub raw:     bool,
 }
 
-impl From<ActionCow> for TabCreateForm {
-	fn from(mut a: ActionCow) -> Self {
-		if a.bool("current") {
-			return Self { url: None };
+impl TryFrom<ActionCow> for TabCreateForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		let mut me: Self = a.deserialize()?;
+
+		if me.current {
+			me.target = None;
+		} else if me.target.is_none() {
+			me.target = Some(BOOT.cwds[0].clone());
+		} else if let Some(mut target) = me.target {
+			if !me.raw {
+				target = expand_url(target).into_owned();
+			}
+
+			if let Some(u) = provider::try_absolute(&target)
+				&& u.is_owned()
+			{
+				target = u.into_owned();
+			}
+
+			me.target = Some(clean_url(target));
 		}
 
-		let Ok(mut url) = a.take_first() else {
-			return Self { url: Some(UrlCow::from(&BOOT.cwds[0])) };
-		};
-
-		if !a.bool("raw") {
-			url = expand_url(url);
-		}
-
-		if let Some(u) = provider::try_absolute(&url)
-			&& u.is_owned()
-		{
-			url = u.into_static();
-		}
-
-		Self { url: Some(clean_url(url).into()) }
+		Ok(me)
 	}
 }
 

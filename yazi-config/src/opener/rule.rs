@@ -2,6 +2,8 @@ use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_fs::Splatter;
 
+use crate::Platform;
+
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OpenerRule {
 	pub run:    String,
@@ -11,7 +13,8 @@ pub struct OpenerRule {
 	pub orphan: bool,
 	#[serde(default)]
 	pub desc:   String,
-	pub r#for:  Option<String>,
+	#[serde(default)]
+	pub r#for:  Platform,
 	#[serde(skip)]
 	pub spread: bool,
 }

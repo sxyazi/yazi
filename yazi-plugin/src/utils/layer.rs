@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
-use yazi_config::{keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_config::{Platform, keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
@@ -28,7 +28,7 @@ impl Utils {
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
 						run:   vec![relay!(which:callback, [i + 1])],
 						desc:  cand.raw_get("desc").ok(),
-						r#for: None,
+						r#for: Platform::All,
 					}))
 				})
 				.collect::<mlua::Result<_>>()?;

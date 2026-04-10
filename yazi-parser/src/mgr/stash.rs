@@ -1,13 +1,14 @@
-use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::{SER_OPT, Url};
+use yazi_core::mgr::CdSource;
 use yazi_shared::{event::ActionCow, url::UrlBuf};
 
-use crate::mgr::{CdForm, CdSource};
+use crate::mgr::CdForm;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct StashForm {
+	#[serde(alias = "0")]
 	pub target: UrlBuf,
 	pub source: CdSource,
 }
@@ -15,11 +16,11 @@ pub struct StashForm {
 impl TryFrom<ActionCow> for StashForm {
 	type Error = anyhow::Error;
 
-	fn try_from(_: ActionCow) -> Result<Self, Self::Error> { bail!("unsupported") }
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
-impl From<CdForm> for StashForm {
-	fn from(form: CdForm) -> Self { Self { target: form.target, source: form.source } }
+impl From<&CdForm> for StashForm {
+	fn from(form: &CdForm) -> Self { Self { target: form.target.clone(), source: form.source } }
 }
 
 impl FromLua for StashForm {

@@ -4,6 +4,7 @@ use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
+use yazi_core::mgr::CdSource;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, path::{clean_url, expand_url}};
 use yazi_macro::{act, err, render, succ};
@@ -26,14 +27,15 @@ impl Actor for Cd {
 		act!(mgr:escape_visual, cx)?;
 		if form.interactive {
 			return Self::cd_interactive(cx);
-		}
-
-		let tab = cx.tab_mut();
-		if form.target == *tab.cwd() {
+		} else if form.target == *cx.cwd() {
 			succ!();
 		}
 
+		// Stash first so it's possible to access the original cwd in hooks
+		act!(mgr:stash, cx, &form).ok();
+
 		// Take parent to history
+		let tab = cx.tab_mut();
 		if let Some(t) = tab.parent.take() {
 			tab.history.insert(t.url.clone(), t);
 		}
@@ -54,7 +56,6 @@ impl Actor for Cd {
 		act!(mgr:sort, cx).ok();
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
-		act!(mgr:stash, cx, form).ok();
 		act!(app:title, cx).ok();
 		succ!(render!());
 	}
@@ -77,7 +78,7 @@ impl Cd {
 
 						let Ok(file) = File::new(&url).await else { return };
 						if file.is_dir() {
-							return MgrProxy::cd(&url);
+							return MgrProxy::cd(&url, CdSource::Cd);
 						}
 
 						if let Some(p) = url.parent() {

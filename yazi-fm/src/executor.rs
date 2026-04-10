@@ -101,6 +101,7 @@ impl<'a> Executor<'a> {
 		on!(forward);
 		on!(reveal);
 		on!(follow);
+		on!(stash);
 
 		// Toggle
 		on!(toggle);

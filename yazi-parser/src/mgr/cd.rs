@@ -1,41 +1,46 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use yazi_core::mgr::CdSource;
 use yazi_fs::path::{clean_url, expand_url};
 use yazi_shared::{event::ActionCow, url::{Url, UrlBuf}};
 use yazi_vfs::provider;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct CdForm {
+	#[serde(alias = "0")]
 	pub target:      UrlBuf,
+	#[serde(default)]
 	pub interactive: bool,
+	#[serde(default)]
+	pub raw:         bool,
+	#[serde(default)]
 	pub source:      CdSource,
 }
 
-impl From<ActionCow> for CdForm {
-	fn from(mut a: ActionCow) -> Self {
-		let mut target = a.take_first().unwrap_or_default();
+impl TryFrom<ActionCow> for CdForm {
+	type Error = anyhow::Error;
 
-		if !a.bool("raw") {
-			target = expand_url(target);
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		let mut me: Self = a.deserialize()?;
+
+		if !me.raw {
+			me.target = expand_url(me.target).into_owned();
 		}
 
-		if let Some(u) = provider::try_absolute(&target)
+		if let Some(u) = provider::try_absolute(&me.target)
 			&& u.is_owned()
 		{
-			target = u.into_static();
+			me.target = u.into_owned();
 		}
 
-		Self {
-			target:      clean_url(target),
-			interactive: a.bool("interactive"),
-			source:      CdSource::Cd,
-		}
+		me.target = clean_url(me.target);
+		Ok(me)
 	}
 }
 
 impl From<(UrlBuf, CdSource)> for CdForm {
 	fn from((target, source): (UrlBuf, CdSource)) -> Self {
-		Self { target, interactive: false, source }
+		Self { target, interactive: false, raw: false, source }
 	}
 }
 
@@ -49,20 +54,4 @@ impl FromLua for CdForm {
 
 impl IntoLua for CdForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
-}
-
-// --- Source
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum CdSource {
-	Tab,
-	Cd,
-	Reveal,
-	Enter,
-	Leave,
-	Follow,
-	Forward,
-	Back,
-	Escape,
-	Displace,
 }

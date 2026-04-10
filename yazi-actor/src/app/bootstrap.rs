@@ -1,8 +1,9 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_boot::BOOT;
+use yazi_core::mgr::CdSource;
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidForm, mgr::CdSource};
+use yazi_parser::VoidForm;
 use yazi_shared::{data::Data, strand::StrandLike, url::UrlLike};
 
 use crate::Actor;

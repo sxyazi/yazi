@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use yazi_shared::Id;
+use yazi_shared::{Id, SStr};
 
-pub(crate) trait TaskIn {
+pub trait TaskIn {
 	type Prog;
 
 	fn id(&self) -> Id;
@@ -10,4 +10,6 @@ pub(crate) trait TaskIn {
 	fn set_id(&mut self, id: Id) -> &mut Self;
 
 	fn title(&self) -> Cow<'_, str>;
+
+	fn set_title(&mut self, _title: impl Into<SStr>) -> &mut Self { self }
 }

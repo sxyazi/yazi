@@ -82,6 +82,10 @@ impl From<Url<'_>> for UrlBufCov {
 	fn from(value: Url<'_>) -> Self { Self(value.to_owned()) }
 }
 
+impl From<UrlCov<'_>> for UrlBufCov {
+	fn from(value: UrlCov<'_>) -> Self { Self(UrlBuf::from(&value.0)) }
+}
+
 impl From<&UrlCov<'_>> for UrlBufCov {
 	fn from(value: &UrlCov<'_>) -> Self { Self(UrlBuf::from(&value.0)) }
 }

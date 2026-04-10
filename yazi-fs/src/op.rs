@@ -2,7 +2,7 @@ use std::path::Path;
 
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
-use yazi_shared::{Id, Ids, path::PathBufDyn, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, Ids, path::PathBufDyn, url::{UrlBuf, UrlLike, UrlMapExt}};
 
 use super::File;
 use crate::{cha::Cha, error::Error};
@@ -52,15 +52,15 @@ impl FilesOp {
 	}
 
 	pub fn rename(map: HashMap<UrlBuf, File>) {
-		let mut parents: HashMap<_, (HashSet<_>, HashMap<_, _>)> = Default::default();
+		let mut parents: HashMap<UrlBuf, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
 			let Some(o_p) = o.parent() else { continue };
 			let Some(n_p) = n.url.parent() else { continue };
 			if o_p == n_p {
-				parents.entry_ref(&o_p).or_default().1.insert(o.urn().into(), n);
+				parents.get_or_insert_default(o_p).1.insert(o.urn().into(), n);
 			} else {
-				parents.entry_ref(&o_p).or_default().0.insert(o.urn().into());
-				parents.entry_ref(&n_p).or_default().1.insert(n.urn().into(), n);
+				parents.get_or_insert_default(o_p).0.insert(o.urn().into());
+				parents.get_or_insert_default(n_p).1.insert(n.urn().into(), n);
 			}
 		}
 		for (p, (o, n)) in parents {

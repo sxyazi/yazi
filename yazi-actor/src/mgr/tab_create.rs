@@ -1,7 +1,7 @@
 use anyhow::Result;
-use yazi_core::tab::Tab;
+use yazi_core::{mgr::CdSource, tab::Tab};
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::{CdSource, TabCreateForm};
+use yazi_parser::mgr::TabCreateForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
@@ -25,8 +25,8 @@ impl Actor for TabCreate {
 		}
 
 		let mut tab = Tab::default();
-		let (cd, url) = if let Some(wd) = form.url {
-			(true, wd.into_owned())
+		let (cd, url) = if let Some(target) = form.target {
+			(true, target)
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();
 			(false, h.url.clone())

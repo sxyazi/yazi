@@ -3,6 +3,7 @@ use std::ops::Deref;
 use yazi_shared::event::ActionCow;
 
 use super::Chord;
+use crate::Platform;
 
 #[derive(Clone, Debug)]
 pub enum ChordCow {
@@ -31,7 +32,7 @@ impl Deref for ChordCow {
 
 impl Default for ChordCow {
 	fn default() -> Self {
-		const C: &Chord = &Chord { on: vec![], run: vec![], desc: None, r#for: None };
+		const C: &Chord = &Chord { on: vec![], run: vec![], desc: None, r#for: Platform::All };
 		Self::Borrowed(C)
 	}
 }

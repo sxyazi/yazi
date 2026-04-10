@@ -6,6 +6,7 @@ use serde::Deserialize;
 use yazi_shared::{Layer, Source, event::Action};
 
 use super::Key;
+use crate::Platform;
 
 static RE: OnceLock<Regex> = OnceLock::new();
 
@@ -16,7 +17,8 @@ pub struct Chord {
 	#[serde(deserialize_with = "super::deserialize_run")]
 	pub run:   Vec<Action>,
 	pub desc:  Option<String>,
-	pub r#for: Option<String>,
+	#[serde(default)]
+	pub r#for: Platform,
 }
 
 impl PartialEq for Chord {

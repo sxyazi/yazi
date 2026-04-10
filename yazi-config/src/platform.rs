@@ -1,9 +1,26 @@
-#[inline]
-pub(crate) fn check_for(r#for: Option<&str>) -> bool {
-	match r#for.as_ref().map(|s| s.as_ref()) {
-		Some("unix") if cfg!(unix) => true,
-		Some(os) if os == std::env::consts::OS => true,
-		Some(_) => false,
-		None => true,
+use serde::Deserialize;
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(rename_all = "kebab-case")]
+pub enum Platform {
+	#[default]
+	All,
+	Linux,
+	Macos,
+	Windows,
+	Android,
+	Unix,
+}
+
+impl Platform {
+	pub(crate) fn matches(self) -> bool {
+		match self {
+			Self::All => true,
+			Self::Linux => cfg!(target_os = "linux"),
+			Self::Macos => cfg!(target_os = "macos"),
+			Self::Windows => cfg!(windows),
+			Self::Android => cfg!(target_os = "android"),
+			Self::Unix => cfg!(unix),
+		}
 	}
 }

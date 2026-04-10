@@ -3,7 +3,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateFilesForm;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::{data::Data, url::{UrlLike, UrlMapExt}};
 use yazi_watcher::local::LINKED;
 
 use crate::{Actor, Ctx};
@@ -87,7 +87,7 @@ impl UpdateFiles {
 
 	fn update_hovered(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let (id, url) = (cx.tab().id, op.cwd());
-		let folder = cx.tab_mut().history.entry_ref(url).or_insert_with(|| Folder::from(url));
+		let folder = cx.tab_mut().history.get_or_insert_with(url, |u| Folder::from(u));
 
 		if folder.update_pub(id, op) {
 			act!(mgr:peek, cx, true)?;
@@ -101,15 +101,11 @@ impl UpdateFiles {
 			|(p, n)| matches!(op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(&n)),
 		);
 
-		tab
-			.history
-			.entry_ref(op.cwd())
-			.or_insert_with(|| Folder::from(op.cwd()))
-			.update_pub(tab.id, op);
-
+		tab.history.get_or_insert_with(op.cwd(), |u| Folder::from(u)).update_pub(tab.id, op);
 		if leave {
 			act!(mgr:leave, cx)?;
 		}
+
 		succ!();
 	}
 }

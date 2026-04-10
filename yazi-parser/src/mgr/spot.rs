@@ -1,13 +1,16 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct SpotOpt {
 	pub skip: Option<usize>,
 }
 
-impl From<ActionCow> for SpotOpt {
-	fn from(a: ActionCow) -> Self { Self { skip: a.get("skip").ok() } }
+impl TryFrom<ActionCow> for SpotOpt {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl From<usize> for SpotOpt {

@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_core::tab::PreviewLock;
 use yazi_shared::event::ActionCow;
@@ -12,15 +12,9 @@ impl TryFrom<ActionCow> for UpdatePeekedForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		if let Some(opt) = a.take_any2("opt") {
-			return opt;
-		}
-
-		let Some(lock) = a.take_any("lock") else {
-			bail!("Invalid 'lock' in UpdatePeekedForm");
-		};
-
-		Ok(Self { lock })
+		Ok(Self {
+			lock: a.take_any("lock").ok_or_else(|| anyhow!("Invalid 'lock' in UpdatePeekedForm"))?,
+		})
 	}
 }
 

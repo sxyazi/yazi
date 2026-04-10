@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_core::spot::SpotLock;
 use yazi_shared::event::ActionCow;
@@ -12,11 +12,9 @@ impl TryFrom<ActionCow> for UpdateSpottedForm {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Some(lock) = a.take_any("lock") else {
-			bail!("Invalid 'lock' in UpdateSpottedForm");
-		};
-
-		Ok(Self { lock })
+		Ok(Self {
+			lock: a.take_any("lock").ok_or_else(|| anyhow!("Invalid 'lock' in UpdateSpottedForm"))?,
+		})
 	}
 }
 
