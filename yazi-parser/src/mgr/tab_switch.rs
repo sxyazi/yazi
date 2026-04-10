@@ -1,16 +1,19 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct TabSwitchForm {
+	#[serde(alias = "0")]
 	pub step:     isize,
+	#[serde(default)]
 	pub relative: bool,
 }
 
-impl From<ActionCow> for TabSwitchForm {
-	fn from(a: ActionCow) -> Self {
-		Self { step: a.first().unwrap_or(0), relative: a.bool("relative") }
-	}
+impl TryFrom<ActionCow> for TabSwitchForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for TabSwitchForm {

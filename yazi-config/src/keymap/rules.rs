@@ -7,7 +7,7 @@ use yazi_codegen::DeserializeOver2;
 use yazi_shared::Layer;
 
 use super::Chord;
-use crate::{Preset, check_for, keymap::Key};
+use crate::{Preset, keymap::Key};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct KeymapRules {
@@ -39,9 +39,8 @@ impl KeymapRules {
 			self.keymap.into_iter().filter(|v| !a_seen.contains(&on(v))),
 			self.append_keymap.into_iter().filter(|v| !b_seen.contains(&on(v))),
 		)
-		.map(|mut chord| (chord.r#for.take(), chord))
-		.filter(|(r#for, chord)| !chord.noop() && check_for(r#for.as_deref()))
-		.map(|(_, chord)| chord.reshape(layer))
+		.filter(|chord| !chord.noop() && chord.r#for.matches())
+		.map(|chord| chord.reshape(layer))
 		.collect::<Result<_>>()?;
 
 		Ok(Self { keymap, ..Default::default() })

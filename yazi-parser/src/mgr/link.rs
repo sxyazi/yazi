@@ -1,14 +1,19 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct LinkForm {
+	#[serde(default)]
 	pub relative: bool,
+	#[serde(default)]
 	pub force:    bool,
 }
 
-impl From<ActionCow> for LinkForm {
-	fn from(a: ActionCow) -> Self { Self { relative: a.bool("relative"), force: a.bool("force") } }
+impl TryFrom<ActionCow> for LinkForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for LinkForm {

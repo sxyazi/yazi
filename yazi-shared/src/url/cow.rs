@@ -261,21 +261,6 @@ impl<'a> UrlCow<'a> {
 
 	pub fn into_path(self) -> PathCow<'a> { self.into_pair().1 }
 
-	pub fn into_static(self) -> UrlCow<'static> {
-		match self {
-			UrlCow::Regular(loc) => UrlCow::Regular(loc.into_owned().into()),
-			UrlCow::Search { loc, domain } => {
-				UrlCow::Search { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
-			}
-			UrlCow::Archive { loc, domain } => {
-				UrlCow::Archive { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
-			}
-			UrlCow::Sftp { loc, domain } => {
-				UrlCow::Sftp { loc: loc.into_owned().into(), domain: domain.into_owned().into() }
-			}
-		}
-	}
-
 	pub fn to_owned(&self) -> UrlBuf { self.as_url().into() }
 }
 

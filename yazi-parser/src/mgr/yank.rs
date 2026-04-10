@@ -1,13 +1,17 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct YankForm {
+	#[serde(default)]
 	pub cut: bool,
 }
 
-impl From<ActionCow> for YankForm {
-	fn from(a: ActionCow) -> Self { Self { cut: a.bool("cut") } }
+impl TryFrom<ActionCow> for YankForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for YankForm {

@@ -1,13 +1,17 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct SeekForm {
+	#[serde(alias = "0")]
 	pub units: i16,
 }
 
-impl From<ActionCow> for SeekForm {
-	fn from(a: ActionCow) -> Self { Self { units: a.first().unwrap_or(0) } }
+impl TryFrom<ActionCow> for SeekForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for SeekForm {

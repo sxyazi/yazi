@@ -1,41 +1,53 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
+use yazi_core::mgr::CdSource;
 use yazi_fs::path::{clean_url, expand_url};
 use yazi_shared::{event::ActionCow, url::UrlBuf};
 use yazi_vfs::provider;
 
-use crate::mgr::CdSource;
-
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct RevealForm {
+	#[serde(alias = "0")]
 	pub target:   UrlBuf,
+	#[serde(default)]
+	pub raw:      bool,
+	#[serde(default = "default_source")]
 	pub source:   CdSource,
+	#[serde(alias = "no-dummy", default)]
 	pub no_dummy: bool,
 }
 
-impl From<ActionCow> for RevealForm {
-	fn from(mut a: ActionCow) -> Self {
-		let mut target = a.take_first().unwrap_or_default();
+impl TryFrom<ActionCow> for RevealForm {
+	type Error = anyhow::Error;
 
-		if !a.bool("raw") {
-			target = expand_url(target);
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		let mut me: Self = a.deserialize()?;
+
+		if !me.raw {
+			me.target = expand_url(me.target).into_owned();
 		}
 
-		if let Some(u) = provider::try_absolute(&target)
+		if let Some(u) = provider::try_absolute(&me.target)
 			&& u.is_owned()
 		{
-			target = u.into_static();
+			me.target = u.into_owned();
 		}
 
-		Self { target: clean_url(target), source: CdSource::Reveal, no_dummy: a.bool("no-dummy") }
+		me.target = clean_url(me.target);
+		Ok(me)
 	}
 }
 
 impl From<UrlBuf> for RevealForm {
-	fn from(target: UrlBuf) -> Self { Self { target, source: CdSource::Reveal, no_dummy: false } }
+	fn from(target: UrlBuf) -> Self {
+		Self { target, raw: false, source: CdSource::Reveal, no_dummy: false }
+	}
 }
 
 impl From<(UrlBuf, CdSource)> for RevealForm {
-	fn from((target, source): (UrlBuf, CdSource)) -> Self { Self { target, source, no_dummy: false } }
+	fn from((target, source): (UrlBuf, CdSource)) -> Self {
+		Self { target, raw: false, source, no_dummy: false }
+	}
 }
 
 impl FromLua for RevealForm {
@@ -45,3 +57,5 @@ impl FromLua for RevealForm {
 impl IntoLua for RevealForm {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
+
+fn default_source() -> CdSource { CdSource::Reveal }

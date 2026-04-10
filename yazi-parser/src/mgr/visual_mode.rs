@@ -1,13 +1,17 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct VisualModeForm {
+	#[serde(default)]
 	pub unset: bool,
 }
 
-impl From<ActionCow> for VisualModeForm {
-	fn from(a: ActionCow) -> Self { Self { unset: a.bool("unset") } }
+impl TryFrom<ActionCow> for VisualModeForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for VisualModeForm {

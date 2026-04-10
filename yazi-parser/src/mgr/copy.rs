@@ -5,21 +5,20 @@ use serde::Deserialize;
 use strum::EnumString;
 use yazi_shared::{SStr, event::ActionCow, strand::AsStrand};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct CopyForm {
+	#[serde(alias = "0")]
 	pub r#type:    SStr,
+	#[serde(default)]
 	pub separator: CopySeparator,
+	#[serde(default)]
 	pub hovered:   bool,
 }
 
-impl From<ActionCow> for CopyForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self {
-			r#type:    a.take_first().unwrap_or_default(),
-			separator: a.str("separator").parse().unwrap_or_default(),
-			hovered:   a.bool("hovered"),
-		}
-	}
+impl TryFrom<ActionCow> for CopyForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for CopyForm {

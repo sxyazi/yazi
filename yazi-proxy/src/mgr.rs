@@ -1,6 +1,7 @@
-use yazi_core::{mgr::{DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt}, spot::SpotLock};
+use yazi_core::{mgr::{CdSource, DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt}, spot::SpotLock};
 use yazi_macro::{emit, relay};
 use yazi_shared::{Id, SStr, url::UrlBuf};
+use yazi_shim::strum::IntoStr;
 
 pub struct MgrProxy;
 
@@ -9,8 +10,10 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:arrow, [step.into()])));
 	}
 
-	pub fn cd(target: impl Into<UrlBuf>) {
-		emit!(Call(relay!(mgr:cd, [target.into()]).with("raw", true)));
+	pub fn cd(target: impl Into<UrlBuf>, source: CdSource) {
+		emit!(Call(
+			relay!(mgr:cd, [target.into()]).with("raw", true).with("source", source.into_str())
+		));
 	}
 
 	pub fn displace_do(tab: Id, opt: DisplaceOpt) {

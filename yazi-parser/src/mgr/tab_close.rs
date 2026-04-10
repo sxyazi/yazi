@@ -1,13 +1,17 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct TabCloseForm {
+	#[serde(alias = "0", default)]
 	pub idx: usize,
 }
 
-impl From<ActionCow> for TabCloseForm {
-	fn from(a: ActionCow) -> Self { Self { idx: a.first().unwrap_or(0) } }
+impl TryFrom<ActionCow> for TabCloseForm {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl From<usize> for TabCloseForm {

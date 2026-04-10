@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use anyhow::bail;
+use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::event::ActionCow;
@@ -18,11 +18,7 @@ impl TryFrom<ActionCow> for UpdateYankedForm<'_> {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Some(state) = a.take_any("state") else {
-			bail!("Invalid 'state' in UpdateYankedForm");
-		};
-
-		Ok(Self(state))
+		a.take_any(0).map(Self).ok_or_else(|| anyhow!("Invalid payload in UpdateYankedForm"))
 	}
 }
 

@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, mem};
 
 use anyhow::{Context, Result};
-use hashbrown::{HashMap, hash_map::EntryRef};
+use hashbrown::HashMap;
 use mlua::Function;
 
 #[derive(Debug, Default)]
@@ -49,15 +49,9 @@ impl Runtime {
 
 	pub fn put_block(&mut self, f: &Function) -> Option<usize> {
 		let cur = self.frames.back().filter(|f| f.id != "init")?;
-		Some(match self.blocks.entry_ref(&cur.id) {
-			EntryRef::Occupied(mut oe) => {
-				oe.get_mut().push(f.clone());
-				oe.get().len() - 1
-			}
-			EntryRef::Vacant(ve) => {
-				ve.insert(vec![f.clone()]);
-				0
-			}
-		})
+		let blocks = self.blocks.entry_ref(&cur.id).or_default();
+
+		blocks.push(f.clone());
+		Some(blocks.len() - 1)
 	}
 }

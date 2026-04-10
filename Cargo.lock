@@ -588,9 +588,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.59"
+version = "1.2.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7a4d3ec6524d28a329fc53654bbadc9bdd7b0431f5d65f1a56ffb28a1ee5283"
+checksum = "43c5703da9466b66a946814e1adf53ea2c90f10063b86290cc9eb67ce3478a20"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1365,9 +1365,9 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "elliptic-curve"
-version = "0.14.0-rc.29"
+version = "0.14.0-rc.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e84043d573efd4ac9d2d125817979a379204bf7e328b25a4a30487e8d100e618"
+checksum = "7d7a0bfd012613a7bcfe02cbfccf2b846e9ef9e1bccb641c48d461253cfb034d"
 dependencies = [
  "base16ct",
  "crypto-bigint",
@@ -1793,9 +1793,9 @@ dependencies = [
 
 [[package]]
 name = "gif"
-version = "0.14.1"
+version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5df2ba84018d80c213569363bdcd0c64e6933c67fe4c1d60ecf822971a3c35e"
+checksum = "ee8cfcc411d9adbbaba82fb72661cc1bcca13e8bba98b364e62b2dba8f960159"
 dependencies = [
  "color_quant",
  "weezl",
@@ -1851,6 +1851,17 @@ name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash 0.2.0",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
 dependencies = [
  "allocator-api2",
  "equivalent",
@@ -2010,12 +2021,12 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.13.1"
+version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45a8a2b9cb3e0b0c1803dbb0758ffac5de2f425b23c28f518faabd9d805342ff"
+checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
  "equivalent",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "serde",
  "serde_core",
 ]
@@ -2279,9 +2290,9 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "libredox"
-version = "0.1.15"
+version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ddbf48fd451246b1f8c2610bd3b4ac0cc6e149d89832867093ab69a17194f08"
+checksum = "e02f3bb43d335493c96bf3fd3a321600bf6bd07ed34bc64118e9293bdffea46c"
 dependencies = [
  "libc",
 ]
@@ -3176,7 +3187,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "740ebea15c5d1428f910cd1a5f52cebf8d25006245ed8ade92702f4943d91e07"
 dependencies = [
  "base64",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "quick-xml",
  "serde",
  "time",
@@ -4103,7 +4114,7 @@ dependencies = [
  "chrono",
  "hex",
  "indexmap 1.9.3",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "schemars 0.9.0",
  "schemars 1.2.1",
  "serde_core",
@@ -4667,9 +4678,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.51.0"
+version = "1.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bd1c4c0fc4a7ab90fc15ef6daaa3ec3b893f004f915f2392557ed23237820cd"
+checksum = "f66bf9585cda4b724d3e78ab34b73fb2bbaba9011b9bfdf69dc836382ea13b8c"
 dependencies = [
  "bytes",
  "libc",
@@ -4723,7 +4734,7 @@ version = "1.1.2+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81f3d15e84cbcd896376e6730314d59fb5a87f31e4b038454184435cd57defee"
 dependencies = [
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "serde_core",
  "serde_spanned",
  "toml_datetime",
@@ -5153,7 +5164,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb0e353e6a2fbdc176932bbaab493762eb1255a7900fe0fea1a2f96c296cc909"
 dependencies = [
  "anyhow",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "wasm-encoder",
  "wasmparser",
 ]
@@ -5166,7 +5177,7 @@ checksum = "47b807c72e1bac69382b3a6fb3dbe8ea4c0ed87ff5629b8685ae6b9a611028fe"
 dependencies = [
  "bitflags 2.11.0",
  "hashbrown 0.15.5",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "semver",
 ]
 
@@ -5662,7 +5673,7 @@ checksum = "b7c566e0f4b284dd6561c786d9cb0142da491f46a9fbed79ea69cdad5db17f21"
 dependencies = [
  "anyhow",
  "heck",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "prettyplease",
  "syn 2.0.117",
  "wasm-metadata",
@@ -5693,7 +5704,7 @@ checksum = "9d66ea20e9553b30172b5e831994e35fbde2d165325bec84fc43dbf6f4eb9cb2"
 dependencies = [
  "anyhow",
  "bitflags 2.11.0",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "log",
  "serde",
  "serde_derive",
@@ -5712,7 +5723,7 @@ checksum = "ecc8ac4bc1dc3381b7f59c34f00b67e18f910c2c0f50015669dde7def656a736"
 dependencies = [
  "anyhow",
  "id-arena",
- "indexmap 2.13.1",
+ "indexmap 2.14.0",
  "log",
  "semver",
  "serde",
@@ -5745,7 +5756,7 @@ dependencies = [
  "crossterm 0.29.0",
  "either",
  "futures",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "libc",
  "mlua",
  "paste",
@@ -5809,7 +5820,7 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "futures",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "libc",
  "mlua",
  "paste",
@@ -5840,7 +5851,7 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "futures",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "regex",
  "vergen-gitcl",
  "yazi-adapter",
@@ -5869,7 +5880,7 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "crossterm 0.29.0",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "serde",
  "serde_json",
  "tokio",
@@ -5900,8 +5911,8 @@ dependencies = [
  "bitflags 2.11.0",
  "crossterm 0.29.0",
  "globset",
- "hashbrown 0.16.1",
- "indexmap 2.13.1",
+ "hashbrown 0.17.0",
+ "indexmap 2.14.0",
  "ratatui",
  "regex",
  "serde",
@@ -5923,8 +5934,8 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "dyn-clone",
- "hashbrown 0.16.1",
- "indexmap 2.13.1",
+ "hashbrown 0.17.0",
+ "indexmap 2.14.0",
  "mlua",
  "parking_lot",
  "ratatui",
@@ -5959,8 +5970,8 @@ name = "yazi-dds"
 version = "26.2.2"
 dependencies = [
  "anyhow",
- "hashbrown 0.16.1",
- "indexmap 2.13.1",
+ "hashbrown 0.17.0",
+ "indexmap 2.14.0",
  "mlua",
  "ordered-float 5.3.0",
  "parking_lot",
@@ -6060,7 +6071,7 @@ dependencies = [
  "dirs",
  "either",
  "foldhash 0.2.0",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "libc",
  "objc2",
  "parking_lot",
@@ -6097,7 +6108,7 @@ dependencies = [
  "anyhow",
  "bitflags 2.11.0",
  "crossterm 0.29.0",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "mlua",
  "paste",
  "ratatui",
@@ -6172,6 +6183,7 @@ dependencies = [
  "yazi-macro",
  "yazi-scheduler",
  "yazi-shared",
+ "yazi-shim",
  "yazi-widgets",
 ]
 
@@ -6180,7 +6192,7 @@ name = "yazi-runner"
 version = "26.2.2"
 dependencies = [
  "anyhow",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "mlua",
  "parking_lot",
  "thiserror 2.0.18",
@@ -6203,7 +6215,7 @@ dependencies = [
  "anyhow",
  "async-priority-channel",
  "foldhash 0.2.0",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "libc",
  "lru",
  "mlua",
@@ -6245,7 +6257,7 @@ dependencies = [
  "dyn-clone",
  "foldhash 0.2.0",
  "futures",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "libc",
  "memchr",
  "ordered-float 5.3.0",
@@ -6311,7 +6323,7 @@ dependencies = [
  "deadpool",
  "either",
  "futures",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "parking_lot",
  "russh",
  "tokio",
@@ -6329,7 +6341,7 @@ name = "yazi-watcher"
 version = "26.2.2"
 dependencies = [
  "futures",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "notify",
  "parking_lot",
  "percent-encoding",

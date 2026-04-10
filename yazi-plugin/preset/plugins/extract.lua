@@ -6,12 +6,12 @@ function M:setup()
 	ps.sub_remote("extract", function(args)
 		ya.async(function()
 			for i, arg in ipairs(args) do
-				ya.task("plugin", {
+				local in_ = {
 					self._id,
 					args = { arg, "", noisy = #args == 1 },
-					title = "Extract " .. arg,
 					track = i == 1,
-				}):spawn()
+				}
+				ya.task("plugin", in_):name("Extract " .. arg):spawn()
 			end
 		end)
 	end)

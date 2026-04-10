@@ -65,6 +65,11 @@ impl TaskIn for PluginInEntry {
 			Cow::Borrowed(&self.title)
 		}
 	}
+
+	fn set_title(&mut self, title: impl Into<SStr>) -> &mut Self {
+		self.title = title.into();
+		self
+	}
 }
 
 impl PluginInEntry {
@@ -80,11 +85,10 @@ impl FromLua for PluginInEntry {
 		};
 
 		Ok(Self {
-			id:     Id::ZERO,
 			plugin: t.raw_get::<String>(1)?.into(),
-			args:   Sendable::table_to_args(lua, t.raw_get("args")?)?,
-			title:  t.raw_get::<Option<String>>("title")?.unwrap_or_default().into(),
-			track:  t.raw_get("track")?,
+			args: Sendable::table_to_args(lua, t.raw_get("args")?)?,
+			track: t.raw_get("track")?,
+			..Default::default()
 		})
 	}
 }

@@ -8,7 +8,6 @@ use toml::{Spanned, de::DeTable};
 use yazi_codegen::DeserializeOver;
 
 use super::OpenerRule;
-use crate::check_for;
 
 #[derive(Debug, Deserialize, DeserializeOver)]
 pub struct Opener(HashMap<String, Vec<OpenerRule>>);
@@ -47,9 +46,8 @@ impl Opener {
 		for rules in self.0.values_mut() {
 			*rules = mem::take(rules)
 				.into_iter()
-				.map(|mut r| (r.r#for.take(), r))
-				.filter(|(r#for, _)| check_for(r#for.as_deref()))
-				.map(|(_, r)| r.reshape())
+				.filter(|r| r.r#for.matches())
+				.map(|r| r.reshape())
 				.collect::<Result<IndexSet<_>>>()?
 				.into_iter()
 				.collect();
