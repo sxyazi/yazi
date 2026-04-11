@@ -7,7 +7,7 @@ use yazi_vfs::provider;
 
 #[derive(Debug, Deserialize)]
 pub struct CdForm {
-	#[serde(alias = "0")]
+	#[serde(alias = "0", default)]
 	pub target:      UrlBuf,
 	#[serde(default)]
 	pub interactive: bool,
