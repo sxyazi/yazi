@@ -60,7 +60,7 @@ Yazi is currently in heavy development, expect breaking changes.
 | [Warp](https://www.warp.dev) (macOS/Linux only)                              | [Inline images protocol][iip]          | ✅ Built-in                              |
 | [Tabby](https://github.com/Eugeny/tabby)                                     | [Inline images protocol][iip]          | ✅ Built-in                              |
 | [VSCode](https://github.com/microsoft/vscode)                                | [Inline images protocol][iip]          | ✅ Built-in                              |
-| [Rio](https://github.com/raphamorim/rio)                                     | [Inline images protocol][iip]          | ❌ Rio renders images at incorrect sizes |
+| [Rio](https://github.com/raphamorim/rio)                                     | [Kitty unicode placeholders][kgp]      | ✅ Built-in                              |
 | [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                   | [Sixel graphics format][sixel]         | ✅ Built-in                              |
 | [Bobcat](https://github.com/ismail-yilmaz/Bobcat)                            | [Inline images protocol][iip]          | ✅ Built-in                              |
 | X11 / Wayland                                                                | Window system protocol                 | ☑️ [Überzug++][ueberzug] required        |
