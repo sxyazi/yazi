@@ -132,6 +132,7 @@ pub enum Spark<'a> {
 	// Pick
 	PickArrow(crate::ArrowForm),
 	PickClose(crate::pick::CloseForm),
+	PickSelect(crate::pick::SelectForm),
 	PickShow(crate::pick::ShowForm),
 
 	// Spot
@@ -316,6 +317,7 @@ impl<'a> IntoLua for Spark<'a> {
 			// Pick
 			Self::PickArrow(b) => b.into_lua(lua),
 			Self::PickClose(b) => b.into_lua(lua),
+			Self::PickSelect(b) => b.into_lua(lua),
 			Self::PickShow(b) => b.into_lua(lua),
 
 			// Spot
@@ -432,6 +434,7 @@ try_from_spark!(crate::mgr::YankForm, mgr:yank);
 try_from_spark!(crate::notify::PushForm, notify:push);
 try_from_spark!(crate::notify::TickForm, notify:tick);
 try_from_spark!(crate::pick::CloseForm, pick:close);
+try_from_spark!(crate::pick::SelectForm, pick: select);
 try_from_spark!(crate::pick::ShowForm, pick:show);
 try_from_spark!(crate::spot::CopyForm, spot:copy);
 try_from_spark!(crate::tasks::ProcessOpenForm, tasks:process_open);

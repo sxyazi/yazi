@@ -236,6 +236,7 @@ impl<'a> Executor<'a> {
 		}
 
 		on!(show);
+		on!(select);
 		on!(close);
 		on!(arrow);
 
