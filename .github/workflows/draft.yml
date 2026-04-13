@@ -210,7 +210,7 @@ jobs:
           merge-multiple: true
 
       - name: Draft
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: |
@@ -246,7 +246,7 @@ jobs:
           git tag --force nightly && git push --force origin tag nightly
 
       - name: Nightly
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: nightly
           prerelease: true
