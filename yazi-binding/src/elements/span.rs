@@ -82,7 +82,7 @@ impl UserData for Span {
 		methods.add_method("visible", |_, Self(me), ()| {
 			Ok(me.content.chars().any(|c| c.width().unwrap_or(0) > 0))
 		});
-		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {
+		methods.add_function("truncate", |_, (ud, t): (AnyUserData, Table)| {
 			ud.borrow_mut::<Self>()?.truncate(t.raw_get("max")?);
 			Ok(ud)
 		});

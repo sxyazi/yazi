@@ -1,12 +1,12 @@
-use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_fs::Splatter;
+use yazi_shared::NonEmptyString;
 
 use crate::Platform;
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OpenerRule {
-	pub run:    String,
+	pub run:    NonEmptyString,
 	#[serde(default)]
 	pub block:  bool,
 	#[serde(default)]
@@ -29,14 +29,8 @@ impl OpenerRule {
 			String::new()
 		}
 	}
-}
 
-impl OpenerRule {
-	pub(super) fn reshape(mut self) -> Result<Self> {
-		if self.run.is_empty() {
-			bail!("[open].rules.*.run cannot be empty.");
-		}
-
+	pub(super) fn fill(&mut self) {
 		#[cfg(unix)]
 		{
 			self.spread =
@@ -46,7 +40,5 @@ impl OpenerRule {
 		{
 			self.spread = Splatter::<()>::spread(&self.run) || self.run.contains("%*");
 		}
-
-		Ok(self)
 	}
 }

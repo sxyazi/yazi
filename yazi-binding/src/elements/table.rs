@@ -108,45 +108,45 @@ impl UserData for Table {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 
-		methods.add_function_mut("header", |_, (ud, header): (AnyUserData, Row)| {
+		methods.add_function("header", |_, (ud, header): (AnyUserData, Row)| {
 			ud.borrow_mut::<Self>()?.header = Some(header.into());
 			Ok(ud)
 		});
-		methods.add_function_mut("footer", |_, (ud, footer): (AnyUserData, Row)| {
+		methods.add_function("footer", |_, (ud, footer): (AnyUserData, Row)| {
 			ud.borrow_mut::<Self>()?.footer = Some(footer.into());
 			Ok(ud)
 		});
-		methods.add_function_mut("widths", |_, (ud, widths): (AnyUserData, Vec<Constraint>)| {
+		methods.add_function("widths", |_, (ud, widths): (AnyUserData, Vec<Constraint>)| {
 			ud.borrow_mut::<Self>()?.widths = widths.into_iter().map(Into::into).collect();
 			Ok(ud)
 		});
-		methods.add_function_mut("spacing", |_, (ud, spacing): (AnyUserData, u16)| {
+		methods.add_function("spacing", |_, (ud, spacing): (AnyUserData, u16)| {
 			ud.borrow_mut::<Self>()?.column_spacing = spacing;
 			Ok(ud)
 		});
 
-		methods.add_function_mut("row", |_, (ud, idx): (AnyUserData, Option<usize>)| {
+		methods.add_function("row", |_, (ud, idx): (AnyUserData, Option<usize>)| {
 			ud.borrow_mut::<Self>()?.state.select(idx);
 			Ok(ud)
 		});
-		methods.add_function_mut("col", |_, (ud, idx): (AnyUserData, Option<usize>)| {
+		methods.add_function("col", |_, (ud, idx): (AnyUserData, Option<usize>)| {
 			ud.borrow_mut::<Self>()?.state.select_column(idx);
 			Ok(ud)
 		});
 
-		methods.add_function_mut("style", |_, (ud, style): (AnyUserData, Style)| {
+		methods.add_function("style", |_, (ud, style): (AnyUserData, Style)| {
 			ud.borrow_mut::<Self>()?.style = style.0;
 			Ok(ud)
 		});
-		methods.add_function_mut("row_style", |_, (ud, style): (AnyUserData, Style)| {
+		methods.add_function("row_style", |_, (ud, style): (AnyUserData, Style)| {
 			ud.borrow_mut::<Self>()?.row_highlight_style = style.0;
 			Ok(ud)
 		});
-		methods.add_function_mut("col_style", |_, (ud, style): (AnyUserData, Style)| {
+		methods.add_function("col_style", |_, (ud, style): (AnyUserData, Style)| {
 			ud.borrow_mut::<Self>()?.column_highlight_style = style.0;
 			Ok(ud)
 		});
-		methods.add_function_mut("cell_style", |_, (ud, style): (AnyUserData, Style)| {
+		methods.add_function("cell_style", |_, (ud, style): (AnyUserData, Style)| {
 			ud.borrow_mut::<Self>()?.cell_highlight_style = style.0;
 			Ok(ud)
 		});

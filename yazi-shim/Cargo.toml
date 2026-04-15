@@ -16,8 +16,12 @@ workspace = true
 yazi-macro = { path = "../yazi-macro", version = "26.2.2" }
 
 # External dependencies
+arc-swap      = { workspace = true }
 crossterm     = { workspace = true }
 ratatui       = { workspace = true }
+serde         = { workspace = true }
+thiserror     = { workspace = true }
+toml          = { workspace = true }
 twox-hash     = { workspace = true }
 unicode-width = { workspace = true }
 

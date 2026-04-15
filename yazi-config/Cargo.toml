@@ -17,22 +17,25 @@ yazi-codegen = { path = "../yazi-codegen", version = "26.2.2" }
 yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
 yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
 yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
+yazi-shim    = { path = "../yazi-shim", version = "26.2.2" }
 yazi-tty     = { path = "../yazi-tty", version = "26.2.2" }
 
 # External dependencies
-anyhow    = { workspace = true }
-bitflags  = { workspace = true }
-crossterm = { workspace = true }
-globset   = { workspace = true }
-hashbrown = { workspace = true }
-indexmap  = { workspace = true }
-ratatui   = { workspace = true }
-regex     = { workspace = true }
-serde     = { workspace = true }
-strum     = { workspace = true }
-tokio     = { workspace = true }
-toml      = { workspace = true }
-tracing   = { workspace = true }
+anyhow     = { workspace = true }
+arc-swap   = { workspace = true }
+bitflags   = { workspace = true }
+crossterm  = { workspace = true }
+globset    = { workspace = true }
+hashbrown  = { workspace = true }
+indexmap   = { workspace = true }
+ratatui    = { workspace = true }
+regex      = { workspace = true }
+serde      = { workspace = true }
+serde_with = { workspace = true }
+strum      = { workspace = true }
+tokio      = { workspace = true }
+toml       = { workspace = true }
+tracing    = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

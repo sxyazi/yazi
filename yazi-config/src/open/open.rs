@@ -5,8 +5,9 @@ use indexmap::IndexSet;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_shared::url::AsUrl;
+use yazi_shim::toml::DeserializeOverHook;
 
-use crate::{Preset, open::OpenRule};
+use crate::{mix, open::OpenRule};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Open {
@@ -60,17 +61,8 @@ impl Open {
 	}
 }
 
-impl Open {
-	pub(crate) fn reshape(self) -> Result<Self> {
-		let any_file = self.append_rules.iter().any(|r| r.any_file());
-		let any_dir = self.append_rules.iter().any(|r| r.any_dir());
-
-		let it =
-			self.rules.into_iter().filter(|r| !(any_file && r.any_file() || any_dir && r.any_dir()));
-
-		Ok(Self {
-			rules: Preset::mix(self.prepend_rules, it, self.append_rules).collect(),
-			..Default::default()
-		})
+impl DeserializeOverHook for Open {
+	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
+		Ok(Self { rules: mix(self.prepend_rules, self.rules, self.append_rules), ..Default::default() })
 	}
 }

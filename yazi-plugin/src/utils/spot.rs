@@ -21,10 +21,10 @@ impl Utils {
 					area,
 					edge: Edge(ratatui::widgets::Borders::ALL),
 					r#type: ratatui::widgets::BorderType::Rounded,
-					style: THEME.spot.border.into(),
+					style: THEME.spot.border.get().into(),
 					titles: vec![(
 						ratatui::widgets::TitlePosition::Top,
-						ratatui::text::Line::raw("Spot").centered().style(THEME.spot.title),
+						ratatui::text::Line::raw("Spot").centered().style(THEME.spot.title.get()),
 					)],
 				}),
 				Renderable::Table(Box::new(table)),

@@ -20,7 +20,7 @@ impl Widget for Body<'_> {
 
 		// Border
 		let block = if self.border {
-			Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border)
+			Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border.get())
 		} else {
 			Block::new()
 		};
@@ -30,7 +30,7 @@ impl Widget for Body<'_> {
 			.clone()
 			.alignment(ratatui::layout::Alignment::Center)
 			.block(block)
-			.style(THEME.confirm.body.derive(Styled::style(&confirm.body)))
+			.style(THEME.confirm.body.get().derive(Styled::style(&confirm.body)))
 			.render(inner, buf);
 	}
 }

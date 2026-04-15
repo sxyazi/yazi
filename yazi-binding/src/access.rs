@@ -8,15 +8,15 @@ pub struct Access(yazi_vfs::provider::Gate);
 
 impl UserData for Access {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_function_mut("append", |_, (ud, append): (AnyUserData, bool)| {
+		methods.add_function("append", |_, (ud, append): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.0.append(append);
 			Ok(ud)
 		});
-		methods.add_function_mut("create", |_, (ud, create): (AnyUserData, bool)| {
+		methods.add_function("create", |_, (ud, create): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.0.create(create);
 			Ok(ud)
 		});
-		methods.add_function_mut("create_new", |_, (ud, create_new): (AnyUserData, bool)| {
+		methods.add_function("create_new", |_, (ud, create_new): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.0.create_new(create_new);
 			Ok(ud)
 		});
@@ -26,15 +26,15 @@ impl UserData for Access {
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
-		methods.add_function_mut("read", |_, (ud, read): (AnyUserData, bool)| {
+		methods.add_function("read", |_, (ud, read): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.0.read(read);
 			Ok(ud)
 		});
-		methods.add_function_mut("truncate", |_, (ud, truncate): (AnyUserData, bool)| {
+		methods.add_function("truncate", |_, (ud, truncate): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.0.truncate(truncate);
 			Ok(ud)
 		});
-		methods.add_function_mut("write", |_, (ud, write): (AnyUserData, bool)| {
+		methods.add_function("write", |_, (ud, write): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.0.write(write);
 			Ok(ud)
 		});

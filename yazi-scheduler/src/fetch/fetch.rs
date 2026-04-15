@@ -30,16 +30,17 @@ impl Fetch {
 	}
 
 	pub(crate) async fn fetch(&self, task: FetchIn) -> Result<(), FetchOutFetch> {
-		let (id, plugin) = (task.id, task.plugin);
+		let (id, fetcher) = (task.id, task.fetcher.clone());
+
 		let hashes: Vec<_> = task.targets.iter().map(|f| f.hash_u64()).collect();
 		let (state, err) = RUNNER.fetch(task.into()).await?;
 
 		let mut loaded = self.loaded.lock();
 		for (_, h) in hashes.into_iter().enumerate().filter(|&(i, _)| !state.get(i)) {
-			loaded.get_mut(&h).map(|x| *x &= !(1 << plugin.idx));
+			loaded.get_mut(&h).map(|x| *x &= !(1 << fetcher.idx));
 		}
 		if let Some(e) = err {
-			error!("Error when running fetcher '{}':\n{e}", plugin.run.name);
+			error!("Error when running fetcher '{}':\n{e}", fetcher.name);
 		}
 
 		Ok(self.ops.out(id, FetchOutFetch::Succ))
@@ -48,7 +49,7 @@ impl Fetch {
 
 impl Fetch {
 	pub(crate) fn submit(&self, r#in: FetchIn) {
-		let priority = match r#in.plugin.prio {
+		let priority = match r#in.fetcher.prio {
 			Priority::Low => LOW,
 			Priority::Normal => HIGH,
 			Priority::High => HIGH,

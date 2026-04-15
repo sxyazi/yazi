@@ -37,7 +37,7 @@ debug = false
 [workspace.dependencies]
 ansi-to-tui         = "8.0.1"
 anyhow              = "1.0.102"
-arc-swap            = "1.9.1"
+arc-swap            = { version = "1.9.1", features = [ "serde" ] }
 base64              = "0.22.1"
 bitflags            = { version = "2.11.0", features = [ "serde" ] }
 chrono              = "0.4.44"
@@ -60,7 +60,7 @@ ordered-float       = { version = "5.3.0", features = [ "serde" ] }
 parking_lot         = "0.12.5"
 paste               = "1.0.15"
 percent-encoding    = "2.3.2"
-rand                = { version = "0.10.0", default-features = false, features = [ "std", "sys_rng" ] }
+rand                = { version = "0.10.1", default-features = false, features = [ "std", "sys_rng" ] }
 ratatui             = { version = "0.30.0", features = [ "serde", "unstable-rendered-line-info", "unstable-widget-ref" ] }
 regex               = "1.12.3"
 russh               = { version = "0.60.0", default-features = false, features = [ "ring", "rsa" ] }

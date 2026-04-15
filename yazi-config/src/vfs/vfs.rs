@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::OnceCell;
 use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
+use yazi_shim::toml::DeserializeOver;
 
 use super::Service;
 use crate::{Preset, vfs::Services};
@@ -19,9 +20,11 @@ impl Vfs {
 		pub static LOADED: OnceCell<Vfs> = OnceCell::const_new();
 
 		async fn init() -> io::Result<Vfs> {
-			tokio::task::spawn_blocking(|| Preset::vfs()?.deserialize_over(&Vfs::read()?)?.reshape())
-				.await?
-				.map_err(io::Error::other)
+			tokio::task::spawn_blocking(|| -> anyhow::Result<Vfs> {
+				Ok(Preset::vfs()?.deserialize_over(&Vfs::read()?)?)
+			})
+			.await?
+			.map_err(io::Error::other)
 		}
 
 		LOADED.get_or_try_init(init).await
@@ -45,6 +48,4 @@ impl Vfs {
 		ok_or_not_found(std::fs::read_to_string(&p))
 			.with_context(|| format!("Failed to read config {p:?}"))
 	}
-
-	fn reshape(self) -> Result<Self> { Ok(Self { services: self.services.reshape()? }) }
 }

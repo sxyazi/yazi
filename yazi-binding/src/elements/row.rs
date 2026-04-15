@@ -55,15 +55,15 @@ impl UserData for Row {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, style);
 
-		methods.add_function_mut("height", |_, (ud, value): (AnyUserData, u16)| {
+		methods.add_function("height", |_, (ud, value): (AnyUserData, u16)| {
 			ud.borrow_mut::<Self>()?.height = value;
 			Ok(ud)
 		});
-		methods.add_function_mut("margin_t", |_, (ud, value): (AnyUserData, u16)| {
+		methods.add_function("margin_t", |_, (ud, value): (AnyUserData, u16)| {
 			ud.borrow_mut::<Self>()?.top_margin = value;
 			Ok(ud)
 		});
-		methods.add_function_mut("margin_b", |_, (ud, value): (AnyUserData, u16)| {
+		methods.add_function("margin_b", |_, (ud, value): (AnyUserData, u16)| {
 			ud.borrow_mut::<Self>()?.bottom_margin = value;
 			Ok(ud)
 		});

@@ -50,7 +50,7 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 			b"sort_translit" => m.sort_translit.get().into_lua(lua)?,
 			b"sort_fallback" => lua.to_value_with(&m.sort_fallback, SER_OPT)?,
 
-			b"linemode" => lua.create_string(&m.linemode)?.into_lua(lua)?,
+			b"linemode" => lua.create_string(&*m.linemode)?.into_lua(lua)?,
 			b"show_hidden" => m.show_hidden.get().into_lua(lua)?,
 			b"show_symlink" => m.show_symlink.get().into_lua(lua)?,
 			b"scrolloff" => m.scrolloff.get().into_lua(lua)?,
@@ -105,12 +105,12 @@ fn tasks() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &YAZI.tasks;
 		match key {
-			b"file_workers" => t.file_workers.into_lua(lua)?,
-			b"plugin_workers" => t.plugin_workers.into_lua(lua)?,
-			b"fetch_workers" => t.fetch_workers.into_lua(lua)?,
-			b"preload_workers" => t.preload_workers.into_lua(lua)?,
-			b"process_workers" => t.process_workers.into_lua(lua)?,
-			b"bizarre_retry" => t.bizarre_retry.into_lua(lua)?,
+			b"file_workers" => t.file_workers.get().into_lua(lua)?,
+			b"plugin_workers" => t.plugin_workers.get().into_lua(lua)?,
+			b"fetch_workers" => t.fetch_workers.get().into_lua(lua)?,
+			b"preload_workers" => t.preload_workers.get().into_lua(lua)?,
+			b"process_workers" => t.process_workers.get().into_lua(lua)?,
+			b"bizarre_retry" => t.bizarre_retry.get().into_lua(lua)?,
 
 			b"image_alloc" => t.image_alloc.into_lua(lua)?,
 			b"image_bound" => lua.to_value_with(&t.image_bound, SER_OPT)?,

@@ -1,24 +1,22 @@
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{Data, DeriveInput, Fields, parse_macro_input};
 
 #[proc_macro_derive(DeserializeOver)]
 pub fn deserialize_over(input: TokenStream) -> TokenStream {
-	let DeriveInput { ident, .. } = parse_macro_input!(input as DeriveInput);
+	let DeriveInput { ident, generics, .. } = parse_macro_input!(input as DeriveInput);
+	let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
 	quote! {
-		impl #ident {
-			pub(crate) fn deserialize_over(self, input: &str) -> Result<Self, toml::de::Error> {
-				crate::error_with_input(self.deserialize_over_with(toml::de::DeTable::parse(input)?), input)
-			}
-		}
+		impl #impl_generics yazi_shim::toml::DeserializeOverHook for #ident #ty_generics #where_clause {}
 	}
 	.into()
 }
 
 #[proc_macro_derive(DeserializeOver1)]
 pub fn deserialize_over1(input: TokenStream) -> TokenStream {
-	let DeriveInput { ident, data, .. } = parse_macro_input!(input as DeriveInput);
+	let DeriveInput { ident, generics, data, .. } = parse_macro_input!(input as DeriveInput);
+	let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
 	let assignments = match data {
 		Data::Struct(struct_) => match struct_.fields {
@@ -32,7 +30,7 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 					assignments.push(quote! {
 						if let Some(value) = table.remove(#field_name) {
 							if !matches!(value.get_ref(), toml::de::DeValue::Table(_)) {
-								_ = toml::Table::deserialize(value.into_deserializer())?;
+								_ = deserialize_spanned::<toml::Table>(value)?;
 								return Err(serde::de::Error::custom(format!("expected top-level `{}` to be a TOML table", #field_name)));
 							}
 
@@ -41,6 +39,7 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 								self.#field_ident = self.#field_ident.deserialize_over_with(toml::Spanned::new(span, table))?;
 							}
 						}
+						self.#field_ident = self.#field_ident.deserialize_over_hook()?;
 					});
 				}
 
@@ -52,14 +51,14 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 	};
 
 	quote! {
-		impl #ident {
-			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
-				use serde::{Deserialize, de::IntoDeserializer};
+		impl #impl_generics yazi_shim::toml::DeserializeOverWith for #ident #ty_generics #where_clause {
+			fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
+				use yazi_shim::toml::{DeserializeOverHook, DeserializeOverWith, deserialize_spanned};
 
 				let mut table = table.into_inner();
 				#(#assignments)*
 
-				Ok(self)
+				self.deserialize_over_hook()
 			}
 		}
 	}
@@ -68,20 +67,30 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(DeserializeOver2)]
 pub fn deserialize_over2(input: TokenStream) -> TokenStream {
-	let DeriveInput { ident, data, .. } = parse_macro_input!(input as DeriveInput);
+	let DeriveInput { ident, generics, data, .. } = parse_macro_input!(input as DeriveInput);
+	let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
 	let assignments = match data {
 		Data::Struct(struct_) => match struct_.fields {
 			Fields::Named(fields) => {
 				let mut assignments = Vec::with_capacity(fields.named.len());
 
-				for field in fields.named {
+				for (index, field) in fields.named.into_iter().enumerate() {
 					let field_ident = field.ident;
 					let field_name = field_ident.as_ref().unwrap().to_string();
+					let field_ty = field.ty;
+					let field_attrs = field.attrs;
+					let field_helper = format_ident!("__DeserializeOver2Field{index}");
 
 					assignments.push(quote! {
+						#[derive(serde::Deserialize)]
+						struct #field_helper #impl_generics (
+							#(#field_attrs)*
+							#field_ty
+						) #where_clause;
+
 						if let Some(value) = table.remove(#field_name) {
-							self.#field_ident = <_>::deserialize(value.into_deserializer())?;
+							self.#field_ident = deserialize_spanned::<#field_helper #ty_generics>(value)?.0;
 						}
 					});
 				}
@@ -94,9 +103,9 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 	};
 
 	quote! {
-		impl #ident {
-			pub(crate) fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
-				use serde::{Deserialize, de::IntoDeserializer};
+		impl #impl_generics yazi_shim::toml::DeserializeOverWith for #ident #ty_generics #where_clause {
+			fn deserialize_over_with<'de>(mut self, table: toml::Spanned<toml::de::DeTable<'de>>) -> Result<Self, toml::de::Error> {
+				use yazi_shim::toml::deserialize_spanned;
 
 				let mut table = table.into_inner();
 				#(#assignments)*

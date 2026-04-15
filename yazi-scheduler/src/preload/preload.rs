@@ -36,7 +36,8 @@ impl Preload {
 	pub(crate) async fn preload(&self, task: PreloadIn) -> Result<(), PreloadOut> {
 		let hash = task.target.hash_u64();
 
-		let mut rx = RUNNER.preload(PreloadJob { action: &task.plugin.run, file: task.target }).await;
+		let mut rx =
+			RUNNER.preload(PreloadJob { preloader: task.preloader.clone(), file: task.target }).await;
 		let state = match rx.recv().await.unwrap_or(Err(PreloadError::Cancelled)) {
 			Ok(state) => state,
 			Err(PreloadError::Cancelled) => Default::default(),
@@ -44,10 +45,10 @@ impl Preload {
 		};
 
 		if !state.complete {
-			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.plugin.idx));
+			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.preloader.idx));
 		}
 		if let Some(e) = state.error {
-			error!("Error when running preloader '{}':\n{e}", task.plugin.run.name);
+			error!("Error when running preloader '{}':\n{e}", task.preloader.name);
 		}
 
 		Ok(self.ops.out(task.id, PreloadOut::Succ))
@@ -56,7 +57,7 @@ impl Preload {
 
 impl Preload {
 	pub(crate) fn submit(&self, r#in: PreloadIn) {
-		let priority = match r#in.plugin.prio {
+		let priority = match r#in.preloader.prio {
 			Priority::Low => LOW,
 			Priority::Normal => NORMAL,
 			Priority::High => HIGH,

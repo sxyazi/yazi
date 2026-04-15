@@ -27,7 +27,7 @@ impl Widget for Help<'_> {
 		let chunks = layout::Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
 		Line::styled(
 			help.keyword().unwrap_or_else(|| format!("{}.help{}", help.layer, Self::tips())),
-			THEME.help.footer,
+			THEME.help.footer.get(),
 		)
 		.render(chunks[1], buf);
 

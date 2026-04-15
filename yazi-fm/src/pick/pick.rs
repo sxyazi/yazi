@@ -22,7 +22,7 @@ impl Widget for Pick<'_> {
 		Block::bordered()
 			.title(pick.title())
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.pick.border)
+			.border_style(THEME.pick.border.get())
 			.render(area, buf);
 
 		List::new(self.core).render(area.inner(Margin::new(0, 1)), buf);

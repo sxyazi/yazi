@@ -91,7 +91,7 @@ impl UserData for Pos {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_function_mut("pad", |_, (ud, pad): (AnyUserData, Pad)| {
+		methods.add_function("pad", |_, (ud, pad): (AnyUserData, Pad)| {
 			ud.borrow_mut::<Self>()?.pad = pad;
 			Ok(ud)
 		});

@@ -76,7 +76,7 @@ impl File {
 				// Operation not permitted (os error 1)
 				// Attribute not found (os error 93)
 				Err(e)
-					if task.retry < YAZI.tasks.bizarre_retry
+					if task.retry < YAZI.tasks.bizarre_retry.get()
 						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 				{
 					task.retry += 1;
@@ -171,7 +171,7 @@ impl File {
 				// Operation not permitted (os error 1)
 				// Attribute not found (os error 93)
 				Err(e)
-					if task.retry < YAZI.tasks.bizarre_retry
+					if task.retry < YAZI.tasks.bizarre_retry.get()
 						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 				{
 					task.retry += 1;
@@ -366,7 +366,7 @@ impl File {
 				// Operation not permitted (os error 1)
 				// Attribute not found (os error 93)
 				Err(e)
-					if task.retry < YAZI.tasks.bizarre_retry
+					if task.retry < YAZI.tasks.bizarre_retry.get()
 						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 				{
 					task.retry += 1;

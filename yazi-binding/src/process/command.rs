@@ -138,7 +138,7 @@ impl UserData for Command {
 			)
 		}
 
-		methods.add_function_mut("arg", |lua, (ud, arg): (AnyUserData, Value)| {
+		methods.add_function("arg", |lua, (ud, arg): (AnyUserData, Value)| {
 			let mut me = ud.borrow_mut::<Self>()?;
 			match arg {
 				Value::Nil => return lua.create_sequence_from(me.inner.as_std().get_args())?.into_lua(lua),
@@ -154,11 +154,11 @@ impl UserData for Command {
 			}
 			ud.into_lua(lua)
 		});
-		methods.add_function_mut("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
+		methods.add_function("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?.as_ref());
 			Ok(ud)
 		});
-		methods.add_function_mut(
+		methods.add_function(
 			"env",
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
 				ud.borrow_mut::<Self>()?
@@ -167,19 +167,19 @@ impl UserData for Command {
 				Ok(ud)
 			},
 		);
-		methods.add_function_mut("stdin", |_, (ud, stdio): (AnyUserData, Value)| {
+		methods.add_function("stdin", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stdin(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function_mut("stdout", |_, (ud, stdio): (AnyUserData, Value)| {
+		methods.add_function("stdout", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stdout(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function_mut("stderr", |_, (ud, stdio): (AnyUserData, Value)| {
+		methods.add_function("stderr", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stderr(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function_mut("memory", |_, (ud, max): (AnyUserData, usize)| {
+		methods.add_function("memory", |_, (ud, max): (AnyUserData, usize)| {
 			ud.borrow_mut::<Self>()?.memory = Some(max);
 			Ok(ud)
 		});

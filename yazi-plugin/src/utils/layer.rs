@@ -27,7 +27,7 @@ impl Utils {
 					Ok(ChordCow::Owned(Chord {
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
 						run:   vec![relay!(which:callback, [i + 1])],
-						desc:  cand.raw_get("desc").ok(),
+						desc:  cand.raw_get("desc").unwrap_or_default(),
 						r#for: Platform::All,
 					}))
 				})

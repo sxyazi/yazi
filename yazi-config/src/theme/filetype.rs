@@ -1,13 +1,13 @@
 use std::ops::Deref;
 
 use serde::Deserialize;
-use yazi_codegen::DeserializeOver2;
+use yazi_codegen::{DeserializeOver, DeserializeOver2};
 use yazi_fs::File;
 
 use super::Is;
 use crate::{Pattern, Style};
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Filetype {
 	rules: Vec<FiletypeRule>,
 }

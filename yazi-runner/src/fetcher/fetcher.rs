@@ -9,12 +9,12 @@ impl Runner {
 		if job.files.is_empty() {
 			return Ok((FetchState::Bool(true), None));
 		}
-		LOADER.ensure(&job.action.name, |_| ()).await.into_lua_err()?;
+		LOADER.ensure(&job.fetcher.name, |_| ()).await.into_lua_err()?;
 
 		tokio::task::spawn_blocking(move || {
-			let lua = self.spawn(&job.action.name)?;
+			let lua = self.spawn(&job.fetcher.name)?;
 			Handle::current().block_on(async {
-				LOADER.load(&lua, &job.action.name).await?.call_async_method("fetch", job).await
+				LOADER.load(&lua, &job.fetcher.name).await?.call_async_method("fetch", job).await
 			})
 		})
 		.await

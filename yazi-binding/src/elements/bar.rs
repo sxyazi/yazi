@@ -81,11 +81,11 @@ impl UserData for Bar {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
-		methods.add_function_mut("edge", |_, (ud, edge): (AnyUserData, Edge)| {
+		methods.add_function("edge", |_, (ud, edge): (AnyUserData, Edge)| {
 			ud.borrow_mut::<Self>()?.edge = edge;
 			Ok(ud)
 		});
-		methods.add_function_mut("symbol", |_, (ud, symbol): (AnyUserData, String)| {
+		methods.add_function("symbol", |_, (ud, symbol): (AnyUserData, String)| {
 			ud.borrow_mut::<Self>()?.symbol = symbol;
 			Ok(ud)
 		});

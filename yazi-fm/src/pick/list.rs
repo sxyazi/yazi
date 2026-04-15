@@ -28,9 +28,9 @@ impl Widget for List<'_> {
 		let inner = area.inner(Margin::new(1, 0));
 		let items = pick.window().map(|(i, v)| {
 			if i == pick.cursor {
-				ListItem::new(format!(" {v}")).style(THEME.pick.active)
+				ListItem::new(format!(" {v}")).style(THEME.pick.active.get())
 			} else {
-				ListItem::new(format!("  {v}")).style(THEME.pick.inactive)
+				ListItem::new(format!("  {v}")).style(THEME.pick.inactive.get())
 			}
 		});
 		Widget::render(ratatui::widgets::List::new(items), inner, buf);

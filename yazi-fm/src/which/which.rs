@@ -22,7 +22,7 @@ impl Widget for Which<'_> {
 			return;
 		}
 
-		let cols = THEME.which.cols as usize;
+		let cols = THEME.which.cols.get() as usize;
 		let height = area.height.min(which.cands.len().div_ceil(cols) as u16 + PADDING_Y * 2);
 		let area = Rect {
 			x: PADDING_X.min(area.width),
@@ -47,7 +47,7 @@ impl Widget for Which<'_> {
 		};
 
 		yazi_widgets::Clear.render(area, buf);
-		Block::new().style(THEME.which.mask).render(area, buf);
+		Block::new().style(THEME.which.mask.get()).render(area, buf);
 
 		for y in 0..area.height {
 			for (x, chunk) in chunks.iter().enumerate() {

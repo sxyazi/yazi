@@ -19,8 +19,8 @@ impl Widget for Input<'_> {
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.input.border)
-			.title(Line::styled(&input.title, THEME.input.title))
+			.border_style(THEME.input.border.get())
+			.title(Line::styled(&input.title, THEME.input.title.get()))
 			.render(area, buf);
 
 		input.render(area.inner(Margin::new(1, 1)), buf);

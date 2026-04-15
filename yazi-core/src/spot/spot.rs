@@ -23,12 +23,12 @@ impl Spot {
 			return;
 		}
 
-		let Some(spotter) = YAZI.plugin.spotter(&file, &mime) else {
+		let Some(spotter) = YAZI.plugin.spotters.matches(&file, &mime) else {
 			return self.reset();
 		};
 
 		self.abort();
-		self.ct = Some(RUNNER.spot(&spotter.run, file, mime, self.skip));
+		self.ct = Some(RUNNER.spot(spotter, file, mime, self.skip));
 	}
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }

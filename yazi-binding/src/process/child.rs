@@ -3,10 +3,9 @@ use std::{ops::DerefMut, process::ExitStatus, time::Duration};
 use futures::future::try_join3;
 use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Table, UserData, UserDataMethods, Value};
 use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
-use crate::Error;
 
 use super::Status;
-use crate::process::Output;
+use crate::{Error, process::Output};
 
 pub struct Child {
 	inner:      tokio::process::Child,

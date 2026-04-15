@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::style::Modifier;
+use yazi_shared::SyncCell;
 
 use crate::{SER_OPT, elements::Color};
 
@@ -20,6 +21,10 @@ impl From<yazi_config::Style> for Style {
 
 impl From<Style> for ratatui::style::Style {
 	fn from(value: Style) -> ratatui::style::Style { value.0 }
+}
+
+impl From<&SyncCell<yazi_config::Style>> for Style {
+	fn from(value: &SyncCell<yazi_config::Style>) -> Self { value.get().into() }
 }
 
 impl Style {

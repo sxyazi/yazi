@@ -16,9 +16,8 @@ impl AppProxy {
 	}
 
 	pub fn plugin_peek(job: PeekJob) {
-		Self::plugin(PluginOpt::new_callback(&*job.action.name, move |_, plugin| {
-			plugin.call_method("peek", job)
-		}));
+		let name = job.previewer.name.clone();
+		Self::plugin(PluginOpt::new_callback(name, move |_, plugin| plugin.call_method("peek", job)));
 	}
 
 	pub fn update_progress(summary: TaskSummary) {

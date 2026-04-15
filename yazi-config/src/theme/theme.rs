@@ -1,9 +1,12 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result, anyhow, bail};
-use serde::Deserialize;
+use anyhow::{Context, Result};
+use arc_swap::ArcSwap;
+use serde::{Deserialize, Deserializer, de};
 use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2};
 use yazi_fs::{Xdg, ok_or_not_found};
+use yazi_shared::SyncCell;
+use yazi_shim::arc_swap::IntoPointee;
 
 use super::{Filetype, Flavor, Icon};
 use crate::{Style, normalize_path};
@@ -28,199 +31,199 @@ pub struct Theme {
 	pub help:      Help,
 
 	// File-specific styles
-	#[serde(skip_serializing)]
 	pub filetype: Filetype,
-	#[serde(skip_serializing)]
 	pub icon:     Icon,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct App {
-	pub overall: Style,
+	pub overall: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Mgr {
-	pub cwd: Style,
+	pub cwd: SyncCell<Style>,
 
 	// Find
-	pub find_keyword:  Style,
-	pub find_position: Style,
+	pub find_keyword:  SyncCell<Style>,
+	pub find_position: SyncCell<Style>,
 
 	// Symlink
-	pub symlink_target: Style,
+	pub symlink_target: SyncCell<Style>,
 
 	// Marker
-	pub marker_copied:   Style,
-	pub marker_cut:      Style,
-	pub marker_marked:   Style,
-	pub marker_selected: Style,
-	pub marker_symbol:   String,
+	pub marker_copied:   SyncCell<Style>,
+	pub marker_cut:      SyncCell<Style>,
+	pub marker_marked:   SyncCell<Style>,
+	pub marker_selected: SyncCell<Style>,
+	pub marker_symbol:   ArcSwap<String>,
 
 	// Count
-	pub count_copied:   Style,
-	pub count_cut:      Style,
-	pub count_selected: Style,
+	pub count_copied:   SyncCell<Style>,
+	pub count_cut:      SyncCell<Style>,
+	pub count_selected: SyncCell<Style>,
 
 	// Border
-	pub border_symbol: String,
-	pub border_style:  Style,
+	pub border_symbol: ArcSwap<String>,
+	pub border_style:  SyncCell<Style>,
 
 	// Highlighting
-	pub syntect_theme: PathBuf,
+	#[serde(deserialize_with = "deserialize_syntect_theme")]
+	pub syntect_theme: ArcSwap<PathBuf>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Tabs {
-	pub active:   Style,
-	pub inactive: Style,
+	pub active:   SyncCell<Style>,
+	pub inactive: SyncCell<Style>,
 
-	pub sep_inner: TabsSep,
-	pub sep_outer: TabsSep,
+	pub sep_inner: ArcSwap<TabsSep>,
+	pub sep_outer: ArcSwap<TabsSep>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize)]
 pub struct TabsSep {
 	pub open:  String,
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Mode {
-	pub normal_main: Style,
-	pub normal_alt:  Style,
+	pub normal_main: SyncCell<Style>,
+	pub normal_alt:  SyncCell<Style>,
 
-	pub select_main: Style,
-	pub select_alt:  Style,
+	pub select_main: SyncCell<Style>,
+	pub select_alt:  SyncCell<Style>,
 
-	pub unset_main: Style,
-	pub unset_alt:  Style,
+	pub unset_main: SyncCell<Style>,
+	pub unset_alt:  SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Indicator {
-	pub parent:  Style,
-	pub current: Style,
-	pub preview: Style,
-	pub padding: IndicatorPadding,
+	pub parent:  SyncCell<Style>,
+	pub current: SyncCell<Style>,
+	pub preview: SyncCell<Style>,
+	pub padding: ArcSwap<IndicatorPadding>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize)]
 pub struct IndicatorPadding {
 	pub open:  String,
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Status {
-	pub overall:   Style,
-	pub sep_left:  StatusSep,
-	pub sep_right: StatusSep,
+	pub overall:   SyncCell<Style>,
+	pub sep_left:  ArcSwap<StatusSep>,
+	pub sep_right: ArcSwap<StatusSep>,
 
 	// Permissions
-	pub perm_sep:   Style,
-	pub perm_type:  Style,
-	pub perm_read:  Style,
-	pub perm_write: Style,
-	pub perm_exec:  Style,
+	pub perm_sep:   SyncCell<Style>,
+	pub perm_type:  SyncCell<Style>,
+	pub perm_read:  SyncCell<Style>,
+	pub perm_write: SyncCell<Style>,
+	pub perm_exec:  SyncCell<Style>,
 
 	// Progress
-	pub progress_label:  Style,
-	pub progress_normal: Style,
-	pub progress_error:  Style,
+	pub progress_label:  SyncCell<Style>,
+	pub progress_normal: SyncCell<Style>,
+	pub progress_error:  SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize)]
 pub struct StatusSep {
 	pub open:  String,
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Which {
-	pub cols: u8,
-	pub mask: Style,
-	pub cand: Style,
-	pub rest: Style,
-	pub desc: Style,
+	#[serde(deserialize_with = "deserialize_which_cols")]
+	pub cols: SyncCell<u8>,
+	pub mask: SyncCell<Style>,
+	pub cand: SyncCell<Style>,
+	pub rest: SyncCell<Style>,
+	pub desc: SyncCell<Style>,
 
-	pub separator:       String,
-	pub separator_style: Style,
+	pub separator:       ArcSwap<String>,
+	pub separator_style: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Confirm {
-	pub border: Style,
-	pub title:  Style,
-	pub body:   Style,
-	pub list:   Style,
+	pub border: SyncCell<Style>,
+	pub title:  SyncCell<Style>,
+	pub body:   SyncCell<Style>,
+	pub list:   SyncCell<Style>,
 
-	pub btn_yes:    Style,
-	pub btn_no:     Style,
+	pub btn_yes:    SyncCell<Style>,
+	pub btn_no:     SyncCell<Style>,
 	pub btn_labels: [String; 2],
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Spot {
-	pub border: Style,
-	pub title:  Style,
+	pub border: SyncCell<Style>,
+	pub title:  SyncCell<Style>,
 
-	pub tbl_col:  Style,
-	pub tbl_cell: Style,
+	pub tbl_col:  SyncCell<Style>,
+	pub tbl_cell: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Notify {
-	pub title_info:  Style,
-	pub title_warn:  Style,
-	pub title_error: Style,
+	pub title_info:  SyncCell<Style>,
+	pub title_warn:  SyncCell<Style>,
+	pub title_error: SyncCell<Style>,
 
-	pub icon_info:  String,
-	pub icon_warn:  String,
-	pub icon_error: String,
+	pub icon_info:  ArcSwap<String>,
+	pub icon_warn:  ArcSwap<String>,
+	pub icon_error: ArcSwap<String>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Pick {
-	pub border:   Style,
-	pub active:   Style,
-	pub inactive: Style,
+	pub border:   SyncCell<Style>,
+	pub active:   SyncCell<Style>,
+	pub inactive: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Input {
-	pub border:   Style,
-	pub title:    Style,
-	pub value:    Style,
-	pub selected: Style,
+	pub border:   SyncCell<Style>,
+	pub title:    SyncCell<Style>,
+	pub value:    SyncCell<Style>,
+	pub selected: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Cmp {
-	pub border:   Style,
-	pub active:   Style,
-	pub inactive: Style,
+	pub border:   SyncCell<Style>,
+	pub active:   SyncCell<Style>,
+	pub inactive: SyncCell<Style>,
 
-	pub icon_file:    String,
-	pub icon_folder:  String,
-	pub icon_command: String,
+	pub icon_file:    ArcSwap<String>,
+	pub icon_folder:  ArcSwap<String>,
+	pub icon_command: ArcSwap<String>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Tasks {
-	pub border:  Style,
-	pub title:   Style,
-	pub hovered: Style,
+	pub border:  SyncCell<Style>,
+	pub title:   SyncCell<Style>,
+	pub hovered: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Help {
-	pub on:   Style,
-	pub run:  Style,
-	pub desc: Style,
+	pub on:   SyncCell<Style>,
+	pub run:  SyncCell<Style>,
+	pub desc: SyncCell<Style>,
 
-	pub hovered: Style,
-	pub footer:  Style,
+	pub hovered: SyncCell<Style>,
+	pub footer:  SyncCell<Style>,
 }
 
 impl Theme {
@@ -230,23 +233,44 @@ impl Theme {
 			.with_context(|| format!("Failed to read theme {p:?}"))
 	}
 
+	// FIXME: remove
 	pub(crate) fn reshape(mut self, light: bool) -> Result<Self> {
-		if self.which.cols < 1 || self.which.cols > 3 {
-			bail!("[which].cols must be between 1 and 3");
+		if let Some(p) = self.flavor.syntect_path(light) {
+			self.mgr.syntect_theme = p.into_pointee();
 		}
-
-		self.icon = self.icon.reshape()?;
-
-		self.mgr.syntect_theme = self
-			.flavor
-			.syntect_path(light)
-			.or_else(|| normalize_path(self.mgr.syntect_theme))
-			.ok_or(anyhow!("[mgr].syntect_theme must be either empty or an absolute path."))?;
 
 		Ok(self)
 	}
 }
 
 impl App {
-	pub fn bg_color(&self) -> String { self.overall.bg.map(|c| c.to_string()).unwrap_or_default() }
+	pub fn bg_color(&self) -> String {
+		self.overall.get().bg.map(|c| c.to_string()).unwrap_or_default()
+	}
+}
+
+fn deserialize_syntect_theme<'de, D>(deserializer: D) -> Result<ArcSwap<PathBuf>, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let mut path = PathBuf::deserialize(deserializer)?;
+	if !path.as_os_str().is_empty() {
+		path = normalize_path(path).ok_or_else(|| {
+			de::Error::custom("syntect_theme must be either empty or an absolute path.")
+		})?;
+	}
+
+	Ok(path.into_pointee())
+}
+
+fn deserialize_which_cols<'de, D>(deserializer: D) -> Result<SyncCell<u8>, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let cols = u8::deserialize(deserializer)?;
+	if (1..=3).contains(&cols) {
+		Ok(SyncCell::new(cols))
+	} else {
+		Err(de::Error::custom("cols must be between 1 and 3"))
+	}
 }

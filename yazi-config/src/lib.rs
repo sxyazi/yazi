@@ -1,10 +1,11 @@
 yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which vfs);
 
-yazi_macro::mod_flat!(icon layout pattern platform preset priority style utils yazi);
+yazi_macro::mod_flat!(icon layout mixing pattern platform preset priority style utils yazi);
 
 use std::io::{Read, Write};
 
 use yazi_shared::{RoCell, SyncCell};
+use yazi_shim::toml::{DeserializeOver, DeserializeOverWith};
 use yazi_tty::TTY;
 
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
@@ -29,8 +30,8 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 		keymap = keymap.deserialize_over(&keymap::Keymap::read()?)?;
 	}
 
-	YAZI.init(yazi.reshape()?);
-	KEYMAP.init(keymap.reshape()?);
+	YAZI.init(yazi);
+	KEYMAP.init(keymap);
 	Ok(())
 }
 

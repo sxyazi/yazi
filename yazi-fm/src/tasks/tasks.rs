@@ -35,10 +35,10 @@ impl Widget for Tasks<'_> {
 		yazi_widgets::Clear.render(area, buf);
 
 		let block = Block::bordered()
-			.title(Line::styled("Tasks", THEME.tasks.title))
+			.title(Line::styled("Tasks", THEME.tasks.title.get()))
 			.title_alignment(Alignment::Center)
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.tasks.border);
+			.border_style(THEME.tasks.border.get());
 		(&block).render(area, buf);
 
 		List::new(self.core).render(block.inner(area), buf);

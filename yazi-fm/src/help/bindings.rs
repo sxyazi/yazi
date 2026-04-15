@@ -19,16 +19,16 @@ impl Widget for Bindings<'_> {
 
 		// On
 		let col1: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on)).collect();
+			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on.get())).collect();
 
 		// Run
 		let col2: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.run()).style(THEME.help.run)).collect();
+			bindings.iter().map(|c| ListItem::new(c.run()).style(THEME.help.run.get())).collect();
 
 		// Desc
 		let col3: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc().unwrap_or("-".into())).style(THEME.help.desc))
+			.map(|c| ListItem::new(c.desc().unwrap_or("-".into())).style(THEME.help.desc.get()))
 			.collect();
 
 		let chunks = layout::Layout::horizontal([
@@ -41,7 +41,7 @@ impl Widget for Bindings<'_> {
 		let cursor = self.core.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
-			THEME.help.hovered,
+			THEME.help.hovered.get(),
 		);
 
 		List::new(col1).render(chunks[0], buf);

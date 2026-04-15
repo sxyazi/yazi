@@ -1,4 +1,4 @@
-use std::{cell::Cell, fmt::{Debug, Display, Formatter}, ops::Deref};
+use std::{cell::Cell, cmp::Ordering, fmt::{Debug, Display, Formatter}, ops::Deref};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -37,6 +37,16 @@ impl<T: Copy + Debug> Debug for SyncCell<T> {
 
 impl<T: Copy + Display> Display for SyncCell<T> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Display::fmt(&self.get(), f) }
+}
+
+impl<T: Copy + PartialEq> PartialEq<T> for SyncCell<T> {
+	#[inline]
+	fn eq(&self, other: &T) -> bool { self.get() == *other }
+}
+
+impl<T: Copy + PartialOrd> PartialOrd<T> for SyncCell<T> {
+	#[inline]
+	fn partial_cmp(&self, other: &T) -> Option<Ordering> { self.get().partial_cmp(other) }
 }
 
 impl<T> Serialize for SyncCell<T>

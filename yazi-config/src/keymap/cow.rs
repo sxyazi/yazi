@@ -1,26 +1,25 @@
 use std::ops::Deref;
 
-use yazi_shared::event::ActionCow;
+use yazi_shared::{Layer, event::ActionCow};
 
 use super::Chord;
-use crate::Platform;
 
 #[derive(Clone, Debug)]
-pub enum ChordCow {
-	Owned(Chord),
-	Borrowed(&'static Chord),
+pub enum ChordCow<const L: u8 = { Layer::App as u8 }> {
+	Owned(Chord<L>),
+	Borrowed(&'static Chord<L>),
 }
 
-impl From<Chord> for ChordCow {
-	fn from(c: Chord) -> Self { Self::Owned(c) }
+impl<const L: u8> From<Chord<L>> for ChordCow<L> {
+	fn from(c: Chord<L>) -> Self { Self::Owned(c) }
 }
 
-impl From<&'static Chord> for ChordCow {
-	fn from(c: &'static Chord) -> Self { Self::Borrowed(c) }
+impl<const L: u8> From<&'static Chord<L>> for ChordCow<L> {
+	fn from(c: &'static Chord<L>) -> Self { Self::Borrowed(c) }
 }
 
-impl Deref for ChordCow {
-	type Target = Chord;
+impl<const L: u8> Deref for ChordCow<L> {
+	type Target = Chord<L>;
 
 	fn deref(&self) -> &Self::Target {
 		match self {
@@ -30,14 +29,11 @@ impl Deref for ChordCow {
 	}
 }
 
-impl Default for ChordCow {
-	fn default() -> Self {
-		const C: &Chord = &Chord { on: vec![], run: vec![], desc: None, r#for: Platform::All };
-		Self::Borrowed(C)
-	}
+impl<const L: u8> Default for ChordCow<L> {
+	fn default() -> Self { Self::Owned(Chord::default()) }
 }
 
-impl ChordCow {
+impl<const L: u8> ChordCow<L> {
 	pub fn into_seq(self) -> Vec<ActionCow> {
 		match self {
 			Self::Owned(c) => c.run.into_iter().rev().map(Into::into).collect(),
