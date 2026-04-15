@@ -5,7 +5,7 @@ use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
 use yazi_config::YAZI;
-use yazi_macro::succ;
+use yazi_macro::{render, succ};
 use yazi_parser::app::MouseForm;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
@@ -45,7 +45,10 @@ impl Actor for Mouse {
 				MouseEventKind::ScrollLeft => root.call_method("touch", (event, -1))?,
 
 				MouseEventKind::Moved => root.call_method("move", event)?,
-				MouseEventKind::Drag(_) => root.call_method("drag", event)?,
+				MouseEventKind::Drag(_) => {
+					root.call_method::<()>("drag", event)?;
+					render!();
+				}
 			}
 
 			Ok(())
