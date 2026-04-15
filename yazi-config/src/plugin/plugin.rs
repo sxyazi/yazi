@@ -49,7 +49,7 @@ impl DeserializeOverHook for Plugin {
 		if fetchers.len() > MAX_FETCHERS as usize {
 			Err(de::Error::custom(format!("Fetchers exceed the limit of {MAX_FETCHERS}")))?;
 		} else if preloaders.len() > MAX_PRELOADERS as usize {
-			Err(de::Error::custom(format!("Preloaders exceed the limit of {MAX_FETCHERS}")))?;
+			Err(de::Error::custom(format!("Preloaders exceed the limit of {MAX_PRELOADERS}")))?;
 		}
 
 		for (i, p) in fetchers.iter_mut().enumerate() {
