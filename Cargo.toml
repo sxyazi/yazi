@@ -39,7 +39,7 @@ ansi-to-tui         = "8.0.1"
 anyhow              = "1.0.102"
 arc-swap            = { version = "1.9.1", features = [ "serde" ] }
 base64              = "0.22.1"
-bitflags            = { version = "2.11.0", features = [ "serde" ] }
+bitflags            = { version = "2.11.1", features = [ "serde" ] }
 chrono              = "0.4.44"
 clap                = { version = "4.6.0", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
@@ -52,8 +52,8 @@ futures             = "0.3.32"
 globset             = "0.4.18"
 hashbrown           = { version = "0.17.0", features = [ "serde" ] }
 indexmap            = { version = "2.14.0", features = [ "serde" ] }
-libc                = "0.2.184"
-lru                 = "0.16.3"
+libc                = "0.2.185"
+lru                 = "0.17.0"
 mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2               = "0.6.4"
 ordered-float       = { version = "5.3.0", features = [ "serde" ] }
@@ -71,7 +71,7 @@ serde_with          = "3.18.0"
 strum               = { version = "0.28.0", features = [ "derive" ] }
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror           = "2.0.18"
-tokio               = { version = "1.51.1", features = [ "full" ] }
+tokio               = { version = "1.52.0", features = [ "full" ] }
 tokio-stream        = "0.1.18"
 tokio-util          = "0.7.18"
 toml                = { version = "1.1.2" }

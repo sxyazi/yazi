@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `--in` for `search` action to set search directory ([#3696])
 - Hover cursor over the new file after copying/cutting/linking/hardlinking/extracting ([#3846], [#3854])
 - Multi-file spotter ([#3733])
+- Dynamic previewer Lua API ([#3891])
 - Vim-like `lua` action that runs an inline Lua snippet ([#3813])
 - Certificate authentication for SFTP VFS provider ([#3716])
 - New `hovered` condition specifying different icons for hovered files ([#3728])
@@ -1699,3 +1700,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3846]: https://github.com/sxyazi/yazi/pull/3846
 [#3854]: https://github.com/sxyazi/yazi/pull/3854
 [#3862]: https://github.com/sxyazi/yazi/pull/3862
+[#3891]: https://github.com/sxyazi/yazi/pull/3891
