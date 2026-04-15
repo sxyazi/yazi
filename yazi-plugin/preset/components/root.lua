@@ -63,7 +63,7 @@ function Root:click(event, up)
 		if tab and tab._chunks then
 			local c = tab._chunks
 			local lx = c[2].x - 1 -- left separator center x
-			local rx = c[3].x     -- right separator center x
+			local rx = c[3].x -- right separator center x
 			if c[1].w > 0 and event.x >= lx - 1 and event.x <= lx + 1 then
 				Root._drag_which = "left"
 				return
