@@ -4,7 +4,7 @@ use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{AsPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
-use crate::{cha::{Cha, ChaType}, provider::{Attrs, Capabilities}};
+use crate::{cha::{Cha, ChaMode, ChaType}, provider::{Attrs, Capabilities}};
 
 pub trait Provider: Sized {
 	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
@@ -162,6 +162,8 @@ pub trait Provider: Sized {
 	fn rename<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
 		P: AsPath;
+
+	fn set_mode(&self, mode: ChaMode) -> impl Future<Output = io::Result<()>>;
 
 	fn symlink<S, F>(&self, original: S, _is_dir: F) -> impl Future<Output = io::Result<()>>
 	where

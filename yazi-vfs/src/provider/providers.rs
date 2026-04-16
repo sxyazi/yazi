@@ -1,7 +1,7 @@
 use std::io;
 
 use tokio::sync::mpsc;
-use yazi_fs::{cha::Cha, provider::{Attrs, Capabilities, Provider}};
+use yazi_fs::{cha::{Cha, ChaMode}, provider::{Attrs, Capabilities, Provider}};
 use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 #[derive(Clone)]
@@ -172,6 +172,13 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.rename(to).await,
 			Self::Sftp(p) => p.rename(to).await,
+		}
+	}
+
+	async fn set_mode(&self, mode: ChaMode) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.set_mode(mode).await,
+			Self::Sftp(p) => p.set_mode(mode).await,
 		}
 	}
 

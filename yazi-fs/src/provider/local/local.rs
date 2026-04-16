@@ -3,7 +3,7 @@ use std::{io, path::Path, sync::Arc};
 use tokio::sync::mpsc;
 use yazi_shared::{path::{AsPath, PathBufDyn}, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
-use crate::{cha::Cha, provider::{Attrs, Capabilities, Provider}};
+use crate::{cha::{Cha, ChaMode}, provider::{Attrs, Capabilities, Provider}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -123,6 +123,26 @@ impl<'a> Provider for Local<'a> {
 		let to = to.as_path().as_os()?;
 
 		tokio::fs::rename(self.path, to).await
+	}
+
+	async fn set_mode(&self, mode: ChaMode) -> io::Result<()> {
+		#[cfg(unix)]
+		{
+			return tokio::fs::set_permissions(self.path, mode.into()).await;
+		}
+		#[cfg(windows)]
+		{
+			use std::os::windows::ffi::OsStrExt;
+
+			let path: Vec<u16> = self.path.as_os_str().encode_wide().chain(Some(0)).collect();
+			let perm = if mode.contains(ChaMode::U_WRITE) { libc::S_IWRITE } else { libc::S_IREAD };
+
+			return tokio::task::spawn_blocking(move || {
+				let result = unsafe { libc::wchmod(path.as_ptr(), perm) };
+				if result == 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
+			})
+			.await?;
+		}
 	}
 
 	#[inline]

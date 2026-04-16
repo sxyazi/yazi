@@ -2,7 +2,7 @@ use std::{io, sync::Arc};
 
 use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ServiceSftp, Vfs};
-use yazi_fs::provider::{Capabilities, DirReader, FileHolder, Provider};
+use yazi_fs::{cha::ChaMode, provider::{Capabilities, DirReader, FileHolder, Provider}};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -191,6 +191,14 @@ impl<'a> Provider for Sftp<'a> {
 			Err(e) => Err(e)?,
 		}
 		Ok(())
+	}
+
+	async fn set_mode(&self, mode: ChaMode) -> io::Result<()> {
+		let attrs = super::Attrs(yazi_fs::provider::Attrs { mode: Some(mode), ..Default::default() })
+			.try_into()
+			.map_err(|()| io::Error::new(io::ErrorKind::InvalidInput, "Cannot convert mode"))?;
+
+		Ok(self.op().await?.setstat(self.path, attrs).await?)
 	}
 
 	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
