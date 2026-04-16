@@ -41,9 +41,9 @@ impl Actor for Shell {
 
 			TasksProxy::open_shell_compat(ProcessOpt {
 				cwd,
-				cmd:    form.run.to_string().into(),
-				args:   selected,
-				block:  form.block,
+				cmd: form.run.to_string().into(),
+				args: selected,
+				block: form.block,
 				orphan: form.orphan,
 				spread: true,
 			});

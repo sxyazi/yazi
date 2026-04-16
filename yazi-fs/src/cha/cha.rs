@@ -81,17 +81,19 @@ impl Cha {
 		};
 
 		#[cfg(windows)]
-		let mode = {
-			if m.is_file() {
-				ChaMode::T_FILE
-			} else if m.is_dir() {
-				ChaMode::T_DIR
-			} else if m.is_symlink() {
-				ChaMode::T_LINK
-			} else {
-				ChaMode::empty()
-			}
+		let mut mode = if m.is_file() {
+			ChaMode::T_FILE
+		} else if m.is_dir() {
+			ChaMode::T_DIR
+		} else if m.is_symlink() {
+			ChaMode::T_LINK
+		} else {
+			ChaMode::empty()
 		};
+		#[cfg(windows)]
+		if !m.permissions().readonly() {
+			mode |= ChaMode::U_WRITE;
+		}
 
 		Self {
 			kind: ChaKind::empty(),

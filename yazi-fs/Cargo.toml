@@ -26,6 +26,7 @@ dirs             = { workspace = true }
 either           = { workspace = true }
 foldhash         = { workspace = true }
 hashbrown        = { workspace = true }
+libc             = { workspace = true }
 parking_lot      = { workspace = true }
 percent-encoding = { workspace = true }
 rand             = { workspace = true }
@@ -38,7 +39,6 @@ tracing          = { workspace = true }
 typed-path       = { workspace = true }
 
 [target."cfg(unix)".dependencies]
-libc  = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]

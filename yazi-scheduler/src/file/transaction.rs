@@ -1,5 +1,6 @@
 use std::{hash::{BuildHasher, Hash, Hasher}, io};
 
+use yazi_fs::cha::ChaMode;
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlBuf}};
 use yazi_vfs::{provider, unique_file};
@@ -31,8 +32,12 @@ impl Transaction {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		if ok_or_not_found!(provider::symlink_metadata(url).await, return Ok(())).is_link() {
+
+		let cha = ok_or_not_found!(provider::symlink_metadata(url).await, return Ok(()));
+		if cha.is_link() {
 			provider::rename(Self::tmp(url).await?, url).await?;
+		} else if !cha.contains(ChaMode::U_WRITE) {
+			provider::set_mode(url, cha.mode | ChaMode::U_WRITE).await?;
 		}
 
 		Ok(())
