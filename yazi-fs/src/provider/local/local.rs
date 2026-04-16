@@ -138,7 +138,7 @@ impl<'a> Provider for Local<'a> {
 			let perm = if mode.contains(ChaMode::U_WRITE) { libc::S_IWRITE } else { libc::S_IREAD };
 
 			return tokio::task::spawn_blocking(move || {
-				let result = unsafe { libc::_wchmod(path.as_ptr(), perm) };
+				let result = unsafe { libc::wchmod(path.as_ptr(), perm) };
 				if result == 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
 			})
 			.await?;

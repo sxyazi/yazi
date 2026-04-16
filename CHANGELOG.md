@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Chafa v1.18.1 causes random ghost keypresses when previewing images ([#3678])
+- `paste --force` doesn't work on existing read-only files with the same name ([#3894])
 - Be a little defensive while parsing the output of `7zz -ba` ([#3744])
 - Make `ya pkg` ignore default remote name in user Git config ([#3648])
 - Archive extraction fails for target paths with non-ASCII characters on Windows ([#3607])
@@ -1701,3 +1702,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3854]: https://github.com/sxyazi/yazi/pull/3854
 [#3862]: https://github.com/sxyazi/yazi/pull/3862
 [#3891]: https://github.com/sxyazi/yazi/pull/3891
+[#3894]: https://github.com/sxyazi/yazi/pull/3894
