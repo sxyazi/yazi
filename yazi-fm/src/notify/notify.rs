@@ -20,9 +20,9 @@ impl<'a> Notify<'a> {
 		.skip(1)
 		.zip(messages)
 		.map(|(&(mut r), m)| {
-			if r.width > m.max_width as u16 {
-				r.x = r.x.saturating_add(r.width - m.max_width as u16);
-				r.width = m.max_width as u16;
+			let w = m.width() as u16;
+			if let Some(sub) = r.width.checked_sub(w) {
+				(r.x, r.width) = (r.x.saturating_add(sub), w);
 			}
 			r
 		})

@@ -45,12 +45,12 @@ impl Worker {
 
 		let handles = []
 			.into_iter()
-			.chain((0..YAZI.tasks.file_workers).map(|_| me.file(file_rx.clone())))
-			.chain((0..YAZI.tasks.plugin_workers).map(|_| me.plugin(plugin_rx.clone())))
-			.chain((0..YAZI.tasks.fetch_workers).map(|_| me.fetch(fetch_rx.clone())))
-			.chain((0..YAZI.tasks.preload_workers).map(|_| me.preload(preload_rx.clone())))
+			.chain((0..YAZI.tasks.file_workers.get()).map(|_| me.file(file_rx.clone())))
+			.chain((0..YAZI.tasks.plugin_workers.get()).map(|_| me.plugin(plugin_rx.clone())))
+			.chain((0..YAZI.tasks.fetch_workers.get()).map(|_| me.fetch(fetch_rx.clone())))
+			.chain((0..YAZI.tasks.preload_workers.get()).map(|_| me.preload(preload_rx.clone())))
 			.chain((0..3).map(|_| me.size(size_rx.clone())))
-			.chain((0..YAZI.tasks.process_workers).map(|_| me.process(process_rx.clone())))
+			.chain((0..YAZI.tasks.process_workers.get()).map(|_| me.process(process_rx.clone())))
 			.chain((0..3).map(|_| me.hook(hook_rx.clone())))
 			.chain([me.op(op_rx)])
 			.collect();

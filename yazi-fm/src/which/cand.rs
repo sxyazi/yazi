@@ -18,21 +18,22 @@ impl Widget for Cand<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let keys = self.keys();
 		let mut spans = Vec::with_capacity(10);
+		let separator = &**THEME.which.separator.load();
 
 		// Padding
 		spans.push(Span::raw(" ".repeat(10usize.saturating_sub(keys.join("").len()))));
 
 		// First key
-		spans.push(Span::styled(keys[0].clone(), THEME.which.cand));
+		spans.push(Span::styled(keys[0].clone(), THEME.which.cand.get()));
 
 		// Rest keys
-		spans.extend(keys.iter().skip(1).map(|k| Span::styled(k, THEME.which.rest)));
+		spans.extend(keys.iter().skip(1).map(|k| Span::styled(k, THEME.which.rest.get())));
 
 		// Separator
-		spans.push(Span::styled(&THEME.which.separator, THEME.which.separator_style));
+		spans.push(Span::styled(separator, THEME.which.separator_style.get()));
 
 		// Description
-		spans.push(Span::styled(self.cand.desc_or_run(), THEME.which.desc));
+		spans.push(Span::styled(self.cand.desc_or_run(), THEME.which.desc.get()));
 
 		Line::from(spans).render(area, buf);
 	}

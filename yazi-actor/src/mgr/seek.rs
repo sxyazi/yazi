@@ -25,12 +25,12 @@ impl Actor for Seek {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		let Some(previewer) = YAZI.plugin.previewer(hovered, mime) else {
+		let Some(previewer) = YAZI.plugin.previewers.matches(hovered, mime) else {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
 		let job = SeekJob { file: hovered.clone(), units: form.units };
-		let opt = PluginOpt::new_callback(&*previewer.run.name, move |_, plugin| {
+		let opt = PluginOpt::new_callback(previewer.name.clone(), move |_, plugin| {
 			plugin.call_method("seek", job)
 		});
 		act!(app:plugin, cx, opt)

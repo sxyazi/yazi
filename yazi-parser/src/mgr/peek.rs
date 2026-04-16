@@ -1,11 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct PeekForm {
 	pub skip:        Option<usize>,
 	pub force:       bool,
-	pub only_if:     Option<UrlCow<'static>>,
+	pub only_if:     Option<UrlBuf>,
 	pub upper_bound: bool,
 }
 

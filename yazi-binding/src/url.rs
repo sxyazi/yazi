@@ -203,7 +203,7 @@ impl UserData for Url {
 		methods.add_method("starts_with", |_, me, base: Value| me.starts_with(base));
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
-		methods.add_function_mut("into_search", |_, (ud, domain): (AnyUserData, mlua::String)| {
+		methods.add_function("into_search", |_, (ud, domain): (AnyUserData, mlua::String)| {
 			let url = ud.take::<Self>()?.inner.into_search(domain.to_str()?).into_lua_err()?;
 			Ok(Self::new(url))
 		});

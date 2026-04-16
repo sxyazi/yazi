@@ -1,10 +1,10 @@
 use serde::Deserialize;
-use yazi_codegen::DeserializeOver2;
+use yazi_codegen::{DeserializeOver, DeserializeOver2};
 
 use super::{Offset, Origin};
 use crate::popup::Position;
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Confirm {
 	// trash
 	pub trash_title:  String,

@@ -1,37 +1,38 @@
 use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
 
-use anyhow::Result;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer, de};
+use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
 use yazi_shared::{Layer, Source, event::Action};
 
 use super::Key;
-use crate::Platform;
+use crate::{Mixable, Platform};
 
 static RE: OnceLock<Regex> = OnceLock::new();
 
 #[derive(Clone, Debug, Default, Deserialize)]
-pub struct Chord {
-	#[serde(deserialize_with = "super::deserialize_on")]
+pub struct Chord<const L: u8 = { Layer::App as u8 }> {
+	#[serde(deserialize_with = "deserialize_on")]
 	pub on:    Vec<Key>,
-	#[serde(deserialize_with = "super::deserialize_run")]
+	#[serde(deserialize_with = "deserialize_run::<L, _>")]
 	pub run:   Vec<Action>,
-	pub desc:  Option<String>,
+	#[serde(default)]
+	pub desc:  String,
 	#[serde(default)]
 	pub r#for: Platform,
 }
 
-impl PartialEq for Chord {
+impl<const L: u8> PartialEq for Chord<L> {
 	fn eq(&self, other: &Self) -> bool { self.on == other.on }
 }
 
-impl Eq for Chord {}
+impl<const L: u8> Eq for Chord<L> {}
 
-impl Hash for Chord {
+impl<const L: u8> Hash for Chord<L> {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.on.hash(state) }
 }
 
-impl Chord {
+impl<const L: u8> Chord<L> {
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	pub fn run(&self) -> String {
@@ -41,7 +42,9 @@ impl Chord {
 	}
 
 	pub fn desc(&self) -> Option<Cow<'_, str>> {
-		self.desc.as_ref().map(|s| RE.get_or_init(|| Regex::new(r"\s+").unwrap()).replace_all(s, " "))
+		Some(&self.desc)
+			.filter(|s| !s.is_empty())
+			.map(|s| RE.get_or_init(|| Regex::new(r"\s+").unwrap()).replace_all(s, " "))
 	}
 
 	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }
@@ -59,14 +62,40 @@ impl Chord {
 	}
 }
 
-impl Chord {
-	pub(super) fn reshape(mut self, layer: Layer) -> Result<Self> {
-		for action in &mut self.run {
-			action.source = Source::Key;
-			if action.layer == Default::default() {
-				action.layer = layer;
-			}
-		}
-		Ok(self)
+impl<const L: u8> Mixable for Chord<L> {
+	fn filter(&self) -> bool { self.r#for.matches() && !self.noop() }
+}
+
+fn deserialize_on<'de, D>(deserializer: D) -> Result<Vec<Key>, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let keys: Vec<Key> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
+	if keys.is_empty() {
+		return Err(de::Error::custom("'on' cannot be empty"));
 	}
+	Ok(keys)
+}
+
+fn deserialize_run<'de, const L: u8, D>(deserializer: D) -> Result<Vec<Action>, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let mut actions: Vec<Action> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
+	if actions.is_empty() {
+		return Err(de::Error::custom("'run' cannot be empty"));
+	}
+
+	let Some(layer) = Layer::from_repr(L) else {
+		return Err(de::Error::custom(format!("invalid keymap layer const: {L}")));
+	};
+
+	for action in &mut actions {
+		action.source = Source::Key;
+		if action.layer == Default::default() {
+			action.layer = layer;
+		}
+	}
+
+	Ok(actions)
 }

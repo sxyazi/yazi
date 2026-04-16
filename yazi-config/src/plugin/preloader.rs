@@ -1,27 +1,35 @@
-use serde::Deserialize;
-use yazi_fs::File;
-use yazi_shared::event::Action;
+use std::ops::Deref;
 
-use crate::{Pattern, Priority};
+use serde::Deserialize;
+use yazi_shared::{Id, event::Action};
+
+use crate::{Mixable, Pattern, Priority, Selectable, Selector, plugin::preloader_id};
 
 #[derive(Debug, Deserialize)]
 pub struct Preloader {
+	#[serde(skip, default = "preloader_id")]
+	pub id:       Id,
 	#[serde(skip)]
-	pub idx: u8,
-
-	pub url:  Option<Pattern>,
-	pub mime: Option<Pattern>,
-	pub run:  Action,
+	pub idx:      u8,
+	#[serde(flatten)]
+	pub selector: Selector,
+	pub run:      Action,
 	#[serde(default)]
-	pub next: bool,
+	pub next:     bool,
 	#[serde(default)]
-	pub prio: Priority,
+	pub prio:     Priority,
 }
 
-impl Preloader {
-	#[inline]
-	pub fn matches(&self, file: &File, mime: &str) -> bool {
-		self.mime.as_ref().is_some_and(|p| p.match_mime(mime))
-			|| self.url.as_ref().is_some_and(|p| p.match_url(&file.url, file.is_dir()))
-	}
+impl Deref for Preloader {
+	type Target = Action;
+
+	fn deref(&self) -> &Self::Target { &self.run }
 }
+
+impl Selectable for Preloader {
+	fn url_pat(&self) -> Option<&Pattern> { self.selector.url_pat() }
+
+	fn mime_pat(&self) -> Option<&Pattern> { self.selector.mime_pat() }
+}
+
+impl Mixable for Preloader {}

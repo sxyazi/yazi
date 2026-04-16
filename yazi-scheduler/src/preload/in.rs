@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::Arc};
 
 use yazi_config::plugin::Preloader;
 use yazi_shared::Id;
@@ -7,9 +7,9 @@ use crate::{TaskIn, preload::PreloadProg};
 
 #[derive(Clone, Debug)]
 pub(crate) struct PreloadIn {
-	pub(crate) id:     Id,
-	pub(crate) plugin: &'static Preloader,
-	pub(crate) target: yazi_fs::File,
+	pub(crate) id:        Id,
+	pub(crate) preloader: Arc<Preloader>,
+	pub(crate) target:    yazi_fs::File,
 }
 
 impl TaskIn for PreloadIn {
@@ -22,5 +22,5 @@ impl TaskIn for PreloadIn {
 		self
 	}
 
-	fn title(&self) -> Cow<'_, str> { format!("Run preloader '{}'", self.plugin.run.name).into() }
+	fn title(&self) -> Cow<'_, str> { format!("Run preloader '{}'", self.preloader.name).into() }
 }

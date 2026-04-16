@@ -5,6 +5,8 @@ use globset::{Candidate, GlobBuilder};
 use serde::Deserialize;
 use yazi_shared::{scheme::SchemeKind, url::AsUrl};
 
+use crate::Mixable;
+
 #[derive(Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
@@ -58,12 +60,6 @@ impl Pattern {
 	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
 		self.is_star || (!mime.as_ref().is_empty() && self.inner.is_match(mime.as_ref()))
 	}
-
-	#[inline]
-	pub fn any_file(&self) -> bool { self.is_star && !self.is_dir }
-
-	#[inline]
-	pub fn any_dir(&self) -> bool { self.is_star && self.is_dir }
 }
 
 impl FromStr for Pattern {
@@ -102,10 +98,17 @@ impl FromStr for Pattern {
 	}
 }
 
+// FIXME: remove
 impl TryFrom<String> for Pattern {
 	type Error = anyhow::Error;
 
 	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(s.as_str()) }
+}
+
+impl Mixable for Pattern {
+	fn any_file(&self) -> bool { self.is_star && !self.is_dir }
+
+	fn any_dir(&self) -> bool { self.is_star && self.is_dir }
 }
 
 // --- Scheme

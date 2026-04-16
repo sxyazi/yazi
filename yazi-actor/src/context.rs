@@ -27,7 +27,6 @@ impl DerefMut for Ctx<'_> {
 }
 
 impl<'a> Ctx<'a> {
-	#[inline]
 	pub fn new(action: &Action, core: &'a mut Core, term: &'a mut Option<Term>) -> Result<Self> {
 		let tab = if let Ok(id) = action.get::<Id>("tab") {
 			core
@@ -51,7 +50,6 @@ impl<'a> Ctx<'a> {
 		})
 	}
 
-	#[inline]
 	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Self {
 		let tab = cx.core.mgr.tabs.cursor;
 		Self {
@@ -65,7 +63,6 @@ impl<'a> Ctx<'a> {
 		}
 	}
 
-	#[inline]
 	pub fn active(core: &'a mut Core, term: &'a mut Option<Term>) -> Self {
 		let tab = core.mgr.tabs.cursor;
 		Self {
@@ -119,6 +116,5 @@ impl<'a> Ctx<'a> {
 		self.tab_mut().hovered_folder_mut()
 	}
 
-	#[inline]
 	pub fn source(&self) -> Source { if self.level != 1 { Source::Ind } else { self.source } }
 }

@@ -1,15 +1,13 @@
-use std::{mem, ops::Deref};
+use std::ops::Deref;
 
-use anyhow::Result;
 use hashbrown::HashMap;
-use indexmap::IndexSet;
-use serde::{Deserialize, de::IntoDeserializer};
+use serde::Deserialize;
 use toml::{Spanned, de::DeTable};
-use yazi_codegen::DeserializeOver;
+use yazi_shim::toml::{DeserializeOverHook, DeserializeOverWith, deserialize_spanned};
 
 use super::OpenerRule;
 
-#[derive(Debug, Deserialize, DeserializeOver)]
+#[derive(Debug, Deserialize)]
 pub struct Opener(HashMap<String, Vec<OpenerRule>>);
 
 impl Deref for Opener {
@@ -41,27 +39,24 @@ impl Opener {
 	}
 }
 
-impl Opener {
-	pub(crate) fn reshape(mut self) -> Result<Self> {
+impl DeserializeOverHook for Opener {
+	fn deserialize_over_hook(mut self) -> Result<Self, toml::de::Error> {
 		for rules in self.0.values_mut() {
-			*rules = mem::take(rules)
-				.into_iter()
-				.filter(|r| r.r#for.matches())
-				.map(|r| r.reshape())
-				.collect::<Result<IndexSet<_>>>()?
-				.into_iter()
-				.collect();
+			rules.retain(|r| r.r#for.matches());
+			rules.iter_mut().for_each(|r| r.fill());
 		}
 
 		Ok(self)
 	}
+}
 
-	pub(crate) fn deserialize_over_with<'de>(
+impl DeserializeOverWith for Opener {
+	fn deserialize_over_with<'de>(
 		mut self,
 		table: Spanned<DeTable<'de>>,
 	) -> Result<Self, toml::de::Error> {
 		for (key, value) in table.into_inner() {
-			self.0.insert(key.into_inner().into_owned(), <_>::deserialize(value.into_deserializer())?);
+			self.0.insert(key.into_inner().into_owned(), deserialize_spanned(value)?);
 		}
 
 		Ok(self)

@@ -6,7 +6,7 @@ use crate::{Runner, loader::LOADER, previewer::{PeekError, PeekJob}};
 impl Runner {
 	pub async fn peek(&'static self, job: &PeekJob) -> mpsc::Receiver<Result<(), PeekError>> {
 		let (tx, rx) = mpsc::channel(1);
-		match LOADER.ensure(&job.action.name, |c| c.sync_peek).await {
+		match LOADER.ensure(&job.previewer.name, |c| c.sync_peek).await {
 			Ok(true) => _ = tx.try_send(Err(PeekError::ShouldSync)),
 			Ok(false) => self.peek_do(job, tx),
 			Err(e) => _ = tx.try_send(Err(e.into())),
@@ -18,7 +18,7 @@ impl Runner {
 		let (tx_, job) = (tx.clone(), job.clone());
 		tokio::task::spawn_blocking(move || {
 			let future = async {
-				let lua = self.spawn(&job.action.name)?;
+				let lua = self.spawn(&job.previewer.name)?;
 				lua.set_hook(
 					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 					move |_, dbg| {
@@ -30,7 +30,7 @@ impl Runner {
 					},
 				)?;
 
-				let plugin = LOADER.load(&lua, &job.action.name).await?;
+				let plugin = LOADER.load(&lua, &job.previewer.name).await?;
 				if tx_.is_closed() {
 					Err(PeekError::Cancelled.into_lua_err())
 				} else {

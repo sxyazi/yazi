@@ -1,7 +1,7 @@
 use anyhow::bail;
 use serde::Deserialize;
 use strum::{EnumString, IntoStaticStr};
-use yazi_shared::{SStr, event::ActionCow, url::{UrlCow, UrlLike}};
+use yazi_shared::{SStr, event::ActionCow, url::{UrlBuf, UrlLike}};
 
 #[derive(Clone, Debug)]
 pub struct SearchOpt {
@@ -9,14 +9,14 @@ pub struct SearchOpt {
 	pub subject:  SStr,
 	pub args:     Vec<String>,
 	pub args_raw: SStr,
-	pub r#in:     Option<UrlCow<'static>>,
+	pub r#in:     Option<UrlBuf>,
 }
 
 impl TryFrom<ActionCow> for SearchOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let r#in = a.take::<UrlCow>("in").ok();
+		let r#in = a.take::<UrlBuf>("in").ok();
 		if let Some(u) = &r#in
 			&& (!u.is_absolute() || u.is_search())
 		{

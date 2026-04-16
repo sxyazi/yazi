@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 use yazi_config::{Style, THEME};
 
@@ -11,19 +13,19 @@ pub enum MessageLevel {
 }
 
 impl MessageLevel {
-	pub fn icon(self) -> &'static str {
+	pub fn icon(self) -> Arc<String> {
 		match self {
-			Self::Info => &THEME.notify.icon_info,
-			Self::Warn => &THEME.notify.icon_warn,
-			Self::Error => &THEME.notify.icon_error,
+			Self::Info => THEME.notify.icon_info.load_full(),
+			Self::Warn => THEME.notify.icon_info.load_full(),
+			Self::Error => THEME.notify.icon_info.load_full(),
 		}
 	}
 
 	pub fn style(self) -> Style {
 		match self {
-			Self::Info => THEME.notify.title_info,
-			Self::Warn => THEME.notify.title_warn,
-			Self::Error => THEME.notify.title_error,
+			Self::Info => THEME.notify.title_info.get(),
+			Self::Warn => THEME.notify.title_warn.get(),
+			Self::Error => THEME.notify.title_error.get(),
 		}
 	}
 }

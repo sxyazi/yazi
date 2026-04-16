@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use yazi_fs::cha::Cha;
 
-#[derive(Default, Deserialize)]
+#[derive(Clone, Copy, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Is {
 	#[default]
@@ -19,7 +19,10 @@ pub enum Is {
 }
 
 impl Is {
-	pub fn check(&self, cha: &Cha) -> bool {
+	#[inline]
+	pub fn enabled(self) -> Option<Self> { (!matches!(self, Self::None)).then_some(self) }
+
+	pub fn check(self, cha: &Cha) -> bool {
 		match self {
 			Self::None => true,
 			Self::Hidden => cha.is_hidden(),

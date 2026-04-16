@@ -9,7 +9,7 @@ impl Runner {
 		job: PreloadJob,
 	) -> mpsc::Receiver<Result<PreloadState, PreloadError>> {
 		let (tx, rx) = mpsc::channel(1);
-		match LOADER.ensure(&job.action.name, |_| ()).await {
+		match LOADER.ensure(&job.preloader.name, |_| ()).await {
 			Ok(()) => self.preload_do(job, tx),
 			Err(e) => _ = tx.try_send(Err(e.into())),
 		};
@@ -24,7 +24,7 @@ impl Runner {
 		let tx_ = tx.clone();
 		tokio::task::spawn_blocking(move || {
 			let future = async {
-				let lua = self.spawn(&job.action.name)?;
+				let lua = self.spawn(&job.preloader.name)?;
 				lua.set_hook(
 					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 					move |_, dbg| {
@@ -36,7 +36,7 @@ impl Runner {
 					},
 				)?;
 
-				let plugin = LOADER.load(&lua, &job.action.name).await?;
+				let plugin = LOADER.load(&lua, &job.preloader.name).await?;
 				if tx_.is_closed() {
 					Err(PreloadError::Cancelled.into_lua_err())
 				} else {

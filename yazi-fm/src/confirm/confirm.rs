@@ -19,8 +19,8 @@ impl Widget for Confirm<'_> {
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.confirm.border)
-			.title(confirm.title.clone().style(THEME.confirm.title.derive(confirm.title.style)))
+			.border_style(THEME.confirm.border.get())
+			.title(confirm.title.clone().style(THEME.confirm.title.get().derive(confirm.title.style)))
 			.title_alignment(Alignment::Center)
 			.render(area, buf);
 

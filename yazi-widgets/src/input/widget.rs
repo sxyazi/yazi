@@ -12,7 +12,7 @@ impl Widget for &Input {
 	{
 		crate::Clear.render(area, buf);
 
-		Line::styled(self.display(), THEME.input.value).render(area, buf);
+		Line::styled(self.display(), THEME.input.value.get()).render(area, buf);
 
 		if let Some(Range { start, end }) = self.selected() {
 			let s = start.min(area.width);
@@ -23,7 +23,7 @@ impl Widget for &Input {
 					width:  (end - start).min(area.width - s),
 					height: area.height.min(1),
 				},
-				THEME.input.selected,
+				THEME.input.selected.get(),
 			);
 		}
 	}

@@ -30,12 +30,12 @@ impl Preview {
 			return;
 		}
 
-		let Some(previewer) = YAZI.plugin.previewer(&file, &mime) else {
+		let Some(previewer) = YAZI.plugin.previewers.matches(&file, &mime) else {
 			return self.reset();
 		};
 
 		self.abort();
-		let job = PeekJob { action: &previewer.run, file, mime, skip: self.skip };
+		let job = PeekJob { previewer, file, mime, skip: self.skip };
 
 		self.handle = Some(tokio::spawn(async move {
 			let mut rx = RUNNER.peek(&job).await;

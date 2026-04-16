@@ -16,10 +16,8 @@ pub(super) struct Dispatcher<'a> {
 }
 
 impl<'a> Dispatcher<'a> {
-	#[inline]
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
-	#[inline]
 	pub(super) fn dispatch(&mut self, event: Event) {
 		let result = match event {
 			Event::Call(action) => self.dispatch_call(action),
@@ -50,7 +48,6 @@ impl<'a> Dispatcher<'a> {
 		Ok(())
 	}
 
-	#[inline]
 	fn dispatch_seq(&mut self, mut actions: Vec<ActionCow>) -> Result<()> {
 		if let Some(last) = actions.pop() {
 			self.dispatch_call(last)?;
@@ -61,7 +58,6 @@ impl<'a> Dispatcher<'a> {
 		Ok(())
 	}
 
-	#[inline]
 	fn dispatch_render(&mut self, partial: bool) -> Result<()> {
 		if partial {
 			_ = NEED_RENDER.compare_exchange(0, 2, Ordering::Relaxed, Ordering::Relaxed);
@@ -71,31 +67,26 @@ impl<'a> Dispatcher<'a> {
 		Ok(())
 	}
 
-	#[inline]
 	fn dispatch_key(&mut self, key: KeyEvent) -> Result<()> {
 		Router::new(self.app).route(Key::from(key))?;
 		Ok(())
 	}
 
-	#[inline]
 	fn dispatch_mouse(&mut self, mouse: MouseEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:mouse, cx, mouse).map(|_| ())
 	}
 
-	#[inline]
 	fn dispatch_resize(&mut self) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _).map(|_| ())
 	}
 
-	#[inline]
 	fn dispatch_focus(&mut self) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:focus, cx).map(|_| ())
 	}
 
-	#[inline]
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {
 		if self.app.core.input.visible {
 			let input = &mut self.app.core.input;

@@ -1,11 +1,23 @@
 use serde::Deserialize;
-use strum::{Display, EnumString, IntoStaticStr};
+use strum::{Display, EnumString, FromRepr, IntoStaticStr};
 
 #[derive(
-	Clone, Copy, Debug, Default, Deserialize, Display, EnumString, Eq, Hash, IntoStaticStr, PartialEq,
+	Clone,
+	Copy,
+	Debug,
+	Default,
+	Deserialize,
+	Display,
+	EnumString,
+	Eq,
+	FromRepr,
+	Hash,
+	IntoStaticStr,
+	PartialEq,
 )]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
+#[repr(u8)]
 pub enum Layer {
 	#[default]
 	App,

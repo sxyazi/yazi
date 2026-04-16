@@ -133,14 +133,14 @@ impl UserData for Line {
 		crate::impl_style_shorthands!(methods, style);
 
 		methods.add_method("width", |_, me, ()| Ok(me.width()));
-		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {
+		methods.add_function("align", |_, (ud, align): (AnyUserData, Align)| {
 			ud.borrow_mut::<Self>()?.alignment = Some(align.0);
 			Ok(ud)
 		});
 		methods.add_method("visible", |_, me, ()| {
 			Ok(me.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
 		});
-		methods.add_function_mut("truncate", |lua, (ud, t): (AnyUserData, Table)| {
+		methods.add_function("truncate", |lua, (ud, t): (AnyUserData, Table)| {
 			let mut me = ud.borrow_mut::<Self>()?;
 
 			let max = t.raw_get("max")?;

@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{ExternalError, ExternalResult, FromLua, Lua, UserData, Value};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Id(pub yazi_shared::Id);
 
 impl Deref for Id {

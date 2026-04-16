@@ -5,7 +5,6 @@ use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}
 
 use crate::provider;
 
-#[inline]
 pub async fn maybe_exists(url: impl AsUrl) -> bool {
 	match provider::symlink_metadata(url).await {
 		Ok(_) => true,

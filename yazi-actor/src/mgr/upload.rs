@@ -14,7 +14,7 @@ impl Actor for Upload {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		for url in form.urls {
-			cx.tasks.scheduler.file_upload(url.into_owned());
+			cx.tasks.scheduler.file_upload(url);
 		}
 		succ!();
 	}

@@ -1,9 +1,9 @@
 use std::mem;
 
 use mlua::{UserData, Value};
-use crate::{cached_field, cached_field_mut};
 
 use super::Status;
+use crate::{cached_field, cached_field_mut};
 
 pub struct Output {
 	inner: std::process::Output,

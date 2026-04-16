@@ -1,9 +1,9 @@
 use serde::Deserialize;
-use yazi_codegen::DeserializeOver2;
+use yazi_codegen::{DeserializeOver, DeserializeOver2};
 
 use super::{Offset, Origin};
 
-#[derive(Deserialize, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Pick {
 	// open
 	pub open_title:  String,

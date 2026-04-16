@@ -28,9 +28,9 @@ impl Widget for Cmp<'_> {
 
 				let mut item = ListItem::new(format!(" {icon} {}{slash}", x.name.display()));
 				if i == self.core.cmp.rel_cursor() {
-					item = item.style(THEME.cmp.active);
+					item = item.style(THEME.cmp.active.get());
 				} else {
-					item = item.style(THEME.cmp.inactive);
+					item = item.style(THEME.cmp.inactive.get());
 				}
 
 				item
@@ -54,7 +54,9 @@ impl Widget for Cmp<'_> {
 
 		yazi_widgets::Clear.render(area, buf);
 		List::new(items)
-			.block(Block::bordered().border_type(BorderType::Rounded).border_style(THEME.cmp.border))
+			.block(
+				Block::bordered().border_type(BorderType::Rounded).border_style(THEME.cmp.border.get()),
+			)
 			.render(area, buf);
 	}
 }

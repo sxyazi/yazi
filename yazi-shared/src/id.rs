@@ -11,7 +11,7 @@ impl Id {
 	pub const ZERO: Self = Self(0);
 
 	#[inline]
-	pub const fn get(&self) -> u64 { self.0 }
+	pub const fn get(self) -> u64 { self.0 }
 
 	pub fn unique() -> Self { Self(crate::timestamp_us()) }
 }

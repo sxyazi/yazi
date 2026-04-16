@@ -10,7 +10,7 @@ const EXPECTED: &str = "expected a table, File, or fs::File";
 
 #[derive(Clone)]
 pub struct File {
-	inner: yazi_fs::File,
+	pub(crate) inner: yazi_fs::File,
 
 	v_cha:     Option<Value>,
 	v_url:     Option<Value>,

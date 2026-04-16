@@ -79,7 +79,7 @@ impl UserData for Border {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
-		methods.add_function_mut("type", |_, (ud, value): (AnyUserData, u8)| {
+		methods.add_function("type", |_, (ud, value): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.r#type = match value {
 				ROUNDED => ratatui::widgets::BorderType::Rounded,
 				DOUBLE => ratatui::widgets::BorderType::Double,
@@ -90,20 +90,17 @@ impl UserData for Border {
 			};
 			Ok(ud)
 		});
-		methods.add_function_mut(
-			"title",
-			|_, (ud, line, position): (AnyUserData, Line, Option<u8>)| {
-				let position = if position == Some(Borders::BOTTOM.bits()) {
-					ratatui::widgets::TitlePosition::Bottom
-				} else {
-					ratatui::widgets::TitlePosition::Top
-				};
+		methods.add_function("title", |_, (ud, line, position): (AnyUserData, Line, Option<u8>)| {
+			let position = if position == Some(Borders::BOTTOM.bits()) {
+				ratatui::widgets::TitlePosition::Bottom
+			} else {
+				ratatui::widgets::TitlePosition::Top
+			};
 
-				ud.borrow_mut::<Self>()?.titles.push((position, line.inner));
-				Ok(ud)
-			},
-		);
-		methods.add_function_mut("edge", |_, (ud, edge): (AnyUserData, Edge)| {
+			ud.borrow_mut::<Self>()?.titles.push((position, line.inner));
+			Ok(ud)
+		});
+		methods.add_function("edge", |_, (ud, edge): (AnyUserData, Edge)| {
 			ud.borrow_mut::<Self>()?.edge = edge;
 			Ok(ud)
 		});

@@ -1,11 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct BulkExitForm {
 	#[serde(alias = "0")]
-	pub target: UrlCow<'static>,
+	pub target: UrlBuf,
 	#[serde(default)]
 	pub accept: bool,
 }

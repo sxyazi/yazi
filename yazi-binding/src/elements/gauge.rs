@@ -57,7 +57,7 @@ impl UserData for Gauge {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
-		methods.add_function_mut("percent", |_, (ud, percent): (AnyUserData, u8)| {
+		methods.add_function("percent", |_, (ud, percent): (AnyUserData, u8)| {
 			if percent > 100 {
 				return Err("percent must be between 0 and 100".into_lua_err());
 			}
@@ -66,7 +66,7 @@ impl UserData for Gauge {
 			Ok(ud)
 		});
 
-		methods.add_function_mut("ratio", |_, (ud, ratio): (AnyUserData, f64)| {
+		methods.add_function("ratio", |_, (ud, ratio): (AnyUserData, f64)| {
 			if !(0.0..1.0).contains(&ratio) {
 				return Err("ratio must be between 0 and 1".into_lua_err());
 			}
@@ -75,12 +75,12 @@ impl UserData for Gauge {
 			Ok(ud)
 		});
 
-		methods.add_function_mut("label", |_, (ud, label): (AnyUserData, Span)| {
+		methods.add_function("label", |_, (ud, label): (AnyUserData, Span)| {
 			ud.borrow_mut::<Self>()?.label = Some(label.0);
 			Ok(ud)
 		});
 
-		methods.add_function_mut("gauge_style", |_, (ud, style): (AnyUserData, Style)| {
+		methods.add_function("gauge_style", |_, (ud, style): (AnyUserData, Style)| {
 			ud.borrow_mut::<Self>()?.gauge_style = style.0;
 			Ok(ud)
 		});

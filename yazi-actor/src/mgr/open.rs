@@ -1,4 +1,6 @@
 use anyhow::Result;
+use futures::StreamExt;
+use hashbrown::HashSet;
 use yazi_boot::ARGS;
 use yazi_core::mgr::OpenDoOpt;
 use yazi_fs::File;
@@ -31,17 +33,17 @@ impl Actor for Open {
 
 		if opt.targets.is_empty() {
 			opt.targets = if opt.hovered {
-				cx.hovered().map(|h| vec![h.url.clone().into()]).unwrap_or_default()
+				cx.hovered().map(|h| vec![h.url.clone()]).unwrap_or_default()
 			} else {
 				act!(mgr:escape_visual, cx)?;
-				cx.tab().selected_or_hovered().cloned().map(Into::into).collect()
+				cx.tab().selected_or_hovered().cloned().collect()
 			};
 		}
 		if opt.targets.is_empty() {
 			succ!();
 		}
 
-		let todo: Vec<_> = opt
+		let todo: HashSet<_> = opt
 			.targets
 			.iter()
 			.enumerate()
@@ -49,21 +51,28 @@ impl Actor for Open {
 			.map(|(i, _)| i)
 			.collect();
 
-		let cwd = opt.cwd.unwrap_or_else(|| cx.cwd().clone().into());
-		if todo.is_empty() {
-			return act!(mgr:open_do, cx, OpenDoOpt { cwd, targets: opt.targets, interactive: opt.interactive });
-		}
-
+		let cwd = opt.cwd.unwrap_or_else(|| cx.cwd().clone());
 		let scheduler = cx.tasks.scheduler.clone();
 		tokio::spawn(async move {
-			let mut files = Vec::with_capacity(todo.len());
-			for i in todo {
-				if let Ok(f) = File::new(&opt.targets[i]).await {
-					files.push(f);
+			let mut all = Vec::with_capacity(opt.targets.len());
+			let mut part = Vec::with_capacity(todo.len());
+
+			let it = futures::stream::iter(opt.targets)
+				.enumerate()
+				.map(|(i, url)| async move { File::new(url).await.ok().map(|file| (i, file)) })
+				.buffered(3)
+				.filter_map(|item| async move { item });
+
+			futures::pin_mut!(it);
+			while let Some((i, file)) = it.next().await {
+				if todo.contains(&i) {
+					part.push(file.clone());
 				}
+				all.push(file);
 			}
-			if scheduler.fetch_mimetype(files).await {
-				MgrProxy::open_do(OpenDoOpt { cwd, targets: opt.targets, interactive: opt.interactive });
+
+			if !all.is_empty() && scheduler.fetch_mimetype(part).await {
+				MgrProxy::open_do(OpenDoOpt { cwd, targets: all, interactive: opt.interactive });
 			}
 		});
 		succ!();

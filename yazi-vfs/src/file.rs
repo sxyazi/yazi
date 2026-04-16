@@ -11,14 +11,12 @@ pub trait VfsFile: Sized {
 }
 
 impl VfsFile for File {
-	#[inline]
 	async fn new<'a>(url: impl Into<UrlCow<'a>>) -> Result<Self> {
 		let url = url.into();
 		let cha = provider::symlink_metadata(&url).await?;
 		Ok(Self::from_follow(url.into_owned(), cha).await)
 	}
 
-	#[inline]
 	async fn from_follow(url: UrlBuf, cha: Cha) -> Self {
 		let link_to = if cha.is_link() { provider::read_link(&url).await.ok() } else { None };
 

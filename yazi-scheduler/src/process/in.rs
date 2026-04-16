@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsString};
 
-use yazi_shared::{CompletionToken, Id, url::UrlCow};
+use yazi_shared::{CompletionToken, Id, url::{UrlBuf, UrlCow}};
 
 use super::ShellOpt;
 use crate::{TaskIn, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
@@ -47,7 +47,7 @@ impl TaskIn for ProcessIn {
 #[derive(Debug)]
 pub(crate) struct ProcessInBlock {
 	pub(crate) id:   Id,
-	pub(crate) cwd:  UrlCow<'static>,
+	pub(crate) cwd:  UrlBuf,
 	pub(crate) cmd:  OsString,
 	pub(crate) args: Vec<UrlCow<'static>>,
 }
@@ -75,7 +75,7 @@ impl From<ProcessInBlock> for ShellOpt {
 #[derive(Debug)]
 pub(crate) struct ProcessInOrphan {
 	pub(crate) id:   Id,
-	pub(crate) cwd:  UrlCow<'static>,
+	pub(crate) cwd:  UrlBuf,
 	pub(crate) cmd:  OsString,
 	pub(crate) args: Vec<UrlCow<'static>>,
 }
@@ -103,7 +103,7 @@ impl From<ProcessInOrphan> for ShellOpt {
 #[derive(Debug)]
 pub(crate) struct ProcessInBg {
 	pub(crate) id:   Id,
-	pub(crate) cwd:  UrlCow<'static>,
+	pub(crate) cwd:  UrlBuf,
 	pub(crate) cmd:  OsString,
 	pub(crate) args: Vec<UrlCow<'static>>,
 	pub(crate) done: CompletionToken,

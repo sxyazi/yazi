@@ -79,7 +79,6 @@ impl PartialEq<&[u8]> for Strand<'_> {
 }
 
 impl<'a> Strand<'a> {
-	#[inline]
 	pub fn as_os(self) -> Result<&'a OsStr, StrandError> {
 		match self {
 			Self::Os(s) => Ok(s),
@@ -98,7 +97,6 @@ impl<'a> Strand<'a> {
 		typed_path::UnixPath::new(self.encoded_bytes())
 	}
 
-	#[inline]
 	pub fn as_utf8(self) -> Result<&'a str, StrandError> {
 		match self {
 			Self::Os(s) => s.to_str().ok_or(StrandError::AsUtf8),

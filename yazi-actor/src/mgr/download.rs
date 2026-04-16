@@ -8,7 +8,7 @@ use yazi_fs::{File, FsScheme, provider::{Provider, local::Local}};
 use yazi_macro::succ;
 use yazi_parser::mgr::DownloadForm;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{data::Data, url::{UrlCow, UrlLike}};
+use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx};
@@ -29,7 +29,7 @@ impl Actor for Download {
 
 			let mut wg1 = FuturesUnordered::new();
 			for url in form.urls {
-				let done = scheduler.file_download(url.to_owned());
+				let done = scheduler.file_download(url.clone());
 				wg1.push(async move { (done.future().await, url) });
 			}
 
@@ -60,7 +60,7 @@ impl Actor for Download {
 			}
 			if form.open && !urls.is_empty() {
 				MgrProxy::open(OpenOpt {
-					cwd:         Some(cwd.into()),
+					cwd:         Some(cwd),
 					targets:     urls,
 					interactive: false,
 					hovered:     false,
@@ -73,7 +73,7 @@ impl Actor for Download {
 }
 
 impl Download {
-	async fn prepare(urls: &[UrlCow<'_>]) {
+	async fn prepare(urls: &[UrlBuf]) {
 		let roots: HashSet<_> = urls.iter().filter_map(|u| u.scheme().cache()).collect();
 		for mut root in roots {
 			root.push("%lock");

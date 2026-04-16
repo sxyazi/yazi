@@ -124,15 +124,15 @@ impl UserData for Text {
 		crate::impl_style_method!(methods, inner.style);
 		crate::impl_style_shorthands!(methods, inner.style);
 
-		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {
+		methods.add_function("align", |_, (ud, align): (AnyUserData, Align)| {
 			ud.borrow_mut::<Self>()?.inner.alignment = Some(align.0);
 			Ok(ud)
 		});
-		methods.add_function_mut("wrap", |_, (ud, wrap): (AnyUserData, Wrap)| {
+		methods.add_function("wrap", |_, (ud, wrap): (AnyUserData, Wrap)| {
 			ud.borrow_mut::<Self>()?.wrap = wrap;
 			Ok(ud)
 		});
-		methods.add_function_mut("scroll", |_, (ud, x, y): (AnyUserData, u16, u16)| {
+		methods.add_function("scroll", |_, (ud, x, y): (AnyUserData, u16, u16)| {
 			ud.borrow_mut::<Self>()?.scroll = ratatui::layout::Position { x, y };
 			Ok(ud)
 		});

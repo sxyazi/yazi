@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_macro::{render_and, succ};
 use yazi_parser::mgr::ToggleForm;
 use yazi_scheduler::NotifyProxy;
-use yazi_shared::{data::Data, url::UrlCow};
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -15,7 +15,7 @@ impl Actor for Toggle {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
-		let Some(url) = form.url.or(tab.current.hovered().map(|h| UrlCow::from(&h.url))) else {
+		let Some(url) = form.url.or_else(|| tab.hovered().map(|h| h.url.clone())) else {
 			succ!();
 		};
 

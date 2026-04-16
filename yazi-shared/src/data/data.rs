@@ -181,6 +181,12 @@ impl TryFrom<Data> for UrlCow<'static> {
 	}
 }
 
+impl TryFrom<Data> for UrlBuf {
+	type Error = anyhow::Error;
+
+	fn try_from(value: Data) -> Result<Self, Self::Error> { UrlCow::try_from(value).map(Into::into) }
+}
+
 impl<'a> TryFrom<&'a Data> for UrlCow<'a> {
 	type Error = anyhow::Error;
 
@@ -192,6 +198,12 @@ impl<'a> TryFrom<&'a Data> for UrlCow<'a> {
 			_ => bail!("not a URL"),
 		}
 	}
+}
+
+impl TryFrom<&Data> for UrlBuf {
+	type Error = anyhow::Error;
+
+	fn try_from(value: &Data) -> Result<Self, Self::Error> { UrlCow::try_from(value).map(Into::into) }
 }
 
 impl<'a> TryFrom<&'a Data> for &'a [u8] {

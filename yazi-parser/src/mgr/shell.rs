@@ -1,13 +1,13 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::ActionCow, url::UrlCow};
+use yazi_shared::{SStr, event::ActionCow, url::UrlBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct ShellForm {
 	#[serde(default, alias = "0")]
 	pub run: SStr,
-	pub cwd: Option<UrlCow<'static>>,
+	pub cwd: Option<UrlBuf>,
 
 	#[serde(default)]
 	pub block:       bool,

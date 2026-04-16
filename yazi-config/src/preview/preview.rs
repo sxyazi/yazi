@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result, bail};
-use serde::{Deserialize, Serialize};
+use anyhow::{Context, Result};
+use serde::{Deserialize, Deserializer, Serialize};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::Xdg;
 use yazi_shared::{SStr, timestamp_us};
+use yazi_shim::toml::DeserializeOverHook;
 
 use super::PreviewWrap;
 use crate::normalize_path;
@@ -16,10 +17,13 @@ pub struct Preview {
 	pub max_width:  u16,
 	pub max_height: u16,
 
+	#[serde(deserialize_with = "deserialize_cache_dir")]
 	pub cache_dir: PathBuf,
 
+	#[serde(deserialize_with = "deserialize_image_delay")]
 	pub image_delay:   u8,
 	pub image_filter:  String,
+	#[serde(deserialize_with = "deserialize_image_quality")]
 	pub image_quality: u8,
 
 	pub ueberzug_scale:  f32,
@@ -43,25 +47,50 @@ impl Preview {
 	}
 }
 
-impl Preview {
-	pub(crate) fn reshape(mut self) -> Result<Self> {
-		if self.image_delay > 100 {
-			bail!("[preview].image_delay must be between 0 and 100.");
-		} else if self.image_quality < 50 || self.image_quality > 90 {
-			bail!("[preview].image_quality must be between 50 and 90.");
-		}
-
-		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
-			Xdg::cache_dir().to_owned()
-		} else if let Some(p) = normalize_path(self.cache_dir) {
-			p
-		} else {
-			bail!("[preview].cache_dir must be either empty or an absolute path.");
-		};
-
+impl DeserializeOverHook for Preview {
+	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		std::fs::create_dir_all(&self.cache_dir)
-			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))?;
+			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
+			.map_err(serde::de::Error::custom)?;
 
 		Ok(self)
+	}
+}
+
+fn deserialize_cache_dir<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let path = PathBuf::deserialize(deserializer)?;
+	if path.as_os_str().is_empty() {
+		Ok(Xdg::cache_dir().to_owned())
+	} else {
+		normalize_path(path).ok_or_else(|| {
+			serde::de::Error::custom("cache_dir must be either empty or an absolute path.")
+		})
+	}
+}
+
+fn deserialize_image_delay<'de, D>(deserializer: D) -> Result<u8, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let value = u8::deserialize(deserializer)?;
+	if value <= 100 {
+		Ok(value)
+	} else {
+		Err(serde::de::Error::custom("image_delay must be between 0 and 100."))
+	}
+}
+
+fn deserialize_image_quality<'de, D>(deserializer: D) -> Result<u8, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	let value = u8::deserialize(deserializer)?;
+	if (50..=90).contains(&value) {
+		Ok(value)
+	} else {
+		Err(serde::de::Error::custom("image_quality must be between 50 and 90."))
 	}
 }

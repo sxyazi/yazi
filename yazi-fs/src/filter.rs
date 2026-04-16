@@ -31,7 +31,6 @@ impl Filter {
 		self.regex.is_match(name.as_strand().encoded_bytes())
 	}
 
-	#[inline]
 	pub fn highlighted(&self, name: impl AsStrand) -> Option<Vec<Range<usize>>> {
 		self.regex.find(name.as_strand().encoded_bytes()).map(|m| vec![m.range()])
 	}

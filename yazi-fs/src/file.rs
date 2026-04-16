@@ -1,4 +1,4 @@
-use std::{hash::{Hash, Hasher}, ops::Deref, path::Path};
+use std::{borrow::Cow, hash::{Hash, Hasher}, ops::Deref, path::Path};
 
 use yazi_shared::{path::{PathBufDyn, PathDyn}, strand::Strand, url::{UrlBuf, UrlLike}};
 
@@ -19,6 +19,14 @@ impl Deref for File {
 
 impl From<&Self> for File {
 	fn from(value: &Self) -> Self { value.clone() }
+}
+
+impl From<File> for Cow<'_, File> {
+	fn from(value: File) -> Self { Cow::Owned(value) }
+}
+
+impl<'a> From<&'a File> for Cow<'a, File> {
+	fn from(value: &'a File) -> Self { Cow::Borrowed(value) }
 }
 
 impl File {

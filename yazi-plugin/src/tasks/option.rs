@@ -9,7 +9,7 @@ pub(crate) struct TaskOpt(pub(crate) yazi_core::tasks::TaskOpt);
 
 impl UserData for TaskOpt {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_function_mut("name", |_, (ud, name): (AnyUserData, mlua::String)| {
+		methods.add_function("name", |_, (ud, name): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.0.set_title(name.to_string_lossy());
 			Ok(ud)
 		});

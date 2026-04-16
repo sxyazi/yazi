@@ -12,7 +12,6 @@ pub struct Chunk {
 }
 
 impl Chunk {
-	#[inline]
 	pub fn compatible(&self) -> bool {
 		let s = yazi_boot::actions::Actions::version();
 		natsort(s.as_bytes(), self.since.as_bytes(), false) != std::cmp::Ordering::Less

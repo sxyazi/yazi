@@ -1,9 +1,9 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct ToggleAllForm {
-	pub urls:  Vec<UrlCow<'static>>,
+	pub urls:  Vec<UrlBuf>,
 	pub state: Option<bool>,
 }
 

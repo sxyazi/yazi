@@ -25,7 +25,7 @@ jobs:
           npm ci
 
       - name: Validate Form
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const script = require('./scripts/validate-form/main.js')

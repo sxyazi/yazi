@@ -1,10 +1,10 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct UpdatePagedForm {
 	pub page:    Option<usize>,
-	pub only_if: Option<UrlCow<'static>>,
+	pub only_if: Option<UrlBuf>,
 }
 
 impl From<ActionCow> for UpdatePagedForm {

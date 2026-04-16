@@ -88,7 +88,7 @@ macro_rules! cached_field_mut {
 #[macro_export]
 macro_rules! impl_area_method {
 	($methods:ident) => {
-		$methods.add_function_mut(
+		$methods.add_function(
 			"area",
 			|lua, (ud, area): (mlua::AnyUserData, Option<mlua::AnyUserData>)| {
 				use mlua::IntoLua;
@@ -106,7 +106,7 @@ macro_rules! impl_area_method {
 #[macro_export]
 macro_rules! impl_style_method {
 	($methods:ident, $($field:tt).+) => {
-		$methods.add_function_mut("style", |_, (ud, style): (mlua::AnyUserData, $crate::Style)| {
+		$methods.add_function("style", |_, (ud, style): (mlua::AnyUserData, $crate::Style)| {
 			ud.borrow_mut::<Self>()?.$($field).+ = style.0;
 			Ok(ud)
 		});
@@ -116,7 +116,7 @@ macro_rules! impl_style_method {
 #[macro_export]
 macro_rules! impl_style_shorthands {
 	($methods:ident, $($field:tt).+) => {
-		$methods.add_function_mut("fg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+		$methods.add_function("fg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
 			use $crate::elements::Color;
 			use mlua::FromLua;
 			use ratatui::style::Modifier;
@@ -135,7 +135,7 @@ macro_rules! impl_style_shorthands {
 				}
 			}
 		});
-		$methods.add_function_mut("bg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+		$methods.add_function("bg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
 			use $crate::elements::Color;
 			use mlua::FromLua;
 			use ratatui::style::Modifier;
@@ -154,7 +154,7 @@ macro_rules! impl_style_shorthands {
 				}
 			}
 		});
-		$methods.add_function_mut("bold", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("bold", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::BOLD);
@@ -163,7 +163,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("dim", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("dim", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::DIM);
@@ -172,7 +172,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("italic", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("italic", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::ITALIC);
@@ -181,7 +181,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("underline", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("underline", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::UNDERLINED);
@@ -190,7 +190,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("blink", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("blink", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::SLOW_BLINK);
@@ -199,7 +199,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("blink_rapid", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("blink_rapid", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::RAPID_BLINK);
@@ -208,7 +208,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("reverse", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("reverse", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::REVERSED);
@@ -217,7 +217,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("hidden", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("hidden", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::HIDDEN);
@@ -226,7 +226,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("crossed", |_, (ud, remove): (mlua::AnyUserData, bool)| {
+		$methods.add_function("crossed", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
 				*me = me.remove_modifier(ratatui::style::Modifier::CROSSED_OUT);
@@ -235,7 +235,7 @@ macro_rules! impl_style_shorthands {
 			}
 			Ok(ud)
 		});
-		$methods.add_function_mut("reset", |_, ud: mlua::AnyUserData| {
+		$methods.add_function("reset", |_, ud: mlua::AnyUserData| {
 			ud.borrow_mut::<Self>()?.$($field).+ = ratatui::style::Style::reset();
 			Ok(ud)
 		});

@@ -155,7 +155,7 @@ impl BulkRename {
 	}
 
 	fn opener() -> Option<&'static OpenerRule> {
-		YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
+		YAZI.opener.block(YAZI.open.all_dummy(Path::new("bulk-rename.txt"), "text/plain"))
 	}
 
 	fn replace_url(url: &UrlBuf, take: usize, rep: &StrandBuf) -> Result<UrlBuf> {

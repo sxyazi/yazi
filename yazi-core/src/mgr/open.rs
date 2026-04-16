@@ -1,9 +1,10 @@
-use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_fs::File;
+use yazi_shared::{event::ActionCow, url::UrlBuf};
 
 #[derive(Clone, Debug)]
 pub struct OpenOpt {
-	pub cwd:         Option<UrlCow<'static>>,
-	pub targets:     Vec<UrlCow<'static>>,
+	pub cwd:         Option<UrlBuf>,
+	pub targets:     Vec<UrlBuf>,
 	pub interactive: bool,
 	pub hovered:     bool,
 }
@@ -24,7 +25,7 @@ impl TryFrom<ActionCow> for OpenOpt {
 // OpenDoOpt
 #[derive(Clone, Debug, Default)]
 pub struct OpenDoOpt {
-	pub cwd:         UrlCow<'static>,
-	pub targets:     Vec<UrlCow<'static>>,
+	pub cwd:         UrlBuf,
+	pub targets:     Vec<File>,
 	pub interactive: bool,
 }

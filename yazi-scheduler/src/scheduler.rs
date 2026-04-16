@@ -177,12 +177,8 @@ impl Scheduler {
 		id
 	}
 
-	pub fn fetch_paged(
-		&self,
-		fetcher: &'static Fetcher,
-		targets: Vec<yazi_fs::File>,
-	) -> CompletionToken {
-		let mut r#in = FetchIn { id: Id::ZERO, plugin: fetcher, targets };
+	pub fn fetch_paged(&self, fetcher: Arc<Fetcher>, targets: Vec<yazi_fs::File>) -> CompletionToken {
+		let mut r#in = FetchIn { id: Id::ZERO, fetcher, targets };
 
 		let done = self.add(&mut r#in, |t| t.done.clone());
 		self.fetch.submit(r#in);
@@ -192,7 +188,7 @@ impl Scheduler {
 
 	pub async fn fetch_mimetype(&self, targets: Vec<yazi_fs::File>) -> bool {
 		let mut wg = vec![];
-		for (fetcher, targets) in YAZI.plugin.mime_fetchers(targets) {
+		for (fetcher, targets) in YAZI.plugin.fetchers.mime(targets) {
 			wg.push(self.fetch_paged(fetcher, targets));
 		}
 
@@ -204,9 +200,9 @@ impl Scheduler {
 		true
 	}
 
-	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
-		let mut r#in = PreloadIn { id: Id::ZERO, plugin: preloader, target: target.clone() };
+	pub fn preload_paged(&self, preloader: Arc<Preloader>, target: &yazi_fs::File) {
 		let hook = HookInPreload::new(preloader.idx, target.hash_u64());
+		let mut r#in = PreloadIn { id: Id::ZERO, preloader, target: target.clone() };
 
 		self.add_hooked(&mut r#in, hook, |_| ());
 		if let Some(prev) = self.preload.loading.lock().put(target.url.hash_u64(), r#in.id) {

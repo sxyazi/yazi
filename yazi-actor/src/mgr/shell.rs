@@ -21,7 +21,7 @@ impl Actor for Shell {
 	fn act(cx: &mut Ctx, mut form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		let cwd = form.cwd.take().unwrap_or(cx.cwd().into()).into_owned();
+		let cwd = form.cwd.take().unwrap_or_else(|| cx.cwd().clone());
 		let selected: Vec<_> = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
 
 		let input = form.interactive.then(|| {
@@ -40,7 +40,7 @@ impl Actor for Shell {
 			}
 
 			TasksProxy::open_shell_compat(ProcessOpt {
-				cwd:    cwd.into(),
+				cwd,
 				cmd:    form.run.to_string().into(),
 				args:   selected,
 				block:  form.block,

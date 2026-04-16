@@ -71,17 +71,17 @@ impl Actions {
 		writeln!(
 			s,
 			"    default     : {:?}",
-			YAZI.opener.first(YAZI.open.all(Path::new("f75a.txt"), "text/plain"))
+			YAZI.opener.first(YAZI.open.all_dummy(Path::new("f75a.txt"), "text/plain"))
 		)?;
 		writeln!(
 			s,
 			"    block-create: {:?}",
-			YAZI.opener.block(YAZI.open.all(Path::new("bulk-create.txt"), "text/plain"))
+			YAZI.opener.block(YAZI.open.all_dummy(Path::new("bulk-create.txt"), "text/plain"))
 		)?;
 		writeln!(
 			s,
 			"    block-rename: {:?}",
-			YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
+			YAZI.opener.block(YAZI.open.all_dummy(Path::new("bulk-rename.txt"), "text/plain"))
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;
