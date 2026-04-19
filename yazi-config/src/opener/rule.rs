@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
 use serde::Deserialize;
 use yazi_fs::Splatter;
-use yazi_shared::NonEmptyString;
+use yazi_shared::{Id, NonEmptyString};
 
-use crate::Platform;
+use crate::{Platform, opener::OpenerRules, plugin::opener_rule_id};
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OpenerRule {
+	#[serde(skip, default = "opener_rule_id")]
+	pub id:     Id,
 	pub run:    NonEmptyString,
 	#[serde(default)]
 	pub block:  bool,
@@ -30,7 +34,7 @@ impl OpenerRule {
 		}
 	}
 
-	pub(super) fn fill(&mut self) {
+	pub fn fill(&mut self) {
 		#[cfg(unix)]
 		{
 			self.spread =
@@ -40,5 +44,46 @@ impl OpenerRule {
 		{
 			self.spread = Splatter::<()>::spread(&self.run) || self.run.contains("%*");
 		}
+	}
+}
+
+// --- Matcher
+#[derive(Default)]
+pub struct OpenerRuleMatcher {
+	pub rules:  Arc<Vec<Arc<OpenerRule>>>,
+	pub id:     Id,
+	pub all:    bool,
+	pub offset: usize,
+}
+
+impl From<&OpenerRules> for OpenerRuleMatcher {
+	fn from(rules: &OpenerRules) -> Self {
+		Self { rules: rules.load_full(), all: true, ..Default::default() }
+	}
+}
+
+impl OpenerRuleMatcher {
+	pub fn matches(&self, rule: &OpenerRule) -> bool {
+		if self.all {
+			true
+		} else if self.id != Id::ZERO {
+			rule.id == self.id
+		} else {
+			false
+		}
+	}
+}
+
+impl Iterator for OpenerRuleMatcher {
+	type Item = Arc<OpenerRule>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		while let Some(rule) = self.rules.get(self.offset) {
+			self.offset += 1;
+			if self.matches(rule) {
+				return Some(rule.clone());
+			}
+		}
+		None
 	}
 }

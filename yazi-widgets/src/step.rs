@@ -56,20 +56,6 @@ impl<'de> Deserialize<'de> for Step {
 				value.parse().map_err(E::custom)
 			}
 
-			fn visit_borrowed_str<E>(self, value: &'_ str) -> Result<Self::Value, E>
-			where
-				E: de::Error,
-			{
-				self.visit_str(value)
-			}
-
-			fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
-			where
-				E: de::Error,
-			{
-				self.visit_str(&value)
-			}
-
 			fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
 			where
 				E: de::Error,

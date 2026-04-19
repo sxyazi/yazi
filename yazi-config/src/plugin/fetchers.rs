@@ -1,15 +1,13 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
-use hashbrown::HashSet;
 use serde::Deserialize;
 use tracing::warn;
 use yazi_fs::File;
-use yazi_shared::Id;
 use yazi_shim::arc_swap::IntoPointee;
 
 use super::{Fetcher, MAX_FETCHERS};
-use crate::Selectable;
+use crate::plugin::FetcherMatcher;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Fetchers(ArcSwap<Vec<Arc<Fetcher>>>);
@@ -66,52 +64,5 @@ impl Fetchers {
 
 	pub(crate) fn unwrap_unchecked(self) -> Vec<Arc<Fetcher>> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique fetchers arc")
-	}
-}
-
-// --- Matcher
-#[derive(Default)]
-pub struct FetcherMatcher<'a> {
-	pub fetchers: Arc<Vec<Arc<Fetcher>>>,
-	pub id:       Id,
-	pub file:     Option<Cow<'a, File>>,
-	pub mime:     Option<Cow<'a, str>>,
-	pub all:      bool,
-	pub offset:   usize,
-	pub seen:     HashSet<String>,
-}
-
-impl From<&Fetchers> for FetcherMatcher<'_> {
-	fn from(fetchers: &Fetchers) -> Self {
-		Self { fetchers: fetchers.load_full(), all: true, ..Default::default() }
-	}
-}
-
-impl FetcherMatcher<'_> {
-	pub fn matches(&self, fetcher: &Fetcher) -> bool {
-		if self.all {
-			true
-		} else if self.id != Id::ZERO {
-			fetcher.id == self.id
-		} else {
-			fetcher.match_with(self.file.as_deref(), self.mime.as_deref())
-		}
-	}
-}
-
-impl Iterator for FetcherMatcher<'_> {
-	type Item = Arc<Fetcher>;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		while let Some(fetcher) = self.fetchers.get(self.offset) {
-			self.offset += 1;
-			if !self.matches(fetcher) {
-				continue;
-			}
-			if self.all || self.seen.insert(fetcher.group.clone()) {
-				return Some(fetcher.clone());
-			}
-		}
-		None
 	}
 }

@@ -62,7 +62,7 @@ scopeguard         = { workspace = true }
 tokio              = { workspace = true }
 tokio-stream       = { workspace = true }
 tracing            = { workspace = true }
-tracing-appender   = "0.2.4"
+tracing-appender   = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = [ "env-filter" ] }
 
 [target."cfg(unix)".dependencies]

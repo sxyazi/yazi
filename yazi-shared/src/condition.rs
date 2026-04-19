@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::bail;
-use serde::{Deserialize, Deserializer, de};
+use serde_with::DeserializeFromStr;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ConditionOp {
@@ -44,7 +44,7 @@ impl ConditionOp {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, DeserializeFromStr)]
 pub struct Condition {
 	ops: Vec<ConditionOp>,
 }
@@ -59,16 +59,6 @@ impl FromStr for Condition {
 		}
 
 		Ok(cond)
-	}
-}
-
-impl<'de> Deserialize<'de> for Condition {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		let s = String::deserialize(deserializer)?;
-		FromStr::from_str(&s).map_err(de::Error::custom)
 	}
 }
 

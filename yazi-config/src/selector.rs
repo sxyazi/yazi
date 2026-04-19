@@ -3,10 +3,10 @@ use serde::{Deserialize, Deserializer, de};
 
 use crate::{Mixable, Pattern, Selectable};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Selector {
-	url:  Option<Pattern>,
-	mime: Option<Pattern>,
+	pub url:  Option<Pattern>,
+	pub mime: Option<Pattern>,
 }
 
 impl<'de> Deserialize<'de> for Selector {

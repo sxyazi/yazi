@@ -68,20 +68,20 @@ impl Actions {
 		writeln!(s, "    FZF_DEFAULT_COMMAND: {:?}", env::var_os("FZF_DEFAULT_COMMAND"))?;
 
 		writeln!(s, "\nText Opener")?;
+		#[rustfmt::skip]
 		writeln!(
-			s,
-			"    default     : {:?}",
-			YAZI.opener.first(YAZI.open.all_dummy(Path::new("f75a.txt"), "text/plain"))
+			s, "    default     : {:?}",
+			YAZI.open.match_dummy(Path::new("f75a.txt"), "text/plain").and_then(|r| YAZI.opener.first(&r))
 		)?;
+		#[rustfmt::skip]
 		writeln!(
-			s,
-			"    block-create: {:?}",
-			YAZI.opener.block(YAZI.open.all_dummy(Path::new("bulk-create.txt"), "text/plain"))
+			s, "    block-create: {:?}",
+			YAZI.open.match_dummy(Path::new("bulk-create.txt"), "text/plain").and_then(|r| YAZI.opener.block(&r))
 		)?;
+		#[rustfmt::skip]
 		writeln!(
-			s,
-			"    block-rename: {:?}",
-			YAZI.opener.block(YAZI.open.all_dummy(Path::new("bulk-rename.txt"), "text/plain"))
+			s, "    block-rename: {:?}",
+			YAZI.open.match_dummy(Path::new("bulk-rename.txt"), "text/plain").and_then(|r| YAZI.opener.block(&r))
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;

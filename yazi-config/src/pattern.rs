@@ -7,7 +7,7 @@ use yazi_shared::{scheme::SchemeKind, url::AsUrl};
 
 use crate::Mixable;
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
 	inner:      globset::GlobMatcher,

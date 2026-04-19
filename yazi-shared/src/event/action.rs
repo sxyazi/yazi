@@ -2,11 +2,11 @@ use std::{borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
 
 use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
-use serde::{Deserialize, de};
+use serde_with::DeserializeFromStr;
 
 use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}, event::Replier};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Action {
 	pub name:   SStr,
 	pub args:   HashMap<DataKey, Data>,
@@ -279,14 +279,5 @@ impl FromStr for Action {
 		let mut me = Self::new(mem::take(&mut words[0]), Default::default(), Some(Default::default()))?;
 		me.args = Self::parse_args(words.into_iter().skip(1), last)?;
 		Ok(me)
-	}
-}
-
-impl<'de> Deserialize<'de> for Action {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: serde::Deserializer<'de>,
-	{
-		<_>::from_str(&String::deserialize(deserializer)?).map_err(de::Error::custom)
 	}
 }

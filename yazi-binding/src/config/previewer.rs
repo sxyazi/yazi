@@ -1,11 +1,9 @@
 use std::{ops::Deref, sync::Arc};
 
-use mlua::{AnyUserData, ExternalError, FromLua, Lua, UserData, UserDataFields, Value};
-use yazi_config::plugin::previewer_id;
+use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Table, UserData, UserDataFields, Value};
+use yazi_config::YAZI;
 
-use crate::{Id, Selector, cached_field};
-
-const EXPECTED: &str = "expected a table or Previewer";
+use crate::{FileRef, Id, Iter, cached_field};
 
 #[derive(Clone)]
 pub struct Previewer {
@@ -30,33 +28,9 @@ impl Previewer {
 	}
 }
 
-impl TryFrom<mlua::Table> for Previewer {
-	type Error = mlua::Error;
-
-	fn try_from(t: mlua::Table) -> Result<Self, Self::Error> {
-		Ok(Self::new(yazi_config::plugin::Previewer {
-			id:       previewer_id(),
-			selector: Selector::try_from(&t)?.into(),
-			run:      t.raw_get::<mlua::String>("run")?.to_str()?.parse()?,
-		}))
-	}
-}
-
-impl TryFrom<AnyUserData> for Previewer {
-	type Error = mlua::Error;
-
-	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> {
-		Ok(Self::new(value.borrow::<Self>()?.clone()))
-	}
-}
-
 impl FromLua for Previewer {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		match value {
-			Value::Table(tbl) => Self::try_from(tbl),
-			Value::UserData(ud) => Self::try_from(ud),
-			_ => Err(EXPECTED.into_lua_err())?,
-		}
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(Self::new(lua.from_value::<yazi_config::plugin::Previewer>(value)?))
 	}
 }
 
@@ -65,5 +39,47 @@ impl UserData for Previewer {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
 
 		cached_field!(fields, name, |lua, me| lua.create_string(&*me.name));
+	}
+}
+
+// --- Matcher
+pub struct PreviewerMatcher(pub(super) yazi_config::plugin::PreviewerMatcher<'static>);
+
+impl PreviewerMatcher {
+	pub fn new(inner: impl Into<yazi_config::plugin::PreviewerMatcher<'static>>) -> Self {
+		Self(inner.into())
+	}
+}
+
+impl TryFrom<Table> for PreviewerMatcher {
+	type Error = mlua::Error;
+
+	fn try_from(value: Table) -> Result<Self, Self::Error> {
+		let id: Id = value.raw_get("id").unwrap_or_default();
+		let file: Option<FileRef> = value.raw_get("file")?;
+		let mime: Option<String> = value.raw_get("mime")?;
+
+		Ok(Self(yazi_config::plugin::PreviewerMatcher {
+			previewers: YAZI.plugin.previewers.load_full(),
+			id: id.0,
+			file: file.map(|f| f.inner.clone().into()),
+			mime: mime.map(Into::into),
+			..Default::default()
+		}))
+	}
+}
+
+impl FromLua for PreviewerMatcher {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Table(t) => t.try_into(),
+			_ => return Err("expected a table of PreviewerMatcher".into_lua_err()),
+		}
+	}
+}
+
+impl IntoLua for PreviewerMatcher {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		Iter::new(self.0.into_iter().map(Previewer::new), None).into_lua(lua)
 	}
 }
