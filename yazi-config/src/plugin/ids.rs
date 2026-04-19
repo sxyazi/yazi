@@ -19,3 +19,13 @@ pub fn spotter_id() -> Id {
 	static IDS: Ids = Ids::new();
 	IDS.next()
 }
+
+pub fn open_rule_id() -> Id {
+	static IDS: Ids = Ids::new();
+	IDS.next()
+}
+
+pub fn opener_rule_id() -> Id {
+	static IDS: Ids = Ids::new();
+	IDS.next()
+}

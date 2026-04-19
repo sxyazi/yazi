@@ -3,11 +3,10 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 use arc_swap::ArcSwap;
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::Id;
-use yazi_shim::{arc_swap::IntoPointee, vec::{IndexAtError, VecExt}};
+use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, vec::{IndexAtError, VecExt}};
 
 use super::Previewer;
-use crate::{Selectable, mix};
+use crate::{mix, plugin::PreviewerMatcher};
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Previewers(ArcSwap<Vec<Arc<Previewer>>>);
@@ -41,27 +40,21 @@ impl Previewers {
 	}
 
 	pub fn insert(&self, index: isize, previewer: Arc<Previewer>) -> Result<(), IndexAtError> {
-		let mut err = None;
-
-		self.0.rcu(|previewers| match previewers.index_at(index) {
-			Ok(n) if n == previewers.len() => {
-				mix(Vec::<Previewer>::new(), previewers.iter().cloned(), [previewer.clone()])
-			}
-			Ok(n) => {
-				let (before, after) = previewers.split_at(n);
-				mix(
+		self.0.try_rcu(|previewers| {
+			let i = previewers.index_at(index)?;
+			if i == previewers.len() {
+				Ok(mix(Vec::<Previewer>::new(), previewers.iter().cloned(), [previewer.clone()]))
+			} else {
+				let (before, after) = previewers.split_at(i);
+				Ok(mix(
 					Vec::<Previewer>::new(),
 					before.iter().cloned().chain([previewer.clone()]).chain(after.iter().cloned()),
 					Vec::<Previewer>::new(),
-				)
+				))
 			}
-			Err(e) => {
-				err = Some(e);
-				Vec::clone(previewers)
-			}
-		});
+		})?;
 
-		err.map_or(Ok(()), Err)
+		Ok(())
 	}
 
 	pub fn remove(&self, matcher: PreviewerMatcher) {
@@ -74,48 +67,5 @@ impl Previewers {
 
 	pub(crate) fn unwrap_unchecked(self) -> Vec<Arc<Previewer>> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique previewers arc")
-	}
-}
-
-// --- Matcher
-#[derive(Default)]
-pub struct PreviewerMatcher<'a> {
-	pub previewers: Arc<Vec<Arc<Previewer>>>,
-	pub id:         Id,
-	pub file:       Option<Cow<'a, File>>,
-	pub mime:       Option<Cow<'a, str>>,
-	pub all:        bool,
-	pub offset:     usize,
-}
-
-impl From<&Previewers> for PreviewerMatcher<'_> {
-	fn from(previewers: &Previewers) -> Self {
-		Self { previewers: previewers.load_full(), all: true, ..Default::default() }
-	}
-}
-
-impl PreviewerMatcher<'_> {
-	pub fn matches(&self, previewer: &Previewer) -> bool {
-		if self.all {
-			true
-		} else if self.id != Id::ZERO {
-			previewer.id == self.id
-		} else {
-			previewer.match_with(self.file.as_deref(), self.mime.as_deref())
-		}
-	}
-}
-
-impl Iterator for PreviewerMatcher<'_> {
-	type Item = Arc<Previewer>;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		while let Some(previewer) = self.previewers.get(self.offset) {
-			self.offset += 1;
-			if self.matches(previewer) {
-				return Some(previewer.clone());
-			}
-		}
-		None
 	}
 }

@@ -1,4 +1,4 @@
-use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
+use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
@@ -154,8 +154,11 @@ impl BulkRename {
 		Ok(())
 	}
 
-	fn opener() -> Option<&'static OpenerRule> {
-		YAZI.opener.block(YAZI.open.all_dummy(Path::new("bulk-rename.txt"), "text/plain"))
+	fn opener() -> Option<Arc<OpenerRule>> {
+		YAZI
+			.open
+			.match_dummy(Path::new("bulk-rename.txt"), "text/plain")
+			.and_then(|r| YAZI.opener.block(&r))
 	}
 
 	fn replace_url(url: &UrlBuf, take: usize, rep: &StrandBuf) -> Result<UrlBuf> {

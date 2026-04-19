@@ -1,5 +1,6 @@
 use anyhow::Result;
 use hashbrown::HashMap;
+use indexmap::IndexSet;
 use yazi_config::{YAZI, popup::PickCfg};
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenDoForm;
@@ -33,7 +34,8 @@ impl Actor for OpenDo {
 			succ!(Self::match_and_open(cx, opt.cwd, targets));
 		}
 
-		let openers: Vec<_> = YAZI.opener.all(YAZI.open.common(&targets).into_iter()).collect();
+		let openers: IndexSet<_> =
+			YAZI.open.match_common(&targets).flat_map(|r| YAZI.opener.all(r)).collect();
 		if openers.is_empty() {
 			succ!();
 		}
@@ -64,7 +66,9 @@ impl OpenDo {
 	fn match_and_open(cx: &Ctx, cwd: UrlBuf, targets: Vec<(yazi_fs::File, &str)>) {
 		let mut openers = HashMap::new();
 		for (file, mime) in targets {
-			if let Some(opener) = YAZI.opener.first(YAZI.open.all(&file, mime)) {
+			if let Some(open) = YAZI.open.matches(&file, mime)
+				&& let Some(opener) = YAZI.opener.first(&open)
+			{
 				openers.entry(opener).or_insert_with(|| vec![UrlCow::default()]).push(file.url.into());
 			}
 		}

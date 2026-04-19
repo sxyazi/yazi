@@ -1,18 +1,18 @@
-use std::ops::Deref;
+use std::{ops::Deref, sync::Arc};
 
 use anyhow::Result;
-use indexmap::IndexSet;
+use indexmap::IndexMap;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{File, cha::ChaType};
 use yazi_shared::url::AsUrl;
 use yazi_shim::toml::DeserializeOverHook;
 
-use crate::{Selectable, mix, open::OpenRule};
+use crate::{mix, open::{OpenRule, OpenRules}};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Open {
-	rules:         Vec<OpenRule>,
+	rules:         OpenRules,
 	#[serde(default)]
 	prepend_rules: Vec<OpenRule>,
 	#[serde(default)]
@@ -20,23 +20,13 @@ pub struct Open {
 }
 
 impl Deref for Open {
-	type Target = Vec<OpenRule>;
+	type Target = OpenRules;
 
 	fn deref(&self) -> &Self::Target { &self.rules }
 }
 
 impl Open {
-	pub fn all<'a>(&'a self, file: &File, mime: &str) -> impl Iterator<Item = &'a str> {
-		self
-			.rules
-			.iter()
-			.find(move |&rule| rule.matches(file, mime))
-			.into_iter()
-			.flat_map(|r| &r.r#use)
-			.map(String::as_str)
-	}
-
-	pub fn all_dummy<'a, U, M>(&'a self, url: U, mime: M) -> impl Iterator<Item = &'a str>
+	pub fn match_dummy<U, M>(&self, url: U, mime: M) -> Option<Arc<OpenRule>>
 	where
 		U: AsUrl,
 		M: AsRef<str>,
@@ -47,30 +37,26 @@ impl Open {
 			Some(if mime.starts_with("folder/") { ChaType::Dir } else { ChaType::File }),
 		);
 
-		self
-			.rules
-			.iter()
-			.find(move |&rule| rule.matches(&file, mime))
-			.into_iter()
-			.flat_map(|r| &r.r#use)
-			.map(String::as_str)
+		self.matches(&file, mime)
 	}
 
-	pub fn common<'a>(&'a self, targets: &[(File, &str)]) -> IndexSet<&'a str> {
-		let each: Vec<IndexSet<&str>> = targets
-			.iter()
-			.map(|(file, mime)| self.all(file, mime).collect::<IndexSet<_>>())
-			.filter(|s| !s.is_empty())
-			.collect();
+	pub fn match_common(&self, targets: &[(File, &str)]) -> impl Iterator<Item = Arc<OpenRule>> {
+		let mut seen: IndexMap<Arc<OpenRule>, usize> = IndexMap::new();
+		for (file, mime) in targets {
+			if let Some(rule) = self.matches(file, mime) {
+				*seen.entry(rule).or_default() += 1;
+			}
+		}
 
-		let mut flat: IndexSet<_> = each.iter().flatten().copied().collect();
-		flat.retain(|use_| each.iter().all(|e| e.contains(use_)));
-		flat
+		seen.into_iter().filter(|&(_, count)| count == targets.len()).map(|(rule, _)| rule)
 	}
 }
 
 impl DeserializeOverHook for Open {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
-		Ok(Self { rules: mix(self.prepend_rules, self.rules, self.append_rules), ..Default::default() })
+		let rules: Vec<Arc<OpenRule>> =
+			mix(self.prepend_rules, self.rules.unwrap_unchecked(), self.append_rules);
+
+		Ok(Self { rules: rules.into(), ..Default::default() })
 	}
 }
