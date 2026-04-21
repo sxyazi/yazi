@@ -12,6 +12,10 @@ rust-version.workspace = true
 [lints]
 workspace = true
 
+[features]
+default      = [ "vendored-lua" ]
+vendored-lua = [ "mlua/vendored" ]
+
 [dependencies]
 yazi-adapter   = { path = "../yazi-adapter", version = "26.2.2" }
 yazi-binding   = { path = "../yazi-binding", version = "26.2.2" }
