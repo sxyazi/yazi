@@ -4,13 +4,13 @@ use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
 use serde::{Deserialize, Serialize};
 use toml::{Spanned, de::DeTable};
-use yazi_codegen::{DeserializeOver, DeserializeOver2};
+use yazi_codegen::{DeserializeOver, DeserializeOver2, Overlay};
 use yazi_fs::Xdg;
 use yazi_shim::toml::deserialize_spanned;
 
 use crate::error_with_input;
 
-#[derive(Default, Deserialize, DeserializeOver, DeserializeOver2, Serialize)]
+#[derive(Default, Deserialize, DeserializeOver, DeserializeOver2, Overlay, Serialize)]
 pub struct Flavor {
 	#[serde(default)]
 	pub dark:  ArcSwap<String>,

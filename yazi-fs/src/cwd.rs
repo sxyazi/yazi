@@ -1,7 +1,8 @@
 use std::{borrow::Cow, env::{current_dir, set_current_dir}, ops::Deref, path::{Path, PathBuf}, sync::{Arc, atomic::{AtomicBool, Ordering}}};
 
 use arc_swap::ArcSwap;
-use yazi_shared::{RoCell, url::{AsUrl, Url, UrlBuf, UrlLike}};
+use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
+use yazi_shim::cell::RoCell;
 
 use crate::{FsUrl, Xdg};
 

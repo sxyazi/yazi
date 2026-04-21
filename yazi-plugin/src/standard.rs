@@ -4,7 +4,7 @@ use mlua::Lua;
 use yazi_binding::{Runtime, runtime_scope};
 use yazi_boot::BOOT;
 use yazi_macro::plugin_preset as preset;
-use yazi_shared::RoCell;
+use yazi_shim::cell::RoCell;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
 

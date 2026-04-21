@@ -22,7 +22,7 @@ impl<'de> serde::Deserializer<'de> for Action {
 		V: serde::de::Visitor<'de>,
 	{
 		visitor.visit_map(MapDeserializer::new(
-			self.args.into_iter().map(|(key, value)| (KeyDeserializer::Owned(key), value)),
+			self.cmd.args.into_iter().map(|(key, value)| (KeyDeserializer::Owned(key), value)),
 		))
 	}
 

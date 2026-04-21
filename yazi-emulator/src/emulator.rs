@@ -6,7 +6,7 @@ use either::Either;
 use scopeguard::defer;
 use tokio::time::sleep;
 use tracing::{debug, error, warn};
-use yazi_shared::RoCell;
+use yazi_shim::cell::RoCell;
 use yazi_tty::{Handle, TTY};
 
 use crate::{Brand, Dimension, Mux, TMUX, Unknown};

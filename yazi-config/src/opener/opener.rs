@@ -2,7 +2,7 @@ use std::{mem, ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
 use hashbrown::HashMap;
-use serde::{Deserialize, Deserializer, de::{MapAccess, Visitor}};
+use serde::{Deserialize, Deserializer};
 use yazi_shim::{arc_swap::IntoPointee, toml::{DeserializeOverHook, DeserializeOverWith}};
 
 use super::{OpenerRule, OpenerRules};
@@ -80,23 +80,6 @@ impl DeserializeOverHook for Opener {
 
 impl DeserializeOverWith for Opener {
 	fn deserialize_over_with<'de, D: Deserializer<'de>>(self, de: D) -> Result<Self, D::Error> {
-		struct V(HashMap<String, Arc<OpenerRules>>);
-
-		impl<'de> Visitor<'de> for V {
-			type Value = Opener;
-
-			fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-				f.write_str("a map of opener rules")
-			}
-
-			fn visit_map<M: MapAccess<'de>>(mut self, mut map: M) -> Result<Self::Value, M::Error> {
-				while let Some(key) = map.next_key()? {
-					self.0.insert(key, map.next_value()?);
-				}
-				Ok(Opener(self.0.into_pointee()))
-			}
-		}
-
-		de.deserialize_map(V(self.unwrap_unchecked()))
+		Ok(Self(self.0.deserialize_over_with(de)?))
 	}
 }

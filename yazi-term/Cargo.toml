@@ -16,7 +16,6 @@ workspace = true
 yazi-config   = { path = "../yazi-config", version = "26.2.2" }
 yazi-emulator = { path = "../yazi-emulator", version = "26.2.2" }
 yazi-macro    = { path = "../yazi-macro", version = "26.2.2" }
-yazi-shared   = { path = "../yazi-shared", version = "26.2.2" }
 yazi-shim     = { path = "../yazi-shim", version = "26.2.2" }
 yazi-tty      = { path = "../yazi-tty", version = "26.2.2" }
 

@@ -1,8 +1,8 @@
 use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
+use yazi_shim::cell::RoCell;
 
 use super::ActionCow;
-use crate::RoCell;
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();

@@ -3,15 +3,14 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
 use serde::{Deserialize, Deserializer, de};
-use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2};
+use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2, Overlay};
 use yazi_fs::{Xdg, ok_or_not_found};
-use yazi_shared::SyncCell;
-use yazi_shim::arc_swap::IntoPointee;
+use yazi_shim::{arc_swap::IntoPointee, cell::SyncCell};
 
 use super::{Filetype, Flavor, Icon};
 use crate::{Style, normalize_path};
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver1)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver1, Overlay)]
 pub struct Theme {
 	pub flavor:    Flavor,
 	pub app:       App,
@@ -35,12 +34,12 @@ pub struct Theme {
 	pub icon:     Icon,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct App {
 	pub overall: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Mgr {
 	pub cwd: SyncCell<Style>,
 
@@ -72,7 +71,7 @@ pub struct Mgr {
 	pub syntect_theme: ArcSwap<PathBuf>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Tabs {
 	pub active:   SyncCell<Style>,
 	pub inactive: SyncCell<Style>,
@@ -87,7 +86,7 @@ pub struct TabsSep {
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Mode {
 	pub normal_main: SyncCell<Style>,
 	pub normal_alt:  SyncCell<Style>,
@@ -99,7 +98,7 @@ pub struct Mode {
 	pub unset_alt:  SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Indicator {
 	pub parent:  SyncCell<Style>,
 	pub current: SyncCell<Style>,
@@ -113,7 +112,7 @@ pub struct IndicatorPadding {
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Status {
 	pub overall:   SyncCell<Style>,
 	pub sep_left:  ArcSwap<StatusSep>,
@@ -138,7 +137,7 @@ pub struct StatusSep {
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Which {
 	#[serde(deserialize_with = "deserialize_which_cols")]
 	pub cols: SyncCell<u8>,
@@ -151,7 +150,7 @@ pub struct Which {
 	pub separator_style: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Confirm {
 	pub border: SyncCell<Style>,
 	pub title:  SyncCell<Style>,
@@ -160,10 +159,10 @@ pub struct Confirm {
 
 	pub btn_yes:    SyncCell<Style>,
 	pub btn_no:     SyncCell<Style>,
-	pub btn_labels: [String; 2],
+	pub btn_labels: ArcSwap<[String; 2]>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Spot {
 	pub border: SyncCell<Style>,
 	pub title:  SyncCell<Style>,
@@ -172,7 +171,7 @@ pub struct Spot {
 	pub tbl_cell: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Notify {
 	pub title_info:  SyncCell<Style>,
 	pub title_warn:  SyncCell<Style>,
@@ -183,14 +182,14 @@ pub struct Notify {
 	pub icon_error: ArcSwap<String>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Pick {
 	pub border:   SyncCell<Style>,
 	pub active:   SyncCell<Style>,
 	pub inactive: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Input {
 	pub border:   SyncCell<Style>,
 	pub title:    SyncCell<Style>,
@@ -198,7 +197,7 @@ pub struct Input {
 	pub selected: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Cmp {
 	pub border:   SyncCell<Style>,
 	pub active:   SyncCell<Style>,
@@ -209,14 +208,14 @@ pub struct Cmp {
 	pub icon_command: ArcSwap<String>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Tasks {
 	pub border:  SyncCell<Style>,
 	pub title:   SyncCell<Style>,
 	pub hovered: SyncCell<Style>,
 }
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver2)]
+#[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Help {
 	pub on:   SyncCell<Style>,
 	pub run:  SyncCell<Style>,

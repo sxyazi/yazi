@@ -15,8 +15,8 @@ impl Actor for Linemode {
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
 
-		if form.new != tab.pref.linemode {
-			tab.pref.linemode = form.new.into_owned();
+		if form.new != *tab.pref.linemode {
+			tab.pref.linemode = form.new.into();
 			render!();
 		}
 

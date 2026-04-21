@@ -31,26 +31,25 @@ function M:spot(job)
 end
 
 function M:spot_base(job)
-	local cha = job.file.cha
-	local spotter, previewer = nil, nil
-	local fetchers, preloaders = {}, {}
+	local cha, pair = job.file.cha, { file = job.file, mime = job.mime }
+	local spotter, previewer, fetchers, preloaders = nil, nil, {}, {}
 
-	for _, v in pairs(rt.plugin.spotters:match(job)) do
+	for _, v in pairs(rt.plugin.spotters:match(pair)) do
 		spotter = v
 		break
 	end
 
-	for _, v in pairs(rt.plugin.previewers:match(job)) do
+	for _, v in pairs(rt.plugin.previewers:match(pair)) do
 		previewer = v
 		break
 	end
 
-	for _, v in pairs(rt.plugin.fetchers:match(job)) do
+	for _, v in pairs(rt.plugin.fetchers:match(pair)) do
 		fetchers[#fetchers + 1] = v.name
 	end
 	fetchers = #fetchers ~= 0 and fetchers or { "-" }
 
-	for _, v in pairs(rt.plugin.preloaders:match(job)) do
+	for _, v in pairs(rt.plugin.preloaders:match(pair)) do
 		preloaders[#preloaders + 1] = v.name
 	end
 	preloaders = #preloaders ~= 0 and preloaders or { "-" }

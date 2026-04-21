@@ -7,7 +7,7 @@ use mlua::{Lua, Table};
 use serde::Deserialize;
 use strum::EnumString;
 use yazi_scheduler::plugin::PluginInEntry;
-use yazi_shared::{SStr, data::{Data, DataKey}, event::{Action, ActionCow}};
+use yazi_shared::{SStr, data::{Data, DataKey}, event::{ActionCow, Cmd}};
 
 #[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
@@ -27,7 +27,7 @@ impl TryFrom<ActionCow> for PluginOpt {
 
 		let args = if let Ok(s) = a.second() {
 			let (words, last) = yazi_shared::shell::unix::split(s, true)?;
-			Action::parse_args(words, last)?
+			Cmd::parse_args(words, last)?
 		} else {
 			Default::default()
 		};

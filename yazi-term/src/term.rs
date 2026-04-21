@@ -4,8 +4,7 @@ use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableFocusChange, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_emulator::{Emulator, Mux, TMUX};
-use yazi_shared::SyncCell;
-use yazi_shim::crossterm::{If, RestoreBackground, RestoreCursor, SetBackground};
+use yazi_shim::{cell::SyncCell, crossterm::{If, RestoreBackground, RestoreCursor, SetBackground}};
 use yazi_tty::{TTY, TtyWriter};
 
 use crate::{TermOption, TermState};

@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use parking_lot::RwLock;
-use yazi_shared::RoCell;
+use yazi_shim::cell::RoCell;
 
 use super::Partition;
 use crate::cha::Cha;

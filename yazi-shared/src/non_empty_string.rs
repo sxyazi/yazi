@@ -1,4 +1,4 @@
-use std::{ffi::{OsStr, OsString}, fmt::{Display, Formatter}, ops::Deref};
+use std::{borrow::Borrow, ffi::{OsStr, OsString}, fmt::{Display, Formatter}, ops::Deref};
 
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -18,6 +18,16 @@ impl Deref for NonEmptyString {
 
 	#[inline]
 	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl Borrow<str> for NonEmptyString {
+	#[inline]
+	fn borrow(&self) -> &str { &self.0 }
+}
+
+impl Borrow<String> for NonEmptyString {
+	#[inline]
+	fn borrow(&self) -> &String { &self.0 }
 }
 
 impl AsRef<str> for NonEmptyString {

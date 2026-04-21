@@ -21,6 +21,7 @@ pub enum Spark<'a> {
 	AppResize(crate::app::ReflowForm),
 	AppResume(crate::app::ResumeForm),
 	AppStop(crate::app::StopForm),
+	AppTheme(crate::VoidForm),
 	AppTitle(crate::app::TitleForm),
 	AppUpdateProgress(crate::app::UpdateProgressForm),
 
@@ -205,6 +206,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppResize(b) => b.into_lua(lua),
 			Self::AppResume(b) => b.into_lua(lua),
 			Self::AppStop(b) => b.into_lua(lua),
+			Self::AppTheme(b) => b.into_lua(lua),
 			Self::AppTitle(b) => b.into_lua(lua),
 			Self::AppUpdateProgress(b) => b.into_lua(lua),
 
@@ -346,6 +348,7 @@ try_from_spark!(
 	crate::VoidForm,
 	app:bootstrap,
 	app:focus,
+	app:theme,
 	mgr:back,
 	mgr:bulk_rename,
 	mgr:enter,

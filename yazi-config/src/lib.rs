@@ -4,8 +4,7 @@ yazi_macro::mod_flat!(icon layout mixing pattern platform preset priority select
 
 use std::io::{Read, Write};
 
-use yazi_shared::{RoCell, SyncCell};
-use yazi_shim::toml::{DeserializeOver, DeserializeOverWith};
+use yazi_shim::{cell::{RoCell, SyncCell}, toml::{DeserializeOver, DeserializeOverWith}};
 use yazi_tty::TTY;
 
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
@@ -44,6 +43,11 @@ pub fn init_flavor(light: bool) -> anyhow::Result<()> {
 }
 
 fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
+	THEME.init(build_flavor(light, merge)?);
+	Ok(())
+}
+
+pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<theme::Theme> {
 	let mut preset = Preset::theme(light)?;
 
 	if merge {
@@ -59,8 +63,7 @@ fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
 		)?;
 	}
 
-	THEME.init(preset.reshape(light)?);
-	Ok(())
+	Ok(preset.reshape(light)?)
 }
 
 fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {

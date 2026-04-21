@@ -2,6 +2,8 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url};
 use yazi_config::THEME;
 
+use crate::LUA;
+
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
@@ -29,6 +31,8 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 
 	Composer::new(get, set)
 }
+
+pub fn reset() -> mlua::Result<()> { LUA.globals().raw_set("th", compose()) }
 
 fn app() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
@@ -223,12 +227,12 @@ fn confirm() -> Composer<ComposerGet, ComposerSet> {
 
 			b"btn_yes" => Style::from(&t.btn_yes).into_lua(lua),
 			b"btn_no" => Style::from(&t.btn_no).into_lua(lua),
-			b"btn_labels" => lua
-				.create_sequence_from([
-					lua.create_string(&t.btn_labels[0])?,
-					lua.create_string(&t.btn_labels[1])?,
-				])?
-				.into_lua(lua),
+			b"btn_labels" => {
+				let labels = t.btn_labels.load();
+				lua
+					.create_sequence_from([lua.create_string(&labels[0])?, lua.create_string(&labels[1])?])?
+					.into_lua(lua)
+			}
 
 			_ => Ok(Value::Nil),
 		}

@@ -1,8 +1,8 @@
 yazi_macro::mod_flat!(cow pool ptr symbol traits);
 
-static SYMBOLS: crate::RoCell<
+static SYMBOLS: yazi_shim::cell::RoCell<
 	parking_lot::Mutex<hashbrown::HashMap<SymbolPtr, u64, foldhash::fast::FixedState>>,
-> = crate::RoCell::new();
+> = yazi_shim::cell::RoCell::new();
 
 pub(super) fn init() { SYMBOLS.with(<_>::default); }
 

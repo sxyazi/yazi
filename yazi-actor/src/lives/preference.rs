@@ -38,7 +38,7 @@ impl UserData for Preference {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		// Display
 		cached_field!(fields, name, |lua, me| lua.create_string(&me.name));
-		cached_field!(fields, linemode, |lua, me| lua.create_string(&me.linemode));
+		cached_field!(fields, linemode, |lua, me| lua.create_string(&*me.linemode));
 		fields.add_field_method_get("show_hidden", |_, me| Ok(me.show_hidden));
 
 		// Sorting

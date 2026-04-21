@@ -5,7 +5,8 @@ use crossterm::style::{Color, Print, ResetColor, SetForegroundColor};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
-use yazi_shared::{LOG_LEVEL, RoCell};
+use yazi_shared::LOG_LEVEL;
+use yazi_shim::cell::RoCell;
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();
 

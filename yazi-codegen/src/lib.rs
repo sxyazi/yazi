@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 mod helper;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{Data, DeriveInput, Fields, parse_macro_input};
 
 use crate::helper::{generics_with_de, has_serde_attr, ident_name, named_fields};
 
@@ -147,6 +147,41 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 				}
 
 				de.deserialize_map(V(self))
+			}
+		}
+	}
+	.into()
+}
+
+#[proc_macro_derive(Overlay)]
+pub fn overlay(input: TokenStream) -> TokenStream {
+	let DeriveInput { ident, generics, data, .. } = parse_macro_input!(input as DeriveInput);
+	let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+	let stmts: Vec<_> = match data {
+		Data::Struct(s) => match s.fields {
+			Fields::Named(fields) => fields
+				.named
+				.into_iter()
+				.map(|f| {
+					let field_ident = f.ident;
+					quote! { self.#field_ident.overlay(new.#field_ident); }
+				})
+				.collect(),
+			Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+				vec![quote! { self.0.overlay(new.0); }]
+			}
+			_ => panic!("expected named fields or a single-field tuple struct"),
+		},
+		_ => panic!("expected struct"),
+	};
+
+	quote! {
+		impl #impl_generics yazi_shim::serde::Overlay for #ident #ty_generics #where_clause {
+			fn overlay(&self, new: Self) {
+				use yazi_shim::serde::Overlay;
+
+				#(#stmts)*
 			}
 		}
 	}

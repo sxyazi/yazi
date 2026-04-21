@@ -3,7 +3,7 @@ yazi_macro::mod_pub!(actions);
 yazi_macro::mod_flat!(args boot);
 
 use clap::Parser;
-use yazi_shared::RoCell;
+use yazi_shim::cell::RoCell;
 
 pub static ARGS: RoCell<Args> = RoCell::new();
 pub static BOOT: RoCell<Boot> = RoCell::new();

@@ -2,7 +2,7 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::{Id, event::Action};
+use yazi_shared::{Id, event::Cmd};
 
 use crate::{Mixable, Pattern, Selectable, Selector, plugin::{Spotters, spotter_id}};
 
@@ -12,11 +12,11 @@ pub struct Spotter {
 	pub id:       Id,
 	#[serde(flatten)]
 	pub selector: Selector,
-	pub run:      Action,
+	pub run:      Cmd,
 }
 
 impl Deref for Spotter {
-	type Target = Action;
+	type Target = Cmd;
 
 	#[inline]
 	fn deref(&self) -> &Self::Target { &self.run }
