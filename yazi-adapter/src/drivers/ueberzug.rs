@@ -7,8 +7,8 @@ use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, Unb
 use tracing::{debug, warn};
 use yazi_config::YAZI;
 use yazi_emulator::Dimension;
-use yazi_shared::{LOG_LEVEL, RoCell, env_exists};
-use yazi_shim::strum::IntoStr;
+use yazi_shared::{LOG_LEVEL, env_exists};
+use yazi_shim::{cell::RoCell, strum::IntoStr};
 
 use crate::Adapter;
 

@@ -1,5 +1,5 @@
 #[cfg(unix)]
-pub static USERS_CACHE: crate::RoCell<uzers::UsersCache> = crate::RoCell::new();
+pub static USERS_CACHE: yazi_shim::cell::RoCell<uzers::UsersCache> = yazi_shim::cell::RoCell::new();
 
 #[cfg(unix)]
 pub fn hostname() -> Option<&'static str> {

@@ -1,4 +1,4 @@
-yazi_macro::mod_flat!(action cow de de_owned event);
+yazi_macro::mod_flat!(action cmd cow de de_owned event);
 
 pub type Replier = tokio::sync::mpsc::UnboundedSender<anyhow::Result<crate::data::Data>>;
 

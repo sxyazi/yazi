@@ -5,7 +5,7 @@ use mlua::{AnyUserData, UserData};
 use scopeguard::defer;
 use tracing::error;
 use yazi_plugin::LUA;
-use yazi_shared::RoCell;
+use yazi_shim::cell::RoCell;
 
 use super::{Core, PtrCell};
 

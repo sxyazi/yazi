@@ -26,7 +26,7 @@ impl<'a> Router<'a> {
 
 		use Layer as L;
 		Ok(match layer {
-			L::App | L::Notify => unreachable!(),
+			L::Null | L::App | L::Notify => unreachable!(),
 			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm | L::Help => {
 				self.matches(layer, key)
 			}

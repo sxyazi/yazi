@@ -15,6 +15,7 @@ workspace = true
 [dependencies]
 yazi-macro  = { path = "../yazi-macro", version = "26.2.2" }
 yazi-shared = { path = "../yazi-shared", version = "26.2.2" }
+yazi-shim   = { path = "../yazi-shim", version = "26.2.2" }
 
 # External dependencies
 parking_lot = { workspace = true }

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use yazi_config::YAZI;
 use yazi_fs::{FilesSorter, SortBy, SortFallback};
 
@@ -5,7 +7,7 @@ use yazi_fs::{FilesSorter, SortBy, SortFallback};
 pub struct Preference {
 	// Display
 	pub name:        String,
-	pub linemode:    String,
+	pub linemode:    Arc<String>,
 	pub show_hidden: bool,
 
 	// Sorting
@@ -22,7 +24,7 @@ impl Default for Preference {
 		Self {
 			// Display
 			name:        String::new(),
-			linemode:    YAZI.mgr.linemode.clone(),
+			linemode:    YAZI.mgr.linemode.load_full(),
 			show_hidden: YAZI.mgr.show_hidden.get(),
 
 			// Sorting

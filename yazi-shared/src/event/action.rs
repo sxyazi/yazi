@@ -1,27 +1,35 @@
-use std::{borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
+use std::{borrow::Cow, fmt::{self, Display}, ops::{Deref, DerefMut}, str::FromStr};
 
-use anyhow::{Result, anyhow, bail};
-use hashbrown::HashMap;
+use anyhow::{Result, bail};
 use serde_with::DeserializeFromStr;
 
-use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}, event::Replier};
+use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}};
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Action {
-	pub name:   SStr,
-	pub args:   HashMap<DataKey, Data>,
+	pub cmd:    Cmd,
 	pub layer:  Layer,
 	pub source: Source,
 }
 
+impl Deref for Action {
+	type Target = Cmd;
+
+	fn deref(&self) -> &Self::Target { &self.cmd }
+}
+
+impl DerefMut for Action {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.cmd }
+}
+
 impl Action {
-	pub fn new<N>(name: N, source: Source, default: Option<Layer>) -> Result<Self>
+	pub fn new<N>(name: N, source: Source, layer: Layer) -> Result<Self>
 	where
 		N: Into<SStr>,
 	{
 		let cow: SStr = name.into();
 		let (layer, name) = match cow.find(':') {
-			None => (default.ok_or_else(|| anyhow!("Cannot infer layer from action name: {cow}"))?, cow),
+			None => (layer, cow),
 			Some(i) => (cow[..i].parse()?, match cow {
 				Cow::Borrowed(s) => Cow::Borrowed(&s[i + 1..]),
 				Cow::Owned(mut s) => {
@@ -31,14 +39,14 @@ impl Action {
 			}),
 		};
 
-		Ok(Self { name, args: Default::default(), layer, source })
+		Ok(Self { cmd: Cmd { name, args: Default::default() }, layer, source })
 	}
 
 	pub fn new_relay<N>(name: N) -> Self
 	where
 		N: Into<SStr>,
 	{
-		Self::new(name, Source::Relay, None).unwrap_or(Self::null())
+		Self::new(name, Source::Relay, Layer::Null).unwrap_or(Self::null())
 	}
 
 	pub fn new_relay_args<N, D, I>(name: N, args: I) -> Self
@@ -47,13 +55,13 @@ impl Action {
 		D: Into<Data>,
 		I: IntoIterator<Item = D>,
 	{
-		let mut action = Self::new(name, Source::Relay, None).unwrap_or(Self::null());
+		let mut action = Self::new(name, Source::Relay, Layer::Null).unwrap_or(Self::null());
 		action.args =
 			args.into_iter().enumerate().map(|(i, a)| (DataKey::Integer(i as i64), a.into())).collect();
 		action
 	}
 
-	fn null() -> Self { Self { name: Cow::Borrowed("null"), ..Default::default() } }
+	fn null() -> Self { Self { cmd: Cmd::null(), layer: Layer::Null, source: Source::Unknown } }
 
 	pub fn len(&self) -> usize { self.args.len() }
 
@@ -217,31 +225,6 @@ impl Action {
 	}
 
 	pub fn take_replier(&mut self) -> Option<Replier> { self.take_any("replier") }
-
-	// Parse
-	pub fn parse_args<I>(words: I, last: Option<String>) -> Result<HashMap<DataKey, Data>>
-	where
-		I: IntoIterator<Item = String>,
-	{
-		let mut i = 0i64;
-		words
-			.into_iter()
-			.map(|s| (s, true))
-			.chain(last.into_iter().map(|s| (s, false)))
-			.map(|(word, normal)| {
-				let Some(arg) = word.strip_prefix("--").filter(|&s| normal && !s.is_empty()) else {
-					i += 1;
-					return Ok((DataKey::Integer(i - 1), word.into()));
-				};
-
-				let mut parts = arg.splitn(2, '=');
-				let key = parts.next().expect("at least one part");
-				let val = parts.next().map_or(Data::Boolean(true), Data::from);
-
-				Ok((key.to_owned().into(), val))
-			})
-			.collect()
-	}
 }
 
 impl Display for Action {
@@ -271,13 +254,11 @@ impl FromStr for Action {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let (mut words, last) = crate::shell::unix::split(s, true)?;
-		if words.is_empty() || words[0].is_empty() {
-			bail!("action name cannot be empty");
-		}
+		let cmd = Cmd::from_str(s)?;
 
-		let mut me = Self::new(mem::take(&mut words[0]), Default::default(), Some(Default::default()))?;
-		me.args = Self::parse_args(words.into_iter().skip(1), last)?;
+		let mut me = Self::new(cmd.name, Source::Unknown, Layer::Null)?;
+		me.args = cmd.args;
+
 		Ok(me)
 	}
 }

@@ -12,6 +12,7 @@ yazi_macro::mod_flat!(
 	resize
 	resume
 	stop
+	theme
 	title
 	update_progress
 );

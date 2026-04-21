@@ -3,7 +3,7 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 use hashbrown::HashSet;
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::{Id, event::Action};
+use yazi_shared::{Id, event::Cmd};
 
 use crate::{Mixable, Pattern, Priority, Selectable, Selector, plugin::{Fetchers, fetcher_id}};
 
@@ -15,14 +15,14 @@ pub struct Fetcher {
 	pub idx:      u8,
 	#[serde(flatten)]
 	pub selector: Selector,
-	pub run:      Action,
+	pub run:      Cmd,
 	#[serde(default)]
 	pub prio:     Priority,
 	pub group:    String,
 }
 
 impl Deref for Fetcher {
-	type Target = Action;
+	type Target = Cmd;
 
 	fn deref(&self) -> &Self::Target { &self.run }
 }

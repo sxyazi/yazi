@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 
-pub static LOG_LEVEL: crate::SyncCell<LogLevel> = crate::SyncCell::new(LogLevel::None);
+pub static LOG_LEVEL: yazi_shim::cell::SyncCell<LogLevel> =
+	yazi_shim::cell::SyncCell::new(LogLevel::None);
 
 #[inline]
 pub fn env_exists(name: &str) -> bool { std::env::var_os(name).is_some_and(|s| !s.is_empty()) }

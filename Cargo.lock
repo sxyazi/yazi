@@ -5884,6 +5884,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
  "yazi-vfs",
 ]
 
@@ -6016,6 +6017,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -6030,6 +6032,7 @@ dependencies = [
  "tracing",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
  "yazi-tty",
 ]
 
@@ -6081,6 +6084,7 @@ dependencies = [
  "yazi-runner",
  "yazi-scheduler",
  "yazi-shared",
+ "yazi-shim",
  "yazi-term",
  "yazi-tty",
  "yazi-vfs",
@@ -6234,6 +6238,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -6301,6 +6306,7 @@ dependencies = [
  "uzers",
  "windows-sys 0.61.2",
  "yazi-macro",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -6309,6 +6315,7 @@ version = "26.2.2"
 dependencies = [
  "arc-swap",
  "crossterm 0.29.0",
+ "hashbrown 0.17.0",
  "mlua",
  "ratatui",
  "serde",
@@ -6346,6 +6353,7 @@ dependencies = [
  "windows-sys 0.61.2",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -6368,6 +6376,7 @@ dependencies = [
  "yazi-macro",
  "yazi-sftp",
  "yazi-shared",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -6387,6 +6396,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
  "yazi-vfs",
 ]
 
@@ -6409,6 +6419,7 @@ dependencies = [
  "yazi-config",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
  "yazi-tty",
 ]
 

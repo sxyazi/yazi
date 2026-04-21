@@ -7,7 +7,7 @@ use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
-use yazi_shared::SyncCell;
+use yazi_shim::cell::SyncCell;
 
 use crate::{adapter::Adapter, image::Image};
 

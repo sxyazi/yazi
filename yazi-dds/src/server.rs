@@ -5,7 +5,8 @@ use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
 use yazi_macro::try_format;
-use yazi_shared::{Id, RoCell};
+use yazi_shared::Id;
+use yazi_shim::cell::RoCell;
 
 use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, ember::{Ember, EmberBye, EmberHey}};
 

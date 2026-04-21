@@ -1,12 +1,12 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::ActionCow};
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Deserialize)]
 pub struct LinemodeForm {
 	#[serde(alias = "0")]
-	pub new: SStr,
+	pub new: String,
 }
 
 impl TryFrom<ActionCow> for LinemodeForm {

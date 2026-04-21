@@ -20,6 +20,7 @@ use strum::{Display, EnumString, FromRepr, IntoStaticStr};
 #[repr(u8)]
 pub enum Layer {
 	#[default]
+	Null,
 	App,
 	Mgr,
 	Tasks,

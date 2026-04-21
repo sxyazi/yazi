@@ -1,5 +1,4 @@
 use tokio::task::LocalSet;
-
-use crate::RoCell;
+use yazi_shim::cell::RoCell;
 
 pub static LOCAL_SET: RoCell<LocalSet> = RoCell::new();

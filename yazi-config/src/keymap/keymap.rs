@@ -21,7 +21,7 @@ pub struct Keymap {
 impl Keymap {
 	pub fn get(&self, layer: Layer) -> &[Chord] {
 		match layer {
-			Layer::App => &[],
+			Layer::Null | Layer::App => &[],
 			Layer::Mgr => self.mgr.as_erased_slice(),
 			Layer::Tasks => self.tasks.as_erased_slice(),
 			Layer::Spot => self.spot.as_erased_slice(),

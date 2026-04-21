@@ -82,9 +82,6 @@ where
 	D: Deserializer<'de>,
 {
 	let mut actions: Vec<Action> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
-	if actions.is_empty() {
-		return Err(de::Error::custom("'run' cannot be empty"));
-	}
 
 	let Some(layer) = Layer::from_repr(L) else {
 		return Err(de::Error::custom(format!("invalid keymap layer const: {L}")));
@@ -92,7 +89,7 @@ where
 
 	for action in &mut actions {
 		action.source = Source::Key;
-		if action.layer == Default::default() {
+		if action.layer == Layer::Null {
 			action.layer = layer;
 		}
 	}

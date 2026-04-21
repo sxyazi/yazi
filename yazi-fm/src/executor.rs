@@ -16,6 +16,7 @@ impl<'a> Executor<'a> {
 
 	pub(super) fn execute(&mut self, action: ActionCow) -> Result<Data> {
 		match action.layer {
+			Layer::Null => self.null(action),
 			Layer::App => self.app(action),
 			Layer::Mgr => self.mgr(action),
 			Layer::Tasks => self.tasks(action),
@@ -29,6 +30,8 @@ impl<'a> Executor<'a> {
 			Layer::Notify => self.notify(action),
 		}
 	}
+
+	fn null(&mut self, _action: ActionCow) -> Result<Data> { succ!() }
 
 	fn app(&mut self, mut action: ActionCow) -> Result<Data> {
 		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
@@ -47,6 +50,7 @@ impl<'a> Executor<'a> {
 		on!(update_progress);
 		on!(lua);
 		on!(deprecate);
+		on!(theme);
 		on!(quit);
 
 		match &*action.name {

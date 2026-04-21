@@ -2,7 +2,7 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use serde::Deserialize;
 use yazi_fs::File;
-use yazi_shared::{Id, event::Action};
+use yazi_shared::{Id, event::Cmd};
 
 use crate::{Mixable, Pattern, Priority, Selectable, Selector, plugin::{Preloaders, preloader_id}};
 
@@ -14,7 +14,7 @@ pub struct Preloader {
 	pub idx:      u8,
 	#[serde(flatten)]
 	pub selector: Selector,
-	pub run:      Action,
+	pub run:      Cmd,
 	#[serde(default)]
 	pub next:     bool,
 	#[serde(default)]
@@ -22,7 +22,7 @@ pub struct Preloader {
 }
 
 impl Deref for Preloader {
-	type Target = Action;
+	type Target = Cmd;
 
 	fn deref(&self) -> &Self::Target { &self.run }
 }

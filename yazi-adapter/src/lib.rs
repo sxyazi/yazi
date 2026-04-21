@@ -3,7 +3,8 @@ yazi_macro::mod_pub!(drivers);
 yazi_macro::mod_flat!(adapter adapters icc image info);
 
 use yazi_emulator::{Brand, CLOSE, EMULATOR, ESCAPE, Emulator, Mux, START, TMUX};
-use yazi_shared::{SyncCell, in_wsl};
+use yazi_shared::in_wsl;
+use yazi_shim::cell::SyncCell;
 
 pub static ADAPTOR: SyncCell<Adapter> = SyncCell::new(Adapter::Chafa);
 

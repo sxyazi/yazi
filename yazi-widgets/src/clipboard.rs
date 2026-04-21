@@ -1,5 +1,5 @@
 use parking_lot::Mutex;
-use yazi_shared::RoCell;
+use yazi_shim::cell::RoCell;
 
 pub static CLIPBOARD: RoCell<Clipboard> = RoCell::new();
 

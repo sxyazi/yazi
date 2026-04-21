@@ -3,7 +3,8 @@ use std::time::Duration;
 use tokio::{pin, select, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_macro::err;
-use yazi_shared::{RoCell, url::UrlBuf};
+use yazi_shared::url::UrlBuf;
+use yazi_shim::cell::RoCell;
 
 use crate::{Pubsub, ember::{EmberDuplicateItem, EmberMoveItem}};
 

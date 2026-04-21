@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::style::Modifier;
-use yazi_shared::SyncCell;
+use yazi_shim::cell::SyncCell;
 
 use crate::{SER_OPT, elements::Color};
 

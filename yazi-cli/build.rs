@@ -24,8 +24,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn generate() -> Result<(), Box<dyn Error>> {
 	Emitter::default()
 		.add_instructions(&BuildBuilder::default().build_date(true).build()?)?
-		.add_instructions(&GitclBuilder::default().commit_date(true).sha(true).build()?)?
 		.emit()?;
+
+	if env::var_os("YAZI_NO_GITCL").is_none() {
+		Emitter::default().add_instructions(&GitclBuilder::default().sha(true).build()?)?.emit()?;
+	} else {
+		println!("cargo:rustc-env=VERGEN_GIT_SHA=no-gitcl");
+	}
 
 	if env::var_os("YAZI_GEN_COMPLETIONS").is_none() {
 		return Ok(());
