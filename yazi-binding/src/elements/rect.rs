@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
 
 use super::Pad;
 
@@ -51,7 +51,7 @@ impl Rect {
 }
 
 impl UserData for Rect {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("x", |_, me| Ok(me.x));
 		fields.add_field_method_get("y", |_, me| Ok(me.y));
 		fields.add_field_method_get("w", |_, me| Ok(me.width));

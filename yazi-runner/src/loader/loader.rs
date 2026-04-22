@@ -65,6 +65,7 @@ impl Default for Loader {
 			("preview".to_owned(), [][..].into()),
 			("progress".to_owned(), [][..].into()),
 			("rail".to_owned(), [][..].into()),
+			("rails".to_owned(), [][..].into()),
 			("root".to_owned(), [][..].into()),
 			("status".to_owned(), [][..].into()),
 			("tab".to_owned(), [][..].into()),

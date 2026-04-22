@@ -49,6 +49,10 @@ end
 
 -- Mouse events
 function Current:click(event, up)
+	if up or event.is_middle then
+		return
+	end
+
 	local y = event.y - self._area.y + 1
 	if self._folder.window[y] then
 		Entity:new(self._folder.window[y]):click(event, up)

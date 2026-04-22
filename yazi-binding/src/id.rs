@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{ExternalError, ExternalResult, FromLua, Lua, UserData, Value};
+use mlua::{ExternalError, ExternalResult, FromLua, Lua, UserData, UserDataFields, Value};
 
 #[derive(Clone, Copy, Default)]
 pub struct Id(pub yazi_shared::Id);
@@ -22,7 +22,7 @@ impl FromLua for Id {
 }
 
 impl UserData for Id {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("value", |_, me| Ok(me.0.get()));
 	}
 }

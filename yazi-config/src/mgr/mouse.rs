@@ -15,10 +15,6 @@ bitflags! {
 	}
 }
 
-impl MouseEvents {
-	pub const fn draggable(self) -> bool { self.contains(Self::DRAG) }
-}
-
 impl TryFrom<Vec<String>> for MouseEvents {
 	type Error = anyhow::Error;
 

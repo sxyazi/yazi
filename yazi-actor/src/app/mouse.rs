@@ -4,8 +4,7 @@ use mlua::{ObjectLike, Table};
 use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
-use yazi_config::YAZI;
-use yazi_macro::{render, succ};
+use yazi_macro::succ;
 use yazi_parser::app::MouseForm;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
@@ -30,10 +29,6 @@ impl Actor for Mouse {
 				LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)
 			})?;
 
-			if matches!(event.kind, MouseEventKind::Down(_) if YAZI.mgr.mouse_events.get().draggable()) {
-				root.raw_set("_drag_start", event)?;
-			}
-
 			match event.kind {
 				MouseEventKind::Down(_) => root.call_method("click", (event, false))?,
 				MouseEventKind::Up(_) => root.call_method("click", (event, true))?,
@@ -45,10 +40,7 @@ impl Actor for Mouse {
 				MouseEventKind::ScrollLeft => root.call_method("touch", (event, -1))?,
 
 				MouseEventKind::Moved => root.call_method("move", event)?,
-				MouseEventKind::Drag(_) => {
-					root.call_method::<()>("drag", event)?;
-					render!();
-				}
+				MouseEventKind::Drag(_) => root.call_method("drag", event)?,
 			}
 
 			Ok(())

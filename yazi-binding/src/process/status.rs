@@ -1,4 +1,4 @@
-use mlua::UserData;
+use mlua::{UserData, UserDataFields};
 
 pub struct Status {
 	inner: std::process::ExitStatus,
@@ -9,7 +9,7 @@ impl Status {
 }
 
 impl UserData for Status {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("success", |_, me| Ok(me.inner.success()));
 		fields.add_field_method_get("code", |_, me| Ok(me.inner.code()));
 	}

@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{MetaMethod, UserData, UserDataMethods};
+use mlua::{MetaMethod, UserData, UserDataFields, UserDataMethods};
 
 pub struct ImageInfo(yazi_adapter::ImageInfo);
 
@@ -15,7 +15,7 @@ impl From<yazi_adapter::ImageInfo> for ImageInfo {
 }
 
 impl UserData for ImageInfo {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("w", |_, me| Ok(me.width));
 		fields.add_field_method_get("h", |_, me| Ok(me.height));
 		fields.add_field_method_get("ori", |_, me| Ok(me.orientation.map(|o| o.to_exif())));
