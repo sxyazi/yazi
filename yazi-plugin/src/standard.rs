@@ -47,6 +47,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	lua.load(preset!("components/linemode")).set_name("linemode.lua").exec()?;
 
 	lua.load(preset!("components/marker")).set_name("marker.lua").exec()?;
+	lua.load(preset!("components/markers")).set_name("markers.lua").exec()?;
 	lua.load(preset!("components/modal")).set_name("modal.lua").exec()?;
 	lua.load(preset!("components/parent")).set_name("parent.lua").exec()?;
 	lua.load(preset!("components/preview")).set_name("preview.lua").exec()?;

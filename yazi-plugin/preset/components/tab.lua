@@ -29,6 +29,7 @@ function Tab:build()
 		Current:new(c[2]:pad(ui.Pad.x(1)), self._tab),
 		Preview:new(c[3]:pad(ui.Pad(0, 1, 0, p)), self._tab),
 		Rails:new(c, self._tab),
+		Markers:new(c, self._tab),
 	}
 end
 

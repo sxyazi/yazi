@@ -24,7 +24,7 @@ function Marker:redraw()
 
 		local y = math.min(self._area.y + last[1], self._area.y + self._area.h) - 1
 		local rect = ui.Rect {
-			x = math.max(0, self._area.x - 1),
+			x = self._area.x,
 			y = y,
 			w = 1,
 			h = math.min(1 + last[2] - last[1], self._area.y + self._area.h - y),

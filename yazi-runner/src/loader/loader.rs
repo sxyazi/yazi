@@ -60,6 +60,7 @@ impl Default for Loader {
 			("header".to_owned(), [][..].into()),
 			("linemode".to_owned(), [][..].into()),
 			("marker".to_owned(), [][..].into()),
+			("markers".to_owned(), [][..].into()),
 			("modal".to_owned(), [][..].into()),
 			("parent".to_owned(), [][..].into()),
 			("preview".to_owned(), [][..].into()),

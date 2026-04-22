@@ -11,15 +11,11 @@ end
 function Rails:build()
 	local c, children = self._chunks, {}
 	if c[1].w > 0 then
-		children[#children + 1] =
-			Rail:new("rail-left", ui.Rect { x = c[2].x, y = c[2].y, w = math.min(1, c[2].w), h = c[2].h }, c)
+		children[#children + 1] = Rail:new("rail-left", c[2] { w = math.min(1, c[2].w) }, c)
 	end
 	if c[3].w > 0 then
-		children[#children + 1] = Rail:new(
-			"rail-right",
-			ui.Rect { x = math.max(0, c[2].right - 1), y = c[2].y, w = math.min(1, c[2].w), h = c[2].h },
-			c
-		)
+		children[#children + 1] =
+			Rail:new("rail-right", c[2] { x = math.max(0, c[2].right - 1), w = math.min(1, c[2].w) }, c)
 	end
 	self._children = children
 end
