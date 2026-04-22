@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Deref};
 
-use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, Value};
 
 #[derive(Clone, Copy, Default, FromLua)]
 pub struct Pad(ratatui::widgets::Padding);
@@ -52,7 +52,7 @@ impl Pad {
 }
 
 impl UserData for Pad {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("left", |_, me| Ok(me.left));
 		fields.add_field_method_get("right", |_, me| Ok(me.right));
 		fields.add_field_method_get("top", |_, me| Ok(me.top));

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Custom tab name ([#3666])
 - New `--in` for `search` action to set search directory ([#3696])
 - Hover cursor over the new file after copying/cutting/linking/hardlinking/extracting ([#3846], [#3854])
+- Drag-resize panes with mouse ([#3890])
 - Multi-file spotter ([#3733])
 - New `app:theme` action that hot-reload user themes/flavors ([#3906])
 - Dynamic open/opener Lua API ([#3901])
@@ -1703,6 +1704,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3846]: https://github.com/sxyazi/yazi/pull/3846
 [#3854]: https://github.com/sxyazi/yazi/pull/3854
 [#3862]: https://github.com/sxyazi/yazi/pull/3862
+[#3890]: https://github.com/sxyazi/yazi/pull/3890
 [#3891]: https://github.com/sxyazi/yazi/pull/3891
 [#3894]: https://github.com/sxyazi/yazi/pull/3894
 [#3901]: https://github.com/sxyazi/yazi/pull/3901

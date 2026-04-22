@@ -23,11 +23,13 @@ end
 
 function Tab:build()
 	local c = self._chunks
+	local p = c[2].w > 0 and 0 or 1
 	self._children = {
-		Parent:new(c[1]:pad(ui.Pad.x(1)), self._tab),
-		Current:new(c[2]:pad(ui.Pad(0, c[3].w > 0 and 0 or 1, 0, c[1].w > 0 and 0 or 1)), self._tab),
-		Preview:new(c[3]:pad(ui.Pad.x(1)), self._tab),
-		Rail:new(c, self._tab),
+		Parent:new(c[1]:pad(ui.Pad(0, p, 0, 1)), self._tab),
+		Current:new(c[2]:pad(ui.Pad.x(1)), self._tab),
+		Preview:new(c[3]:pad(ui.Pad(0, 1, 0, p)), self._tab),
+		Rails:new(c, self._tab),
+		Markers:new(c, self._tab),
 	}
 end
 

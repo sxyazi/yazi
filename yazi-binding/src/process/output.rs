@@ -1,6 +1,6 @@
 use std::mem;
 
-use mlua::{UserData, Value};
+use mlua::{UserData, UserDataFields, Value};
 
 use super::Status;
 use crate::{cached_field, cached_field_mut};
@@ -20,7 +20,7 @@ impl Output {
 }
 
 impl UserData for Output {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		cached_field!(fields, status, |_, me| Ok(Status::new(me.inner.status)));
 		cached_field_mut!(fields, stdout, |lua, me| {
 			lua.create_external_string(mem::take(&mut me.inner.stdout))

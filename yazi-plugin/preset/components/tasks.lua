@@ -29,12 +29,7 @@ function Tasks:redraw()
 			break
 		end
 
-		elements[#elements + 1] = ui.Line({ self:icon(snap), snap.title }):area(ui.Rect {
-			x = self._area.x,
-			y = y,
-			w = self._area.w,
-			h = 1,
-		})
+		elements[#elements + 1] = ui.Line({ self:icon(snap), snap.title }):area(self._area { y = y, h = 1 })
 
 		if i == cx.tasks.cursor + 1 then
 			elements[#elements] = elements[#elements]:style(th.tasks.hovered)
@@ -107,14 +102,14 @@ function Tasks:progress_redraw(snap, y)
 
 		return {
 			ui.Gauge()
-				:area(ui.Rect { x = self._chunks[1].x, y = y, w = self._chunks[1].w, h = 1 })
+				:area(self._chunks[1] { y = y, h = 1 })
 				:percent(snap.percent)
 				:label(ui.Span(label):style(th.status.progress_label))
 				:gauge_style(style),
 
 			ui.Line(string.format("%d/%d", snap.prog.success_files, snap.prog.total_files))
 				:fg("gray")
-				:area(ui.Rect { x = self._chunks[2].x, y = y, w = self._chunks[2].w, h = 1 })
+				:area(self._chunks[2] { y = y, h = 1 })
 				:align(ui.Align.RIGHT),
 		}
 	else
@@ -127,7 +122,7 @@ function Tasks:progress_redraw(snap, y)
 			text = "Failed, press Enter to view log…"
 		end
 		return {
-			ui.Line(text):fg("gray"):area(ui.Rect { x = self._chunks[1].x, y = y, w = self._chunks[1].w, h = 1 }),
+			ui.Line(text):fg("gray"):area(self._chunks[1] { y = y, h = 1 }),
 		}
 	end
 end

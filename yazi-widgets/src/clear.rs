@@ -30,7 +30,7 @@ impl Widget for Clear {
 }
 
 const fn is_overlapping(a: Rect, b: Rect) -> bool {
-	a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+	a.x < b.right() && a.right() > b.x && a.y < b.y + b.height && a.y + a.height > b.y
 }
 
 fn overlap(a: Rect, b: Rect) -> Option<Rect> {
@@ -40,7 +40,7 @@ fn overlap(a: Rect, b: Rect) -> Option<Rect> {
 
 	let x = a.x.max(b.x);
 	let y = a.y.max(b.y);
-	let width = (a.x + a.width).min(b.x + b.width) - x;
+	let width = a.right().min(b.right()) - x;
 	let height = (a.y + a.height).min(b.y + b.height) - y;
 	Some(Rect { x, y, width, height })
 }

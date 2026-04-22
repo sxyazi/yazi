@@ -1,6 +1,6 @@
 Root = {
 	_id = "root",
-	_drag_start = ui.Rect {},
+	_dragging = nil,
 }
 
 function Root:new(area)
@@ -50,11 +50,12 @@ end
 
 -- Mouse events
 function Root:click(event, up)
-	if tostring(cx.layer) ~= "mgr" then
-		return
+	local c = Root._dragging or ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
+	Root._dragging = not up and c or nil
+
+	if tostring(cx.layer) == "mgr" then
+		return c and c:click(event, up)
 	end
-	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
-	return c and c:click(event, up)
 end
 
 function Root:scroll(event, step)
@@ -75,4 +76,11 @@ end
 
 function Root:move(event) end
 
-function Root:drag(event) end
+function Root:drag(event)
+	if tostring(cx.layer) ~= "mgr" then
+		return
+	end
+
+	local c = Root._dragging
+	return c and c.drag and c:drag(event)
+end

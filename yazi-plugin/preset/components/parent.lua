@@ -34,6 +34,10 @@ end
 
 -- Mouse events
 function Parent:click(event, up)
+	if up or event.is_middle then
+		return
+	end
+
 	local y = event.y - self._area.y + 1
 	local window = self._folder and self._folder.window or {}
 	if window[y] then

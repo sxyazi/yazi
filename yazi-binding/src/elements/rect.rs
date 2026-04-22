@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
 
 use super::Pad;
 
@@ -48,10 +48,19 @@ impl Rect {
 		r.height = r.height.saturating_sub(pad.top + pad.bottom);
 		Self(r)
 	}
+
+	fn patch(self, t: Table) -> mlua::Result<Self> {
+		Ok(Self(ratatui::layout::Rect {
+			x:      t.raw_get::<Option<_>>("x")?.unwrap_or(self.x),
+			y:      t.raw_get::<Option<_>>("y")?.unwrap_or(self.y),
+			width:  t.raw_get::<Option<_>>("w")?.unwrap_or(self.width),
+			height: t.raw_get::<Option<_>>("h")?.unwrap_or(self.height),
+		}))
+	}
 }
 
 impl UserData for Rect {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("x", |_, me| Ok(me.x));
 		fields.add_field_method_get("y", |_, me| Ok(me.y));
 		fields.add_field_method_get("w", |_, me| Ok(me.width));
@@ -71,5 +80,7 @@ impl UserData for Rect {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("pad", |_, me, pad: Pad| Ok(me.pad(pad)));
 		methods.add_method("contains", |_, me, Self(rect)| Ok(me.contains(rect.into())));
+
+		methods.add_meta_method(MetaMethod::Call, |_, me, t: Table| me.patch(t));
 	}
 }
