@@ -50,14 +50,12 @@ end
 
 -- Mouse events
 function Root:click(event, up)
-	if tostring(cx.layer) ~= "mgr" then
-		return
-	end
-
 	local c = Root._dragging or ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
 	Root._dragging = not up and c or nil
 
-	return c and c:click(event, up)
+	if tostring(cx.layer) == "mgr" then
+		return c and c:click(event, up)
+	end
 end
 
 function Root:scroll(event, step)
