@@ -93,8 +93,10 @@ impl Conn {
 			self.connect_by_key_and_cert(pref).await
 		} else if !self.config.key_file.as_os_str().is_empty() {
 			self.connect_by_key(pref).await
-		} else {
+		} else if !self.config.identity_agent.as_os_str().is_empty() {
 			self.connect_by_agent(pref).await
+		} else {
+			self.connect_by_none(pref).await
 		}?;
 
 		let channel = session.channel_open_session().await?;
@@ -222,15 +224,13 @@ impl Conn {
 			russh::keys::agent::client::AgentClient::connect_named_pipe(identity_agent).await?;
 
 		let identities = agent.request_identities().await?;
-		if identities.is_empty() {
-			return Err(cfg_err!("No keys found in SSH agent"));
-		}
+		let identity_count = identities.len();
 
 		let mut session =
 			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
 
+		let hash_alg = session.best_supported_rsa_hash().await?.flatten();
 		for identity in identities {
-			let hash_alg = session.best_supported_rsa_hash().await?.flatten();
 			let result = match identity {
 				AgentIdentity::PublicKey { key, .. } => {
 					session.authenticate_publickey_with(&self.config.user, key, hash_alg, &mut agent).await
@@ -248,6 +248,26 @@ impl Conn {
 			}
 		}
 
-		Err(cfg_err!("Identity agent authentication failed"))
+		if session.authenticate_none(&self.config.user).await?.success() {
+			Ok(session)
+		} else if identity_count == 0 {
+			Err(cfg_err!("No keys found in SSH agent"))
+		} else {
+			Err(cfg_err!("Identity agent authentication failed"))
+		}
+	}
+
+	async fn connect_by_none(
+		self,
+		pref: Arc<russh::client::Config>,
+	) -> Result<russh::client::Handle<Self>, russh::Error> {
+		let mut session =
+			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
+
+		if session.authenticate_none(&self.config.user).await?.success() {
+			Ok(session)
+		} else {
+			Err(cfg_err!("None authentication failed"))
+		}
 	}
 }
