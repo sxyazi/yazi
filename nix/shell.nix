@@ -2,7 +2,7 @@
   mkShell,
   yazi,
   toolchain,
-  nodePackages,
+  cspell,
   yazi-unwrapped,
 }:
 
@@ -16,7 +16,7 @@ mkShell {
         "clippy"
       ];
     })
-    nodePackages.cspell
+    cspell
   ];
 
   inputsFrom = [ yazi-unwrapped ];
