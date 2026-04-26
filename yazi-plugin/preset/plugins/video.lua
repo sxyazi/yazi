@@ -46,7 +46,7 @@ function M:preload(job)
 	end
 
 	local pic = M.has_pic(meta)
-	local percent = (pic and 0 or 5) + job.skip
+	local percent = (pic and 0 or 10) + job.skip
 	if percent > 95 then
 		ya.emit("peek", { pic and 95 or 90, only_if = job.file.url, upper_bound = true })
 		return false
@@ -58,8 +58,12 @@ function M:preload(job)
 
 	if percent ~= 0 then
 		cmd:arg { "-ss", math.floor(meta.format.duration * percent / 100) }
+	else
+		cmd:arg { "-skip_frame", "nokey" }
 	end
-	cmd:arg { "-skip_frame", "nokey", "-i", tostring(job.file.path) }
+
+	cmd:arg { "-i", tostring(job.file.path) }
+
 	if percent == 0 then
 		cmd:arg { "-map", "disp:attached_pic" }
 	end
