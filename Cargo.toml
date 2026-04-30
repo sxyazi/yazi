@@ -52,8 +52,8 @@ futures             = "0.3.32"
 globset             = "0.4.18"
 hashbrown           = { version = "0.17.0", features = [ "serde" ] }
 indexmap            = { version = "2.14.0", features = [ "serde" ] }
-libc                = "0.2.185"
-lru                 = "0.17.0"
+libc                = "0.2.186"
+lru                 = "0.18.0"
 mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2               = "0.6.4"
 ordered-float       = { version = "5.3.0", features = [ "serde" ] }
@@ -63,7 +63,7 @@ percent-encoding    = "2.3.2"
 rand                = { version = "0.10.1", default-features = false, features = [ "std", "sys_rng" ] }
 ratatui             = { version = "0.30.0", features = [ "serde", "unstable-rendered-line-info", "unstable-widget-ref" ] }
 regex               = "1.12.3"
-russh               = { version = "0.60.1", default-features = false, features = [ "ring", "rsa" ] }
+russh               = { version = "0.60.2", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
 serde_json          = "1.0.149"

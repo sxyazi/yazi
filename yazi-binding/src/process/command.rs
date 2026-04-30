@@ -55,9 +55,9 @@ impl Command {
 	fn spawn(&mut self) -> io::Result<Child> {
 		use std::os::windows::io::RawHandle;
 
-		use windows_sys::Win32::System::JobObjects::{AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation, SetInformationJobObject};
+		use windows_sys::Win32::{Foundation::CloseHandle, System::JobObjects::{AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation, SetInformationJobObject}};
 
-		fn assign_job(max: usize, handle: RawHandle) -> io::Result<RawHandle> {
+		fn create_job(handle: RawHandle, memory: Option<usize>) -> io::Result<RawHandle> {
 			unsafe {
 				let job = CreateJobObjectW(std::ptr::null_mut(), std::ptr::null());
 				if job.is_null() {
@@ -65,31 +65,37 @@ impl Command {
 				}
 
 				let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
-				info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_PROCESS_MEMORY;
-				info.ProcessMemoryLimit = max;
+				info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+				if let Some(m) = memory {
+					info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_PROCESS_MEMORY;
+					info.ProcessMemoryLimit = m;
+				}
 
-				let result = SetInformationJobObject(
+				if SetInformationJobObject(
 					job,
 					JobObjectExtendedLimitInformation,
 					&mut info as *mut _ as *mut _,
 					std::mem::size_of_val(&info) as u32,
-				);
-
-				if result == 0 {
-					Err(io::Error::last_os_error())
-				} else if AssignProcessToJobObject(job, handle) == 0 {
-					Err(io::Error::last_os_error())
-				} else {
-					Ok(job)
+				) == 0
+				{
+					CloseHandle(job);
+					return Err(io::Error::last_os_error());
 				}
+
+				if AssignProcessToJobObject(job, handle) == 0 {
+					CloseHandle(job);
+					return Err(io::Error::last_os_error());
+				}
+
+				Ok(job)
 			}
 		}
 
 		let child = self.inner.spawn()?;
-		if let (Some(max), Some(handle)) = (self.memory, child.raw_handle()) {
-			if let Ok(job) = assign_job(max, handle) {
-				return Ok(Child::new(child, Some(job)));
-			}
+		if let Some(handle) = child.raw_handle()
+			&& let Ok(job) = create_job(handle, self.memory)
+		{
+			return Ok(Child::new(child, Some(job)));
 		}
 
 		Ok(Child::new(child, None))
