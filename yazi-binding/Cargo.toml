@@ -49,4 +49,4 @@ libc = { workspace = true }
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
 
 [target."cfg(windows)".dependencies]
-windows-sys = { version = "0.61.2", features = [ "Win32_System_JobObjects" ] }
+windows-sys = { version = "0.61.2", features = [ "Win32_Foundation", "Win32_System_JobObjects" ] }

@@ -27,7 +27,7 @@ jobs:
         run: rustup toolchain install stable --profile minimal
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.10
 
       - name: Build
         run: cargo build --verbose
