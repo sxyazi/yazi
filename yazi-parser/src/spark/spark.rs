@@ -165,6 +165,8 @@ impl<'a> Spark<'a> {
 			// app:title
 			IndAppTitle => Self::AppTitle(<_>::from_lua(value, lua)?),
 
+			// mgr:close
+			KeyClose => Self::Close(<_>::from_lua(value, lua)?),
 			// mgr:hidden
 			KeyHidden => Self::Hidden(<_>::from_lua(value, lua)?),
 			IndHidden => Self::Hidden(<_>::from_lua(value, lua)?),
