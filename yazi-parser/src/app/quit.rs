@@ -1,10 +1,12 @@
-use mlua::{FromLua, IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
+use yazi_binding::SER_OPT;
 use yazi_core::app::QuitOpt;
 use yazi_shared::event::ActionCow;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct QuitForm {
+	#[serde(flatten)]
 	pub opt: QuitOpt,
 }
 
@@ -21,11 +23,9 @@ impl TryFrom<ActionCow> for QuitForm {
 }
 
 impl FromLua for QuitForm {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(Self { opt: <_>::from_lua(value, lua)? })
-	}
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl IntoLua for QuitForm {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.opt.into_lua(lua) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
 }

@@ -6,6 +6,8 @@ pub enum SparkKind {
 	// app:title
 	IndAppTitle,
 
+	// mgr:close
+	KeyClose,
 	// mgr:hidden
 	KeyHidden,
 	IndHidden,

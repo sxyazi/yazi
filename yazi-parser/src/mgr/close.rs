@@ -1,9 +1,12 @@
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
+use serde::{Deserialize, Serialize};
+use yazi_binding::SER_OPT;
 use yazi_core::app::QuitOpt;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CloseForm {
+	#[serde(flatten)]
 	pub opt: QuitOpt,
 }
 
@@ -16,9 +19,9 @@ impl TryFrom<ActionCow> for CloseForm {
 }
 
 impl FromLua for CloseForm {
-	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl IntoLua for CloseForm {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value_with(&self, SER_OPT) }
 }
