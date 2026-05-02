@@ -1,5 +1,7 @@
 use std::{env, path::PathBuf, sync::OnceLock};
 
+use yazi_macro::unix_either;
+
 pub struct Xdg;
 
 impl Xdg {
@@ -55,7 +57,7 @@ impl Xdg {
 				.filter(|p| p.is_absolute())
 				.map(|p| p.join("yazi"))
 				.or_else(|| dirs::home_dir().map(|h| h.join(".cache/yazi")))
-				.expect("Failed to get state directory")
+				.expect("Failed to get cache directory")
 		}
 	}
 
@@ -91,15 +93,15 @@ impl Xdg {
 			.filter(|p| p.is_absolute())
 			.unwrap_or_else(|| env::temp_dir());
 
-		#[cfg(unix)]
-		let uid = {
-			use uzers::Users;
-			yazi_shared::USERS_CACHE.get_current_uid()
-		};
-		#[cfg(not(unix))]
-		let uid = 0;
+		let uid = unix_either!(
+			{
+				use uzers::Users;
+				yazi_shared::USERS_CACHE.get_current_uid()
+			},
+			0
+		);
 
-		p.push(format!("yazi-{uid}"));
+		p.push(format!("yazi+{uid}"));
 		p
 	}
 
@@ -112,7 +114,15 @@ impl Xdg {
 		let mut p = env::temp_dir();
 		assert!(p.is_absolute(), "Temporary directory path is not absolute");
 
-		p.push("yazi");
+		let uid = unix_either!(
+			{
+				use uzers::Users;
+				yazi_shared::USERS_CACHE.get_current_uid()
+			},
+			0
+		);
+
+		p.push(format!("yazi-{uid}"));
 		p
 	}
 }
