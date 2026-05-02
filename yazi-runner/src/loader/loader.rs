@@ -4,8 +4,7 @@ use anyhow::{Context, Result, bail, ensure};
 use hashbrown::HashMap;
 use mlua::{ChunkMode, ExternalError, Lua, Table};
 use parking_lot::RwLock;
-use yazi_boot::BOOT;
-use yazi_fs::provider::local::Local;
+use yazi_fs::{Xdg, provider::local::Local};
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::{BytesExt, LOG_LEVEL};
 use yazi_shim::cell::RoCell;
@@ -89,7 +88,7 @@ impl Loader {
 			return Self::compatible_or_error(id, c).map(|_| f(c));
 		}
 
-		let p = BOOT.plugin_dir.join(format!("{plugin}.yazi/{entry}.lua"));
+		let p = Xdg::config_dir().join(format!("plugins/{plugin}.yazi/{entry}.lua"));
 		let chunk = Local::regular(&p)
 			.read()
 			.await

@@ -63,7 +63,7 @@ where
 {
 	let path = PathBuf::deserialize(deserializer)?;
 	if path.as_os_str().is_empty() {
-		Ok(Xdg::cache_dir().to_owned())
+		Ok(Xdg::temp_dir().to_owned())
 	} else {
 		normalize_path(path).ok_or_else(|| {
 			serde::de::Error::custom("cache_dir must be either empty or an absolute path.")

@@ -4,7 +4,7 @@ use anyhow::Context;
 use yazi_fs::Xdg;
 
 pub(super) fn init() -> anyhow::Result<()> {
-	let packages_dir = Xdg::state_dir().join("packages");
+	let packages_dir = Xdg::cache_dir().join("packages");
 	std::fs::create_dir_all(&packages_dir)
 		.with_context(|| format!("failed to create packages directory: {packages_dir:?}"))?;
 
