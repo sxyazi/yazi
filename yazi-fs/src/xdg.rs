@@ -25,17 +25,15 @@ impl Xdg {
 
 		#[cfg(windows)]
 		{
-			dirs::config_dir()
-				.map(|p| p.join("yazi").join("config"))
-				.expect("Failed to get config directory")
+			dirs::config_dir().map(|p| p.join("yazi\\config")).expect("Failed to get config directory")
 		}
 		#[cfg(unix)]
 		{
 			env::var_os("XDG_CONFIG_HOME")
 				.map(PathBuf::from)
 				.filter(|p| p.is_absolute())
-				.or_else(|| dirs::home_dir().map(|h| h.join(".config")))
 				.map(|p| p.join("yazi"))
+				.or_else(|| dirs::home_dir().map(|h| h.join(".config/yazi")))
 				.expect("Failed to get config directory")
 		}
 	}
@@ -55,8 +53,8 @@ impl Xdg {
 			env::var_os("XDG_CACHE_HOME")
 				.map(PathBuf::from)
 				.filter(|p| p.is_absolute())
-				.or_else(|| dirs::home_dir().map(|h| h.join(".cache")))
 				.map(|p| p.join("yazi"))
+				.or_else(|| dirs::home_dir().map(|h| h.join(".cache/yazi")))
 				.expect("Failed to get state directory")
 		}
 	}

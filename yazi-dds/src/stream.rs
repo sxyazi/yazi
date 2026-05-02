@@ -55,16 +55,16 @@ impl Stream {
 	async fn socket_file() -> io::Result<&'static std::path::PathBuf> {
 		use tokio::{fs::DirBuilder, sync::OnceCell};
 		use yazi_fs::Xdg;
-		static ONCE: tokio::sync::OnceCell<std::path::PathBuf> = OnceCell::const_new();
 
+		static ONCE: tokio::sync::OnceCell<std::path::PathBuf> = OnceCell::const_new();
 		ONCE
 			.get_or_try_init(|| async move {
 				let p = Xdg::runtime_dir();
 
 				#[cfg(unix)]
-				DirBuilder::new().recursive(true).create(p).await?;
-				#[cfg(not(unix))]
 				DirBuilder::new().mode(0o700).recursive(true).create(p).await?;
+				#[cfg(not(unix))]
+				DirBuilder::new().recursive(true).create(p).await?;
 
 				Ok(p.join(".dds.sock"))
 			})
