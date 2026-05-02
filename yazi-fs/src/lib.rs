@@ -6,4 +6,6 @@ pub fn init() {
 	CWD.init(<_>::default());
 
 	mounts::init();
+
+	Xdg::load();
 }

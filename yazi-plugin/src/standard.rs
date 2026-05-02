@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use futures::executor::block_on;
 use mlua::Lua;
 use yazi_binding::{Runtime, runtime_scope};
-use yazi_boot::BOOT;
+use yazi_fs::Xdg;
 use yazi_macro::plugin_preset as preset;
 use yazi_shim::cell::RoCell;
 
@@ -67,7 +67,7 @@ fn stage_2(lua: &Lua) -> mlua::Result<()> {
 	lua.load(preset!("setup")).set_name("setup.lua").exec()?;
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
-	if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
+	if let Ok(b) = std::fs::read(Xdg::config_dir().join("init.lua")) {
 		runtime_scope!(lua, "init", block_on(lua.load(b).set_name("init.lua").exec_async()))?;
 	}
 

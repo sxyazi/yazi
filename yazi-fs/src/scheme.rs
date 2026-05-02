@@ -13,10 +13,10 @@ impl FsScheme for SchemeRef<'_> {
 		match self {
 			Self::Regular { .. } | Self::Search { .. } => None,
 			Self::Archive { domain, .. } => Some(
-				Xdg::cache_dir().join(format!("archive-{}", yazi_shared::scheme::Encode::domain(domain))),
+				Xdg::temp_dir().join(format!("archive-{}", yazi_shared::scheme::Encode::domain(domain))),
 			),
 			Self::Sftp { domain, .. } => {
-				Some(Xdg::cache_dir().join(format!("sftp-{}", yazi_shared::scheme::Encode::domain(domain))))
+				Some(Xdg::temp_dir().join(format!("sftp-{}", yazi_shared::scheme::Encode::domain(domain))))
 			}
 		}
 	}

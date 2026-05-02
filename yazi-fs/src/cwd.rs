@@ -56,7 +56,7 @@ impl Cwd {
 			return cache.into();
 		}
 
-		let latter = cache.strip_prefix(Xdg::cache_dir()).expect("under cache dir");
+		let latter = cache.strip_prefix(Xdg::temp_dir()).expect("under temp dir");
 		let mut it = latter.components().peekable();
 		while it.peek() == Some(&C::CurDir) {
 			it.next().unwrap();

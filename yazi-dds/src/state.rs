@@ -4,8 +4,7 @@ use anyhow::Result;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
-use yazi_boot::BOOT;
-use yazi_fs::provider::{FileBuilder, Provider, local::{Gate, Local}};
+use yazi_fs::{Xdg, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_shared::timestamp_us;
 use yazi_shim::cell::RoCell;
 
@@ -59,14 +58,11 @@ impl State {
 			return Ok(());
 		}
 
-		Local::regular(&BOOT.state_dir).create_dir_all().await?;
+		let state_dir = Xdg::state_dir();
+		Local::regular(&state_dir).create_dir_all().await?;
+
 		let mut buf = BufWriter::new(
-			Gate::default()
-				.write(true)
-				.create(true)
-				.truncate(true)
-				.open(BOOT.state_dir.join(".dds"))
-				.await?,
+			Gate::default().write(true).create(true).truncate(true).open(state_dir.join(".dds")).await?,
 		);
 
 		let mut state = inner.into_iter().collect::<Vec<_>>();
@@ -80,7 +76,7 @@ impl State {
 	}
 
 	async fn load(&self) -> Result<()> {
-		let mut file = BufReader::new(Local::regular(&BOOT.state_dir.join(".dds")).open().await?);
+		let mut file = BufReader::new(Local::regular(&Xdg::state_dir().join(".dds")).open().await?);
 		let mut buf = String::new();
 
 		let mut inner = HashMap::new();
@@ -104,7 +100,7 @@ impl State {
 	}
 
 	async fn skip(&self) -> Result<bool> {
-		let cha = Local::regular(&BOOT.state_dir.join(".dds")).symlink_metadata().await?;
+		let cha = Local::regular(&Xdg::state_dir().join(".dds")).symlink_metadata().await?;
 		let modified = cha.mtime_dur()?.as_micros();
 		Ok(modified >= self.last.load(Ordering::Relaxed) as u128)
 	}

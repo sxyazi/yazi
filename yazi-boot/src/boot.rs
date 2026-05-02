@@ -1,8 +1,6 @@
-use std::path::PathBuf;
-
 use futures::executor::block_on;
 use hashbrown::HashSet;
-use yazi_fs::{CWD, Xdg, path::clean_url};
+use yazi_fs::{CWD, path::clean_url};
 use yazi_shared::{strand::StrandBuf, url::{UrlBuf, UrlLike}};
 use yazi_vfs::provider;
 
@@ -13,11 +11,6 @@ pub struct Boot {
 
 	pub local_events:  HashSet<String>,
 	pub remote_events: HashSet<String>,
-
-	pub config_dir: PathBuf,
-	pub flavor_dir: PathBuf,
-	pub plugin_dir: PathBuf,
-	pub state_dir:  PathBuf,
 }
 
 impl Boot {
@@ -52,7 +45,6 @@ impl Boot {
 
 impl From<&crate::Args> for Boot {
 	fn from(args: &crate::Args) -> Self {
-		let config_dir = Xdg::config_dir();
 		let (cwds, files) = block_on(Self::parse_entries(&args.entries));
 
 		let local_events = args
@@ -66,17 +58,6 @@ impl From<&crate::Args> for Boot {
 			.map(|s| s.split(',').map(|s| s.to_owned()).collect())
 			.unwrap_or_default();
 
-		Self {
-			cwds,
-			files,
-
-			local_events,
-			remote_events,
-
-			flavor_dir: config_dir.join("flavors"),
-			plugin_dir: config_dir.join("plugins"),
-			config_dir,
-			state_dir: Xdg::state_dir(),
-		}
+		Self { cwds, files, local_events, remote_events }
 	}
 }

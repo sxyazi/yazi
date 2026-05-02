@@ -40,7 +40,7 @@ impl Watched {
 	}
 
 	pub(super) fn find_by_cache(&self, cache: PathDyn) -> Option<UrlBuf> {
-		let mut it = cache.try_strip_prefix(Xdg::cache_dir()).ok()?.components();
+		let mut it = cache.try_strip_prefix(Xdg::temp_dir()).ok()?.components();
 
 		// Parse domain
 		let domain = it.next()?.as_normal()?.to_str().ok()?;
