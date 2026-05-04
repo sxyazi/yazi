@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `app:theme` action that hot-reload user themes/flavors ([#3906])
 - Dynamic open/opener Lua API ([#3901])
 - Dynamic previewer Lua API ([#3891])
+- Custom styles for plugins ([#3934])
 - Vim-like `lua` action that runs an inline Lua snippet ([#3813])
 - Certificate authentication for SFTP VFS provider ([#3716])
 - New `hovered` condition specifying different icons for hovered files ([#3728])
@@ -1709,3 +1710,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3894]: https://github.com/sxyazi/yazi/pull/3894
 [#3901]: https://github.com/sxyazi/yazi/pull/3901
 [#3906]: https://github.com/sxyazi/yazi/pull/3906
+[#3934]: https://github.com/sxyazi/yazi/pull/3934
