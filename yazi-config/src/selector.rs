@@ -1,5 +1,6 @@
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Deserializer, de};
+use yazi_shim::toml::DeserializeOverWith;
 
 use crate::{Mixable, Pattern, Selectable};
 
@@ -19,6 +20,16 @@ impl<'de> Deserialize<'de> for Selector {
 
 		let shadow = Shadow::deserialize(deserializer)?;
 		Self::new(shadow.url, shadow.mime).map_err(de::Error::custom)
+	}
+}
+
+impl DeserializeOverWith for Selector {
+	fn deserialize_over_with<'de, D: Deserializer<'de>>(
+		self,
+		deserializer: D,
+	) -> Result<Self, D::Error> {
+		let new = Selector::deserialize(deserializer)?;
+		Self::new(new.url.or(self.url), new.mime.or(self.mime)).map_err(de::Error::custom)
 	}
 }
 

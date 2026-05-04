@@ -57,6 +57,6 @@ impl From<NonEmptyString> for OsString {
 impl<'de> Deserialize<'de> for NonEmptyString {
 	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
 		let value = String::deserialize(deserializer)?;
-		Self::new(value).ok_or_else(|| serde::de::Error::custom("string cannot be empty"))
+		Self::new(value).ok_or_else(|| serde::de::Error::custom("must be a non-empty string"))
 	}
 }

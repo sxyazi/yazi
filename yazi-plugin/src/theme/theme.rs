@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url, theme::CustomSection};
 use yazi_config::THEME;
 
 use crate::LUA;
@@ -22,7 +22,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"cmp" => cmp(),
 			b"tasks" => tasks(),
 			b"help" => help(),
-			_ => return Ok(Value::Nil),
+			_ => return custom(lua, key),
 		}
 		.into_lua(lua)
 	}
@@ -374,4 +374,11 @@ fn help() -> Composer<ComposerGet, ComposerSet> {
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
 	Composer::new(get, set)
+}
+
+fn custom(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
+	match THEME.custom.load().get(str::from_utf8(key)?) {
+		Some(section) => CustomSection::new(section.load_full()).into_lua(lua),
+		None => Ok(Value::Nil),
+	}
 }

@@ -24,22 +24,38 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 	let visitor_generics = generics_with_de(&generics);
 	let (impl_visitor_generics, ..) = visitor_generics.split_for_impl();
 
-	let fields: Vec<_> = named_fields(data).into_iter().map(|f| f.ident.unwrap()).collect();
-	let match_arms = fields.iter().map(|f| {
-		let name = ident_name(f);
-		quote! { #name => self.0.#f = map.next_value_seed(DeserializeOverSeed(self.0.#f))?, }
+	let (flatten_fields, normal_fields): (Vec<_>, Vec<_>) =
+		named_fields(data).into_iter().partition(|f| has_serde_attr(&f.attrs, "flatten"));
+
+	let field_hooks: Vec<_> = flatten_fields
+		.iter()
+		.chain(&normal_fields)
+		.map(|f| {
+			let ident = f.ident.as_ref().unwrap();
+			quote! { #ident: deserialized.#ident.deserialize_over_hook().map_err(Error::custom)? }
+		})
+		.collect();
+
+	let normal_arms = normal_fields.into_iter().map(|f| {
+		let ident = f.ident.unwrap();
+		let name = ident_name(&ident);
+		quote! { #name => self.0.#ident = map.next_value_seed(DeserializeOverSeed(self.0.#ident))? }
 	});
 
-	let hook_fields = fields.iter().map(|f| {
-		quote! { #f: deserialized.#f.deserialize_over_hook().map_err(Error::custom)? }
-	});
+	let flatten_arm = match flatten_fields.into_iter().next() {
+		Some(f) => {
+			let ident = f.ident.unwrap();
+			quote! { _ => self.0.#ident = self.0.#ident.deserialize_over_with(single_map_entry(key, &mut map))? }
+		}
+		None => quote! { _ => _ = map.next_value::<IgnoredAny>()? },
+	};
 
 	quote! {
 		impl #impl_generics yazi_shim::toml::DeserializeOverWith for #ident #ty_generics #where_clause {
 			fn deserialize_over_with<'__de, __D: serde::Deserializer<'__de>>(self, de: __D) -> Result<Self, __D::Error> {
-				use std::borrow::Cow;
 				use serde::de::{Error, IgnoredAny, MapAccess, Visitor};
-				use yazi_shim::toml::{DeserializeOverHook, DeserializeOverSeed};
+				use yazi_shared::KebabCasedString;
+				use yazi_shim::{serde::single_map_entry, toml::{DeserializeOverHook, DeserializeOverSeed, DeserializeOverWith}};
 
 				struct V #impl_generics (#ident #ty_generics) #where_clause;
 
@@ -51,10 +67,10 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 					}
 
 					fn visit_map<__M: MapAccess<'__de>>(mut self, mut map: __M) -> Result<Self::Value, __M::Error> {
-						while let Some(key) = map.next_key::<Cow<str>>()? {
+						while let Some(key) = map.next_key::<KebabCasedString>()? {
 							match key.as_ref() {
-								#(#match_arms)*
-								_ => { map.next_value::<IgnoredAny>()?; }
+								#(#normal_arms,)*
+								#flatten_arm
 							}
 						}
 						Ok(self.0)
@@ -62,7 +78,7 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 				}
 
 				let deserialized = de.deserialize_map(V(self))?;
-				Ok(Self { #(#hook_fields,)* })
+				Ok(Self { #(#field_hooks,)* })
 			}
 		}
 	}
@@ -77,7 +93,8 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 	let visitor_generics = generics_with_de(&generics);
 	let (impl_visitor_generics, ..) = visitor_generics.split_for_impl();
 
-	let (mut match_arms, mut post_fields) = (vec![], vec![]);
+	let mut normal_arms = vec![];
+	let mut flatten_arm = quote! { _ => _ = map.next_value::<IgnoredAny>()? };
 	for field in named_fields(data) {
 		let (field_ident, field_ty) = (field.ident, field.ty);
 		let field_name = ident_name(field_ident.as_ref().unwrap());
@@ -86,25 +103,16 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 			continue;
 		}
 
-		if field_name == "selector" && has_serde_attr(&field.attrs, "flatten") {
-			match_arms.push(quote! {
-				"url" => selector_url = Some(map.next_value()?),
-				"mime" => selector_mime = Some(map.next_value()?),
-			});
-			post_fields.push(quote! {
-				self.0.#field_ident = Selector::new(
-					selector_url.or(self.0.#field_ident.url),
-					selector_mime.or(self.0.#field_ident.mime)
-				).map_err(Error::custom)?;
-			});
+		if has_serde_attr(&field.attrs, "flatten") {
+			flatten_arm = quote! { _ => self.0.#field_ident = self.0.#field_ident.deserialize_over_with(single_map_entry(key, &mut map))? };
 			continue;
 		}
 
 		let serde_attrs: Vec<_> = field.attrs.iter().filter(|a| a.path().is_ident("serde")).collect();
 		if serde_attrs.is_empty() {
-			match_arms.push(quote! { #field_name => self.0.#field_ident = map.next_value()?, });
+			normal_arms.push(quote! { #field_name => self.0.#field_ident = map.next_value()? });
 		} else {
-			match_arms.push(quote! {
+			normal_arms.push(quote! {
 				#field_name => {
 					#[derive(serde::Deserialize)]
 					struct H #impl_generics(#(#serde_attrs)* #field_ty,) #where_clause;
@@ -117,9 +125,9 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 	quote! {
 		impl #impl_generics yazi_shim::toml::DeserializeOverWith for #ident #ty_generics #where_clause {
 			fn deserialize_over_with<'__de, __D: serde::Deserializer<'__de>>(self, de: __D) -> Result<Self, __D::Error> {
-				use std::borrow::Cow;
 				use serde::de::{Error, IgnoredAny, MapAccess, Visitor};
-				use crate::Selector;
+				use std::borrow::Cow;
+				use yazi_shim::{serde::single_map_entry, toml::DeserializeOverWith};
 
 				struct V #impl_generics (#ident #ty_generics) #where_clause;
 
@@ -131,17 +139,13 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 					}
 
 					fn visit_map<__M: MapAccess<'__de>>(mut self, mut map: __M) -> Result<Self::Value, __M::Error> {
-						let mut selector_url: Option<crate::Pattern> = None;
-						let mut selector_mime: Option<crate::Pattern> = None;
-
 						while let Some(key) = map.next_key::<Cow<str>>()? {
 							match key.as_ref() {
-								#(#match_arms)*
-								_ => { map.next_value::<IgnoredAny>()?; }
+								#(#normal_arms,)*
+								#flatten_arm
 							}
 						}
 
-						#(#post_fields)*
 						Ok(self.0)
 					}
 				}

@@ -49,4 +49,4 @@ core-foundation-sys = { workspace = true }
 objc2               = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-trash = "5.2.5"
+trash = "5.2.6"
