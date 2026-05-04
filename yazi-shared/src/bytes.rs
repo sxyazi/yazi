@@ -11,6 +11,8 @@ pub trait BytesExt {
 
 	fn rsplit_seq_once(&self, sep: &[u8]) -> Option<(&[u8], &[u8])>;
 
+	fn snake_cased(&self) -> bool;
+
 	fn split_seq_once(&self, sep: &[u8]) -> Option<(&[u8], &[u8])>;
 }
 
@@ -45,6 +47,10 @@ impl BytesExt for [u8] {
 			}
 		}
 		None
+	}
+
+	fn snake_cased(&self) -> bool {
+		self.iter().all(|&b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'_'))
 	}
 
 	fn split_seq_once(&self, sep: &[u8]) -> Option<(&[u8], &[u8])> {

@@ -71,9 +71,15 @@ pub struct OpenerRulesMatcher {
 impl From<&Opener> for OpenerRulesMatcher {
 	fn from(opener: &Opener) -> Self {
 		let opener = opener.load_full();
-		let iter: hash_map::Iter<String, Arc<OpenerRules>> = opener.iter();
 
-		Self { iter: unsafe { mem::transmute(iter) }, _opener: opener }
+		let iter = unsafe {
+			mem::transmute::<
+				hash_map::Iter<'_, String, Arc<OpenerRules>>,
+				hash_map::Iter<'static, String, Arc<OpenerRules>>,
+			>(opener.iter())
+		};
+
+		Self { iter, _opener: opener }
 	}
 }
 

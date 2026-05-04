@@ -7,7 +7,7 @@ use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2, Overlay}
 use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shim::{arc_swap::IntoPointee, cell::SyncCell};
 
-use super::{Filetype, Flavor, Icon};
+use super::{Custom, Filetype, Flavor, Icon};
 use crate::{Style, normalize_path};
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1, Overlay)]
@@ -32,6 +32,10 @@ pub struct Theme {
 	// File-specific styles
 	pub filetype: Filetype,
 	pub icon:     Icon,
+
+	// User-defined custom sections
+	#[serde(flatten, default)]
+	pub custom: Custom,
 }
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]

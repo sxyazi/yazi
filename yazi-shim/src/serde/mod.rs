@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(traits);
+yazi_macro::mod_flat!(map traits);
