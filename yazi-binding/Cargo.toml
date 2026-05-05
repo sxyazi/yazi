@@ -17,15 +17,15 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "26.2.2" }
-yazi-codegen = { path = "../yazi-codegen", version = "26.2.2" }
-yazi-config  = { path = "../yazi-config", version = "26.2.2" }
-yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
-yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
-yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
-yazi-shim    = { path = "../yazi-shim", version = "26.2.2" }
-yazi-vfs     = { path = "../yazi-vfs", version = "26.2.2" }
-yazi-widgets = { path = "../yazi-widgets", version = "26.2.2" }
+yazi-adapter = { path = "../yazi-adapter", version = "26.5.6" }
+yazi-codegen = { path = "../yazi-codegen", version = "26.5.6" }
+yazi-config  = { path = "../yazi-config", version = "26.5.6" }
+yazi-fs      = { path = "../yazi-fs", version = "26.5.6" }
+yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
+yazi-vfs     = { path = "../yazi-vfs", version = "26.5.6" }
+yazi-widgets = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
 ansi-to-tui   = { workspace = true }

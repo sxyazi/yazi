@@ -17,17 +17,17 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-binding   = { path = "../yazi-binding", version = "26.2.2" }
-yazi-boot      = { path = "../yazi-boot", version = "26.2.2" }
-yazi-config    = { path = "../yazi-config", version = "26.2.2" }
-yazi-core      = { path = "../yazi-core", version = "26.2.2" }
-yazi-dds       = { path = "../yazi-dds", version = "26.2.2" }
-yazi-fs        = { path = "../yazi-fs", version = "26.2.2" }
-yazi-macro     = { path = "../yazi-macro", version = "26.2.2" }
-yazi-scheduler = { path = "../yazi-scheduler", version = "26.2.2" }
-yazi-shared    = { path = "../yazi-shared", version = "26.2.2" }
-yazi-vfs       = { path = "../yazi-vfs", version = "26.2.2" }
-yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
+yazi-binding   = { path = "../yazi-binding", version = "26.5.6" }
+yazi-boot      = { path = "../yazi-boot", version = "26.5.6" }
+yazi-config    = { path = "../yazi-config", version = "26.5.6" }
+yazi-core      = { path = "../yazi-core", version = "26.5.6" }
+yazi-dds       = { path = "../yazi-dds", version = "26.5.6" }
+yazi-fs        = { path = "../yazi-fs", version = "26.5.6" }
+yazi-macro     = { path = "../yazi-macro", version = "26.5.6" }
+yazi-scheduler = { path = "../yazi-scheduler", version = "26.5.6" }
+yazi-shared    = { path = "../yazi-shared", version = "26.5.6" }
+yazi-vfs       = { path = "../yazi-vfs", version = "26.5.6" }
+yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
 anyhow     = { workspace = true }

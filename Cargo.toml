@@ -5,7 +5,7 @@ default-members = [ "yazi-fm", "yazi-cli" ]
 
 [workspace.package]
 edition      = "2024"
-version      = "26.2.2"
+version      = "26.5.6"
 license      = "MIT"
 authors      = [ "sxyazi <sxyazi@gmail.com>" ]
 homepage     = "https://yazi-rs.github.io"

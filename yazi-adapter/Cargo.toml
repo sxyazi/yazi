@@ -13,13 +13,13 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-config   = { path = "../yazi-config", version = "26.2.2" }
-yazi-emulator = { path = "../yazi-emulator", version = "26.2.2" }
-yazi-fs       = { path = "../yazi-fs", version = "26.2.2" }
-yazi-macro    = { path = "../yazi-macro", version = "26.2.2" }
-yazi-shared   = { path = "../yazi-shared", version = "26.2.2" }
-yazi-shim     = { path = "../yazi-shim", version = "26.2.2" }
-yazi-tty      = { path = "../yazi-tty", version = "26.2.2" }
+yazi-config   = { path = "../yazi-config", version = "26.5.6" }
+yazi-emulator = { path = "../yazi-emulator", version = "26.5.6" }
+yazi-fs       = { path = "../yazi-fs", version = "26.5.6" }
+yazi-macro    = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shared   = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim     = { path = "../yazi-shim", version = "26.5.6" }
+yazi-tty      = { path = "../yazi-tty", version = "26.5.6" }
 
 # External dependencies
 ansi-to-tui = { workspace = true }
