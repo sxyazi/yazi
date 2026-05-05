@@ -4,8 +4,8 @@ use arc_swap::ArcSwap;
 use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, de::{self, MapAccess, SeqAccess, Visitor}};
 use yazi_codegen::{DeserializeOver, Overlay};
-use yazi_shim::arc_swap::IntoPointee;
 use yazi_shared::SnakeCasedString;
+use yazi_shim::arc_swap::IntoPointee;
 
 use crate::theme::CustomField;
 

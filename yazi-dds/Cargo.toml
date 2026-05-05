@@ -17,12 +17,12 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-binding = { path = "../yazi-binding", version = "26.2.2" }
-yazi-boot    = { path = "../yazi-boot", version = "26.2.2" }
-yazi-fs      = { path = "../yazi-fs", version = "26.2.2" }
-yazi-macro   = { path = "../yazi-macro", version = "26.2.2" }
-yazi-shared  = { path = "../yazi-shared", version = "26.2.2" }
-yazi-shim    = { path = "../yazi-shim", version = "26.2.2" }
+yazi-binding = { path = "../yazi-binding", version = "26.5.6" }
+yazi-boot    = { path = "../yazi-boot", version = "26.5.6" }
+yazi-fs      = { path = "../yazi-fs", version = "26.5.6" }
+yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
 
 # External dependencies
 anyhow        = { workspace = true }
@@ -40,6 +40,3 @@ tracing       = { workspace = true }
 
 [build-dependencies]
 vergen-gitcl = { version = "9.1.0", features = [ "build" ] }
-
-[target."cfg(unix)".dependencies]
-uzers = { workspace = true }

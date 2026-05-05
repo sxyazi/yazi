@@ -13,10 +13,10 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-macro  = { path = "../yazi-macro", version = "26.2.2" }
-yazi-shared = { path = "../yazi-shared", version = "26.2.2" }
-yazi-shim   = { path = "../yazi-shim", version = "26.2.2" }
-yazi-tty    = { path = "../yazi-tty", version = "26.2.2" }
+yazi-macro  = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shared = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim   = { path = "../yazi-shim", version = "26.5.6" }
+yazi-tty    = { path = "../yazi-tty", version = "26.5.6" }
 
 # External dependencies
 anyhow     = { workspace = true }

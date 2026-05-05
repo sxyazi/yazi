@@ -13,13 +13,13 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-config    = { path = "../yazi-config", version = "26.2.2" }
-yazi-core      = { path = "../yazi-core", version = "26.2.2" }
-yazi-macro     = { path = "../yazi-macro", version = "26.2.2" }
-yazi-scheduler = { path = "../yazi-scheduler", version = "26.2.2" }
-yazi-shared    = { path = "../yazi-shared", version = "26.2.2" }
-yazi-shim      = { path = "../yazi-shim", version = "26.2.2" }
-yazi-widgets   = { path = "../yazi-widgets", version = "26.2.2" }
+yazi-config    = { path = "../yazi-config", version = "26.5.6" }
+yazi-core      = { path = "../yazi-core", version = "26.5.6" }
+yazi-macro     = { path = "../yazi-macro", version = "26.5.6" }
+yazi-scheduler = { path = "../yazi-scheduler", version = "26.5.6" }
+yazi-shared    = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim      = { path = "../yazi-shim", version = "26.5.6" }
+yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
 anyhow = { workspace = true }

@@ -17,4 +17,4 @@ prev_ver=$(grep -oE '^\[v[0-9][^]]+\]' CHANGELOG.md | tail -n1 | tr -d '[]')
 link="\[v$1\]: https://github.com/sxyazi/yazi/compare/$prev_ver...v$1"
 perl -pi -e 's{(\['"$prev_ver"'\]:[^\n]+\n)}{$1'"$link"'\n}s' CHANGELOG.md
 
-ESLINT_USE_FLAT_CONFIG=true eslint -c ~/.config/rules/eslint/eslint.config.cjs --fix -- $TOML_FILES
+eslint -c ~/.config/rules/eslint/eslint.config.js --fix -- $TOML_FILES
