@@ -21,7 +21,9 @@ impl Actor for Close {
 		if let Some(tx) = input.tx.take() {
 			let value = input.snap().value.clone();
 			if form.submit {
-				yazi_widgets::input::INPUT_HISTORY.lock().unwrap().push(value.clone());
+				if !input.obscure {
+					yazi_widgets::input::INPUT_HISTORY.lock().unwrap().push(value.clone());
+				}
 				_ = tx.send(InputEvent::Submit(value));
 			} else {
 				_ = tx.send(InputEvent::Cancel(value));

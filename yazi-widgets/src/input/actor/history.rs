@@ -6,7 +6,7 @@ use crate::input::{INPUT_HISTORY, Input, InputOp, parser::HistoryOpt};
 
 impl Input {
 	pub fn history(&mut self, opt: HistoryOpt) -> Result<Data> {
-		if self.snap().op != InputOp::None {
+		if self.snap().op != InputOp::None || self.obscure {
 			succ!();
 		}
 
