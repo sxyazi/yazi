@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_shared::data::Data;
 
 use crate::input::{INPUT_HISTORY, Input, InputOp, parser::HistoryOpt};
@@ -10,14 +10,10 @@ impl Input {
 			succ!();
 		}
 
-		let new_value = INPUT_HISTORY.lock().unwrap().navigate(opt.offset, &self.snap().value);
-		let Some(value) = new_value else { succ!() };
+		if !INPUT_HISTORY.lock().unwrap().navigate(opt.offset, &mut self.snaps, self.limit) {
+			succ!();
+		}
 
-		let snap = self.snap_mut();
-		snap.value = value;
-		snap.cursor = snap.count();
-
-		act!(r#move, self)?;
 		succ!(render!());
 	}
 }
