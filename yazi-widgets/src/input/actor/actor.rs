@@ -22,6 +22,7 @@ impl Input {
 		on!(r#move, "move");
 		on!(backward);
 		on!(forward);
+		on!(history);
 
 		match self.mode() {
 			InputMode::Normal => {
