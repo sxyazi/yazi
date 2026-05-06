@@ -305,10 +305,10 @@ keymap = [
 	{ on = "P", run = "paste --before",                                    desc = "Paste copied characters before the cursor" },
 
 	# History
-	{ on = "<Up>",   run = "history up",   desc = "Navigate to the previous history entry" },
-	{ on = "<Down>", run = "history down", desc = "Navigate to the next history entry" },
-	{ on = "<C-p>",  run = "history up",   desc = "Navigate to the previous history entry" },
-	{ on = "<C-n>",  run = "history down", desc = "Navigate to the next history entry" },
+	{ on = "<Up>",   run = "history -1", desc = "Navigate to the previous history entry" },
+	{ on = "<Down>", run = "history +1", desc = "Navigate to the next history entry" },
+	{ on = "<C-p>",  run = "history -1", desc = "Navigate to the previous history entry" },
+	{ on = "<C-n>",  run = "history +1", desc = "Navigate to the next history entry" },
 
 	# Undo/Redo/Casefy
 	{ on = "u",     run = [ "undo", "casefy lower" ], desc = "Undo, or lowercase if in visual mode" },

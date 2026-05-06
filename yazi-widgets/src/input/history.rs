@@ -29,35 +29,28 @@ impl InputHistory {
 		self.draft.clear();
 	}
 
-	pub fn navigate(&mut self, up: bool, current: &str) -> Option<String> {
-		if self.entries.is_empty() {
+	pub fn navigate(&mut self, step: i64, current: &str) -> Option<String> {
+		if self.entries.is_empty() || step == 0 {
 			return None;
 		}
 
-		if up {
-			let new_idx = match self.idx {
-				None => {
-					self.draft = current.to_owned();
-					self.entries.len() - 1
-				}
-				Some(0) => return None,
-				Some(i) => i - 1,
-			};
-			self.idx = Some(new_idx);
-			Some(self.entries[new_idx].clone())
+		let len = self.entries.len() as i64;
+		let pos = self.idx.map_or(len, |i| i as i64);
+		let new_pos = (pos + step).clamp(0, len);
+
+		if new_pos == pos {
+			return None;
+		}
+
+		if new_pos == len {
+			self.idx = None;
+			Some(std::mem::take(&mut self.draft))
 		} else {
-			match self.idx {
-				None => None,
-				Some(i) if i + 1 >= self.entries.len() => {
-					self.idx = None;
-					let draft = std::mem::take(&mut self.draft);
-					Some(draft)
-				}
-				Some(i) => {
-					self.idx = Some(i + 1);
-					Some(self.entries[i + 1].clone())
-				}
+			if self.idx.is_none() {
+				self.draft = current.to_owned();
 			}
+			self.idx = Some(new_pos as usize);
+			Some(self.entries[new_pos as usize].clone())
 		}
 	}
 }
