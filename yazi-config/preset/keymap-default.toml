@@ -309,6 +309,8 @@ keymap = [
 	{ on = "<Down>", run = "history +1", desc = "Navigate to the next history entry" },
 	{ on = "<C-p>",  run = "history -1", desc = "Navigate to the previous history entry" },
 	{ on = "<C-n>",  run = "history +1", desc = "Navigate to the next history entry" },
+	{ on = "k",  run = "history -1", desc = "Navigate to the previous history entry" },
+	{ on = "j",  run = "history +1", desc = "Navigate to the next history entry" },
 
 	# Undo/Redo/Casefy
 	{ on = "u",     run = [ "undo", "casefy lower" ], desc = "Undo, or lowercase if in visual mode" },
