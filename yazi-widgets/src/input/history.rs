@@ -1,8 +1,6 @@
-use std::{mem, sync::Mutex};
+use std::mem;
 
 use super::{InputMode, InputSnaps};
-
-pub static INPUT_HISTORY: Mutex<InputHistory> = Mutex::new(InputHistory::new());
 
 #[derive(Default)]
 pub struct InputHistory {

@@ -2,10 +2,10 @@ use anyhow::Result;
 use yazi_macro::{act, succ};
 use yazi_shared::{data::Data, event::ActionCow};
 
-use crate::input::{Input, InputMode};
+use crate::input::{Input, InputHistory, InputMode};
 
 impl Input {
-	pub fn execute(&mut self, action: ActionCow) -> Result<Data> {
+	pub fn execute(&mut self, action: ActionCow, history: &mut InputHistory) -> Result<Data> {
 		macro_rules! on {
 			($name:ident) => {
 				if action.name == stringify!($name) {
@@ -22,7 +22,9 @@ impl Input {
 		on!(r#move, "move");
 		on!(backward);
 		on!(forward);
-		on!(history);
+		if action.name == "history" {
+			return self.history(action.into(), history);
+		}
 
 		match self.mode() {
 			InputMode::Normal => {
