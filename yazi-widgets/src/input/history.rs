@@ -68,6 +68,11 @@ impl InputHistory {
 			self.entry_snaps[new_idx].take().unwrap()
 		};
 
+		// Preserve mode from before navigation
+		let snap = snaps.current_mut();
+		snap.cursor = snap.cursor.min(snap.count().saturating_sub(mode.delta()));
+		snap.mode = mode;
+
 		true
 	}
 
