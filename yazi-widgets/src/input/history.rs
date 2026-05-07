@@ -2,26 +2,38 @@ use std::mem;
 
 use super::InputSnaps;
 
+// TODO: make configurable?
+const MAX_LENGTH: usize = 20;
+
 #[derive(Default)]
 pub struct InputHistory {
-	entries: Vec<String>,
-	entry_snaps: Vec<Option<InputSnaps>>,
+	entries: std::collections::VecDeque<String>,
+	entry_snaps: std::collections::VecDeque<Option<InputSnaps>>,
 	idx: Option<usize>,
 	draft: Option<InputSnaps>,
 }
 
 impl InputHistory {
 	pub const fn new() -> Self {
-		Self { entries: Vec::new(), entry_snaps: Vec::new(), idx: None, draft: None }
+		Self {
+			entries: std::collections::VecDeque::new(),
+			entry_snaps: std::collections::VecDeque::new(),
+			idx: None,
+			draft: None,
+		}
 	}
 
 	pub fn push(&mut self, value: String) {
 		if value.is_empty() {
 			return;
 		}
-		if self.entries.last().map(String::as_str) != Some(&value) {
-			self.entries.push(value);
-			self.entry_snaps.push(None);
+		if self.entries.back().map(String::as_str) != Some(&value) {
+			if self.entries.len() >= MAX_LENGTH {
+				self.entries.pop_front();
+				self.entry_snaps.pop_front();
+			}
+			self.entries.push_back(value);
+			self.entry_snaps.push_back(None);
 		}
 		self.reset();
 	}
