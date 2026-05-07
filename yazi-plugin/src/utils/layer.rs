@@ -59,6 +59,7 @@ impl Utils {
 				position: t.raw_get::<Pos>("pos")?.with_height(3).into(),
 				realtime,
 				completion: false,
+				id: t.raw_get("id").unwrap_or_default(),
 			}));
 
 			if !realtime {

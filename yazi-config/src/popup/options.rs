@@ -13,6 +13,7 @@ pub struct InputCfg {
 	pub position:   Position,
 	pub realtime:   bool,
 	pub completion: bool,
+	pub id:         String,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -37,6 +38,7 @@ impl InputCfg {
 			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
 			position: Position::new(YAZI.input.cd_origin, YAZI.input.cd_offset),
 			completion: true,
+			id: "cd".to_owned(),
 			..Default::default()
 		}
 	}
@@ -45,6 +47,7 @@ impl InputCfg {
 		Self {
 			title: YAZI.input.create_title[dir as usize].clone(),
 			position: Position::new(YAZI.input.create_origin, YAZI.input.create_offset),
+			id: "create".to_owned(),
 			..Default::default()
 		}
 	}
@@ -53,6 +56,7 @@ impl InputCfg {
 		Self {
 			title: YAZI.input.rename_title.clone(),
 			position: Position::new(YAZI.input.rename_origin, YAZI.input.rename_offset),
+			id: "rename".to_owned(),
 			..Default::default()
 		}
 	}
@@ -62,6 +66,7 @@ impl InputCfg {
 			title: YAZI.input.filter_title.clone(),
 			position: Position::new(YAZI.input.filter_origin, YAZI.input.filter_offset),
 			realtime: true,
+			id: "filter".to_owned(),
 			..Default::default()
 		}
 	}
@@ -79,6 +84,7 @@ impl InputCfg {
 		Self {
 			title: YAZI.input.search_title.replace("{n}", name),
 			position: Position::new(YAZI.input.search_origin, YAZI.input.search_offset),
+			id: "search".to_owned(),
 			..Default::default()
 		}
 	}
@@ -87,6 +93,7 @@ impl InputCfg {
 		Self {
 			title: YAZI.input.shell_title[block as usize].clone(),
 			position: Position::new(YAZI.input.shell_origin, YAZI.input.shell_offset),
+			id: "shell".to_owned(),
 			..Default::default()
 		}
 	}
@@ -100,6 +107,7 @@ impl InputCfg {
 				width:  50,
 				height: 3,
 			}),
+			id: "tab_rename".to_owned(),
 			..Default::default()
 		}
 	}

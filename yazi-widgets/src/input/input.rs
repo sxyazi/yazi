@@ -18,6 +18,7 @@ pub struct Input {
 	pub obscure:    bool,
 	pub realtime:   bool,
 	pub completion: bool,
+	pub id:         String,
 
 	pub tx:     Option<mpsc::UnboundedSender<InputEvent>>,
 	pub ticket: Ids,
@@ -32,6 +33,7 @@ impl Input {
 			obscure: opt.cfg.obscure,
 			realtime: opt.cfg.realtime,
 			completion: opt.cfg.completion,
+			id: opt.cfg.id,
 
 			tx: Some(opt.tx),
 			..Default::default()

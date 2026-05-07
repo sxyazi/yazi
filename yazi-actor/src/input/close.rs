@@ -22,7 +22,7 @@ impl Actor for Close {
 			let value = input.snap().value.clone();
 			if form.submit {
 				if !input.obscure {
-					input.history.push(value.clone());
+					input.history().push(value.clone());
 				}
 				_ = tx.send(InputEvent::Submit(value));
 			} else {

@@ -9,7 +9,7 @@ use yazi_widgets::input::{InputOp, parser::HistoryOpt};
 #[derive(Default)]
 pub struct Input {
 	pub(super) inner: yazi_widgets::input::Input,
-	pub history: yazi_widgets::input::InputHistory,
+	pub history: std::collections::HashMap<String, yazi_widgets::input::InputHistory>,
 
 	pub visible: bool,
 	pub title: String,
@@ -19,17 +19,28 @@ pub struct Input {
 impl Input {
 	pub fn execute(&mut self, action: ActionCow) -> Result<Data> {
 		if action.name == "history" {
-			return self.history(action.into());
+			return self.navigate_history(action.into());
 		}
 		self.inner.execute(action)
 	}
 
-	pub fn history(&mut self, opt: HistoryOpt) -> Result<Data> {
+	pub fn history(&mut self) -> &mut yazi_widgets::input::InputHistory {
+		if !self.history.contains_key(&self.inner.id) {
+			self.history.insert(self.inner.id.clone(), yazi_widgets::input::InputHistory::new());
+		}
+		self.history.get_mut(&self.inner.id).unwrap()
+	}
+	pub fn navigate_history(&mut self, opt: HistoryOpt) -> Result<Data> {
 		if self.inner.snap().op != InputOp::None || self.inner.obscure {
 			succ!();
 		}
-		if !self.history.navigate(opt.offset, &mut self.inner.snaps, self.inner.limit) {
-			succ!();
+		match self.history.get_mut(&self.inner.id) {
+			Some(history) => {
+				if !history.navigate(opt.offset, &mut self.inner.snaps, self.inner.limit) {
+					succ!();
+				}
+			}
+			None => succ!(),
 		}
 		succ!(render!());
 	}
