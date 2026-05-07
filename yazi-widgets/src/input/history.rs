@@ -1,6 +1,6 @@
 use std::mem;
 
-use super::{InputMode, InputSnaps};
+use super::InputSnaps;
 
 #[derive(Default)]
 pub struct InputHistory {
@@ -45,6 +45,7 @@ impl InputHistory {
 		}
 
 		let mode = snaps.current().mode;
+		let cursor = snaps.current().cursor;
 
 		// Save current snaps into draft or the slot we're leaving
 		let old = mem::take(snaps);
@@ -63,25 +64,18 @@ impl InputHistory {
 			self.idx = Some(new_idx);
 			if self.entry_snaps[new_idx].is_none() {
 				let value = self.entries[new_idx].clone();
-				self.entry_snaps[new_idx] = Some(Self::initial_snaps(value, mode, limit));
+				// history does not trigger on obscured inputs
+				self.entry_snaps[new_idx] = Some(InputSnaps::new(value, false, limit));
 			}
 			self.entry_snaps[new_idx].take().unwrap()
 		};
 
-		// Preserve mode from before navigation
+		// Preserve mode and cursor position from before navigation
 		let snap = snaps.current_mut();
-		snap.cursor = snap.cursor.min(snap.count().saturating_sub(mode.delta()));
 		snap.mode = mode;
+		snap.cursor = cursor.min(snap.count().saturating_sub(mode.delta()));
+		snap.resize(limit);
 
 		true
-	}
-
-	fn initial_snaps(value: String, mode: InputMode, limit: usize) -> InputSnaps {
-		let mut snaps = InputSnaps::new(value, false, limit);
-		let snap = snaps.current_mut();
-		snap.mode = mode;
-		snap.cursor = snap.count().saturating_sub(mode.delta());
-		snap.resize(limit);
-		snaps
 	}
 }
