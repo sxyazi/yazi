@@ -72,7 +72,10 @@ impl Condition {
 			let op = ConditionOp::new(token);
 			match op {
 				ConditionOp::Or | ConditionOp::And | ConditionOp::Not => {
-					while matches!(stack.last(), Some(last) if last.prec() >= op.prec()) {
+					while matches!(
+						stack.last(),
+						Some(last) if last.prec() > op.prec() || (op != ConditionOp::Not && last.prec() == op.prec())
+					) {
 						output.push(stack.pop().unwrap());
 					}
 					stack.push(op);
@@ -127,5 +130,23 @@ impl Condition {
 		}
 
 		if stack.len() == 1 { Some(stack[0]) } else { None }
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_condition_not() -> anyhow::Result<()> {
+		let cond: Condition = "!!dir".parse()?;
+		assert!(cond.eval(|s| s == "dir").unwrap());
+		assert!(!cond.eval(|_| false).unwrap());
+
+		let cond: Condition = "!!!dir".parse()?;
+		assert!(!cond.eval(|s| s == "dir").unwrap());
+		assert!(cond.eval(|_| false).unwrap());
+
+		Ok(())
 	}
 }
