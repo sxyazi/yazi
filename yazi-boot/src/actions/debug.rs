@@ -35,7 +35,7 @@ impl Actions {
 		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
 		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
 		writeln!(s, "    Brand.from_env      : {:?}", yazi_emulator::Brand::from_env())?;
-		writeln!(s, "    Emulator.detect     : {:?}", &*yazi_emulator::EMULATOR)?;
+		writeln!(s, "    Emulator.detect     : {:?}", *yazi_emulator::EMULATOR)?;
 
 		writeln!(s, "\nAdapter")?;
 		writeln!(s, "    Adapter.matches    : {:?}", yazi_adapter::ADAPTOR)?;

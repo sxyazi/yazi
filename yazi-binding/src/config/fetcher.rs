@@ -63,13 +63,13 @@ impl FromLua for FetcherMatcher {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
 			Value::Table(t) => t.try_into(),
-			_ => return Err("expected a table of FetcherMatcher".into_lua_err()),
+			_ => Err("expected a table of FetcherMatcher".into_lua_err()),
 		}
 	}
 }
 
 impl IntoLua for FetcherMatcher {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		Iter::new(self.0.into_iter().map(Fetcher::new), None).into_lua(lua)
+		Iter::new(self.0.map(Fetcher::new), None).into_lua(lua)
 	}
 }

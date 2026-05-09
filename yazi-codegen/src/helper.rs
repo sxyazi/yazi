@@ -33,6 +33,6 @@ pub(super) fn has_serde_attr(attrs: &[Attribute], name: &str) -> bool {
 		a.path().is_ident("serde")
 			&& a
 				.parse_args_with(Punctuated::<Meta, Comma>::parse_terminated)
-				.map_or(false, |n| n.iter().any(|m| m.path().is_ident(name)))
+				.is_ok_and(|n| n.iter().any(|m| m.path().is_ident(name)))
 	})
 }

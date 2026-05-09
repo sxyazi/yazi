@@ -63,7 +63,7 @@ pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<theme::Theme> {
 		)?;
 	}
 
-	Ok(preset.reshape(light)?)
+	preset.reshape(light)
 }
 
 fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {

@@ -20,8 +20,8 @@ impl<'a> Dispatcher<'a> {
 
 	pub(super) fn dispatch(&mut self, event: Event) {
 		let result = match event {
-			Event::Call(action) => self.dispatch_call(action),
-			Event::Seq(actions) => self.dispatch_seq(actions),
+			Event::Call(action) => Ok(self.dispatch_call(action)),
+			Event::Seq(actions) => Ok(self.dispatch_seq(actions)),
 			Event::Render(partial) => self.dispatch_render(partial),
 			Event::Key(key) => self.dispatch_key(key),
 			Event::Mouse(mouse) => self.dispatch_mouse(mouse),
@@ -35,7 +35,7 @@ impl<'a> Dispatcher<'a> {
 		}
 	}
 
-	fn dispatch_call(&mut self, action: ActionCow) -> Result<()> {
+	fn dispatch_call(&mut self, action: ActionCow) {
 		let tx = action.replier().cloned();
 		let result = Executor::new(self.app).execute(action);
 
@@ -45,17 +45,15 @@ impl<'a> Dispatcher<'a> {
 		if let Some(tx) = tx {
 			tx.send(result).ok();
 		}
-		Ok(())
 	}
 
-	fn dispatch_seq(&mut self, mut actions: Vec<ActionCow>) -> Result<()> {
+	pub(super) fn dispatch_seq(&mut self, mut actions: Vec<ActionCow>) {
 		if let Some(last) = actions.pop() {
-			self.dispatch_call(last)?;
+			self.dispatch_call(last);
 		}
 		if !actions.is_empty() {
 			emit!(Seq(actions));
 		}
-		Ok(())
 	}
 
 	fn dispatch_render(&mut self, partial: bool) -> Result<()> {

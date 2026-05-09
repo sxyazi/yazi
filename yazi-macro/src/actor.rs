@@ -1,8 +1,8 @@
 #[macro_export]
 macro_rules! act {
 	(@pre $layer:ident : $name:ident, $cx:ident, $opt:ident) => {
-		if let Some(hook) = <act!($layer:$name) as yazi_actor::Actor>::hook($cx, &$opt) {
-			<act!(core:preflight)>::act($cx, (hook, yazi_parser::spark!($layer:$name, $opt))).map(|spark| spark.try_into().unwrap())
+		if let Some(hook) = <$crate::act!($layer:$name) as yazi_actor::Actor>::hook($cx, &$opt) {
+			<$crate::act!(core:preflight)>::act($cx, (hook, yazi_parser::spark!($layer:$name, $opt))).map(|spark| spark.try_into().unwrap())
 		} else {
 			Ok($opt)
 		}
@@ -12,8 +12,8 @@ macro_rules! act {
 		#[cfg(debug_assertions)]
 		$cx.backtrace.push(concat!(stringify!($layer), ":", stringify!($name)));
 
-		let result = match act!(@pre $layer:$name, $cx, $opt) {
-			Ok(opt) => <act!($layer:$name) as yazi_actor::Actor>::act($cx, opt),
+		let result = match $crate::act!(@pre $layer:$name, $cx, $opt) {
+			Ok(opt) => <$crate::act!($layer:$name) as yazi_actor::Actor>::act($cx, opt),
 			Err(e) => Err(e),
 		};
 
@@ -25,12 +25,12 @@ macro_rules! act {
 	}};
 
 	($layer:ident : $name:ident, $cx:ident, $action:expr) => {
-		<act!($layer:$name) as yazi_actor::Actor>::Form::try_from($action)
+		<$crate::act!($layer:$name) as yazi_actor::Actor>::Form::try_from($action)
 			.map_err(anyhow::Error::from)
-			.and_then(|opt| act!(@impl $layer:$name, $cx, opt))
+			.and_then(|opt| $crate::act!(@impl $layer:$name, $cx, opt))
 	};
 	($layer:ident : $name:ident, $cx:ident) => {
-		act!($layer:$name, $cx, <<act!($layer:$name) as yazi_actor::Actor>::Form as Default>::default())
+		$crate::act!($layer:$name, $cx, <<$crate::act!($layer:$name) as yazi_actor::Actor>::Form as Default>::default())
 	};
 	($layer:ident : $name:ident) => {
 		paste::paste! { yazi_actor::$layer::[<$name:camel>] }

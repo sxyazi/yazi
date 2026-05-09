@@ -5,9 +5,9 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_core::mgr::FilterOpt;
-use yazi_macro::succ;
+use yazi_macro::{input, succ};
 use yazi_parser::mgr::FilterForm;
-use yazi_proxy::{InputProxy, MgrProxy};
+use yazi_proxy::MgrProxy;
 use yazi_shared::{Debounce, data::Data};
 use yazi_widgets::input::InputEvent;
 
@@ -20,8 +20,8 @@ impl Actor for Filter {
 
 	const NAME: &str = "filter";
 
-	fn act(_: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
-		let input = InputProxy::show(InputCfg::filter());
+	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
+		let input = input!(cx, InputCfg::filter())?;
 
 		tokio::spawn(async move {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));

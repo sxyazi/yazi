@@ -7,6 +7,6 @@ pub enum CustomField {
 	String(String),
 }
 
-impl From<&CustomField> for CustomField {
-	fn from(value: &CustomField) -> Self { value.clone() }
+impl From<&Self> for CustomField {
+	fn from(value: &Self) -> Self { value.clone() }
 }

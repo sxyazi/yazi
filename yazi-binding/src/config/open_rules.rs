@@ -20,7 +20,7 @@ impl UserData for OpenRules {
 				_ => index,
 			};
 
-			YAZI.open.insert(index, rule.clone().into()).into_lua_err()?;
+			YAZI.open.insert(index, rule.clone()).into_lua_err()?;
 			Ok(rule)
 		});
 

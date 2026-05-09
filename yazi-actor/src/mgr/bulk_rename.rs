@@ -65,7 +65,7 @@ impl Actor for BulkRename {
 
 			batcher.prime(&tmp);
 			TasksProxy::process_exec(
-				cwd.into(),
+				cwd,
 				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
 				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
 				opener.block,

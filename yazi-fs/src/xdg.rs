@@ -91,7 +91,7 @@ impl Xdg {
 		let mut p = env::var_os("XDG_RUNTIME_DIR")
 			.map(PathBuf::from)
 			.filter(|p| p.is_absolute())
-			.unwrap_or_else(|| env::temp_dir());
+			.unwrap_or_else(env::temp_dir);
 
 		let uid = unix_either!(
 			{

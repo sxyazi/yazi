@@ -1,9 +1,9 @@
 use anyhow::{Result, bail};
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_fs::{File, FilesOp};
-use yazi_macro::{ok_or_not_found, succ};
+use yazi_macro::{input, ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
-use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
+use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -20,7 +20,7 @@ impl Actor for Create {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().to_owned();
-		let mut input = InputProxy::show(InputCfg::create(form.dir));
+		let mut input = input!(cx, InputCfg::create(form.dir))?;
 
 		tokio::spawn(async move {
 			let Some(InputEvent::Submit(name)) = input.recv().await else { return };

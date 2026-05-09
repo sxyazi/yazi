@@ -9,7 +9,7 @@ pub(super) fn init() -> anyhow::Result<()> {
 		.with_context(|| format!("failed to create packages directory: {packages_dir:?}"))?;
 
 	let config_dir = Xdg::config_dir();
-	std::fs::create_dir_all(&config_dir)
+	std::fs::create_dir_all(config_dir)
 		.with_context(|| format!("failed to create config directory: {config_dir:?}"))?;
 
 	Ok(())

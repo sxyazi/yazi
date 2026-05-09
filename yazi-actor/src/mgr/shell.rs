@@ -2,9 +2,9 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use yazi_config::popup::InputCfg;
-use yazi_macro::{act, succ};
+use yazi_macro::{act, input, succ};
 use yazi_parser::mgr::ShellForm;
-use yazi_proxy::{InputProxy, TasksProxy};
+use yazi_proxy::TasksProxy;
 use yazi_scheduler::process::ProcessOpt;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
@@ -24,9 +24,11 @@ impl Actor for Shell {
 		let cwd = form.cwd.take().unwrap_or_else(|| cx.cwd().clone());
 		let selected: Vec<_> = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
 
-		let input = form.interactive.then(|| {
-			InputProxy::show(InputCfg::shell(form.block).with_value(&*form.run).with_cursor(form.cursor))
-		});
+		let input = if form.interactive {
+			Some(input!(cx, InputCfg::shell(form.block).with_value(&*form.run).with_cursor(form.cursor))?)
+		} else {
+			None
+		};
 
 		tokio::spawn(async move {
 			if let Some(mut rx) = input {

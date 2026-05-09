@@ -20,7 +20,7 @@ impl Logs {
 		}
 
 		let state_dir = Xdg::state_dir();
-		std::fs::create_dir_all(&state_dir)
+		std::fs::create_dir_all(state_dir)
 			.with_context(|| format!("failed to create state directory: {state_dir:?}"))?;
 
 		let log_path = state_dir.join("yazi.log");

@@ -63,13 +63,13 @@ impl FromLua for PreloaderMatcher {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
 			Value::Table(t) => t.try_into(),
-			_ => return Err("expected a table of PreloaderMatcher".into_lua_err()),
+			_ => Err("expected a table of PreloaderMatcher".into_lua_err()),
 		}
 	}
 }
 
 impl IntoLua for PreloaderMatcher {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		Iter::new(self.0.into_iter().map(Preloader::new), None).into_lua(lua)
+		Iter::new(self.0.map(Preloader::new), None).into_lua(lua)
 	}
 }

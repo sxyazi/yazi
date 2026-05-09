@@ -43,7 +43,7 @@ impl UserData for OpenerRules {
 				_ => index,
 			};
 
-			me.inner.insert(index, rule.clone().into()).into_lua_err()?;
+			me.inner.insert(index, rule.clone()).into_lua_err()?;
 			Ok(rule)
 		});
 

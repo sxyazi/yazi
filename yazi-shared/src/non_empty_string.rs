@@ -8,9 +8,7 @@ pub struct NonEmptyString(String);
 
 impl NonEmptyString {
 	#[inline]
-	pub fn new(value: String) -> Option<Self> {
-		Some(NonEmptyString(value)).filter(|s| !s.is_empty())
-	}
+	pub fn new(value: String) -> Option<Self> { Some(Self(value)).filter(|s| !s.is_empty()) }
 }
 
 impl Deref for NonEmptyString {

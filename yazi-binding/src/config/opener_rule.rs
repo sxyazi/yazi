@@ -76,6 +76,6 @@ impl FromLua for OpenerRuleMatcher {
 
 impl IntoLua for OpenerRuleMatcher {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		Iter::new(self.0.into_iter().map(OpenerRule::new), None).into_lua(lua)
+		Iter::new(self.0.map(OpenerRule::new), None).into_lua(lua)
 	}
 }

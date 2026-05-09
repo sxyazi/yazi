@@ -6,10 +6,10 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_core::mgr::{CdSource, SearchVia};
 use yazi_fs::{FilesOp, cha::Cha};
-use yazi_macro::{act, succ};
+use yazi_macro::{act, input, succ};
 use yazi_parser::{VoidForm, mgr::SearchForm};
 use yazi_plugin::external;
-use yazi_proxy::{InputProxy, MgrProxy};
+use yazi_proxy::MgrProxy;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::{AsUrl, UrlLike}};
 use yazi_widgets::input::InputEvent;
@@ -28,7 +28,7 @@ impl Actor for Search {
 			handle.abort();
 		}
 
-		let mut input = InputProxy::show(InputCfg::search(opt.via.into()).with_value(&*opt.subject));
+		let mut input = input!(cx, InputCfg::search(opt.via.into()).with_value(&*opt.subject))?;
 
 		tokio::spawn(async move {
 			if let Some(InputEvent::Submit(subject)) = input.recv().await {

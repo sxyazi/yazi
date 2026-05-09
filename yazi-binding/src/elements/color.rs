@@ -7,7 +7,7 @@ pub struct Color(pub ratatui::style::Color);
 
 impl Color {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, color): (Table, Color)| Ok(color))?;
+		let new = lua.create_function(|_, (_, color): (Table, Self)| Ok(color))?;
 
 		let color = lua.create_table()?;
 		color.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;

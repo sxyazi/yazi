@@ -20,7 +20,7 @@ impl From<yazi_config::Style> for Style {
 }
 
 impl From<Style> for ratatui::style::Style {
-	fn from(value: Style) -> ratatui::style::Style { value.0 }
+	fn from(value: Style) -> Self { value.0 }
 }
 
 impl From<&SyncCell<yazi_config::Style>> for Style {

@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::{sync::atomic::{AtomicU8, Ordering}, time::Instant};
 
 use anyhow::Result;
 use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
@@ -16,6 +16,7 @@ use crate::{app::App, root::Root};
 
 impl App {
 	pub(crate) fn render(&mut self, partial: bool) -> Result<Data> {
+		self.last_render = Instant::now();
 		NEED_RENDER.store(0, Ordering::Relaxed);
 		let Some(term) = &mut self.term else { succ!() };
 

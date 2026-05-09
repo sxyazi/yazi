@@ -28,7 +28,7 @@ impl DeserializeOverWith for Selector {
 		self,
 		deserializer: D,
 	) -> Result<Self, D::Error> {
-		let new = Selector::deserialize(deserializer)?;
+		let new = Self::deserialize(deserializer)?;
 		Self::new(new.url.or(self.url), new.mime.or(self.mime)).map_err(de::Error::custom)
 	}
 }

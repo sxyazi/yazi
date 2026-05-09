@@ -2,9 +2,9 @@ use anyhow::Result;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp};
-use yazi_macro::{act, err, ok_or_not_found, succ};
+use yazi_macro::{act, err, input, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameForm;
-use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
+use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{Id, data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -42,7 +42,7 @@ impl Actor for Rename {
 		};
 
 		let (tab, old) = (cx.tab().id, hovered.url_owned());
-		let mut input = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
+		let mut input = input!(cx, InputCfg::rename().with_value(name).with_cursor(cursor))?;
 
 		tokio::spawn(async move {
 			let Some(InputEvent::Submit(name)) = input.recv().await else { return };

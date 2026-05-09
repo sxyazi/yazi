@@ -67,8 +67,8 @@ impl Opener {
 impl DeserializeOverHook for Opener {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		let mut inner = self.unwrap_unchecked();
-		for mut rules in inner.values_mut() {
-			*rules = Arc::try_unwrap(mem::take(&mut rules))
+		for rules in inner.values_mut() {
+			*rules = Arc::try_unwrap(mem::take(rules))
 				.expect("unique opener value arc")
 				.deserialize_over_hook()?
 				.into();

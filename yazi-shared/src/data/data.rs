@@ -83,7 +83,7 @@ impl From<&str> for Data {
 
 impl<T> FromIterator<T> for Data
 where
-	T: Into<Data>,
+	T: Into<Self>,
 {
 	fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
 		Self::List(iter.into_iter().map(Into::into).collect())

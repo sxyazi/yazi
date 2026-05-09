@@ -1,8 +1,8 @@
 use anyhow::Result;
 use yazi_config::popup::ConfirmCfg;
-use yazi_macro::{act, succ};
+use yazi_macro::{act, confirm, succ};
 use yazi_parser::mgr::RemoveForm;
-use yazi_proxy::{ConfirmProxy, MgrProxy};
+use yazi_proxy::MgrProxy;
 use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
@@ -29,14 +29,17 @@ impl Actor for Remove {
 			return act!(mgr:remove_do, cx, form);
 		}
 
-		let confirm = ConfirmProxy::show(if form.permanently {
-			ConfirmCfg::delete(&form.targets)
-		} else {
-			ConfirmCfg::trash(&form.targets)
-		});
+		let confirm = confirm!(
+			cx,
+			if form.permanently {
+				ConfirmCfg::delete(&form.targets)
+			} else {
+				ConfirmCfg::trash(&form.targets)
+			}
+		)?;
 
 		tokio::spawn(async move {
-			if confirm.await {
+			if confirm.future().await {
 				MgrProxy::remove_do(form.targets, form.permanently);
 			}
 		});
