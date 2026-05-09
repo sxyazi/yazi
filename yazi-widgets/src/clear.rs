@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
-use unicode_width::UnicodeWidthStr;
+use unicode_width::UnicodeWidthChar;
 use yazi_adapter::ADAPTOR;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
@@ -14,13 +14,18 @@ impl Widget for Clear {
 	where
 		Self: Sized,
 	{
-		// Reset any double-width characters just outside the left edge whose
-		// second half would overlap into the cleared area, which would otherwise
-		// obscure the border drawn at area.x.
-		if area.x > 0 {
+		// Reset double-width characters straddling the overlay boundary.
+		//
+		// A wide char (e.g. CJK) just outside the left edge occupies two
+		// columns; its second half falls on the border column, and the
+		// terminal renders the wide char over the border. Invalidating
+		// the owning cell is the correct fix — terminals cannot render
+		// half a wide glyph.
+		if area.x > buf.area.x {
 			let left = area.x - 1;
 			for y in area.top()..area.bottom() {
-				if buf[(left, y)].symbol().width() > 1 {
+				let ch = buf[(left, y)].symbol().chars().next();
+				if ch.is_some_and(|c| c.width().unwrap_or(0) > 1) {
 					buf[(left, y)].reset();
 				}
 			}
