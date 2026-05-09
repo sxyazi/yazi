@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use unicode_width::UnicodeWidthStr;
 use yazi_adapter::ADAPTOR;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
@@ -13,6 +14,18 @@ impl Widget for Clear {
 	where
 		Self: Sized,
 	{
+		// Reset any double-width characters just outside the left edge whose
+		// second half would overlap into the cleared area, which would otherwise
+		// obscure the border drawn at area.x.
+		if area.x > 0 {
+			let left = area.x - 1;
+			for y in area.top()..area.bottom() {
+				if buf[(left, y)].symbol().width() > 1 {
+					buf[(left, y)].reset();
+				}
+			}
+		}
+
 		ratatui::widgets::Clear.render(area, buf);
 
 		let Some(r) = ADAPTOR.get().shown_load().and_then(|r| overlap(area, r)) else {
