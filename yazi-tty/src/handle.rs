@@ -1,4 +1,4 @@
-use std::{io::{Error, ErrorKind, Read, Write}, time::Duration};
+use std::{io::{Error, ErrorKind, Read, Write}, ptr, time::Duration};
 
 use tracing::error;
 
@@ -24,6 +24,24 @@ impl Drop for Handle {
 		if self.close {
 			unsafe { windows_sys::Win32::Foundation::CloseHandle(self.inner) };
 		}
+	}
+}
+
+#[cfg(unix)]
+impl From<Handle> for std::process::Stdio {
+	fn from(value: Handle) -> Self {
+		use std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
+
+		Self::from(unsafe { OwnedFd::from_raw_fd(value.into_raw_fd()) })
+	}
+}
+
+#[cfg(windows)]
+impl From<Handle> for std::process::Stdio {
+	fn from(value: Handle) -> Self {
+		use std::os::windows::io::{FromRawHandle, IntoRawHandle, OwnedHandle};
+
+		Self::from(unsafe { OwnedHandle::from_raw_handle(value.into_raw_handle()) })
 	}
 }
 
@@ -76,6 +94,22 @@ impl Write for Handle {
 }
 
 #[cfg(unix)]
+impl std::os::fd::IntoRawFd for Handle {
+	fn into_raw_fd(mut self) -> std::os::fd::RawFd {
+		self.close = false;
+		self.inner
+	}
+}
+
+#[cfg(windows)]
+impl std::os::windows::io::IntoRawHandle for Handle {
+	fn into_raw_handle(mut self) -> std::os::windows::io::RawHandle {
+		self.close = false;
+		self.inner
+	}
+}
+
+#[cfg(unix)]
 impl Handle {
 	pub(super) fn new(out: bool) -> Self {
 		use std::{fs::OpenOptions, os::fd::IntoRawFd};
@@ -106,7 +140,7 @@ impl Handle {
 			let mut set: libc::fd_set = std::mem::zeroed();
 			libc::FD_ZERO(&mut set);
 			libc::FD_SET(self.inner, &mut set);
-			libc::select(self.inner + 1, &mut set, std::ptr::null_mut(), std::ptr::null_mut(), &mut tv)
+			libc::select(self.inner + 1, &mut set, ptr::null_mut(), ptr::null_mut(), &mut tv)
 		};
 
 		match result {
@@ -124,6 +158,13 @@ impl Handle {
 			_ => Ok(b),
 		}
 	}
+
+	pub fn try_clone(&self) -> std::io::Result<Self> {
+		match unsafe { libc::dup(self.inner) } {
+			-1 => Err(Error::last_os_error()),
+			fd => Ok(Self { inner: fd, close: true }),
+		}
+	}
 }
 
 #[cfg(windows)]
@@ -139,10 +180,10 @@ impl Handle {
 				name.as_ptr(),
 				GENERIC_READ | GENERIC_WRITE,
 				FILE_SHARE_READ | FILE_SHARE_WRITE,
-				std::ptr::null_mut(),
+				ptr::null_mut(),
 				OPEN_EXISTING,
 				0,
-				std::ptr::null_mut(),
+				ptr::null_mut(),
 			)
 		};
 
@@ -184,7 +225,7 @@ impl Handle {
 
 		let mut buf = 0;
 		let mut bytes = 0;
-		let success = unsafe { ReadFile(self.inner, &mut buf, 1, &mut bytes, std::ptr::null_mut()) };
+		let success = unsafe { ReadFile(self.inner, &mut buf, 1, &mut bytes, ptr::null_mut()) };
 
 		if success == 0 {
 			return Err(Error::last_os_error());
@@ -192,5 +233,34 @@ impl Handle {
 			return Err(Error::from(ErrorKind::UnexpectedEof));
 		}
 		Ok(buf)
+	}
+
+	pub fn try_clone(&self) -> std::io::Result<Self> {
+		use windows_sys::Win32::{Foundation::{DUPLICATE_SAME_ACCESS, DuplicateHandle, HANDLE}, System::Threading::GetCurrentProcess};
+
+		let proc = unsafe { GetCurrentProcess() };
+		let mut handle = ptr::null_mut();
+		let status = unsafe {
+			DuplicateHandle(
+				proc,
+				self.inner,
+				proc,
+				&mut handle as *mut HANDLE,
+				0,
+				0,
+				DUPLICATE_SAME_ACCESS,
+			)
+		};
+
+		if status == 0 {
+			Err(Error::last_os_error())
+		} else {
+			Ok(Self {
+				inner:           handle,
+				close:           true,
+				out_utf8:        self.out_utf8,
+				incomplete_utf8: Default::default(),
+			})
+		}
 	}
 }

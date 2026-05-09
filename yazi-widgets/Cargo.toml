@@ -22,7 +22,7 @@ yazi-config  = { path = "../yazi-config", version = "26.5.6" }
 yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
 yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
-yazi-tty     = { path = "../yazi-tty", version = "26.5.6" }
+yazi-tty     = { path = "../yazi-tty", version = "26.5.9" }
 
 # External dependencies
 anyhow        = { workspace = true }

@@ -5892,8 +5892,9 @@ dependencies = [
 
 [[package]]
 name = "yazi-build"
-version = "26.5.6"
+version = "26.5.9"
 dependencies = [
+ "anyhow",
  "yazi-tty",
 ]
 
@@ -6345,7 +6346,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-tty"
-version = "26.5.6"
+version = "26.5.9"
 dependencies = [
  "libc",
  "parking_lot",

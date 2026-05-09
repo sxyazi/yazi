@@ -12,16 +12,6 @@ rust-version.workspace = true
 [lints]
 workspace = true
 
-[profile.release]
-codegen-units = 1
-lto           = true
-panic         = "abort"
-strip         = true
-
-[profile.release-windows]
-inherits = "release"
-panic    = "unwind"
-
 [dependencies]
 yazi-boot   = { path = "../yazi-boot", version = "26.5.6" }
 yazi-dds    = { path = "../yazi-dds", version = "26.5.6" }
