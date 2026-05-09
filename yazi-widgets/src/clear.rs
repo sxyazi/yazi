@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
-use unicode_width::UnicodeWidthChar;
+use unicode_width::UnicodeWidthStr;
 use yazi_adapter::ADAPTOR;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
@@ -24,8 +24,7 @@ impl Widget for Clear {
 		if area.x > buf.area.x {
 			let left = area.x - 1;
 			for y in area.top()..area.bottom() {
-				let ch = buf[(left, y)].symbol().chars().next();
-				if ch.is_some_and(|c| c.width().unwrap_or(0) > 1) {
+				if buf[(left, y)].symbol().width() > 1 {
 					buf[(left, y)].reset();
 				}
 			}
