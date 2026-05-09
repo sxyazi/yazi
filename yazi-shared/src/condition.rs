@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{cmp::Ordering, str::FromStr};
 
 use anyhow::bail;
 use serde_with::DeserializeFromStr;
@@ -33,13 +33,24 @@ impl ConditionOp {
 		}
 	}
 
-	#[inline]
-	pub fn prec(&self) -> u8 {
+	fn prec(&self) -> u8 {
 		match self {
 			Self::Or => 1,
 			Self::And => 2,
 			Self::Not => 3,
 			_ => 0,
+		}
+	}
+}
+
+impl PartialOrd for ConditionOp {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		use Ordering::*;
+
+		match self.prec().cmp(&other.prec()) {
+			// Keep repeated `!` right-associative by making `! >= !` false.
+			Equal if matches!((self, other), (Self::Not, Self::Not)) => None,
+			ordering => Some(ordering),
 		}
 	}
 }
@@ -72,10 +83,7 @@ impl Condition {
 			let op = ConditionOp::new(token);
 			match op {
 				ConditionOp::Or | ConditionOp::And | ConditionOp::Not => {
-					while matches!(
-						stack.last(),
-						Some(last) if last.prec() > op.prec() || (op != ConditionOp::Not && last.prec() == op.prec())
-					) {
+					while matches!(stack.last(), Some(last) if last >= &op) {
 						output.push(stack.pop().unwrap());
 					}
 					stack.push(op);
@@ -139,13 +147,13 @@ mod tests {
 
 	#[test]
 	fn test_condition_not() -> anyhow::Result<()> {
+		let cond: Condition = "!dir".parse()?;
+		assert!(!cond.eval(|s| s == "dir").unwrap());
+		assert!(cond.eval(|_| false).unwrap());
+
 		let cond: Condition = "!!dir".parse()?;
 		assert!(cond.eval(|s| s == "dir").unwrap());
 		assert!(!cond.eval(|_| false).unwrap());
-
-		let cond: Condition = "!!!dir".parse()?;
-		assert!(!cond.eval(|s| s == "dir").unwrap());
-		assert!(cond.eval(|_| false).unwrap());
 
 		Ok(())
 	}
