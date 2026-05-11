@@ -1,5 +1,5 @@
-# A TOML linter such as https://github.com/tombi-toml/tombi can use this schema to validate your config.
-# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
+# A TOML linter such as Tombi can use this schema to validate your config.
+# If you encounter any problems, please file an issue at https://github.com/yazi-rs/schemas.
 
 #:schema https://yazi-rs.github.io/schemas/yazi.json
 

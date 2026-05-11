@@ -51,6 +51,18 @@ impl FilesOp {
 		ticket
 	}
 
+	pub fn create(files: Vec<File>) {
+		let mut parents: HashMap<UrlBuf, Vec<_>> = Default::default();
+		for file in files {
+			if let Some(p) = file.url.parent() {
+				parents.get_or_insert_default(p).push(file);
+			}
+		}
+		for (p, files) in parents {
+			Self::Creating(p, files).emit();
+		}
+	}
+
 	pub fn rename(map: HashMap<UrlBuf, File>) {
 		let mut parents: HashMap<UrlBuf, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
