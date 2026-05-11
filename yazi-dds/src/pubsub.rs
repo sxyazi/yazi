@@ -8,7 +8,7 @@ use yazi_fs::FolderStage;
 use yazi_shared::{Id, url::{Url, UrlBuf, UrlBufCov}};
 use yazi_shim::cell::RoCell;
 
-use crate::{Client, ID, PEERS, ember::{Ember, EmberBulk, EmberDuplicateItem, EmberHi, EmberMoveItem}};
+use crate::{Client, ID, PEERS, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -128,18 +128,18 @@ impl Pubsub {
 		true
 	}
 
-	pub fn pub_after_bulk<'a, I>(changes: I) -> Result<()>
+	pub fn pub_after_bulk_rename<'a, I>(changes: I) -> Result<()>
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)> + Clone,
 	{
-		if BOOT.local_events.contains("bulk") {
-			EmberBulk::borrowed(changes.clone()).with_receiver(*ID).flush()?;
+		if BOOT.local_events.contains("bulk-rename") {
+			EmberBulkRename::borrowed(changes.clone()).with_receiver(*ID).flush()?;
 		}
-		if PEERS.read().values().any(|p| p.able("bulk")) {
-			Client::push(EmberBulk::borrowed(changes.clone()))?;
+		if PEERS.read().values().any(|p| p.able("bulk-rename")) {
+			Client::push(EmberBulkRename::borrowed(changes.clone()))?;
 		}
-		if LOCAL.read().contains_key("bulk") {
-			Self::r#pub(EmberBulk::owned(changes))?;
+		if LOCAL.read().contains_key("bulk-rename") {
+			Self::r#pub(EmberBulkRename::owned(changes))?;
 		}
 		Ok(())
 	}

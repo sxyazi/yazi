@@ -28,6 +28,7 @@ pub enum Spark<'a> {
 	// Mgr
 	Arrow(crate::ArrowForm),
 	Back(crate::VoidForm),
+	BulkCreate(crate::VoidForm),
 	BulkExit(crate::mgr::BulkExitForm),
 	BulkRename(crate::VoidForm),
 	Cd(crate::mgr::CdForm),
@@ -215,6 +216,7 @@ impl<'a> IntoLua for Spark<'a> {
 			// Mgr
 			Self::Arrow(b) => b.into_lua(lua),
 			Self::Back(b) => b.into_lua(lua),
+			Self::BulkCreate(b) => b.into_lua(lua),
 			Self::BulkExit(b) => b.into_lua(lua),
 			Self::BulkRename(b) => b.into_lua(lua),
 			Self::Cd(b) => b.into_lua(lua),

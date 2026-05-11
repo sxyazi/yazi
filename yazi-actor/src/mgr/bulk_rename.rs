@@ -45,7 +45,7 @@ impl Actor for BulkRename {
 		let cwd = cx.cwd().clone();
 		let batcher = cx.core.mgr.batcher.clone();
 		tokio::spawn(async move {
-			let tmp = YAZI.preview.tmpfile("bulk");
+			let tmp = YAZI.preview.tmpfile("bulk-rename");
 
 			Gate::default()
 				.write(true)
@@ -143,7 +143,7 @@ impl BulkRename {
 
 		if !succeeded.is_empty() {
 			let it = succeeded.iter().map(|(o, n)| (o.as_url(), n.url.as_url()));
-			err!(Pubsub::pub_after_bulk(it));
+			err!(Pubsub::pub_after_bulk_rename(it));
 			FilesOp::rename(succeeded);
 		}
 		drop(permit);

@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Added
+
+- Bulk create ([#3793])
+
 ## [v26.5.6]
 
 ### Added
@@ -1704,6 +1708,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3780]: https://github.com/sxyazi/yazi/pull/3780
 [#3781]: https://github.com/sxyazi/yazi/pull/3781
 [#3792]: https://github.com/sxyazi/yazi/pull/3792
+[#3793]: https://github.com/sxyazi/yazi/pull/3793
 [#3804]: https://github.com/sxyazi/yazi/pull/3804
 [#3813]: https://github.com/sxyazi/yazi/pull/3813
 [#3846]: https://github.com/sxyazi/yazi/pull/3846

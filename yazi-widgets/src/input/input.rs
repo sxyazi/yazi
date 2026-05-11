@@ -6,9 +6,10 @@ use tokio::sync::mpsc;
 use yazi_config::YAZI;
 use yazi_macro::act;
 use yazi_shared::Ids;
+use yazi_shim::path::CROSS_SEPARATOR;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
-use crate::{CLIPBOARD, input::{InputEvent, InputOpt, SEPARATOR}};
+use crate::{CLIPBOARD, input::{InputEvent, InputOpt}};
 
 #[derive(Default)]
 pub struct Input {
@@ -152,7 +153,7 @@ impl Input {
 		let snap = self.snap();
 		let idx = snap.idx(snap.cursor).unwrap();
 
-		if let Some(sep) = snap.value[idx..].find(SEPARATOR).map(|i| idx + i) {
+		if let Some(sep) = snap.value[idx..].find(CROSS_SEPARATOR).map(|i| idx + i) {
 			(&snap.value[..sep], &snap.value[sep + 1..])
 		} else {
 			(&snap.value, "")

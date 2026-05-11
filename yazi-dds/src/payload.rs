@@ -94,7 +94,7 @@ impl Display for Payload<'_> {
 			Ember::Hover(b) => serde_json::to_string(b),
 			Ember::Tab(b) => serde_json::to_string(b),
 			Ember::Rename(b) => serde_json::to_string(b),
-			Ember::Bulk(b) => serde_json::to_string(b),
+			Ember::BulkRename(b) => serde_json::to_string(b),
 			Ember::Yank(b) => serde_json::to_string(b),
 			Ember::Duplicate(b) => serde_json::to_string(b),
 			Ember::Move(b) => serde_json::to_string(b),

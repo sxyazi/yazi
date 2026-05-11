@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use yazi_shared::Id;
 
-use super::{EmberBulk, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
+use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
 use crate::Payload;
 
 #[derive(Clone, Debug)]
@@ -15,7 +15,7 @@ pub enum Ember<'a> {
 	Load(EmberLoad<'a>),
 	Hover(EmberHover<'a>),
 	Rename(EmberRename<'a>),
-	Bulk(EmberBulk<'a>),
+	BulkRename(EmberBulkRename<'a>),
 	Yank(EmberYank<'a>),
 	Duplicate(EmberDuplicate<'a>),
 	Move(EmberMove<'a>),
@@ -37,7 +37,7 @@ impl Ember<'static> {
 			"load" => Self::Load(serde_json::from_str(body)?),
 			"hover" => Self::Hover(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
-			"bulk" => Self::Bulk(serde_json::from_str(body)?),
+			"bulk-rename" => Self::BulkRename(serde_json::from_str(body)?),
 			"@yank" => Self::Yank(serde_json::from_str(body)?),
 			"duplicate" => Self::Duplicate(serde_json::from_str(body)?),
 			"move" => Self::Move(serde_json::from_str(body)?),
@@ -65,7 +65,7 @@ impl Ember<'static> {
 				| "load"
 				| "hover"
 				| "rename"
-				| "bulk"
+				| "bulk-rename"
 				| "@yank"
 				| "duplicate"
 				| "move"
@@ -104,7 +104,7 @@ impl<'a> Ember<'a> {
 			Self::Load(_) => "load",
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
-			Self::Bulk(_) => "bulk",
+			Self::BulkRename(_) => "bulk-rename",
 			Self::Yank(_) => "@yank",
 			Self::Duplicate(_) => "duplicate",
 			Self::Move(_) => "move",
@@ -132,7 +132,7 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Hover(b) => b.into_lua(lua),
 			Self::Tab(b) => b.into_lua(lua),
 			Self::Rename(b) => b.into_lua(lua),
-			Self::Bulk(b) => b.into_lua(lua),
+			Self::BulkRename(b) => b.into_lua(lua),
 			Self::Yank(b) => b.into_lua(lua),
 			Self::Duplicate(b) => b.into_lua(lua),
 			Self::Move(b) => b.into_lua(lua),
