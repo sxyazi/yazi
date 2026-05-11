@@ -1,4 +1,4 @@
-use std::{io::{Read, Write}, path::Path};
+use std::{io::{Read, Write}, path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow, bail};
 use scopeguard::defer;
@@ -6,8 +6,9 @@ use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_fs::{File, FilesOp, Splatter, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{ok_or_not_found, succ};
-use yazi_parser::VoidOpt;
-use yazi_proxy::{AppProxy, MgrProxy, NotifyProxy, TasksProxy};
+use yazi_parser::VoidForm;
+use yazi_proxy::{MgrProxy, TasksProxy};
+use yazi_scheduler::{AppProxy, NotifyProxy};
 use yazi_shared::{data::Data, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::TTY;
@@ -17,11 +18,11 @@ use yazi_watcher::WATCHER;
 use crate::{Actor, Ctx};
 pub struct BulkCreate;
 impl Actor for BulkCreate {
-	type Options = VoidOpt;
+	type Form = VoidForm;
 
 	const NAME: &str = "bulk_create";
 
-	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
+	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let Some(opener) = Self::opener() else {
 			succ!(NotifyProxy::push_warn("Bulk create", "No text opener found"));
 		};
@@ -97,8 +98,11 @@ impl BulkCreate {
 		Ok(())
 	}
 
-	fn opener() -> Option<&'static OpenerRule> {
-		YAZI.opener.block(YAZI.open.all(Path::new("bulk-rename.txt"), "text/plain"))
+	fn opener() -> Option<Arc<OpenerRule>> {
+		YAZI
+			.open
+			.match_dummy(Path::new("bulk-create.txt"), "text/plain")
+			.and_then(|r| YAZI.opener.block(&r))
 	}
 
 	async fn create_one(new: &UrlBuf, dir: bool) -> Result<UrlBuf> {
