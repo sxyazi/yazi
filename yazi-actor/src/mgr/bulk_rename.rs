@@ -143,7 +143,7 @@ impl BulkRename {
 
 		if !succeeded.is_empty() {
 			let it = succeeded.iter().map(|(o, n)| (o.as_url(), n.url.as_url()));
-			err!(Pubsub::pub_after_bulk(it));
+			err!(Pubsub::pub_after_bulk_rename(it));
 			FilesOp::rename(succeeded);
 		}
 		drop(permit);

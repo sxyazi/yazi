@@ -6,11 +6,11 @@ use yazi_shared::url::{Url, UrlCow};
 use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct EmberBulk<'a> {
+pub struct EmberBulkRename<'a> {
 	pub changes: HashMap<UrlCow<'a>, UrlCow<'a>>,
 }
 
-impl<'a> EmberBulk<'a> {
+impl<'a> EmberBulkRename<'a> {
 	pub fn borrowed<I>(changes: I) -> Ember<'a>
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)>,
@@ -19,7 +19,7 @@ impl<'a> EmberBulk<'a> {
 	}
 }
 
-impl EmberBulk<'static> {
+impl EmberBulkRename<'static> {
 	pub fn owned<'a, I>(changes: I) -> Ember<'static>
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)>,
@@ -31,11 +31,11 @@ impl EmberBulk<'static> {
 	}
 }
 
-impl<'a> From<EmberBulk<'a>> for Ember<'a> {
-	fn from(value: EmberBulk<'a>) -> Self { Self::Bulk(value) }
+impl<'a> From<EmberBulkRename<'a>> for Ember<'a> {
+	fn from(value: EmberBulkRename<'a>) -> Self { Self::BulkRename(value) }
 }
 
-impl IntoLua for EmberBulk<'_> {
+impl IntoLua for EmberBulkRename<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from(
