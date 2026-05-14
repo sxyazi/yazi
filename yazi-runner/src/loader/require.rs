@@ -90,7 +90,7 @@ impl Require {
 
 	fn absolute_id<'a>(lua: &Lua, id: &'a str) -> mlua::Result<Cow<'a, str>> {
 		Ok(match id.strip_prefix('.') {
-			None => id.into(),
+			None => id.strip_suffix(".main").unwrap_or(id).into(),
 			Some("main") => runtime!(lua)?.current_module()?.to_owned().into(),
 			Some(rel) => format!("{}.{rel}", runtime!(lua)?.current_module()?).into(),
 		})
