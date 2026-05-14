@@ -89,10 +89,10 @@ impl Require {
 	}
 
 	fn absolute_id<'a>(lua: &Lua, id: &'a str) -> mlua::Result<Cow<'a, str>> {
-		let Some(stripped) = id.strip_prefix('.') else { return Ok(id.into()) };
-
-		let rt = runtime!(lua)?;
-		let cur = rt.current()?;
-		Ok(format!("{}.{stripped}", cur.split('.').next().unwrap_or(cur)).into())
+		Ok(match id.strip_prefix('.') {
+			None => id.strip_suffix(".main").unwrap_or(id).into(),
+			Some("main") => runtime!(lua)?.current_module()?.to_owned().into(),
+			Some(rel) => format!("{}.{rel}", runtime!(lua)?.current_module()?).into(),
+		})
 	}
 }

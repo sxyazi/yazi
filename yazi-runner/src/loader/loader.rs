@@ -83,7 +83,7 @@ impl Loader {
 	where
 		F: FnOnce(&Chunk) -> T,
 	{
-		let (id, plugin, entry) = Self::normalize_id(id)?;
+		let (id, plugin, entry) = Self::explode_id_parts(id)?;
 		if let Some(c) = self.cache.read().get(id) {
 			return Self::compatible_or_error(id, c).map(|_| f(c));
 		}
@@ -103,7 +103,7 @@ impl Loader {
 	}
 
 	pub async fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::normalize_id(id)?;
+		let (id, ..) = Self::explode_id_parts(id)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
 		if let Ok(t) = loaded.raw_get(id) {
@@ -118,7 +118,7 @@ impl Loader {
 	}
 
 	async fn load_new(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::normalize_id(id)?;
+		let (id, ..) = Self::explode_id_parts(id)?;
 
 		let mut mode = ChunkMode::Text;
 		let f = match self.cache.read().get(id) {
@@ -141,7 +141,7 @@ impl Loader {
 	}
 
 	pub fn load_chunk(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
-		let (id, ..) = Self::normalize_id(id)?;
+		let (id, ..) = Self::explode_id_parts(id)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
 		if let Ok(t) = loaded.raw_get(id) {
@@ -156,7 +156,7 @@ impl Loader {
 	}
 
 	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::normalize_id(id)?;
+		let (id, ..) = Self::explode_id_parts(id)?;
 		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(id)
 	}
 
@@ -172,8 +172,8 @@ impl Loader {
 		);
 	}
 
-	pub fn normalize_id(id: &str) -> anyhow::Result<(&str, &str, &str)> {
-		let id = id.trim_end_matches(".main");
+	fn explode_id_parts(id: &str) -> anyhow::Result<(&str, &str, &str)> {
+		let id = id.strip_suffix(".main").unwrap_or(id);
 		let (plugin, entry) = if let Some((a, b)) = id.split_once(".") { (a, b) } else { (id, "main") };
 
 		ensure!(plugin.as_bytes().kebab_cased(), "Plugin name `{plugin}` must be in kebab-case");

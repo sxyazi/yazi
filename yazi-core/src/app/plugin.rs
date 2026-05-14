@@ -55,9 +55,9 @@ impl PluginOpt {
 
 	fn normalize_id(s: SStr) -> SStr {
 		match s {
-			Cow::Borrowed(s) => s.trim_end_matches(".main").into(),
+			Cow::Borrowed(s) => s.strip_suffix(".main").unwrap_or(s).into(),
 			Cow::Owned(mut s) => {
-				s.truncate(s.trim_end_matches(".main").len());
+				s.truncate(s.strip_suffix(".main").unwrap_or(&s).len());
 				s.into()
 			}
 		}
