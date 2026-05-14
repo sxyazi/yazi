@@ -41,6 +41,11 @@ impl Runtime {
 		self.frames.back().map(|f| f.id.as_str()).context("No current runtime frame")
 	}
 
+	pub fn current_module(&self) -> Result<&str> {
+		let s = self.current()?;
+		Ok(s.split('.').next().unwrap_or(s))
+	}
+
 	pub fn current_owned(&self) -> Result<String> { self.current().map(ToOwned::to_owned) }
 
 	pub fn get_block(&self, id: &str, calls: usize) -> Option<Function> {
