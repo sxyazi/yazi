@@ -10,6 +10,7 @@ pub enum Step {
 	Next,
 	Offset(isize),
 	Percent(i8),
+	PercentWindow(i8),
 }
 
 impl Default for Step {
@@ -29,6 +30,7 @@ impl FromStr for Step {
 			"bot" => Self::Bot,
 			"prev" => Self::Prev,
 			"next" => Self::Next,
+			s if s.ends_with("%-window") => Self::PercentWindow(s[..s.len() - 8].parse()?),
 			s if s.ends_with('%') => Self::Percent(s[..s.len() - 1].parse()?),
 			s => Self::Offset(s.parse()?),
 		})
@@ -76,6 +78,17 @@ impl<'de> Deserialize<'de> for Step {
 }
 
 impl Step {
+	pub const fn is_window_relative(self) -> bool {
+		matches!(self, Self::PercentWindow(_))
+	}
+
+	pub fn window_position(self, offset: usize, len: usize, limit: usize) -> Option<usize> {
+		let window_len = len.saturating_sub(offset).min(limit);
+		let Self::PercentWindow(n) = self else { return None };
+
+		Some(Self::percent_pos(offset, len, window_len, n))
+	}
+
 	pub fn add(self, pos: usize, len: usize, limit: usize) -> usize {
 		if len == 0 {
 			return 0;
@@ -84,6 +97,9 @@ impl Step {
 		let off = match self {
 			Self::Top => return 0,
 			Self::Bot => return len - 1,
+			Self::PercentWindow(n) => {
+				return Self::percent_pos(0, len, if limit == 0 { len } else { len.min(limit) }, n);
+			}
 			Self::Prev => -1,
 			Self::Next => 1,
 			Self::Offset(n) => n,
@@ -99,5 +115,15 @@ impl Step {
 			pos.saturating_sub(off.unsigned_abs())
 		}
 		.min(len - 1)
+	}
+
+	fn percent_pos(offset: usize, len: usize, window_len: usize, n: i8) -> usize {
+		if len == 0 || window_len == 0 {
+			return 0;
+		}
+
+		let max = offset + window_len.saturating_sub(1);
+		let pos = offset.saturating_add_signed(n as isize * window_len.saturating_sub(1) as isize / 100);
+		pos.clamp(offset, max).min(len - 1)
 	}
 }
