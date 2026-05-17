@@ -9,13 +9,9 @@ pub trait Scrollable {
 
 	fn scroll(&mut self, step: impl Into<Step>) -> bool {
 		let step = step.into();
-		if let Some(new) = step.window_position(*self.offset_mut(), self.total(), self.limit()) {
-			let old = *self.cursor_mut();
-			*self.cursor_mut() = new;
-			return old != new;
-		}
-
-		let new = step.add(*self.cursor_mut(), self.total(), self.limit());
+		let new = step
+			.window_position(*self.offset_mut(), self.total(), self.limit(), self.scrolloff())
+			.unwrap_or_else(|| step.add(*self.cursor_mut(), self.total(), self.limit()));
 
 		if new > *self.cursor_mut() { self.next(new) } else { self.prev(new) }
 	}

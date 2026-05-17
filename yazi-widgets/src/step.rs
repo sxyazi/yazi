@@ -78,15 +78,29 @@ impl<'de> Deserialize<'de> for Step {
 }
 
 impl Step {
-	pub const fn is_window_relative(self) -> bool {
-		matches!(self, Self::PercentWindow(_))
-	}
-
-	pub fn window_position(self, offset: usize, len: usize, limit: usize) -> Option<usize> {
-		let window_len = len.saturating_sub(offset).min(limit);
+	pub fn window_position(
+		self,
+		offset: usize,
+		len: usize,
+		limit: usize,
+		scrolloff: usize,
+	) -> Option<usize> {
 		let Self::PercentWindow(n) = self else { return None };
 
-		Some(Self::percent_pos(offset, len, window_len, n))
+		let window_len = len.saturating_sub(offset).min(limit);
+		if window_len == 0 {
+			return Some(0);
+		}
+
+		let scrolloff = scrolloff.min(window_len.saturating_sub(1) / 2);
+
+		// Clamp relative position in window to not reach into any scrolloff region.
+		// Still allow reaching the real list start and end if already visible.
+		let pos = Self::percent_pos(offset, window_len, n);
+		let min = if offset == 0 { 0 } else { offset + scrolloff };
+		let max = offset + window_len - 1 - if offset + window_len >= len { 0 } else { scrolloff };
+
+		Some(pos.clamp(min, max))
 	}
 
 	pub fn add(self, pos: usize, len: usize, limit: usize) -> usize {
@@ -98,7 +112,7 @@ impl Step {
 			Self::Top => return 0,
 			Self::Bot => return len - 1,
 			Self::PercentWindow(n) => {
-				return Self::percent_pos(0, len, if limit == 0 { len } else { len.min(limit) }, n);
+				return Self::percent_pos(0, if limit == 0 { len } else { len.min(limit) }, n);
 			}
 			Self::Prev => -1,
 			Self::Next => 1,
@@ -117,13 +131,13 @@ impl Step {
 		.min(len - 1)
 	}
 
-	fn percent_pos(offset: usize, len: usize, window_len: usize, n: i8) -> usize {
-		if len == 0 || window_len == 0 {
+	fn percent_pos(offset: usize, len: usize, n: i8) -> usize {
+		if len == 0 {
 			return 0;
 		}
 
-		let max = offset + window_len.saturating_sub(1);
-		let pos = offset.saturating_add_signed(n as isize * window_len.saturating_sub(1) as isize / 100);
-		pos.clamp(offset, max).min(len - 1)
+		let span = len.saturating_sub(1);
+		let pos = offset.saturating_add_signed(n as isize * span as isize / 100);
+		pos.clamp(offset, offset + span)
 	}
 }

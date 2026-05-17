@@ -93,18 +93,13 @@ impl Folder {
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
-		let step = step.into();
-		let window_relative = step.is_window_relative();
-
 		let mut b = if self.files.is_empty() {
 			(mem::take(&mut self.cursor), mem::take(&mut self.offset)) != (0, 0)
 		} else {
 			self.scroll(step)
 		};
 
-		if !window_relative {
-			b |= self.squeeze_offset();
-		}
+		b |= self.squeeze_offset();
 		self.sync_page(false);
 		b
 	}
