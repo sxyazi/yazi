@@ -16,7 +16,7 @@ impl Actor for Arrow {
 		let spot = &mut cx.tab_mut().spot;
 		let Some(lock) = &mut spot.lock else { succ!() };
 
-		let new = form.step.add(spot.skip, lock.len().unwrap_or(u16::MAX as _), 0);
+		let new = form.step.add(spot.skip, lock.len().unwrap_or(u16::MAX as _), 0, 0, 0);
 		let Some(old) = lock.selected() else {
 			return act!(mgr:spot, cx, new);
 		};

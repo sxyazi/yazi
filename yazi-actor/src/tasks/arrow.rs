@@ -17,7 +17,7 @@ impl Actor for Arrow {
 		let tasks = &mut cx.tasks;
 
 		let old = tasks.cursor;
-		tasks.cursor = form.step.add(tasks.cursor, tasks.snaps.len(), Tasks::limit());
+		tasks.cursor = form.step.add(tasks.cursor, tasks.snaps.len(), Tasks::limit(), 0, 0);
 
 		succ!(render!(tasks.cursor != old));
 	}
