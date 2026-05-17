@@ -8,7 +8,11 @@ pub trait Scrollable {
 	fn offset_mut(&mut self) -> &mut usize;
 
 	fn scroll(&mut self, step: impl Into<Step>) -> bool {
-		let new = step.into().add(*self.cursor_mut(), self.total(), self.limit());
+		let step = step.into();
+		let new = step
+			.window_position(*self.offset_mut(), self.total(), self.limit(), self.scrolloff())
+			.unwrap_or_else(|| step.add(*self.cursor_mut(), self.total(), self.limit()));
+
 		if new > *self.cursor_mut() { self.next(new) } else { self.prev(new) }
 	}
 
