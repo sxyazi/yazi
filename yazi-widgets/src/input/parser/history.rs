@@ -1,14 +1,18 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::ActionCow;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct HistoryOpt {
+	#[serde(alias = "0", default)]
 	pub offset: i64,
 }
 
-impl From<ActionCow> for HistoryOpt {
-	fn from(a: ActionCow) -> Self {
-		Self { offset: a.str(0).parse().unwrap_or(0) }
+impl TryFrom<ActionCow> for HistoryOpt {
+	type Error = anyhow::Error;
+
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+		Ok(a.deserialize()?)
 	}
 }
 
