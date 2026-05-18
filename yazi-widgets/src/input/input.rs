@@ -5,7 +5,7 @@ use crossterm::cursor::SetCursorStyle;
 use tokio::sync::mpsc;
 use yazi_config::YAZI;
 use yazi_macro::act;
-use yazi_shared::Ids;
+use yazi_shared::{Ids, SStr};
 use yazi_shim::path::CROSS_SEPARATOR;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
@@ -13,12 +13,12 @@ use crate::{CLIPBOARD, input::{InputEvent, InputOpt}};
 
 #[derive(Default)]
 pub struct Input {
+	pub id:         SStr,
 	pub snaps:      InputSnaps,
 	pub limit:      usize,
 	pub obscure:    bool,
 	pub realtime:   bool,
 	pub completion: bool,
-	pub id:         String,
 
 	pub tx:     Option<mpsc::UnboundedSender<InputEvent>>,
 	pub ticket: Ids,
@@ -28,12 +28,12 @@ impl Input {
 	pub fn new(opt: InputOpt) -> Result<Self> {
 		let limit = opt.cfg.position.offset.width.saturating_sub(YAZI.input.border()) as usize;
 		let mut input = Self {
+			id: opt.cfg.id,
 			snaps: InputSnaps::new(opt.cfg.value, opt.cfg.obscure, limit),
 			limit,
 			obscure: opt.cfg.obscure,
 			realtime: opt.cfg.realtime,
 			completion: opt.cfg.completion,
-			id: opt.cfg.id,
 
 			tx: Some(opt.tx),
 			..Default::default()

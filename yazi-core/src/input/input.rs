@@ -3,13 +3,13 @@ use std::ops::{Deref, DerefMut};
 use anyhow::Result;
 use yazi_config::popup::Position;
 use yazi_macro::{render, succ};
-use yazi_shared::{data::Data, event::ActionCow};
+use yazi_shared::{data::Data, event::ActionCow, SStr};
 use yazi_widgets::input::{InputOp, parser::HistoryOpt};
 
 #[derive(Default)]
 pub struct Input {
 	pub(super) inner: yazi_widgets::input::Input,
-	pub history: std::collections::HashMap<String, yazi_widgets::input::InputHistory>,
+	pub history: std::collections::HashMap<SStr, yazi_widgets::input::InputHistory>,
 
 	pub visible: bool,
 	pub title: String,
