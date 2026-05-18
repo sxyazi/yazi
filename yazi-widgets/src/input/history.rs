@@ -1,4 +1,4 @@
-use std::mem;
+use std::{collections::VecDeque, mem};
 
 use super::InputSnaps;
 
@@ -7,8 +7,8 @@ const MAX_LENGTH: usize = 20;
 
 #[derive(Default)]
 pub struct InputHistory {
-	entries: std::collections::VecDeque<String>,
-	entry_snaps: std::collections::VecDeque<Option<InputSnaps>>,
+	entries: VecDeque<String>,
+	entry_snaps: VecDeque<Option<InputSnaps>>,
 	idx: Option<usize>,
 	draft: Option<InputSnaps>,
 }
@@ -16,8 +16,8 @@ pub struct InputHistory {
 impl InputHistory {
 	pub const fn new() -> Self {
 		Self {
-			entries: std::collections::VecDeque::new(),
-			entry_snaps: std::collections::VecDeque::new(),
+			entries: VecDeque::new(),
+			entry_snaps: VecDeque::new(),
 			idx: None,
 			draft: None,
 		}
