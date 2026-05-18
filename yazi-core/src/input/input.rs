@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use anyhow::Result;
 use yazi_config::popup::Position;
 use yazi_macro::{render, succ};
-use yazi_shared::{data::Data, event::ActionCow, SStr};
+use yazi_shared::{data::Data, SStr};
 use yazi_widgets::input::{InputOp, parser::HistoryOpt};
 
 #[derive(Default)]
@@ -17,13 +17,6 @@ pub struct Input {
 }
 
 impl Input {
-	pub fn execute(&mut self, action: ActionCow) -> Result<Data> {
-		if action.name == "history" {
-			return self.navigate_history(action.into());
-		}
-		self.inner.execute(action)
-	}
-
 	pub fn history(&mut self) -> &mut yazi_widgets::input::InputHistory {
 		if !self.history.contains_key(&self.inner.id) {
 			self.history.insert(self.inner.id.clone(), yazi_widgets::input::InputHistory::new());

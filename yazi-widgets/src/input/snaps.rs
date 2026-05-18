@@ -1,5 +1,6 @@
 use std::mem;
 
+use crate::input::InputMode;
 use super::InputSnap;
 
 #[derive(PartialEq, Eq)]
