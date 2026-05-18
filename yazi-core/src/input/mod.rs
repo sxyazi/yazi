@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(input);
+yazi_macro::mod_flat!(history input);

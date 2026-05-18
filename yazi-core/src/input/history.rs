@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, mem};
 
-use super::InputSnaps;
+use yazi_widgets::input::InputSnaps;
 
 // TODO: make configurable?
 const MAX_LENGTH: usize = 20;
@@ -83,10 +83,7 @@ impl InputHistory {
 		};
 
 		// Preserve mode and cursor position from before navigation
-		let snap = snaps.current_mut();
-		snap.mode = mode;
-		snap.cursor = cursor.min(snap.count().saturating_sub(mode.delta()));
-		snap.resize(limit);
+		snaps.update_current(mode, cursor, limit);
 
 		true
 	}
