@@ -11,8 +11,8 @@ pub struct Input {
 	pub(super) inner: yazi_widgets::input::Input,
 	pub history: std::collections::HashMap<SStr, yazi_widgets::input::InputHistory>,
 
-	pub visible: bool,
-	pub title: String,
+	pub visible:  bool,
+	pub title:    String,
 	pub position: Position,
 }
 
@@ -49,13 +49,9 @@ impl Input {
 impl Deref for Input {
 	type Target = yazi_widgets::input::Input;
 
-	fn deref(&self) -> &Self::Target {
-		&self.inner
-	}
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl DerefMut for Input {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.inner
-	}
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }
