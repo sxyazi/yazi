@@ -1,6 +1,6 @@
 use std::{str::FromStr, time::Duration};
 
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value, prelude::LuaError};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
 use yazi_config::{Platform, keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
@@ -52,6 +52,7 @@ impl Utils {
 
 			let realtime = t.raw_get("realtime")?;
 			let rx = UnboundedReceiverStream::new(InputProxy::show(InputCfg {
+				id: (t.raw_get("id") as Result<String, LuaError>).unwrap_or_default().into(),
 				title: t.raw_get("title")?,
 				value: t.raw_get("value").unwrap_or_default(),
 				cursor: None, // TODO

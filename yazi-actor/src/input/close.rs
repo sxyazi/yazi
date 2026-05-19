@@ -20,7 +20,14 @@ impl Actor for Close {
 
 		if let Some(tx) = input.tx.take() {
 			let value = input.snap().value.clone();
-			_ = tx.send(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
+			if form.submit {
+				if !input.obscure {
+					input.history().push(value.clone());
+				}
+				_ = tx.send(InputEvent::Submit(value));
+			} else {
+				_ = tx.send(InputEvent::Cancel(value));
+			}
 		}
 
 		act!(cmp:close, cx)?;

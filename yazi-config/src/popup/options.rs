@@ -1,11 +1,12 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
-use yazi_shared::{scheme::Encode as EncodeScheme, strand::ToStrand, url::{Url, UrlBuf}};
+use yazi_shared::{SStr, scheme::Encode as EncodeScheme, strand::ToStrand, url::{Url, UrlBuf}};
 
 use super::{Offset, Position};
 use crate::{YAZI, popup::Origin};
 
 #[derive(Clone, Debug, Default)]
 pub struct InputCfg {
+	pub id:         SStr,
 	pub title:      String,
 	pub value:      String,
 	pub cursor:     Option<usize>,
@@ -33,6 +34,7 @@ pub struct ConfirmCfg {
 impl InputCfg {
 	pub fn cd(cwd: Url) -> Self {
 		Self {
+			id: "cd".into(),
 			title: YAZI.input.cd_title.clone(),
 			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
 			position: Position::new(YAZI.input.cd_origin, YAZI.input.cd_offset),
@@ -43,6 +45,7 @@ impl InputCfg {
 
 	pub fn create(dir: bool) -> Self {
 		Self {
+			id: "create".into(),
 			title: YAZI.input.create_title[dir as usize].clone(),
 			position: Position::new(YAZI.input.create_origin, YAZI.input.create_offset),
 			..Default::default()
@@ -51,6 +54,7 @@ impl InputCfg {
 
 	pub fn rename() -> Self {
 		Self {
+			id: "rename".into(),
 			title: YAZI.input.rename_title.clone(),
 			position: Position::new(YAZI.input.rename_origin, YAZI.input.rename_offset),
 			..Default::default()
@@ -59,6 +63,7 @@ impl InputCfg {
 
 	pub fn filter() -> Self {
 		Self {
+			id: "filter".into(),
 			title: YAZI.input.filter_title.clone(),
 			position: Position::new(YAZI.input.filter_origin, YAZI.input.filter_offset),
 			realtime: true,
@@ -78,6 +83,7 @@ impl InputCfg {
 	pub fn search(name: &str) -> Self {
 		Self {
 			title: YAZI.input.search_title.replace("{n}", name),
+			id: "search".into(),
 			position: Position::new(YAZI.input.search_origin, YAZI.input.search_offset),
 			..Default::default()
 		}
@@ -85,6 +91,7 @@ impl InputCfg {
 
 	pub fn shell(block: bool) -> Self {
 		Self {
+			id: "shell".into(),
 			title: YAZI.input.shell_title[block as usize].clone(),
 			position: Position::new(YAZI.input.shell_origin, YAZI.input.shell_offset),
 			..Default::default()
@@ -93,6 +100,7 @@ impl InputCfg {
 
 	pub fn tab_rename() -> Self {
 		Self {
+			id: "tab_rename".into(),
 			title: "Rename tab:".to_owned(),
 			position: Position::new(Origin::TopCenter, Offset {
 				x:      0,

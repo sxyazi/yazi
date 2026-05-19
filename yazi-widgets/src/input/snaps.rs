@@ -1,5 +1,6 @@
 use std::mem;
 
+use crate::input::InputMode;
 use super::InputSnap;
 
 #[derive(PartialEq, Eq)]
@@ -76,4 +77,16 @@ impl InputSnaps {
 
 	#[inline]
 	pub(super) fn current_mut(&mut self) -> &mut InputSnap { &mut self.current }
+
+	/// Updates the current snap.
+	///
+	/// * `mode`: New mode to use.
+	/// * `cursor`: Cursor position.
+	/// * `limit`: New size of the snap.
+	pub fn update_current(&mut self, mode: InputMode, cursor: usize, limit: usize) {
+		let snap = self.current_mut();
+		snap.mode = mode;
+		snap.cursor = cursor.min(snap.count().saturating_sub(mode.delta()));
+		snap.resize(limit);
+	}
 }
