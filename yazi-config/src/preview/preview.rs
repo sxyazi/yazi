@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -49,12 +49,46 @@ impl Preview {
 
 impl DeserializeOverHook for Preview {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
-		std::fs::create_dir_all(&self.cache_dir)
-			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
-			.map_err(serde::de::Error::custom)?;
+		create_cache_dir(&self.cache_dir).map_err(serde::de::Error::custom)?;
 
 		Ok(self)
 	}
+}
+
+fn create_cache_dir(path: &Path) -> Result<()> {
+	create_cache_dir_all(path)?;
+	restrict_cache_dir_permissions(path)?;
+	Ok(())
+}
+
+#[cfg(unix)]
+fn create_cache_dir_all(path: &Path) -> Result<()> {
+	use std::os::unix::fs::DirBuilderExt;
+
+	std::fs::DirBuilder::new()
+		.recursive(true)
+		.mode(0o700)
+		.create(path)
+		.context(format!("Failed to create cache directory: {}", path.display()))
+}
+
+#[cfg(not(unix))]
+fn create_cache_dir_all(path: &Path) -> Result<()> {
+	std::fs::create_dir_all(path)
+		.context(format!("Failed to create cache directory: {}", path.display()))
+}
+
+#[cfg(unix)]
+fn restrict_cache_dir_permissions(path: &Path) -> Result<()> {
+	use std::os::unix::fs::PermissionsExt;
+
+	std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))
+		.context(format!("Failed to set cache directory permissions: {}", path.display()))
+}
+
+#[cfg(not(unix))]
+fn restrict_cache_dir_permissions(_: &Path) -> Result<()> {
+	Ok(())
 }
 
 fn deserialize_cache_dir<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
@@ -92,5 +126,26 @@ where
 		Ok(value)
 	} else {
 		Err(serde::de::Error::custom("image_quality must be between 50 and 90."))
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[cfg(unix)]
+	#[test]
+	fn create_cache_dir_restricts_permissions_on_unix() {
+		use std::os::unix::fs::PermissionsExt;
+
+		let cache_dir = std::env::temp_dir().join(format!("yazi-cache-test-{}", timestamp_us()));
+		std::fs::create_dir_all(&cache_dir).unwrap();
+		std::fs::set_permissions(&cache_dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+		create_cache_dir(&cache_dir).unwrap();
+		let mode = std::fs::metadata(&cache_dir).unwrap().permissions().mode() & 0o777;
+		let _ = std::fs::remove_dir_all(&cache_dir);
+
+		assert_eq!(mode, 0o700);
 	}
 }
