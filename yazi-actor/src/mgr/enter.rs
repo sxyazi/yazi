@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_core::mgr::CdSource;
+use yazi_core::mgr::{CdSource, OpenOpt};
 use yazi_macro::{act, succ};
 use yazi_parser::VoidForm;
 use yazi_shared::{data::Data, url::UrlLike};
@@ -14,10 +14,13 @@ impl Actor for Enter {
 	const NAME: &str = "enter";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		let Some(h) = cx.hovered().filter(|h| h.is_dir()) else { succ!() };
+		let Some(h) = cx.hovered() else { succ!() };
 
-		let url = if h.url.is_search() { h.url.to_regular()? } else { h.url.clone() };
+		if h.is_dir() {
+			let url = if h.url.is_search() { h.url.to_regular()? } else { h.url.clone() };
+			return act!(mgr:cd, cx, (url, CdSource::Enter));
+		}
 
-		act!(mgr:cd, cx, (url, CdSource::Enter))
+		act!(mgr:open, cx, OpenOpt { cwd: None, targets: vec![], interactive: false, hovered: true })
 	}
 }
