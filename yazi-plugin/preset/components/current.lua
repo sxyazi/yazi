@@ -2,6 +2,8 @@ Current = {
 	_id = "current",
 }
 
+local last_click = { time = 0, url = nil }
+
 function Current:new(area, tab)
 	return setmetatable({
 		_area = area,
@@ -54,9 +56,27 @@ function Current:click(event, up)
 	end
 
 	local y = event.y - self._area.y + 1
-	if self._folder.window[y] then
-		Entity:new(self._folder.window[y]):click(event, up)
+	local f = self._folder.window[y]
+	if not f then
+		return
 	end
+
+	if event.is_left then
+		local delay = rt.mgr.mouse_double_click_delay or 0
+		local now = ya.time()
+		local url = tostring(f.url)
+		if delay > 0
+			and (now - last_click.time) * 1000 <= delay
+			and last_click.url == url
+		then
+			last_click.time = 0
+			ya.emit("open", {})
+			return
+		end
+		last_click = { time = now, url = url }
+	end
+
+	Entity:new(f):click(event, up)
 end
 
 function Current:scroll(event, step) ya.emit("arrow", { step }) end
