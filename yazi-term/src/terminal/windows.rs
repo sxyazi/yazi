@@ -48,36 +48,32 @@ impl<'a> Terminal<'a> {
 	}
 
 	pub fn enter_raw_mode(&self) -> io::Result<()> {
-		_ = self.set_input_mode(
+		self.set_input_mode(
 			(self.restorer.input_mode
 				& !(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT))
 				| ENABLE_VIRTUAL_TERMINAL_INPUT
 				| ENABLE_MOUSE_INPUT
 				| ENABLE_WINDOW_INPUT,
-		);
+		)?;
 
-		_ = self.set_output_mode(
+		self.set_output_mode(
 			self.restorer.output_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN,
-		);
-
-		Ok(())
+		)
 	}
 
 	pub fn enter_cooked_mode(&self) -> io::Result<()> {
-		_ = self.set_output_mode(
+		self.set_output_mode(
 			self.restorer.output_mode
 				& !(ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN),
-		);
+		)?;
 
-		_ = self.set_input_mode(
+		self.set_input_mode(
 			(self.restorer.input_mode
 				& !(ENABLE_VIRTUAL_TERMINAL_INPUT | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT))
 				| ENABLE_ECHO_INPUT
 				| ENABLE_LINE_INPUT
 				| ENABLE_PROCESSED_INPUT,
-		);
-
-		Ok(())
+		)
 	}
 
 	fn set_input_cp(&self, cp: u32) -> io::Result<()> { bool_ok(unsafe { SetConsoleCP(cp) }) }

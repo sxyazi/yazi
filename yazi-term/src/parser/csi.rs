@@ -190,8 +190,8 @@ impl Parser {
 		let cb = parse_next::<u8>(&mut it)?.checked_sub(32).ok_or(ParseError::Invalid)?;
 		let (kind, modifiers) = MouseEventKind::from_cb(cb)?;
 
-		let column = parse_next::<u16>(&mut it)? - 1;
-		let row = parse_next::<u16>(&mut it)? - 1;
+		let column = parse_next::<u16>(&mut it)?.checked_sub(1).ok_or(ParseError::Invalid)?;
+		let row = parse_next::<u16>(&mut it)?.checked_sub(1).ok_or(ParseError::Invalid)?;
 
 		Ok(Event::Mouse(MouseEvent { kind, column, row, modifiers }))
 	}
@@ -212,8 +212,8 @@ impl Parser {
 		// Mouse positions are encoded as (value + 32), but the upper left
 		// character position on the terminal is denoted as 1,1.
 		// So, we need to subtract 32 + 1 (33) to keep it synced with the cursor.
-		let column = u16::from(seq[4].saturating_sub(33));
-		let row = u16::from(seq[5].saturating_sub(33));
+		let column = u16::from(seq[4].checked_sub(33).ok_or(ParseError::Invalid)?);
+		let row = u16::from(seq[5].checked_sub(33).ok_or(ParseError::Invalid)?);
 
 		Ok(Event::Mouse(MouseEvent { kind, column, row, modifiers }))
 	}

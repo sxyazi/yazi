@@ -19,6 +19,7 @@ macro_rules! errln {
 macro_rules! writef {
 	($dst:expr, $($arg:tt)*) => {{
 		use std::io::Write as _;
-		write!($dst, $($arg)*).and_then(|_| ($dst).flush())
+		let dst = &mut $dst;
+		write!(dst, $($arg)*).and_then(|_| dst.flush())
 	}};
 }
