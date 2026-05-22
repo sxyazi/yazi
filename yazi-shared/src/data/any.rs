@@ -1,4 +1,4 @@
-use std::{any::Any, fmt};
+use std::{any::Any, fmt::{self, Debug}};
 
 use dyn_clone::DynClone;
 
@@ -21,7 +21,7 @@ impl Clone for Box<dyn DataAny> {
 	fn clone(&self) -> Self { dyn_clone::clone_box(&**self) }
 }
 
-impl fmt::Debug for dyn DataAny {
+impl Debug for dyn DataAny {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.debug_struct("DataAny").finish_non_exhaustive()
 	}

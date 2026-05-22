@@ -1,12 +1,14 @@
-use std::fs::File;
+use std::{fs::File, io};
 
 use anyhow::Context;
-use crossterm::style::{Color, Print, ResetColor, SetForegroundColor};
+use ratatui::style::Color;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
+use yazi_macro::writef;
 use yazi_shared::LOG_LEVEL;
 use yazi_shim::cell::RoCell;
+use yazi_term::sequence::{SetFg, SetSgr};
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();
 
@@ -36,11 +38,11 @@ impl Logs {
 			.init();
 
 		_GUARD.init(guard);
-		Ok(crossterm::execute!(
-			std::io::stderr(),
-			SetForegroundColor(Color::Yellow),
-			Print(format!("Running with log level `{level}`, logs are written to {log_path:?}\n")),
-			ResetColor
+		Ok(writef!(
+			io::stderr(),
+			"{}Running with log level `{level}`, logs are written to {log_path:?}\n{}",
+			SetFg(Color::Yellow),
+			SetSgr::Reset,
 		)?)
 	}
 }

@@ -1,5 +1,5 @@
-use crossterm::event::MouseEvent;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use yazi_term::event::MouseEvent;
 
 #[derive(Debug)]
 pub struct MouseForm {

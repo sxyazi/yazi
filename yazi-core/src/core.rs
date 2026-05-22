@@ -1,6 +1,6 @@
-use crossterm::cursor::SetCursorStyle;
 use ratatui::layout::{Position, Rect};
 use yazi_shared::Layer;
+use yazi_term::CursorStyle;
 
 use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
 
@@ -31,7 +31,7 @@ impl Core {
 		}
 	}
 
-	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
+	pub fn cursor(&self) -> Option<(Position, CursorStyle)> {
 		if self.input.visible {
 			let Rect { x, y, .. } = self.mgr.area(self.input.position);
 			return Some((

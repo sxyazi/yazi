@@ -4,11 +4,11 @@ use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}};
 use yazi_fs::File;
 use yazi_shared::{Id, Source, event::Action, url::UrlBuf};
-use yazi_term::Term;
+use yazi_tui::Raterm;
 
 pub struct Ctx<'a> {
 	pub core:      &'a mut Core,
-	pub term:      &'a mut Option<Term>,
+	pub term:      &'a mut Option<Raterm>,
 	pub tab:       usize,
 	pub level:     usize,
 	pub source:    Source,
@@ -27,7 +27,7 @@ impl DerefMut for Ctx<'_> {
 }
 
 impl<'a> Ctx<'a> {
-	pub fn new(action: &Action, core: &'a mut Core, term: &'a mut Option<Term>) -> Result<Self> {
+	pub fn new(action: &Action, core: &'a mut Core, term: &'a mut Option<Raterm>) -> Result<Self> {
 		let tab = if let Ok(id) = action.get::<Id>("tab") {
 			core
 				.mgr
@@ -63,7 +63,7 @@ impl<'a> Ctx<'a> {
 		}
 	}
 
-	pub fn active(core: &'a mut Core, term: &'a mut Option<Term>) -> Self {
+	pub fn active(core: &'a mut Core, term: &'a mut Option<Raterm>) -> Self {
 		let tab = core.mgr.tabs.cursor;
 		Self {
 			core,

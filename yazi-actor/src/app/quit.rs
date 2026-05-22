@@ -1,9 +1,11 @@
+use std::process;
+
 use anyhow::Result;
 use yazi_boot::ARGS;
 use yazi_fs::provider::{Provider, local::Local};
 use yazi_parser::app::QuitForm;
 use yazi_shared::{data::Data, strand::{StrandBuf, StrandLike, ToStrand}};
-use yazi_term::Term;
+use yazi_tui::Raterm;
 
 use crate::{Actor, Ctx};
 
@@ -27,7 +29,8 @@ impl Actor for Quit {
 			);
 		});
 
-		Term::goodbye(|| opt.code);
+		Raterm::stop();
+		process::exit(opt.code);
 	}
 }
 

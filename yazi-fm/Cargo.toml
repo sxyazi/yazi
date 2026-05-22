@@ -24,7 +24,6 @@ yazi-boot      = { path = "../yazi-boot", version = "26.5.6" }
 yazi-config    = { path = "../yazi-config", version = "26.5.6" }
 yazi-core      = { path = "../yazi-core", version = "26.5.6" }
 yazi-dds       = { path = "../yazi-dds", version = "26.5.6" }
-yazi-emulator  = { path = "../yazi-emulator", version = "26.5.6" }
 yazi-fs        = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro     = { path = "../yazi-macro", version = "26.5.6" }
 yazi-parser    = { path = "../yazi-parser", version = "26.5.6" }
@@ -36,6 +35,7 @@ yazi-shared    = { path = "../yazi-shared", version = "26.5.6" }
 yazi-shim      = { path = "../yazi-shim", version = "26.5.6" }
 yazi-term      = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty       = { path = "../yazi-tty", version = "26.5.9" }
+yazi-tui       = { path = "../yazi-tui", version = "26.5.6" }
 yazi-vfs       = { path = "../yazi-vfs", version = "26.5.6" }
 yazi-watcher   = { path = "../yazi-watcher", version = "26.5.6" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
@@ -43,7 +43,6 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 # External dependencies
 anyhow             = { workspace = true }
 better-panic       = "0.3.0"
-crossterm          = { workspace = true }
 fdlimit            = "0.3.0"
 futures            = { workspace = true }
 mlua               = { workspace = true }
@@ -59,9 +58,6 @@ tracing-subscriber = { version = "0.3.23", features = [ "env-filter" ] }
 [target."cfg(unix)".dependencies]
 libc              = { workspace = true }
 signal-hook-tokio = { version = "0.4.0", features = [ "futures-v0_3" ] }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
 tikv-jemallocator = "0.6.1"

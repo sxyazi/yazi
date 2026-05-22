@@ -1,7 +1,7 @@
-use crate::TermOption;
+use crate::RatermOption;
 
 #[derive(Clone, Copy)]
-pub struct TermState {
+pub struct RatermState {
 	pub bg:           bool,
 	pub csi_u:        bool,
 	pub mouse:        bool,
@@ -10,7 +10,7 @@ pub struct TermState {
 	pub cursor_blink: bool,
 }
 
-impl TermState {
+impl RatermState {
 	pub(super) const fn default() -> Self {
 		Self {
 			bg:           false,
@@ -22,7 +22,7 @@ impl TermState {
 		}
 	}
 
-	pub(super) fn new(resp: &str, opt: &TermOption) -> Self {
+	pub(super) fn new(resp: &str, opt: &RatermOption) -> Self {
 		let csi_u = resp.contains("\x1b[?0u");
 
 		let cursor_shape = resp

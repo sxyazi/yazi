@@ -52,9 +52,9 @@ impl TryFrom<Attrs> for std::fs::FileTimes {
 impl TryFrom<Attrs> for std::fs::Permissions {
 	type Error = ();
 
-	fn try_from(value: Attrs) -> Result<Self, Self::Error> {
+	fn try_from(_value: Attrs) -> Result<Self, Self::Error> {
 		#[cfg(unix)]
-		if let Some(mode) = value.mode {
+		if let Some(mode) = _value.mode {
 			return Ok(mode.into());
 		}
 

@@ -26,13 +26,13 @@ yazi-fs        = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro     = { path = "../yazi-macro", version = "26.5.6" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.5.6" }
 yazi-shared    = { path = "../yazi-shared", version = "26.5.6" }
+yazi-term      = { path = "../yazi-term", version = "26.5.6" }
 yazi-vfs       = { path = "../yazi-vfs", version = "26.5.6" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
 anyhow     = { workspace = true }
 bitflags   = { workspace = true }
-crossterm  = { workspace = true }
 hashbrown  = { workspace = true }
 mlua       = { workspace = true }
 paste      = { workspace = true }
@@ -41,6 +41,3 @@ serde      = { workspace = true }
 serde_with = { workspace = true }
 strum      = { workspace = true }
 tokio      = { workspace = true }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

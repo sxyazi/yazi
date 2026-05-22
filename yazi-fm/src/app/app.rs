@@ -6,14 +6,13 @@ use yazi_actor::Ctx;
 use yazi_core::Core;
 use yazi_macro::act;
 use yazi_shared::{data::Data, event::{Event, NEED_RENDER}};
-use yazi_term::Term;
+use yazi_tui::Raterm;
 
 use crate::{Dispatcher, Signals};
 
 pub(crate) struct App {
-	pub(crate) core:    Core,
-	pub(crate) term:    Option<Term>,
-	pub(crate) signals: Signals,
+	pub(crate) core: Core,
+	pub(crate) term: Option<Raterm>,
 
 	need_render:            u8,
 	pub(crate) last_render: Instant,
@@ -21,11 +20,10 @@ pub(crate) struct App {
 }
 
 impl App {
-	fn make(term: Term, signals: Signals) -> Result<Self> {
+	fn make(term: Raterm) -> Result<Self> {
 		Ok(Self {
 			core: Core::make(),
 			term: Some(term),
-			signals,
 
 			need_render: 0,
 			last_render: Instant::now(),
@@ -34,12 +32,13 @@ impl App {
 	}
 
 	pub(crate) async fn serve() -> Result<()> {
-		let term = Term::start()?;
-		let (mut rx, signals) = (Event::take(), Signals::start()?);
+		let term = Raterm::start()?;
+		Signals::start()?;
 
-		let mut app = Self::make(term, signals)?;
+		let mut app = Self::make(term)?;
 		app.bootstrap()?;
 
+		let mut rx = Event::take();
 		loop {
 			if let Some(t) = app.next_render.take() {
 				select! {

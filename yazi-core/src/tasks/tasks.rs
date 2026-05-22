@@ -1,8 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
 use tokio::{task::JoinHandle, time::sleep};
-use yazi_emulator::Dimension;
 use yazi_scheduler::{Scheduler, TaskSnap, TaskSummary};
+use yazi_term::TERM;
 
 use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
 use crate::AppProxy;
@@ -52,8 +52,8 @@ impl Tasks {
 	}
 
 	pub fn limit() -> usize {
-		((Dimension::available().rows * TASKS_PERCENT / 100)
-			.saturating_sub(TASKS_BORDER + TASKS_PADDING) as usize)
+		((TERM.dimension().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_BORDER + TASKS_PADDING)
+			as usize)
 			/ 3
 	}
 

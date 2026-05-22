@@ -1,8 +1,9 @@
-use std::{io::{BufWriter, Error, ErrorKind, Read, Write}, time::{Duration, Instant}};
+use std::{io::{BufWriter, Error, ErrorKind, Read}, time::{Duration, Instant}};
 
 use parking_lot::{Mutex, MutexGuard};
 
 use super::Handle;
+use crate::{TtyReader, TtyWriter};
 
 pub struct Tty {
 	stdin:  Mutex<Handle>,
@@ -43,10 +44,11 @@ impl Tty {
 					continue;
 				}
 
-				let b = stdin.read_u8()?;
-				buf.push(b);
+				let mut b = [0u8];
+				stdin.read_exact(&mut b)?;
+				buf.push(b[0]);
 
-				if predicate(b, &buf) {
+				if predicate(b[0], &buf) {
 					break;
 				}
 			}
@@ -55,27 +57,5 @@ impl Tty {
 
 		let result = read();
 		(buf, result)
-	}
-}
-
-// --- Reader
-pub struct TtyReader<'a>(&'a Mutex<Handle>);
-
-impl Read for TtyReader<'_> {
-	fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> { self.0.lock().read(buf) }
-}
-
-// --- Writer
-pub struct TtyWriter<'a>(&'a Mutex<BufWriter<Handle>>);
-
-impl std::io::Write for TtyWriter<'_> {
-	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> { self.0.lock().write(buf) }
-
-	fn flush(&mut self) -> std::io::Result<()> { self.0.lock().flush() }
-}
-
-impl std::fmt::Write for TtyWriter<'_> {
-	fn write_str(&mut self, s: &str) -> std::fmt::Result {
-		self.0.lock().write_all(s.as_bytes()).map_err(|_| std::fmt::Error)
 	}
 }

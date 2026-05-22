@@ -1,15 +1,17 @@
-use std::{io::BufWriter, time::Duration};
+use std::{io::{self, BufWriter, Write}, time::Duration};
 
 use anyhow::Result;
-use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use either::Either;
+use ratatui::style::Color;
 use scopeguard::defer;
 use tokio::time::sleep;
 use tracing::{debug, error, warn};
+use yazi_macro::writef;
 use yazi_shim::cell::RoCell;
+use yazi_term::{TERM, sequence::{HideCursor, If, KittyGraphicsQuery, MoveTo, RequestBgColor, RequestCellPixelSize, RequestDA1, RequestXtVersion, RestoreCursorPos, SaveCursorPos, SetFg, SetSgr, ShowCursor}};
 use yazi_tty::{Handle, TTY};
 
-use crate::{Brand, Dimension, Mux, TMUX, Unknown};
+use crate::{Brand, Mux, TMUX, Unknown};
 
 pub static EMULATOR: RoCell<Emulator> = RoCell::new();
 
@@ -36,25 +38,18 @@ impl Default for Emulator {
 
 impl Emulator {
 	pub fn detect() -> Result<Self> {
-		defer! { disable_raw_mode().ok(); }
-		enable_raw_mode()?;
+		defer! { TERM.enter_cooked_mode().ok(); }
+		TERM.enter_raw_mode()?;
 
 		let resort = Brand::from_env();
-		let kgp_seq = if resort.is_none() {
-			Mux::csi("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\")
-		} else {
-			"".into()
-		};
-
-		execute!(
+		writef!(
 			TTY.writer(),
-			SavePosition,
-			Print(kgp_seq),             // Detect KGP
-			Print(Mux::csi("\x1b[>q")), // Request terminal version
-			Print("\x1b[16t"),          // Request cell size
-			Print("\x1b]11;?\x07"),     // Request background color
-			Print(Mux::csi("\x1b[0c")), // Request device attributes
-			RestorePosition
+			"{SaveCursorPos}{}{}{}{}{}{RestoreCursorPos}",
+			If(resort.is_none(), Mux::wrap(KittyGraphicsQuery)),
+			Mux::wrap(RequestXtVersion),
+			RequestCellPixelSize,
+			RequestBgColor,
+			Mux::wrap(RequestDA1),
 		)?;
 
 		let resp = Self::read_until_da1();
@@ -83,28 +78,26 @@ impl Emulator {
 	where
 		F: FnOnce(&mut BufWriter<Handle>) -> Result<T>,
 	{
-		use std::{io::Write, thread, time::Duration};
-
-		use crossterm::{cursor::{Hide, MoveTo, Show}, queue};
+		use std::{thread, time::Duration};
 
 		let mut w = TTY.lockout();
 
 		// I really don't want to add this,
 		// But tmux and ConPTY sometimes cause the cursor position to get out of sync.
 		if TMUX.get() || cfg!(windows) {
-			execute!(w, SavePosition, MoveTo(x, y), Show)?;
-			execute!(w, MoveTo(x, y), Show)?;
-			execute!(w, MoveTo(x, y), Show)?;
+			writef!(w, "{SaveCursorPos}{}{ShowCursor}", MoveTo(x, y))?;
+			writef!(w, "{}{ShowCursor}", MoveTo(x, y))?;
+			writef!(w, "{}{ShowCursor}", MoveTo(x, y))?;
 			thread::sleep(Duration::from_millis(1));
 		} else {
-			queue!(w, SavePosition, MoveTo(x, y))?;
+			write!(w, "{SaveCursorPos}{}", MoveTo(x, y))?;
 		}
 
 		let result = cb(&mut w);
 		if TMUX.get() || cfg!(windows) {
-			queue!(w, Hide, RestorePosition)?;
+			write!(w, "{HideCursor}{RestoreCursorPos}")?;
 		} else {
-			queue!(w, RestorePosition)?;
+			write!(w, "{RestoreCursorPos}")?;
 		}
 
 		w.flush()?;
@@ -148,21 +141,13 @@ impl Emulator {
 	}
 
 	async fn error_to_user() {
-		use crossterm::style::{Attribute, Color, Print, ResetColor, SetAttributes, SetForegroundColor};
-
 		sleep(Duration::from_millis(400)).await;
-		_ = crossterm::execute!(
-			std::io::stderr(),
-			SetForegroundColor(Color::Red),
-			SetAttributes(Attribute::Bold.into()),
-			Print("\r\nTerminal response timeout: "),
-			ResetColor,
-			SetAttributes(Attribute::Reset.into()),
-			//
-			Print("The request sent by Yazi didn't receive a correct response.\r\n"),
-			Print(
-				"Please check your terminal environment as per: https://yazi-rs.github.io/docs/faq#trt\r\n"
-			),
+		_ = writef!(
+			io::stderr(),
+			"{}{}\r\nTerminal response timeout: {}The request sent by Yazi didn't receive a correct response.\r\nPlease check your terminal environment as per: https://yazi-rs.github.io/docs/faq#trt\r\n",
+			SetFg(Color::Red),
+			SetSgr::Bold,
+			SetSgr::Reset,
 		);
 	}
 
@@ -206,8 +191,6 @@ impl Emulator {
 			return false;
 		}
 
-		Dimension::available()
-			.ratio()
-			.is_none_or(|(rw, rh)| rw.floor() as u16 != w || rh.floor() as u16 != h)
+		TERM.dimension().ratio().is_none_or(|(rw, rh)| rw.floor() as u16 != w || rh.floor() as u16 != h)
 	}
 }

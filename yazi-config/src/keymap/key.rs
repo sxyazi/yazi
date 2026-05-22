@@ -1,7 +1,7 @@
 use std::{fmt::{Display, Write}, str::FromStr};
 
 use anyhow::bail;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use yazi_term::event::{KeyCode, KeyEvent, Modifiers};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Key {
@@ -30,29 +30,12 @@ impl Default for Key {
 
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
-		// For alphabet:
-		//   Unix    :  <S-a> => Char("A") + SHIFT
-		//   Windows :  <S-a> => Char("A") + SHIFT
-		//
-		// For non-alphabet:
-		//   Unix    :  <S-`> => Char("~") + NULL
-		//   Windows :  <S-`> => Char("~") + SHIFT
-		//
-		// So we detect `Char("~") + SHIFT`, and change it to `Char("~") + NULL`
-		// for consistent behavior between OSs.
-
-		let shift = match (value.code, value.modifiers) {
-			(KeyCode::Char(c), _) => c.is_ascii_uppercase(),
-			(KeyCode::BackTab, _) => false,
-			(_, m) => m.contains(KeyModifiers::SHIFT),
-		};
-
 		Self {
-			code: value.code,
-			shift,
-			ctrl: value.modifiers.contains(KeyModifiers::CONTROL),
-			alt: value.modifiers.contains(KeyModifiers::ALT),
-			super_: value.modifiers.contains(KeyModifiers::SUPER),
+			code:   value.code,
+			shift:  value.modifiers.contains(Modifiers::SHIFT),
+			ctrl:   value.modifiers.contains(Modifiers::CONTROL),
+			alt:    value.modifiers.contains(Modifiers::ALT),
+			super_: value.modifiers.contains(Modifiers::SUPER),
 		}
 	}
 }
@@ -92,29 +75,28 @@ impl FromStr for Key {
 				"pageup" => key.code = KeyCode::PageUp,
 				"pagedown" => key.code = KeyCode::PageDown,
 				"tab" => key.code = KeyCode::Tab,
-				"backtab" => key.code = KeyCode::BackTab,
 				"delete" => key.code = KeyCode::Delete,
 				"insert" => key.code = KeyCode::Insert,
-				"f1" => key.code = KeyCode::F(1),
-				"f2" => key.code = KeyCode::F(2),
-				"f3" => key.code = KeyCode::F(3),
-				"f4" => key.code = KeyCode::F(4),
-				"f5" => key.code = KeyCode::F(5),
-				"f6" => key.code = KeyCode::F(6),
-				"f7" => key.code = KeyCode::F(7),
-				"f8" => key.code = KeyCode::F(8),
-				"f9" => key.code = KeyCode::F(9),
-				"f10" => key.code = KeyCode::F(10),
-				"f11" => key.code = KeyCode::F(11),
-				"f12" => key.code = KeyCode::F(12),
-				"f13" => key.code = KeyCode::F(13),
-				"f14" => key.code = KeyCode::F(14),
-				"f15" => key.code = KeyCode::F(15),
-				"f16" => key.code = KeyCode::F(16),
-				"f17" => key.code = KeyCode::F(17),
-				"f18" => key.code = KeyCode::F(18),
-				"f19" => key.code = KeyCode::F(19),
-				"esc" => key.code = KeyCode::Esc,
+				"f1" => key.code = KeyCode::Fn(1),
+				"f2" => key.code = KeyCode::Fn(2),
+				"f3" => key.code = KeyCode::Fn(3),
+				"f4" => key.code = KeyCode::Fn(4),
+				"f5" => key.code = KeyCode::Fn(5),
+				"f6" => key.code = KeyCode::Fn(6),
+				"f7" => key.code = KeyCode::Fn(7),
+				"f8" => key.code = KeyCode::Fn(8),
+				"f9" => key.code = KeyCode::Fn(9),
+				"f10" => key.code = KeyCode::Fn(10),
+				"f11" => key.code = KeyCode::Fn(11),
+				"f12" => key.code = KeyCode::Fn(12),
+				"f13" => key.code = KeyCode::Fn(13),
+				"f14" => key.code = KeyCode::Fn(14),
+				"f15" => key.code = KeyCode::Fn(15),
+				"f16" => key.code = KeyCode::Fn(16),
+				"f17" => key.code = KeyCode::Fn(17),
+				"f18" => key.code = KeyCode::Fn(18),
+				"f19" => key.code = KeyCode::Fn(19),
+				"esc" => key.code = KeyCode::Escape,
 
 				_ => match next {
 					s if it.peek().is_none() => {
@@ -166,29 +148,28 @@ impl Display for Key {
 			KeyCode::PageUp => "PageUp",
 			KeyCode::PageDown => "PageDown",
 			KeyCode::Tab => "Tab",
-			KeyCode::BackTab => "BackTab",
 			KeyCode::Delete => "Delete",
 			KeyCode::Insert => "Insert",
-			KeyCode::F(1) => "F1",
-			KeyCode::F(2) => "F2",
-			KeyCode::F(3) => "F3",
-			KeyCode::F(4) => "F4",
-			KeyCode::F(5) => "F5",
-			KeyCode::F(6) => "F6",
-			KeyCode::F(7) => "F7",
-			KeyCode::F(8) => "F8",
-			KeyCode::F(9) => "F9",
-			KeyCode::F(10) => "F10",
-			KeyCode::F(11) => "F11",
-			KeyCode::F(12) => "F12",
-			KeyCode::F(13) => "F13",
-			KeyCode::F(14) => "F14",
-			KeyCode::F(15) => "F15",
-			KeyCode::F(16) => "F16",
-			KeyCode::F(17) => "F17",
-			KeyCode::F(18) => "F18",
-			KeyCode::F(19) => "F19",
-			KeyCode::Esc => "Esc",
+			KeyCode::Fn(1) => "F1",
+			KeyCode::Fn(2) => "F2",
+			KeyCode::Fn(3) => "F3",
+			KeyCode::Fn(4) => "F4",
+			KeyCode::Fn(5) => "F5",
+			KeyCode::Fn(6) => "F6",
+			KeyCode::Fn(7) => "F7",
+			KeyCode::Fn(8) => "F8",
+			KeyCode::Fn(9) => "F9",
+			KeyCode::Fn(10) => "F10",
+			KeyCode::Fn(11) => "F11",
+			KeyCode::Fn(12) => "F12",
+			KeyCode::Fn(13) => "F13",
+			KeyCode::Fn(14) => "F14",
+			KeyCode::Fn(15) => "F15",
+			KeyCode::Fn(16) => "F16",
+			KeyCode::Fn(17) => "F17",
+			KeyCode::Fn(18) => "F18",
+			KeyCode::Fn(19) => "F19",
+			KeyCode::Escape => "Esc",
 
 			KeyCode::Char(' ') => "Space",
 			KeyCode::Char(c) => {

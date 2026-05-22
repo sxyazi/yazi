@@ -1,5 +1,6 @@
 use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
+use chrono::DateTime;
 use russh::keys::{PrivateKeyWithHashAlg, agent::AgentIdentity};
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
@@ -186,14 +187,14 @@ impl Conn {
 				.verify_signature()
 				.map_err(|e| cfg_err!("Certificate signature verification failed: {e}"))?;
 
-			let now: chrono::DateTime<chrono::Local> = SystemTime::now().into();
-			let start: chrono::DateTime<chrono::Local> = cert.valid_after_time().into();
-			let end: chrono::DateTime<chrono::Local> = cert.valid_before_time().into();
-			if now < start || now > end {
+			let now: DateTime<chrono::Local> = SystemTime::now().into();
+			let start: Option<DateTime<chrono::Local>> = cert.valid_after_time().map(Into::into);
+			let end: Option<DateTime<chrono::Local>> = cert.valid_before_time().map(Into::into);
+			if start.is_some_and(|d| now < d) || end.is_some_and(|d| now > d) {
 				return Err(cfg_err!(
 					"Certificate is out of the validity range of '{}' to '{}'",
-					start.to_rfc2822(),
-					end.to_rfc2822()
+					start.map(|d| d.to_rfc2822()).as_deref().unwrap_or("unknown"),
+					end.map(|d| d.to_rfc2822()).as_deref().unwrap_or("unknown")
 				));
 			}
 		}

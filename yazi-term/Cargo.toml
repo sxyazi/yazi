@@ -1,6 +1,6 @@
 [package]
 name                   = "yazi-term"
-description            = "Yazi terminal extensions"
+description            = "Cross-platform virtual terminal"
 version.workspace      = true
 edition.workspace      = true
 license.workspace      = true
@@ -13,17 +13,23 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-config   = { path = "../yazi-config", version = "26.5.6" }
-yazi-emulator = { path = "../yazi-emulator", version = "26.5.6" }
-yazi-macro    = { path = "../yazi-macro", version = "26.5.6" }
-yazi-shim     = { path = "../yazi-shim", version = "26.5.6" }
-yazi-tty      = { path = "../yazi-tty", version = "26.5.9" }
+yazi-macro = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shim  = { path = "../yazi-shim", version = "26.5.6" }
+yazi-tty   = { path = "../yazi-tty", version = "26.5.9" }
 
 # External dependencies
-anyhow    = { workspace = true }
-crossterm = { workspace = true }
-ratatui   = { workspace = true }
-tokio     = { workspace = true }
+anyhow      = { workspace = true }
+base64      = { workspace = true }
+bitflags    = { workspace = true }
+futures     = { workspace = true }
+parking_lot = { workspace = true }
+ratatui     = { workspace = true }
+thiserror   = { workspace = true }
+tokio       = { workspace = true }
 
-[target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.4.4"
+rustix      = { version = "1.1.4" , default-features = false, features = [ "std", "stdio", "termios", "event" ] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = [ "Win32_Globalization", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_IO", "Win32_System_Threading" ] }

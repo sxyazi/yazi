@@ -1,15 +1,16 @@
-use std::{sync::atomic::{AtomicU8, Ordering}, time::Instant};
+use std::{io::Write, sync::atomic::{AtomicU8, Ordering}, time::Instant};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
-use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
+use ratatui::{CompletedFrame, backend::Backend, buffer::Buffer, layout::Position};
 use yazi_actor::{Ctx, lives::Lives};
 use yazi_binding::runtime_scope;
 use yazi_config::LAYOUT;
-use yazi_macro::{act, succ};
+use yazi_macro::{act, succ, writef};
 use yazi_plugin::LUA;
 use yazi_shared::{data::Data, event::NEED_RENDER};
+use yazi_term::{CursorStyle, sequence::{BeginSyncUpdate, EndSyncUpdate, MoveTo, SetCursorStyle, ShowCursor}};
 use yazi_tty::TTY;
+use yazi_tui::RatermBackend;
 use yazi_widgets::COLLISION;
 
 use crate::{app::App, root::Root};
@@ -90,10 +91,10 @@ impl App {
 		}
 
 		let patches = frame.buffer.diff(&new);
-		CrosstermBackend::new(&mut *TTY.lockout()).draw(patches.into_iter()).ok();
+		RatermBackend::new(&mut *TTY.lockout()).draw(patches.into_iter()).ok();
 	}
 
-	fn routine(push: bool, cursor: Option<(Position, SetCursorStyle)>) {
+	fn routine(push: bool, cursor: Option<(Position, CursorStyle)>) {
 		static COUNT: AtomicU8 = AtomicU8::new(0);
 		if push && COUNT.fetch_add(1, Ordering::Relaxed) != 0 {
 			return;
@@ -101,12 +102,18 @@ impl App {
 			return;
 		}
 
-		_ = if push {
-			queue!(TTY.writer(), BeginSynchronizedUpdate)
+		if push {
+			write!(TTY.writer(), "{BeginSyncUpdate}").ok();
 		} else if let Some((Position { x, y }, shape)) = cursor {
-			execute!(TTY.writer(), shape, MoveTo(x, y), Show, EndSynchronizedUpdate)
+			writef!(
+				TTY.writer(),
+				"{}{}{ShowCursor}{EndSyncUpdate}",
+				SetCursorStyle(shape as u8),
+				MoveTo(x, y),
+			)
+			.ok();
 		} else {
-			execute!(TTY.writer(), EndSynchronizedUpdate)
+			writef!(TTY.writer(), "{EndSyncUpdate}").ok();
 		};
 	}
 }

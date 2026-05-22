@@ -1,10 +1,9 @@
 use anyhow::Result;
-use crossterm::{cursor::SetCursorStyle, event::KeyCode};
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
-use yazi_emulator::Dimension;
 use yazi_macro::{act, render, render_and};
 use yazi_shared::Layer;
+use yazi_term::{CursorStyle, TERM, event::KeyCode};
 use yazi_widgets::Scrollable;
 
 use crate::help::HELP_MARGIN;
@@ -27,7 +26,7 @@ impl Help {
 	pub fn r#type(&mut self, key: &Key) -> Result<bool> {
 		let Some(input) = &mut self.in_filter else { return Ok(false) };
 		match key {
-			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false, super_: false } => {
+			Key { code: KeyCode::Escape, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
 				render!();
 			}
@@ -85,26 +84,22 @@ impl Help {
 			return None;
 		}
 		if let Some(kw) = self.keyword() {
-			return Some((kw.width() as u16, Dimension::available().rows));
+			return Some((kw.width() as u16, TERM.dimension().rows));
 		}
 		None
 	}
 
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 
-	pub fn cursor_shape(&self) -> SetCursorStyle {
-		if YAZI.input.cursor_blink {
-			SetCursorStyle::BlinkingBlock
-		} else {
-			SetCursorStyle::SteadyBlock
-		}
+	pub fn cursor_shape(&self) -> CursorStyle {
+		if YAZI.input.cursor_blink { CursorStyle::BlinkingBlock } else { CursorStyle::SteadyBlock }
 	}
 }
 
 impl Scrollable for Help {
 	fn total(&self) -> usize { self.bindings.len() }
 
-	fn limit(&self) -> usize { Dimension::available().rows.saturating_sub(HELP_MARGIN) as usize }
+	fn limit(&self) -> usize { TERM.dimension().rows.saturating_sub(HELP_MARGIN) as usize }
 
 	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
 

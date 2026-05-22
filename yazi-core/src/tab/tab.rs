@@ -4,9 +4,9 @@ use anyhow::Result;
 use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
-use yazi_emulator::Dimension;
 use yazi_fs::File;
 use yazi_shared::{Id, Ids, url::{UrlBuf, UrlLike}};
+use yazi_term::TERM;
 
 use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
 use crate::{spot::Spot, tab::Selected};
@@ -90,11 +90,11 @@ impl Tab {
 	}
 
 	pub fn hovered_rect_based(&self, pos: Position) -> Rect {
-		let ws = Dimension::available().into();
+		let dim = TERM.dimension();
 		if let Some(r) = self.hovered_rect() {
-			Position::sticky(ws, r, pos.offset)
+			Position::sticky(dim, r, pos.offset)
 		} else {
-			Position::new(Origin::TopCenter, pos.offset).rect(ws)
+			Position::new(Origin::TopCenter, pos.offset).rect(dim)
 		}
 	}
 

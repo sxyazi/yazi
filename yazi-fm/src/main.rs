@@ -16,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_tty::init();
 
-	yazi_term::init();
+	yazi_term::init()?;
 
 	yazi_fs::init();
 

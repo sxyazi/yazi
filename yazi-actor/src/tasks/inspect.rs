@@ -1,15 +1,15 @@
 use std::io::Write;
 
 use anyhow::Result;
-use crossterm::{execute, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_binding::Permit;
-use yazi_macro::succ;
+use yazi_term::TERM;
+use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_scheduler::AppProxy;
-use yazi_shared::{data::Data, terminal_clear};
-use yazi_term::YIELD_TO_SUBPROCESS;
+use yazi_shared::data::Data;
+use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
 use yazi_tty::TTY;
 
 use crate::{Actor, Ctx};
@@ -39,24 +39,27 @@ impl Actor for Inspect {
 				task.logs.clone()
 			};
 
+			// Stop the app and clear the terminal
 			AppProxy::stop().await;
-			terminal_clear(TTY.writer()).ok();
+			writeln!(TTY.writer(), "{EraseScreen}").ok();
+
+			// Print the buffered logs
 			TTY.writer().write_all(buffered.as_bytes()).ok();
 			TTY.writer().flush().ok();
 
-			defer! { disable_raw_mode().ok(); }
-			enable_raw_mode().ok();
+			defer! { TERM.enter_cooked_mode().ok(); }
+			TERM.enter_raw_mode().ok();
 
 			let mut stdin = stdin(); // TODO: stdin
 			let mut answer = 0;
 			loop {
 				select! {
 					Some(line) = rx.recv() => {
-						execute!(TTY.writer(), crossterm::style::Print(line), crossterm::style::Print("\r\n")).ok();
+						writef!(TTY.writer(), "{line}\r\n").ok();
 					}
 					_ = time::sleep(time::Duration::from_millis(500)) => {
 						if !ongoing.lock().exists(id) {
-							execute!(TTY.writer(), crossterm::style::Print("Task finished, press `q` to quit\r\n")).ok();
+							writef!(TTY.writer(), "Task finished, press `q` to quit\r\n").ok();
 							break;
 						}
 					},

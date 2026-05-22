@@ -5,6 +5,7 @@ yazi_macro::mod_flat!(icon layout mixing pattern platform preset priority select
 use std::io::{Read, Write};
 
 use yazi_shim::{cell::{RoCell, SyncCell}, toml::{DeserializeOver, DeserializeOverWith}};
+use yazi_term::sequence::SetSgr;
 use yazi_tty::TTY;
 
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
@@ -74,14 +75,12 @@ fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
 		writeln!(stdout, "\nCaused by:\n{src}")?;
 	}
 
-	use crossterm::style::{Attribute, Print, SetAttributes};
-	crossterm::execute!(
+	writeln!(
 		stdout,
-		SetAttributes(Attribute::Reverse.into()),
-		SetAttributes(Attribute::Bold.into()),
-		Print("Press <Enter> to continue with preset settings..."),
-		SetAttributes(Attribute::Reset.into()),
-		Print("\n"),
+		"{}{}Press <Enter> to continue with preset settings...{}",
+		SetSgr::Reverse,
+		SetSgr::Bold,
+		SetSgr::Reset
 	)?;
 
 	TTY.reader().read_exact(&mut [0])?;

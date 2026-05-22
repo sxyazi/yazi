@@ -13,3 +13,13 @@ macro_rules! errln {
 		writeln!(std::io::stderr(), $($tt)*)
 	}}
 }
+
+/// Like [`write!`] but immediately flushes the writer afterwards.
+#[macro_export]
+macro_rules! writef {
+	($dst:expr, $($arg:tt)*) => {{
+		use std::io::Write as _;
+		let dst = &mut $dst;
+		write!(dst, $($arg)*).and_then(|_| dst.flush())
+	}};
+}

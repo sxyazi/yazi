@@ -5,6 +5,7 @@ use yazi_config::{THEME, YAZI};
 use yazi_emulator::Mux;
 use yazi_fs::Xdg;
 use yazi_shared::timestamp_us;
+use yazi_term::TERM;
 
 use super::Actions;
 
@@ -39,7 +40,7 @@ impl Actions {
 
 		writeln!(s, "\nAdapter")?;
 		writeln!(s, "    Adapter.matches    : {:?}", yazi_adapter::ADAPTOR)?;
-		writeln!(s, "    Dimension.available: {:?}", yazi_emulator::Dimension::available())?;
+		writeln!(s, "    Dimension.available: {:?}", TERM.dimension())?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;

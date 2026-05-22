@@ -1,9 +1,10 @@
-use std::borrow::Cow;
+use std::fmt::{self, Display};
 
 use anyhow::Result;
 use tracing::error;
-use yazi_macro::time;
+use yazi_macro::{time, writef};
 use yazi_shim::cell::SyncCell;
+use yazi_term::sequence::RequestDeviceStatus;
 use yazi_tty::TTY;
 
 use crate::Emulator;
@@ -16,15 +17,24 @@ pub static CLOSE: SyncCell<&'static str> = SyncCell::new("");
 pub struct Mux;
 
 impl Mux {
-	pub fn csi(s: &str) -> Cow<'_, str> {
-		if TMUX.get() {
-			Cow::Owned(format!(
-				"{START}{}{CLOSE}",
-				s.trim_start_matches('\x1b').replace('\x1b', ESCAPE.get()),
-			))
-		} else {
-			Cow::Borrowed(s)
+	pub fn wrap<T: Display>(s: T) -> impl Display {
+		struct Wrapper<T>(T);
+
+		impl<T: Display> Display for Wrapper<T> {
+			fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+				if !TMUX.get() {
+					return self.0.fmt(f);
+				}
+
+				write!(
+					f,
+					"{START}{}{CLOSE}",
+					self.0.to_string().trim_start_matches('\x1b').replace('\x1b', ESCAPE.get())
+				)
+			}
 		}
+
+		Wrapper(s)
 	}
 
 	pub fn tmux_passthrough() {
@@ -56,7 +66,7 @@ impl Mux {
 
 	pub fn tmux_drain() -> Result<()> {
 		if TMUX.get() {
-			crossterm::execute!(TTY.writer(), crossterm::style::Print(Self::csi("\x1b[5n")))?;
+			writef!(TTY.writer(), "{}", Self::wrap(RequestDeviceStatus))?;
 			_ = Emulator::read_until_dsr();
 		}
 		Ok(())

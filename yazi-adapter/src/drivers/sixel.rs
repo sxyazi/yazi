@@ -1,12 +1,12 @@
 use std::{io::Write, path::PathBuf};
 
 use anyhow::{Result, bail};
-use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
 use quantette::{PaletteSize, color_map::IndexedColorMap, wu::{BinnerU8x3, WuU8x3}};
 use ratatui::layout::Rect;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
+use yazi_term::sequence::MoveTo;
 
 use crate::{Image, adapter::Adapter};
 
@@ -35,7 +35,7 @@ impl Sixel {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
 			for y in area.top()..area.bottom() {
-				queue!(w, MoveTo(area.x, y))?;
+				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
 			Ok(())
