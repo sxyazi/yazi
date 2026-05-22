@@ -25,7 +25,6 @@ yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
 yazi-runner  = { path = "../yazi-runner", version = "26.5.6" }
 yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
 yazi-term    = { path = "../yazi-term", version = "26.5.6" }
-yazi-tui     = { path = "../yazi-tui", version = "26.5.6" }
 yazi-vfs     = { path = "../yazi-vfs", version = "26.5.6" }
 
 # External dependencies

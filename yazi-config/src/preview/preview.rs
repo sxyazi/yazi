@@ -1,4 +1,6 @@
-use std::path::PathBuf;
+#[cfg(unix)]
+use std::os::unix::fs::DirBuilderExt;
+use std::{fs::DirBuilder, path::PathBuf};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -49,7 +51,12 @@ impl Preview {
 
 impl DeserializeOverHook for Preview {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
-		std::fs::create_dir_all(&self.cache_dir)
+		#[cfg(unix)]
+		let result = DirBuilder::new().mode(0o700).recursive(true).create(&self.cache_dir);
+		#[cfg(not(unix))]
+		let result = DirBuilder::new().recursive(true).create(&self.cache_dir);
+
+		result
 			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
 			.map_err(serde::de::Error::custom)?;
 
