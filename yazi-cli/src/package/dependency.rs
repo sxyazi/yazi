@@ -1,4 +1,4 @@
-use std::{env, io::{self, BufWriter}, path::{Path, PathBuf}, str::FromStr};
+use std::{env, io, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -48,20 +48,19 @@ impl Dependency {
 	pub(super) fn header(&self, s: &str) -> Result<()> {
 		use std::io::IsTerminal;
 
-		use crossterm::style::{Attribute, Print, SetAttributes};
-		use yazi_shim::crossterm::If;
+		use yazi_macro::writef;
+		use yazi_term::sequence::{If, SetSgr};
 
 		let ansi = env::var_os("YA_FORCE_ANSI").is_some_and(|v| v == "1") || io::stdout().is_terminal();
-		crossterm::execute!(
-			BufWriter::new(io::stdout()),
-			Print("\n"),
-			If(ansi, SetAttributes(Attribute::Reverse.into())),
-			If(ansi, SetAttributes(Attribute::Bold.into())),
-			Print("  "),
-			Print(s.replacen("{name}", &self.name, 1)),
-			Print("  "),
-			If(ansi, SetAttributes(Attribute::Reset.into())),
-			Print("\n\n"),
+		writef!(
+			io::stdout(),
+			"\n{}{}{} {} {}{}\n\n",
+			If(ansi, SetSgr::Reverse),
+			If(ansi, SetSgr::Bold),
+			"  ",
+			s.replacen("{name}", &self.name, 1),
+			"  ",
+			If(ansi, SetSgr::Reset),
 		)?;
 		Ok(())
 	}

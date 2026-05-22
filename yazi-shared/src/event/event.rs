@@ -1,4 +1,3 @@
-use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 use yazi_shim::cell::RoCell;
 
@@ -11,12 +10,8 @@ static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
 pub enum Event {
 	Call(ActionCow),
 	Seq(Vec<ActionCow>),
+	Term(yazi_term::event::Event),
 	Render(bool),
-	Key(KeyEvent),
-	Mouse(MouseEvent),
-	Resize,
-	Focus,
-	Paste(String),
 }
 
 impl Event {

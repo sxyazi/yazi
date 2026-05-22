@@ -1,12 +1,12 @@
 use std::{borrow::Cow, ops::Range};
 
 use anyhow::Result;
-use crossterm::cursor::SetCursorStyle;
 use tokio::sync::mpsc;
 use yazi_config::YAZI;
 use yazi_macro::act;
 use yazi_shared::Ids;
 use yazi_shim::path::CROSS_SEPARATOR;
+use yazi_term::CursorStyle;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
 use crate::{CLIPBOARD, input::{InputEvent, InputOpt}};
@@ -99,7 +99,7 @@ impl Input {
 		if let Some(tx) = self.tx.as_ref().filter(|_| self.completion) {
 			tx.send(InputEvent::Trigger(
 				self.partition().0.to_owned(),
-				Some(self.ticket.current()).filter(|_| !force),
+				(!force).then_some(self.ticket.current()),
 			))
 			.ok();
 		}
@@ -121,16 +121,16 @@ impl Input {
 
 	pub fn cursor(&self) -> u16 { self.snap().width(self.snap().offset..self.snap().cursor) }
 
-	pub fn cursor_shape(&self) -> SetCursorStyle {
+	pub fn cursor_shape(&self) -> CursorStyle {
 		use InputMode as M;
 
 		match self.mode() {
-			M::Normal if YAZI.input.cursor_blink => SetCursorStyle::BlinkingBlock,
-			M::Normal if !YAZI.input.cursor_blink => SetCursorStyle::SteadyBlock,
-			M::Insert if YAZI.input.cursor_blink => SetCursorStyle::BlinkingBar,
-			M::Insert if !YAZI.input.cursor_blink => SetCursorStyle::SteadyBar,
-			M::Replace if YAZI.input.cursor_blink => SetCursorStyle::BlinkingUnderScore,
-			M::Replace if !YAZI.input.cursor_blink => SetCursorStyle::SteadyUnderScore,
+			M::Normal if YAZI.input.cursor_blink => CursorStyle::BlinkingBlock,
+			M::Normal if !YAZI.input.cursor_blink => CursorStyle::SteadyBlock,
+			M::Insert if YAZI.input.cursor_blink => CursorStyle::BlinkingBar,
+			M::Insert if !YAZI.input.cursor_blink => CursorStyle::SteadyBar,
+			M::Replace if YAZI.input.cursor_blink => CursorStyle::BlinkingUnderline,
+			M::Replace if !YAZI.input.cursor_blink => CursorStyle::SteadyUnderline,
 			M::Normal | M::Insert | M::Replace => unreachable!(),
 		}
 	}

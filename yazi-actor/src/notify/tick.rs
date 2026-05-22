@@ -3,11 +3,11 @@ use std::time::Duration;
 use anyhow::Result;
 use ratatui::layout::Rect;
 use yazi_core::notify::Notify;
-use yazi_emulator::Dimension;
 use yazi_macro::{render, render_partial, succ};
 use yazi_parser::notify::TickForm;
 use yazi_proxy::NotifyProxy;
 use yazi_shared::data::Data;
+use yazi_term::{Dimension, TERM};
 
 use crate::{Actor, Ctx};
 
@@ -21,8 +21,8 @@ impl Actor for Tick {
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		cx.notify.ticker.take().map(|h| h.abort());
 
-		let Dimension { rows, columns, .. } = Dimension::available();
-		let area = Notify::available(Rect { x: 0, y: 0, width: columns, height: rows });
+		let Dimension { rows, cols, .. } = TERM.dimension();
+		let area = Notify::available(Rect { x: 0, y: 0, width: cols, height: rows });
 
 		let limit = cx.notify.limit(area);
 		if limit == 0 {

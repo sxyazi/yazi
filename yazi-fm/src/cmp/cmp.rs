@@ -3,8 +3,8 @@ use std::path::MAIN_SEPARATOR_STR;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
 use yazi_config::{THEME, popup::{Offset, Position}};
 use yazi_core::Core;
-use yazi_emulator::Dimension;
 use yazi_shared::strand::StrandLike;
+use yazi_term::TERM;
 
 pub(crate) struct Cmp<'a> {
 	core: &'a Core,
@@ -38,7 +38,7 @@ impl Widget for Cmp<'_> {
 			.collect();
 
 		let input_area = self.core.mgr.area(self.core.input.position);
-		let mut area = Position::sticky(Dimension::available().into(), input_area, Offset {
+		let mut area = Position::sticky(TERM.dimension(), input_area, Offset {
 			x:      1,
 			y:      0,
 			width:  input_area.width.saturating_sub(2),

@@ -1,12 +1,12 @@
 use std::sync::atomic::Ordering;
 
 use anyhow::Result;
-use crossterm::event::{KeyEvent, MouseEvent};
 use tracing::warn;
 use yazi_actor::Ctx;
 use yazi_config::keymap::Key;
 use yazi_macro::{act, emit};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
+use yazi_term::event::{Event as TermEvent, KeyEvent, MouseEvent};
 use yazi_widgets::input::InputMode;
 
 use crate::{Executor, Router, app::App};
@@ -23,11 +23,12 @@ impl<'a> Dispatcher<'a> {
 			Event::Call(action) => Ok(self.dispatch_call(action)),
 			Event::Seq(actions) => Ok(self.dispatch_seq(actions)),
 			Event::Render(partial) => self.dispatch_render(partial),
-			Event::Key(key) => self.dispatch_key(key),
-			Event::Mouse(mouse) => self.dispatch_mouse(mouse),
-			Event::Resize => self.dispatch_resize(),
-			Event::Focus => self.dispatch_focus(),
-			Event::Paste(str) => self.dispatch_paste(str),
+			Event::Term(TermEvent::Key(key)) => self.dispatch_key(key),
+			Event::Term(TermEvent::Mouse(mouse)) => self.dispatch_mouse(mouse),
+			Event::Term(TermEvent::Resize(_)) => self.dispatch_resize(),
+			Event::Term(TermEvent::FocusIn) => self.dispatch_focus(),
+			Event::Term(TermEvent::FocusOut) => Ok(()),
+			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
 		};
 
 		if let Err(e) = &result {

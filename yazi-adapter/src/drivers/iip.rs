@@ -2,11 +2,11 @@ use std::{fmt::Write, io::Write as ioWrite, path::PathBuf};
 
 use anyhow::Result;
 use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
-use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
 use yazi_emulator::{CLOSE, Emulator, START};
+use yazi_term::sequence::MoveTo;
 
 use crate::{Image, adapter::Adapter};
 
@@ -30,7 +30,7 @@ impl Iip {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
 			for y in area.top()..area.bottom() {
-				queue!(w, MoveTo(area.x, y))?;
+				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
 			Ok(())

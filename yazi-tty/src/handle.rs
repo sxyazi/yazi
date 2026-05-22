@@ -1,18 +1,20 @@
-use std::{io::{Error, ErrorKind, Read, Write}, ptr, time::Duration};
+use std::{io::{Error, Read, Write}, ptr, time::Duration};
 
 use tracing::error;
 
+#[derive(Debug)]
 pub struct Handle {
 	#[cfg(unix)]
-	inner:           std::os::fd::RawFd,
+	inner: std::os::fd::RawFd,
 	#[cfg(windows)]
-	inner:           std::os::windows::io::RawHandle,
-	close:           bool,
-	#[cfg(windows)]
-	out_utf8:        bool,
-	#[cfg(windows)]
-	incomplete_utf8: super::IncompleteUtf8,
+	inner: std::os::windows::io::RawHandle,
+	close: bool,
 }
+
+// Windows HANDLEs are kernel object references and it is safe to use them in
+// any threads.
+#[cfg(windows)]
+unsafe impl Send for Handle {}
 
 impl Drop for Handle {
 	fn drop(&mut self) {
@@ -49,19 +51,21 @@ impl Read for Handle {
 	fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
 		#[cfg(unix)]
 		{
-			use std::os::{fd::IntoRawFd, unix::io::FromRawFd};
-			let mut f = unsafe { std::fs::File::from_raw_fd(self.inner) };
-			let result = f.read(buf);
-			_ = f.into_raw_fd();
-			result
+			match unsafe { libc::read(self.inner, buf.as_mut_ptr() as *mut _, buf.len()) } {
+				-1 => Err(Error::last_os_error()),
+				n => Ok(n as usize),
+			}
 		}
 		#[cfg(windows)]
 		{
-			use std::os::windows::io::{FromRawHandle, IntoRawHandle};
-			let mut f = unsafe { std::fs::File::from_raw_handle(self.inner) };
-			let result = f.read(buf);
-			_ = f.into_raw_handle();
-			result
+			use windows_sys::Win32::Storage::FileSystem::ReadFile;
+			use yazi_shim::bool_ok;
+
+			let mut len = 0;
+			bool_ok(unsafe {
+				ReadFile(self.inner, buf.as_mut_ptr(), buf.len() as u32, &mut len, ptr::null_mut())
+			})?;
+			Ok(len as usize)
 		}
 	}
 }
@@ -70,27 +74,37 @@ impl Write for Handle {
 	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
 		#[cfg(unix)]
 		{
-			use std::os::{fd::IntoRawFd, unix::io::FromRawFd};
-			let mut f = unsafe { std::fs::File::from_raw_fd(self.inner) };
-			let result = f.write(buf);
-			_ = f.into_raw_fd();
-			result
+			match unsafe { libc::write(self.inner, buf.as_ptr() as *const _, buf.len()) } {
+				-1 => Err(Error::last_os_error()),
+				n => Ok(n as usize),
+			}
 		}
 		#[cfg(windows)]
 		{
-			use std::os::windows::io::{FromRawHandle, IntoRawHandle};
-			if self.out_utf8 {
-				let mut f = unsafe { std::fs::File::from_raw_handle(self.inner) };
-				let result = f.write(buf);
-				_ = f.into_raw_handle();
-				result
-			} else {
-				super::write_console_utf16(buf, &mut self.incomplete_utf8, self.inner)
-			}
+			use windows_sys::Win32::Storage::FileSystem::WriteFile;
+			use yazi_shim::bool_ok;
+
+			let mut len = 0;
+			bool_ok(unsafe {
+				WriteFile(self.inner, buf.as_ptr(), buf.len() as u32, &mut len, ptr::null_mut())
+			})?;
+			Ok(len as usize)
 		}
 	}
 
 	fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+}
+
+#[cfg(unix)]
+impl std::os::fd::AsFd for Handle {
+	fn as_fd(&self) -> std::os::fd::BorrowedFd<'_> {
+		unsafe { std::os::fd::BorrowedFd::borrow_raw(self.inner) }
+	}
+}
+
+#[cfg(unix)]
+impl std::os::fd::AsRawFd for Handle {
+	fn as_raw_fd(&self) -> std::os::fd::RawFd { self.inner }
 }
 
 #[cfg(unix)]
@@ -99,6 +113,11 @@ impl std::os::fd::IntoRawFd for Handle {
 		self.close = false;
 		self.inner
 	}
+}
+
+#[cfg(windows)]
+impl std::os::windows::io::AsRawHandle for Handle {
+	fn as_raw_handle(&self) -> std::os::windows::io::RawHandle { self.inner }
 }
 
 #[cfg(windows)]
@@ -111,7 +130,7 @@ impl std::os::windows::io::IntoRawHandle for Handle {
 
 #[cfg(unix)]
 impl Handle {
-	pub(super) fn new(out: bool) -> Self {
+	pub fn new(out: bool) -> Self {
 		use std::{fs::OpenOptions, os::fd::IntoRawFd};
 
 		use libc::{STDIN_FILENO, STDOUT_FILENO};
@@ -150,15 +169,6 @@ impl Handle {
 		}
 	}
 
-	pub(super) fn read_u8(&mut self) -> std::io::Result<u8> {
-		let mut b = 0;
-		match unsafe { libc::read(self.inner, &mut b as *mut _ as *mut _, 1) } {
-			-1 => Err(Error::last_os_error()),
-			0 => Err(Error::from(ErrorKind::UnexpectedEof)),
-			_ => Ok(b),
-		}
-	}
-
 	pub fn try_clone(&self) -> std::io::Result<Self> {
 		match unsafe { libc::dup(self.inner) } {
 			-1 => Err(Error::last_os_error()),
@@ -169,10 +179,10 @@ impl Handle {
 
 #[cfg(windows)]
 impl Handle {
-	pub(super) fn new(out: bool) -> Self {
+	pub fn new(out: bool) -> Self {
 		use std::{io::{Error, stdin, stdout}, os::windows::io::AsRawHandle};
 
-		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Globalization::CP_UTF8, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}, System::Console::GetConsoleOutputCP};
+		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
 
 		let name: Vec<u16> = if out { "CONOUT$\0" } else { "CONIN$\0" }.encode_utf16().collect();
 		let result = unsafe {
@@ -188,12 +198,7 @@ impl Handle {
 		};
 
 		if result != INVALID_HANDLE_VALUE {
-			return Self {
-				inner:           result,
-				close:           true,
-				out_utf8:        unsafe { GetConsoleOutputCP() } == CP_UTF8,
-				incomplete_utf8: Default::default(),
-			};
+			return Self { inner: result, close: true };
 		}
 
 		error!(
@@ -202,10 +207,8 @@ impl Handle {
 			Error::last_os_error()
 		);
 		Self {
-			inner:           if out { stdout().as_raw_handle() } else { stdin().as_raw_handle() },
-			close:           false,
-			out_utf8:        unsafe { GetConsoleOutputCP() } == CP_UTF8,
-			incomplete_utf8: Default::default(),
+			inner: if out { stdout().as_raw_handle() } else { stdin().as_raw_handle() },
+			close: false,
 		}
 	}
 
@@ -218,21 +221,6 @@ impl Handle {
 			WAIT_OBJECT_0 => Ok(true),
 			_ => Ok(false),
 		}
-	}
-
-	pub(super) fn read_u8(&mut self) -> std::io::Result<u8> {
-		use windows_sys::Win32::Storage::FileSystem::ReadFile;
-
-		let mut buf = 0;
-		let mut bytes = 0;
-		let success = unsafe { ReadFile(self.inner, &mut buf, 1, &mut bytes, ptr::null_mut()) };
-
-		if success == 0 {
-			return Err(Error::last_os_error());
-		} else if bytes == 0 {
-			return Err(Error::from(ErrorKind::UnexpectedEof));
-		}
-		Ok(buf)
 	}
 
 	pub fn try_clone(&self) -> std::io::Result<Self> {
@@ -252,15 +240,6 @@ impl Handle {
 			)
 		};
 
-		if status == 0 {
-			Err(Error::last_os_error())
-		} else {
-			Ok(Self {
-				inner:           handle,
-				close:           true,
-				out_utf8:        self.out_utf8,
-				incomplete_utf8: Default::default(),
-			})
-		}
+		if status == 0 { Err(Error::last_os_error()) } else { Ok(Self { inner: handle, close: true }) }
 	}
 }

@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use bitflags::bitflags;
-use crossterm::event::MouseEventKind;
 use serde::{Deserialize, Serialize};
+use yazi_term::event::MouseEventKind;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -45,8 +45,8 @@ impl From<MouseEvents> for Vec<String> {
 	}
 }
 
-impl From<crossterm::event::MouseEventKind> for MouseEvents {
-	fn from(value: crossterm::event::MouseEventKind) -> Self {
+impl From<MouseEventKind> for MouseEvents {
+	fn from(value: MouseEventKind) -> Self {
 		match value {
 			MouseEventKind::Down(_) | MouseEventKind::Up(_) => Self::CLICK,
 			MouseEventKind::ScrollDown | MouseEventKind::ScrollUp => Self::SCROLL,

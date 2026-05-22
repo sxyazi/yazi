@@ -15,10 +15,10 @@ workspace = true
 [dependencies]
 yazi-macro = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shim  = { path = "../yazi-shim", version = "26.5.6" }
+yazi-term  = { path = "../yazi-term", version = "26.5.6" }
 
 # External dependencies
 anyhow           = { workspace = true }
-crossterm        = { workspace = true }
 dyn-clone        = { workspace = true }
 foldhash         = { workspace = true }
 futures          = { workspace = true }
@@ -41,6 +41,3 @@ uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61.2", features = [ "Win32_UI_Shell" ] }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

@@ -52,7 +52,7 @@ impl Watched {
 		let path = path.percent_decode(SchemeKind::Sftp).ok()?;
 		let path = PathBufDyn::from_components(
 			SchemeKind::Sftp,
-			Some(Component::RootDir).filter(|_| abs).into_iter().chain(path.components()),
+			abs.then_some(Component::RootDir).into_iter().chain(path.components()),
 		)
 		.ok()?;
 

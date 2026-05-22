@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::{act, succ};
 use yazi_shared::{Layer, data::Data, event::ActionCow};
@@ -33,7 +33,7 @@ impl<'a> Executor<'a> {
 
 	fn null(&mut self, _action: ActionCow) -> Result<Data> { succ!() }
 
-	fn app(&mut self, mut action: ActionCow) -> Result<Data> {
+	fn app(&mut self, action: ActionCow) -> Result<Data> {
 		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
 
 		macro_rules! on {
@@ -51,19 +51,12 @@ impl<'a> Executor<'a> {
 		on!(lua);
 		on!(deprecate);
 		on!(theme);
+		on!(stop);
 		on!(quit);
 
 		match &*action.name {
 			"resize" => act!(app:resize, cx, crate::Root::reflow as fn(_) -> _),
-			"resume" => act!(app:resume, cx, yazi_parser::app::ResumeForm {
-				tx: self.app.signals.tx.clone(),
-				reflow: crate::Root::reflow,
-				replier: action.take_replier().context("Missing replier in ResumeForm")?,
-			}),
-			"stop" => act!(app:stop, cx, yazi_parser::app::StopForm {
-				tx: self.app.signals.tx.clone(),
-				replier: action.take_replier().context("Missing replier in StopForm")?,
-			}),
+			"resume" => act!(app:resume, cx, crate::Root::reflow as fn(_) -> _),
 			_ => succ!(),
 		}
 	}

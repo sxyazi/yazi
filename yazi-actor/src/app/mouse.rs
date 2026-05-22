@@ -1,5 +1,4 @@
 use anyhow::Result;
-use crossterm::event::MouseEventKind;
 use mlua::{ObjectLike, Table};
 use tracing::error;
 use yazi_actor::lives::Lives;
@@ -8,6 +7,7 @@ use yazi_macro::succ;
 use yazi_parser::app::MouseForm;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
+use yazi_term::event::MouseEventKind;
 
 use crate::{Actor, Ctx};
 

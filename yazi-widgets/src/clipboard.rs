@@ -53,12 +53,13 @@ impl Clipboard {
 	pub async fn set(&self, s: impl AsRef<[u8]>) {
 		use std::process::Stdio;
 
-		use crossterm::execute;
 		use tokio::{io::AsyncWriteExt, process::Command};
+		use yazi_macro::writef;
+		use yazi_term::sequence::SetClipboard;
 		use yazi_tty::TTY;
 
 		s.as_ref().clone_into(&mut self.content.lock());
-		execute!(TTY.writer(), osc52::SetClipboard::new(s.as_ref())).ok();
+		writef!(TTY.writer(), "{}", SetClipboard::new(s.as_ref())).ok();
 
 		let all = [
 			("pbcopy", &[][..]),
@@ -101,27 +102,5 @@ impl Clipboard {
 		tokio::task::spawn_blocking(move || set_clipboard_string(&String::from_utf8_lossy(&b)))
 			.await
 			.ok();
-	}
-}
-
-#[cfg(unix)]
-mod osc52 {
-	use base64::{Engine, engine::general_purpose};
-
-	#[derive(Debug)]
-	pub struct SetClipboard {
-		content: String,
-	}
-
-	impl SetClipboard {
-		pub fn new(content: &[u8]) -> Self {
-			Self { content: general_purpose::STANDARD.encode(content) }
-		}
-	}
-
-	impl crossterm::Command for SetClipboard {
-		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
-			write!(f, "\x1b]52;c;{}\x1b\\", self.content)
-		}
 	}
 }

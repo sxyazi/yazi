@@ -5,13 +5,13 @@ use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_fs::{File, FilesOp, Splatter, provider::{Provider, local::Local}};
-use yazi_macro::succ;
+use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy};
-use yazi_shared::{data::Data, strand::Strand, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
-use yazi_term::YIELD_TO_SUBPROCESS;
+use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
 use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, provider};
 use yazi_watcher::WATCHER;
@@ -61,7 +61,7 @@ impl Actor for BulkCreate {
 
 impl BulkCreate {
 	async fn r#do(cwd: UrlBuf, todo: Vec<Entry<'_>>) -> Result<()> {
-		terminal_clear(TTY.writer())?;
+		writef!(TTY.writer(), "{EraseScreen}\n")?;
 		if todo.is_empty() {
 			return Ok(());
 		} else if !Self::ask_continue(&todo, None)? {
@@ -134,7 +134,7 @@ impl BulkCreate {
 
 	async fn output_failed(failed: Vec<(Entry<'_>, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
-		terminal_clear(&mut *stdout)?;
+		writeln!(stdout, "{EraseScreen}")?;
 
 		writeln!(stdout, "Failed to create:")?;
 		for (entry, err) in failed {
@@ -161,7 +161,7 @@ impl<'a> Entry<'a> {
 			None => (s, false),
 		};
 
-		Some(Self { path: path.into(), is_dir }).filter(|_| !path.is_empty())
+		(!path.is_empty()).then_some(Self { path: path.into(), is_dir })
 	}
 }
 

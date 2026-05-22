@@ -3,11 +3,11 @@ use std::{io::Write, path::PathBuf};
 
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
-use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
-use ratatui::layout::Rect;
+use ratatui::{layout::Rect, style::Color};
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_shim::cell::SyncCell;
+use yazi_term::sequence::{MoveTo, SetFg};
 
 use crate::{adapter::Adapter, image::Image};
 
@@ -334,7 +334,7 @@ impl Kgp {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
 			for y in area.top()..area.bottom() {
-				queue!(w, MoveTo(area.x, y))?;
+				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
 
@@ -385,10 +385,10 @@ impl Kgp {
 
 		let id = Self::image_id();
 		let (r, g, b) = ((id >> 16) & 0xff, (id >> 8) & 0xff, id & 0xff);
-		write!(buf, "\x1b[38;2;{r};{g};{b}m")?;
+		write!(buf, "{}", SetFg(Color::Rgb(r as u8, g as u8, b as u8)))?;
 
 		for y in 0..area.height {
-			write!(buf, "\x1b[{};{}H", area.y + y + 1, area.x + 1)?;
+			write!(buf, "{}", MoveTo(area.x, area.y + y))?;
 			for x in 0..area.width {
 				write!(buf, "\u{10EEEE}")?;
 				write!(buf, "{}", *DIACRITICS.get(y as usize).unwrap_or(&DIACRITICS[0]))?;

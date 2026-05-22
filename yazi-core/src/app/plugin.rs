@@ -99,7 +99,7 @@ impl Clone for Box<dyn PluginCallback> {
 	fn clone(&self) -> Self { dyn_clone::clone_box(&**self) }
 }
 
-impl fmt::Debug for dyn PluginCallback {
+impl Debug for dyn PluginCallback {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.debug_struct("PluginCallback").finish_non_exhaustive()
 	}

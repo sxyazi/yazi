@@ -21,6 +21,6 @@ impl Actor for Close {
 	}
 
 	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {
-		Some(SparkKind::KeyClose).filter(|_| cx.source().is_key())
+		cx.source().is_key().then_some(SparkKind::KeyClose)
 	}
 }

@@ -35,7 +35,7 @@ impl IntoLua for EmberCd<'_> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", Some(self.url).filter(|_| !self.dummy).map(yazi_binding::Url::new).into_lua(lua)?),
+				("url", (!self.dummy).then_some(self.url).map(yazi_binding::Url::new).into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

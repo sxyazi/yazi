@@ -2,9 +2,9 @@ use std::iter;
 
 use ratatui::layout::Rect;
 use yazi_config::popup::{Origin, Position};
-use yazi_emulator::Dimension;
 use yazi_fs::Splatable;
 use yazi_shared::url::{AsUrl, Url, UrlBuf};
+use yazi_term::TERM;
 use yazi_watcher::Watcher;
 
 use super::{Batcher, Mimetype, Tabs, Yanked};
@@ -35,7 +35,7 @@ impl Mgr {
 		if pos.origin == Origin::Hovered {
 			self.active().hovered_rect_based(pos)
 		} else {
-			pos.rect(Dimension::available().into())
+			pos.rect(TERM.dimension())
 		}
 	}
 

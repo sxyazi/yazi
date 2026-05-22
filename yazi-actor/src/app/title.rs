@@ -1,11 +1,11 @@
 use anyhow::Result;
-use crossterm::{execute, terminal::SetTitle};
 use yazi_actor::Ctx;
-use yazi_macro::succ;
+use yazi_macro::{succ, writef};
 use yazi_parser::{app::TitleForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
-use yazi_term::TermState;
+use yazi_term::sequence::SetTitle;
 use yazi_tty::TTY;
+use yazi_tui::RatermState;
 
 use crate::Actor;
 
@@ -18,9 +18,9 @@ impl Actor for Title {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let s = form.value.unwrap_or_else(|| format!("Yazi: {}", cx.tab().name()).into());
-		execute!(TTY.writer(), SetTitle(&s))?;
+		writef!(TTY.writer(), "{}", SetTitle(&s))?;
 
-		yazi_term::STATE.set(TermState { title: !s.is_empty(), ..yazi_term::STATE.get() });
+		yazi_tui::STATE.set(RatermState { title: !s.is_empty(), ..yazi_tui::STATE.get() });
 		succ!()
 	}
 

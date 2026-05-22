@@ -1,5 +1,5 @@
-use crossterm::terminal::WindowSize;
 use ratatui::layout::Rect;
+use yazi_term::Dimension;
 
 use super::{Offset, Origin};
 
@@ -12,15 +12,15 @@ pub struct Position {
 impl Position {
 	pub const fn new(origin: Origin, offset: Offset) -> Self { Self { origin, offset } }
 
-	pub fn rect(&self, WindowSize { columns, rows, .. }: WindowSize) -> Rect {
+	pub fn rect(&self, Dimension { cols, rows, .. }: Dimension) -> Rect {
 		use Origin::*;
 		let Offset { x, y, width, height } = self.offset;
 
-		let max_x = columns.saturating_sub(width);
+		let max_x = cols.saturating_sub(width);
 		let new_x = match self.origin {
 			TopLeft | BottomLeft => x.clamp(0, max_x as i16) as u16,
 			TopCenter | BottomCenter | Center => {
-				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x)
+				(cols / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x)
 			}
 			TopRight | BottomRight => max_x.saturating_add_signed(x).clamp(0, max_x),
 			Hovered => unreachable!(),
@@ -37,18 +37,18 @@ impl Position {
 		Rect {
 			x:      new_x,
 			y:      new_y,
-			width:  width.min(columns.saturating_sub(new_x)),
+			width:  width.min(cols.saturating_sub(new_x)),
 			height: height.min(rows.saturating_sub(new_y)),
 		}
 	}
 
-	pub fn sticky(WindowSize { columns, rows, .. }: WindowSize, base: Rect, offset: Offset) -> Rect {
+	pub fn sticky(Dimension { cols, rows, .. }: Dimension, base: Rect, offset: Offset) -> Rect {
 		let Offset { x, y, width, height } = offset;
 
 		let above =
 			base.y.saturating_add(base.height).saturating_add(height).saturating_add_signed(y) > rows;
 
-		let new_x = base.x.saturating_add_signed(x).clamp(0, columns.saturating_sub(width));
+		let new_x = base.x.saturating_add_signed(x).clamp(0, cols.saturating_sub(width));
 		let new_y = if above {
 			base.y.saturating_sub(height.saturating_sub(y.unsigned_abs()))
 		} else {
@@ -58,7 +58,7 @@ impl Position {
 		Rect {
 			x:      new_x,
 			y:      new_y,
-			width:  width.min(columns.saturating_sub(new_x)),
+			width:  width.min(cols.saturating_sub(new_x)),
 			height: height.min(rows.saturating_sub(new_y)),
 		}
 	}

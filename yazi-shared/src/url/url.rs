@@ -368,10 +368,10 @@ impl<'a> Url<'a> {
 			(U::Regular(_), U::Regular(_)) => Ok(prefix),
 			(U::Search { .. }, U::Search { .. }) => Ok(prefix),
 			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
-				Some(prefix).filter(|_| a == b).ok_or(Exotic)
+				(a == b).then_some(prefix).ok_or(Exotic)
 			}
 			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
-				Some(prefix).filter(|_| a == b).ok_or(Exotic)
+				(a == b).then_some(prefix).ok_or(Exotic)
 			}
 
 			// Both are local files
@@ -380,16 +380,16 @@ impl<'a> Url<'a> {
 
 			// Only the entry of archives is a local file
 			(U::Regular(_), U::Archive { .. }) => {
-				Some(prefix).filter(|_| base.uri().is_empty()).ok_or(NotPrefix)
+				base.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
 			(U::Search { .. }, U::Archive { .. }) => {
-				Some(prefix).filter(|_| base.uri().is_empty()).ok_or(NotPrefix)
+				base.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
 			(U::Archive { .. }, U::Regular(_)) => {
-				Some(prefix).filter(|_| self.uri().is_empty()).ok_or(NotPrefix)
+				self.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
 			(U::Archive { .. }, U::Search { .. }) => {
-				Some(prefix).filter(|_| self.uri().is_empty()).ok_or(NotPrefix)
+				self.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
 
 			// Independent virtual file space
@@ -414,10 +414,10 @@ impl<'a> Url<'a> {
 			(U::Regular(_), U::Regular(_)) => Ok(suffix),
 			(U::Search { .. }, U::Search { .. }) => Ok(suffix),
 			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
-				Some(suffix).filter(|_| a == b).ok_or(Exotic)
+				(a == b).then_some(suffix).ok_or(Exotic)
 			}
 			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
-				Some(suffix).filter(|_| a == b).ok_or(Exotic)
+				(a == b).then_some(suffix).ok_or(Exotic)
 			}
 
 			// Both are local files
@@ -426,16 +426,16 @@ impl<'a> Url<'a> {
 
 			// Only the entry of archives is a local file
 			(U::Regular(_), U::Archive { .. }) => {
-				Some(suffix).filter(|_| other.uri().is_empty()).ok_or(NotSuffix)
+				other.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
 			(U::Search { .. }, U::Archive { .. }) => {
-				Some(suffix).filter(|_| other.uri().is_empty()).ok_or(NotSuffix)
+				other.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
 			(U::Archive { .. }, U::Regular(_)) => {
-				Some(suffix).filter(|_| self.uri().is_empty()).ok_or(NotSuffix)
+				self.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
 			(U::Archive { .. }, U::Search { .. }) => {
-				Some(suffix).filter(|_| self.uri().is_empty()).ok_or(NotSuffix)
+				self.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
 
 			// Independent virtual file space

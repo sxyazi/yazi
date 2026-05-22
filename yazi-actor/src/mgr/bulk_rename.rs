@@ -1,7 +1,6 @@
 use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
-use crossterm::{execute, style::Print};
 use hashbrown::HashMap;
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
@@ -9,12 +8,12 @@ use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
-use yazi_macro::{err, succ};
+use yazi_macro::{err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy};
-use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, terminal_clear, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
-use yazi_term::YIELD_TO_SUBPROCESS;
+use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
 use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -100,11 +99,10 @@ impl BulkRename {
 		selected: Vec<UrlBuf>,
 		decision: Option<bool>,
 	) -> Result<()> {
-		terminal_clear(TTY.writer())?;
+		writef!(TTY.writer(), "{EraseScreen}\n")?;
 		if old.len() != new.len() {
 			#[rustfmt::skip]
-			let s = format!("Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len());
-			execute!(TTY.writer(), Print(s))?;
+			writef!(TTY.writer(), "Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len())?;
 
 			TTY.reader().read_exact(&mut [0])?;
 			return Ok(());
@@ -186,7 +184,7 @@ impl BulkRename {
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
-		terminal_clear(&mut *stdout)?;
+		writeln!(stdout, "{EraseScreen}")?;
 
 		writeln!(stdout, "Failed to rename:")?;
 		for (old, new, err) in failed {

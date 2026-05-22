@@ -1,4 +1,4 @@
-use yazi_term::Term;
+use yazi_tui::Raterm;
 
 pub(super) struct Panic;
 
@@ -8,10 +8,8 @@ impl Panic {
 
 		let hook = std::panic::take_hook();
 		std::panic::set_hook(Box::new(move |info| {
-			Term::goodbye(|| {
-				hook(info);
-				1
-			});
+			Raterm::stop();
+			hook(info);
 		}));
 	}
 }
