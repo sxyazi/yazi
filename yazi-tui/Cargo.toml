@@ -23,6 +23,5 @@ yazi-tty      = { path = "../yazi-tty", version = "26.5.9" }
 
 # External dependencies
 anyhow  = { workspace = true }
-tracing = { workspace = true }
 ratatui = { workspace = true }
 tokio   = { workspace = true }

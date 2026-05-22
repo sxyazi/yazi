@@ -65,7 +65,7 @@ regex               = "1.12.3"
 russh               = { version = "0.61.0", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
-serde_json          = "1.0.149"
+serde_json          = "1.0.150"
 serde_with          = "3.20.0"
 strum               = { version = "0.28.0", features = [ "derive" ] }
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
