@@ -11,11 +11,12 @@ sort_reverse 	 = false
 sort_dir_first = true
 sort_translit  = false
 sort_fallback  = "alphabetical"
-linemode       = "none"
-show_hidden    = false
-show_symlink   = true
-scrolloff      = 5
-mouse_events   = [ "click", "scroll", "drag" ]
+linemode                    = "none"
+show_hidden                 = false
+show_symlink                = true
+scrolloff                   = 5
+mouse_events                = [ "click", "scroll", "drag" ]
+mouse_double_click_delay    = 300
 
 [preview]
 wrap            = "no"

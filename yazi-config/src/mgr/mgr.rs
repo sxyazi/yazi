@@ -22,10 +22,11 @@ pub struct Mgr {
 	// Display
 	#[serde(deserialize_with = "deserialize_linemode")]
 	pub linemode:     ArcSwap<String>,
-	pub show_hidden:  SyncCell<bool>,
-	pub show_symlink: SyncCell<bool>,
-	pub scrolloff:    SyncCell<u8>,
-	pub mouse_events: SyncCell<MouseEvents>,
+	pub show_hidden:           SyncCell<bool>,
+	pub show_symlink:          SyncCell<bool>,
+	pub scrolloff:             SyncCell<u8>,
+	pub mouse_events:          SyncCell<MouseEvents>,
+	pub mouse_double_click_delay: SyncCell<u16>,
 }
 
 fn deserialize_linemode<'de, D>(deserializer: D) -> Result<ArcSwap<String>, D::Error>
