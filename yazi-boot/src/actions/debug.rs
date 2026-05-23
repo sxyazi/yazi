@@ -46,6 +46,7 @@ impl Actions {
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;
 		writeln!(s, "    WAYLAND_DISPLAY            : {:?}", env::var_os("WAYLAND_DISPLAY"))?;
 		writeln!(s, "    DISPLAY                    : {:?}", env::var_os("DISPLAY"))?;
+		writeln!(s, "    NIRI_SOCKET                : {:?}", env::var_os("NIRI_SOCKET"))?;
 		writeln!(s, "    SWAYSOCK                   : {:?}", env::var_os("SWAYSOCK"))?;
 		#[rustfmt::skip]
 		writeln!(s, "    HYPRLAND_INSTANCE_SIGNATURE: {:?}", env::var_os("HYPRLAND_INSTANCE_SIGNATURE"))?;

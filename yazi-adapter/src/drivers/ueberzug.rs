@@ -76,11 +76,12 @@ impl Ueberzug {
 		}
 	}
 
-	// Currently Überzug++'s Wayland output only supports Sway, Hyprland and Wayfire
-	// as it requires information from specific compositor socket directly.
+	// Currently Überzug++'s Wayland output only supports Niri, Sway, Hyprland and
+	// Wayfire as it requires information from specific compositor socket directly.
 	// These environment variables are from ueberzugpp src/canvas/wayland/config.cpp
 	pub(crate) fn supported_compositor() -> bool {
-		env_exists("SWAYSOCK")
+		env_exists("NIRI_SOCKET")
+			|| env_exists("SWAYSOCK")
 			|| env_exists("HYPRLAND_INSTANCE_SIGNATURE")
 			|| env_exists("WAYFIRE_SOCKET")
 	}
