@@ -1,4 +1,4 @@
-use std::{io::{self, Write}, ops::Deref};
+use std::{io::{self, Write}, ops::Deref, time::Duration};
 
 use anyhow::Result;
 use ratatui::{CompletedFrame, Frame, Terminal, buffer::Buffer, layout::Rect};
@@ -63,7 +63,15 @@ impl Raterm {
 
 		let mut term = Self {
 			inner:       Terminal::new(RatermBackend::new(TTY.writer()))?,
-			stream:      EventStream::from(&*TERM),
+			stream:      {
+				if TMUX.get() {
+					// tmux passthrough can deliver terminal query replies out of order.
+					// Keep them out of EventStream, where DCS/CSI payload bytes
+					// such as `r`, `f`, or `z` are indistinguishable from keys.
+					let _ = TTY.drain_until_quiet(Duration::from_millis(1000), Duration::from_millis(100));
+				}
+				EventStream::from(&*TERM)
+			},
 			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};

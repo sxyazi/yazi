@@ -58,4 +58,32 @@ impl Tty {
 		let result = read();
 		(buf, result)
 	}
+
+	pub fn drain_until_quiet(&self, timeout: Duration, quiet: Duration) -> std::io::Result<usize> {
+		let mut drained = 0;
+		let until = Instant::now() + timeout;
+		let mut stdin = self.stdin.lock();
+
+		while Instant::now() < until {
+			match stdin.poll(quiet) {
+				Ok(true) => {}
+				Ok(false) => break,
+				Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+				Err(e) => return Err(e),
+			}
+
+			let mut b = [0u8];
+			loop {
+				match stdin.read_exact(&mut b) {
+					Ok(()) => {
+						drained += 1;
+						break;
+					}
+					Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+					Err(e) => return Err(e),
+				}
+			}
+		}
+		Ok(drained)
+	}
 }
