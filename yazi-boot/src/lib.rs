@@ -8,8 +8,12 @@ use yazi_shim::cell::RoCell;
 pub static ARGS: RoCell<Args> = RoCell::new();
 pub static BOOT: RoCell<Boot> = RoCell::new();
 
-pub fn init() {
+pub fn preflight() {
 	ARGS.with(<_>::parse);
+	actions::Actions::act_early(&ARGS);
+}
+
+pub fn init() {
 	BOOT.init(<_>::from(&*ARGS));
 
 	actions::Actions::act(&ARGS);

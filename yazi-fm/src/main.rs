@@ -14,6 +14,8 @@ async fn main() -> anyhow::Result<()> {
 	Logs::start()?;
 	_ = fdlimit::raise_fd_limit();
 
+	yazi_boot::preflight();
+
 	yazi_tty::init();
 
 	yazi_term::init()?;
