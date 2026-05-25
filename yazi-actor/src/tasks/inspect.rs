@@ -4,12 +4,11 @@ use anyhow::Result;
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_binding::Permit;
-use yazi_term::TERM;
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_scheduler::AppProxy;
 use yazi_shared::data::Data;
-use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
+use yazi_term::{TERM, YIELD_TO_SUBPROCESS, sequence::EraseScreen};
 use yazi_tty::TTY;
 
 use crate::{Actor, Ctx};
