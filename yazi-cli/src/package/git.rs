@@ -8,11 +8,11 @@ pub(super) struct Git;
 
 impl Git {
 	pub(super) async fn clone(url: &str, path: &Path) -> Result<()> {
-		Self::exec(|c| c.args(["clone", url]).arg(path)).await
+		Self::exec(|c| c.args(["clone", "--no-tags", url]).arg(path)).await
 	}
 
 	pub(super) async fn fetch(path: &Path) -> Result<()> {
-		Self::exec(|c| c.arg("fetch").current_dir(path)).await
+		Self::exec(|c| c.args(["fetch", "--no-tags"]).current_dir(path)).await
 	}
 
 	pub(super) async fn checkout(path: &Path, rev: &str) -> Result<()> {
