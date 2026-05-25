@@ -4,9 +4,10 @@ use anyhow::Result;
 use tracing::warn;
 use yazi_actor::Ctx;
 use yazi_config::keymap::Key;
-use yazi_macro::{act, emit};
+use yazi_macro::{act, emit, writef};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
-use yazi_term::event::{Event as TermEvent, KeyEvent, MouseEvent};
+use yazi_term::{event::{Event as TermEvent, KeyEvent, MouseEvent}, sequence::{ConfirmDrag, ConfirmDrop, FinishDrop, PresentDrag, PresentDragIcon, StartDrag, StartDrop}};
+use yazi_tty::TTY;
 use yazi_widgets::input::InputMode;
 
 use crate::{Executor, Router, app::App};
@@ -29,6 +30,53 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::FocusIn) => self.dispatch_focus(),
 			Event::Term(TermEvent::FocusOut) => Ok(()),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
+			Event::Term(TermEvent::Dnd(dnd)) => {
+				match dnd {
+					yazi_term::event::DndEvent::DragOffer(event) => {
+						tracing::debug!("DragOffer: {event:?}");
+						// writef!(
+						// 	TTY.writer(),
+						// 	"{}{}{}{StartDrag}",
+						// 	ConfirmDrag::Either(&["text/uri-list"]),
+						// 	PresentDrag(0, b"file:///tmp/cspell.json\r\n"),
+						// 	PresentDragIcon { format: 0, width: 6, height: 1, opacity: 0,
+						// payload: b"drag" }, )
+						// .ok();
+					}
+					yazi_term::event::DndEvent::DragAccept(event) => {
+						tracing::debug!("DragAccept: {event:?}");
+					}
+					yazi_term::event::DndEvent::DragChange(event) => {
+						tracing::debug!("DragChange: {event:?}");
+					}
+					yazi_term::event::DndEvent::DragLand => {
+						tracing::debug!("DragLand");
+					}
+					yazi_term::event::DndEvent::DragEnd(event) => {
+						tracing::debug!("DragEnd: {event:?}");
+					}
+					yazi_term::event::DndEvent::DragSend(event) => {
+						tracing::debug!("DragSend: {event:?}");
+					}
+
+					yazi_term::event::DndEvent::DropEnter(event) => {
+						tracing::debug!("DropEnter: {event:?}");
+						writef!(TTY.writer(), "{}", ConfirmDrop::Copy(&["text/uri-list"])).ok();
+					}
+					yazi_term::event::DndEvent::DropLeave => {
+						tracing::debug!("DropLeave");
+					}
+					yazi_term::event::DndEvent::DropReady(event) => {
+						tracing::debug!("DropReady: {event:?}");
+						writef!(TTY.writer(), "{}", StartDrop(1)).ok();
+					}
+					yazi_term::event::DndEvent::DropData(event) => {
+						tracing::debug!("DropData: {event:?}");
+						writef!(TTY.writer(), "{}", FinishDrop::Copy).ok();
+					}
+				}
+				Ok(())
+			}
 		};
 
 		if let Err(e) = &result {

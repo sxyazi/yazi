@@ -24,6 +24,7 @@ bitflags    = { workspace = true }
 futures     = { workspace = true }
 parking_lot = { workspace = true }
 ratatui     = { workspace = true }
+strum       = { workspace = true }
 thiserror   = { workspace = true }
 tokio       = { workspace = true }
 
