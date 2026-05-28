@@ -11,6 +11,7 @@ pub enum Spark<'a> {
 	AppAcceptPayload(yazi_dds::Payload<'a>),
 	AppBootstrap(crate::VoidForm),
 	AppDeprecate(crate::app::DeprecateForm),
+	AppDnd(crate::app::DndForm),
 	AppFocus(crate::VoidForm),
 	AppLua(crate::app::LuaForm),
 	AppMouse(crate::app::MouseForm),
@@ -199,6 +200,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppAcceptPayload(b) => b.into_lua(lua),
 			Self::AppBootstrap(b) => b.into_lua(lua),
 			Self::AppDeprecate(b) => b.into_lua(lua),
+			Self::AppDnd(b) => b.into_lua(lua),
 			Self::AppFocus(b) => b.into_lua(lua),
 			Self::AppLua(b) => b.into_lua(lua),
 			Self::AppMouse(b) => b.into_lua(lua),
@@ -376,6 +378,7 @@ try_from_spark!(
 // App
 try_from_spark!(crate::ArrowForm, mgr:arrow, mgr:tab_swap);
 try_from_spark!(crate::app::DeprecateForm, app:deprecate);
+try_from_spark!(crate::app::DndForm, app:dnd);
 try_from_spark!(crate::app::LuaForm, app:lua);
 try_from_spark!(crate::app::MouseForm, app:mouse);
 try_from_spark!(crate::app::PluginForm, app:plugin, app:plugin_do);

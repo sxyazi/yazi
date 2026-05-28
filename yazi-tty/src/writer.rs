@@ -1,4 +1,4 @@
-use std::{fmt::{self, Debug}, io::{self, BufWriter, Write}, ops::Deref};
+use std::{fmt::{self, Debug}, io::{self, BufWriter}, ops::Deref};
 
 use parking_lot::Mutex;
 
@@ -21,12 +21,6 @@ impl io::Write for TtyWriter<'_> {
 	fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.0.lock().write(buf) }
 
 	fn flush(&mut self) -> io::Result<()> { self.0.lock().flush() }
-}
-
-impl fmt::Write for TtyWriter<'_> {
-	fn write_str(&mut self, s: &str) -> fmt::Result {
-		self.0.lock().write_all(s.as_bytes()).map_err(|_| fmt::Error)
-	}
 }
 
 #[cfg(unix)]

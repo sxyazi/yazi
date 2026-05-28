@@ -1,6 +1,9 @@
 use std::{fmt::{self, Display}, str};
 
-use base64::{Engine, engine::general_purpose};
+use base64::Engine;
+use yazi_shim::BASE64_SANE;
+
+use super::traits::Mimelist;
 
 /// Enable drag support: `OSC 72 ; t=o:x=1 ; machine id ST`
 pub struct EnableDrag<'a>(pub &'a str);
@@ -12,11 +15,11 @@ impl Display for EnableDrag<'_> {
 }
 
 /// Enable drop support: `OSC 72 ; t=a ; MIME list ST`
-pub struct EnableDrop<'a>(pub &'a [&'a str]);
+pub struct EnableDrop<M>(pub M);
 
-impl Display for EnableDrop<'_> {
+impl<M: Mimelist> Display for EnableDrop<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "\x1b]72;t=a;{}\x1b\\", ListDndMimes(self.0))
+		write!(f, "\x1b]72;t=a;{}\x1b\\", ListDndMimes(self.0.clone()))
 	}
 }
 
@@ -35,35 +38,35 @@ impl Display for DisableDrop {
 }
 
 /// Confirm drag: `OSC 72 ; t=o:o=operation ST`
-pub enum ConfirmDrag<'a> {
-	Copy(&'a [&'a str]),
-	Move(&'a [&'a str]),
-	Either(&'a [&'a str]),
+pub enum ConfirmDrag<M> {
+	Copy(M),
+	Move(M),
+	Either(M),
 }
 
-impl Display for ConfirmDrag<'_> {
+impl<M: Mimelist> Display for ConfirmDrag<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::Copy(mimes) => write!(f, "\x1b]72;t=o:o=1;{}\x1b\\", ListDndMimes(mimes)),
-			Self::Move(mimes) => write!(f, "\x1b]72;t=o:o=2;{}\x1b\\", ListDndMimes(mimes)),
-			Self::Either(mimes) => write!(f, "\x1b]72;t=o:o=3;{}\x1b\\", ListDndMimes(mimes)),
+			Self::Copy(mimes) => write!(f, "\x1b]72;t=o:o=1;{}\x1b\\", ListDndMimes(mimes.clone())),
+			Self::Move(mimes) => write!(f, "\x1b]72;t=o:o=2;{}\x1b\\", ListDndMimes(mimes.clone())),
+			Self::Either(mimes) => write!(f, "\x1b]72;t=o:o=3;{}\x1b\\", ListDndMimes(mimes.clone())),
 		}
 	}
 }
 
 /// Confirm dropped data: `OSC 72 ; t=m:o=O ; MIME list ST`
-pub enum ConfirmDrop<'a> {
+pub enum ConfirmDrop<M> {
 	Reject,
-	Copy(&'a [&'a str]),
-	Move(&'a [&'a str]),
+	Copy(M),
+	Move(M),
 }
 
-impl Display for ConfirmDrop<'_> {
+impl<M: Mimelist> Display for ConfirmDrop<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Reject => write!(f, "\x1b]72;t=m:o=0\x1b\\"),
-			Self::Copy(mimes) => write!(f, "\x1b]72;t=m:o=1;{}\x1b\\", ListDndMimes(mimes)),
-			Self::Move(mimes) => write!(f, "\x1b]72;t=m:o=2;{}\x1b\\", ListDndMimes(mimes)),
+			Self::Copy(mimes) => write!(f, "\x1b]72;t=m:o=1;{}\x1b\\", ListDndMimes(mimes.clone())),
+			Self::Move(mimes) => write!(f, "\x1b]72;t=m:o=2;{}\x1b\\", ListDndMimes(mimes.clone())),
 		}
 	}
 }
@@ -89,7 +92,7 @@ pub struct PresentDrag<'a>(pub u8, pub &'a [u8]);
 
 impl Display for PresentDrag<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let b64 = general_purpose::STANDARD_NO_PAD.encode(self.1).into_bytes();
+		let b64 = BASE64_SANE.encode(self.1).into_bytes();
 		let chunks = b64.len().div_ceil(4096);
 
 		for (i, chunk) in b64.chunks(4096).enumerate() {
@@ -112,12 +115,12 @@ pub struct PresentDragIcon<'a> {
 	pub opacity: u16,
 	pub width:   u32,
 	pub height:  u32,
-	pub payload: &'a [u8],
+	pub data:    &'a [u8],
 }
 
 impl Display for PresentDragIcon<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let b64 = general_purpose::STANDARD_NO_PAD.encode(self.payload).into_bytes();
+		let b64 = BASE64_SANE.encode(self.data).into_bytes();
 		let chunks = b64.len().div_ceil(4096);
 
 		for (i, chunk) in b64.chunks(4096).enumerate() {
@@ -155,11 +158,11 @@ impl Display for FinishDrop {
 }
 
 /// Write MIME types separated by spaces.
-struct ListDndMimes<'a>(&'a [&'a str]);
+struct ListDndMimes<M>(pub M);
 
-impl Display for ListDndMimes<'_> {
+impl<M: Mimelist> Display for ListDndMimes<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		for (i, &m) in self.0.iter().enumerate() {
+		for (i, m) in self.0.clone().into_iter().enumerate() {
 			if i != 0 {
 				write!(f, " ")?;
 			}

@@ -18,6 +18,7 @@ impl From<yazi_term::event::MouseEvent> for MouseEvent {
 
 impl UserData for MouseEvent {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field("type", "legacy");
 		fields.add_field_method_get("x", |_, me| Ok(me.column));
 		fields.add_field_method_get("y", |_, me| Ok(me.row));
 		fields.add_field_method_get("is_left", |_, me| {
