@@ -26,12 +26,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pname = "yazi";
   inherit version src;
 
-  cargoLock = {
-    lockFile = "${src}/Cargo.lock";
-    #outputHashes = {
-    #  "mlua-0.10.0" = "sha256-Xg6/jc+UP8tbJJ6x1sbAgt8ZHt051xEBBcjmikQqYlw=";
-    #};
-  };
+  cargoHash = "sha256-EnxhbS+FO3MPKmNkh30x2Wwyf23CgZ/6B+guAwRq32Y=";
 
   env = {
     YAZI_GEN_COMPLETIONS = true;
