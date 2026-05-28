@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use mlua::{Function, Lua};
 use twox_hash::XxHash3_128;
+use yazi_shim::RFC_3986;
 use yazi_widgets::CLIPBOARD;
 
 use super::Utils;
@@ -42,6 +43,16 @@ impl Utils {
 			match percent_encoding::percent_decode(&b).into() {
 				Cow::Borrowed(_) => Ok(s),
 				Cow::Owned(b) => lua.create_external_string(b),
+			}
+		})
+	}
+
+	pub(super) fn percent_encode(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, s: mlua::String| {
+			let b = s.as_bytes();
+			match percent_encoding::percent_encode(&b, RFC_3986).into() {
+				Cow::Borrowed(_) => Ok(s),
+				Cow::Owned(s) => lua.create_external_string(s),
 			}
 		})
 	}

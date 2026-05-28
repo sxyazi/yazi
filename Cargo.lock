@@ -6140,6 +6140,7 @@ dependencies = [
  "base64",
  "hashbrown 0.17.1",
  "mlua",
+ "percent-encoding",
  "ratatui",
  "serde",
  "thiserror 2.0.18",

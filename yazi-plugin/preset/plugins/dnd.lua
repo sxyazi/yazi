@@ -3,10 +3,10 @@ local M = {}
 function M.selected_uri_list()
 	local paths = {}
 	for _, u in pairs(cx.active.selected) do
-		paths[#paths + 1] = string.format("file://%s", u.path)
+		paths[#paths + 1] = "file://" .. ya.percent_encode(tostring(u.path))
 	end
 	if #paths == 0 and cx.active.current.hovered then
-		paths[1] = string.format("file://%s", cx.active.current.hovered.path)
+		paths[1] = "file://" .. ya.percent_encode(tostring(cx.active.current.hovered.path))
 	end
 	return paths
 end

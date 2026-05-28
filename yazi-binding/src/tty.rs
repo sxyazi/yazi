@@ -47,7 +47,7 @@ impl Tty {
 				})
 			}
 			b"FinishDrop" => match &*t.raw_get::<BorrowedBytes>("type")? {
-				b"copy" => write!(w, "{}", FinishDrop::Move),
+				b"copy" => write!(w, "{}", FinishDrop::Copy),
 				b"move" => write!(w, "{}", FinishDrop::Move),
 				_ => return Err("invalid FinishDrop type".into_lua_err()),
 			},
