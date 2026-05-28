@@ -1,11 +1,9 @@
-#[cfg(unix)]
-use std::os::unix::fs::DirBuilderExt;
-use std::{fs::DirBuilder, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::Xdg;
+use yazi_fs::{Xdg, create_owned_dir_blocking};
 use yazi_shared::{SStr, timestamp_us};
 use yazi_shim::toml::DeserializeOverHook;
 
@@ -51,12 +49,7 @@ impl Preview {
 
 impl DeserializeOverHook for Preview {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
-		#[cfg(unix)]
-		let result = DirBuilder::new().mode(0o700).recursive(true).create(&self.cache_dir);
-		#[cfg(not(unix))]
-		let result = DirBuilder::new().recursive(true).create(&self.cache_dir);
-
-		result
+		create_owned_dir_blocking(&self.cache_dir)
 			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
 			.map_err(serde::de::Error::custom)?;
 

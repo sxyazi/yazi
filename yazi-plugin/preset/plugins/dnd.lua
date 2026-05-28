@@ -12,6 +12,7 @@ function M.selected_uri_list()
 end
 
 function M.cut_uri_list(list)
+	cx.tasks.behavior:reset()
 	for line in list:gmatch("[^\r\n]+") do
 		if line:sub(1, 7) ~= "file://" then
 			goto continue

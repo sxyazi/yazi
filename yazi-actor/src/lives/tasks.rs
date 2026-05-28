@@ -4,13 +4,14 @@ use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields, Value};
 use yazi_binding::{SER_OPT, cached_field};
 
 use super::{Lives, PtrCell};
-use crate::lives::TaskSnap;
+use crate::lives::{Behavior, TaskSnap};
 
 pub(super) struct Tasks {
 	inner: PtrCell<yazi_core::tasks::Tasks>,
 
-	v_snaps:   Option<Value>,
-	v_summary: Option<Value>,
+	v_behavior: Option<Value>,
+	v_snaps:    Option<Value>,
+	v_summary:  Option<Value>,
 }
 
 impl Deref for Tasks {
@@ -24,8 +25,9 @@ impl Tasks {
 		Lives::scoped_userdata(Self {
 			inner: inner.into(),
 
-			v_snaps:   None,
-			v_summary: None,
+			v_behavior: None,
+			v_snaps:    None,
+			v_summary:  None,
 		})
 	}
 }
@@ -33,6 +35,8 @@ impl Tasks {
 impl UserData for Tasks {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("cursor", |_, me| Ok(me.cursor));
+
+		cached_field!(fields, behavior, |_, me| Behavior::make(&me.scheduler.behavior));
 
 		cached_field!(fields, snaps, |lua, me| {
 			let tbl = lua.create_table_with_capacity(me.snaps.len(), 0)?;

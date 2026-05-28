@@ -13,7 +13,7 @@ function Tip:layout()
 		:direction(ui.Layout.VERTICAL)
 		:constraints({
 			ui.Constraint.Fill(1),
-			ui.Constraint.Length(1),
+			ui.Constraint.Length(3),
 			ui.Constraint.Fill(1),
 		})
 		:split(self._area)
@@ -24,6 +24,7 @@ function Tip:reflow() return {} end
 function Tip:redraw()
 	return {
 		ui.Clear(self._chunks[2]),
-		ui.Text(self._text):area(self._chunks[2]):align(ui.Align.CENTER):fg("black"):bg("yellow"):bold(),
+		ui.Text(""):area(self._chunks[2]):align(ui.Align.CENTER):bg("yellow"),
+		ui.Text(self._text):area(self._chunks[2]:pad(ui.Pad.xy(1, 1))):align(ui.Align.CENTER):fg("black"):bold(),
 	}
 end
