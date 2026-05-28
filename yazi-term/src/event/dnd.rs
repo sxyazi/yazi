@@ -2,7 +2,7 @@ use std::str::SplitWhitespace;
 
 use base64::Engine;
 use strum::{FromRepr, IntoStaticStr};
-use yazi_shim::base64::BASE64_SANE;
+use yazi_shim::BASE64_SANE;
 
 use crate::parser::StateOsc72;
 

@@ -1,7 +1,7 @@
 use std::{fmt::{self, Display}, str};
 
 use base64::Engine;
-use yazi_shim::base64::BASE64_SANE;
+use yazi_shim::BASE64_SANE;
 
 use super::traits::Mimelist;
 
