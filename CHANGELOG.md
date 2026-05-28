@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- Drag and drop ([#4005])
 - Bulk create ([#3793])
 - Image preview with Überzug++ on Niri ([#3990])
 
@@ -1729,3 +1730,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3943]: https://github.com/sxyazi/yazi/pull/3943
 [#3989]: https://github.com/sxyazi/yazi/pull/3989
 [#3990]: https://github.com/sxyazi/yazi/pull/3990
+[#4005]: https://github.com/sxyazi/yazi/pull/4005

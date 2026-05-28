@@ -1,7 +1,10 @@
-use mlua::{ExternalError, Table, Value};
+use std::marker::PhantomData;
 
-use crate::toml::DeserializeOverWith;
+use mlua::{ExternalError, FromLua, Lua, Table, Value};
 
+use crate::{mlua::SequenceIter, toml::DeserializeOverWith};
+
+// --- DeserializeOverLua
 pub trait DeserializeOverLua: DeserializeOverWith {
 	fn deserialize_over_lua(self, table: &Table) -> mlua::Result<Self> {
 		let de = mlua::serde::Deserializer::new(Value::Table(table.clone()));
@@ -10,3 +13,19 @@ pub trait DeserializeOverLua: DeserializeOverWith {
 }
 
 impl<T: DeserializeOverWith> DeserializeOverLua for T {}
+
+// --- IntoLua
+pub trait LuaTableExt {
+	fn sequence_iter<V: FromLua>(&self, lua: &Lua) -> SequenceIter<V>;
+}
+
+impl LuaTableExt for Table {
+	fn sequence_iter<V: FromLua>(&self, lua: &Lua) -> SequenceIter<V> {
+		SequenceIter {
+			lua:      lua.clone(),
+			table:    self.clone(),
+			index:    0,
+			_phantom: PhantomData,
+		}
+	}
+}

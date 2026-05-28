@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, SER_OPT, Url, config::{OpenRules, Opener}, elements::Wrap};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, SER_OPT, Tty, Url, config::{OpenRules, Opener}, elements::Wrap};
 use yazi_boot::ARGS;
 use yazi_config::YAZI;
 
@@ -7,6 +7,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"args" => args().into_lua(lua)?,
+			b"tty" => Tty.into_lua(lua)?,
 			b"term" => super::term().into_lua(lua)?,
 			b"mgr" => mgr().into_lua(lua)?,
 			b"open" => open().into_lua(lua)?,

@@ -72,9 +72,9 @@ impl TaskIn for PluginInEntry {
 	}
 }
 
-impl PluginInEntry {
-	pub(crate) fn into_job(self) -> EntryJob {
-		EntryJob { id: self.id, args: self.args, plugin: self.plugin }
+impl From<PluginInEntry> for EntryJob {
+	fn from(value: PluginInEntry) -> Self {
+		Self { id: value.id, args: value.args, plugin: value.plugin }
 	}
 }
 

@@ -23,7 +23,7 @@ dyn-clone        = { workspace = true }
 foldhash         = { workspace = true }
 futures          = { workspace = true }
 hashbrown        = { workspace = true }
-memchr           = "2.8.0"
+memchr           = "2.8.1"
 ordered-float    = { workspace = true }
 parking_lot      = { workspace = true }
 paste            = { workspace = true }

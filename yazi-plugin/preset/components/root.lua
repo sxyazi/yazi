@@ -1,6 +1,7 @@
 Root = {
 	_id = "root",
 	_dragging = nil,
+	_dropping = nil,
 }
 
 function Root:new(area)
@@ -50,7 +51,7 @@ end
 
 -- Mouse events
 function Root:click(event, up)
-	local c = Root._dragging or ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
+	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
 	Root._dragging = not up and c or nil
 
 	if tostring(cx.layer) == "mgr" then
@@ -83,4 +84,17 @@ function Root:drag(event)
 
 	local c = Root._dragging
 	return c and c.drag and c:drag(event)
+end
+
+function Root:drop(event)
+	local d = Root._dropping
+	local c = event.x and ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow()) or d
+	if d and d.drop and d._id ~= c._id then
+		d:drop { type = "leave" }
+	end
+
+	Root._dropping = c
+	if tostring(cx.layer) == "mgr" then
+		return c and c.drop and c:drop(event)
+	end
 end

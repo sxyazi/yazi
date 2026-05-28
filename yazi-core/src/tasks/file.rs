@@ -1,5 +1,6 @@
 use indexmap::IndexSet;
 use tracing::debug;
+use yazi_scheduler::file::FileInCut;
 use yazi_shared::url::{UrlBuf, UrlBufCov, UrlLike};
 
 use super::Tasks;
@@ -17,7 +18,7 @@ impl Tasks {
 			if force && *u == to {
 				debug!("file_cut: same file, skip {to:?}");
 			} else {
-				self.scheduler.file_cut(u.0.clone(), to, force);
+				self.scheduler.file_cut(FileInCut::new(u.0.clone(), to, force));
 			}
 		}
 	}

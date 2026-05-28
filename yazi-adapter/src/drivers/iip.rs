@@ -1,4 +1,4 @@
-use std::{fmt::Write, io::Write as ioWrite, path::PathBuf};
+use std::{fmt::Write as _, io::Write as _, path::PathBuf};
 
 use anyhow::Result;
 use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
