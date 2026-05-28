@@ -28,13 +28,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
-    # Use static.crates.io (CDN) instead of crates.io/api to avoid the 1 req/sec
-    # rate limit which currently returns intermittent 403s.
-    # See https://github.com/rust-lang/crates.io/issues/13482
-    # This override can be removed once nixpkgs includes NixOS/nixpkgs#524985.
-    extraRegistries = {
-      "https://github.com/rust-lang/crates.io-index" = "https://static.crates.io/crates";
-    };
   };
 
   env = {
