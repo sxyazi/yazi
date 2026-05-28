@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use mlua::{Function, Lua};
 use twox_hash::XxHash3_128;
 use yazi_widgets::CLIPBOARD;
@@ -30,6 +32,16 @@ impl Utils {
 				Ok(None)
 			} else {
 				Some(lua.create_external_string(CLIPBOARD.get().await)).transpose()
+			}
+		})
+	}
+
+	pub(super) fn percent_decode(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, s: mlua::String| {
+			let b = s.as_bytes();
+			match percent_encoding::percent_decode(&b).into() {
+				Cow::Borrowed(_) => Ok(s),
+				Cow::Owned(b) => lua.create_external_string(b),
 			}
 		})
 	}

@@ -1,10 +1,12 @@
 use std::borrow::Cow;
 
-use yazi_scheduler::{TaskIn, plugin::PluginInEntry};
+use yazi_scheduler::{TaskIn, file::FileInCut, plugin::PluginInEntry};
 use yazi_shared::{Id, SStr};
 
 #[derive(Clone, Debug)]
 pub enum TaskOpt {
+	Cut(FileInCut),
+
 	Plugin(PluginInEntry),
 }
 
@@ -13,12 +15,16 @@ impl TaskIn for TaskOpt {
 
 	fn id(&self) -> Id {
 		match self {
+			Self::Cut(r#in) => r#in.id(),
+
 			Self::Plugin(r#in) => r#in.id(),
 		}
 	}
 
 	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
+			Self::Cut(r#in) => _ = r#in.set_id(id),
+
 			Self::Plugin(r#in) => _ = r#in.set_id(id),
 		}
 		self
@@ -26,12 +32,16 @@ impl TaskIn for TaskOpt {
 
 	fn title(&self) -> Cow<'_, str> {
 		match self {
+			Self::Cut(r#in) => r#in.title(),
+
 			Self::Plugin(r#in) => r#in.title(),
 		}
 	}
 
 	fn set_title(&mut self, title: impl Into<SStr>) -> &mut Self {
 		match self {
+			Self::Cut(r#in) => _ = r#in.set_title(title),
+
 			Self::Plugin(r#in) => _ = r#in.set_title(title),
 		}
 		self

@@ -65,17 +65,16 @@ impl Scheduler {
 		}
 	}
 
-	pub fn file_cut(&self, from: UrlBuf, to: UrlBuf, force: bool) {
-		let follow = !from.scheme().covariant(to.scheme());
-		let mut r#in =
-			FileInCut { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0, drop: None };
+	pub fn file_cut(&self, mut r#in: FileInCut) -> Id {
+		let id = self.add(&mut r#in, |t| t.id);
 
-		self.add(&mut r#in, |_| ());
 		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
 			self.ops.out(r#in.id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
 		} else {
 			self.file.submit(r#in, LOW);
 		}
+
+		id
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {

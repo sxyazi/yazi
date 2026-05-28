@@ -59,6 +59,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	lua.load(preset!("components/tab")).set_name("tab.lua").exec()?;
 	lua.load(preset!("components/tabs")).set_name("tabs.lua").exec()?;
 	lua.load(preset!("components/tasks")).set_name("tasks.lua").exec()?;
+	lua.load(preset!("components/tip")).set_name("tip.lua").exec()?;
 
 	Ok(())
 }

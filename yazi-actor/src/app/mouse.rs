@@ -25,25 +25,25 @@ impl Actor for Mouse {
 		let area = yazi_binding::elements::Rect::from(size);
 
 		let result = Lives::scope(cx.core, move || {
-			let root = runtime_scope!(LUA, "root", {
-				LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)
-			})?;
+			runtime_scope!(LUA, "root", {
+				let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
-			match event.kind {
-				MouseEventKind::Down(_) => root.call_method("click", (event, false))?,
-				MouseEventKind::Up(_) => root.call_method("click", (event, true))?,
+				match event.kind {
+					MouseEventKind::Down(_) => root.call_method("click", (event, false))?,
+					MouseEventKind::Up(_) => root.call_method("click", (event, true))?,
 
-				MouseEventKind::ScrollDown => root.call_method("scroll", (event, 1))?,
-				MouseEventKind::ScrollUp => root.call_method("scroll", (event, -1))?,
+					MouseEventKind::ScrollDown => root.call_method("scroll", (event, 1))?,
+					MouseEventKind::ScrollUp => root.call_method("scroll", (event, -1))?,
 
-				MouseEventKind::ScrollRight => root.call_method("touch", (event, 1))?,
-				MouseEventKind::ScrollLeft => root.call_method("touch", (event, -1))?,
+					MouseEventKind::ScrollRight => root.call_method("touch", (event, 1))?,
+					MouseEventKind::ScrollLeft => root.call_method("touch", (event, -1))?,
 
-				MouseEventKind::Moved => root.call_method("move", event)?,
-				MouseEventKind::Drag(_) => root.call_method("drag", event)?,
-			}
+					MouseEventKind::Moved => root.call_method("move", event)?,
+					MouseEventKind::Drag(_) => root.call_method("drag", event)?,
+				}
 
-			Ok(())
+				Ok(())
+			})
 		});
 
 		if let Err(ref e) = result {

@@ -21,6 +21,7 @@ yazi-macro = { path = "../yazi-macro", version = "26.5.6" }
 
 # External dependencies
 arc-swap      = { workspace = true }
+base64        = { workspace = true }
 hashbrown     = { workspace = true }
 mlua          = { workspace = true }
 ratatui       = { workspace = true }

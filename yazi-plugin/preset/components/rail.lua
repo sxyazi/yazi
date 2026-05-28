@@ -24,6 +24,10 @@ function Rail:scroll(event, step) end
 function Rail:touch(event, step) end
 
 function Rail:drag(event)
+	if event.type ~= "legacy" then
+		return
+	end
+
 	local c, x, parent, current, preview = self._chunks, 0, 0, 0, 0
 	if self._id == "rail-left" then
 		x = math.min(event.x, c[2].right - 2)

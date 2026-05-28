@@ -66,6 +66,7 @@ pub fn compose(
 			b"hash" => Utils::hash(lua)?,
 			b"quote" => Utils::quote(lua)?,
 			b"clipboard" => Utils::clipboard(lua)?,
+			b"percent_decode" => Utils::percent_decode(lua)?,
 
 			// Time
 			b"time" => Utils::time(lua)?,
