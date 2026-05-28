@@ -1,4 +1,5 @@
-use tokio::io;
+use std::{io, path::Path};
+
 use yazi_shared::url::{Component, UrlBuf, UrlLike};
 
 #[inline]
@@ -73,4 +74,48 @@ fn test_max_common_root() {
 	assert(&["/a/b/c", "/a/b/d"], "/a/b");
 	assert(&["/aa/bb/cc", "/aa/dd/ee"], "/aa");
 	assert(&["/aa/bb/cc", "/aa/bb/cc/dd/ee", "/aa/bb/cc/ff"], "/aa/bb");
+}
+
+pub async fn create_owned_dir(p: &Path) -> io::Result<()> {
+	let p = p.to_owned();
+	tokio::task::spawn_blocking(move || create_owned_dir_blocking(&p)).await?
+}
+
+pub fn create_owned_dir_blocking(p: &Path) -> io::Result<()> {
+	#[cfg(unix)]
+	{
+		use std::{fs::{DirBuilder, OpenOptions}, mem, os::unix::{fs::{DirBuilderExt, OpenOptionsExt}, io::AsRawFd}};
+
+		use libc::{O_DIRECTORY, O_NOFOLLOW};
+		use uzers::Users;
+		use yazi_shared::USERS_CACHE;
+
+		DirBuilder::new().mode(0o700).recursive(true).create(p)?;
+		let dir = OpenOptions::new().read(true).custom_flags(O_DIRECTORY | O_NOFOLLOW).open(p)?;
+
+		let mut stat: libc::stat = unsafe { mem::zeroed() };
+		if unsafe { libc::fstat(dir.as_raw_fd(), &mut stat) } != 0 {
+			return Err(io::Error::last_os_error());
+		}
+
+		// Reject directories not owned by the current user.
+		let uid = USERS_CACHE.get_current_uid();
+		if stat.st_uid != uid {
+			return Err(io::Error::new(
+				io::ErrorKind::PermissionDenied,
+				format!("directory {:?} is owned by uid {} but current uid is {}", p, stat.st_uid, uid),
+			));
+		}
+
+		// Enforce mode 0o700 via the fd.
+		if unsafe { libc::fchmod(dir.as_raw_fd(), 0o700) } != 0 {
+			return Err(io::Error::last_os_error());
+		}
+
+		Ok(())
+	}
+	#[cfg(not(unix))]
+	{
+		std::fs::DirBuilder::new().recursive(true).create(p)
+	}
 }
