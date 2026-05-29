@@ -40,3 +40,6 @@ tracing       = { workspace = true }
 
 [build-dependencies]
 vergen-gitcl = { version = "9.1.0", features = [ "build" ] }
+
+[target.'cfg(windows)'.dependencies]
+uds_windows = "1.2.1"

@@ -26,6 +26,7 @@ impl Deref for State {
 
 impl State {
 	pub fn set(&self, kind: &str, sender: u64, body: &str) -> bool {
+		debug_assert!(kind.starts_with('@'));
 		let Some(inner) = &mut *self.inner.write() else { return false };
 
 		if body == "null" {
@@ -84,7 +85,7 @@ impl State {
 			let line = mem::take(&mut buf);
 			let mut parts = line.splitn(4, ',');
 
-			let Some(kind) = parts.next() else { continue };
+			let Some(kind) = parts.next().filter(|s| s.starts_with('@')) else { continue };
 			let Some(_) = parts.next() else { continue };
 			inner.insert(kind.to_owned(), line);
 		}
