@@ -48,8 +48,8 @@ impl Client {
 							writer.write_all(payload.as_bytes()).await.ok(); // Retry once
 						}
 					}
-					Ok(next) = lines.next_line() => {
-						let Some(line) = next else {
+					next = lines.next_line() => {
+						let Ok(Some(line)) = next else {
 							(lines, writer) = Self::reconnect(&mut server).await;
 							continue;
 						};

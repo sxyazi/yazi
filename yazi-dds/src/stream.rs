@@ -48,9 +48,12 @@ impl Stream {
 	#[cfg(windows)]
 	pub(super) async fn bind() -> io::Result<ServerListener> {
 		let p = Self::socket_file().await?;
-
 		Local::regular(&p).remove_file().await.ok();
-		Ok(WinUnixListener(uds_windows::UnixListener::bind(p)?))
+
+		let listener = uds_windows::UnixListener::bind(p)?;
+		listener.set_nonblocking(true)?;
+
+		Ok(WinUnixListener(listener))
 	}
 
 	async fn socket_file() -> io::Result<&'static PathBuf> {
@@ -75,9 +78,15 @@ impl WinUnixListener {
 	pub(super) async fn accept(
 		&self,
 	) -> io::Result<(tokio::net::TcpStream, uds_windows::SocketAddr)> {
-		let listener = self.0.try_clone()?;
-		let (stream, addr) = tokio::task::spawn_blocking(move || listener.accept()).await??;
-		Ok((Self::into_tokio(stream)?, addr))
+		loop {
+			match self.0.accept() {
+				Ok((stream, addr)) => return Ok((Self::into_tokio(stream)?, addr)),
+				Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
+					tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+				}
+				Err(e) => return Err(e),
+			}
+		}
 	}
 
 	fn into_tokio(uds: uds_windows::UnixStream) -> io::Result<tokio::net::TcpStream> {
