@@ -123,6 +123,7 @@ pub enum Spark<'a> {
 	InputEscape(crate::VoidForm),
 	InputForward(yazi_widgets::input::parser::ForwardOpt),
 	InputInsert(yazi_widgets::input::parser::InsertOpt),
+	InputHistory(yazi_widgets::input::parser::HistoryOpt),
 	InputKill(yazi_widgets::input::parser::KillOpt),
 	InputMove(yazi_widgets::input::parser::MoveOpt),
 	InputPaste(yazi_widgets::input::parser::PasteOpt),
@@ -312,6 +313,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::InputEscape(b) => b.into_lua(lua),
 			Self::InputForward(b) => b.into_lua(lua),
 			Self::InputInsert(b) => b.into_lua(lua),
+			Self::InputHistory(b) => b.into_lua(lua),
 			Self::InputKill(b) => b.into_lua(lua),
 			Self::InputMove(b) => b.into_lua(lua),
 			Self::InputPaste(b) => b.into_lua(lua),
@@ -450,6 +452,7 @@ try_from_spark!(crate::which::ActivateForm, which:activate);
 try_from_spark!(yazi_dds::Payload<'a>, app:accept_payload);
 try_from_spark!(yazi_widgets::input::InputOpt, input:show);
 try_from_spark!(yazi_widgets::input::parser::BackspaceOpt, input:backspace);
+try_from_spark!(yazi_widgets::input::parser::HistoryOpt, input:history);
 try_from_spark!(yazi_widgets::input::parser::BackwardOpt, input:backward);
 try_from_spark!(yazi_widgets::input::parser::CompleteOpt, input:complete);
 try_from_spark!(yazi_widgets::input::parser::DeleteOpt, input:delete);
