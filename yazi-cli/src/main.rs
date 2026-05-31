@@ -107,6 +107,7 @@ async fn run() -> anyhow::Result<()> {
 		}
 
 		Command::Cache(cmd) => {
+			yazi_tty::init();
 			yazi_config::init()?;
 
 			match cmd {
