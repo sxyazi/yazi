@@ -26,10 +26,10 @@ body:
     validations:
       required: true
   - type: textarea
-    id: debug
+    id: env
     attributes:
-      label: "`yazi --debug` output"
-      description: Please run `yazi --debug` and paste the debug information here.
+      label: "`ya env` output"
+      description: Run `ya env` and paste the environment information here.
       render: Shell
     validations:
       required: true
@@ -65,6 +65,6 @@ body:
       options:
         - label: I tried the [latest nightly build](https://yazi-rs.github.io/docs/installation#binaries), and the issue is still reproducible
           required: true
-        - label: I updated the debug information (`yazi --debug`) input box to the nightly that I tried
+        - label: I updated the environment information (`ya env`) field to the nightly that I tried
           required: true
         - label: I can reproduce it after disabling all custom configs/plugins (`mv ~/.config/yazi ~/.config/yazi-backup`)

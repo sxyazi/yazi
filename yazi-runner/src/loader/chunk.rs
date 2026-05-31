@@ -13,7 +13,7 @@ pub struct Chunk {
 
 impl Chunk {
 	pub fn compatible(&self) -> bool {
-		let s = yazi_boot::actions::Actions::version();
+		let s = yazi_version::version();
 		natsort(s.as_bytes(), self.since.as_bytes(), false) != std::cmp::Ordering::Less
 	}
 

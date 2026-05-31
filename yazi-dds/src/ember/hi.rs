@@ -22,13 +22,9 @@ impl<'a> EmberHi<'a> {
 	{
 		Self {
 			abilities: abilities.into_iter().map(Into::into).collect(),
-			version:   Self::version().into(),
+			version:   yazi_version::version().into(),
 		}
 		.into()
-	}
-
-	pub fn version() -> &'static str {
-		concat!(env!("CARGO_PKG_VERSION"), " ", env!("VERGEN_GIT_SHA"))
 	}
 }
 

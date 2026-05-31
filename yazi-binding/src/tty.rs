@@ -55,8 +55,8 @@ impl Tty {
 		};
 
 		match result {
-			Ok(()) => true.into_lua_multi(&lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+			Ok(()) => true.into_lua_multi(lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(lua),
 		}
 	}
 }

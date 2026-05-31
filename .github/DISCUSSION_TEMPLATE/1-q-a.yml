@@ -22,10 +22,10 @@ body:
     validations:
       required: true
   - type: textarea
-    id: debug
+    id: env
     attributes:
-      label: "`yazi --debug` output"
-      description: Please run `yazi --debug` and paste the debug information here.
+      label: "`ya env` output"
+      description: Run `ya env` and paste the environment information here.
       render: Shell
     validations:
       required: true

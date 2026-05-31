@@ -18,9 +18,9 @@ pub struct Args {
 	#[arg(long)]
 	pub chooser_file: Option<PathBuf>,
 
-	/// Clear the cache directory
+	/// Clear the cache directory (deprecated, use `ya cache clear`)
 	#[arg(long)]
-	pub clear_cache: bool,
+	pub clear_cache: bool, // TODO: remove
 
 	/// Use the specified client ID, must be a globally unique number
 	#[arg(long)]
@@ -32,9 +32,9 @@ pub struct Args {
 	#[arg(long)]
 	pub remote_events: Option<String>,
 
-	/// Print debug information
+	/// Print debug information (deprecated, use `ya env`)
 	#[arg(long)]
-	pub debug: bool,
+	pub debug: bool, // TODO: remove
 
 	/// Print version
 	#[arg(short = 'V', long)]

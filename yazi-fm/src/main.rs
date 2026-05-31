@@ -14,19 +14,19 @@ async fn main() -> anyhow::Result<()> {
 	Logs::start()?;
 	_ = fdlimit::raise_fd_limit();
 
-	yazi_tty::init();
-
-	yazi_term::init()?;
-
 	yazi_fs::init();
-
-	yazi_config::init()?;
 
 	yazi_vfs::init();
 
-	yazi_adapter::init()?;
+	yazi_tty::init();
+
+	yazi_config::init()?;
 
 	yazi_boot::init();
+
+	yazi_term::init()?;
+
+	yazi_adapter::init()?;
 
 	yazi_dds::init();
 
