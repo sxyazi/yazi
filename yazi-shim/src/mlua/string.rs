@@ -17,7 +17,7 @@ impl fmt::Display for ByteString {
 
 impl FromLua for ByteString {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(ByteString(mlua::String::from_lua(value, lua)?))
+		Ok(Self(mlua::String::from_lua(value, lua)?))
 	}
 }
 

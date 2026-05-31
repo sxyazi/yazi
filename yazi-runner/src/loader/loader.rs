@@ -170,7 +170,7 @@ impl Loader {
 		bail!(
 			"Plugin `{id}` requires at least Yazi {}, but your current version is Yazi {}.",
 			chunk.since,
-			yazi_boot::actions::Actions::version()
+			yazi_version::version_long()
 		);
 	}
 

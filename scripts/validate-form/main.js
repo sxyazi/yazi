@@ -13,7 +13,7 @@ function bugReportBody(creator, content, hash) {
 I noticed that you did not correctly follow the issue template. Please ensure that:
 
 - The bug can still be reproduced on the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
-- The debug information (\`yazi --debug\`) is updated for the newest nightly.
+- The environment info (\`ya env\`) is updated for the newest nightly.
 - The non-optional items in the checklist are checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
@@ -32,7 +32,7 @@ function featureRequestBody(creator, content) {
 I noticed that you did not correctly follow the issue template. Please ensure that:
 
 - The requested feature does not exist in the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
-- The debug information (\`yazi --debug\`) is updated for the newest nightly.
+- The environment info (\`ya env\`) is updated for the newest nightly.
 - The non-optional items in the checklist are checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.

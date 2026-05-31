@@ -104,16 +104,16 @@ pub enum KeyCode {
 impl KeyCode {
 	pub(crate) fn from_xterm_modifier(r#final: u8) -> Result<Self> {
 		Ok(match r#final {
-			b'A' => KeyCode::Up,
-			b'B' => KeyCode::Down,
-			b'C' => KeyCode::Right,
-			b'D' => KeyCode::Left,
-			b'F' => KeyCode::End,
-			b'H' => KeyCode::Home,
-			b'P' => KeyCode::Fn(1),
-			b'Q' => KeyCode::Fn(2),
-			b'R' => KeyCode::Fn(3),
-			b'S' => KeyCode::Fn(4),
+			b'A' => Self::Up,
+			b'B' => Self::Down,
+			b'C' => Self::Right,
+			b'D' => Self::Left,
+			b'F' => Self::End,
+			b'H' => Self::Home,
+			b'P' => Self::Fn(1),
+			b'Q' => Self::Fn(2),
+			b'R' => Self::Fn(3),
+			b'S' => Self::Fn(4),
 			_ => bail!(),
 		})
 	}

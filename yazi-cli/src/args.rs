@@ -32,6 +32,11 @@ pub(super) enum Command {
 	PubTo(CommandPubTo),
 	/// Subscribe to messages from all remote instances.
 	Sub(CommandSub),
+	/// Manage the cache.
+	#[command(subcommand)]
+	Cache(CommandCache),
+	/// Print environment and configuration information.
+	Env,
 }
 
 #[derive(clap::Args)]
@@ -152,6 +157,12 @@ pub(super) struct CommandSub {
 	/// Kind of messages to subscribe to, separated by commas if multiple.
 	#[arg(index = 1)]
 	pub(super) kinds: String,
+}
+
+#[derive(Subcommand)]
+pub(super) enum CommandCache {
+	/// Clear the cache directory.
+	Clear,
 }
 
 // --- Macros
