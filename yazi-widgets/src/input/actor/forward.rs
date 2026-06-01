@@ -1,8 +1,8 @@
 use anyhow::Result;
 use yazi_macro::act;
-use yazi_shared::{CharKind, data::Data};
+use yazi_shared::data::Data;
 
-use crate::input::{Input, op::InputOp, parser::ForwardOpt};
+use crate::input::{CharKind, Input, op::InputOp, parser::ForwardOpt};
 
 impl Input {
 	pub fn forward(&mut self, opt: ForwardOpt) -> Result<Data> {
@@ -16,9 +16,9 @@ impl Input {
 		for (i, c) in it {
 			let k = CharKind::new(c);
 			let b = if opt.end_of_word {
-				prev != CharKind::Space && prev.vary(k, opt.far) && i != 1
+				prev != CharKind::Space && prev.vary(k, opt.gait) && i != 1
 			} else {
-				k != CharKind::Space && k.vary(prev, opt.far)
+				k != CharKind::Space && k.vary(prev, opt.gait)
 			};
 			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
 				return act!(r#move, self, i as isize);

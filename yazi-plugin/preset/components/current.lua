@@ -86,7 +86,7 @@ function Current:drop(event)
 	if Current._dragging then
 		return
 	elseif event.type == "enter" then
-		rt.tty:queue("ConfirmDrop", { type = "move", mimes = { "text/uri-list" } })
+		rt.tty:queue("AgreeDrop", { type = "move", mimes = { "text/uri-list" } })
 	elseif event.type == "ready" then
 		rt.tty:queue("StartDrop", { idx = 1 })
 	elseif event.type == "arrive" then

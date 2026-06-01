@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
-use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, SizeCalculator, Url, UrlRef, deprecate};
+use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, SizeCalculator, Url, UrlRef};
 use yazi_config::Pattern;
 use yazi_fs::{mounts::PARTITIONS, provider::{Attrs, DirReader, FileHolder}};
 use yazi_shared::url::{UrlCow, UrlLike};
@@ -23,7 +23,6 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"remove" => remove(lua)?,
 			b"rename" => rename(lua)?,
 			b"unique" => unique(lua)?,
-			b"unique_name" => unique_name(lua)?,
 			b"write" => write(lua)?,
 			_ => return Ok(Value::Nil),
 		}
@@ -225,16 +224,6 @@ fn unique(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(u) => Url::new(u).into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
-		}
-	})
-}
-
-fn unique_name(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, url: UrlRef| async move {
-		deprecate!(lua, "`fs.unique_name()` is deprecated, use `fs.unique()` instead, in your {}\nSee #3677 for more details: https://github.com/sxyazi/yazi/pull/3677");
-		match yazi_vfs::unique_name(url.clone(), async { false }).await {
 			Ok(u) => Url::new(u).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
