@@ -37,14 +37,14 @@ impl Display for DisableDrop {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b]72;t=A\x1b\\") }
 }
 
-/// Confirm drag: `OSC 72 ; t=o:o=operation ST`
-pub enum ConfirmDrag<M> {
+/// Agree drag: `OSC 72 ; t=o:o=operation ST`
+pub enum AgreeDrag<M> {
 	Copy(M),
 	Move(M),
 	Either(M),
 }
 
-impl<M: Mimelist> Display for ConfirmDrag<M> {
+impl<M: Mimelist> Display for AgreeDrag<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Copy(mimes) => write!(f, "\x1b]72;t=o:o=1;{}\x1b\\", ListDndMimes(mimes.clone())),
@@ -54,14 +54,14 @@ impl<M: Mimelist> Display for ConfirmDrag<M> {
 	}
 }
 
-/// Confirm dropped data: `OSC 72 ; t=m:o=O ; MIME list ST`
-pub enum ConfirmDrop<M> {
+/// Agree drop: `OSC 72 ; t=m:o=O ; MIME list ST`
+pub enum AgreeDrop<M> {
 	Reject,
 	Copy(M),
 	Move(M),
 }
 
-impl<M: Mimelist> Display for ConfirmDrop<M> {
+impl<M: Mimelist> Display for AgreeDrop<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Reject => write!(f, "\x1b]72;t=m:o=0\x1b\\"),

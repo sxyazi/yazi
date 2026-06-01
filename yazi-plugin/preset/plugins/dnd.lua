@@ -35,7 +35,7 @@ function M.offer_uri_list()
 	end
 
 	local icon = string.format("%d selected file(s)", #list)
-	rt.tty:queue("ConfirmDrag", { type = "either", mimes = { "text/uri-list" } })
+	rt.tty:queue("AgreeDrag", { type = "either", mimes = { "text/uri-list" } })
 	rt.tty:queue("PresentDrag", { idx = 0, data = table.concat(list, "\r\n") })
 	rt.tty:queue("PresentDragIcon", { format = 0, opacity = 0, width = 6, height = 4, data = icon })
 	rt.tty:queue("StartDrag", {})

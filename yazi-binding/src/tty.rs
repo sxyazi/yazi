@@ -2,7 +2,7 @@ use std::io::Write;
 
 use mlua::{BorrowedBytes, ExternalError, IntoLuaMulti, Lua, MultiValue, Table, UserData, UserDataMethods};
 use yazi_shim::mlua::{ByteString, LuaTableExt};
-use yazi_term::sequence::{ConfirmDrag, ConfirmDrop, FinishDrop, PresentDrag, PresentDragIcon, StartDrag, StartDrop};
+use yazi_term::sequence::{AgreeDrag, AgreeDrop, FinishDrop, PresentDrag, PresentDragIcon, StartDrag, StartDrop};
 use yazi_tty::TTY;
 
 use crate::Error;
@@ -14,22 +14,22 @@ impl Tty {
 		let mut w = TTY.writer();
 
 		let result = match kind {
-			b"ConfirmDrag" => {
+			b"AgreeDrag" => {
 				let it = t.raw_get::<Table>("mimes")?.sequence_iter::<ByteString>(lua).flatten();
 				write!(w, "{}", match &*t.raw_get::<BorrowedBytes>("type")? {
-					b"copy" => ConfirmDrag::Copy(it),
-					b"move" => ConfirmDrag::Move(it),
-					b"either" => ConfirmDrag::Either(it),
-					_ => return Err("invalid ConfirmDrag type".into_lua_err()),
+					b"copy" => AgreeDrag::Copy(it),
+					b"move" => AgreeDrag::Move(it),
+					b"either" => AgreeDrag::Either(it),
+					_ => return Err("invalid AgreeDrag type".into_lua_err()),
 				})
 			}
-			b"ConfirmDrop" => {
+			b"AgreeDrop" => {
 				let it = t.raw_get::<Table>("mimes")?.sequence_iter::<ByteString>(lua).flatten();
 				write!(w, "{}", match &*t.raw_get::<BorrowedBytes>("type")? {
-					b"reject" => ConfirmDrop::Reject,
-					b"copy" => ConfirmDrop::Copy(it),
-					b"move" => ConfirmDrop::Move(it),
-					_ => return Err("invalid ConfirmDrop type".into_lua_err()),
+					b"reject" => AgreeDrop::Reject,
+					b"copy" => AgreeDrop::Copy(it),
+					b"move" => AgreeDrop::Move(it),
+					_ => return Err("invalid AgreeDrop type".into_lua_err()),
 				})
 			}
 			b"StartDrag" => write!(w, "{StartDrag}"),

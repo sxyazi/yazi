@@ -1,8 +1,8 @@
 use anyhow::Result;
-use yazi_macro::{act, succ};
-use yazi_shared::{CharKind, data::Data};
+use yazi_macro::act;
+use yazi_shared::data::Data;
 
-use crate::input::{Input, parser::BackwardOpt};
+use crate::input::{CharKind, Input, parser::BackwardOpt};
 
 impl Input {
 	pub fn backward(&mut self, opt: BackwardOpt) -> Result<Data> {
@@ -16,15 +16,12 @@ impl Input {
 		let mut prev = CharKind::new(it.next().unwrap().1);
 		for (i, c) in it {
 			let k = CharKind::new(c);
-			if prev != CharKind::Space && prev.vary(k, opt.far) {
+			if prev != CharKind::Space && prev.vary(k, opt.gait) {
 				return act!(r#move, self, -(i as isize));
 			}
 			prev = k;
 		}
 
-		if prev != CharKind::Space {
-			act!(r#move, self, -(snap.len() as isize))?;
-		}
-		succ!();
+		act!(r#move, self, -(snap.len() as isize))
 	}
 }
