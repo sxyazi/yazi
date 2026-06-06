@@ -2,6 +2,7 @@ mod actor;
 mod asset;
 mod confirm;
 mod context;
+mod data;
 mod event;
 mod fmt;
 mod fs;

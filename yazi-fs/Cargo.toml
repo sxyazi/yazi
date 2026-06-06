@@ -27,6 +27,7 @@ either           = { workspace = true }
 foldhash         = { workspace = true }
 hashbrown        = { workspace = true }
 libc             = { workspace = true }
+mlua             = { workspace = true }
 parking_lot      = { workspace = true }
 percent-encoding = { workspace = true }
 rand             = { workspace = true }

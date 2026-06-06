@@ -14,7 +14,7 @@ pub trait DeserializeOverLua: DeserializeOverWith {
 
 impl<T: DeserializeOverWith> DeserializeOverLua for T {}
 
-// --- IntoLua
+// --- LuaTableExt
 pub trait LuaTableExt {
 	fn sequence_iter<V: FromLua>(&self, lua: &Lua) -> SequenceIter<V>;
 }

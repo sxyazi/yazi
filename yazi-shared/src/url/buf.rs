@@ -2,6 +2,7 @@ use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Pat
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
+use yazi_macro::impl_data_any;
 
 use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::{Scheme, SchemeLike}, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
 
@@ -12,6 +13,8 @@ pub enum UrlBuf {
 	Archive { loc: LocBuf, domain: Symbol<str> },
 	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, domain: Symbol<str> },
 }
+
+impl_data_any!(UrlBuf);
 
 // FIXME: remove
 impl Default for UrlBuf {

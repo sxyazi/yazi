@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Drag and drop ([#4005])
 - Bulk create ([#3793])
 - Image preview with Überzug++ on Niri ([#3990])
+- New gait for input `backward` and `forward` actions ([#4012])
 
 ### Changed
 

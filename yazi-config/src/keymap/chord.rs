@@ -1,17 +1,19 @@
-use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
+use std::{borrow::Cow, hash::{Hash, Hasher}, sync::{Arc, OnceLock}};
 
 use regex::Regex;
 use serde::{Deserialize, Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
-use yazi_shared::{Layer, Source, event::Action};
+use yazi_shared::{Id, Layer, Source, event::Action};
 
-use super::Key;
-use crate::{Mixable, Platform};
+use super::{Key, ids::chord_id};
+use crate::{Mixable, Platform, keymap::Chords};
 
 static RE: OnceLock<Regex> = OnceLock::new();
 
-#[derive(Clone, Debug, Default, Deserialize)]
-pub struct Chord<const L: u8 = { Layer::App as u8 }> {
+#[derive(Debug, Default, Deserialize)]
+pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
+	#[serde(skip, default = "chord_id")]
+	pub id:    Id,
 	#[serde(deserialize_with = "deserialize_on")]
 	pub on:    Vec<Key>,
 	#[serde(deserialize_with = "deserialize_run::<L, _>")]
@@ -20,6 +22,18 @@ pub struct Chord<const L: u8 = { Layer::App as u8 }> {
 	pub desc:  String,
 	#[serde(default)]
 	pub r#for: Platform,
+}
+
+impl<const L: u8> Clone for Chord<L> {
+	fn clone(&self) -> Self {
+		Self {
+			id:    chord_id(),
+			on:    self.on.clone(),
+			run:   self.run.clone(),
+			desc:  self.desc.clone(),
+			r#for: self.r#for,
+		}
+	}
 }
 
 impl<const L: u8> PartialEq for Chord<L> {
@@ -33,6 +47,10 @@ impl<const L: u8> Hash for Chord<L> {
 }
 
 impl<const L: u8> Chord<L> {
+	pub fn as_erased<const M: u8>(self: &Arc<Self>) -> &Arc<Chord<M>> {
+		unsafe { &*(self as *const Arc<Chord<L>> as *const Arc<Chord<M>>) }
+	}
+
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	pub fn run(&self) -> String {
@@ -81,11 +99,11 @@ fn deserialize_run<'de, const L: u8, D>(deserializer: D) -> Result<Vec<Action>, 
 where
 	D: Deserializer<'de>,
 {
-	let mut actions: Vec<Action> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
-
 	let Some(layer) = Layer::from_repr(L) else {
 		return Err(de::Error::custom(format!("invalid keymap layer const: {L}")));
 	};
+
+	let mut actions: Vec<Action> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
 
 	for action in &mut actions {
 		action.source = Source::Key;
@@ -95,4 +113,55 @@ where
 	}
 
 	Ok(actions)
+}
+
+// --- Matcher
+#[derive(Default)]
+pub struct ChordMatcher {
+	pub id:  Id,
+	pub all: bool,
+}
+
+impl ChordMatcher {
+	pub fn matches(&self, chord: &Chord) -> bool {
+		if self.all {
+			true
+		} else if self.id != Id::ZERO {
+			chord.id == self.id
+		} else {
+			false
+		}
+	}
+}
+
+// --- Iter
+#[derive(Default)]
+pub struct ChordIter {
+	pub chords:  Arc<Vec<Arc<Chord>>>,
+	pub matcher: ChordMatcher,
+	pub offset:  usize,
+}
+
+impl From<&Chords> for ChordIter {
+	fn from(chords: &Chords) -> Self {
+		Self {
+			chords: chords.load_full(),
+			matcher: ChordMatcher { all: true, ..Default::default() },
+			..Default::default()
+		}
+	}
+}
+
+impl Iterator for ChordIter {
+	type Item = Arc<Chord>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		while let Some(chord) = self.chords.get(self.offset) {
+			self.offset += 1;
+			if self.matcher.matches(chord) {
+				return Some(chord.clone());
+			}
+		}
+		None
+	}
 }

@@ -28,6 +28,7 @@ bitflags   = { workspace = true }
 globset    = { workspace = true }
 hashbrown  = { workspace = true }
 indexmap   = { workspace = true }
+mlua       = { workspace = true }
 ratatui    = { workspace = true }
 regex      = { workspace = true }
 serde      = { workspace = true }

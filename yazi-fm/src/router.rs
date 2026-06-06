@@ -36,7 +36,8 @@ impl<'a> Router<'a> {
 	}
 
 	fn matches(&mut self, layer: Layer, key: Key) -> bool {
-		for chord @ Chord { on, .. } in KEYMAP.get(layer) {
+		for chord in &*KEYMAP.get(layer) {
+			let Chord { on, .. } = &**chord;
 			if on.is_empty() || on[0] != key {
 				continue;
 			}

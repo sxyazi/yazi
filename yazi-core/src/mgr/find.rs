@@ -1,5 +1,6 @@
 use anyhow::bail;
 use yazi_fs::FilterCase;
+use yazi_macro::impl_data_any;
 use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Clone, Debug)]
@@ -8,6 +9,8 @@ pub struct FindDoOpt {
 	pub prev:  bool,
 	pub case:  FilterCase,
 }
+
+impl_data_any!(FindDoOpt);
 
 impl TryFrom<ActionCow> for FindDoOpt {
 	type Error = anyhow::Error;

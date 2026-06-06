@@ -257,7 +257,7 @@ impl Data {
 
 	pub fn as_any<T: 'static>(&self) -> Option<&T> {
 		match self {
-			Self::Any(b) => (**b).as_any().downcast_ref::<T>(),
+			Self::Any(a) => a.downcast_ref::<T>(),
 			_ => None,
 		}
 	}
@@ -271,15 +271,15 @@ impl Data {
 
 	pub fn into_any<T: 'static>(self) -> Option<T> {
 		match self {
-			Self::Any(b) => b.into_any().downcast::<T>().ok().map(|b| *b),
+			Self::Any(a) => a.downcast::<T>().ok().map(|b| *b),
 			_ => None,
 		}
 	}
 
 	// FIXME: find a better name
 	pub fn into_any2<T: 'static>(self) -> Result<T> {
-		if let Self::Any(b) = self
-			&& let Ok(t) = b.into_any().downcast::<T>()
+		if let Self::Any(a) = self
+			&& let Ok(t) = a.downcast::<T>()
 		{
 			Ok(*t)
 		} else {

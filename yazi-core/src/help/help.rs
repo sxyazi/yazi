@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
@@ -12,7 +14,7 @@ use crate::help::HELP_MARGIN;
 pub struct Help {
 	pub visible:         bool,
 	pub layer:           Layer,
-	pub(super) bindings: Vec<&'static Chord>,
+	pub(super) bindings: Vec<Arc<Chord>>,
 
 	// Filter
 	pub keyword:   String,
@@ -51,10 +53,10 @@ impl Help {
 
 		if kw.is_empty() {
 			self.keyword = String::new();
-			self.bindings = KEYMAP.get(self.layer).iter().collect();
+			self.bindings = KEYMAP.get(self.layer).iter().cloned().collect();
 		} else if self.keyword != kw {
 			self.keyword = kw.to_owned();
-			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).collect();
+			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).cloned().collect();
 		}
 
 		render!(self.scroll(0));
@@ -73,7 +75,7 @@ impl Help {
 	}
 
 	// --- Bindings
-	pub fn window(&self) -> &[&Chord] {
+	pub fn window(&self) -> &[Arc<Chord>] {
 		let end = (self.offset + self.limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}

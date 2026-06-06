@@ -1,5 +1,6 @@
 use mlua::Table;
 use yazi_binding::{FileRef, elements::Renderable};
+use yazi_macro::impl_data_any;
 use yazi_shared::Id;
 
 #[derive(Clone, Debug)]
@@ -12,6 +13,8 @@ pub struct SpotLock {
 	pub skip: usize,
 	pub data: Vec<Renderable>,
 }
+
+impl_data_any!(SpotLock);
 
 impl TryFrom<Table> for SpotLock {
 	type Error = mlua::Error;

@@ -12,7 +12,7 @@ impl<'a> Help<'a> {
 	pub fn new(core: &'a Core) -> Self { Self { core } }
 
 	fn tips() -> String {
-		match KEYMAP.help.iter().find(|&c| c.run.iter().any(|c| c.name == "filter")) {
+		match KEYMAP.help.load().iter().find(|&c| c.run.iter().any(|a| a.name == "filter")) {
 			Some(c) => format!(" (Press `{}` to filter)", c.on()),
 			None => String::new(),
 		}

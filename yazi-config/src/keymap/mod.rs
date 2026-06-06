@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(chord cow key keymap rules);
+yazi_macro::mod_flat!(chord chords cow ids key keymap section);

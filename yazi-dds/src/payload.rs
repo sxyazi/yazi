@@ -3,7 +3,7 @@ use std::{fmt::Display, io::Write, str::FromStr};
 use anyhow::{Result, anyhow};
 use mlua::{IntoLua, Lua, Value};
 use yazi_boot::BOOT;
-use yazi_macro::{emit, relay};
+use yazi_macro::{emit, impl_data_any, relay};
 use yazi_shared::{Id, event::ActionCow};
 
 use crate::{ID, ember::Ember};
@@ -14,6 +14,8 @@ pub struct Payload<'a> {
 	pub sender:   Id,
 	pub body:     Ember<'a>,
 }
+
+impl_data_any!(Payload<'static>);
 
 impl<'a> Payload<'a> {
 	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id::ZERO, sender: *ID, body } }

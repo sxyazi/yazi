@@ -8,6 +8,7 @@ pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	globals.raw_set("ya", crate::utils::compose(true))?;
 	globals.raw_set("fs", crate::fs::compose())?;
 	globals.raw_set("rt", crate::runtime::compose())?;
+	globals.raw_set("km", crate::keymap::compose())?;
 	globals.raw_set("th", crate::theme::compose().into_lua(lua)?)?;
 
 	yazi_binding::Cha::install(lua)?;
