@@ -61,7 +61,7 @@ parking_lot         = "0.12.5"
 paste               = "1.0.15"
 percent-encoding    = "2.3.2"
 rand                = { version = "0.10.1", default-features = false, features = [ "std", "sys_rng" ] }
-ratatui             = { version = "0.30.1", default-features = false, features = [ "layout-cache", "serde", "underline-color", "unstable-rendered-line-info", "unstable-widget-ref" ] }
+ratatui             = { version = "=0.30.0", default-features = false, features = [ "layout-cache", "serde", "underline-color", "unstable-rendered-line-info", "unstable-widget-ref" ] }
 regex               = "1.12.3"
 russh               = { version = "0.61.2", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"

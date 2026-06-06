@@ -15,3 +15,7 @@ A clear and concise description of the rationale of the changes, to help our rev
 
 If it has already been detailed in the associated issue, please skip this section.
 -->
+
+## Checklist
+
+- [ ] I have read [CONTRIBUTING.md](https://github.com/sxyazi/yazi/blob/main/CONTRIBUTING.md)
