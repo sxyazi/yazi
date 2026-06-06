@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
 
+### Improved
+
+- Eliminate hacks in image and UI conflict resolution ([#4022])
+
 ## [v26.5.6]
 
 ### Added
@@ -1737,3 +1741,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3990]: https://github.com/sxyazi/yazi/pull/3990
 [#4005]: https://github.com/sxyazi/yazi/pull/4005
 [#4012]: https://github.com/sxyazi/yazi/pull/4012
+[#4022]: https://github.com/sxyazi/yazi/pull/4022
