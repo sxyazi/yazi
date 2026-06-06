@@ -1,7 +1,7 @@
 use std::{io::Write, sync::atomic::{AtomicU8, Ordering}, time::Instant};
 
 use anyhow::Result;
-use ratatui::{CompletedFrame, backend::Backend, buffer::Buffer, layout::Position};
+use ratatui::layout::Position;
 use yazi_actor::{Ctx, lives::Lives};
 use yazi_binding::runtime_scope;
 use yazi_config::LAYOUT;
@@ -10,7 +10,6 @@ use yazi_plugin::LUA;
 use yazi_shared::{data::Data, event::NEED_RENDER};
 use yazi_term::{CursorStyle, sequence::{BeginSyncUpdate, EndSyncUpdate, MoveTo, SetCursorStyle, ShowCursor}};
 use yazi_tty::TTY;
-use yazi_tui::RatermBackend;
 use yazi_widgets::COLLISION;
 
 use crate::{app::App, root::Root};
@@ -30,15 +29,12 @@ impl App {
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let preview_rect = LAYOUT.get().preview;
-		let frame = term.draw(|f| {
+		term.draw(|f| {
 			_ = Lives::scope(&self.core, || {
 				runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(&self.core), f.area())))
 			});
 		})?;
 
-		if COLLISION.load(Ordering::Relaxed) {
-			Self::patch(frame);
-		}
 		if !self.core.notify.messages.is_empty() {
 			self.render_partially()?;
 		}
@@ -61,7 +57,7 @@ impl App {
 		Self::routine(true, None);
 		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
 
-		let frame = term.draw_partial(|f| {
+		term.draw_partial(|f| {
 			_ = Lives::scope(&self.core, || {
 				runtime_scope!(LUA, "root", {
 					f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
@@ -71,27 +67,7 @@ impl App {
 			});
 		})?;
 
-		if COLLISION.load(Ordering::Relaxed) {
-			Self::patch(frame);
-		}
 		succ!();
-	}
-
-	#[inline]
-	fn patch(frame: CompletedFrame) {
-		let mut new = Buffer::empty(frame.area);
-		for y in new.area.top()..new.area.bottom() {
-			for x in new.area.left()..new.area.right() {
-				let cell = &frame.buffer[(x, y)];
-				if cell.skip {
-					new[(x, y)] = cell.clone();
-				}
-				new[(x, y)].set_skip(!cell.skip);
-			}
-		}
-
-		let patches = frame.buffer.diff(&new);
-		RatermBackend::new(&mut *TTY.lockout()).draw(patches.into_iter()).ok();
 	}
 
 	fn routine(push: bool, cursor: Option<(Position, CursorStyle)>) {

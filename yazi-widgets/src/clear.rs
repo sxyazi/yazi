@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use ratatui::{buffer::{Buffer, CellDiffOption}, layout::Rect, widgets::Widget};
 use yazi_adapter::ADAPTOR;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
@@ -23,7 +23,7 @@ impl Widget for Clear {
 		COLLISION.store(true, Ordering::Relaxed);
 		for y in r.top()..r.bottom() {
 			for x in r.left()..r.right() {
-				buf[(x, y)].set_skip(true);
+				buf[(x, y)].set_diff_option(CellDiffOption::AlwaysUpdate);
 			}
 		}
 	}

@@ -123,9 +123,7 @@ impl Raterm {
 			let buffer = frame.buffer_mut();
 			for y in self.last_area.top()..self.last_area.bottom() {
 				for x in self.last_area.left()..self.last_area.right() {
-					let mut cell = self.last_buffer[(x, y)].clone();
-					cell.skip = false;
-					buffer[(x, y)] = cell;
+					buffer[(x, y)] = self.last_buffer[(x, y)].clone();
 				}
 			}
 
