@@ -1,4 +1,5 @@
 use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
 
 use crate::{ParseError, Result, bail, event::Modifiers};
 
@@ -71,7 +72,8 @@ impl KeyEventState {
 }
 
 // --- Code
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(tag = "type", content = "value")]
 pub enum KeyCode {
 	Char(char),
 	Enter,
@@ -217,7 +219,8 @@ impl KeyCode {
 }
 
 // --- Modifier key
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(untagged)]
 pub enum ModifierKeyCode {
 	LeftShift,
 	LeftControl,
@@ -250,7 +253,8 @@ impl ModifierKeyCode {
 }
 
 // --- Media key
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(untagged)]
 pub enum MediaKeyCode {
 	Play,
 	Pause,

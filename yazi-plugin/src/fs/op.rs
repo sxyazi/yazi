@@ -1,7 +1,20 @@
-use mlua::{IntoLua, Lua, Table, Value};
+use mlua::{Lua, Table, UserData};
 use yazi_binding::{Cha, File, Id, Path, Url};
+use yazi_codegen::FromLuaOwned;
+use yazi_macro::impl_data_any;
 
+#[derive(Clone, FromLuaOwned)]
 pub(super) struct FilesOp(yazi_fs::FilesOp);
+
+impl_data_any!(FilesOp => yazi_fs::FilesOp; from_into_lua = inherit);
+
+impl From<FilesOp> for yazi_fs::FilesOp {
+	fn from(op: FilesOp) -> Self { op.0 }
+}
+
+impl AsRef<yazi_fs::FilesOp> for FilesOp {
+	fn as_ref(&self) -> &yazi_fs::FilesOp { &self.0 }
+}
 
 impl FilesOp {
 	pub(super) fn part(_: &Lua, t: Table) -> mlua::Result<Self> {
@@ -41,8 +54,4 @@ impl FilesOp {
 	}
 }
 
-impl IntoLua for FilesOp {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_any_userdata(self.0)?.into_lua(lua)
-	}
-}
+impl UserData for FilesOp {}

@@ -1,4 +1,5 @@
 use yazi_fs::FilterCase;
+use yazi_macro::impl_data_any;
 use yazi_shared::{SStr, event::ActionCow};
 
 #[derive(Clone, Debug, Default)]
@@ -7,6 +8,8 @@ pub struct FilterOpt {
 	pub case:  FilterCase,
 	pub done:  bool,
 }
+
+impl_data_any!(FilterOpt);
 
 impl TryFrom<ActionCow> for FilterOpt {
 	type Error = anyhow::Error;

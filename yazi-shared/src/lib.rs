@@ -1,4 +1,6 @@
-yazi_macro::mod_pub!(data event loc path pool scheme shell strand translit url wtf8);
+extern crate self as yazi_shared;
+
+yazi_macro::mod_pub!(any_data data event loc path pool scheme shell strand translit url wtf8);
 
 yazi_macro::mod_flat!(alias bytes chars completion_token condition debounce env id kebab_cased_string last_value layer localset natsort non_empty_string os predictor snake_cased_string source tests throttle time);
 

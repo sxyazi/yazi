@@ -1,6 +1,7 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::SER_OPT;
+use yazi_macro::impl_data_any;
 use yazi_shared::{event::ActionCow, strand::StrandBuf};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -12,6 +13,8 @@ pub struct QuitOpt {
 	#[serde(default, alias = "no-cwd-file")]
 	pub no_cwd_file: bool,
 }
+
+impl_data_any!(QuitOpt);
 
 impl TryFrom<ActionCow> for QuitOpt {
 	type Error = anyhow::Error;

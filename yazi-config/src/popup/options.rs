@@ -1,9 +1,11 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
+use yazi_macro::impl_data_any;
 use yazi_shared::{scheme::Encode as EncodeScheme, strand::ToStrand, url::{Url, UrlBuf}};
 
 use super::{Offset, Position};
 use crate::{YAZI, popup::Origin};
 
+// --- InputCfg
 #[derive(Clone, Debug, Default)]
 pub struct InputCfg {
 	pub title:      String,
@@ -15,20 +17,7 @@ pub struct InputCfg {
 	pub completion: bool,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct PickCfg {
-	pub title:    String,
-	pub items:    Vec<String>,
-	pub position: Position,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct ConfirmCfg {
-	pub position: Position,
-	pub title:    Line<'static>,
-	pub body:     Paragraph<'static>,
-	pub list:     Paragraph<'static>,
-}
+impl_data_any!(InputCfg);
 
 impl InputCfg {
 	pub fn cd(cwd: Url) -> Self {
@@ -117,6 +106,45 @@ impl InputCfg {
 	}
 }
 
+// --- PickCfg
+#[derive(Clone, Debug, Default)]
+pub struct PickCfg {
+	pub title:    String,
+	pub items:    Vec<String>,
+	pub position: Position,
+}
+
+impl_data_any!(PickCfg);
+
+impl PickCfg {
+	fn max_height(len: usize) -> u16 {
+		YAZI.pick.open_offset.height.min(YAZI.pick.border().saturating_add(len as u16))
+	}
+
+	pub fn open(items: Vec<String>) -> Self {
+		let max_height = Self::max_height(items.len());
+		Self {
+			title: YAZI.pick.open_title.clone(),
+			items,
+			position: Position::new(YAZI.pick.open_origin, Offset {
+				height: max_height,
+				..YAZI.pick.open_offset
+			}),
+		}
+	}
+}
+
+// --- ConfirmCfg
+#[derive(Clone, Debug, Default)]
+pub struct ConfirmCfg {
+	pub position: Position,
+	pub title:    Line<'static>,
+	pub body:     Paragraph<'static>,
+	pub list:     Paragraph<'static>,
+}
+
+impl_data_any!(ConfirmCfg);
+
 impl ConfirmCfg {
 	fn new(
 		title: String,
@@ -186,23 +214,5 @@ impl ConfirmCfg {
 			lines.push(s.to_strand().into_string_lossy());
 		}
 		Some(Text::from_iter(lines))
-	}
-}
-
-impl PickCfg {
-	fn max_height(len: usize) -> u16 {
-		YAZI.pick.open_offset.height.min(YAZI.pick.border().saturating_add(len as u16))
-	}
-
-	pub fn open(items: Vec<String>) -> Self {
-		let max_height = Self::max_height(items.len());
-		Self {
-			title: YAZI.pick.open_title.clone(),
-			items,
-			position: Position::new(YAZI.pick.open_origin, Offset {
-				height: max_height,
-				..YAZI.pick.open_offset
-			}),
-		}
 	}
 }

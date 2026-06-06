@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 
 use indexmap::IndexSet;
-use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::get_metatable;
+use yazi_macro::impl_data_any;
 use yazi_shared::url::UrlBufCov;
 
 use super::Ember;
@@ -19,6 +20,8 @@ pub struct EmberYank<'a> {
 	pub urls: Cow<'a, IndexSet<UrlBufCov>>,
 }
 
+impl_data_any!(EmberYank<'static>, from_into_lua = inherit);
+
 impl<'a> EmberYank<'a> {
 	pub fn borrowed(cut: bool, urls: &'a IndexSet<UrlBufCov>) -> Ember<'a> {
 		Self { cut, urls: Cow::Borrowed(urls) }.into()
@@ -33,6 +36,19 @@ impl EmberYank<'static> {
 
 impl<'a> From<EmberYank<'a>> for Ember<'a> {
 	fn from(value: EmberYank<'a>) -> Self { Self::Yank(value) }
+}
+
+impl FromLua for EmberYank<'static> {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::UserData(ud) => ud.take::<EmberYankIter>()?.collect(lua),
+			_ => Err(mlua::Error::FromLuaConversionError {
+				from:    value.type_name(),
+				to:      "EmberYank".to_owned(),
+				message: Some("expected EmberYankIter userdata".to_owned()),
+			}),
+		}
+	}
 }
 
 impl IntoLua for EmberYank<'_> {

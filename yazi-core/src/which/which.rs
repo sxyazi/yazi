@@ -4,7 +4,7 @@ use yazi_macro::{emit, render_and};
 
 #[derive(Default)]
 pub struct Which {
-	pub tx:    Option<mpsc::UnboundedSender<Option<yazi_binding::ChordCow>>>,
+	pub tx:    Option<mpsc::UnboundedSender<Option<yazi_binding::keymap::ChordCow>>>,
 	pub times: usize,
 	pub cands: Vec<ChordCow>,
 

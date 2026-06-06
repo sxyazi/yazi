@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use hashbrown::{HashMap, HashSet};
-use yazi_macro::relay;
+use yazi_macro::{impl_data_any, relay};
 use yazi_shared::{Id, Ids, path::PathBufDyn, url::{UrlBuf, UrlLike, UrlMapExt}};
 
 use super::File;
@@ -22,6 +22,8 @@ pub enum FilesOp {
 	Updating(UrlBuf, HashMap<PathBufDyn, File>),
 	Upserting(UrlBuf, HashMap<PathBufDyn, File>),
 }
+
+impl_data_any!(FilesOp);
 
 impl FilesOp {
 	#[inline]

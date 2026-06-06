@@ -1,5 +1,6 @@
 use ordered_float::OrderedFloat;
 use serde::Serialize;
+use yazi_macro::impl_data_any;
 
 use crate::{Ongoing, Progress};
 
@@ -10,6 +11,8 @@ pub struct TaskSummary {
 	pub failed:  u32,
 	pub percent: Option<OrderedFloat<f32>>,
 }
+
+impl_data_any!(TaskSummary);
 
 impl From<&Ongoing> for TaskSummary {
 	fn from(value: &Ongoing) -> Self {

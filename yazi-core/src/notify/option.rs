@@ -4,6 +4,7 @@ use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSecondsWithFrac, serde_as};
 use yazi_binding::SER_OPT;
+use yazi_macro::impl_data_any;
 use yazi_shared::event::ActionCow;
 
 use crate::notify::MessageLevel;
@@ -20,6 +21,8 @@ pub struct MessageOpt {
 	#[serde_as(as = "DurationSecondsWithFrac<f64>")]
 	pub timeout: Duration,
 }
+
+impl_data_any!(MessageOpt);
 
 impl TryFrom<ActionCow> for MessageOpt {
 	type Error = anyhow::Error;

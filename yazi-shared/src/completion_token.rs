@@ -1,11 +1,14 @@
 use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
 
 use tokio::sync::Notify;
+use yazi_macro::impl_data_any;
 
 #[derive(Clone, Debug, Default)]
 pub struct CompletionToken {
 	inner: Arc<(AtomicU8, Notify)>,
 }
+
+impl_data_any!(CompletionToken);
 
 impl CompletionToken {
 	pub fn complete(&self, success: bool) {

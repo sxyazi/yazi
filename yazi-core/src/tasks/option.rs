@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use yazi_macro::impl_data_any;
 use yazi_scheduler::{TaskIn, file::FileInCut, plugin::PluginInEntry};
 use yazi_shared::{Id, SStr};
 
@@ -9,6 +10,8 @@ pub enum TaskOpt {
 
 	Plugin(PluginInEntry),
 }
+
+impl_data_any!(TaskOpt);
 
 impl TaskIn for TaskOpt {
 	type Prog = ();

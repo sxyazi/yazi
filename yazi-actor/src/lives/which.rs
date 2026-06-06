@@ -29,7 +29,7 @@ impl UserData for Which {
 		cached_field!(fields, tx, |_, me| Ok(me.tx.clone().map(yazi_binding::MpscUnboundedTx)));
 		fields.add_field_method_get("times", |_, me| Ok(me.inner.times));
 		cached_field!(fields, cands, |lua, me| {
-			lua.create_sequence_from(me.inner.cands.iter().cloned().map(yazi_binding::ChordCow))
+			lua.create_sequence_from(me.inner.cands.iter().cloned().map(yazi_binding::keymap::ChordCow))
 		});
 
 		fields.add_field_method_get("active", |_, me| Ok(me.inner.active));

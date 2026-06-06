@@ -1,14 +1,17 @@
 use std::{fmt::{Display, Write}, str::FromStr};
 
 use anyhow::bail;
+use serde::{Deserialize, Serialize};
 use yazi_term::event::{KeyCode, KeyEvent, Modifiers};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct Key {
+	#[serde(flatten)]
 	pub code:   KeyCode,
 	pub shift:  bool,
 	pub ctrl:   bool,
 	pub alt:    bool,
+	#[serde(rename = "super")]
 	pub super_: bool,
 }
 
