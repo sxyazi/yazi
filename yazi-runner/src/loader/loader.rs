@@ -55,6 +55,8 @@ impl Default for Loader {
 			("video".to_owned(), preset!("plugins/video").into()),
 			("zoxide".to_owned(), preset!("plugins/zoxide").into()),
 			// Components
+			("app".to_owned(), [][..].into()),
+			("backdrop".to_owned(), [][..].into()),
 			("current".to_owned(), [][..].into()),
 			("entity".to_owned(), [][..].into()),
 			("header".to_owned(), [][..].into()),

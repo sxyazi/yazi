@@ -246,12 +246,6 @@ impl Theme {
 	}
 }
 
-impl App {
-	pub fn bg_color(&self) -> String {
-		self.overall.get().bg.map(|c| c.to_string()).unwrap_or_default()
-	}
-}
-
 fn deserialize_syntect_theme<'de, D>(deserializer: D) -> Result<ArcSwap<PathBuf>, D::Error>
 where
 	D: Deserializer<'de>,

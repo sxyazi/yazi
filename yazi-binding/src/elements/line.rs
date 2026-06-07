@@ -1,7 +1,7 @@
 use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
@@ -139,6 +139,13 @@ impl UserData for Line {
 		});
 		methods.add_method("visible", |_, me, ()| {
 			Ok(me.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
+		});
+		methods.add_function("map", |_, (ud, f): (AnyUserData, Function)| {
+			let mut me = ud.borrow_mut::<Self>()?;
+			for span in &mut me.spans {
+				*span = f.call::<Span>(Span(mem::take(span)))?.0;
+			}
+			Ok(ud)
 		});
 		methods.add_function("truncate", |lua, (ud, t): (AnyUserData, Table)| {
 			let mut me = ud.borrow_mut::<Self>()?;

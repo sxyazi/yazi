@@ -115,9 +115,9 @@ function Entity:style_rev()
 	local s = self:style()
 	local bg = s:bg(true)
 	if bg then
-		return ui.Style():fg(bg):bg("reset"):reverse(true)
+		return ui.Style():fg(bg):bg(App.bg()):reverse(true)
 	elseif s:raw().reversed then
-		return ui.Style():bg("reset"):reverse(true)
+		return ui.Style():bg(App.bg()):reverse(true)
 	end
 end
 

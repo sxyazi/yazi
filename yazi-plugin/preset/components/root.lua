@@ -25,6 +25,7 @@ end
 
 function Root:build()
 	self._children = {
+		Backdrop:new(self._area),
 		Header:new(self._chunks[1], cx.active),
 		Tabs:new(self._chunks[2]),
 		Tab:new(self._chunks[3], cx.active),

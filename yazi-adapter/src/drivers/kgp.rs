@@ -5,9 +5,10 @@ use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
 use ratatui::{layout::Rect, style::Color};
+use yazi_config::THEME;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_shim::cell::SyncCell;
-use yazi_term::sequence::{MoveTo, SetFg};
+use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg, SetFg};
 
 use crate::{adapter::Adapter, image::Image};
 
@@ -333,12 +334,16 @@ impl Kgp {
 	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
+			if let Some(c) = THEME.app.overall.get().bg {
+				write!(w, "{}", SetBg(c))?;
+			}
+
 			for y in area.top()..area.bottom() {
 				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
 
-			write!(w, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
+			write!(w, "{ResetAttrs}{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
 			Ok(())
 		})
 	}
@@ -381,11 +386,15 @@ impl Kgp {
 	}
 
 	fn place(area: &Rect) -> Result<Vec<u8>> {
-		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 50);
+		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 500);
 
 		let id = Self::image_id();
 		let (r, g, b) = ((id >> 16) & 0xff, (id >> 8) & 0xff, id & 0xff);
 		write!(buf, "{}", SetFg(Color::Rgb(r as u8, g as u8, b as u8)))?;
+
+		if let Some(c) = THEME.app.overall.get().bg {
+			write!(buf, "{}", SetBg(c))?;
+		}
 
 		for y in 0..area.height {
 			write!(buf, "{}", MoveTo(area.x, area.y + y))?;
@@ -395,6 +404,8 @@ impl Kgp {
 				write!(buf, "{}", *DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]))?;
 			}
 		}
+
+		write!(buf, "{ResetAttrs}")?;
 		Ok(buf)
 	}
 

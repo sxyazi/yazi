@@ -1,12 +1,9 @@
-use yazi_config::{THEME, YAZI};
+use yazi_config::YAZI;
 
 pub(super) struct RatermOption {
-	pub bg:    String,
 	pub mouse: bool,
 }
 
 impl Default for RatermOption {
-	fn default() -> Self {
-		Self { bg: THEME.app.bg_color(), mouse: !YAZI.mgr.mouse_events.get().is_empty() }
-	}
+	fn default() -> Self { Self { mouse: !YAZI.mgr.mouse_events.get().is_empty() } }
 }
