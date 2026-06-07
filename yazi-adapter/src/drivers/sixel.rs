@@ -5,8 +5,9 @@ use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
 use quantette::{PaletteSize, color_map::IndexedColorMap, wu::{BinnerU8x3, WuU8x3}};
 use ratatui::layout::Rect;
+use yazi_config::THEME;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
-use yazi_term::sequence::MoveTo;
+use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg};
 
 use crate::{Image, adapter::Adapter};
 
@@ -34,11 +35,14 @@ impl Sixel {
 	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
+			if let Some(c) = THEME.app.overall.get().bg {
+				write!(w, "{}", SetBg(c))?;
+			}
 			for y in area.top()..area.bottom() {
 				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
-			Ok(())
+			Ok(write!(w, "{ResetAttrs}")?)
 		})
 	}
 

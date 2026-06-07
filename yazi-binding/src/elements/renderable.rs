@@ -3,8 +3,8 @@ use std::any::TypeId;
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Value};
 use ratatui::widgets::Widget;
 
-use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
-use crate::{Error, elements::Area};
+use super::{Area, Bar, Border, Clear, Fill, Gauge, Line, List, Table, Text};
+use crate::Error;
 
 #[derive(Clone, Debug)]
 pub enum Renderable {
@@ -13,6 +13,7 @@ pub enum Renderable {
 	List(Box<List>),
 	Bar(Bar),
 	Clear(Clear),
+	Fill(Fill),
 	Border(Border),
 	Gauge(Box<Gauge>),
 	Table(Box<Table>),
@@ -26,6 +27,7 @@ impl Renderable {
 			Self::List(list) => list.area,
 			Self::Bar(bar) => bar.area,
 			Self::Clear(clear) => clear.area,
+			Self::Fill(fill) => fill.area,
 			Self::Border(border) => border.area,
 			Self::Gauge(gauge) => gauge.area,
 			Self::Table(table) => table.area,
@@ -40,6 +42,7 @@ impl Renderable {
 			Self::List(list) => list.area = area,
 			Self::Bar(bar) => bar.area = area,
 			Self::Clear(clear) => clear.area = area,
+			Self::Fill(fill) => fill.area = area,
 			Self::Border(border) => border.area = area,
 			Self::Gauge(gauge) => gauge.area = area,
 			Self::Table(table) => table.area = area,
@@ -66,6 +69,7 @@ impl TryFrom<&AnyUserData> for Renderable {
 			Some(t) if t == TypeId::of::<List>() => Self::List(Box::new(ud.take()?)),
 			Some(t) if t == TypeId::of::<Bar>() => Self::Bar(ud.take()?),
 			Some(t) if t == TypeId::of::<Clear>() => Self::Clear(ud.take()?),
+			Some(t) if t == TypeId::of::<Fill>() => Self::Fill(ud.take()?),
 			Some(t) if t == TypeId::of::<Border>() => Self::Border(ud.take()?),
 			Some(t) if t == TypeId::of::<Gauge>() => Self::Gauge(Box::new(ud.take()?)),
 			Some(t) if t == TypeId::of::<Table>() => Self::Table(Box::new(ud.take()?)),
@@ -95,6 +99,7 @@ impl Widget for Renderable {
 			Self::List(list) => list.render(rect, buf),
 			Self::Bar(bar) => bar.render(rect, buf),
 			Self::Clear(clear) => clear.render(rect, buf),
+			Self::Fill(fill) => fill.render(rect, buf),
 			Self::Border(border) => border.render(rect, buf),
 			Self::Gauge(gauge) => gauge.render(rect, buf),
 			Self::Table(table) => table.render(rect, buf),
@@ -113,6 +118,7 @@ impl Widget for &Renderable {
 			Renderable::List(list) => (&**list).render(rect, buf),
 			Renderable::Bar(bar) => bar.render(rect, buf),
 			Renderable::Clear(clear) => clear.render(rect, buf),
+			Renderable::Fill(fill) => fill.render(rect, buf),
 			Renderable::Border(border) => border.render(rect, buf),
 			Renderable::Gauge(gauge) => (&**gauge).render(rect, buf),
 			Renderable::Table(table) => (&**table).render(rect, buf),

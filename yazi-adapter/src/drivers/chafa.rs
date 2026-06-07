@@ -4,8 +4,9 @@ use ansi_to_tui::IntoText;
 use anyhow::{Result, anyhow, bail};
 use ratatui::layout::Rect;
 use tokio::process::Command;
+use yazi_config::THEME;
 use yazi_emulator::Emulator;
-use yazi_term::sequence::MoveTo;
+use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg};
 
 use crate::Adapter;
 
@@ -71,11 +72,14 @@ impl Chafa {
 	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
+			if let Some(c) = THEME.app.overall.get().bg {
+				write!(w, "{}", SetBg(c))?;
+			}
 			for y in area.top()..area.bottom() {
 				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
-			Ok(())
+			Ok(write!(w, "{ResetAttrs}")?)
 		})
 	}
 }

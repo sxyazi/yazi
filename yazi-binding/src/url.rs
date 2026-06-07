@@ -130,14 +130,19 @@ impl Url {
 				}
 			}
 			Value::UserData(ref ud) => {
-				let url = ud.borrow::<Self>()?;
-				if url.scheme().covariant(self.scheme()) {
-					Self::new(self.try_join(url.loc()).into_lua_err()?).into_lua(lua)
+				if let Ok(url) = ud.borrow::<Self>() {
+					if url.scheme().covariant(self.scheme()) {
+						Self::new(self.try_join(url.loc()).into_lua_err()?).into_lua(lua)
+					} else {
+						Ok(other)
+					}
+				} else if let Ok(path) = ud.borrow::<Path>() {
+					Self::new(self.try_join(&*path).into_lua_err()?).into_lua(lua)
 				} else {
-					Ok(other)
+					Err(EXPECTED.into_lua_err())?
 				}
 			}
-			_ => Err("must be a string or Url".into_lua_err())?,
+			_ => Err(EXPECTED.into_lua_err())?,
 		}
 	}
 

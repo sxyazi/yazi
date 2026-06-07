@@ -4,9 +4,9 @@ use anyhow::Result;
 use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
-use yazi_config::YAZI;
+use yazi_config::{THEME, YAZI};
 use yazi_emulator::{CLOSE, Emulator, START};
-use yazi_term::sequence::MoveTo;
+use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg};
 
 use crate::{Image, adapter::Adapter};
 
@@ -29,11 +29,14 @@ impl Iip {
 	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
+			if let Some(c) = THEME.app.overall.get().bg {
+				write!(w, "{}", SetBg(c))?;
+			}
 			for y in area.top()..area.bottom() {
 				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
-			Ok(())
+			Ok(write!(w, "{ResetAttrs}")?)
 		})
 	}
 
