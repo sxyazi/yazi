@@ -25,9 +25,11 @@ function M:preload(job)
 		return true
 	end
 
-	local cmd = M.with_limit():arg(tostring(job.file.path))
+	local cmd = M.with_limit()
 	if job.args.flatten then
-		cmd:arg("-flatten")
+		cmd:arg(tostring(job.file.path)):arg("-flatten")
+	else
+		cmd:arg(tostring(job.file.path) .. "[0]")
 	end
 	cmd:arg { "-auto-orient", "-strip" }
 
