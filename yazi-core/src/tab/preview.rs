@@ -6,20 +6,27 @@ use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
 use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
-use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
-use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
+use yazi_runner::{
+	RUNNER,
+	previewer::{PeekError, PeekJob},
+};
+use yazi_shared::{
+	pool::Symbol,
+	url::{UrlBuf, UrlLike},
+};
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Preview {
 	pub lock: Option<PreviewLock>,
 	pub skip: usize,
+	pub search_idx: Option<usize>,
 
-	handle:          Option<JoinHandle<()>>,
+	handle: Option<JoinHandle<()>>,
 	pub folder_lock: Option<UrlBuf>,
-	folder_loader:   Option<JoinHandle<()>>,
+	folder_loader: Option<JoinHandle<()>>,
 }
 
 impl Preview {
@@ -35,7 +42,11 @@ impl Preview {
 		};
 
 		self.abort();
+
+		// let search_first_occurrence = self.get_first_search_occurrence(&file.url);
 		let job = PeekJob { previewer, file, mime, skip: self.skip };
+
+		tracing::debug!("preview {:?}", self);
 
 		self.handle = Some(tokio::spawn(async move {
 			let mut rx = RUNNER.peek(&job).await;
@@ -85,7 +96,9 @@ impl Preview {
 	}
 
 	pub fn reset(&mut self) {
+		self.search_idx = None;
 		self.abort();
+
 		ADAPTOR.get().image_hide().ok();
 		render!(self.lock.take().is_some())
 	}
@@ -95,7 +108,9 @@ impl Preview {
 		ADAPTOR.get().image_hide().ok();
 	}
 
-	pub fn same_url(&self, url: &UrlBuf) -> bool { matches!(&self.lock, Some(l) if l.url == *url) }
+	pub fn same_url(&self, url: &UrlBuf) -> bool {
+		matches!(&self.lock, Some(l) if l.url == *url)
+	}
 
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {
 		self.same_url(&file.url)
@@ -106,5 +121,7 @@ impl Preview {
 		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
 	}
 
-	pub fn same_folder(&self, url: &UrlBuf) -> bool { self.folder_lock.as_ref() == Some(url) }
+	pub fn same_folder(&self, url: &UrlBuf) -> bool {
+		self.folder_lock.as_ref() == Some(url)
+	}
 }
