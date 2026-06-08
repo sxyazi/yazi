@@ -1,8 +1,20 @@
-use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::OnceLock};
+use std::{
+	io::{BufRead, BufReader, Cursor, Seek},
+	path::PathBuf,
+	sync::OnceLock,
+};
 
 use anyhow::{Result, anyhow, bail};
-use ratatui::{layout::Size, text::{Line, Span, Text}};
-use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
+use ratatui::{
+	layout::Size,
+	text::{Line, Span, Text},
+};
+use syntect::{
+	LoadingError, dumps,
+	easy::HighlightLines,
+	highlighting::{self, Theme, ThemeSet},
+	parsing::{SyntaxReference, SyntaxSet},
+};
 use yazi_config::{THEME, YAZI};
 use yazi_runner::previewer::PeekError;
 use yazi_shared::{Id, Ids, replace_to_printable};
@@ -11,17 +23,17 @@ use yazi_shim::ratatui::LineIter;
 static INCR: Ids = Ids::new();
 
 pub struct Highlighter {
-	path:   PathBuf,
+	path: PathBuf,
 	reader: BufReader<std::fs::File>,
 
-	skip:   usize,
-	size:   Size,
+	skip: usize,
+	size: Size,
 	ticket: Id,
 
-	theme:    &'static Theme,
+	theme: &'static Theme,
 	syntaxes: &'static SyntaxSet,
-	inner:    Option<HighlightLines<'static>>,
-	syntax:   Option<&'static SyntaxReference>,
+	inner: Option<HighlightLines<'static>>,
+	syntax: Option<&'static SyntaxReference>,
 }
 
 impl Highlighter {
@@ -57,7 +69,9 @@ impl Highlighter {
 		})
 	}
 
-	pub fn abort() { INCR.next(); }
+	pub fn abort() {
+		INCR.next();
+	}
 
 	fn highlight(mut self) -> Result<Text<'static>, PeekError> {
 		self.load_syntax()?;
@@ -220,7 +234,7 @@ impl Highlighter {
 
 			Span {
 				content: s.into(),
-				style:   ratatui::style::Style {
+				style: ratatui::style::Style {
 					fg: Self::to_ansi_color(style.foreground),
 					// bg: Self::to_ansi_color(style.background),
 					add_modifier: modifier,
