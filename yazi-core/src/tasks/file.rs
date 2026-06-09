@@ -1,6 +1,6 @@
 use indexmap::IndexSet;
 use tracing::debug;
-use yazi_scheduler::file::FileInCut;
+use yazi_scheduler::file::{FileInCopy, FileInCut};
 use yazi_shared::url::{UrlBuf, UrlBufCov, UrlLike};
 
 use super::Tasks;
@@ -23,7 +23,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
+	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: Option<bool>) {
 		self.scheduler.behavior.reset();
 
 		for u in src.iter() {
@@ -34,7 +34,7 @@ impl Tasks {
 			if force && *u == to {
 				debug!("file_copy: same file, skip {to:?}");
 			} else {
-				self.scheduler.file_copy(u.0.clone(), to, force, follow);
+				self.scheduler.file_copy(FileInCopy::new(u.0.clone(), to, force, follow));
 			}
 		}
 	}

@@ -77,16 +77,16 @@ impl Scheduler {
 		id
 	}
 
-	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let follow = follow || !from.scheme().covariant(to.scheme());
-		let mut r#in = FileInCopy { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0 };
+	pub fn file_copy(&self, mut r#in: FileInCopy) -> Id {
+		let id = self.add(&mut r#in, |t| t.id);
 
-		self.add(&mut r#in, |_| ());
 		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
 			self.ops.out(r#in.id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
 		} else {
 			self.file.submit(r#in, LOW);
 		}
+
+		id
 	}
 
 	pub fn file_link(&self, from: UrlBuf, to: UrlBuf, relative: bool, force: bool) {

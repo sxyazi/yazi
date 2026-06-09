@@ -19,6 +19,8 @@ pub(crate) enum State {
 	Osc,
 	/// Inside an OSC 72 (DnD) sequence (`\x1B]72;` … ST).
 	Osc72(StateOsc72),
+	/// Inside an OSC 5522 (Clipboard) sequence (`\x1B]5522;` … ST).
+	Osc5522(StateOsc5522),
 	/// Inside OSC, just saw `\x1B` (potential start of ST = `\x1B\\`).
 	OscSt,
 	/// Inside a DCS sequence (`\x1BP` … ST).
@@ -39,4 +41,29 @@ pub(crate) struct StateOsc72 {
 	pub(crate) op:       Option<u8>,
 	pub(crate) payload:  Vec<u8>,
 	pub(crate) has_more: bool,
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub(crate) struct StateOsc5522 {
+	pub(crate) status:   Option<Osc5522Status>,
+	pub(crate) read:     bool,
+	pub(crate) primary:  bool,
+	pub(crate) mime:     Vec<Vec<u8>>,
+	pub(crate) payload:  Vec<Vec<u8>>,
+	pub(crate) pw:       Vec<u8>,
+	pub(crate) idx:      usize,
+	pub(crate) has_more: bool,
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub(crate) enum Osc5522Status {
+	#[default]
+	OK,
+	DATA,
+	DONE,
+	ENOSYS,
+	EPERM,
+	EBUSY,
+	EIO,
+	EINVAL,
 }

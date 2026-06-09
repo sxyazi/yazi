@@ -9,6 +9,7 @@ impl Utils {
 		lua.create_function(|lua, (kind, value): (mlua::String, Value)| {
 			Ok(TaskOpt(match &*kind.as_bytes() {
 				b"cut" => tasks::TaskOpt::Cut(<_>::from_lua(value, lua)?),
+				b"copy" => tasks::TaskOpt::Copy(<_>::from_lua(value, lua)?),
 
 				b"plugin" => tasks::TaskOpt::Plugin(<_>::from_lua(value, lua)?),
 

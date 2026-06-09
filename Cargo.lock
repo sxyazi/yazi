@@ -5567,6 +5567,7 @@ dependencies = [
  "mlua",
  "parking_lot",
  "paste",
+ "percent-encoding",
  "ratatui",
  "scopeguard",
  "tokio",

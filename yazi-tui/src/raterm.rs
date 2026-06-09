@@ -6,7 +6,7 @@ use yazi_config::YAZI;
 use yazi_emulator::{Emulator, Mux, TMUX};
 use yazi_macro::writef;
 use yazi_shim::cell::SyncCell;
-use yazi_term::{TERM, event::{Event, KeyEventKind}, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}, stream::EventStream};
+use yazi_term::{TERM, event::{Event, KeyEventKind}, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, DisablePasteEvents, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnablePasteEvents, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}, stream::EventStream};
 use yazi_tty::{TTY, TtyWriter};
 
 use crate::{RatermBackend, RatermOption, RatermState};
@@ -42,7 +42,7 @@ impl Raterm {
 		let opt = RatermOption::default();
 		writef!(
 			TTY.writer(),
-			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestKeyboardFlags}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}",
+			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestKeyboardFlags}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{EnablePasteEvents}",
 			If(!TMUX.get(), EnterAlternateScreen),
 			If(TMUX.get(), EnterAlternateScreen),
 			EnableDrag(""),
@@ -81,7 +81,7 @@ impl Raterm {
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{DisableDrop}{DisableDrag}{}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
+			"{}{DisableDrop}{DisableDrag}{DisablePasteEvents}{}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
 			If(state.csi_u, PopKeyboardFlags),
 			RestoreCursorStyle { shape: state.cursor_shape, blink: state.cursor_blink },
