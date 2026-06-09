@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::File;
-use yazi_dds::Sendable;
+use yazi_binding::{File, Sendable};
 
 pub struct FetchJob {
 	pub fetcher: Arc<yazi_config::plugin::Fetcher>,

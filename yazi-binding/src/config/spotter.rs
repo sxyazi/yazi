@@ -2,14 +2,13 @@ use std::{ops::Deref, sync::Arc};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, Value};
 use yazi_config::YAZI;
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{FileRef, Id, Iter, cached_field};
+use crate::{FileRef, Id, Iter};
 
 #[derive(Clone)]
 pub struct Spotter {
 	inner: Arc<yazi_config::plugin::Spotter>,
-
-	v_name: Option<Value>,
 }
 
 impl Deref for Spotter {
@@ -20,7 +19,7 @@ impl Deref for Spotter {
 
 impl Spotter {
 	pub fn new(inner: impl Into<Arc<yazi_config::plugin::Spotter>>) -> Self {
-		Self { inner: inner.into(), v_name: None }
+		Self { inner: inner.into() }
 	}
 }
 
@@ -28,7 +27,7 @@ impl UserData for Spotter {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
 
-		cached_field!(fields, name, |lua, me| lua.create_string(&*me.name));
+		fields.add_cached_field("name", |lua, me| lua.create_string(&*me.name));
 	}
 }
 

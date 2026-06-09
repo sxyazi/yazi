@@ -34,7 +34,9 @@ ansi-to-tui   = { workspace = true }
 anyhow        = { workspace = true }
 futures       = { workspace = true }
 hashbrown     = { workspace = true }
+inventory     = { workspace = true }
 mlua          = { workspace = true }
+ordered-float = { workspace = true }
 paste         = { workspace = true }
 ratatui       = { workspace = true }
 serde_json    = { workspace = true }

@@ -4,9 +4,8 @@ use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmS
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
-use yazi_binding::{File, Id};
+use yazi_binding::{File, Id, Sendable};
 use yazi_config::plugin::Spotter;
-use yazi_dds::Sendable;
 use yazi_shared::{Ids, pool::Symbol};
 
 use crate::{Runner, loader::LOADER};

@@ -1,15 +1,13 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, UserData, UserDataFields, Value};
-use yazi_binding::cached_field;
+use mlua::{AnyUserData, UserData, UserDataFields};
 use yazi_config::LAYOUT;
+use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::{Folder, Lives, PtrCell};
 
 pub(super) struct Preview {
 	tab: PtrCell<yazi_core::tab::Tab>,
-
-	v_folder: Option<Value>,
 }
 
 impl Deref for Preview {
@@ -20,14 +18,14 @@ impl Deref for Preview {
 
 impl Preview {
 	pub(super) fn make(tab: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { tab: tab.into(), v_folder: None })
+		Lives::scoped_userdata(Self { tab: tab.into() })
 	}
 }
 
 impl UserData for Preview {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("skip", |_, me| Ok(me.skip));
-		cached_field!(fields, folder, |_, me| {
+		fields.add_static_field("folder", |_, me| {
 			me.tab
 				.hovered_folder()
 				.map(|f| {

@@ -3,19 +3,13 @@ use std::ops::Deref;
 use mlua::{ExternalError, ExternalResult, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_codegen::FromLuaOwned;
 use yazi_shared::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, Strand, StrandCow}};
-
-use crate::cached_field;
+use yazi_shim::mlua::UserDataFieldsExt;
 
 pub type PathRef = UserDataRef<Path>;
 
 #[derive(FromLuaOwned)]
 pub struct Path {
 	inner: PathBufDyn,
-
-	v_ext:    Option<Value>,
-	v_name:   Option<Value>,
-	v_parent: Option<Value>,
-	v_stem:   Option<Value>,
 }
 
 impl Deref for Path {
@@ -37,16 +31,7 @@ impl AsStrand for &Path {
 }
 
 impl Path {
-	pub fn new(path: impl Into<PathBufDyn>) -> Self {
-		Self {
-			inner: path.into(),
-
-			v_ext:    None,
-			v_name:   None,
-			v_parent: None,
-			v_stem:   None,
-		}
-	}
+	pub fn new(path: impl Into<PathBufDyn>) -> Self { Self { inner: path.into() } }
 
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
@@ -110,14 +95,14 @@ impl Path {
 
 impl UserData for Path {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, ext, |lua, me| {
+		fields.add_cached_field("ext", |lua, me| {
 			me.ext().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		cached_field!(fields, name, |lua, me| {
+		fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
-		cached_field!(fields, stem, |lua, me| {
+		fields.add_cached_field("parent", |_, me| Ok(me.parent().map(Self::new)));
+		fields.add_cached_field("stem", |lua, me| {
 			me.stem().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
 

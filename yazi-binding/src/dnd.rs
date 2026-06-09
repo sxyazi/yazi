@@ -1,16 +1,11 @@
 use std::{mem, ops::Deref};
 
-use mlua::{UserData, UserDataFields, Value};
-use yazi_shim::strum::IntoStr;
+use mlua::{IntoLua, UserData, UserDataFields, Value};
+use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 use yazi_term::event::{DndDropArrive, DndEvent as Inner};
-
-use crate::{cached_field, cached_field_mut};
 
 pub struct DndEvent {
 	inner: Inner,
-
-	v_mimes: Option<Value>,
-	v_data:  Option<mlua::Result<Value>>,
 }
 
 impl Deref for DndEvent {
@@ -20,7 +15,7 @@ impl Deref for DndEvent {
 }
 
 impl From<Inner> for DndEvent {
-	fn from(inner: Inner) -> Self { Self { inner, v_mimes: None, v_data: None } }
+	fn from(inner: Inner) -> Self { Self { inner } }
 }
 
 impl UserData for DndEvent {
@@ -35,7 +30,7 @@ impl UserData for DndEvent {
 
 		fields.add_field_method_get("op", |_, me| Ok(me.inner.op().map(IntoStr::into_str)));
 
-		cached_field!(fields, mimes, |lua, me| {
+		fields.add_cached_field("mimes", |lua, me| {
 			if let Some(mimes) = me.inner.mimes() {
 				lua.create_sequence_from(mimes.iter())?.into_lua(lua)
 			} else {
@@ -43,13 +38,11 @@ impl UserData for DndEvent {
 			}
 		});
 
-		cached_field_mut!(fields, data, |lua, me| {
-			match &mut me.inner {
-				Inner::DropArrive(DndDropArrive { data, .. }) => {
-					lua.create_external_string(mem::take(data))?.into_lua(lua)
-				}
-				_ => Ok(Value::Nil),
+		fields.add_cached_field_mut("data", |lua, me| match &mut me.inner {
+			Inner::DropArrive(DndDropArrive { data, .. }) => {
+				lua.create_external_string(mem::take(data))?.into_lua(lua)
 			}
+			_ => Ok(Value::Nil),
 		});
 	}
 }

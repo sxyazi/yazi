@@ -1,14 +1,12 @@
 use std::{ops::Deref, sync::Arc};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Table, UserData, UserDataFields, Value};
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{Id, Iter, cached_field, event::Action, keymap::Key};
+use crate::{Id, Iter, event::Action, keymap::Key};
 
 pub struct Chord {
 	inner: Arc<yazi_config::keymap::Chord>,
-
-	v_on:  Option<Value>,
-	v_run: Option<Value>,
 }
 
 impl Deref for Chord {
@@ -23,7 +21,7 @@ impl From<Chord> for Arc<yazi_config::keymap::Chord> {
 
 impl Chord {
 	pub fn new(inner: impl Into<Arc<yazi_config::keymap::Chord>>) -> Self {
-		Self { inner: inner.into(), v_on: None, v_run: None }
+		Self { inner: inner.into() }
 	}
 }
 
@@ -37,10 +35,14 @@ impl UserData for Chord {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.inner.id)));
 
-		cached_field!(fields, on, |lua, me| lua.create_sequence_from(me.on.iter().copied().map(Key)));
+		fields
+			.add_cached_field("on", |lua, me| lua.create_sequence_from(me.on.iter().copied().map(Key)));
 
-		cached_field!(fields, run, |lua, me| lua
-			.create_sequence_from(me.run.iter().cloned().map(Action::new)));
+		fields.add_cached_field("run", |lua, me| {
+			lua.create_sequence_from(me.run.iter().cloned().map(Action::new))
+		});
+
+		fields.add_cached_field("desc", |lua, me| lua.create_string(&me.desc));
 	}
 }
 

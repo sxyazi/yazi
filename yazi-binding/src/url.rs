@@ -4,8 +4,9 @@ use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod,
 use yazi_codegen::FromLuaOwned;
 use yazi_fs::{FsHash64, FsHash128, FsUrl};
 use yazi_shared::{path::{PathLike, StripPrefixError}, scheme::{SchemeCow, SchemeLike}, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{Path, Scheme, cached_field};
+use crate::{Path, Scheme};
 
 pub type UrlRef = UserDataRef<Url>;
 
@@ -14,19 +15,6 @@ const EXPECTED: &str = "expected a string, Url, or Path";
 #[derive(FromLuaOwned)]
 pub struct Url {
 	inner: yazi_shared::url::UrlBuf,
-
-	v_path:   Option<Value>,
-	v_name:   Option<Value>,
-	v_stem:   Option<Value>,
-	v_ext:    Option<Value>,
-	v_urn:    Option<Value>,
-	v_base:   Option<Value>,
-	v_parent: Option<Value>,
-
-	v_scheme: Option<Value>,
-	v_domain: Option<Value>,
-
-	v_cache: Option<Value>,
 }
 
 impl Deref for Url {
@@ -62,24 +50,7 @@ impl TryFrom<&[u8]> for Url {
 }
 
 impl Url {
-	pub fn new(url: impl Into<yazi_shared::url::UrlBuf>) -> Self {
-		Self {
-			inner: url.into(),
-
-			v_path:   None,
-			v_name:   None,
-			v_stem:   None,
-			v_ext:    None,
-			v_urn:    None,
-			v_base:   None,
-			v_parent: None,
-
-			v_scheme: None,
-			v_domain: None,
-
-			v_cache: None,
-		}
-	}
+	pub fn new(url: impl Into<yazi_shared::url::UrlBuf>) -> Self { Self { inner: url.into() } }
 
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
@@ -171,28 +142,28 @@ impl Url {
 
 impl UserData for Url {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, path, |_, me| Ok(Path::new(me.loc())));
-		cached_field!(fields, name, |lua, me| {
+		fields.add_cached_field("path", |_, me| Ok(Path::new(me.loc())));
+		fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		cached_field!(fields, stem, |lua, me| {
+		fields.add_cached_field("stem", |lua, me| {
 			me.stem().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		cached_field!(fields, ext, |lua, me| {
+		fields.add_cached_field("ext", |lua, me| {
 			me.ext().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		cached_field!(fields, urn, |_, me| Ok(Path::new(me.urn())));
-		cached_field!(fields, base, |_, me| {
+		fields.add_cached_field("urn", |_, me| Ok(Path::new(me.urn())));
+		fields.add_cached_field("base", |_, me| {
 			Ok(Some(me.base()).filter(|u| !u.loc().is_empty()).map(Self::new))
 		});
-		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
+		fields.add_cached_field("parent", |_, me| Ok(me.parent().map(Self::new)));
 
-		cached_field!(fields, scheme, |_, me| Ok(Scheme::new(me.scheme())));
-		cached_field!(fields, domain, |lua, me| {
+		fields.add_cached_field("scheme", |_, me| Ok(Scheme::new(me.scheme())));
+		fields.add_cached_field("domain", |lua, me| {
 			me.scheme().domain().map(|s| lua.create_string(s)).transpose()
 		});
 
-		cached_field!(fields, cache, |_, me| Ok(me.cache().map(Path::new)));
+		fields.add_cached_field("cache", |_, me| Ok(me.cache().map(Path::new)));
 
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 		fields.add_field_method_get("is_search", |_, me| Ok(me.is_search()));

@@ -19,7 +19,6 @@ vendored-lua = [ "mlua/vendored" ]
 [dependencies]
 yazi-binding = { path = "../yazi-binding", version = "26.5.6" }
 yazi-config  = { path = "../yazi-config", version = "26.5.6" }
-yazi-dds     = { path = "../yazi-dds", version = "26.5.6" }
 yazi-fs      = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
