@@ -1,6 +1,6 @@
 use mlua::{ExternalError, Function, Lua, Table};
 use tokio::sync::mpsc;
-use yazi_dds::Sendable;
+use yazi_binding::Sendable;
 use yazi_macro::emit;
 use yazi_shared::{Layer, Source, event::Action};
 

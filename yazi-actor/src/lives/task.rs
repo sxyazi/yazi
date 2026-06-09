@@ -1,16 +1,14 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields, Value};
-use yazi_binding::{SER_OPT, cached_field};
+use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields};
+use yazi_binding::SER_OPT;
 use yazi_scheduler::Progress;
+use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::{Lives, PtrCell};
 
 pub(super) struct TaskSnap {
 	inner: PtrCell<yazi_scheduler::TaskSnap>,
-
-	v_title: Option<Value>,
-	v_prog:  Option<Value>,
 }
 
 impl Deref for TaskSnap {
@@ -21,14 +19,14 @@ impl Deref for TaskSnap {
 
 impl TaskSnap {
 	pub(super) fn make(inner: &yazi_scheduler::TaskSnap) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { inner: inner.into(), v_title: None, v_prog: None })
+		Lives::scoped_userdata(Self { inner: inner.into() })
 	}
 }
 
 impl UserData for TaskSnap {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, title, |lua, me| lua.create_string(&me.title));
-		cached_field!(fields, prog, |lua, me| lua.to_value_with(&me.prog, SER_OPT));
+		fields.add_cached_field("title", |lua, me| lua.create_string(&me.title));
+		fields.add_cached_field("prog", |lua, me| lua.to_value_with(&me.prog, SER_OPT));
 
 		fields.add_field_method_get("running", |_, me| Ok(me.prog.running()));
 		fields.add_field_method_get("cooked", |_, me| Ok(me.prog.cooked()));

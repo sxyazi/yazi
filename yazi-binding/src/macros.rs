@@ -44,48 +44,6 @@ macro_rules! deprecate {
 }
 
 #[macro_export]
-macro_rules! cached_field {
-	($fields:ident, $key:ident, $value:expr) => {
-		$fields.add_field_function_get(stringify!($key), |lua, ud| {
-			use mlua::{Error::UserDataDestructed, IntoLua, Lua, Result, Value, Value::UserData};
-			ud.borrow_mut_scoped::<Self, Result<Value>>(|me| match paste::paste! { &me.[<v_ $key>] } {
-				Some(v) if !v.is_userdata() => Ok(v.clone()),
-				Some(v @ UserData(ud)) if !matches!(ud.borrow::<()>(), Err(UserDataDestructed)) => {
-					Ok(v.clone())
-				}
-				_ => {
-					let v = ($value as fn(&Lua, &Self) -> Result<_>)(lua, me)?.into_lua(lua)?;
-					paste::paste! { me.[<v_ $key>] = Some(v.clone()) };
-					Ok(v)
-				}
-			})?
-		});
-	};
-}
-
-#[macro_export]
-macro_rules! cached_field_mut {
-	($fields:ident, $key:ident, $value:expr) => {
-		$fields.add_field_function_get(stringify!($key), |lua, ud| {
-			use mlua::{Error::UserDataDestructed, IntoLua, Lua, Result, Value, Value::UserData};
-			ud.borrow_mut_scoped::<Self, Result<Value>>(|me| match paste::paste! { &me.[<v_ $key>] } {
-				Some(Ok(v)) if !v.is_userdata() => Ok(v.clone()),
-				Some(Ok(v @ UserData(ud))) if !matches!(ud.borrow::<()>(), Err(UserDataDestructed)) => {
-					Ok(v.clone())
-				}
-				Some(Err(e)) => Err(e.clone()),
-				_ => {
-					let v =
-						($value as fn(&Lua, &mut Self) -> Result<_>)(lua, me).and_then(|v| v.into_lua(lua));
-					paste::paste! { me.[<v_ $key>] = Some(v.clone()) };
-					v
-				}
-			})?
-		});
-	};
-}
-
-#[macro_export]
 macro_rules! impl_area_method {
 	($methods:ident) => {
 		$methods.add_function(
@@ -245,19 +203,21 @@ macro_rules! impl_style_shorthands {
 #[macro_export]
 macro_rules! impl_file_fields {
 	($fields:ident) => {
-		$crate::cached_field!($fields, cha, |_, me| Ok($crate::Cha(me.cha)));
-		$crate::cached_field!($fields, url, |_, me| Ok($crate::Url::new(me.url_owned())));
-		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to.as_ref().map($crate::Path::new)));
+		use yazi_shim::mlua::UserDataFieldsExt;
 
-		$crate::cached_field!($fields, name, |lua, me| {
+		$fields.add_cached_field("cha", |_, me| Ok($crate::Cha(me.cha)));
+		$fields.add_cached_field("url", |_, me| Ok($crate::Url::new(me.url_owned())));
+		$fields.add_cached_field("link_to", |_, me| Ok(me.link_to.as_ref().map($crate::Path::new)));
+
+		$fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		$crate::cached_field!($fields, path, |_, me| {
+		$fields.add_cached_field("path", |_, me| {
 			use yazi_fs::FsUrl;
 			use yazi_shared::url::AsUrl;
 			Ok($crate::Path::new(me.url.as_url().unified_path()))
 		});
-		$crate::cached_field!($fields, cache, |_, me| {
+		$fields.add_cached_field("cache", |_, me| {
 			use yazi_fs::FsUrl;
 			Ok(me.url.cache().map($crate::Path::new))
 		});

@@ -2,13 +2,12 @@ use std::{ops::Deref, sync::Arc};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Table, UserData, UserDataFields, Value};
 use yazi_config::YAZI;
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{FileRef, Id, Iter, cached_field};
+use crate::{FileRef, Id, Iter};
 
 pub struct OpenRule {
 	inner: Arc<yazi_config::open::OpenRule>,
-
-	v_use: Option<Value>,
 }
 
 impl Deref for OpenRule {
@@ -23,7 +22,7 @@ impl From<OpenRule> for Arc<yazi_config::open::OpenRule> {
 
 impl OpenRule {
 	pub fn new(inner: impl Into<Arc<yazi_config::open::OpenRule>>) -> Self {
-		Self { inner: inner.into(), v_use: None }
+		Self { inner: inner.into() }
 	}
 }
 
@@ -36,7 +35,7 @@ impl FromLua for OpenRule {
 impl UserData for OpenRule {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
-		cached_field!(fields, use, |lua, me| {
+		fields.add_cached_field("use", |lua, me| {
 			lua.create_sequence_from(me.r#use.iter().map(|s| s.as_str()))
 		});
 	}

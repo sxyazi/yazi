@@ -1,16 +1,15 @@
 use std::ops::Deref;
 
 use anyhow::bail;
-use mlua::{UserData, UserDataFields, Value};
+use mlua::{UserData, UserDataFields};
 use yazi_config::KEYMAP;
 use yazi_shared::Layer;
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{cached_field, keymap::Chords};
+use crate::keymap::Chords;
 
 pub struct KeymapSection {
 	inner: &'static yazi_config::keymap::KeymapSection,
-
-	v_rules: Option<Value>,
 }
 
 impl Deref for KeymapSection {
@@ -37,12 +36,12 @@ impl TryFrom<Layer> for KeymapSection {
 			Layer::Notify => bail!("invalid layer"),
 		};
 
-		Ok(Self { inner, v_rules: None })
+		Ok(Self { inner })
 	}
 }
 
 impl UserData for KeymapSection {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, rules, |_, me| Ok(Chords::new(me.inner)));
+		fields.add_cached_field("rules", |_, me| Ok(Chords::new(me.inner)));
 	}
 }

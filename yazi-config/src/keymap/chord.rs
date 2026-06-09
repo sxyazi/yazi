@@ -3,7 +3,7 @@ use std::{borrow::Cow, hash::{Hash, Hasher}, sync::{Arc, OnceLock}};
 use regex::Regex;
 use serde::{Deserialize, Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
-use yazi_shared::{Id, Layer, Source, event::Action};
+use yazi_shared::{Id, Layer, event::{Actions, deserialize_actions}};
 
 use super::{Key, ids::chord_id};
 use crate::{Mixable, Platform, keymap::Chords};
@@ -16,8 +16,8 @@ pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
 	pub id:    Id,
 	#[serde(deserialize_with = "deserialize_on")]
 	pub on:    Vec<Key>,
-	#[serde(deserialize_with = "deserialize_run::<L, _>")]
-	pub run:   Vec<Action>,
+	#[serde(deserialize_with = "deserialize_actions::<L, _>")]
+	pub run:   Actions,
 	#[serde(default)]
 	pub desc:  String,
 	#[serde(default)]
@@ -93,26 +93,6 @@ where
 		return Err(de::Error::custom("'on' cannot be empty"));
 	}
 	Ok(keys)
-}
-
-fn deserialize_run<'de, const L: u8, D>(deserializer: D) -> Result<Vec<Action>, D::Error>
-where
-	D: Deserializer<'de>,
-{
-	let Some(layer) = Layer::from_repr(L) else {
-		return Err(de::Error::custom(format!("invalid keymap layer const: {L}")));
-	};
-
-	let mut actions: Vec<Action> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
-
-	for action in &mut actions {
-		action.source = Source::Key;
-		if action.layer == Layer::Null {
-			action.layer = layer;
-		}
-	}
-
-	Ok(actions)
 }
 
 // --- Matcher

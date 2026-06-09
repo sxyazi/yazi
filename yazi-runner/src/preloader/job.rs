@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{File, elements::Rect};
+use yazi_binding::{File, Sendable, elements::Rect};
 use yazi_config::LAYOUT;
-use yazi_dds::Sendable;
 
 pub struct PreloadJob {
 	pub preloader: Arc<yazi_config::plugin::Preloader>,

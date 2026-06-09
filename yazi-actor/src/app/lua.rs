@@ -1,6 +1,5 @@
 use anyhow::Result;
-use yazi_binding::runtime_scope;
-use yazi_dds::Sendable;
+use yazi_binding::{Sendable, runtime_scope};
 use yazi_macro::succ;
 use yazi_parser::app::LuaForm;
 use yazi_plugin::LUA;

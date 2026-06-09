@@ -1,7 +1,7 @@
 use std::{ops::Deref, ptr};
 
-use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::{Range, Style, cached_field};
+use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
+use yazi_binding::{Range, Style};
 use yazi_config::THEME;
 use yazi_shared::{path::AsPath, url::UrlLike};
 
@@ -12,16 +12,6 @@ pub(super) struct File {
 	idx:    usize,
 	folder: PtrCell<yazi_core::tab::Folder>,
 	tab:    PtrCell<yazi_core::tab::Tab>,
-
-	v_cha:     Option<Value>,
-	v_url:     Option<Value>,
-	v_link_to: Option<Value>,
-
-	v_name:  Option<Value>,
-	v_path:  Option<Value>,
-	v_cache: Option<Value>,
-
-	v_bare: Option<Value>,
 }
 
 impl Deref for File {
@@ -45,21 +35,7 @@ impl File {
 		Ok(match super::FILE_CACHE.borrow_mut().entry(PtrCell(&folder.files[idx])) {
 			Entry::Occupied(oe) => oe.into_mut().clone(),
 			Entry::Vacant(ve) => {
-				let ud = Lives::scoped_userdata(Self {
-					idx,
-					folder: folder.into(),
-					tab: tab.into(),
-
-					v_cha: None,
-					v_url: None,
-					v_link_to: None,
-
-					v_name: None,
-					v_path: None,
-					v_cache: None,
-
-					v_bare: None,
-				})?;
+				let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
 				ve.insert(ud.clone());
 				ud
 			}
@@ -73,7 +49,7 @@ impl File {
 impl UserData for File {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		yazi_binding::impl_file_fields!(fields);
-		cached_field!(fields, bare, |_, me| Ok(yazi_binding::File::new(&**me)));
+		fields.add_cached_field("bare", |_, me| Ok(yazi_binding::File::new(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.is_hovered()));

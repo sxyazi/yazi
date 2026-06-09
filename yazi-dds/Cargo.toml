@@ -31,7 +31,6 @@ hashbrown     = { workspace = true }
 indexmap      = { workspace = true }
 inventory     = { workspace = true }
 mlua          = { workspace = true }
-ordered-float = { workspace = true }
 parking_lot   = { workspace = true }
 paste         = { workspace = true }
 serde         = { workspace = true }

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, Lua, Value};
-use yazi_dds::Sendable;
+use yazi_binding::Sendable;
 use yazi_runner::entry::EntryJob;
 use yazi_shared::{Id, SStr, data::{Data, DataKey}};
 

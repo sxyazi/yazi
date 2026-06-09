@@ -11,14 +11,6 @@ const EXPECTED: &str = "expected a table, File, or fs::File";
 #[derive(Clone)]
 pub struct File {
 	pub(crate) inner: yazi_fs::File,
-
-	v_cha:     Option<Value>,
-	v_url:     Option<Value>,
-	v_link_to: Option<Value>,
-
-	v_name:  Option<Value>,
-	v_path:  Option<Value>,
-	v_cache: Option<Value>,
 }
 
 impl Deref for File {
@@ -32,18 +24,7 @@ impl From<File> for yazi_fs::File {
 }
 
 impl File {
-	pub fn new(inner: impl Into<yazi_fs::File>) -> Self {
-		Self {
-			inner:     inner.into(),
-			v_cha:     None,
-			v_url:     None,
-			v_link_to: None,
-
-			v_name:  None,
-			v_path:  None,
-			v_cache: None,
-		}
-	}
+	pub fn new(inner: impl Into<yazi_fs::File>) -> Self { Self { inner: inner.into() } }
 
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set("File", lua.create_function(|_, file: Self| Ok(file))?)

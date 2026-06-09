@@ -1,14 +1,12 @@
 use std::{ops::Deref, sync::Arc};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Table, UserData, UserDataFields, Value};
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{Id, Iter, cached_field};
+use crate::{Id, Iter};
 
 pub struct OpenerRule {
 	inner: Arc<yazi_config::opener::OpenerRule>,
-
-	v_run:  Option<Value>,
-	v_desc: Option<Value>,
 }
 
 impl Deref for OpenerRule {
@@ -23,7 +21,7 @@ impl From<OpenerRule> for Arc<yazi_config::opener::OpenerRule> {
 
 impl OpenerRule {
 	pub fn new(inner: impl Into<Arc<yazi_config::opener::OpenerRule>>) -> Self {
-		Self { inner: inner.into(), v_run: None, v_desc: None }
+		Self { inner: inner.into() }
 	}
 }
 
@@ -39,10 +37,10 @@ impl FromLua for OpenerRule {
 impl UserData for OpenerRule {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
-		cached_field!(fields, run, |lua, me| lua.create_string(&*me.run));
+		fields.add_cached_field("run", |lua, me| lua.create_string(&*me.run));
 		fields.add_field_method_get("block", |_, me| Ok(me.block));
 		fields.add_field_method_get("orphan", |_, me| Ok(me.orphan));
-		cached_field!(fields, desc, |lua, me| lua.create_string(&*me.desc));
+		fields.add_cached_field("desc", |lua, me| lua.create_string(&*me.desc));
 	}
 }
 

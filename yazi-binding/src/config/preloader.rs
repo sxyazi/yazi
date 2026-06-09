@@ -2,14 +2,13 @@ use std::{ops::Deref, sync::Arc};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, Value};
 use yazi_config::YAZI;
+use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{FileRef, Id, Iter, cached_field};
+use crate::{FileRef, Id, Iter};
 
 #[derive(Clone)]
 pub struct Preloader {
 	inner: Arc<yazi_config::plugin::Preloader>,
-
-	v_name: Option<Value>,
 }
 
 impl Deref for Preloader {
@@ -20,7 +19,7 @@ impl Deref for Preloader {
 
 impl Preloader {
 	pub fn new(inner: impl Into<Arc<yazi_config::plugin::Preloader>>) -> Self {
-		Self { inner: inner.into(), v_name: None }
+		Self { inner: inner.into() }
 	}
 }
 
@@ -28,7 +27,7 @@ impl UserData for Preloader {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
 
-		cached_field!(fields, name, |lua, me| lua.create_string(&*me.name));
+		fields.add_cached_field("name", |lua, me| lua.create_string(&*me.name));
 	}
 }
 
