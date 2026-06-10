@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Drag and drop ([#4005])
 - Bulk create ([#3793])
+- Dynamic keymap Lua API ([#4031])
 - Image preview with Überzug++ on Niri ([#3990])
 - New gait for input `backward` and `forward` actions ([#4012])
 
@@ -1742,3 +1743,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4005]: https://github.com/sxyazi/yazi/pull/4005
 [#4012]: https://github.com/sxyazi/yazi/pull/4012
 [#4022]: https://github.com/sxyazi/yazi/pull/4022
+[#4031]: https://github.com/sxyazi/yazi/pull/4031
