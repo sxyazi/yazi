@@ -11,6 +11,7 @@ This guide will help you understand how to contribute to the project.
 3. [Development Setup](#development-setup)
 4. [How to Contribute](#how-to-contribute)
 5. [Pull Requests](#pull-requests)
+6. [AI Policy](#ai-policy)
 
 ## Getting Started
 

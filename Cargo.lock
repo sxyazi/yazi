@@ -5674,6 +5674,7 @@ dependencies = [
  "ordered-float 5.3.0",
  "paste",
  "ratatui",
+ "serde",
  "serde_json",
  "tokio",
  "tokio-stream",

@@ -6,7 +6,8 @@ use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shared::Layer;
 
-use super::{Chord, KeymapSection};
+use super::KeymapSection;
+use crate::keymap::ChordArc;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Keymap {
@@ -21,7 +22,7 @@ pub struct Keymap {
 }
 
 impl Keymap {
-	pub fn get(&self, layer: Layer) -> Arc<Vec<Arc<Chord>>> {
+	pub fn get(&self, layer: Layer) -> Arc<Vec<ChordArc>> {
 		match layer {
 			Layer::Null | Layer::App => Arc::new(Vec::new()),
 			Layer::Mgr => self.mgr.deref().as_erased(),

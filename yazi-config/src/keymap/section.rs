@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
 use hashbrown::HashSet;
 use serde::Deserialize;
@@ -7,7 +7,7 @@ use yazi_shared::Layer;
 use yazi_shim::toml::DeserializeOverHook;
 
 use super::{Chord, Chords, Key};
-use crate::mix;
+use crate::{keymap::ChordArc, mix};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct KeymapSection<const L: u8 = { Layer::Null as u8 }> {
@@ -41,7 +41,7 @@ impl<const L: u8> DeserializeOverHook for KeymapSection<L> {
 		let a_seen: HashSet<_> = self.prepend_keymap.iter().map(on).collect();
 		let b_seen: HashSet<_> = keymap.iter().map(|c| on(c)).collect();
 
-		let keymap: Vec<Arc<Chord<L>>> = mix(
+		let keymap: Vec<ChordArc<L>> = mix(
 			self.prepend_keymap,
 			keymap.into_iter().filter(|v| !a_seen.contains(&on(v))),
 			self.append_keymap.into_iter().filter(|v| !b_seen.contains(&on(v))),

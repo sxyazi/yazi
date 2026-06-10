@@ -1,33 +1,61 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
-use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Table, UserData, UserDataFields, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, Value};
+use serde::Deserialize;
+use yazi_codegen::FromLuaOwned;
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{Id, Iter, event::Action, keymap::Key};
+use crate::{Id, Iter, event::Actions, keymap::Key};
 
+#[derive(FromLuaOwned)]
 pub struct Chord {
-	inner: Arc<yazi_config::keymap::Chord>,
+	inner: yazi_config::keymap::ChordArc,
 }
 
 impl Deref for Chord {
-	type Target = Arc<yazi_config::keymap::Chord>;
+	type Target = yazi_config::keymap::ChordArc;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl From<Chord> for Arc<yazi_config::keymap::Chord> {
+impl From<&yazi_config::keymap::ChordArc> for Chord {
+	fn from(value: &yazi_config::keymap::ChordArc) -> Self { Self { inner: value.clone() } }
+}
+
+impl From<Chord> for yazi_config::keymap::ChordArc {
 	fn from(value: Chord) -> Self { value.inner }
 }
 
 impl Chord {
-	pub fn new(inner: impl Into<Arc<yazi_config::keymap::Chord>>) -> Self {
+	pub fn new(inner: impl Into<yazi_config::keymap::ChordArc>) -> Self {
 		Self { inner: inner.into() }
 	}
 }
 
-impl FromLua for Chord {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(Self::new(lua.from_value::<yazi_config::keymap::Chord>(value)?))
+impl TryFrom<(Value, yazi_shared::Layer)> for Chord {
+	type Error = mlua::Error;
+
+	fn try_from((value, layer): (Value, yazi_shared::Layer)) -> Result<Self, Self::Error> {
+		use yazi_config::keymap::Chord as C;
+		use yazi_shared::Layer as L;
+
+		let de = mlua::serde::Deserializer::new(value);
+		let inner = match layer {
+			L::Null => C::<{ L::Null as u8 }>::deserialize(de)?.into(),
+			L::App => C::<{ L::App as u8 }>::deserialize(de)?.into(),
+			L::Mgr => C::<{ L::Mgr as u8 }>::deserialize(de)?.into(),
+			L::Tasks => C::<{ L::Tasks as u8 }>::deserialize(de)?.into(),
+			L::Spot => C::<{ L::Spot as u8 }>::deserialize(de)?.into(),
+			L::Pick => C::<{ L::Pick as u8 }>::deserialize(de)?.into(),
+			L::Input => C::<{ L::Input as u8 }>::deserialize(de)?.into(),
+			L::Confirm => C::<{ L::Confirm as u8 }>::deserialize(de)?.into(),
+			L::Help => C::<{ L::Help as u8 }>::deserialize(de)?.into(),
+			L::Cmp => C::<{ L::Cmp as u8 }>::deserialize(de)?.into(),
+			L::Which => C::<{ L::Which as u8 }>::deserialize(de)?.into(),
+			L::Notify => C::<{ L::Notify as u8 }>::deserialize(de)?.into(),
+		};
+
+		Ok(Self { inner })
 	}
 }
 
@@ -38,9 +66,7 @@ impl UserData for Chord {
 		fields
 			.add_cached_field("on", |lua, me| lua.create_sequence_from(me.on.iter().copied().map(Key)));
 
-		fields.add_cached_field("run", |lua, me| {
-			lua.create_sequence_from(me.run.iter().cloned().map(Action::new))
-		});
+		fields.add_cached_field("run", |_, me| Ok(Actions::new(me.run.clone())));
 
 		fields.add_cached_field("desc", |lua, me| lua.create_string(&me.desc));
 	}

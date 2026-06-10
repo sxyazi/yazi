@@ -5,29 +5,28 @@ use serde::Deserialize;
 use yazi_shared::Layer;
 use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, vec::{IndexAtError, VecExt}};
 
-use super::Chord;
-use crate::keymap::ChordMatcher;
+use crate::keymap::{Chord, ChordArc, ChordMatcher};
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Chords<const L: u8 = { Layer::Null as u8 }>(ArcSwap<Vec<Arc<Chord<L>>>>);
+pub struct Chords<const L: u8 = { Layer::Null as u8 }>(ArcSwap<Vec<ChordArc<L>>>);
 
 impl<const L: u8> Deref for Chords<L> {
-	type Target = ArcSwap<Vec<Arc<Chord<L>>>>;
+	type Target = ArcSwap<Vec<ChordArc<L>>>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl<const L: u8> From<Vec<Arc<Chord<L>>>> for Chords<L> {
-	fn from(inner: Vec<Arc<Chord<L>>>) -> Self { Self(inner.into_pointee()) }
+impl<const L: u8> From<Vec<ChordArc<L>>> for Chords<L> {
+	fn from(inner: Vec<ChordArc<L>>) -> Self { Self(inner.into_pointee()) }
 }
 
 impl<const L: u8> Chords<L> {
-	pub fn as_erased<const M: u8>(&self) -> Arc<Vec<Arc<Chord<M>>>> {
+	pub fn as_erased<const M: u8>(&self) -> Arc<Vec<ChordArc<M>>> {
 		let chords = self.0.load_full();
-		unsafe { Arc::from_raw(Arc::into_raw(chords) as *const Vec<Arc<Chord<M>>>) }
+		unsafe { Arc::from_raw(Arc::into_raw(chords) as *const Vec<ChordArc<M>>) }
 	}
 
-	pub fn insert(&self, index: isize, rule: Arc<Chord>) -> Result<(), IndexAtError> {
+	pub fn insert(&self, index: isize, rule: ChordArc) -> Result<(), IndexAtError> {
 		self.0.try_rcu(|rules| {
 			let (before, after) = rules.split_at(rules.index_at(index)?);
 			Ok(
@@ -46,12 +45,30 @@ impl<const L: u8> Chords<L> {
 	pub fn remove(&self, matcher: ChordMatcher) {
 		self.0.rcu(|chords| {
 			let mut next = Vec::clone(chords);
-			next.retain(|chord| !matcher.matches(chord.as_erased()));
+			next.retain(|arc| !matcher.matches(arc.as_erased()));
 			next
 		});
 	}
 
-	pub(crate) fn unwrap_unchecked(self) -> Vec<Arc<Chord<L>>> {
+	pub fn update<E>(
+		&self,
+		matcher: ChordMatcher,
+		f: impl Fn(Chord) -> Result<Chord, E>,
+	) -> Result<(), E> {
+		self.0.try_rcu(|rules| {
+			let mut next = Vec::clone(rules);
+			for arc in &mut next {
+				if matcher.matches(arc.as_erased()) {
+					*arc = f(Chord::clone(arc.as_erased()))?.into();
+				}
+			}
+			Ok(Arc::new(next))
+		})?;
+
+		Ok(())
+	}
+
+	pub(crate) fn unwrap_unchecked(self) -> Vec<ChordArc<L>> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique chords arc")
 	}
 }

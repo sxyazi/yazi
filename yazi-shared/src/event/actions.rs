@@ -22,6 +22,21 @@ impl From<Action> for Actions {
 	fn from(value: Action) -> Self { Self(vec![value]) }
 }
 
+impl From<Vec<Action>> for Actions {
+	fn from(value: Vec<Action>) -> Self { Self(value) }
+}
+
+impl Actions {
+	pub fn set(&mut self, layer: Layer, source: Source) {
+		for action in &mut self.0 {
+			action.source = source;
+			if action.layer == Layer::Null {
+				action.layer = layer;
+			}
+		}
+	}
+}
+
 impl IntoIterator for Actions {
 	type IntoIter = vec::IntoIter<Action>;
 	type Item = Action;
@@ -44,14 +59,8 @@ where
 		return Err(de::Error::custom(format!("invalid keymap layer const: {L}")));
 	};
 
-	let mut actions: Vec<Action> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
+	let mut actions = Actions(OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?);
+	actions.set(layer, Source::Key);
 
-	for action in &mut actions {
-		action.source = Source::Key;
-		if action.layer == Layer::Null {
-			action.layer = layer;
-		}
-	}
-
-	Ok(Actions(actions))
+	Ok(actions)
 }

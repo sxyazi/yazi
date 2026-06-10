@@ -26,7 +26,7 @@ impl UserData for Which {
 		fields.add_cached_field("tx", |_, me| Ok(me.tx.clone().map(yazi_binding::MpscUnboundedTx)));
 		fields.add_field_method_get("times", |_, me| Ok(me.inner.times));
 		fields.add_cached_field("cands", |lua, me| {
-			lua.create_sequence_from(me.inner.cands.iter().cloned().map(yazi_binding::keymap::ChordCow))
+			lua.create_sequence_from(me.inner.cands.iter().map(yazi_binding::keymap::Chord::from))
 		});
 
 		fields.add_field_method_get("active", |_, me| Ok(me.inner.active));

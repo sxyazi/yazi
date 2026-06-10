@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(action cmd);
+yazi_macro::mod_flat!(action actions cmd);

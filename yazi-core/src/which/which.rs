@@ -1,12 +1,12 @@
 use tokio::sync::mpsc;
-use yazi_config::keymap::{ChordCow, Key};
+use yazi_config::keymap::{ChordArc, Key};
 use yazi_macro::{emit, render_and};
 
 #[derive(Default)]
 pub struct Which {
-	pub tx:    Option<mpsc::UnboundedSender<Option<yazi_binding::keymap::ChordCow>>>,
+	pub tx:    Option<mpsc::UnboundedSender<Option<yazi_binding::keymap::Chord>>>,
 	pub times: usize,
-	pub cands: Vec<ChordCow>,
+	pub cands: Vec<ChordArc>,
 
 	// Active state
 	pub active: bool,
@@ -31,7 +31,7 @@ impl Which {
 		render_and!(true)
 	}
 
-	pub fn dismiss(&mut self, chord: Option<ChordCow>) {
+	pub fn dismiss(&mut self, chord: Option<ChordArc>) {
 		self.times = 0;
 		self.cands.clear();
 
@@ -39,7 +39,7 @@ impl Which {
 		self.silent = false;
 
 		if let Some(tx) = self.tx.take() {
-			_ = tx.send(chord.clone().map(Into::into));
+			_ = tx.send(chord.as_ref().map(Into::into));
 		}
 		if let Some(chord) = chord {
 			emit!(Seq(chord.into_seq()));

@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
+use yazi_config::{KEYMAP, YAZI, keymap::{ChordArc, Key}};
 use yazi_macro::{act, render, render_and};
 use yazi_shared::Layer;
 use yazi_term::{CursorStyle, TERM, event::KeyCode};
@@ -14,7 +12,7 @@ use crate::help::HELP_MARGIN;
 pub struct Help {
 	pub visible:         bool,
 	pub layer:           Layer,
-	pub(super) bindings: Vec<Arc<Chord>>,
+	pub(super) bindings: Vec<ChordArc>,
 
 	// Filter
 	pub keyword:   String,
@@ -75,7 +73,7 @@ impl Help {
 	}
 
 	// --- Bindings
-	pub fn window(&self) -> &[Arc<Chord>] {
+	pub fn window(&self) -> &[ChordArc] {
 		let end = (self.offset + self.limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}
