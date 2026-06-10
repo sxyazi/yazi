@@ -117,10 +117,27 @@ where
 /// Apply the diff between two `Modifier` sets by emitting SGR codes.
 fn write_modifier_diff(w: &mut impl Write, from: Modifier, to: Modifier) -> io::Result<()> {
 	let removed = from - to;
-	if removed.contains(Modifier::REVERSED) {
-		write!(w, "{}", SetSgr::NoReverse)?;
+	let added = to - from;
+
+	// Process removed styles
+	let removed_styles = [
+		(Modifier::REVERSED, SetSgr::NoReverse),
+		(Modifier::ITALIC, SetSgr::NoItalic),
+		(Modifier::UNDERLINED, SetSgr::NoUnderline),
+		(Modifier::CROSSED_OUT, SetSgr::NotCrossedOut),
+		(Modifier::HIDDEN, SetSgr::NoHidden),
+	];
+	for (modifier, sgr) in removed_styles {
+		if removed.contains(modifier) {
+			write!(w, "{}", sgr)?;
+		}
 	}
 
+	if removed.contains(Modifier::SLOW_BLINK) || removed.contains(Modifier::RAPID_BLINK) {
+		write!(w, "{}", SetSgr::NoBlink)?;
+	}
+
+	// Process intensity (Bold / Dim) status transitions
 	let reset_intensity = removed.contains(Modifier::BOLD) || removed.contains(Modifier::DIM);
 	if reset_intensity {
 		// Bold and Dim are both reset by applying the Normal intensity
@@ -131,55 +148,32 @@ fn write_modifier_diff(w: &mut impl Write, from: Modifier, to: Modifier) -> io::
 		if to.contains(Modifier::DIM) {
 			write!(w, "{}", SetSgr::Dim)?;
 		}
-
 		if to.contains(Modifier::BOLD) {
 			write!(w, "{}", SetSgr::Bold)?;
 		}
+	} else {
+		if added.contains(Modifier::BOLD) {
+			write!(w, "{}", SetSgr::Bold)?;
+		}
+		if added.contains(Modifier::DIM) {
+			write!(w, "{}", SetSgr::Dim)?;
+		}
 	}
 
-	if removed.contains(Modifier::ITALIC) {
-		write!(w, "{}", SetSgr::NoItalic)?;
-	}
-	if removed.contains(Modifier::UNDERLINED) {
-		write!(w, "{}", SetSgr::NoUnderline)?;
-	}
-	if removed.contains(Modifier::CROSSED_OUT) {
-		write!(w, "{}", SetSgr::NotCrossedOut)?;
-	}
-	if removed.contains(Modifier::HIDDEN) {
-		write!(w, "{}", SetSgr::NoHidden)?;
-	}
-	if removed.contains(Modifier::SLOW_BLINK) || removed.contains(Modifier::RAPID_BLINK) {
-		write!(w, "{}", SetSgr::NoBlink)?;
-	}
-
-	let added = to - from;
-	if added.contains(Modifier::REVERSED) {
-		write!(w, "{}", SetSgr::Reverse)?;
-	}
-	if added.contains(Modifier::BOLD) && !reset_intensity {
-		write!(w, "{}", SetSgr::Bold)?;
-	}
-	if added.contains(Modifier::ITALIC) {
-		write!(w, "{}", SetSgr::Italic)?;
-	}
-	if added.contains(Modifier::UNDERLINED) {
-		write!(w, "{}", SetSgr::Underlined)?;
-	}
-	if added.contains(Modifier::DIM) && !reset_intensity {
-		write!(w, "{}", SetSgr::Dim)?;
-	}
-	if added.contains(Modifier::CROSSED_OUT) {
-		write!(w, "{}", SetSgr::CrossedOut)?;
-	}
-	if added.contains(Modifier::HIDDEN) {
-		write!(w, "{}", SetSgr::Hidden)?;
-	}
-	if added.contains(Modifier::SLOW_BLINK) {
-		write!(w, "{}", SetSgr::SlowBlink)?;
-	}
-	if added.contains(Modifier::RAPID_BLINK) {
-		write!(w, "{}", SetSgr::RapidBlink)?;
+	// Process added styles
+	let added_styles = [
+		(Modifier::REVERSED, SetSgr::Reverse),
+		(Modifier::ITALIC, SetSgr::Italic),
+		(Modifier::UNDERLINED, SetSgr::Underlined),
+		(Modifier::CROSSED_OUT, SetSgr::CrossedOut),
+		(Modifier::HIDDEN, SetSgr::Hidden),
+		(Modifier::SLOW_BLINK, SetSgr::SlowBlink),
+		(Modifier::RAPID_BLINK, SetSgr::RapidBlink),
+	];
+	for (modifier, sgr) in added_styles {
+		if added.contains(modifier) {
+			write!(w, "{}", sgr)?;
+		}
 	}
 
 	Ok(())
