@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
-use yazi_config::{KEYMAP, keymap::{Chord, ChordCow, Key}};
+use yazi_config::{KEYMAP, keymap::{Chord, Key}};
 use yazi_macro::act;
 use yazi_shared::Layer;
 
@@ -37,7 +37,7 @@ impl<'a> Router<'a> {
 
 	fn matches(&mut self, layer: Layer, key: Key) -> bool {
 		for chord in &*KEYMAP.get(layer) {
-			let Chord { on, .. } = &**chord;
+			let Chord { on, .. } = chord.as_ref();
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
@@ -46,7 +46,7 @@ impl<'a> Router<'a> {
 				let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 				act!(which:activate, cx, (layer, key)).ok();
 			} else {
-				Dispatcher::new(self.app).dispatch_seq(ChordCow::from(chord).into_seq());
+				Dispatcher::new(self.app).dispatch_seq(chord.to_seq());
 			}
 			return true;
 		}

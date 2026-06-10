@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
-use yazi_config::{Platform, keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
@@ -24,7 +24,7 @@ impl Utils {
 				.enumerate()
 				.map(|(i, cand)| {
 					let cand = cand?;
-					Ok(ChordCow::Owned(Chord {
+					Ok(ChordArc::from(Chord::<{ Layer::Null as u8 }> {
 						id:    yazi_config::keymap::chord_id(),
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
 						run:   relay!(which:callback, [i + 1]).into(),

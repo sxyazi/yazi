@@ -3,14 +3,15 @@ use std::{borrow::Cow, hash::{Hash, Hasher}, sync::{Arc, OnceLock}};
 use regex::Regex;
 use serde::{Deserialize, Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
+use yazi_codegen::DeserializeOver2;
 use yazi_shared::{Id, Layer, event::{Actions, deserialize_actions}};
 
 use super::{Key, ids::chord_id};
-use crate::{Mixable, Platform, keymap::Chords};
+use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
 
 static RE: OnceLock<Regex> = OnceLock::new();
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, DeserializeOver2)]
 pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
 	#[serde(skip, default = "chord_id")]
 	pub id:    Id,
@@ -47,10 +48,6 @@ impl<const L: u8> Hash for Chord<L> {
 }
 
 impl<const L: u8> Chord<L> {
-	pub fn as_erased<const M: u8>(self: &Arc<Self>) -> &Arc<Chord<M>> {
-		unsafe { &*(self as *const Arc<Chord<L>> as *const Arc<Chord<M>>) }
-	}
-
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	pub fn run(&self) -> String {
@@ -117,7 +114,7 @@ impl ChordMatcher {
 // --- Iter
 #[derive(Default)]
 pub struct ChordIter {
-	pub chords:  Arc<Vec<Arc<Chord>>>,
+	pub chords:  Arc<Vec<ChordArc>>,
 	pub matcher: ChordMatcher,
 	pub offset:  usize,
 }
@@ -133,7 +130,7 @@ impl From<&Chords> for ChordIter {
 }
 
 impl Iterator for ChordIter {
-	type Item = Arc<Chord>;
+	type Item = ChordArc;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some(chord) = self.chords.get(self.offset) {
