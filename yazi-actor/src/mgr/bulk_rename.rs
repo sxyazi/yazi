@@ -386,7 +386,7 @@ impl Eq for Tuple {}
 
 impl Hash for Tuple {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-		self.1.hash(state);
+		self.1.as_strand().encoded_bytes().hash(state);
 	}
 }
 
