@@ -1,4 +1,10 @@
-use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path, sync::Arc};
+use std::{
+	hash::Hash,
+	io::{Read, Write},
+	ops::Deref,
+	path::Path,
+	sync::Arc,
+};
 
 use anyhow::{Result, anyhow};
 use hashbrown::HashMap;
@@ -7,18 +13,33 @@ use tokio::io::AsyncWriteExt;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
+use yazi_fs::{
+	File, FilesOp, Splatter, max_common_root,
+	path::skip_url,
+	provider::{
+		FileBuilder, Provider,
+		local::{Gate, Local},
+	},
+};
 use yazi_macro::{err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy};
-use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{
+	data::Data,
+	path::PathDyn,
+	strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike},
+	timestamp_us,
+	url::{AsUrl, UrlBuf, UrlCow, UrlLike},
+};
 use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
 use yazi_tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
+
+type Renames = Vec<(Tuple, Tuple)>;
 
 pub struct BulkRename;
 
@@ -109,18 +130,20 @@ impl BulkRename {
 		}
 
 		let (old, new) = old.into_iter().zip(new).filter(|(o, n)| o != n).unzip();
-		let todo = Self::prioritized_paths(old, new);
-		if todo.is_empty() {
+		let (chain, cycles) = Self::prioritized_paths(old, new);
+		if chain.is_empty() && cycles.is_empty() {
 			return Ok(());
 		}
 
+		let todo: Vec<_> = chain.iter().chain(cycles.iter().flatten()).cloned().collect();
 		if !Self::ask_continue(&todo, decision)? {
 			return Ok(());
 		}
 
 		let permit = WATCHER.acquire().await.unwrap();
-		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
-		for (o, n) in todo {
+		let cap = chain.len() + cycles.iter().map(Vec::len).sum::<usize>();
+		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(cap));
+		for (o, n) in chain {
 			let (Ok(old), Ok(new)) =
 				(Self::replace_url(&selected[o.0], root, &o), Self::replace_url(&selected[n.0], root, &n))
 			else {
@@ -137,6 +160,10 @@ impl BulkRename {
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));
 			}
+		}
+
+		for cycle in cycles {
+			Self::rename_cycle(root, cycle, &selected, &mut failed, &mut succeeded).await;
 		}
 
 		if !succeeded.is_empty() {
@@ -161,6 +188,85 @@ impl BulkRename {
 
 	fn replace_url(url: &UrlBuf, take: usize, rep: &StrandBuf) -> Result<UrlBuf> {
 		Ok(url.try_replace(take, PathDyn::with(url.kind(), rep)?)?.into_owned())
+	}
+
+	async fn rename_cycle(
+		root: usize,
+		cycle: Renames,
+		selected: &[UrlBuf],
+		failed: &mut Vec<(Tuple, Tuple, anyhow::Error)>,
+		succeeded: &mut HashMap<UrlBuf, File>,
+	) {
+		let edge = |i: usize, e: anyhow::Error| (cycle[i].0.clone(), cycle[i].1.clone(), e);
+
+		let urls: Result<Vec<_>> = cycle
+			.iter()
+			.map(|(o, n)| {
+				Ok((
+					Self::replace_url(&selected[o.0], root, o)?,
+					Self::replace_url(&selected[n.0], root, n)?,
+				))
+			})
+			.collect();
+		let Ok(urls) = urls else {
+			failed.extend((0..cycle.len()).map(|i| edge(i, anyhow!("Invalid new or old file name"))));
+			return;
+		};
+
+		let first = &urls[0].0;
+		let Some(tmp) = Self::temp_url(first, &urls).await else {
+			failed
+				.extend((0..cycle.len()).map(|i| edge(i, anyhow!("Failed to allocate a temporary name"))));
+			return;
+		};
+
+		if let Err(e) = provider::rename(first, &tmp).await {
+			failed.push(edge(0, e.into()));
+			failed.extend((1..cycle.len()).map(|i| edge(i, anyhow!("Skipped due to a broken cycle"))));
+			return;
+		}
+
+		for i in (1..cycle.len()).rev() {
+			let (old, new) = &urls[i];
+			if let Err(e) = provider::rename(old, new).await {
+				err!(provider::rename(&tmp, first).await);
+				failed.extend((0..i).map(|j| edge(j, anyhow!("Rolled back due to a broken cycle"))));
+				failed.push(edge(i, e.into()));
+				return;
+			}
+			match File::new(new.clone()).await {
+				Ok(f) => {
+					succeeded.insert(old.clone(), f);
+				}
+				Err(_) => failed.push(edge(i, anyhow!("Failed to retrieve file info"))),
+			}
+		}
+
+		let final_to = &urls[0].1;
+		if let Err(e) = provider::rename(&tmp, final_to).await {
+			failed.push(edge(0, anyhow!("{e}; the file is left at {}", tmp.display())));
+		}
+		match File::new(final_to.clone()).await {
+			Ok(f) => {
+				succeeded.insert(first.clone(), f);
+			}
+			Err(_) => failed.push(edge(0, anyhow!("Failed to retrieve file info"))),
+		}
+	}
+
+	async fn temp_url(file: &UrlBuf, urls: &[(UrlBuf, UrlBuf)]) -> Option<UrlBuf> {
+		let parent = file.parent()?;
+		for _ in 0..16 {
+			let name = format!(".bulk-rename-{}", timestamp_us());
+			let Ok(tmp) = parent.try_join(name.as_str()) else { continue };
+			if urls.iter().any(|(_, n)| *n == tmp) {
+				continue;
+			}
+			if !maybe_exists(&tmp).await {
+				return Some(tmp);
+			}
+		}
+		None
 	}
 
 	fn ask_continue(todo: &[(Tuple, Tuple)], decision: Option<bool>) -> Result<bool> {
@@ -197,7 +303,7 @@ impl BulkRename {
 		Ok(())
 	}
 
-	fn prioritized_paths(old: Vec<Tuple>, new: Vec<Tuple>) -> Vec<(Tuple, Tuple)> {
+	fn prioritized_paths(old: Vec<Tuple>, new: Vec<Tuple>) -> (Renames, Vec<Renames>) {
 		let orders: HashMap<_, _> = old.iter().enumerate().map(|(i, t)| (t, i)).collect();
 		let mut incomes: HashMap<_, _> = old.iter().map(|t| (t, false)).collect();
 		let mut todos: HashMap<_, _> = old
@@ -215,13 +321,10 @@ impl BulkRename {
 			let mut outcomes: Vec<_> = incomes.iter().filter(|&(_, b)| !b).map(|(&t, _)| t).collect();
 			outcomes.sort_unstable_by(|a, b| orders[b].cmp(&orders[a]));
 
-			// If there're no outcomes, it means there are cycles in the renaming
+			// If there're no outcomes, every remaining edge belongs to a cycle
 			if outcomes.is_empty() {
-				let mut remain: Vec<_> = todos.into_iter().map(|(o, n)| (o.clone(), n)).collect();
-				remain.sort_unstable_by(|(a, _), (b, _)| orders[a].cmp(&orders[b]));
 				sorted.reverse();
-				sorted.extend(remain);
-				return sorted;
+				return (sorted, Self::partition_cycles(todos, &orders));
 			}
 
 			for old in outcomes {
@@ -232,7 +335,32 @@ impl BulkRename {
 			}
 		}
 		sorted.reverse();
-		sorted
+		(sorted, Vec::new())
+	}
+
+	fn partition_cycles(
+		mut todos: HashMap<&Tuple, Tuple>,
+		orders: &HashMap<&Tuple, usize>,
+	) -> Vec<Renames> {
+		let mut starts: Vec<_> = todos.keys().copied().collect();
+		starts.sort_unstable_by(|a, b| orders[a].cmp(&orders[b]));
+
+		let mut cycles = Vec::new();
+		for start in starts {
+			if !todos.contains_key(start) {
+				continue;
+			}
+
+			let mut cycle = Vec::new();
+			let mut cur = start;
+			while let Some(next) = todos.remove(cur) {
+				cycle.push((cur.clone(), next.clone()));
+				let Some((&owner, _)) = todos.get_key_value(&next) else { break };
+				cur = owner;
+			}
+			cycles.push(cycle);
+		}
+		cycles
 	}
 }
 
@@ -243,25 +371,35 @@ struct Tuple(usize, StrandBuf);
 impl Deref for Tuple {
 	type Target = StrandBuf;
 
-	fn deref(&self) -> &Self::Target { &self.1 }
+	fn deref(&self) -> &Self::Target {
+		&self.1
+	}
 }
 
 impl PartialEq for Tuple {
-	fn eq(&self, other: &Self) -> bool { self.1 == other.1 }
+	fn eq(&self, other: &Self) -> bool {
+		self.1 == other.1
+	}
 }
 
 impl Eq for Tuple {}
 
 impl Hash for Tuple {
-	fn hash<H: std::hash::Hasher>(&self, state: &mut H) { self.1.hash(state); }
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.1.hash(state);
+	}
 }
 
 impl AsStrand for &Tuple {
-	fn as_strand(&self) -> Strand<'_> { self.1.as_strand() }
+	fn as_strand(&self) -> Strand<'_> {
+		self.1.as_strand()
+	}
 }
 
 impl Tuple {
-	fn new(index: usize, inner: impl Into<StrandBuf>) -> Self { Self(index, inner.into()) }
+	fn new(index: usize, inner: impl Into<StrandBuf>) -> Self {
+		Self(index, inner.into())
+	}
 }
 
 // --- Tests
