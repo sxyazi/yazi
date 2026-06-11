@@ -409,44 +409,70 @@ mod tests {
 
 	#[test]
 	fn test_sort() {
-		fn cmp(input: &[(&str, &str)], expected: &[(&str, &str)]) {
-			let sorted = BulkRename::prioritized_paths(
+		fn cmp(input: &[(&str, &str)], chain: &[(&str, &str)], cycles: &[&[(&str, &str)]]) {
+			let (res_chain, res_cycles) = BulkRename::prioritized_paths(
 				input.iter().map(|&(o, _)| Tuple::new(0, o)).collect(),
 				input.iter().map(|&(_, n)| Tuple::new(0, n)).collect(),
 			);
-			let sorted: Vec<_> =
-				sorted.iter().map(|(o, n)| (o.to_str().unwrap(), n.to_str().unwrap())).collect();
-			assert_eq!(sorted, expected);
+			let flat = |v: &[(Tuple, Tuple)]| -> Vec<(String, String)> {
+				v.iter().map(|(o, n)| (o.to_str().unwrap().into(), n.to_str().unwrap().into())).collect()
+			};
+			let want = |v: &[(&str, &str)]| -> Vec<(String, String)> {
+				v.iter().map(|&(o, n)| (o.into(), n.into())).collect()
+			};
+			assert_eq!(flat(&res_chain), want(chain));
+			assert_eq!(
+				res_cycles.iter().map(|c| flat(c)).collect::<Vec<_>>(),
+				cycles.iter().map(|c| want(c)).collect::<Vec<_>>()
+			);
 		}
 
 		#[rustfmt::skip]
 		cmp(
 			&[("2", "3"), ("1", "2"), ("3", "4")],
-			&[("3", "4"), ("2", "3"), ("1", "2")]
+			&[("3", "4"), ("2", "3"), ("1", "2")],
+			&[]
 		);
 
 		#[rustfmt::skip]
 		cmp(
 			&[("1", "3"), ("2", "3"), ("3", "4")],
-			&[("3", "4"), ("1", "3"), ("2", "3")]
+			&[("3", "4"), ("1", "3"), ("2", "3")],
+			&[]
+		);
+		#[rustfmt::skip]
+		cmp(
+			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
+			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
+			&[]
 		);
 
 		#[rustfmt::skip]
 		cmp(
-			&[("2", "1"), ("1", "2")],
-			&[("2", "1"), ("1", "2")]
+			&[("1", "2"), ("2", "1")],
+			&[],
+			&[&[("1", "2"), ("2", "1")]]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("1", "2"), ("2", "3"), ("3", "1")],
+			&[],
+			&[&[("1", "2"), ("2", "3"), ("3", "1")]]
 		);
 
 		#[rustfmt::skip]
 		cmp(
 			&[("3", "2"), ("2", "1"), ("1", "3"), ("a", "b"), ("b", "c")],
-			&[("b", "c"), ("a", "b"), ("3", "2"), ("2", "1"), ("1", "3")]
+			&[("b", "c"), ("a", "b")],
+			&[&[("3", "2"), ("2", "1"), ("1", "3")]]
 		);
 
 		#[rustfmt::skip]
 		cmp(
-			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
-			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
+			&[("1", "2"), ("2", "1"), ("3", "4"), ("4", "3")],
+			&[],
+			&[&[("1", "2"), ("2", "1")], &[("3", "4"), ("4", "3")]]
 		);
 	}
 }
