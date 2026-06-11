@@ -43,7 +43,7 @@ impl Actor for PluginDo {
 		};
 		drop(loader);
 
-		let result = Lives::scope(cx.core, || {
+		let result = Lives::scope(cx.core, |_| {
 			if let Some(cb) = opt.callback {
 				cb(&LUA, plugin)
 			} else {

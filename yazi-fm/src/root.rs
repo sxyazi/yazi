@@ -1,18 +1,18 @@
 use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
-use yazi_binding::elements::render_once;
 use yazi_core::Core;
 use yazi_plugin::LUA;
 
 use super::{cmp, confirm, help, input, mgr, pick, spot, tasks, which};
+use crate::Renderer;
 
 pub(super) struct Root<'a> {
-	core: &'a Core,
+	core: &'a mut Core,
 }
 
 impl<'a> Root<'a> {
-	pub(super) fn new(core: &'a Core) -> Self { Self { core } }
+	pub(super) fn new(core: &'a mut Core) -> Self { Self { core } }
 
 	pub(super) fn reflow(area: Rect) -> mlua::Result<Table> {
 		let area = yazi_binding::elements::Rect::from(area);
@@ -23,14 +23,7 @@ impl<'a> Root<'a> {
 
 impl Widget for Root<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let mut f = || {
-			let area = yazi_binding::elements::Rect::from(area);
-			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
-
-			render_once(root.call_method("redraw", ())?, buf, |p| self.core.mgr.area(p));
-			Ok::<_, mlua::Error>(())
-		};
-		if let Err(e) = f() {
+		if let Err(e) = Renderer::new(self.core, "Root").render(area, buf) {
 			error!("Failed to redraw the `Root` component:\n{e}");
 		}
 

@@ -5,11 +5,11 @@ use yazi_core::{Core, tasks::TASKS_PERCENT};
 use crate::tasks::List;
 
 pub(crate) struct Tasks<'a> {
-	core: &'a Core,
+	core: &'a mut Core,
 }
 
 impl<'a> Tasks<'a> {
-	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
+	pub(crate) fn new(core: &'a mut Core) -> Self { Self { core } }
 
 	pub(super) fn area(area: Rect) -> Rect {
 		let chunk = layout::Layout::vertical([

@@ -1,9 +1,11 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataMethods, UserDataRef, Value};
 use paste::paste;
 
 use super::{Lives, PtrCell};
+
+pub(super) type CoreRef = UserDataRef<Core>;
 
 pub(super) struct Core {
 	inner: PtrCell<yazi_core::Core>,
