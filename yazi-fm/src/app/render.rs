@@ -30,8 +30,8 @@ impl App {
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let preview_rect = LAYOUT.get().preview;
 		term.draw(|f| {
-			_ = Lives::scope(&self.core, || {
-				runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(&self.core), f.area())))
+			_ = Lives::scope(&mut self.core, |core| {
+				runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(core), f.area())))
 			});
 		})?;
 
@@ -58,10 +58,10 @@ impl App {
 		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
 
 		term.draw_partial(|f| {
-			_ = Lives::scope(&self.core, || {
+			_ = Lives::scope(&mut self.core, |core| {
 				runtime_scope!(LUA, "root", {
-					f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
-					f.render_widget(crate::notify::Notify::new(&self.core), f.area());
+					f.render_widget(crate::tasks::Progress::new(core), f.area());
+					f.render_widget(crate::notify::Notify::new(core), f.area());
 					Ok(())
 				})
 			});

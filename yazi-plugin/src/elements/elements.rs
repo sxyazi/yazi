@@ -123,7 +123,7 @@ pub(super) fn redraw(lua: &Lua) -> mlua::Result<Value> {
 			Value::UserData(ud) => lua.create_sequence_from([ud]),
 			_ => {
 				error!(
-					"Failed to `redraw()` the `{}` component: expected a table or UserData",
+					"Failed to `redraw()` the `{}` component: expected an element or a table of them",
 					id.display(),
 				);
 				lua.create_table()

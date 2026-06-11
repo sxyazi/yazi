@@ -16,7 +16,7 @@ impl Actor for Lua {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let chunk = LUA.load(&*form.code).set_name("anonymous");
-		let result = Lives::scope(cx.core, || {
+		let result = Lives::scope(cx.core, |_| {
 			runtime_scope!(LUA, "inline", Sendable::value_to_data(&LUA, chunk.eval()?))
 		});
 		succ!(result?);

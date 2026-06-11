@@ -55,6 +55,7 @@ impl<T> RoCell<T> {
 			self.inner.get().replace(MaybeUninit::uninit()).assume_init()
 		}
 	}
+
 }
 
 impl<T> Default for RoCell<T> {

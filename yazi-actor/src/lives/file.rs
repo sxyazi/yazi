@@ -5,8 +5,8 @@ use yazi_binding::{Range, Style};
 use yazi_config::THEME;
 use yazi_shared::{path::AsPath, url::UrlLike};
 
-use super::Lives;
-use crate::lives::PtrCell;
+use super::{FILE_CACHE, Lives};
+use crate::lives::{CoreRef, PtrCell};
 
 pub(super) struct File {
 	idx:    usize,
@@ -32,7 +32,7 @@ impl File {
 	) -> mlua::Result<AnyUserData> {
 		use hashbrown::hash_map::Entry;
 
-		Ok(match super::FILE_CACHE.borrow_mut().entry(PtrCell(&folder.files[idx])) {
+		Ok(match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.files[idx])) {
 			Entry::Occupied(oe) => oe.into_mut().clone(),
 			Entry::Vacant(ve) => {
 				let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
@@ -71,9 +71,8 @@ impl UserData for File {
 			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				core.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
-			})?
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			core.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
 		});
 		methods.add_method("prefix", |lua, me, ()| {
 			if !me.url.has_trail() {
@@ -85,20 +84,18 @@ impl UserData for File {
 			Some(lua.create_string(comp.as_path().encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				let mime = core.mgr.mimetype.get(&me.url).unwrap_or_default();
-				THEME.filetype.match_style(me, mime).map(Style::from)
-			})
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			let mime = core.mgr.mimetype.get(&me.url).unwrap_or_default();
+			Ok(THEME.filetype.match_style(me, mime).map(Style::from))
 		});
 		methods.add_method("is_yanked", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				if !core.mgr.yanked.contains(&me.url) {
-					0u8
-				} else if core.mgr.yanked.cut {
-					2u8
-				} else {
-					1u8
-				}
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			Ok(if !core.mgr.yanked.contains(&me.url) {
+				0u8
+			} else if core.mgr.yanked.cut {
+				2u8
+			} else {
+				1u8
 			})
 		});
 		methods.add_method("is_marked", |_, me, ()| {
@@ -115,31 +112,30 @@ impl UserData for File {
 		});
 		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains(&me.url)));
 		methods.add_method("found", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				let Some(finder) = &core.active().finder else {
-					return Ok(None);
-				};
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			let Some(finder) = &core.active().finder else {
+				return Ok(None);
+			};
 
-				let Some(idx) = finder.matched_idx(&me.folder, me.urn()) else {
-					return Ok(None);
-				};
+			let Some(idx) = finder.matched_idx(&me.folder, me.urn()) else {
+				return Ok(None);
+			};
 
-				Some(lua.create_sequence_from([idx.into_lua(lua)?, finder.matched.len().into_lua(lua)?]))
-					.transpose()
-			})
+			lua.create_sequence_from([idx.into_lua(lua)?, finder.matched.len().into_lua(lua)?]).map(Some)
 		});
 		methods.add_method("highlights", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				let Some(finder) = &core.active().finder else {
-					return None;
-				};
-				if me.folder.url != me.tab.current.url {
-					return None;
-				}
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			let Some(finder) = &core.active().finder else {
+				return Ok(None);
+			};
+			if me.folder.url != me.tab.current.url {
+				return Ok(None);
+			}
+			let Some(Some(h)) = me.url.name().map(|s| finder.filter.highlighted(s)) else {
+				return Ok(None);
+			};
 
-				let h = finder.filter.highlighted(me.url.name()?)?;
-				Some(h.into_iter().map(Range::from).collect::<Vec<_>>())
-			})
+			lua.create_sequence_from(h.into_iter().map(Range::from)).map(Some)
 		});
 	}
 }

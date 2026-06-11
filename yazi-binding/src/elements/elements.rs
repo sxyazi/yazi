@@ -1,7 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use tracing::error;
 
-use super::Renderable;
 use crate::{Composer, ComposerGet, ComposerSet};
 
 pub fn compose(p_get: ComposerGet, p_set: ComposerSet) -> Composer<ComposerGet, ComposerSet> {
@@ -36,25 +34,4 @@ pub fn compose(p_get: ComposerGet, p_set: ComposerSet) -> Composer<ComposerGet, 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
 	Composer::with_parent(get, set, p_get, p_set)
-}
-
-pub fn render_once<F>(value: Value, buf: &mut ratatui::buffer::Buffer, trans: F)
-where
-	F: FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect + Copy,
-{
-	match value {
-		Value::Table(tbl) => {
-			for widget in tbl.sequence_values::<Renderable>() {
-				match widget {
-					Ok(w) => w.render_with(buf, trans),
-					Err(e) => error!("Failed to convert to renderable elements: {e}"),
-				}
-			}
-		}
-		Value::UserData(ud) => match Renderable::try_from(&ud) {
-			Ok(w) => w.render_with(buf, trans),
-			Err(e) => error!("Failed to convert to renderable element: {e}"),
-		},
-		_ => error!("Expected a renderable element, or a table of them, got: {value:?}"),
-	}
 }
