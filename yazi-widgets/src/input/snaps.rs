@@ -2,7 +2,7 @@ use std::mem;
 
 use super::InputSnap;
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct InputSnaps {
 	idx:      usize,
 	versions: Vec<InputSnap>,

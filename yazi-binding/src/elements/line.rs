@@ -6,13 +6,13 @@ use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
 use super::{Area, Span};
-use crate::elements::Align;
+use crate::elements::{Align, Spatial};
 
 const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 
 #[derive(Clone, Debug, Default)]
 pub struct Line {
-	pub(super) area: Area,
+	area: Area,
 
 	pub(super) inner: ratatui::text::Line<'static>,
 }
@@ -57,6 +57,20 @@ impl From<ratatui::text::Line<'static>> for Line {
 	}
 }
 
+impl TryFrom<&AnyUserData> for Line {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> {
+		Ok(if let Ok(line) = value.take() {
+			line
+		} else if let Ok(Span(span)) = value.take() {
+			Self { inner: span.into(), ..Default::default() }
+		} else {
+			Err(EXPECTED.into_lua_err())?
+		})
+	}
+}
+
 impl TryFrom<Table> for Line {
 	type Error = mlua::Error;
 
@@ -86,6 +100,12 @@ impl From<Line> for ratatui::text::Line<'static> {
 	fn from(value: Line) -> Self { value.inner }
 }
 
+impl Spatial for Line {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
+}
+
 impl Widget for Line {
 	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
 	where
@@ -106,22 +126,11 @@ impl Widget for &Line {
 
 impl FromLua for Line {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(Self {
-			inner: match value {
-				Value::Table(tb) => return Self::try_from(tb),
-				Value::String(s) => s.to_string_lossy().into(),
-				Value::UserData(ud) => {
-					if let Ok(Span(span)) = ud.take() {
-						span.into()
-					} else if let Ok(line) = ud.take() {
-						return Ok(line);
-					} else {
-						Err(EXPECTED.into_lua_err())?
-					}
-				}
-				_ => Err(EXPECTED.into_lua_err())?,
-			},
-			..Default::default()
+		Ok(match value {
+			Value::Table(tb) => Self::try_from(tb)?,
+			Value::String(s) => Self { inner: s.to_string_lossy().into(), ..Default::default() },
+			Value::UserData(ud) => Self::try_from(&ud)?,
+			_ => Err(EXPECTED.into_lua_err())?,
 		})
 	}
 }

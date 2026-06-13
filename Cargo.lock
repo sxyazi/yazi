@@ -5672,6 +5672,7 @@ dependencies = [
  "libc",
  "mlua",
  "ordered-float 5.3.0",
+ "parking_lot",
  "paste",
  "ratatui",
  "serde",

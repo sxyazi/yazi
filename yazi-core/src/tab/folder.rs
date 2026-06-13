@@ -155,7 +155,8 @@ impl Folder {
 			len.saturating_sub(limit).min(self.offset)
 		} else {
 			len.saturating_sub(limit).min(self.cursor.saturating_sub(limit) + 1 + scrolloff)
-		};
+		}
+		.min(self.cursor);
 
 		old != self.offset
 	}

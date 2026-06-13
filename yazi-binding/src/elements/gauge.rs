@@ -2,11 +2,11 @@ use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData
 use ratatui::widgets::Widget;
 
 use super::{Area, Span};
-use crate::Style;
+use crate::{Style, elements::Spatial};
 
 #[derive(Clone, Debug, Default)]
 pub struct Gauge {
-	pub(super) area: Area,
+	area: Area,
 
 	ratio:       f64,
 	label:       Option<ratatui::text::Span<'static>>,
@@ -23,6 +23,18 @@ impl Gauge {
 
 		gauge.into_lua(lua)
 	}
+}
+
+impl TryFrom<&AnyUserData> for Gauge {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for Gauge {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for Gauge {

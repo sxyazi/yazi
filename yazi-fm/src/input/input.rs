@@ -13,16 +13,16 @@ impl<'a> Input<'a> {
 impl Widget for Input<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let input = &self.core.input;
-		let area = self.core.mgr.area(input.position);
 
-		yazi_widgets::Clear.render(area, buf);
+		let outer = self.core.mgr.area(input.main_position);
+		yazi_widgets::Clear.render(outer, buf);
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.input.border.get())
-			.title(Line::styled(&input.title, THEME.input.title.get()))
-			.render(area, buf);
+			.title(Line::styled(&input.main_title, THEME.input.title.get()))
+			.render(outer, buf);
 
-		input.render(area.inner(Margin::new(1, 1)), buf);
+		input.main.render(outer.inner(Margin::new(1, 1)), buf);
 	}
 }

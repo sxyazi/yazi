@@ -42,7 +42,3 @@ pub struct Input {
 	pub shell_origin: Origin,
 	pub shell_offset: Offset,
 }
-
-impl Input {
-	pub const fn border(&self) -> u16 { 2 }
-}

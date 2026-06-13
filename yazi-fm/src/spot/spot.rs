@@ -1,4 +1,5 @@
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use yazi_binding::elements::Spatial;
 use yazi_core::Core;
 
 pub(crate) struct Spot<'a> {

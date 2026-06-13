@@ -50,11 +50,14 @@ macro_rules! impl_area_method {
 			"area",
 			|lua, (ud, area): (mlua::AnyUserData, Option<mlua::AnyUserData>)| {
 				use mlua::IntoLua;
+
+				use crate::elements::Spatial;
+
 				if let Some(v) = area {
-					ud.borrow_mut::<Self>()?.area = $crate::elements::Area::try_from(v)?;
+					ud.borrow_mut::<Self>()?.set_area((&v).try_into()?);
 					ud.into_lua(lua)
 				} else {
-					ud.borrow::<Self>()?.area.into_lua(lua)
+					ud.borrow::<Self>()?.area().into_lua(lua)
 				}
 			},
 		);

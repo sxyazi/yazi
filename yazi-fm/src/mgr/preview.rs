@@ -1,4 +1,5 @@
 use ratatui::{buffer::Buffer, widgets::Widget};
+use yazi_binding::elements::Spatial;
 use yazi_config::LAYOUT;
 use yazi_core::Core;
 

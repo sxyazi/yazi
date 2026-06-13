@@ -181,6 +181,10 @@ impl<'a> Spark<'a> {
 			// mgr:quit
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
 
+			// input:close
+			KeyInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
+			IndInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
+
 			// which:activate
 			IndWhichActivate => Self::WhichActivate(<_>::from_lua(value, lua)?),
 

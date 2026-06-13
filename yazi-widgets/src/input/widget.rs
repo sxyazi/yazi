@@ -10,8 +10,6 @@ impl Widget for &Input {
 	where
 		Self: Sized,
 	{
-		crate::Clear.render(area, buf);
-
 		Line::styled(self.display(), THEME.input.value.get()).render(area, buf);
 
 		if let Some(Range { start, end }) = self.selected() {

@@ -249,40 +249,39 @@ impl<'a> Executor<'a> {
 	}
 
 	fn input(&mut self, action: ActionCow) -> Result<Data> {
-		let mode = self.app.core.input.mode();
-		let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
+		let Some(mut guard) = self.app.core.input.lock_mut() else { succ!() };
 
 		macro_rules! on {
 			($name:ident) => {
 				if action.name == stringify!($name) {
-					return act!(input:$name, cx, action);
+					on!(input:$name, action);
 				}
 			};
+			($layer:ident : $name:ident, $opt:expr) => {{
+				drop(guard);
+				let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
+				return act!($layer:$name, cx, $opt);
+			}};
 		}
 
 		on!(escape);
 		on!(show);
 		on!(close);
 
-		match mode {
-			InputMode::Normal => {
-				match action.name.as_ref() {
-					// Help
-					"help" => return act!(help:toggle, cx, Layer::Input),
-					// Plugin
-					"plugin" => return act!(app:plugin, cx, action),
-					// Lua
-					"lua" => return act!(app:lua, cx, action),
-					_ => {}
-				}
-			}
+		match guard.mode() {
+			InputMode::Normal => match action.name.as_ref() {
+				"help" => on!(help:toggle, Layer::Input),
+				"plugin" => on!(app:plugin, action),
+				"lua" => on!(app:lua, action),
+				_ => {}
+			},
 			InputMode::Insert => {
 				on!(complete);
 			}
 			InputMode::Replace => {}
 		};
 
-		self.app.core.input.execute(action)
+		guard.execute(action)
 	}
 
 	fn confirm(&mut self, action: ActionCow) -> Result<Data> {

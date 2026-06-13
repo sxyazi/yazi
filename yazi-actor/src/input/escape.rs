@@ -15,16 +15,20 @@ impl Actor for Escape {
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		use yazi_widgets::input::InputMode as M;
-		let input = &mut cx.input;
+		let Some(mut guard) = cx.input.lock_mut() else {
+			succ!();
+		};
 
-		let mode = input.snap().mode;
+		let (mode, op) = (guard.snap().mode, guard.snap().op);
+		act!(escape, guard)?;
+
+		drop(guard);
 		match mode {
-			M::Normal if input.snap_mut().op == InputOp::None => act!(input:close, cx),
+			M::Normal if op == InputOp::None => act!(input:close, cx),
 			M::Insert => act!(cmp:close, cx),
 			M::Normal | M::Replace => Ok(().into()),
 		}?;
 
-		act!(escape, cx.input)?;
 		succ!(render!());
 	}
 }

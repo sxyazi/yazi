@@ -45,6 +45,7 @@ impl PartialEq<u64> for Id {
 }
 
 // --- Ids
+#[derive(Debug)]
 pub struct Ids {
 	next: AtomicU64,
 }
