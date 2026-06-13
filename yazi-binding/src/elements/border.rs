@@ -2,7 +2,7 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMetho
 use ratatui::widgets::{Borders, Widget};
 
 use super::{Area, Edge};
-use crate::elements::Line;
+use crate::elements::{Line, Spatial};
 
 // Type
 const PLAIN: u8 = 0;
@@ -42,6 +42,18 @@ impl Border {
 		border.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		border.into_lua(lua)
 	}
+}
+
+impl TryFrom<&AnyUserData> for Border {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for Border {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for Border {

@@ -2,10 +2,11 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMetho
 use ratatui::widgets::{Borders, Widget};
 
 use super::{Area, Edge};
+use crate::elements::Spatial;
 
 #[derive(Clone, Debug, Default)]
 pub struct Bar {
-	pub(super) area: Area,
+	area: Area,
 
 	edge:   Edge,
 	symbol: String,
@@ -21,6 +22,18 @@ impl Bar {
 		bar.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		bar.into_lua(lua)
 	}
+}
+
+impl TryFrom<&AnyUserData> for Bar {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for Bar {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for Bar {

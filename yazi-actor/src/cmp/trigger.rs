@@ -22,7 +22,7 @@ impl Actor for Trigger {
 		if form.ticket.is_some_and(|t| t != cx.cmp.ticket) {
 			succ!();
 		} else if form.ticket.is_none() {
-			cx.cmp.ticket = cx.input.ticket.current();
+			cx.cmp.ticket = cx.input.lock().map(|g| g.ticket.current()).unwrap_or_default();
 		}
 
 		cx.cmp.handle.take().map(|h| h.abort());

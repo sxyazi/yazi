@@ -19,7 +19,7 @@ impl Input {
 				snap.mode = InputMode::Normal;
 			}
 		}
-		self.snaps.tag(self.limit);
+		self.snaps.tag(self.pos.width as usize);
 		succ!();
 	}
 }

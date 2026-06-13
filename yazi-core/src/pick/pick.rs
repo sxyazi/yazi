@@ -26,9 +26,7 @@ impl Pick {
 impl Scrollable for Pick {
 	fn total(&self) -> usize { self.items.len() }
 
-	fn limit(&self) -> usize {
-		self.position.offset.height.saturating_sub(YAZI.pick.border()) as usize
-	}
+	fn limit(&self) -> usize { self.position.height.saturating_sub(YAZI.pick.border()) as usize }
 
 	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
 

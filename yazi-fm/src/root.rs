@@ -42,7 +42,7 @@ impl Widget for Root<'_> {
 			pick::Pick::new(self.core).render(area, buf);
 		}
 
-		if self.core.input.visible {
+		if self.core.input.main_visible {
 			input::Input::new(self.core).render(area, buf);
 		}
 

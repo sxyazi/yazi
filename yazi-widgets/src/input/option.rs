@@ -9,7 +9,7 @@ use crate::input::InputEvent;
 #[derive(Debug)]
 pub struct InputOpt {
 	pub cfg: InputCfg,
-	pub tx:  mpsc::UnboundedSender<InputEvent>,
+	pub tx:  Option<mpsc::UnboundedSender<InputEvent>>,
 }
 
 impl TryFrom<ActionCow> for InputOpt {
@@ -17,14 +17,10 @@ impl TryFrom<ActionCow> for InputOpt {
 
 	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
 		let Some(cfg) = a.take_any("cfg") else {
-			bail!("Invalid 'cfg' in InputOpt");
+			bail!("invalid 'cfg' in InputOpt");
 		};
 
-		let Some(tx) = a.take_any("tx") else {
-			bail!("Invalid 'tx' in InputOpt");
-		};
-
-		Ok(Self { cfg, tx })
+		Ok(Self { cfg, tx: a.take_any("tx") })
 	}
 }
 

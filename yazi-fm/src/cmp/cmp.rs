@@ -37,7 +37,7 @@ impl Widget for Cmp<'_> {
 			})
 			.collect();
 
-		let input_area = self.core.mgr.area(self.core.input.position);
+		let input_area = self.core.mgr.area(self.core.input.main_position);
 		let mut area = Position::sticky(TERM.dimension(), input_area, Offset {
 			x:      1,
 			y:      0,

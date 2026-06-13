@@ -58,19 +58,21 @@ impl Span {
 	}
 }
 
+impl TryFrom<&AnyUserData> for Span {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> {
+		if let Ok(span) = value.take() { Ok(span) } else { Err(EXPECTED.into_lua_err()) }
+	}
+}
+
 impl FromLua for Span {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(Self(match value {
-			Value::String(s) => s.to_string_lossy().into(),
-			Value::UserData(ud) => {
-				if let Ok(Self(span)) = ud.take() {
-					span
-				} else {
-					Err(EXPECTED.into_lua_err())?
-				}
-			}
+		Ok(match value {
+			Value::String(s) => Self(s.to_string_lossy().into()),
+			Value::UserData(ud) => Self::try_from(&ud)?,
 			_ => Err(EXPECTED.into_lua_err())?,
-		}))
+		})
 	}
 }
 

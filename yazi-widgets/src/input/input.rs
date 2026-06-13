@@ -2,7 +2,7 @@ use std::{borrow::Cow, ops::Range};
 
 use anyhow::Result;
 use tokio::sync::mpsc;
-use yazi_config::YAZI;
+use yazi_config::{YAZI, popup::Position};
 use yazi_macro::act;
 use yazi_shared::Ids;
 use yazi_shim::path::CROSS_SEPARATOR;
@@ -11,10 +11,10 @@ use yazi_term::CursorStyle;
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
 use crate::{CLIPBOARD, input::{InputEvent, InputOpt}};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Input {
+	pub pos:        Position,
 	pub snaps:      InputSnaps,
-	pub limit:      usize,
 	pub obscure:    bool,
 	pub realtime:   bool,
 	pub completion: bool,
@@ -25,15 +25,15 @@ pub struct Input {
 
 impl Input {
 	pub fn new(opt: InputOpt) -> Result<Self> {
-		let limit = opt.cfg.position.offset.width.saturating_sub(YAZI.input.border()) as usize;
+		let limit = opt.cfg.position.width as usize;
 		let mut input = Self {
+			pos: opt.cfg.position,
 			snaps: InputSnaps::new(opt.cfg.value, opt.cfg.obscure, limit),
-			limit,
 			obscure: opt.cfg.obscure,
 			realtime: opt.cfg.realtime,
 			completion: opt.cfg.completion,
 
-			tx: Some(opt.tx),
+			tx: opt.tx,
 			..Default::default()
 		};
 
@@ -43,6 +43,11 @@ impl Input {
 		}
 
 		Ok(input)
+	}
+
+	pub fn repos(&mut self, pos: Position) {
+		self.pos = pos;
+		self.snap_mut().resize(pos.width as usize);
 	}
 
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
@@ -81,7 +86,7 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag(self.limit).then(|| self.flush_type());
+			self.snaps.tag(self.pos.width as usize).then(|| self.flush_type());
 		}
 		true
 	}
@@ -111,9 +116,9 @@ impl Input {
 
 	pub fn display(&self) -> Cow<'_, str> {
 		if self.obscure {
-			"•".repeat(self.snap().window(self.limit).len()).into()
+			"•".repeat(self.snap().window(self.pos.width as usize).len()).into()
 		} else {
-			self.snap().slice(self.snap().window(self.limit)).into()
+			self.snap().slice(self.snap().window(self.pos.width as usize)).into()
 		}
 	}
 
@@ -142,7 +147,7 @@ impl Input {
 		let (start, end) =
 			if start < snap.cursor { (start, snap.cursor) } else { (snap.cursor + 1, start + 1) };
 
-		let win = snap.window(self.limit);
+		let win = snap.window(self.pos.width as usize);
 		let Range { start, end } = start.max(win.start)..end.min(win.end);
 
 		let s = snap.width(snap.offset..start);

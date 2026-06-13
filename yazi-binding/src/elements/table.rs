@@ -2,12 +2,12 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, UserDataMethods, Val
 use ratatui::widgets::{StatefulWidget, Widget};
 
 use super::{Area, Row};
-use crate::{Style, elements::Constraint};
+use crate::{Style, elements::{Constraint, Spatial}};
 
 // --- Table
 #[derive(Clone, Debug, Default)]
 pub struct Table {
-	pub area: Area,
+	area: Area,
 
 	rows:           Vec<Row>,
 	header:         Option<ratatui::widgets::Row<'static>>,
@@ -60,10 +60,16 @@ impl Table {
 	}
 }
 
-impl TryFrom<AnyUserData> for Table {
+impl TryFrom<&AnyUserData> for Table {
 	type Error = mlua::Error;
 
-	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> { value.take() }
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for Table {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for Table {

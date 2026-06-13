@@ -3,8 +3,8 @@ use std::any::TypeId;
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Value};
 use ratatui::widgets::Widget;
 
-use super::{Area, Bar, Border, Clear, Fill, Gauge, Line, List, Table, Text};
-use crate::Error;
+use super::{Area, Bar, Border, Clear, Fill, Gauge, Input, Line, List, Table, Text};
+use crate::{Error, elements::Spatial};
 
 #[derive(Clone, Debug)]
 pub enum Renderable {
@@ -15,38 +15,14 @@ pub enum Renderable {
 	Clear(Clear),
 	Fill(Fill),
 	Border(Border),
+	Input(Input),
 	Gauge(Box<Gauge>),
 	Table(Box<Table>),
 }
 
 impl Renderable {
-	pub fn area(&self) -> Area {
-		match self {
-			Self::Line(line) => line.area,
-			Self::Text(text) => text.area,
-			Self::List(list) => list.area,
-			Self::Bar(bar) => bar.area,
-			Self::Clear(clear) => clear.area,
-			Self::Fill(fill) => fill.area,
-			Self::Border(border) => border.area,
-			Self::Gauge(gauge) => gauge.area,
-			Self::Table(table) => table.area,
-		}
-	}
-
 	pub fn with_area(mut self, area: impl Into<Area>) -> Self {
-		let area = area.into();
-		match &mut self {
-			Self::Line(line) => line.area = area,
-			Self::Text(text) => text.area = area,
-			Self::List(list) => list.area = area,
-			Self::Bar(bar) => bar.area = area,
-			Self::Clear(clear) => clear.area = area,
-			Self::Fill(fill) => fill.area = area,
-			Self::Border(border) => border.area = area,
-			Self::Gauge(gauge) => gauge.area = area,
-			Self::Table(table) => table.area = area,
-		}
+		self.set_area(area.into());
 		self
 	}
 
@@ -64,15 +40,16 @@ impl TryFrom<&AnyUserData> for Renderable {
 
 	fn try_from(ud: &AnyUserData) -> Result<Self, Self::Error> {
 		Ok(match ud.type_id() {
-			Some(t) if t == TypeId::of::<Line>() => Self::Line(ud.take()?),
-			Some(t) if t == TypeId::of::<Text>() => Self::Text(ud.take()?),
-			Some(t) if t == TypeId::of::<List>() => Self::List(Box::new(ud.take()?)),
-			Some(t) if t == TypeId::of::<Bar>() => Self::Bar(ud.take()?),
-			Some(t) if t == TypeId::of::<Clear>() => Self::Clear(ud.take()?),
-			Some(t) if t == TypeId::of::<Fill>() => Self::Fill(ud.take()?),
-			Some(t) if t == TypeId::of::<Border>() => Self::Border(ud.take()?),
-			Some(t) if t == TypeId::of::<Gauge>() => Self::Gauge(Box::new(ud.take()?)),
-			Some(t) if t == TypeId::of::<Table>() => Self::Table(Box::new(ud.take()?)),
+			Some(t) if t == TypeId::of::<Line>() => Self::Line(ud.try_into()?),
+			Some(t) if t == TypeId::of::<Text>() => Self::Text(ud.try_into()?),
+			Some(t) if t == TypeId::of::<List>() => Self::List(Box::new(ud.try_into()?)),
+			Some(t) if t == TypeId::of::<Bar>() => Self::Bar(ud.try_into()?),
+			Some(t) if t == TypeId::of::<Clear>() => Self::Clear(ud.try_into()?),
+			Some(t) if t == TypeId::of::<Fill>() => Self::Fill(ud.try_into()?),
+			Some(t) if t == TypeId::of::<Border>() => Self::Border(ud.try_into()?),
+			Some(t) if t == TypeId::of::<Input>() => Self::Input(ud.try_into()?),
+			Some(t) if t == TypeId::of::<Gauge>() => Self::Gauge(Box::new(ud.try_into()?)),
+			Some(t) if t == TypeId::of::<Table>() => Self::Table(Box::new(ud.try_into()?)),
 			_ => Err(format!("expected a renderable userdata, not: {ud:#?}").into_lua_err())?,
 		})
 	}
@@ -80,11 +57,39 @@ impl TryFrom<&AnyUserData> for Renderable {
 
 impl From<Error> for Renderable {
 	fn from(error: Error) -> Self {
-		Self::Text(Text {
-			inner: error.into_string().into(),
-			wrap: ratatui::widgets::Wrap { trim: false }.into(),
-			..Default::default()
-		})
+		Self::Text(Text::from(error.into_string()).wrap(ratatui::widgets::Wrap { trim: false }))
+	}
+}
+
+impl Spatial for Renderable {
+	fn area(&self) -> Area {
+		match self {
+			Self::Line(line) => line.area(),
+			Self::Text(text) => text.area(),
+			Self::List(list) => list.area(),
+			Self::Bar(bar) => bar.area(),
+			Self::Clear(clear) => clear.area(),
+			Self::Fill(fill) => fill.area(),
+			Self::Border(border) => border.area(),
+			Self::Input(input) => input.area(),
+			Self::Gauge(gauge) => gauge.area(),
+			Self::Table(table) => table.area(),
+		}
+	}
+
+	fn set_area(&mut self, area: Area) {
+		match self {
+			Self::Line(line) => line.set_area(area),
+			Self::Text(text) => text.set_area(area),
+			Self::List(list) => list.set_area(area),
+			Self::Bar(bar) => bar.set_area(area),
+			Self::Clear(clear) => clear.set_area(area),
+			Self::Fill(fill) => fill.set_area(area),
+			Self::Border(border) => border.set_area(area),
+			Self::Input(input) => input.set_area(area),
+			Self::Gauge(gauge) => gauge.set_area(area),
+			Self::Table(table) => table.set_area(area),
+		}
 	}
 }
 
@@ -101,6 +106,7 @@ impl Widget for Renderable {
 			Self::Clear(clear) => clear.render(rect, buf),
 			Self::Fill(fill) => fill.render(rect, buf),
 			Self::Border(border) => border.render(rect, buf),
+			Self::Input(input) => input.render(rect, buf),
 			Self::Gauge(gauge) => gauge.render(rect, buf),
 			Self::Table(table) => table.render(rect, buf),
 		}
@@ -120,6 +126,7 @@ impl Widget for &Renderable {
 			Renderable::Clear(clear) => clear.render(rect, buf),
 			Renderable::Fill(fill) => fill.render(rect, buf),
 			Renderable::Border(border) => border.render(rect, buf),
+			Renderable::Input(input) => input.render(rect, buf),
 			Renderable::Gauge(gauge) => (&**gauge).render(rect, buf),
 			Renderable::Table(table) => (&**table).render(rect, buf),
 		}

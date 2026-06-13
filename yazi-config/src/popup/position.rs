@@ -1,4 +1,6 @@
-use ratatui::layout::Rect;
+use std::ops::{Deref, DerefMut};
+
+use ratatui::{layout::Rect, widgets::Padding};
 use yazi_term::Dimension;
 
 use super::{Offset, Origin};
@@ -7,6 +9,16 @@ use super::{Offset, Origin};
 pub struct Position {
 	pub origin: Origin,
 	pub offset: Offset,
+}
+
+impl Deref for Position {
+	type Target = Offset;
+
+	fn deref(&self) -> &Self::Target { &self.offset }
+}
+
+impl DerefMut for Position {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.offset }
 }
 
 impl Position {
@@ -61,5 +73,31 @@ impl Position {
 			width:  width.min(cols.saturating_sub(new_x)),
 			height: height.min(rows.saturating_sub(new_y)),
 		}
+	}
+
+	pub fn padding(mut self, padding: Padding) -> Self {
+		use Origin::*;
+		let h_reduction = padding.left + padding.right;
+		let v_reduction = padding.top + padding.bottom;
+
+		self.x = self.x.saturating_add_unsigned(padding.left);
+		self.y = self.y.saturating_add_unsigned(padding.top);
+
+		self.width = self.width.saturating_sub(h_reduction);
+		self.height = self.height.saturating_sub(v_reduction);
+
+		self.x = self.x.saturating_sub_unsigned(match self.origin {
+			TopCenter | BottomCenter | Center => h_reduction / 2,
+			TopRight | BottomRight => h_reduction,
+			_ => 0,
+		});
+
+		self.y = self.y.saturating_sub_unsigned(match self.origin {
+			BottomLeft | BottomCenter | BottomRight => v_reduction,
+			Center => v_reduction / 2,
+			_ => 0,
+		});
+
+		self
 	}
 }

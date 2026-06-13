@@ -56,7 +56,7 @@ function Root:click(event, up)
 	Root._dragging = not up and c or nil
 
 	if tostring(cx.layer) == "mgr" then
-		return c and c:click(event, up)
+		return c and c.click and c:click(event, up)
 	end
 end
 
@@ -65,7 +65,7 @@ function Root:scroll(event, step)
 		return
 	end
 	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
-	return c and c:scroll(event, step)
+	return c and c.scroll and c:scroll(event, step)
 end
 
 function Root:touch(event, step)
@@ -73,7 +73,7 @@ function Root:touch(event, step)
 		return
 	end
 	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
-	return c and c:touch(event, step)
+	return c and c.touch and c:touch(event, step)
 end
 
 function Root:move(event) end

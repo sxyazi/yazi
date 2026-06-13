@@ -13,11 +13,14 @@ impl Actor for Complete {
 	const NAME: &str = "complete";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let input = &mut cx.input;
-		if !input.visible || input.ticket.current() != form.ticket {
+		let Some(mut guard) = cx.input.lock_mut() else {
+			succ!();
+		};
+
+		if guard.ticket.current() != form.ticket {
 			succ!();
 		}
 
-		act!(complete, input, form)
+		act!(complete, guard, form)
 	}
 }

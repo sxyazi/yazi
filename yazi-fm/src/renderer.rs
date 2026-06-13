@@ -1,6 +1,6 @@
 use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect};
-use yazi_binding::elements::Renderables;
+use yazi_binding::elements::{Renderable, Renderables};
 use yazi_core::Core;
 use yazi_plugin::LUA;
 
@@ -33,9 +33,17 @@ impl<'a> Renderer<'a> {
 			.globals()
 			.raw_get::<Table>(self.component)?
 			.call_method::<Table>(self.constructor, area)?
-			.call_method("redraw", ())?;
+			.call_method(self.redrawer, ())?;
 
+		self.core.input.alt = None;
 		Renderables::reduce(value, |element| {
+			match &element {
+				Renderable::Input(input) if input.focus => {
+					self.core.input.alt = Some(input.into());
+				}
+				_ => {}
+			}
+
 			element.render_with(buf, |p| self.core.mgr.area(p));
 		});
 

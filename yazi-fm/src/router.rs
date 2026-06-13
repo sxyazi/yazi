@@ -14,17 +14,20 @@ impl<'a> Router<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	pub(super) fn route(&mut self, key: Key) -> Result<bool> {
-		let core = &mut self.app.core;
-		let layer = core.layer();
+		use Layer as L;
 
+		let core = &mut self.app.core;
 		if core.help.visible && core.help.r#type(&key)? {
 			return Ok(true);
 		}
-		if core.input.visible && core.input.r#type(&key)? {
+
+		if let Some(mut guard) = core.input.lock_mut()
+			&& guard.r#type(&key)?
+		{
 			return Ok(true);
 		}
 
-		use Layer as L;
+		let layer = core.layer();
 		Ok(match layer {
 			L::Null | L::App | L::Notify => unreachable!(),
 			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm | L::Help => {

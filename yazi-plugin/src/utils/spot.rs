@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, Function, Lua, Table};
-use yazi_binding::elements::{Edge, Renderable};
+use yazi_binding::elements::{Edge, Renderable, Spatial};
 use yazi_config::THEME;
 use yazi_core::spot::SpotLock;
 use yazi_proxy::MgrProxy;
@@ -10,13 +10,13 @@ impl Utils {
 	pub(super) fn spot_table(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (t, table): (mlua::Table, AnyUserData)| {
 			let mut lock = SpotLock::try_from(t)?;
-			let mut table = yazi_binding::elements::Table::try_from(table)?;
+			let mut table = yazi_binding::elements::Table::try_from(&table)?;
 
-			let area = table.area;
-			table.area = area.inner(ratatui::widgets::Padding::uniform(1));
+			let area = table.area();
+			table.set_area(area.inner(ratatui::widgets::Padding::uniform(1)));
 
 			lock.data = vec![
-				Renderable::Clear(yazi_binding::elements::Clear { area }),
+				Renderable::Clear(Default::default()).with_area(area),
 				Renderable::Border(yazi_binding::elements::Border {
 					area,
 					edge: Edge(ratatui::widgets::Borders::ALL),

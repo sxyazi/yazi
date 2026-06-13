@@ -1,11 +1,12 @@
-use mlua::{IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
 use super::Area;
+use crate::elements::Spatial;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Fill {
-	pub area: Area,
+	area: Area,
 
 	style: ratatui::style::Style,
 }
@@ -20,6 +21,18 @@ impl Fill {
 
 		fill.into_lua(lua)
 	}
+}
+
+impl TryFrom<&AnyUserData> for Fill {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { Ok(*value.borrow()?) }
+}
+
+impl Spatial for Fill {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for Fill {

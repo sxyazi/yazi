@@ -34,7 +34,6 @@ impl InputSnap {
 		snap
 	}
 
-	#[inline]
 	pub(super) fn resize(&mut self, limit: usize) {
 		let count = self.count();
 		let limit = if self.obscure {

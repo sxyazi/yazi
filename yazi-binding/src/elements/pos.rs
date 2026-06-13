@@ -30,6 +30,14 @@ impl From<Pos> for yazi_config::popup::Position {
 	fn from(value: Pos) -> Self { value.inner }
 }
 
+impl TryFrom<&AnyUserData> for Pos {
+	type Error = mlua::Error;
+
+	fn try_from(ud: &AnyUserData) -> Result<Self, Self::Error> {
+		if let Ok(pos) = ud.borrow() { Ok(*pos) } else { Err(EXPECTED.into_lua_err()) }
+	}
+}
+
 impl TryFrom<Table> for Pos {
 	type Error = mlua::Error;
 
@@ -50,17 +58,11 @@ impl TryFrom<Table> for Pos {
 
 impl FromLua for Pos {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(match value {
-			Value::Table(tbl) => Self::try_from(tbl)?,
-			Value::UserData(ud) => {
-				if let Ok(pos) = ud.borrow() {
-					*pos
-				} else {
-					Err(EXPECTED.into_lua_err())?
-				}
-			}
-			_ => Err(EXPECTED.into_lua_err())?,
-		})
+		match value {
+			Value::Table(tbl) => Self::try_from(tbl),
+			Value::UserData(ud) => Self::try_from(&ud),
+			_ => Err(EXPECTED.into_lua_err()),
+		}
 	}
 }
 
@@ -75,7 +77,7 @@ impl Pos {
 	}
 
 	pub fn with_height(mut self, height: u16) -> Self {
-		self.inner.offset.height = height;
+		self.inner.height = height;
 		self
 	}
 }
@@ -84,10 +86,10 @@ impl UserData for Pos {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		// TODO: cache
 		fields.add_field_method_get("1", |_, me| Ok(me.origin.into_str()));
-		fields.add_field_method_get("x", |_, me| Ok(me.offset.x));
-		fields.add_field_method_get("y", |_, me| Ok(me.offset.y));
-		fields.add_field_method_get("w", |_, me| Ok(me.offset.width));
-		fields.add_field_method_get("h", |_, me| Ok(me.offset.height));
+		fields.add_field_method_get("x", |_, me| Ok(me.x));
+		fields.add_field_method_get("y", |_, me| Ok(me.y));
+		fields.add_field_method_get("w", |_, me| Ok(me.width));
+		fields.add_field_method_get("h", |_, me| Ok(me.height));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {

@@ -1,22 +1,40 @@
-use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
 
+use parking_lot::Mutex;
 use yazi_config::popup::Position;
+
+use crate::input::{InputGuard, InputMutGuard};
 
 #[derive(Default)]
 pub struct Input {
-	pub(super) inner: yazi_widgets::input::Input,
+	pub main: yazi_widgets::input::Input,
+	pub alt:  Option<Arc<Mutex<yazi_widgets::input::Input>>>,
 
-	pub visible:  bool,
-	pub title:    String,
-	pub position: Position,
+	pub main_visible:  bool,
+	pub main_title:    String,
+	pub main_position: Position,
 }
 
-impl Deref for Input {
-	type Target = yazi_widgets::input::Input;
+impl Input {
+	pub fn focus(&self) -> bool { self.main_visible || self.alt.is_some() }
 
-	fn deref(&self) -> &Self::Target { &self.inner }
-}
+	pub fn lock(&self) -> Option<InputGuard<'_>> {
+		if self.main_visible {
+			Some(InputGuard::Main(&self.main))
+		} else if let Some(alt) = &self.alt {
+			Some(InputGuard::Alt(alt.lock()))
+		} else {
+			None
+		}
+	}
 
-impl DerefMut for Input {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
+	pub fn lock_mut(&mut self) -> Option<InputMutGuard<'_>> {
+		if self.main_visible {
+			Some(InputMutGuard::Main(&mut self.main))
+		} else if let Some(alt) = &self.alt {
+			Some(InputMutGuard::Alt(alt.lock()))
+		} else {
+			None
+		}
+	}
 }

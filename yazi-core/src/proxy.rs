@@ -50,7 +50,7 @@ impl MgrProxy {
 			skip: job.skip,
 			area: area.into(),
 			data: vec![
-				Renderable::Clear(yazi_binding::elements::Clear { area: area.into() }),
+				Renderable::Clear(Default::default()).with_area(area),
 				Renderable::from(Error::custom(error)).with_area(area),
 			],
 		});

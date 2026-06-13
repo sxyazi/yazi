@@ -88,12 +88,11 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {
-		if self.app.core.input.visible {
-			let input = &mut self.app.core.input;
-			if input.mode() == InputMode::Insert {
-				input.type_str(&str)?;
-			} else if input.mode() == InputMode::Replace {
-				input.replace_str(&str)?;
+		if let Some(mut guard) = self.app.core.input.lock_mut() {
+			if guard.mode() == InputMode::Insert {
+				guard.type_str(&str)?;
+			} else if guard.mode() == InputMode::Replace {
+				guard.replace_str(&str)?;
 			}
 		}
 		Ok(())

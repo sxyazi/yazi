@@ -1,12 +1,13 @@
-use mlua::{IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Text};
+use crate::elements::Spatial;
 
 // --- List
 #[derive(Clone, Debug, Default)]
 pub struct List {
-	pub(super) area: Area,
+	area: Area,
 
 	inner: ratatui::widgets::List<'static>,
 }
@@ -22,6 +23,18 @@ impl List {
 
 		list.into_lua(lua)
 	}
+}
+
+impl TryFrom<&AnyUserData> for List {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for List {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for List {
