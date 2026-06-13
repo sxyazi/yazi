@@ -13,4 +13,4 @@ rust-version.workspace = true
 workspace = true
 
 [build-dependencies]
-vergen-gitcl = { version = "9.1.0", features = [ "build", "rustc" ] }
+vergen-gitcl = { version = "10.0.0", features = [ "build", "rustc" ] }

@@ -24,7 +24,7 @@ foldhash         = { workspace = true }
 futures          = { workspace = true }
 hashbrown        = { workspace = true }
 inventory        = { workspace = true }
-memchr           = "2.8.1"
+memchr           = "2.8.2"
 mlua             = { workspace = true }
 ordered-float    = { workspace = true }
 parking_lot      = { workspace = true }
