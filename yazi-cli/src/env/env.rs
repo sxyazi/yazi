@@ -86,6 +86,12 @@ impl Env {
 		writeln!(s, "    tmux version       : {}", Self::dep_version("tmux", "-V"))?;
 		writeln!(s, "    tmux build flags   : enable-sixel={}", Mux::tmux_sixel_flag())?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
+		writeln!(
+			s,
+			"    {}: {:?}",
+			yazi_adapter::ZELLIJ_KITTY_PASSTHROUGH_ENV,
+			env::var_os(yazi_adapter::ZELLIJ_KITTY_PASSTHROUGH_ENV)
+		)?;
 		writeln!(s, "    Zellij version     : {}", Self::dep_version("zellij", "--version"))?;
 
 		writeln!(s, "\nDependencies")?;

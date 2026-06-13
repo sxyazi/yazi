@@ -9,6 +9,9 @@ use yazi_shared::env_exists;
 
 use crate::{Adapters, SHOWN, drivers};
 
+const ZELLIJ_SESSION_NAME_ENV: &str = "ZELLIJ_SESSION_NAME";
+pub const ZELLIJ_KITTY_PASSTHROUGH_ENV: &str = "YAZI_ZELLIJ_KITTY_PASSTHROUGH";
+
 #[derive(Clone, Copy, Debug, Display, Eq, IntoStaticStr, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub enum Adapter {
@@ -75,8 +78,8 @@ impl Adapter {
 impl Adapter {
 	pub fn matches(emulator: &Emulator) -> Self {
 		let mut adapters: Adapters = emulator.into();
-		if env_exists("ZELLIJ_SESSION_NAME") {
-			adapters.retain(|p| *p == Self::Sixel);
+		if env_exists(ZELLIJ_SESSION_NAME_ENV) {
+			adapters.retain(|p| p.supported_in_zellij());
 		} else if TMUX.get() {
 			adapters.retain(|p| *p != Self::KgpOld);
 		}
@@ -101,5 +104,75 @@ impl Adapter {
 
 		warn!("[Adapter] Falling back to chafa");
 		Self::Chafa
+	}
+
+	fn supported_in_zellij(self) -> bool {
+		self == Self::Sixel
+			|| (env_exists(ZELLIJ_KITTY_PASSTHROUGH_ENV)
+				&& matches!(self, Self::Kgp | Self::KgpOld))
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use std::{env, ffi::OsString, sync::Mutex};
+
+	use super::*;
+
+	static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+	struct EnvVarGuard {
+		name: &'static str,
+		old:  Option<OsString>,
+	}
+
+	impl EnvVarGuard {
+		fn set(name: &'static str, value: &str) -> Self {
+			let old = env::var_os(name);
+			unsafe { env::set_var(name, value) };
+			Self { name, old }
+		}
+
+		fn remove(name: &'static str) -> Self {
+			let old = env::var_os(name);
+			unsafe { env::remove_var(name) };
+			Self { name, old }
+		}
+	}
+
+	impl Drop for EnvVarGuard {
+		fn drop(&mut self) {
+			unsafe {
+				if let Some(value) = self.old.take() {
+					env::set_var(self.name, value);
+				} else {
+					env::remove_var(self.name);
+				}
+			}
+		}
+	}
+
+	#[test]
+	fn zellij_uses_sixel_by_default() {
+		let _lock = ENV_LOCK.lock().unwrap();
+		let _session = EnvVarGuard::set(ZELLIJ_SESSION_NAME_ENV, "test-session");
+		let _passthrough = EnvVarGuard::remove(ZELLIJ_KITTY_PASSTHROUGH_ENV);
+
+		assert!(Adapter::Sixel.supported_in_zellij());
+		assert!(!Adapter::Kgp.supported_in_zellij());
+		assert!(!Adapter::KgpOld.supported_in_zellij());
+		assert!(!Adapter::Iip.supported_in_zellij());
+	}
+
+	#[test]
+	fn zellij_kitty_passthrough_adds_kitty_adapters_only() {
+		let _lock = ENV_LOCK.lock().unwrap();
+		let _session = EnvVarGuard::set(ZELLIJ_SESSION_NAME_ENV, "test-session");
+		let _passthrough = EnvVarGuard::set(ZELLIJ_KITTY_PASSTHROUGH_ENV, "1");
+
+		assert!(Adapter::Sixel.supported_in_zellij());
+		assert!(Adapter::Kgp.supported_in_zellij());
+		assert!(Adapter::KgpOld.supported_in_zellij());
+		assert!(!Adapter::Iip.supported_in_zellij());
 	}
 }
