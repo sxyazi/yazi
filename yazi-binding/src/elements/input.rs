@@ -52,7 +52,7 @@ impl TryFrom<Table> for Input {
 				realtime:   false,
 				completion: false,
 			},
-			tx:  None,
+			cb:  None,
 		})?;
 
 		Ok(Self { inner: Arc::new(Mutex::new(input)), ..Default::default() })

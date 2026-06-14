@@ -19,6 +19,7 @@ pub struct Border {
 	pub edge:   Edge,
 	pub r#type: ratatui::widgets::BorderType,
 	pub style:  ratatui::style::Style,
+	pub merge:  ratatui::symbols::merge::MergeStrategy,
 
 	pub titles: Vec<(ratatui::widgets::TitlePosition, ratatui::text::Line<'static>)>,
 }
@@ -64,7 +65,8 @@ impl Widget for Border {
 		let mut block = ratatui::widgets::Block::default()
 			.borders(self.edge.0)
 			.border_type(self.r#type)
-			.border_style(self.style);
+			.border_style(self.style)
+			.merge_borders(self.merge);
 
 		for title in self.titles {
 			block = match title {
@@ -114,6 +116,14 @@ impl UserData for Border {
 		});
 		methods.add_function("edge", |_, (ud, edge): (AnyUserData, Edge)| {
 			ud.borrow_mut::<Self>()?.edge = edge;
+			Ok(ud)
+		});
+		methods.add_function("merge", |_, (ud, exact): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.merge = if exact {
+				ratatui::symbols::merge::MergeStrategy::Exact
+			} else {
+				ratatui::symbols::merge::MergeStrategy::Fuzzy
+			};
 			Ok(ud)
 		});
 	}

@@ -249,12 +249,12 @@ impl<'a> Executor<'a> {
 	}
 
 	fn input(&mut self, action: ActionCow) -> Result<Data> {
-		let Some(mut guard) = self.app.core.input.lock_mut() else { succ!() };
-
+		let mut guard;
 		macro_rules! on {
 			($name:ident) => {
 				if action.name == stringify!($name) {
-					on!(input:$name, action);
+					let cx = &mut Ctx::new(&action, &mut self.app.core, &mut self.app.term)?;
+					return act!(input:$name, cx, action);
 				}
 			};
 			($layer:ident : $name:ident, $opt:expr) => {{
@@ -268,6 +268,11 @@ impl<'a> Executor<'a> {
 		on!(show);
 		on!(close);
 
+		guard = match self.app.core.input.lock_mut() {
+			Some(g) => g,
+			None => succ!(),
+		};
+
 		match guard.mode() {
 			InputMode::Normal => match action.name.as_ref() {
 				"help" => on!(help:toggle, Layer::Input),
@@ -275,9 +280,10 @@ impl<'a> Executor<'a> {
 				"lua" => on!(app:lua, action),
 				_ => {}
 			},
-			InputMode::Insert => {
-				on!(complete);
-			}
+			InputMode::Insert => match action.name.as_ref() {
+				"complete" => on!(input:complete, action),
+				_ => {}
+			},
 			InputMode::Replace => {}
 		};
 

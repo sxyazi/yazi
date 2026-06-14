@@ -22,6 +22,7 @@ impl Utils {
 					edge: Edge(ratatui::widgets::Borders::ALL),
 					r#type: ratatui::widgets::BorderType::Rounded,
 					style: THEME.spot.border.get().into(),
+					merge: Default::default(),
 					titles: vec![(
 						ratatui::widgets::TitlePosition::Top,
 						ratatui::text::Line::raw("Spot").centered().style(THEME.spot.title.get()),

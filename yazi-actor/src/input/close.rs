@@ -19,9 +19,9 @@ impl Actor for Close {
 		};
 
 		guard.ticket.next();
-		if let Some(tx) = guard.tx.take() {
+		if let Some(cb) = guard.cb.take() {
 			let value = guard.snap().value.clone();
-			_ = tx.send(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
+			cb(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
 		}
 
 		drop(guard);

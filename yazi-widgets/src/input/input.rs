@@ -1,7 +1,6 @@
 use std::{borrow::Cow, ops::Range};
 
 use anyhow::Result;
-use tokio::sync::mpsc;
 use yazi_config::{YAZI, popup::Position};
 use yazi_macro::act;
 use yazi_shared::Ids;
@@ -9,7 +8,7 @@ use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_term::CursorStyle;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
-use crate::{CLIPBOARD, input::{InputEvent, InputOpt}};
+use crate::{CLIPBOARD, input::{InputCallback, InputEvent, InputOpt}};
 
 #[derive(Debug, Default)]
 pub struct Input {
@@ -19,7 +18,7 @@ pub struct Input {
 	pub realtime:   bool,
 	pub completion: bool,
 
-	pub tx:     Option<mpsc::UnboundedSender<InputEvent>>,
+	pub cb:     Option<Box<dyn InputCallback>>,
 	pub ticket: Ids,
 }
 
@@ -33,7 +32,7 @@ impl Input {
 			realtime: opt.cfg.realtime,
 			completion: opt.cfg.completion,
 
-			tx: opt.tx,
+			cb: opt.cb,
 			..Default::default()
 		};
 
@@ -93,20 +92,19 @@ impl Input {
 
 	pub(super) fn flush_type(&mut self) {
 		self.ticket.next();
-		if let Some(tx) = self.tx.as_ref().filter(|_| self.realtime) {
-			tx.send(InputEvent::Type(self.value().to_owned())).ok();
+		if let Some(cb) = self.cb.as_ref().filter(|_| self.realtime) {
+			cb(InputEvent::Type(self.value().to_owned()));
 		}
 
 		self.flush_trigger(true);
 	}
 
 	pub(super) fn flush_trigger(&self, force: bool) {
-		if let Some(tx) = self.tx.as_ref().filter(|_| self.completion) {
-			tx.send(InputEvent::Trigger(
+		if let Some(cb) = self.cb.as_ref().filter(|_| self.completion) {
+			cb(InputEvent::Trigger(
 				self.partition().0.to_owned(),
 				(!force).then_some(self.ticket.current()),
-			))
-			.ok();
+			));
 		}
 	}
 }

@@ -1,15 +1,14 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
 use yazi_shared::event::ActionCow;
 
-use crate::input::InputEvent;
+use crate::input::InputCallback;
 
 #[derive(Debug)]
 pub struct InputOpt {
 	pub cfg: InputCfg,
-	pub tx:  Option<mpsc::UnboundedSender<InputEvent>>,
+	pub cb:  Option<Box<dyn InputCallback>>,
 }
 
 impl TryFrom<ActionCow> for InputOpt {
@@ -20,7 +19,7 @@ impl TryFrom<ActionCow> for InputOpt {
 			bail!("invalid 'cfg' in InputOpt");
 		};
 
-		Ok(Self { cfg, tx: a.take_any("tx") })
+		Ok(Self { cfg, cb: a.take_any("cb") })
 	}
 }
 

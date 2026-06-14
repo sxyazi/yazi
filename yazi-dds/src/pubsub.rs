@@ -174,5 +174,7 @@ impl Pubsub {
 
 	pub_after!(download(urls: Vec<UrlBuf>), (&urls), (urls));
 
+	pub_after!(input(r#type: &'static str, value: &str), (r#type, value));
+
 	pub_after!(mount(), ());
 }
