@@ -19,8 +19,7 @@ pub struct RgOpt {
 
 pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 	let mut child = Command::new("rg")
-	.args(["--color=never", "--no-heading", "--column", "--smart-case"])
-		// .args(["--color=never", "--files-with-matches", "--smart-case"])
+		.args(["--color=never", "--no-heading", "--column", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject)

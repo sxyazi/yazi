@@ -18,18 +18,22 @@ impl Utils {
 	pub(super) fn preview_code(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
 			let area: Area = t.raw_get("area")?;
-			// let position: Option<HighlightPosition> = t.raw_get("position").ok();
+			let position: Option<HighlightPosition> = t.raw_get("position").ok();
+
+			tracing::debug!("{:?}", position);
 
 			let mut lock = PreviewLock::try_from(t)?;
 			let path = lock.url.as_url().unified_path();
 
-			// let skip = position.map(|p| p.line).unwrap_or(lock.skip);
-			let size = area.size();
+			let search_subject = lock.url.as_url().scheme().domain();
 
-			// tracing::debug!("skip size: {size}");
+			tracing::debug!("search subject{:?}", search_subject);
 
-			let inner = match Highlighter::oneshot(path, lock.skip, size).await {
-				Ok(text) => text,
+			let inner = match Highlighter::oneshot(path, lock.skip, area.size()).await {
+				Ok(text) => {
+					// tracing::debug!("{:?}", text);
+					text
+				}
 				Err(e @ PeekError::Exceeded(max)) => return (e, max).into_lua_multi(&lua),
 				Err(e) => {
 					return e.into_lua_multi(&lua);

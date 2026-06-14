@@ -54,6 +54,8 @@ impl Highlighter {
 		let path = path.into();
 		let (theme, syntaxes) = CACHE.get_or_init(Self::load);
 
+		// tracing::debug!("{:?}", theme);
+
 		Ok(Self {
 			reader: BufReader::new(std::fs::File::open(&path)?),
 			path,
@@ -82,6 +84,7 @@ impl Highlighter {
 		let mut lines = Vec::with_capacity(self.size.height as usize);
 		let mut inspected = 0u16;
 		while self.reader.read_until(b'\n', &mut buf).is_ok_and(|n| n > 0) {
+			// tracing::debug!("{:?}", buf);
 			if Self::is_binary(&buf, &mut inspected) {
 				Err(anyhow!("Binary file"))?;
 			}
