@@ -29,7 +29,9 @@ impl Preview {
 impl UserData for Preview {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("skip", |_, me| Ok(me.skip));
+		// TODO: Make sure we need this ?
 		fields.add_field_method_get("search_idx", |_, me| Ok(me.search_idx));
+
 		cached_field!(fields, folder, |_, me| {
 			me.tab
 				.hovered_folder()

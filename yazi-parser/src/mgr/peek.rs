@@ -17,7 +17,7 @@ impl From<ActionCow> for PeekForm {
 			force: a.bool("force"),
 			only_if: a.take("only-if").ok(),
 			upper_bound: a.bool("upper-bound"),
-			search_idx: a.take("search_idx").ok(),
+			search_idx: a.take("search-idx").ok(),
 		}
 	}
 }

@@ -9,9 +9,10 @@ use yazi_shared::pool::Symbol;
 #[derive(Clone, Debug)]
 pub struct PeekJob {
 	pub previewer: Arc<yazi_config::plugin::Previewer>,
-	pub file:      yazi_fs::File,
-	pub mime:      Symbol<str>,
-	pub skip:      usize,
+	pub file: yazi_fs::File,
+	pub mime: Symbol<str>,
+	pub skip: usize,
+	pub search_idx: Option<usize>,
 }
 
 impl IntoLua for PeekJob {
@@ -23,6 +24,7 @@ impl IntoLua for PeekJob {
 				("file", File::new(self.file).into_lua(lua)?),
 				("mime", self.mime.into_lua(lua)?),
 				("skip", self.skip.into_lua(lua)?),
+				("search_idx", self.search_idx.into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}
@@ -31,7 +33,7 @@ impl IntoLua for PeekJob {
 // --- Seek
 #[derive(Clone, Debug)]
 pub struct SeekJob {
-	pub file:  yazi_fs::File,
+	pub file: yazi_fs::File,
 	pub units: i16,
 }
 

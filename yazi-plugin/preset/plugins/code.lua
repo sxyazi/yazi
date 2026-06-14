@@ -18,35 +18,36 @@ local function get_search_occurrences(url)
 	return lines
 end
 
--- local function get_next_occurrence(occurrences, current_line, direction)
--- 	local step = direction == "up" and -1 or 1
--- 	local start = direction == "up" and #occurrences or 1
--- 	local stop = direction == "up" and 1 or #occurrences
---
--- 	for i = start, stop, step do
--- 		local line = occurrences[i]
--- 		if go_up and line >= current_line then
--- 			return line
--- 		end
--- 		if direction == "down" and line <= current_line then
--- 			return line
--- 		end
---
--- 		-- TODO: Handle return to first element or last one
--- 	end
--- end
+local function get_next_occurrence_idx(search_idx, direction, occurrences_len)
+	local index
+
+	if direction == "up" then
+		index = (search_idx or 1) - 1
+		if index < 1 then
+			index = occurrences_len
+		end
+	else
+		index = (search_idx or 1) + 1
+		if index > occurrences_len then
+			index = 1
+		end
+	end
+
+	return index
+end
 
 function M:peek(job)
 	local search_occurrences = get_search_occurrences(job.file.url)
-	local search_idx = cx.active.preview.search_idx
-	ya.dbg(" search index", search_idx)
+	local search_idx = job.search_idx
+
+	ya.dbg("code.lua: search_occurrences:", search_occurrences)
+
 	local occurrence
 	if search_occurrences and search_idx then
 		occurrence = search_occurrences[search_idx]
 	end
 
-	ya.dgb("Peek Occurrence:", occurrence)
-
+	ya.dbg("code.lua: Occurrence:", occurrence)
 	-- Todo: Pass the occurrence for highlighting
 	local err, bound = ya.preview_code(job)
 	if bound then
@@ -60,7 +61,7 @@ function M:seek(job)
 	local direction = job.units > 0 and "down" or "up"
 
 	local search_idx = cx.active.preview.search_idx
-	ya.dbg(" search index", search_idx)
+	ya.dbg("search index before to set it in seek", search_idx)
 
 	local h = cx.active.current.hovered
 	if not h or h.url ~= job.file.url then
@@ -69,19 +70,13 @@ function M:seek(job)
 
 	local search_occurrences = get_search_occurrences(job.file.url)
 	if search_occurrences then
-		search_idx = (search_idx or 0) + 1
-		-- local current_line = cx.active.preview.skip + 1
-		-- ya.dbg("Current line:", current_line)
-		-- local next_occurrence = get_next_occurrence(search_occurrences, current_line, direction)
-		-- for _, occurrence in ipairs(search_occurrences) do
-		-- 	local search_line = occurrence[1]
-		-- 	-- local col = occurrence[2]
-		--
-		-- 	if search_line >= current_line then
-		-- 		ya.emit("peek", { math.max(0, search_line - 1), only_if = job.file.url })
-		-- 		return
-		-- 	end
-		-- end
+		local next_occurrence_idx = get_next_occurrence_idx(search_idx, direction, #search_occurrences)
+		local occurrence = search_occurrences[next_occurrence_idx]
+		local line = occurrence[1]
+		-- local col = occurrence[2]
+
+		ya.emit("peek", { math.max(0, line - 1), only_if = job.file.url, search_idx = next_occurrence_idx })
+		return
 	end
 
 	-- ya.emit("peek", { math.max(0, line - 1), only_if = job.file.url })
@@ -92,7 +87,7 @@ function M:seek(job)
 	ya.emit("peek", {
 		math.max(0, cx.active.preview.skip + step),
 		only_if = job.file.url,
-		search_idx,
+		search_idx = search_idx,
 	})
 end
 

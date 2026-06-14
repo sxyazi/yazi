@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::succ;
 use yazi_parser::mgr::PeekForm;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -46,10 +46,8 @@ impl Actor for Peek {
 			}
 		}
 
-		tracing::debug!("peeeek boy before set stuff");
 		match form.search_idx {
 			Some(index) => {
-				tracing::debug!("search index setting {}", index);
 				preview.search_idx = Some(index);
 			}
 			None => {}

@@ -43,10 +43,9 @@ impl Preview {
 
 		self.abort();
 
-		// let search_first_occurrence = self.get_first_search_occurrence(&file.url);
-		let job = PeekJob { previewer, file, mime, skip: self.skip };
+		let job = PeekJob { previewer, file, mime, skip: self.skip, search_idx: self.search_idx };
 
-		tracing::debug!("preview {:?}", self);
+		tracing::debug!("preview before to peek {:?}", self.search_idx);
 
 		self.handle = Some(tokio::spawn(async move {
 			let mut rx = RUNNER.peek(&job).await;
