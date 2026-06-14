@@ -1,6 +1,7 @@
+use strum::IntoStaticStr;
 use yazi_shared::Id;
 
-#[derive(Debug)]
+#[derive(Debug, IntoStaticStr)]
 pub enum InputEvent {
 	Submit(String),
 	Cancel(String),
@@ -10,5 +11,11 @@ pub enum InputEvent {
 }
 
 impl InputEvent {
+	pub fn value(&self) -> &str {
+		match self {
+			Self::Submit(v) | Self::Cancel(v) | Self::Type(v) | Self::Trigger(v, _) => v.as_str(),
+		}
+	}
+
 	pub fn is_submit(&self) -> bool { matches!(self, Self::Submit(_)) }
 }

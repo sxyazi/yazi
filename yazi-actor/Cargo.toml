@@ -46,6 +46,7 @@ futures      = { workspace = true }
 hashbrown    = { workspace = true }
 indexmap     = { workspace = true }
 mlua         = { workspace = true }
+parking_lot  = { workspace = true }
 paste        = { workspace = true }
 ratatui      = { workspace = true }
 scopeguard   = { workspace = true }
