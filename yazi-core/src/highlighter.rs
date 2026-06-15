@@ -1,13 +1,12 @@
-use std::{
-	io::{BufRead, BufReader, Cursor, Seek},
-	path::PathBuf,
-	sync::OnceLock,
-};
-
 use anyhow::{Result, anyhow, bail};
 use ratatui::{
 	layout::Size,
 	text::{Line, Span, Text},
+};
+use std::{
+	io::{BufRead, BufReader, Cursor, Seek},
+	path::PathBuf,
+	sync::OnceLock,
 };
 use syntect::{
 	LoadingError, dumps,
@@ -15,6 +14,7 @@ use syntect::{
 	highlighting::{self, Theme, ThemeSet},
 	parsing::{SyntaxReference, SyntaxSet},
 };
+use yazi_binding::elements::HighlightPosition;
 use yazi_config::{THEME, YAZI};
 use yazi_runner::previewer::PeekError;
 use yazi_shared::{Id, Ids, replace_to_printable};
@@ -37,12 +37,17 @@ pub struct Highlighter {
 }
 
 impl Highlighter {
-	pub async fn oneshot<P>(path: P, skip: usize, size: Size) -> Result<Text<'static>, PeekError>
+	pub async fn oneshot<P>(
+		path: P,
+		skip: usize,
+		size: Size,
+		position: Option<HighlightPosition>,
+	) -> Result<Text<'static>, PeekError>
 	where
 		P: Into<PathBuf>,
 	{
 		let path = path.into();
-		tokio::task::spawn_blocking(move || Self::make(path, skip, size)?.highlight()).await?
+		tokio::task::spawn_blocking(move || Self::make(path, skip, size)?.highlight(position)).await?
 	}
 
 	fn make<P>(path: P, skip: usize, size: Size) -> Result<Self>
@@ -75,7 +80,7 @@ impl Highlighter {
 		INCR.next();
 	}
 
-	fn highlight(mut self) -> Result<Text<'static>, PeekError> {
+	fn highlight(mut self, position: Option<HighlightPosition>) -> Result<Text<'static>, PeekError> {
 		self.load_syntax()?;
 		let mut plain = self.syntax.is_none();
 
@@ -84,7 +89,6 @@ impl Highlighter {
 		let mut lines = Vec::with_capacity(self.size.height as usize);
 		let mut inspected = 0u16;
 		while self.reader.read_until(b'\n', &mut buf).is_ok_and(|n| n > 0) {
-			// tracing::debug!("{:?}", buf);
 			if Self::is_binary(&buf, &mut inspected) {
 				Err(anyhow!("Binary file"))?;
 			}
@@ -95,9 +99,9 @@ impl Highlighter {
 			}
 
 			self.ensure_not_cancelled()?;
-			if plain && !self.process_plain(&buf, &mut i, &mut lines)? {
+			if plain && !self.process_plain(&buf, &mut i, &position, &mut lines)? {
 				break;
-			} else if !plain && !self.process_hyper(&buf, &mut i, &mut lines)? {
+			} else if !plain && !self.process_hyper(&buf, &mut i, &position, &mut lines)? {
 				break;
 			}
 			buf.clear();
@@ -110,7 +114,13 @@ impl Highlighter {
 		Ok(Text::from(lines))
 	}
 
-	fn process_plain(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+	fn process_plain(
+		&mut self,
+		buf: &[u8],
+		i: &mut usize,
+		position: &Option<HighlightPosition>,
+		lines: &mut Vec<Line>,
+	) -> Result<bool> {
 		let b = replace_to_printable(buf, true, YAZI.preview.tab_size, false);
 		let s = String::from_utf8_lossy(&b);
 
@@ -131,11 +141,18 @@ impl Highlighter {
 		Ok(true)
 	}
 
-	fn process_hyper(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+	fn process_hyper(
+		&mut self,
+		buf: &[u8],
+		i: &mut usize,
+		position: &Option<HighlightPosition>,
+		lines: &mut Vec<Line>,
+	) -> Result<bool> {
 		let Some(syntax) = self.syntax else { bail!("No syntax") };
 		let h = self.inner.get_or_insert_with(|| HighlightLines::new(syntax, self.theme));
 
 		let s = String::from_utf8_lossy(buf);
+		tracing::debug!("s {:?}", s);
 		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 
 		let mut it = LineIter::parsed(&line, YAZI.preview.tab_size);

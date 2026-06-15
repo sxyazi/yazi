@@ -7,7 +7,7 @@ use yazi_binding::{
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::FsUrl;
 use yazi_runner::previewer::PeekError;
-use yazi_shared::url::AsUrl;
+use yazi_shared::url::{AsUrl, UrlLike};
 
 use super::Utils;
 
@@ -20,16 +20,10 @@ impl Utils {
 			let area: Area = t.raw_get("area")?;
 			let position: Option<HighlightPosition> = t.raw_get("position").ok();
 
-			tracing::debug!("{:?}", position);
-
 			let mut lock = PreviewLock::try_from(t)?;
 			let path = lock.url.as_url().unified_path();
 
-			let search_subject = lock.url.as_url().scheme().domain();
-
-			tracing::debug!("search subject{:?}", search_subject);
-
-			let inner = match Highlighter::oneshot(path, lock.skip, area.size()).await {
+			let inner = match Highlighter::oneshot(path, lock.skip, area.size(), position).await {
 				Ok(text) => {
 					// tracing::debug!("{:?}", text);
 					text

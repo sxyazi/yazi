@@ -45,8 +45,6 @@ impl Preview {
 
 		let job = PeekJob { previewer, file, mime, skip: self.skip, search_idx: self.search_idx };
 
-		tracing::debug!("preview before to peek {:?}", self.search_idx);
-
 		self.handle = Some(tokio::spawn(async move {
 			let mut rx = RUNNER.peek(&job).await;
 			match rx.recv().await.unwrap_or(Err(PeekError::Cancelled)) {

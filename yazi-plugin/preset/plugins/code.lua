@@ -4,7 +4,8 @@ local function get_search_occurrences(url)
 	if not url.is_search then
 		return
 	end
-	local occurrences = tostring(url):match("^search://(.-)//")
+	-- Shoud we encode ~ too?
+	local subject_len, occurrences = tostring(url):match("^search://([^~]+)~(.-)//")
 	local lines = {}
 	for occurrence in occurrences:gmatch("[^,]+") do
 		local line, col = occurrence:match("(%d+)-(%d+)")
@@ -15,7 +16,7 @@ local function get_search_occurrences(url)
 		return
 	end
 
-	return lines
+	return tonumber(subject_len), lines
 end
 
 local function get_next_occurrence_idx(search_idx, direction, occurrences_len)
@@ -37,18 +38,19 @@ local function get_next_occurrence_idx(search_idx, direction, occurrences_len)
 end
 
 function M:peek(job)
-	local search_occurrences = get_search_occurrences(job.file.url)
+	local subject_len, search_occurrences = get_search_occurrences(job.file.url)
 	local search_idx = job.search_idx
-
-	ya.dbg("code.lua: search_occurrences:", search_occurrences)
 
 	local occurrence
 	if search_occurrences and search_idx then
 		occurrence = search_occurrences[search_idx]
+		job.position = {
+			line = occurrence[1],
+			col = occurrence[2],
+			length = subject_len,
+		}
 	end
 
-	ya.dbg("code.lua: Occurrence:", occurrence)
-	-- Todo: Pass the occurrence for highlighting
 	local err, bound = ya.preview_code(job)
 	if bound then
 		ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true })
@@ -61,14 +63,13 @@ function M:seek(job)
 	local direction = job.units > 0 and "down" or "up"
 
 	local search_idx = cx.active.preview.search_idx
-	ya.dbg("search index before to set it in seek", search_idx)
 
 	local h = cx.active.current.hovered
 	if not h or h.url ~= job.file.url then
 		return
 	end
 
-	local search_occurrences = get_search_occurrences(job.file.url)
+	local _, search_occurrences = get_search_occurrences(job.file.url)
 	if search_occurrences then
 		local next_occurrence_idx = get_next_occurrence_idx(search_idx, direction, #search_occurrences)
 		local occurrence = search_occurrences[next_occurrence_idx]
