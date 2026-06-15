@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{fmt::format, process::Stdio};
 
 use anyhow::Result;
 use tokio::{
@@ -22,7 +22,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		.args(["--color=never", "--no-heading", "--column", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
-		.arg(opt.subject)
+		.arg(opt.subject.clone())
 		.current_dir(&*opt.cwd.as_url().unified_path())
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
@@ -42,7 +42,9 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 			let Some((file_path, line, col)) = parse_rg_line(&search_line) else { continue };
 
 			if current_file != file_path {
-				let Some(url) = build_file_url(opt.cwd.clone(), &current_file, &current_occurrences) else {
+				let Some(url) =
+					build_file_url(opt.cwd.clone(), opt.subject.clone(), &current_file, &current_occurrences)
+				else {
 					continue;
 				};
 
@@ -57,7 +59,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		}
 
 		if current_occurrences.len() > 0 {
-			match build_file_url(opt.cwd, &current_file, &current_occurrences) {
+			match build_file_url(opt.cwd, opt.subject, &current_file, &current_occurrences) {
 				Some(url) => {
 					if let Ok(file) = File::new(url).await {
 						tx.send(file).ok();
@@ -73,10 +75,16 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 	Ok(rx)
 }
 
-fn build_file_url(cwd: UrlBuf, file_path: &str, occurences: &Vec<(u32, u32)>) -> Option<UrlBuf> {
+fn build_file_url(
+	cwd: UrlBuf,
+	subject: String,
+	file_path: &str,
+	occurences: &Vec<(u32, u32)>,
+) -> Option<UrlBuf> {
 	let occurrences_str =
 		occurences.iter().map(|(line, col)| format!("{line}-{col}")).collect::<Vec<_>>().join(",");
-	let url = cwd.try_join(file_path).ok().and_then(|u| u.into_search(occurrences_str).ok());
+	let search_str = format!("{}~{}", subject.len(), occurrences_str);
+	let url = cwd.try_join(file_path).ok().and_then(|u| u.into_search(search_str).ok());
 
 	url
 }
