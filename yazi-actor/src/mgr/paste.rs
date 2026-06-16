@@ -23,7 +23,7 @@ impl Actor for Paste {
 			mgr.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(&*mgr.yanked));
 			act!(mgr:unyank, cx)
 		} else {
-			succ!(cx.core.tasks.file_copy(&mgr.yanked, dest, form.force, form.follow));
+			succ!(cx.core.tasks.file_copy(&mgr.yanked, dest, form.force));
 		}
 	}
 }

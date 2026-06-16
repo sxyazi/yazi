@@ -6,7 +6,7 @@ use yazi_actor::Ctx;
 use yazi_config::keymap::Key;
 use yazi_macro::{act, emit};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
-use yazi_term::event::{DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
+use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 use yazi_widgets::input::InputMode;
 
 use crate::{Executor, Router, app::App};
@@ -30,6 +30,7 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::FocusOut) => Ok(()),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
 			Event::Term(TermEvent::Dnd(dnd)) => self.dispatch_dnd(dnd),
+			Event::Term(TermEvent::Clipboard(clip)) => self.dispatch_clipboard(clip),
 		};
 
 		if let Err(e) = &result {
@@ -101,5 +102,16 @@ impl<'a> Dispatcher<'a> {
 	fn dispatch_dnd(&mut self, dnd: DndEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:dnd, cx, dnd).map(|_| ())
+	}
+
+	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
+		if self.app.core.input.focus() {
+			if let Some(text) = clip.text() {
+				self.dispatch_paste(text)?;
+				return Ok(());
+			}
+		}
+		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		act!(app:clipboard, cx, clip).map(|_| ())
 	}
 }

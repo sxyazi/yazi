@@ -2,7 +2,7 @@ use std::io::Write;
 
 use mlua::{BorrowedBytes, ExternalError, IntoLuaMulti, Lua, MultiValue, Table, UserData, UserDataMethods};
 use yazi_shim::mlua::{ByteString, LuaTableExt};
-use yazi_term::sequence::{AgreeDrag, AgreeDrop, FinishDrop, PresentDrag, PresentDragIcon, StartDrag, StartDrop};
+use yazi_term::sequence::{AgreeDrag, AgreeDrop, FinishDrop, PresentDrag, PresentDragIcon, ReadClipboard, StartDrag, StartDrop, WriteClipboard, WriteClipboardData};
 use yazi_tty::TTY;
 
 use crate::Error;
@@ -51,6 +51,30 @@ impl Tty {
 				b"move" => write!(w, "{}", FinishDrop::Move),
 				_ => return Err("invalid FinishDrop type".into_lua_err()),
 			},
+			b"ReadClipboard" => {
+				write!(w, "{}", ReadClipboard {
+					mime:    &t.raw_get::<BorrowedBytes>("mimes")?,
+					pw:      &t.raw_get::<BorrowedBytes>("pw")?,
+					name:    &t.raw_get::<BorrowedBytes>("name")?,
+					primary: t.raw_get("primary")?,
+				})
+			}
+			b"WriteClipboard" => {
+				let mut data = Vec::new();
+				for v in &t.sequence_values::<Table>().collect::<Result<Vec<_>, mlua::Error>>()? {
+					data.push((
+						v.raw_get::<BorrowedBytes>("mime")?,
+						v.raw_get::<BorrowedBytes>("data")?,
+						v.raw_get::<BorrowedBytes>("alias")?,
+					));
+				}
+				write!(w, "{}", WriteClipboard {
+					data: data
+						.iter()
+						.map(|(m, p, a)| { WriteClipboardData { mime: &m, payload: &p, alias: &a } })
+						.collect(),
+				})
+			}
 			_ => return Err("invalid sequence kind".into_lua_err()),
 		};
 

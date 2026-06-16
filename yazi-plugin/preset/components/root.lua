@@ -99,3 +99,16 @@ function Root:drop(event)
 		return c and c.drop and c:drop(event)
 	end
 end
+
+function Root:clipboard(event)
+	if event and event.type == "mimetypes" and event.pw then
+		-- No harm in asking for unavailable types
+		local mimetypes = "text/plain text/uri-list"
+		rt.tty:queue("ReadClipboard", { mimes = mimetypes, pw = event.pw, name = "Paste Event", primary = event.primary })
+		rt.tty:flush()
+	elseif event and event.type == "data" then
+		if event.data["text/uri-list"] ~= nil then
+			require("clipboard").copy_uri_list(event.data["text/uri-list"])
+		end
+	end
+end

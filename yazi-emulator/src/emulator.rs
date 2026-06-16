@@ -8,7 +8,7 @@ use tokio::time::sleep;
 use tracing::{debug, error, warn};
 use yazi_macro::writef;
 use yazi_shim::cell::RoCell;
-use yazi_term::{TERM, sequence::{HideCursor, If, KittyGraphicsQuery, MoveTo, RequestBgColor, RequestCellPixelSize, RequestDA1, RequestXtVersion, RestoreCursorPos, SaveCursorPos, SetFg, SetSgr, ShowCursor}};
+use yazi_term::{TERM, sequence::{HideCursor, If, KittyGraphicsQuery, MoveTo, QueryOSC5522, RequestBgColor, RequestCellPixelSize, RequestDA1, RequestXtVersion, RestoreCursorPos, SaveCursorPos, SetFg, SetSgr, ShowCursor}};
 use yazi_tty::{Handle, TTY};
 
 use crate::{Brand, Mux, TMUX, Unknown};
@@ -22,6 +22,7 @@ pub struct Emulator {
 	pub light:     bool,
 	pub csi_16t:   (u16, u16),
 	pub force_16t: bool,
+	pub osc_5522:  bool,
 }
 
 impl Default for Emulator {
@@ -32,6 +33,7 @@ impl Default for Emulator {
 			light:     false,
 			csi_16t:   (0, 0),
 			force_16t: false,
+			osc_5522:  false,
 		}
 	}
 }
@@ -44,11 +46,12 @@ impl Emulator {
 		let resort = Brand::from_env();
 		writef!(
 			TTY.writer(),
-			"{SaveCursorPos}{}{}{}{}{}{RestoreCursorPos}",
+			"{SaveCursorPos}{}{}{}{}{}{}{RestoreCursorPos}",
 			If(resort.is_none(), Mux::wrap(KittyGraphicsQuery)),
 			Mux::wrap(RequestXtVersion),
 			RequestCellPixelSize,
 			RequestBgColor,
+			QueryOSC5522,
 			Mux::wrap(RequestDA1),
 		)?;
 
@@ -65,12 +68,14 @@ impl Emulator {
 		};
 
 		let csi_16t = Self::csi_16t(&resp).unwrap_or_default();
+
 		Ok(Self {
 			kind,
 			version: Self::csi_gt_q(&resp).unwrap_or_default(),
 			light: Self::light_bg(&resp).unwrap_or_default(),
 			csi_16t,
 			force_16t: Self::force_16t(csi_16t),
+			osc_5522: Self::osc_5522(&resp),
 		})
 	}
 
@@ -184,6 +189,10 @@ impl Emulator {
 				Ok(false)
 			}
 		}
+	}
+
+	fn osc_5522(resp: &str) -> bool {
+		["\x1b[?5522;1$y", "\x1b[?5522;2$y", "\x1b[?5522;3$y"].iter().any(|s| resp.contains(s))
 	}
 
 	fn force_16t((w, h): (u16, u16)) -> bool {
