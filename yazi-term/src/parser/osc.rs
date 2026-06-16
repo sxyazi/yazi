@@ -90,16 +90,16 @@ impl Parser {
 		// decode now since each payload may have its own padding
 		let payload = BASE64_PAD.decode(&payload).or(Err(ParseError::Invalid))?;
 
-		// Limit payload size to 1MiB to prevent potential DoS
-		// TODO A larger size would be required for directly pasting images/large files
-		if state.payload.len() + payload.len() > 1 << 20 {
-			return Err(ParseError::Invalid);
-		}
-
 		if state.idx >= state.payload.len() {
 			state.payload.push(payload.to_vec());
 		} else {
 			state.payload[state.idx].extend(payload);
+		}
+
+		// Limit payload size to 1MiB per mime type to prevent potential DoS
+		// TODO A larger size would be required for directly pasting images/large files
+		if state.payload[state.idx].len() > 1 << 20 {
+			return Err(ParseError::Invalid);
 		}
 
 		Ok(())
