@@ -52,19 +52,28 @@ impl Tty {
 				_ => return Err("invalid FinishDrop type".into_lua_err()),
 			},
 			b"ReadClipboard" => {
-				let esc_seq = ReadClipboard {
+				write!(w, "{}", ReadClipboard {
 					mime:    &t.raw_get::<BorrowedBytes>("mimes")?,
 					pw:      &t.raw_get::<BorrowedBytes>("pw")?,
 					name:    &t.raw_get::<BorrowedBytes>("name")?,
 					primary: t.raw_get("primary")?,
-				};
-				write!(w, "{}", esc_seq)
+				})
 			}
 			b"WriteClipboard" => {
-				let mime = &t.raw_get::<BorrowedBytes>("mime")?;
-				let payload = &t.raw_get::<BorrowedBytes>("data")?;
-				let alias = &t.raw_get::<BorrowedBytes>("alias")?;
-				write!(w, "{}", WriteClipboard { data: vec![WriteClipboardData { mime, payload, alias }] })
+				let mut data = Vec::new();
+				for v in &t.sequence_values::<Table>().collect::<Result<Vec<_>, mlua::Error>>()? {
+					data.push((
+						v.raw_get::<BorrowedBytes>("mime")?,
+						v.raw_get::<BorrowedBytes>("data")?,
+						v.raw_get::<BorrowedBytes>("alias")?,
+					));
+				}
+				write!(w, "{}", WriteClipboard {
+					data: data
+						.iter()
+						.map(|(m, p, a)| { WriteClipboardData { mime: &m, payload: &p, alias: &a } })
+						.collect(),
+				})
 			}
 			_ => return Err("invalid sequence kind".into_lua_err()),
 		};
