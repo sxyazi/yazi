@@ -157,9 +157,9 @@ impl TaskIn for FileInCopy {
 }
 
 impl FileInCopy {
-	pub fn new(from: UrlBuf, to: UrlBuf, force: bool, follow: Option<bool>) -> Self {
+	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
 		Self {
-			follow: follow.unwrap_or(!from.scheme().covariant(to.scheme())),
+			follow: !from.scheme().covariant(to.scheme()),
 			id: Id::ZERO,
 			from,
 			to,
@@ -193,7 +193,6 @@ impl FromLua for FileInCopy {
 			t.raw_get::<yazi_binding::Url>("from")?.into(),
 			t.raw_get::<yazi_binding::Url>("to")?.into(),
 			t.raw_get("force")?,
-			None, // t.raw_get("follow")?,
 		))
 	}
 }

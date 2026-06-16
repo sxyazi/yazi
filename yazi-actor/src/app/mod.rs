@@ -1,6 +1,7 @@
 yazi_macro::mod_flat!(
 	accept_payload
 	bootstrap
+	clipboard
 	deprecate
 	dnd
 	focus
@@ -16,5 +17,4 @@ yazi_macro::mod_flat!(
 	theme
 	title
 	update_progress
-	clipboard
 );

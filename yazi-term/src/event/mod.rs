@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(dnd event keyboard modifiers mouse clipboard);
+yazi_macro::mod_flat!(clipboard dnd event keyboard mime modifiers mouse);
