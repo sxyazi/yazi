@@ -1,4 +1,6 @@
 use anyhow::{Result, anyhow, bail};
+use ratatui::style;
+use ratatui::style::Style;
 use ratatui::{
 	layout::Size,
 	text::{Line, Span, Text},
@@ -150,11 +152,10 @@ impl Highlighter {
 	) -> Result<bool> {
 		let Some(syntax) = self.syntax else { bail!("No syntax") };
 		let h = self.inner.get_or_insert_with(|| HighlightLines::new(syntax, self.theme));
-
 		let s = String::from_utf8_lossy(buf);
-		tracing::debug!("s {:?}", s);
-		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 
+		// tracing::debug!("s {:?}", s);
+		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 		let mut it = LineIter::parsed(&line, YAZI.preview.tab_size);
 		if let Some(wrap) = YAZI.preview.wrap.into() {
 			it = it.wrapped(wrap, self.size.width);
@@ -165,7 +166,14 @@ impl Highlighter {
 			if *i > self.skip + self.size.height as usize {
 				return Ok(false);
 			} else if *i > self.skip {
-				lines.push(spans.into_static_line());
+				let mut static_line = spans.into_static_line();
+				if let Some(pos) = position {
+					if pos.line == *i {
+						tracing::debug!("Position: {:?}, line: {}", pos, i);
+						static_line.style = Style::new().bg(style::Color::Red);
+					}
+				}
+				lines.push(static_line);
 			}
 			self.ensure_not_cancelled()?;
 		}
