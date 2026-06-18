@@ -1,6 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
-use ratatui::{layout::Rect, widgets::Padding};
+use ratatui_core::layout::Rect;
+use ratatui_widgets::block::Padding;
 
 use super::{Offset, Origin};
 

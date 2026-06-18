@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
+use ratatui_core::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType, paragraph::{Paragraph, Wrap}};
 use yazi_core::{Core, notify::Message};
 
 pub(crate) struct Notify<'a> {

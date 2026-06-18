@@ -2,7 +2,7 @@ use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::Widget;
+use ratatui_core::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
 use super::{Area, Span};
@@ -14,11 +14,11 @@ const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 pub struct Line {
 	area: Area,
 
-	pub(super) inner: ratatui::text::Line<'static>,
+	pub(super) inner: ratatui_core::text::Line<'static>,
 }
 
 impl Deref for Line {
-	type Target = ratatui::text::Line<'static>;
+	type Target = ratatui_core::text::Line<'static>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
@@ -51,8 +51,8 @@ impl Line {
 	}
 }
 
-impl From<ratatui::text::Line<'static>> for Line {
-	fn from(value: ratatui::text::Line<'static>) -> Self {
+impl From<ratatui_core::text::Line<'static>> for Line {
+	fn from(value: ratatui_core::text::Line<'static>) -> Self {
 		Self { inner: value, ..Default::default() }
 	}
 }
@@ -96,7 +96,7 @@ impl TryFrom<Table> for Line {
 	}
 }
 
-impl From<Line> for ratatui::text::Line<'static> {
+impl From<Line> for ratatui_core::text::Line<'static> {
 	fn from(value: Line) -> Self { value.inner }
 }
 
@@ -107,7 +107,7 @@ impl Spatial for Line {
 }
 
 impl Widget for &Line {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
@@ -157,7 +157,7 @@ impl UserData for Line {
 			}
 
 			let ellipsis = match t.raw_get::<Value>("ellipsis")? {
-				Value::Nil => (1, ratatui::text::Span::raw("…")),
+				Value::Nil => (1, ratatui_core::text::Span::raw("…")),
 				v => {
 					let mut span = Span::from_lua(v, lua)?;
 					(span.truncate(max), span.0)

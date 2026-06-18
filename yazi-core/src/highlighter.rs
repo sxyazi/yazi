@@ -1,7 +1,7 @@
 use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::OnceLock};
 
 use anyhow::{Result, anyhow, bail};
-use ratatui::{layout::Size, text::{Line, Span, Text}};
+use ratatui_core::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use yazi_config::{THEME, YAZI};
 use yazi_runner::previewer::PeekError;
@@ -207,20 +207,20 @@ impl Highlighter {
 impl Highlighter {
 	fn to_line_widget<'a>(regions: Vec<(highlighting::Style, &'a str)>) -> Line<'a> {
 		Line::from_iter(regions.into_iter().map(|(style, s)| {
-			let mut modifier = ratatui::style::Modifier::empty();
+			let mut modifier = ratatui_core::style::Modifier::empty();
 			if style.font_style.contains(highlighting::FontStyle::BOLD) {
-				modifier |= ratatui::style::Modifier::BOLD;
+				modifier |= ratatui_core::style::Modifier::BOLD;
 			}
 			if style.font_style.contains(highlighting::FontStyle::ITALIC) {
-				modifier |= ratatui::style::Modifier::ITALIC;
+				modifier |= ratatui_core::style::Modifier::ITALIC;
 			}
 			if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
-				modifier |= ratatui::style::Modifier::UNDERLINED;
+				modifier |= ratatui_core::style::Modifier::UNDERLINED;
 			}
 
 			Span {
 				content: s.into(),
-				style:   ratatui::style::Style {
+				style:   ratatui_core::style::Style {
 					fg: Self::to_ansi_color(style.foreground),
 					// bg: Self::to_ansi_color(style.background),
 					add_modifier: modifier,
@@ -231,7 +231,7 @@ impl Highlighter {
 	}
 
 	// Copied from https://github.com/sharkdp/bat/blob/master/src/terminal.rs
-	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
+	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui_core::style::Color> {
 		if color.a == 0 {
 			// Themes can specify one of the user-configurable terminal colors by
 			// encoding them as #RRGGBBAA with AA set to 00 (transparent) and RR set
@@ -242,14 +242,14 @@ impl Highlighter {
 				// sequences using codes 30-37 (foreground) and 40-47 (background).
 				// For example, red foreground is \x1b[31m. This works on terminals
 				// without 256-color support.
-				0x00 => ratatui::style::Color::Black,
-				0x01 => ratatui::style::Color::Red,
-				0x02 => ratatui::style::Color::Green,
-				0x03 => ratatui::style::Color::Yellow,
-				0x04 => ratatui::style::Color::Blue,
-				0x05 => ratatui::style::Color::Magenta,
-				0x06 => ratatui::style::Color::Cyan,
-				0x07 => ratatui::style::Color::White,
+				0x00 => ratatui_core::style::Color::Black,
+				0x01 => ratatui_core::style::Color::Red,
+				0x02 => ratatui_core::style::Color::Green,
+				0x03 => ratatui_core::style::Color::Yellow,
+				0x04 => ratatui_core::style::Color::Blue,
+				0x05 => ratatui_core::style::Color::Magenta,
+				0x06 => ratatui_core::style::Color::Cyan,
+				0x07 => ratatui_core::style::Color::White,
 				// For all other colors, use Fixed to produce escape sequences using
 				// codes 38;5 (foreground) and 48;5 (background). For example,
 				// bright red foreground is \x1b[38;5;9m. This only works on
@@ -258,7 +258,7 @@ impl Highlighter {
 				// TODO: When ansi_term adds support for bright variants using codes
 				// 90-97 (foreground) and 100-107 (background), we should use those
 				// for values 0x08 to 0x0f and only use Fixed for 0x10 to 0xff.
-				n => ratatui::style::Color::Indexed(n),
+				n => ratatui_core::style::Color::Indexed(n),
 			})
 		} else if color.a == 1 {
 			// Themes can specify the terminal's default foreground/background color
@@ -266,7 +266,7 @@ impl Highlighter {
 			// 01. The built-in theme ansi uses this.
 			None
 		} else {
-			Some(ratatui::style::Color::Rgb(color.r, color.g, color.b))
+			Some(ratatui_core::style::Color::Rgb(color.r, color.g, color.b))
 		}
 	}
 }

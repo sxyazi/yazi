@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, Lua, Table, Value};
-use ratatui::style::Style;
+use ratatui_core::style::Style;
 
 #[derive(Clone, Debug, Default)]
 pub struct InputStyles {

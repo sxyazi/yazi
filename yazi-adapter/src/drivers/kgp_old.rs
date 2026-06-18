@@ -4,7 +4,7 @@ use std::{io::Write, path::PathBuf};
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_tty::TTY;
 

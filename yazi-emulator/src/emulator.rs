@@ -2,7 +2,7 @@ use std::{io::{self, BufWriter, Write}, time::Duration};
 
 use anyhow::Result;
 use either::Either;
-use ratatui::style::Color;
+use ratatui_core::style::Color;
 use scopeguard::defer;
 use tokio::time::sleep;
 use tracing::{debug, error, warn};

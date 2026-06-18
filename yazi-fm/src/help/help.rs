@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, text::Line, widgets::Widget};
+use ratatui_core::{buffer::Buffer, layout::{self, Constraint, Rect}, text::Line, widgets::Widget};
 use yazi_config::{KEYMAP, THEME};
 use yazi_core::Core;
 

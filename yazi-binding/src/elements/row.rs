@@ -10,7 +10,7 @@ pub struct Row {
 	height:           u16,
 	top_margin:       u16,
 	bottom_margin:    u16,
-	style:            ratatui::style::Style,
+	style:            ratatui_core::style::Style,
 }
 
 impl Row {
@@ -26,7 +26,7 @@ impl Row {
 	}
 }
 
-impl From<Row> for ratatui::widgets::Row<'static> {
+impl From<Row> for ratatui_widgets::table::Row<'static> {
 	fn from(value: Row) -> Self {
 		Self::new(value.cells)
 			.height(value.height.max(1))

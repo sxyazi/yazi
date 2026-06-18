@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 
 #[derive(Debug)]
 pub struct ReflowForm {

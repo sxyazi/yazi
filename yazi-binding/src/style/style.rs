@@ -1,16 +1,16 @@
 use std::ops::Deref;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::style::Modifier;
+use ratatui_core::style::Modifier;
 use yazi_shim::{cell::SyncCell, mlua::SER_OPT};
 
 use crate::{elements::Color, style::StyleFlat};
 
 #[derive(Clone, Copy, Default)]
-pub struct Style(pub ratatui::style::Style);
+pub struct Style(pub ratatui_core::style::Style);
 
 impl Deref for Style {
-	type Target = ratatui::style::Style;
+	type Target = ratatui_core::style::Style;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -23,7 +23,7 @@ impl From<&SyncCell<StyleFlat>> for Style {
 	fn from(value: &SyncCell<StyleFlat>) -> Self { value.get().into() }
 }
 
-impl From<Style> for ratatui::style::Style {
+impl From<Style> for ratatui_core::style::Style {
 	fn from(value: Style) -> Self { value.0 }
 }
 

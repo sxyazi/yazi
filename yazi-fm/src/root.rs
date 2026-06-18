@@ -1,5 +1,5 @@
 use mlua::{ObjectLike, Table};
-use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_core::Core;
 use yazi_plugin::LUA;

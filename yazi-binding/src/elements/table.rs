@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
-use ratatui::widgets::{StatefulWidget, Widget};
+use ratatui_core::widgets::{StatefulWidget, Widget};
 
 use super::{Area, Row};
 use crate::{elements::{Constraint, Spatial}, style::Style};
@@ -10,23 +10,23 @@ pub struct Table {
 	area: Area,
 
 	rows:           Vec<Row>,
-	header:         Option<ratatui::widgets::Row<'static>>,
-	footer:         Option<ratatui::widgets::Row<'static>>,
-	widths:         Vec<ratatui::layout::Constraint>,
+	header:         Option<ratatui_widgets::table::Row<'static>>,
+	footer:         Option<ratatui_widgets::table::Row<'static>>,
+	widths:         Vec<ratatui_core::layout::Constraint>,
 	column_spacing: u16,
-	block:          Option<ratatui::widgets::Block<'static>>, // TODO
+	block:          Option<ratatui_widgets::block::Block<'static>>, // TODO
 
-	style:                  ratatui::style::Style,
-	row_highlight_style:    ratatui::style::Style,
-	column_highlight_style: ratatui::style::Style,
-	cell_highlight_style:   ratatui::style::Style,
+	style:                  ratatui_core::style::Style,
+	row_highlight_style:    ratatui_core::style::Style,
+	column_highlight_style: ratatui_core::style::Style,
+	cell_highlight_style:   ratatui_core::style::Style,
 
-	highlight_symbol:  ratatui::text::Text<'static>, // TODO
-	highlight_spacing: ratatui::widgets::HighlightSpacing, // TODO
+	highlight_symbol:  ratatui_core::text::Text<'static>, // TODO
+	highlight_spacing: ratatui_widgets::table::HighlightSpacing, // TODO
 
-	flex: ratatui::layout::Flex,
+	flex: ratatui_core::layout::Flex,
 
-	state: ratatui::widgets::TableState,
+	state: ratatui_widgets::table::TableState,
 }
 
 impl Table {
@@ -41,7 +41,7 @@ impl Table {
 		table.into_lua(lua)
 	}
 
-	pub fn selected_cell(&self) -> Option<&ratatui::text::Text<'_>> {
+	pub fn selected_cell(&self) -> Option<&ratatui_core::text::Text<'_>> {
 		let row = &self.rows[self.selected()?];
 		let col = self.state.selected_column()?;
 		if row.cells.is_empty() { None } else { Some(&row.cells[col.min(row.cells.len() - 1)].text) }
@@ -73,11 +73,11 @@ impl Spatial for Table {
 }
 
 impl Widget for Table {
-	fn render(mut self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(mut self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
-		let mut table = ratatui::widgets::Table::new(self.rows, self.widths)
+		let mut table = ratatui_widgets::table::Table::new(self.rows, self.widths)
 			.column_spacing(self.column_spacing)
 			.style(self.style)
 			.row_highlight_style(self.row_highlight_style)
@@ -102,7 +102,7 @@ impl Widget for Table {
 }
 
 impl Widget for &Table {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{

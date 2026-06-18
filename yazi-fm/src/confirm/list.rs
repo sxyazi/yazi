@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget, Wrap}};
+use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, widgets::{StatefulWidget, Widget}};
+use ratatui_widgets::{block::Block, borders::Borders, paragraph::Wrap, scrollbar::{Scrollbar, ScrollbarOrientation, ScrollbarState}};
 use yazi_config::THEME;
 use yazi_core::Core;
 

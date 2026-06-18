@@ -52,8 +52,8 @@ impl Message {
 	}
 
 	pub fn height(&self, width: u16) -> usize {
-		let lines = ratatui::widgets::Paragraph::new(self.content.as_str())
-			.wrap(ratatui::widgets::Wrap { trim: false })
+		let lines = ratatui_widgets::paragraph::Paragraph::new(self.content.as_str())
+			.wrap(ratatui_widgets::paragraph::Wrap { trim: false })
 			.line_count(width.saturating_sub(NOTIFY_BORDER));
 
 		lines + NOTIFY_BORDER as usize

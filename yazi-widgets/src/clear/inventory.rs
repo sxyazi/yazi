@@ -1,4 +1,4 @@
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 
 pub struct ClearInventory {
 	pub clear: fn(Rect) -> Option<Rect>,

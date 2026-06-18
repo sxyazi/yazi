@@ -5,10 +5,10 @@ use unicode_width::UnicodeWidthChar;
 
 const EXPECTED: &str = "expected a string or Span";
 
-pub struct Span(pub(super) ratatui::text::Span<'static>);
+pub struct Span(pub(super) ratatui_core::text::Span<'static>);
 
 impl Deref for Span {
-	type Target = ratatui::text::Span<'static>;
+	type Target = ratatui_core::text::Span<'static>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }

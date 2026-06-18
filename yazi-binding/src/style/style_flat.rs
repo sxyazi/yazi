@@ -1,4 +1,4 @@
-use ratatui::style::Color;
+use ratatui_core::style::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
@@ -16,10 +16,10 @@ pub struct StyleFlat {
 	pub crossed:     Option<bool>,
 }
 
-impl From<ratatui::style::Style> for StyleFlat {
+impl From<ratatui_core::style::Style> for StyleFlat {
 	#[rustfmt::skip]
-	fn from(value: ratatui::style::Style) -> Self {
-		use ratatui::style::Modifier as M;
+	fn from(value: ratatui_core::style::Style) -> Self {
+		use ratatui_core::style::Modifier as M;
 
 		let sub = value.sub_modifier;
 		let all = value.add_modifier - sub;
@@ -40,10 +40,10 @@ impl From<ratatui::style::Style> for StyleFlat {
 	}
 }
 
-impl From<StyleFlat> for ratatui::style::Style {
+impl From<StyleFlat> for ratatui_core::style::Style {
 	#[rustfmt::skip]
 	fn from(value: StyleFlat) -> Self {
-		use ratatui::style::Modifier as M;
+		use ratatui_core::style::Modifier as M;
 
 		let (mut add, mut sub) = (M::empty(), M::empty());
 		if let Some(b) = value.bold {
@@ -85,7 +85,7 @@ impl From<StyleFlat> for ratatui::style::Style {
 }
 
 impl StyleFlat {
-	pub fn derive(self, other: ratatui::style::Style) -> ratatui::style::Style {
-		ratatui::style::Style::from(self).patch(other)
+	pub fn derive(self, other: ratatui_core::style::Style) -> ratatui_core::style::Style {
+		ratatui_core::style::Style::from(self).patch(other)
 	}
 }

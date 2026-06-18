@@ -34,20 +34,21 @@ yazi-watcher   = { path = "../yazi-watcher", version = "26.5.6" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
-anyhow        = { workspace = true }
-dyn-clone     = { workspace = true }
-hashbrown     = { workspace = true }
-indexmap      = { workspace = true }
-mlua          = { workspace = true }
-parking_lot   = { workspace = true }
-ratatui       = { workspace = true }
-serde         = { workspace = true }
-serde_with    = { workspace = true }
-strum         = { workspace = true }
-syntect       = { workspace = true }
-tokio         = { workspace = true }
-tokio-stream  = { workspace = true }
-tokio-util    = { workspace = true }
-tracing       = { workspace = true }
-unicode-width = { workspace = true }
-yazi-prebuilt = "0.1.0"
+anyhow          = { workspace = true }
+dyn-clone       = { workspace = true }
+hashbrown       = { workspace = true }
+indexmap        = { workspace = true }
+mlua            = { workspace = true }
+parking_lot     = { workspace = true }
+ratatui-core    = { workspace = true }
+ratatui-widgets = { workspace = true }
+serde           = { workspace = true }
+serde_with      = { workspace = true }
+strum           = { workspace = true }
+syntect         = { workspace = true }
+tokio           = { workspace = true }
+tokio-stream    = { workspace = true }
+tokio-util      = { workspace = true }
+tracing         = { workspace = true }
+unicode-width   = { workspace = true }
+yazi-prebuilt   = "0.1.0"

@@ -1,6 +1,7 @@
 use std::path::MAIN_SEPARATOR_STR;
 
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
+use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType, list::{List, ListItem}};
 use yazi_binding::position::{Offset, Position};
 use yazi_config::THEME;
 use yazi_core::Core;

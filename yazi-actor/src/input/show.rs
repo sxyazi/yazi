@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ratatui::widgets::Padding;
+use ratatui_widgets::block::Padding;
 use yazi_config::{THEME, YAZI};
 use yazi_macro::{act, render, succ};
 use yazi_parser::input::ShowForm;

@@ -1,11 +1,11 @@
 use mlua::{FromLua, IntoLua, Lua, UserData, Value};
 
 #[derive(Clone, Copy, Default, FromLua)]
-pub struct Constraint(pub(super) ratatui::layout::Constraint);
+pub struct Constraint(pub(super) ratatui_core::layout::Constraint);
 
 impl Constraint {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		use ratatui::layout::Constraint as C;
+		use ratatui_core::layout::Constraint as C;
 
 		lua
 			.create_table_from([
@@ -20,7 +20,7 @@ impl Constraint {
 	}
 }
 
-impl From<Constraint> for ratatui::layout::Constraint {
+impl From<Constraint> for ratatui_core::layout::Constraint {
 	fn from(value: Constraint) -> Self { value.0 }
 }
 

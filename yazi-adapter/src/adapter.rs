@@ -1,7 +1,7 @@
 use std::{fmt::{self, Debug}, ops::Deref};
 
 use anyhow::Result;
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_emulator::EMULATOR;
 use yazi_shim::cell::SyncCell;
 use yazi_widgets::clear::ClearInventory;

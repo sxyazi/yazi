@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
 use quantette::{PaletteSize, color_map::IndexedColorMap, wu::{BinnerU8x3, WuU8x3}};
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_config::THEME;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_tty::sequence::{MoveTo, ResetAttrs, SetBg};

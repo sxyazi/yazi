@@ -5,28 +5,33 @@ use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, U
 use super::Pad;
 
 #[derive(Clone, Copy, Debug, Default, FromLua)]
-pub struct Rect(pub ratatui::layout::Rect);
+pub struct Rect(pub ratatui_core::layout::Rect);
 
 impl Deref for Rect {
-	type Target = ratatui::layout::Rect;
+	type Target = ratatui_core::layout::Rect;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl From<ratatui::layout::Rect> for Rect {
-	fn from(rect: ratatui::layout::Rect) -> Self { Self(rect) }
+impl From<ratatui_core::layout::Rect> for Rect {
+	fn from(rect: ratatui_core::layout::Rect) -> Self { Self(rect) }
 }
 
-impl From<ratatui::layout::Size> for Rect {
-	fn from(size: ratatui::layout::Size) -> Self {
-		Self(ratatui::layout::Rect { x: 0, y: 0, width: size.width, height: size.height })
+impl From<ratatui_core::layout::Size> for Rect {
+	fn from(size: ratatui_core::layout::Size) -> Self {
+		Self(ratatui_core::layout::Rect {
+			x:      0,
+			y:      0,
+			width:  size.width,
+			height: size.height,
+		})
 	}
 }
 
 impl Rect {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, args): (Table, Table)| {
-			Ok(Self(ratatui::layout::Rect {
+			Ok(Self(ratatui_core::layout::Rect {
 				x:      args.raw_get("x").unwrap_or_default(),
 				y:      args.raw_get("y").unwrap_or_default(),
 				width:  args.raw_get("w").unwrap_or_default(),
@@ -50,7 +55,7 @@ impl Rect {
 	}
 
 	fn patch(self, t: Table) -> mlua::Result<Self> {
-		Ok(Self(ratatui::layout::Rect {
+		Ok(Self(ratatui_core::layout::Rect {
 			x:      t.raw_get::<Option<_>>("x")?.unwrap_or(self.x),
 			y:      t.raw_get::<Option<_>>("y")?.unwrap_or(self.y),
 			width:  t.raw_get::<Option<_>>("w")?.unwrap_or(self.width),

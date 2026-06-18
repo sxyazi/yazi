@@ -1,6 +1,6 @@
 use std::ops::ControlFlow;
 
-use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui_core::layout::{Constraint, Layout, Rect};
 use tokio::task::JoinHandle;
 
 use super::{Message, NOTIFY_SPACING};

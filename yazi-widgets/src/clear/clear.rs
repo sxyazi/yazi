@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::{buffer::{Buffer, CellDiffOption}, layout::Rect, widgets::Widget};
+use ratatui_core::{buffer::{Buffer, CellDiffOption}, layout::Rect, widgets::Widget};
 use yazi_binding::{elements::{Area, Spatial}, impl_area_method};
 
 use crate::clear::ClearInventory;
@@ -37,7 +37,7 @@ impl Widget for Clear {
 	where
 		Self: Sized,
 	{
-		ratatui::widgets::Clear.render(area, buf);
+		ratatui_widgets::clear::Clear.render(area, buf);
 
 		for inv in inventory::iter::<ClearInventory> {
 			if let Some(overlap) = (inv.clear)(area) {

@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_binding::elements::Spatial;
 use yazi_core::Core;
 

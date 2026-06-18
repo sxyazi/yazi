@@ -3,7 +3,7 @@ use std::str::FromStr;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 #[derive(Clone, Copy, Default)]
-pub struct Color(pub ratatui::style::Color);
+pub struct Color(pub ratatui_core::style::Color);
 
 impl Color {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
@@ -25,8 +25,8 @@ impl TryFrom<&AnyUserData> for Color {
 impl FromLua for Color {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(Self(match value {
-			Value::Nil => ratatui::style::Color::Reset,
-			Value::String(s) => ratatui::style::Color::from_str(&s.to_str()?).into_lua_err()?,
+			Value::Nil => ratatui_core::style::Color::Reset,
+			Value::String(s) => ratatui_core::style::Color::from_str(&s.to_str()?).into_lua_err()?,
 			Value::UserData(ud) => return Self::try_from(&ud),
 			_ => Err("expected a Color".into_lua_err())?,
 		}))

@@ -2,7 +2,7 @@ use std::{any::TypeId, mem};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::Widget;
+use ratatui_core::widgets::Widget;
 use yazi_shim::SStr;
 
 use super::{Area, Line, Span, Wrap};
@@ -15,9 +15,9 @@ pub struct Text {
 	area: Area,
 
 	// TODO: block
-	pub inner:  ratatui::text::Text<'static>,
+	pub inner:  ratatui_core::text::Text<'static>,
 	pub wrap:   Wrap,
-	pub scroll: ratatui::layout::Position,
+	pub scroll: ratatui_core::layout::Position,
 }
 
 impl Text {
@@ -39,8 +39,8 @@ impl Text {
 	}
 }
 
-impl From<ratatui::text::Text<'static>> for Text {
-	fn from(inner: ratatui::text::Text<'static>) -> Self { Self { inner, ..Default::default() } }
+impl From<ratatui_core::text::Text<'static>> for Text {
+	fn from(inner: ratatui_core::text::Text<'static>) -> Self { Self { inner, ..Default::default() } }
 }
 
 impl From<SStr> for Text {
@@ -68,16 +68,16 @@ impl TryFrom<Table> for Text {
 	}
 }
 
-impl From<Text> for ratatui::text::Text<'static> {
+impl From<Text> for ratatui_core::text::Text<'static> {
 	fn from(value: Text) -> Self { value.inner }
 }
 
-impl From<Text> for ratatui::widgets::Paragraph<'static> {
+impl From<Text> for ratatui_widgets::paragraph::Paragraph<'static> {
 	fn from(mut value: Text) -> Self {
 		let align = value.inner.alignment.take();
 		let style = mem::take(&mut value.inner.style);
 
-		let mut p = ratatui::widgets::Paragraph::new(value.inner).style(style);
+		let mut p = ratatui_widgets::paragraph::Paragraph::new(value.inner).style(style);
 		if let Some(align) = align {
 			p = p.alignment(align);
 		}
@@ -95,27 +95,27 @@ impl Spatial for Text {
 }
 
 impl Widget for Text {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
 		if self.wrap.is_none() && self.scroll == Default::default() {
 			self.inner.render(rect, buf);
 		} else {
-			ratatui::widgets::Paragraph::from(self).render(rect, buf);
+			ratatui_widgets::paragraph::Paragraph::from(self).render(rect, buf);
 		}
 	}
 }
 
 impl Widget for &Text {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
 		if self.wrap.is_none() && self.scroll == Default::default() {
 			(&self.inner).render(rect, buf);
 		} else {
-			ratatui::widgets::Paragraph::from(self.clone()).render(rect, buf);
+			ratatui_widgets::paragraph::Paragraph::from(self.clone()).render(rect, buf);
 		}
 	}
 }
@@ -162,7 +162,7 @@ impl UserData for Text {
 			Ok(ud)
 		});
 		methods.add_function("scroll", |_, (ud, x, y): (AnyUserData, u16, u16)| {
-			ud.borrow_mut::<Self>()?.scroll = ratatui::layout::Position { x, y };
+			ud.borrow_mut::<Self>()?.scroll = ratatui_core::layout::Position { x, y };
 			Ok(ud)
 		});
 		methods.add_method("max_width", |_, me, ()| {

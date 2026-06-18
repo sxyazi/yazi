@@ -1,5 +1,6 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::{Borders, Widget};
+use ratatui_core::widgets::Widget;
+use ratatui_widgets::borders::Borders;
 
 use super::{Area, Edge};
 use crate::elements::{Line, Spatial};
@@ -17,17 +18,17 @@ pub struct Border {
 	pub area: Area,
 
 	pub edge:   Edge,
-	pub r#type: ratatui::widgets::BorderType,
-	pub style:  ratatui::style::Style,
-	pub merge:  ratatui::symbols::merge::MergeStrategy,
+	pub r#type: ratatui_widgets::borders::BorderType,
+	pub style:  ratatui_core::style::Style,
+	pub merge:  ratatui_core::symbols::merge::MergeStrategy,
 
-	pub titles: Vec<(ratatui::widgets::TitlePosition, ratatui::text::Line<'static>)>,
+	pub titles: Vec<(ratatui_widgets::block::TitlePosition, ratatui_core::text::Line<'static>)>,
 }
 
 impl Border {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, edge): (Table, Edge)| {
-			Ok(Self { edge, r#type: ratatui::widgets::BorderType::Rounded, ..Default::default() })
+			Ok(Self { edge, r#type: ratatui_widgets::borders::BorderType::Rounded, ..Default::default() })
 		})?;
 
 		let border = lua.create_table_from([
@@ -58,11 +59,11 @@ impl Spatial for Border {
 }
 
 impl Widget for Border {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
-		let mut block = ratatui::widgets::Block::default()
+		let mut block = ratatui_widgets::block::Block::default()
 			.borders(self.edge.0)
 			.border_type(self.r#type)
 			.border_style(self.style)
@@ -70,8 +71,8 @@ impl Widget for Border {
 
 		for title in self.titles {
 			block = match title {
-				(ratatui::widgets::TitlePosition::Top, line) => block.title_top(line),
-				(ratatui::widgets::TitlePosition::Bottom, line) => block.title_bottom(line),
+				(ratatui_widgets::block::TitlePosition::Top, line) => block.title_top(line),
+				(ratatui_widgets::block::TitlePosition::Bottom, line) => block.title_bottom(line),
 			};
 		}
 
@@ -80,7 +81,7 @@ impl Widget for Border {
 }
 
 impl Widget for &Border {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
@@ -95,20 +96,20 @@ impl UserData for Border {
 
 		methods.add_function("type", |_, (ud, value): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.r#type = match value {
-				ROUNDED => ratatui::widgets::BorderType::Rounded,
-				DOUBLE => ratatui::widgets::BorderType::Double,
-				THICK => ratatui::widgets::BorderType::Thick,
-				QUADRANT_INSIDE => ratatui::widgets::BorderType::QuadrantInside,
-				QUADRANT_OUTSIDE => ratatui::widgets::BorderType::QuadrantOutside,
-				_ => ratatui::widgets::BorderType::Plain,
+				ROUNDED => ratatui_widgets::borders::BorderType::Rounded,
+				DOUBLE => ratatui_widgets::borders::BorderType::Double,
+				THICK => ratatui_widgets::borders::BorderType::Thick,
+				QUADRANT_INSIDE => ratatui_widgets::borders::BorderType::QuadrantInside,
+				QUADRANT_OUTSIDE => ratatui_widgets::borders::BorderType::QuadrantOutside,
+				_ => ratatui_widgets::borders::BorderType::Plain,
 			};
 			Ok(ud)
 		});
 		methods.add_function("title", |_, (ud, line, position): (AnyUserData, Line, Option<u8>)| {
 			let position = if position == Some(Borders::BOTTOM.bits()) {
-				ratatui::widgets::TitlePosition::Bottom
+				ratatui_widgets::block::TitlePosition::Bottom
 			} else {
-				ratatui::widgets::TitlePosition::Top
+				ratatui_widgets::block::TitlePosition::Top
 			};
 
 			ud.borrow_mut::<Self>()?.titles.push((position, line.inner));
@@ -120,9 +121,9 @@ impl UserData for Border {
 		});
 		methods.add_function("merge", |_, (ud, exact): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.merge = if exact {
-				ratatui::symbols::merge::MergeStrategy::Exact
+				ratatui_core::symbols::merge::MergeStrategy::Exact
 			} else {
-				ratatui::symbols::merge::MergeStrategy::Fuzzy
+				ratatui_core::symbols::merge::MergeStrategy::Fuzzy
 			};
 			Ok(ud)
 		});

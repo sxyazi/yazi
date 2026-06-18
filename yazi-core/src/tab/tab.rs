@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use tokio::task::JoinHandle;
 use yazi_binding::position::{Origin, Position};
 use yazi_config::LAYOUT;

@@ -44,7 +44,8 @@ futures          = { workspace = true }
 inventory        = { workspace = true }
 mlua             = { workspace = true }
 percent-encoding = { workspace = true }
-ratatui          = { workspace = true }
+ratatui-core     = { workspace = true }
+ratatui-widgets  = { workspace = true }
 serde_json       = { workspace = true }
 tokio            = { workspace = true }
 tokio-stream     = { workspace = true }

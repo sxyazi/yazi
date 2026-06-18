@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::Widget;
+use ratatui_core::widgets::Widget;
 
 use super::{Area, Span};
 use crate::{elements::Spatial, style::Style};
@@ -9,9 +9,9 @@ pub struct Gauge {
 	area: Area,
 
 	ratio:       f64,
-	label:       Option<ratatui::text::Span<'static>>,
-	style:       ratatui::style::Style,
-	gauge_style: ratatui::style::Style,
+	label:       Option<ratatui_core::text::Span<'static>>,
+	style:       ratatui_core::style::Style,
+	gauge_style: ratatui_core::style::Style,
 }
 
 impl Gauge {
@@ -38,11 +38,11 @@ impl Spatial for Gauge {
 }
 
 impl Widget for Gauge {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
-		let mut gauge = ratatui::widgets::Gauge::default()
+		let mut gauge = ratatui_widgets::gauge::Gauge::default()
 			.ratio(self.ratio)
 			.style(self.style)
 			.gauge_style(self.gauge_style);
@@ -56,7 +56,7 @@ impl Widget for Gauge {
 }
 
 impl Widget for &Gauge {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
