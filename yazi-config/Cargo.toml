@@ -13,6 +13,7 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
+yazi-binding = { path = "../yazi-binding", version = "26.5.6" }
 yazi-codegen = { path = "../yazi-codegen", version = "26.5.6" }
 yazi-fs      = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
@@ -20,6 +21,7 @@ yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
 yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
 yazi-term    = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty     = { path = "../yazi-tty", version = "26.5.9" }
+yazi-widgets = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
 anyhow     = { workspace = true }
@@ -28,12 +30,12 @@ bitflags   = { workspace = true }
 globset    = { workspace = true }
 hashbrown  = { workspace = true }
 indexmap   = { workspace = true }
+inventory  = { workspace = true }
 mlua       = { workspace = true }
 ratatui    = { workspace = true }
 regex      = { workspace = true }
 serde      = { workspace = true }
 serde_with = { workspace = true }
-strum      = { workspace = true }
 tokio      = { workspace = true }
 toml       = { workspace = true }
 tracing    = { workspace = true }

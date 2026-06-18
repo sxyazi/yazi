@@ -4,8 +4,7 @@ use anyhow::Result;
 use tracing::error;
 use yazi_macro::{time, writef};
 use yazi_shim::cell::SyncCell;
-use yazi_term::sequence::RequestDeviceStatus;
-use yazi_tty::TTY;
+use yazi_tty::{TTY, sequence::RequestDeviceStatus};
 
 use crate::Emulator;
 

@@ -42,11 +42,6 @@ pub struct EmberDuplicateItem {
 
 impl IntoLua for EmberDuplicateItem {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua
-			.create_table_from([
-				("from", yazi_binding::Url::new(self.from)),
-				("to", yazi_binding::Url::new(self.to)),
-			])?
-			.into_lua(lua)
+		lua.create_table_from([("from", self.from), ("to", self.to)])?.into_lua(lua)
 	}
 }

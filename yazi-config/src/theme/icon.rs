@@ -2,7 +2,7 @@ use anyhow::Result;
 use hashbrown::HashMap;
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver2, Overlay};
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_shared::{NonEmptyString, url::UrlLike};
 use yazi_shim::toml::DeserializeOverHook;
 

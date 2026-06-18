@@ -15,3 +15,12 @@ impl From<PreviewWrap> for Option<ratatui::widgets::Wrap> {
 		}
 	}
 }
+
+impl From<PreviewWrap> for yazi_binding::elements::Wrap {
+	fn from(value: PreviewWrap) -> Self {
+		Self(match value {
+			PreviewWrap::No => None,
+			PreviewWrap::Yes => Some(ratatui::widgets::Wrap { trim: false }),
+		})
+	}
+}

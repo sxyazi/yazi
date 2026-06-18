@@ -2,7 +2,7 @@ use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData
 use ratatui::widgets::Widget;
 
 use super::{Area, Span};
-use crate::{Style, elements::Spatial};
+use crate::{elements::Spatial, style::Style};
 
 #[derive(Clone, Debug, Default)]
 pub struct Gauge {

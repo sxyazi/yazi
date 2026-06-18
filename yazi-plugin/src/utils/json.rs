@@ -1,5 +1,6 @@
 use mlua::{Function, IntoLuaMulti, Lua, LuaSerdeExt, Value};
-use yazi_binding::{Error, SER_OPT};
+use yazi_binding::Error;
+use yazi_shim::mlua::SER_OPT;
 
 use super::Utils;
 

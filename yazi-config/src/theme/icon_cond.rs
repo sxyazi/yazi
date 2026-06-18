@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_shared::Condition;
 
 use crate::{Icon, Mixable};

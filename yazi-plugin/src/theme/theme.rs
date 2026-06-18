@@ -1,6 +1,7 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url, theme::CustomSection};
-use yazi_config::THEME;
+use yazi_binding::{Composer, ComposerGet, ComposerSet, style::Style};
+use yazi_config::{THEME, theme::CustomSectionArc};
+use yazi_shared::url::UrlBuf;
 
 use crate::LUA;
 
@@ -73,7 +74,7 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 			b"border_symbol" => lua.create_string(&**m.border_symbol.load())?.into_lua(lua),
 			b"border_style" => Style::from(&m.border_style).into_lua(lua),
 
-			b"syntect_theme" => Url::new(&**m.syntect_theme.load()).into_lua(lua),
+			b"syntect_theme" => UrlBuf::from(&**m.syntect_theme.load()).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}
@@ -377,8 +378,5 @@ fn help() -> Composer<ComposerGet, ComposerSet> {
 }
 
 fn custom(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
-	match THEME.custom.load().get(str::from_utf8(key)?) {
-		Some(section) => CustomSection::new(section.load_full()).into_lua(lua),
-		None => Ok(Value::Nil),
-	}
+	THEME.custom.load().get(str::from_utf8(key)?).map(CustomSectionArc::from).into_lua(lua)
 }

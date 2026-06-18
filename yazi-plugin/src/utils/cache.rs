@@ -1,9 +1,9 @@
 use std::hash::Hash;
 
 use mlua::{Function, Lua, Table};
-use yazi_binding::{FileRef, Url};
 use yazi_config::YAZI;
-use yazi_shared::url::UrlLike;
+use yazi_fs::file::FileRef;
+use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_shim::Twox128;
 
 use super::Utils;
@@ -23,7 +23,7 @@ impl Utils {
 				format!("{:x}", h.finish_128())
 			};
 
-			Ok(Some(Url::new(YAZI.preview.cache_dir.join(hex))))
+			Ok(Some(UrlBuf::from(YAZI.preview.cache_dir.join(hex))))
 		})
 	}
 }

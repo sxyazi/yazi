@@ -2,12 +2,12 @@ use std::{borrow::Cow, fmt::Display};
 
 use mlua::{ExternalError, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_codegen::FromLuaOwned;
-use yazi_shared::SStr;
+use yazi_shim::SStr;
 
 #[derive(FromLuaOwned)]
 pub enum Error {
 	Io(std::io::Error),
-	Fs(yazi_fs::error::Error),
+	Fs(yazi_shim::fs::Error),
 	Serde(serde_json::Error),
 	Custom(SStr),
 }
@@ -18,7 +18,7 @@ impl Error {
 
 		let fs = lua.create_function(|_, value: Value| {
 			Ok(Self::Fs(match value {
-				Value::Table(t) => yazi_fs::error::Error::custom(
+				Value::Table(t) => yazi_shim::fs::Error::custom(
 					&t.raw_get::<mlua::String>("kind")?.to_str()?,
 					t.raw_get("code")?,
 					&t.raw_get::<mlua::String>("message")?.to_str()?,
@@ -64,7 +64,7 @@ impl UserData for Error {
 		});
 		fields.add_field_method_get("kind", |_, me| {
 			Ok(match me {
-				Self::Io(e) => Some(yazi_fs::error::Error::from(e.kind()).kind_str()),
+				Self::Io(e) => Some(yazi_shim::fs::Error::from(e.kind()).kind_str()),
 				Self::Fs(e) => Some(e.kind_str()),
 				_ => None,
 			})

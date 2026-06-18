@@ -3,7 +3,7 @@ use std::{ops::Deref, sync::Arc};
 use arc_swap::ArcSwap;
 use serde::Deserialize;
 use yazi_codegen::Overlay;
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_shim::arc_swap::IntoPointee;
 
 use crate::{Icon, Selectable, theme::IconGlob};

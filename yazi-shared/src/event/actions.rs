@@ -1,12 +1,13 @@
 use std::{ops::{Deref, DerefMut}, slice, vec};
 
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::{Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
 
 use crate::{Layer, Source, event::Action};
 
 #[derive(Clone, Debug, Default)]
-pub struct Actions(Vec<Action>);
+pub struct Actions(pub Vec<Action>);
 
 impl Deref for Actions {
 	type Target = Vec<Action>;
@@ -49,6 +50,22 @@ impl<'a> IntoIterator for &'a Actions {
 	type Item = &'a Action;
 
 	fn into_iter(self) -> Self::IntoIter { self.0.iter() }
+}
+
+impl FromLua for Actions {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(match value {
+			Value::Table(t) => t.sequence_values::<Action>().collect::<mlua::Result<Vec<_>>>()?.into(),
+			v @ Value::String(_) => Action::from_lua(v, lua)?.into(),
+			_ => Err("expected a string or a table of actions".into_lua_err())?,
+		})
+	}
+}
+
+impl IntoLua for Actions {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua.create_sequence_from(self.0)?.into_lua(lua)
+	}
 }
 
 pub fn deserialize_actions<'de, const L: u8, D>(deserializer: D) -> Result<Actions, D::Error>

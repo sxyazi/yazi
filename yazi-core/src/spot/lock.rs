@@ -1,7 +1,8 @@
 use mlua::Table;
-use yazi_binding::{FileRef, elements::Renderable};
+use yazi_fs::file::FileRef;
 use yazi_macro::impl_data_any;
-use yazi_shared::Id;
+use yazi_shared::id::Id;
+use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug)]
 pub struct SpotLock {
@@ -26,7 +27,7 @@ impl TryFrom<Table> for SpotLock {
 			cha:  file.cha,
 			mime: t.raw_get("mime")?,
 
-			id:   *t.raw_get::<yazi_binding::Id>("id")?,
+			id:   t.raw_get("id")?,
 			skip: t.raw_get("skip")?,
 			data: Default::default(),
 		})

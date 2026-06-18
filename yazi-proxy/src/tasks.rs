@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 use yazi_core::tasks::TaskOpt;
 use yazi_macro::{emit, relay};
 use yazi_scheduler::process::ProcessOpt;
-use yazi_shared::{Id, url::{UrlBuf, UrlCow}};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlCow}};
 
 pub struct TasksProxy;
 

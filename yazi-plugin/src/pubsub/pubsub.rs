@@ -1,6 +1,7 @@
 use mlua::{ExternalResult, Function, Lua, Value};
-use yazi_binding::{Id, runtime};
+use yazi_binding::runtime;
 use yazi_dds::ember::Ember;
+use yazi_shared::id::Id;
 
 pub struct Pubsub;
 
@@ -13,7 +14,7 @@ impl Pubsub {
 
 	pub(super) fn pub_to(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (receiver, kind, value): (Id, mlua::String, Value)| {
-			yazi_dds::Pubsub::pub_to(*receiver, Ember::from_lua(lua, &kind.to_str()?, value)?)
+			yazi_dds::Pubsub::pub_to(receiver, Ember::from_lua(lua, &kind.to_str()?, value)?)
 				.into_lua_err()
 		})
 	}

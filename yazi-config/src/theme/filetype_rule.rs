@@ -1,4 +1,6 @@
 use serde::Deserialize;
+use yazi_binding::style::StyleFlat;
+use yazi_fs::file::File;
 
 use crate::{Pattern, Selectable};
 
@@ -9,7 +11,7 @@ pub struct FiletypeRule {
 	#[serde(flatten)]
 	selector:  crate::Selector,
 	#[serde(flatten)]
-	pub style: crate::Style,
+	pub style: StyleFlat,
 }
 
 impl Selectable for FiletypeRule {
@@ -17,7 +19,7 @@ impl Selectable for FiletypeRule {
 
 	fn mime_pat(&self) -> Option<&Pattern> { self.selector.mime_pat() }
 
-	fn match_with(&self, file: Option<&yazi_fs::File>, mime: Option<&str>) -> bool {
+	fn match_with(&self, file: Option<&File>, mime: Option<&str>) -> bool {
 		match (self.is.enabled(), file) {
 			(Some(is), Some(f)) if !is.check(&f.cha) => false,
 			(Some(_), None) => false,

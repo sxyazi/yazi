@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(cha kind mode r#type);
+yazi_macro::mod_flat!(cha kind lua mode r#type);

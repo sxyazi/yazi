@@ -4,7 +4,7 @@ use hashbrown::HashMap;
 use notify::Result;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::{File, FilesOp};
+use yazi_fs::{FilesOp, file::File};
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 

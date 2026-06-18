@@ -1,10 +1,11 @@
 use tokio::sync::mpsc;
-use yazi_config::keymap::{ChordArc, Key};
+use yazi_config::keymap::ChordArc;
 use yazi_macro::{emit, render_and};
+use yazi_term::event::KeyEvent;
 
 #[derive(Default)]
 pub struct Which {
-	pub tx:    Option<mpsc::UnboundedSender<Option<yazi_binding::keymap::Chord>>>,
+	pub tx:    Option<mpsc::UnboundedSender<Option<ChordArc>>>,
 	pub times: usize,
 	pub cands: Vec<ChordArc>,
 
@@ -14,7 +15,7 @@ pub struct Which {
 }
 
 impl Which {
-	pub fn r#type(&mut self, key: Key) -> bool {
+	pub fn r#type(&mut self, key: KeyEvent) -> bool {
 		self.cands.retain(|c| c.on.len() > self.times && c.on[self.times] == key);
 		self.times += 1;
 

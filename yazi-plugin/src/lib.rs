@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(elements external fs keymap pubsub runtime tasks theme utils);
+yazi_macro::mod_pub!(external fs keymap pubsub runtime tasks theme ui utils);
 
 yazi_macro::mod_flat!(slim standard);
 

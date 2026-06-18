@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
 use crate::Payload;

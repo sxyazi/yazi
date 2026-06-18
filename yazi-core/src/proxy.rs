@@ -1,10 +1,11 @@
 use mlua::ObjectLike;
-use yazi_binding::{Error, elements::Renderable};
+use yazi_binding::Error;
 use yazi_config::LAYOUT;
 use yazi_macro::{emit, relay};
 use yazi_runner::previewer::PeekJob;
 use yazi_scheduler::TaskSummary;
 use yazi_shared::url::AsUrl;
+use yazi_widgets::Renderable;
 
 use crate::{app::PluginOpt, tab::PreviewLock};
 

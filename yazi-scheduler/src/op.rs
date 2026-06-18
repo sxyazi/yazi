@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 use crate::TaskOut;
 

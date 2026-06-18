@@ -50,8 +50,7 @@ macro_rules! impl_area_method {
 			"area",
 			|lua, (ud, area): (mlua::AnyUserData, Option<mlua::AnyUserData>)| {
 				use mlua::IntoLua;
-
-				use crate::elements::Spatial;
+				use $crate::elements::Spatial;
 
 				if let Some(v) = area {
 					ud.borrow_mut::<Self>()?.set_area((&v).try_into()?);
@@ -67,7 +66,7 @@ macro_rules! impl_area_method {
 #[macro_export]
 macro_rules! impl_style_method {
 	($methods:ident, $($field:tt).+) => {
-		$methods.add_function("style", |_, (ud, style): (mlua::AnyUserData, $crate::Style)| {
+		$methods.add_function("style", |_, (ud, style): (mlua::AnyUserData, $crate::style::Style)| {
 			ud.borrow_mut::<Self>()?.$($field).+ = style.0;
 			Ok(ud)
 		});
@@ -208,21 +207,22 @@ macro_rules! impl_file_fields {
 	($fields:ident) => {
 		use yazi_shim::mlua::UserDataFieldsExt;
 
-		$fields.add_cached_field("cha", |_, me| Ok($crate::Cha(me.cha)));
-		$fields.add_cached_field("url", |_, me| Ok($crate::Url::new(me.url_owned())));
-		$fields.add_cached_field("link_to", |_, me| Ok(me.link_to.as_ref().map($crate::Path::new)));
+		$fields.add_cached_field("cha", |_, me| Ok(me.cha));
+		$fields.add_cached_field("url", |_, me| Ok(me.url_owned()));
+		$fields.add_cached_field("link_to", |_, me| Ok(me.link_to.clone()));
 
 		$fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
 		$fields.add_cached_field("path", |_, me| {
 			use yazi_fs::FsUrl;
-			use yazi_shared::url::AsUrl;
-			Ok($crate::Path::new(me.url.as_url().unified_path()))
+			use yazi_shared::{path::PathBufDyn, url::AsUrl};
+			Ok(PathBufDyn::from(me.url.as_url().unified_path()))
 		});
 		$fields.add_cached_field("cache", |_, me| {
 			use yazi_fs::FsUrl;
-			Ok(me.url.cache().map($crate::Path::new))
+			use yazi_shared::path::PathBufDyn;
+			Ok(me.url.cache().map(PathBufDyn::from))
 		});
 	};
 }

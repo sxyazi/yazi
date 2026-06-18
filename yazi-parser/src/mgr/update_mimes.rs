@@ -1,7 +1,8 @@
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::ActionCow, url::UrlCow};
+use yazi_shared::{event::ActionCow, url::UrlCow};
+use yazi_shim::SStr;
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateMimesForm {

@@ -2,7 +2,7 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, UserDataMethods, Val
 use ratatui::widgets::{StatefulWidget, Widget};
 
 use super::{Area, Row};
-use crate::{Style, elements::{Constraint, Spatial}};
+use crate::{elements::{Constraint, Spatial}, style::Style};
 
 // --- Table
 #[derive(Clone, Debug, Default)]

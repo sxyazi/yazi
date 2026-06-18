@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use hashbrown::HashSet;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::SStr;
+use yazi_shim::SStr;
 
 use super::Ember;
 

@@ -37,15 +37,6 @@ impl Spatial for List {
 	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
-impl Widget for List {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
-	where
-		Self: Sized,
-	{
-		(&self).render(rect, buf);
-	}
-}
-
 impl Widget for &List {
 	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
 	where

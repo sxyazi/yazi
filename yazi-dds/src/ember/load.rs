@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::UrlBuf};
 
 use super::Ember;
 
@@ -35,8 +35,8 @@ impl IntoLua for EmberLoad<'_> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", yazi_binding::Url::new(self.url).into_lua(lua)?),
-				("stage", yazi_binding::FolderStage::new(self.stage.into_owned()).into_lua(lua)?),
+				("url", self.url.into_owned().into_lua(lua)?),
+				("stage", self.stage.into_owned().into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

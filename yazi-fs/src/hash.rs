@@ -1,9 +1,10 @@
 use std::hash::{BuildHasher, Hash};
 
-use yazi_shared::url::AsUrl;
+use mlua::UserDataMethods;
+use yazi_shared::url::{AsUrl, UrlBufInventory};
 use yazi_shim::Twox128;
 
-use crate::{File, cha::Cha};
+use crate::{cha::Cha, file::File};
 
 pub trait FsHash64 {
 	fn hash_u64(&self) -> u64;
@@ -39,5 +40,20 @@ impl<T: AsUrl> FsHash128 for T {
 		let mut h = Twox128::default();
 		self.as_url().hash(&mut h);
 		h.finish_128()
+	}
+}
+
+// --- Inject
+inventory::submit! {
+	UrlBufInventory {
+		register: |registry| {
+			registry.add_method("hash", |_, me, long: bool| {
+				Ok(if long {
+					format!("{:x}", me.hash_u128())
+				} else {
+					format!("{:x}", me.hash_u64())
+				})
+			});
+		}
 	}
 }

@@ -1,7 +1,7 @@
 use std::path::MAIN_SEPARATOR_STR;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, event::ActionCow, strand::{StrandBuf, StrandLike}};
+use yazi_shared::{event::ActionCow, id::Id, strand::{StrandBuf, StrandLike}};
 
 #[derive(Debug)]
 pub struct CompleteOpt {

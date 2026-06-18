@@ -8,8 +8,8 @@ use tokio::time::sleep;
 use tracing::{debug, error, warn};
 use yazi_macro::writef;
 use yazi_shim::cell::RoCell;
-use yazi_term::{TERM, sequence::{HideCursor, If, KittyGraphicsQuery, MoveTo, RequestBgColor, RequestCellPixelSize, RequestDA1, RequestXtVersion, RestoreCursorPos, SaveCursorPos, SetFg, SetSgr, ShowCursor}};
-use yazi_tty::{Handle, TTY};
+use yazi_term::TERM;
+use yazi_tty::{Handle, TTY, sequence::{HideCursor, If, KittyGraphicsQuery, MoveTo, RequestBgColor, RequestCellPixelSize, RequestDA1, RequestXtVersion, RestoreCursorPos, SaveCursorPos, SetFg, SetSgr, ShowCursor}};
 
 use crate::{Brand, Mux, TMUX, Unknown};
 

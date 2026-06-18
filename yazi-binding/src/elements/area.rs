@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, Value};
 
 use super::{Pos, Rect};
+use crate::position::Position;
 
 const EXPECTED: &str = "expected a Pos or Rect";
 
@@ -45,7 +46,7 @@ impl Area {
 
 	pub fn transform(
 		self,
-		f: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
+		f: impl FnOnce(Position) -> ratatui::layout::Rect,
 	) -> ratatui::layout::Rect {
 		match self {
 			Self::Rect(rect) => *rect,
@@ -62,8 +63,8 @@ impl From<ratatui::layout::Rect> for Area {
 	fn from(rect: ratatui::layout::Rect) -> Self { Self::Rect(rect.into()) }
 }
 
-impl From<yazi_config::popup::Position> for Area {
-	fn from(pos: yazi_config::popup::Position) -> Self { Self::Pos(pos.into()) }
+impl From<Position> for Area {
+	fn from(value: Position) -> Self { Self::Pos(value.into()) }
 }
 
 impl TryFrom<&AnyUserData> for Area {

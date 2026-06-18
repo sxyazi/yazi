@@ -2,8 +2,8 @@ use std::ops::{Deref, DerefMut};
 
 use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}};
-use yazi_fs::File;
-use yazi_shared::{Id, Source, event::Action, url::UrlBuf};
+use yazi_fs::file::File;
+use yazi_shared::{Source, event::Action, id::Id, url::UrlBuf};
 use yazi_tui::Raterm;
 
 pub struct Ctx<'a> {

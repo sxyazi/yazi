@@ -1,9 +1,10 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
-use yazi_binding::{Error, elements::{Area, Renderable}};
+use yazi_binding::{Error, elements::Area};
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::FsUrl;
 use yazi_runner::previewer::PeekError;
 use yazi_shared::url::AsUrl;
+use yazi_widgets::Renderable;
 
 use super::Utils;
 

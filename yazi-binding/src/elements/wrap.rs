@@ -1,10 +1,9 @@
 use std::ops::Deref;
 
 use mlua::{FromLua, IntoLua, Lua, Value};
-use yazi_config::preview::PreviewWrap;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Wrap(pub(super) Option<ratatui::widgets::Wrap>);
+pub struct Wrap(pub Option<ratatui::widgets::Wrap>);
 
 impl Deref for Wrap {
 	type Target = Option<ratatui::widgets::Wrap>;
@@ -24,15 +23,6 @@ impl From<Wrap> for Option<ratatui::widgets::Wrap> {
 
 impl From<ratatui::widgets::Wrap> for Wrap {
 	fn from(value: ratatui::widgets::Wrap) -> Self { Self(Some(value)) }
-}
-
-impl From<PreviewWrap> for Wrap {
-	fn from(value: PreviewWrap) -> Self {
-		Self(match value {
-			PreviewWrap::No => None,
-			PreviewWrap::Yes => Some(ratatui::widgets::Wrap { trim: false }),
-		})
-	}
 }
 
 impl FromLua for Wrap {

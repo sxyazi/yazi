@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use yazi_shared::scheme::{AsScheme, Scheme, SchemeRef};
+use yazi_shared::{path::PathBufDyn, scheme::{AsScheme, Scheme, SchemeInventory, SchemeRef}};
+use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::Xdg;
 
@@ -24,4 +25,13 @@ impl FsScheme for SchemeRef<'_> {
 
 impl FsScheme for Scheme {
 	fn cache(&self) -> Option<PathBuf> { self.as_scheme().cache() }
+}
+
+// --- Inject
+inventory::submit! {
+	SchemeInventory {
+		register: |registry| {
+			registry.add_cached_field("cache", |_, me| Ok(me.cache().map(PathBufDyn::from)));
+		}
+	}
 }

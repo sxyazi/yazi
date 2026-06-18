@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}, wtf8::FromWtf8Vec};
+use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shim::wtf8::FromWtf8Vec;
 
 #[inline]
 pub fn expand_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { expand_url_impl(url.into()) }

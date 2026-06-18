@@ -4,8 +4,8 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{Xdg, create_owned_dir_blocking};
-use yazi_shared::{SStr, timestamp_us};
-use yazi_shim::toml::DeserializeOverHook;
+use yazi_shared::timestamp_us;
+use yazi_shim::{SStr, toml::DeserializeOverHook};
 
 use super::PreviewWrap;
 use crate::normalize_path;

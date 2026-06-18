@@ -3,7 +3,6 @@ use std::sync::atomic::Ordering;
 use anyhow::Result;
 use tracing::warn;
 use yazi_actor::Ctx;
-use yazi_config::keymap::Key;
 use yazi_macro::{act, emit};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
 use yazi_term::event::{DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
@@ -68,7 +67,7 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) -> Result<()> {
-		Router::new(self.app).route(Key::from(key))?;
+		Router::new(self.app).route(key)?;
 		Ok(())
 	}
 

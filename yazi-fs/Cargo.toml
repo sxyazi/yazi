@@ -13,10 +13,11 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-ffi    = { path = "../yazi-ffi", version = "26.5.6" }
-yazi-macro  = { path = "../yazi-macro", version = "26.5.6" }
-yazi-shared = { path = "../yazi-shared", version = "26.5.6" }
-yazi-shim   = { path = "../yazi-shim", version = "26.5.6" }
+yazi-binding = { path = "../yazi-binding", version = "26.5.6" }
+yazi-ffi     = { path = "../yazi-ffi", version = "26.5.6" }
+yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
 
 # External dependencies
 anyhow           = { workspace = true }
@@ -26,6 +27,7 @@ dirs             = { workspace = true }
 either           = { workspace = true }
 foldhash         = { workspace = true }
 hashbrown        = { workspace = true }
+inventory        = { workspace = true }
 libc             = { workspace = true }
 mlua             = { workspace = true }
 parking_lot      = { workspace = true }

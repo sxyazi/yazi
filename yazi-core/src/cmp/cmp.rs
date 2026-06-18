@@ -2,7 +2,7 @@ use std::io;
 
 use hashbrown::HashMap;
 use tokio::task::JoinHandle;
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::UrlBuf};
 use yazi_widgets::Scrollable;
 
 use crate::cmp::CmpItem;

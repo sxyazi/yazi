@@ -3,7 +3,7 @@ use std::{borrow::Cow, time::Duration};
 use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_config::popup::InputCfg;
+use yazi_config::YAZI;
 use yazi_core::mgr::{CdSource, SearchVia};
 use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, input, succ};
@@ -28,7 +28,7 @@ impl Actor for Search {
 			handle.abort();
 		}
 
-		let mut input = input!(cx, InputCfg::search(opt.via.into()).with_value(&*opt.subject))?;
+		let mut input = input!(cx, YAZI.input.search(opt.via.into()).with_value(&*opt.subject))?;
 
 		tokio::spawn(async move {
 			if let Some(InputEvent::Submit(subject)) = input.recv().await {

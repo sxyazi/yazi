@@ -3,8 +3,7 @@ use yazi_actor::Ctx;
 use yazi_macro::{succ, writef};
 use yazi_parser::{app::TitleForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
-use yazi_term::sequence::SetTitle;
-use yazi_tty::TTY;
+use yazi_tty::{TTY, sequence::SetTitle};
 use yazi_tui::RatermState;
 
 use crate::Actor;

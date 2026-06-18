@@ -1,8 +1,9 @@
 use mlua::{AnyUserData, Function, Lua, Table};
-use yazi_binding::elements::{Edge, Renderable, Spatial};
+use yazi_binding::elements::{Edge, Spatial};
 use yazi_config::THEME;
 use yazi_core::spot::SpotLock;
 use yazi_proxy::MgrProxy;
+use yazi_widgets::Renderable;
 
 use super::Utils;
 

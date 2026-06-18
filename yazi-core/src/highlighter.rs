@@ -5,7 +5,7 @@ use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use yazi_config::{THEME, YAZI};
 use yazi_runner::previewer::PeekError;
-use yazi_shared::{Id, Ids, replace_to_printable};
+use yazi_shared::{id::{Id, Ids}, replace_to_printable};
 use yazi_shim::ratatui::LineIter;
 
 static INCR: Ids = Ids::new();

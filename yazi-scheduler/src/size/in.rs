@@ -1,6 +1,6 @@
 use std::{borrow::Cow, sync::Arc};
 
-use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Throttle, id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{TaskIn, size::SizeProg};
 

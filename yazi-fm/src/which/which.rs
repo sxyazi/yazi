@@ -46,7 +46,7 @@ impl Widget for Which<'_> {
 			.split(area)
 		};
 
-		yazi_widgets::Clear.render(area, buf);
+		yazi_widgets::clear::Clear::default().render(area, buf);
 		Block::new().style(THEME.which.mask.get()).render(area, buf);
 
 		for y in 0..area.height {

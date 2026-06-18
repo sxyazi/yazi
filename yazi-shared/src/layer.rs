@@ -1,5 +1,7 @@
+use mlua::{MetaMethod, UserData, UserDataMethods};
 use serde::Deserialize;
 use strum::{Display, EnumString, FromRepr, IntoStaticStr};
+use yazi_shim::strum::IntoStr;
 
 #[derive(
 	Clone,
@@ -32,4 +34,10 @@ pub enum Layer {
 	Cmp,
 	Which,
 	Notify,
+}
+
+impl UserData for Layer {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.into_str()));
+	}
 }

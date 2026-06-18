@@ -1,7 +1,7 @@
 use std::{ops::Deref, ptr};
 
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
-use yazi_binding::{Range, Style};
+use yazi_binding::{Range, style::Style};
 use yazi_config::THEME;
 use yazi_shared::{path::AsPath, url::UrlLike};
 
@@ -15,13 +15,13 @@ pub(super) struct File {
 }
 
 impl Deref for File {
-	type Target = yazi_fs::File;
+	type Target = yazi_fs::file::File;
 
 	fn deref(&self) -> &Self::Target { &self.folder.files[self.idx] }
 }
 
-impl AsRef<yazi_fs::File> for File {
-	fn as_ref(&self) -> &yazi_fs::File { self }
+impl AsRef<yazi_fs::file::File> for File {
+	fn as_ref(&self) -> &yazi_fs::file::File { self }
 }
 
 impl File {
@@ -49,7 +49,7 @@ impl File {
 impl UserData for File {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		yazi_binding::impl_file_fields!(fields);
-		fields.add_cached_field("bare", |_, me| Ok(yazi_binding::File::new(&**me)));
+		fields.add_cached_field("bare", |_, me| Ok(yazi_fs::file::File::from(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.is_hovered()));
@@ -63,9 +63,8 @@ impl UserData for File {
 		yazi_binding::impl_file_methods!(methods);
 
 		methods.add_method("icon", |_, me, ()| {
-			use yazi_binding::Icon;
 			// TODO: use a cache
-			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()).map(Icon::from))
+			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
 		methods.add_method("size", |_, me, ()| {
 			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })

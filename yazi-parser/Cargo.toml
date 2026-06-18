@@ -26,6 +26,7 @@ yazi-fs        = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro     = { path = "../yazi-macro", version = "26.5.6" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.5.6" }
 yazi-shared    = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim      = { path = "../yazi-shim", version = "26.5.6" }
 yazi-term      = { path = "../yazi-term", version = "26.5.6" }
 yazi-vfs       = { path = "../yazi-vfs", version = "26.5.6" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }

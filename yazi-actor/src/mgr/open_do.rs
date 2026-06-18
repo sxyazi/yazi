@@ -1,7 +1,8 @@
 use anyhow::Result;
 use hashbrown::HashMap;
 use indexmap::IndexSet;
-use yazi_config::{YAZI, popup::PickCfg};
+use yazi_config::YAZI;
+use yazi_fs::file::File;
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenDoForm;
 use yazi_proxy::{PickProxy, TasksProxy};
@@ -40,7 +41,7 @@ impl Actor for OpenDo {
 			succ!();
 		}
 
-		let pick = PickProxy::show(PickCfg::open(openers.iter().map(|o| o.desc()).collect()));
+		let pick = PickProxy::show(YAZI.pick.open(openers.iter().map(|o| o.desc()).collect()));
 		let urls: Vec<_> = [UrlCow::default()]
 			.into_iter()
 			.chain(targets.into_iter().map(|(file, _)| file.url.into()))
@@ -63,7 +64,7 @@ impl Actor for OpenDo {
 
 impl OpenDo {
 	// TODO: remove
-	fn match_and_open(cx: &Ctx, cwd: UrlBuf, targets: Vec<(yazi_fs::File, &str)>) {
+	fn match_and_open(cx: &Ctx, cwd: UrlBuf, targets: Vec<(File, &str)>) {
 		let mut openers = HashMap::new();
 		for (file, mime) in targets {
 			if let Some(open) = YAZI.open.matches(&file, mime)

@@ -8,7 +8,9 @@ use serde::Deserialize;
 use strum::EnumString;
 use yazi_macro::impl_data_any;
 use yazi_scheduler::plugin::PluginInEntry;
-use yazi_shared::{SStr, data::{Data, DataKey}, event::{ActionCow, Cmd}};
+use yazi_shared::{data::{Data, DataKey}, event::{ActionCow, Cmd}};
+use yazi_shim::SStr;
+
 #[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
 	pub id:       SStr,

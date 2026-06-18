@@ -1,20 +1,22 @@
 use std::{borrow::Cow, ops::Range};
 
 use anyhow::Result;
-use yazi_config::{YAZI, popup::Position};
+use yazi_binding::position::Position;
 use yazi_macro::act;
-use yazi_shared::Ids;
+use yazi_shared::id::Ids;
 use yazi_shim::path::CROSS_SEPARATOR;
-use yazi_term::CursorStyle;
+use yazi_tty::sequence::SetCursorStyle;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
-use crate::{CLIPBOARD, input::{InputCallback, InputEvent, InputOpt}};
+use crate::{CLIPBOARD, input::{InputCallback, InputEvent, InputOpt, InputStyles}};
 
 #[derive(Debug, Default)]
 pub struct Input {
 	pub pos:        Position,
 	pub snaps:      InputSnaps,
+	pub styles:     InputStyles,
 	pub obscure:    bool,
+	pub blinking:   bool,
 	pub realtime:   bool,
 	pub completion: bool,
 
@@ -24,19 +26,21 @@ pub struct Input {
 
 impl Input {
 	pub fn new(opt: InputOpt) -> Result<Self> {
-		let limit = opt.cfg.position.width as usize;
+		let limit = opt.position.width as usize;
 		let mut input = Self {
-			pos: opt.cfg.position,
-			snaps: InputSnaps::new(opt.cfg.value, opt.cfg.obscure, limit),
-			obscure: opt.cfg.obscure,
-			realtime: opt.cfg.realtime,
-			completion: opt.cfg.completion,
+			pos: opt.position,
+			snaps: InputSnaps::new(opt.value, opt.obscure, limit),
+			styles: opt.styles,
+			obscure: opt.obscure,
+			blinking: opt.blinking,
+			realtime: opt.realtime,
+			completion: opt.completion,
 
 			cb: opt.cb,
 			..Default::default()
 		};
 
-		if let Some(cursor) = opt.cfg.cursor {
+		if let Some(cursor) = opt.cursor {
 			input.snap_mut().cursor = cursor;
 			act!(r#move, input)?;
 		}
@@ -124,16 +128,16 @@ impl Input {
 
 	pub fn cursor(&self) -> u16 { self.snap().width(self.snap().offset..self.snap().cursor) }
 
-	pub fn cursor_shape(&self) -> CursorStyle {
+	pub fn cursor_shape(&self) -> SetCursorStyle {
 		use InputMode as M;
 
 		match self.mode() {
-			M::Normal if YAZI.input.cursor_blink => CursorStyle::BlinkingBlock,
-			M::Normal if !YAZI.input.cursor_blink => CursorStyle::SteadyBlock,
-			M::Insert if YAZI.input.cursor_blink => CursorStyle::BlinkingBar,
-			M::Insert if !YAZI.input.cursor_blink => CursorStyle::SteadyBar,
-			M::Replace if YAZI.input.cursor_blink => CursorStyle::BlinkingUnderline,
-			M::Replace if !YAZI.input.cursor_blink => CursorStyle::SteadyUnderline,
+			M::Normal if self.blinking => SetCursorStyle::BlinkingBlock,
+			M::Normal if !self.blinking => SetCursorStyle::SteadyBlock,
+			M::Insert if self.blinking => SetCursorStyle::BlinkingBar,
+			M::Insert if !self.blinking => SetCursorStyle::SteadyBar,
+			M::Replace if self.blinking => SetCursorStyle::BlinkingUnderline,
+			M::Replace if !self.blinking => SetCursorStyle::SteadyUnderline,
 			M::Normal | M::Insert | M::Replace => unreachable!(),
 		}
 	}

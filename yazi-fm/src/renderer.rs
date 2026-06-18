@@ -1,8 +1,8 @@
 use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect};
-use yazi_binding::elements::{Renderable, Renderables};
 use yazi_core::Core;
 use yazi_plugin::LUA;
+use yazi_widgets::{Renderable, Renderables};
 
 pub(super) struct Renderer<'a> {
 	core:        &'a mut Core,

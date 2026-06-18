@@ -2,7 +2,8 @@ use anyhow::bail;
 use serde::Deserialize;
 use strum::{EnumString, IntoStaticStr};
 use yazi_macro::impl_data_any;
-use yazi_shared::{SStr, event::ActionCow, url::{UrlBuf, UrlLike}};
+use yazi_shared::{event::ActionCow, url::{UrlBuf, UrlLike}};
+use yazi_shim::SStr;
 
 // --- SearchOpt
 #[derive(Clone, Debug)]

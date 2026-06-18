@@ -3,9 +3,9 @@ use std::time::Duration;
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSecondsWithFrac, serde_as};
-use yazi_binding::SER_OPT;
 use yazi_macro::impl_data_any;
 use yazi_shared::event::ActionCow;
+use yazi_shim::mlua::SER_OPT;
 
 use crate::notify::MessageLevel;
 

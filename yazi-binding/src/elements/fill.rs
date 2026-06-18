@@ -35,15 +35,6 @@ impl Spatial for Fill {
 	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
-impl Widget for Fill {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
-	where
-		Self: Sized,
-	{
-		(&self).render(rect, buf);
-	}
-}
-
 impl Widget for &Fill {
 	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
 	where

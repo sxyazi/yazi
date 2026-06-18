@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_fs::{File, FilesOp};
+use yazi_fs::{FilesOp, file::File};
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::RevealForm;
 use yazi_shared::{data::Data, url::UrlLike};

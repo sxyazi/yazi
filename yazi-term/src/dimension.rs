@@ -31,6 +31,8 @@ impl Dimension {
 		}
 	}
 
+	pub fn area(self) -> (u16, u16) { (self.cols, self.rows) }
+
 	pub fn ratio(self) -> Option<(f64, f64)> {
 		if self.rows == 0 || self.cols == 0 || self.width == 0 || self.height == 0 {
 			None

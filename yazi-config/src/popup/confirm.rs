@@ -1,8 +1,6 @@
 use serde::Deserialize;
+use yazi_binding::position::{Offset, Origin, Position};
 use yazi_codegen::{DeserializeOver, DeserializeOver2};
-
-use super::{Offset, Origin};
-use crate::popup::Position;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Confirm {

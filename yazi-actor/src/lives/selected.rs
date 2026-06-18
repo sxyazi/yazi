@@ -1,4 +1,5 @@
 use mlua::AnyUserData;
+use yazi_shared::url::UrlBuf;
 
 use super::Lives;
 use crate::lives::PtrCell;
@@ -11,7 +12,7 @@ impl Selected {
 		let inner = PtrCell::from(inner);
 
 		Lives::scoped_userdata(yazi_binding::Iter::new(
-			inner.as_static().values().map(yazi_binding::Url::new),
+			inner.as_static().values().map(UrlBuf::from),
 			Some(inner.len()),
 		))
 	}

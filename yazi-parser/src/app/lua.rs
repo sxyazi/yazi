@@ -3,7 +3,8 @@ use std::fmt::Debug;
 use anyhow::Result;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{SStr, event::ActionCow};
+use yazi_shared::event::ActionCow;
+use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct LuaForm {

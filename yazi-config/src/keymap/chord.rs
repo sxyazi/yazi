@@ -1,12 +1,15 @@
 use std::{borrow::Cow, hash::{Hash, Hasher}, sync::{Arc, OnceLock}};
 
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use regex::Regex;
 use serde::{Deserialize, Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
+use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
-use yazi_shared::{Id, Layer, event::{Actions, deserialize_actions}};
+use yazi_shared::{Layer, event::{Actions, deserialize_actions}, id::Id};
+use yazi_term::event::KeyEvent;
 
-use super::{Key, ids::chord_id};
+use super::ids::chord_id;
 use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
 
 static RE: OnceLock<Regex> = OnceLock::new();
@@ -16,7 +19,7 @@ pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
 	#[serde(skip, default = "chord_id")]
 	pub id:    Id,
 	#[serde(deserialize_with = "deserialize_on")]
-	pub on:    Vec<Key>,
+	pub on:    Vec<KeyEvent>,
 	#[serde(deserialize_with = "deserialize_actions::<L, _>")]
 	pub run:   Actions,
 	#[serde(default)]
@@ -81,11 +84,11 @@ impl<const L: u8> Mixable for Chord<L> {
 	fn filter(&self) -> bool { self.r#for.matches() && !self.noop() }
 }
 
-fn deserialize_on<'de, D>(deserializer: D) -> Result<Vec<Key>, D::Error>
+fn deserialize_on<'de, D>(deserializer: D) -> Result<Vec<KeyEvent>, D::Error>
 where
 	D: Deserializer<'de>,
 {
-	let keys: Vec<Key> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
+	let keys: Vec<KeyEvent> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
 	if keys.is_empty() {
 		return Err(de::Error::custom("'on' cannot be empty"));
 	}
@@ -107,6 +110,25 @@ impl ChordMatcher {
 			chord.id == self.id
 		} else {
 			false
+		}
+	}
+}
+
+impl TryFrom<Table> for ChordMatcher {
+	type Error = mlua::Error;
+
+	fn try_from(value: Table) -> Result<Self, Self::Error> {
+		let id: Id = value.raw_get("id").unwrap_or_default();
+
+		Ok(Self { id, ..Default::default() })
+	}
+}
+
+impl FromLua for ChordMatcher {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Table(t) => t.try_into(),
+			_ => Err("expected a table of ChordMatcher".into_lua_err()),
 		}
 	}
 }
@@ -141,4 +163,8 @@ impl Iterator for ChordIter {
 		}
 		None
 	}
+}
+
+impl IntoLua for ChordIter {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
 }

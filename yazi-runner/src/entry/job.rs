@@ -1,7 +1,7 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::Sendable;
-use yazi_shared::{Id, SStr, data::{Data, DataKey}};
+use yazi_shared::{data::{Data, DataKey, Sendable}, id::Id};
+use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default)]
 pub struct EntryJob {

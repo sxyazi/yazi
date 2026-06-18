@@ -1,6 +1,6 @@
 use tokio_util::sync::CancellationToken;
 use yazi_config::YAZI;
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_macro::render;
 use yazi_runner::RUNNER;
 use yazi_shared::{pool::Symbol, url::UrlBuf};

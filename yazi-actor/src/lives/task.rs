@@ -1,9 +1,8 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields};
-use yazi_binding::SER_OPT;
 use yazi_scheduler::Progress;
-use yazi_shim::mlua::UserDataFieldsExt;
+use yazi_shim::mlua::{SER_OPT, UserDataFieldsExt};
 
 use super::{Lives, PtrCell};
 

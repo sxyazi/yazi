@@ -4,11 +4,11 @@ use yazi_shared::url::{UrlBuf, UrlLike};
 use crate::maybe_exists;
 
 pub trait VfsFilesOp {
-	fn issue_error(cwd: &UrlBuf, kind: impl Into<yazi_fs::error::Error>) -> impl Future<Output = ()>;
+	fn issue_error(cwd: &UrlBuf, kind: impl Into<yazi_shim::fs::Error>) -> impl Future<Output = ()>;
 }
 
 impl VfsFilesOp for FilesOp {
-	async fn issue_error(cwd: &UrlBuf, err: impl Into<yazi_fs::error::Error>) {
+	async fn issue_error(cwd: &UrlBuf, err: impl Into<yazi_shim::fs::Error>) {
 		let err = err.into();
 		if err.kind() != std::io::ErrorKind::NotFound {
 			Self::IOErr(cwd.clone(), err).emit();

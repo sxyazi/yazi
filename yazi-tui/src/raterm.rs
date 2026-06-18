@@ -6,8 +6,8 @@ use yazi_config::YAZI;
 use yazi_emulator::{Emulator, Mux, TMUX};
 use yazi_macro::writef;
 use yazi_shim::cell::SyncCell;
-use yazi_term::{TERM, event::{Event, KeyEventKind}, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}, stream::EventStream};
-use yazi_tty::{TTY, TtyWriter};
+use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
+use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
 
 use crate::{RatermBackend, RatermOption, RatermState};
 

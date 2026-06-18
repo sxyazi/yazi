@@ -1,11 +1,13 @@
 use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
+use yazi_codegen::FromLuaOwned;
+use yazi_shim::wtf8::FromWtf8Vec;
 
-use crate::{path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand, wtf8::FromWtf8Vec};
+use crate::{path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand};
 
 // --- PathBufDyn
-#[derive(Clone, Debug, Eq)]
+#[derive(Clone, Debug, Eq, FromLuaOwned)]
 pub enum PathBufDyn {
 	Os(std::path::PathBuf),
 	Unix(typed_path::UnixPathBuf),

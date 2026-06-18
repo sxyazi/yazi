@@ -1,5 +1,5 @@
 use strum::IntoStaticStr;
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 #[derive(Debug, IntoStaticStr)]
 pub enum InputEvent {

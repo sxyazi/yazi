@@ -2,12 +2,14 @@ use std::{str::FromStr, time::Duration};
 
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
-use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_binding::{elements::{Line, Pos, Text}, runtime};
+use yazi_config::{Platform, keymap::{Chord, ChordArc}, popup::ConfirmCfg};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
 use yazi_shared::{Debounce, Layer};
+use yazi_term::event::KeyEvent;
+use yazi_widgets::input::{InputOpt, InputStream};
 
 use super::Utils;
 
@@ -51,28 +53,21 @@ impl Utils {
 				return Err("Cannot call `ya.input()` while main thread is blocked".into_lua_err());
 			}
 
-			let realtime = t.raw_get("realtime")?;
-			let rx = UnboundedReceiverStream::new(InputProxy::show(InputCfg {
-				title: t.raw_get("title")?,
-				value: t.raw_get("value").unwrap_or_default(),
-				cursor: None, // TODO
-				obscure: t.raw_get("obscure")?,
-				position: t.raw_get::<Pos>("pos")?.with_height(3).into(),
-				realtime,
-				completion: false,
-			}));
+			let opt = InputOpt::try_from(&t)?;
+			let realtime = opt.realtime;
 
+			let rx = UnboundedReceiverStream::new(InputProxy::show(opt));
 			if !realtime {
-				return InputRx::consume(rx).await.into_lua_multi(&lua);
+				return InputStream::consume(rx).await.into_lua_multi(&lua);
 			}
 
 			let debounce = t.raw_get::<f64>("debounce").unwrap_or_default();
 			if debounce < 0.0 {
 				Err("negative debounce duration".into_lua_err())
 			} else if debounce == 0.0 {
-				InputRx::new(rx).into_lua_multi(&lua)
+				InputStream::new(rx).into_lua_multi(&lua)
 			} else {
-				InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))).into_lua_multi(&lua)
+				InputStream::new(Debounce::new(rx, Duration::from_secs_f64(debounce))).into_lua_multi(&lua)
 			}
 		})
 	}
@@ -98,15 +93,15 @@ impl Utils {
 		lua.create_function(|_, opt: MessageOpt| Ok(NotifyProxy::push(opt)))
 	}
 
-	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {
+	fn parse_keys(value: Value) -> mlua::Result<Vec<KeyEvent>> {
 		Ok(match value {
 			Value::String(s) => {
-				vec![Key::from_str(&s.to_str()?).into_lua_err()?]
+				vec![KeyEvent::from_str(&s.to_str()?).into_lua_err()?]
 			}
 			Value::Table(t) => {
 				let mut v = Vec::with_capacity(10);
 				for s in t.sequence_values::<mlua::String>() {
-					v.push(Key::from_str(&s?.to_str()?).into_lua_err()?);
+					v.push(KeyEvent::from_str(&s?.to_str()?).into_lua_err()?);
 				}
 				v
 			}
