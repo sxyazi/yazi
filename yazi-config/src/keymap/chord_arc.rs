@@ -22,8 +22,8 @@ impl<const L: u8> DerefMut for ChordArc<L> {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
-impl<const L: u8> From<&ChordArc<L>> for ChordArc<L> {
-	fn from(value: &ChordArc<L>) -> Self { value.clone() }
+impl<const L: u8> From<&Self> for ChordArc<L> {
+	fn from(value: &Self) -> Self { value.clone() }
 }
 
 impl<const L: u8, const M: u8> From<Chord<L>> for ChordArc<M> {
@@ -70,7 +70,7 @@ impl TryFrom<(Value, Layer)> for ChordArc {
 
 impl<const L: u8> ChordArc<L> {
 	pub fn as_erased<const M: u8>(&self) -> &ChordArc<M> {
-		unsafe { &*(self as *const ChordArc<L> as *const ChordArc<M>) }
+		unsafe { &*(self as *const Self as *const ChordArc<M>) }
 	}
 
 	pub fn into_erased<const M: u8>(self) -> ChordArc<M> {

@@ -1,8 +1,7 @@
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, ObjectLike, Table, UserData, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_binding::{impl_file_fields, impl_file_methods};
-use yazi_shared::url::UrlBuf;
 
-use crate::{cha::Cha, file::{File, FileInventory}};
+use crate::file::{File, FileInventory};
 
 pub type FileRef = UserDataRef<File>;
 
@@ -18,11 +17,7 @@ impl TryFrom<Table> for File {
 	type Error = mlua::Error;
 
 	fn try_from(value: Table) -> Result<Self, Self::Error> {
-		Ok(Self {
-			url: value.raw_get::<UrlBuf>("url")?.into(),
-			cha: value.raw_get::<Cha>("cha")?,
-			..Default::default()
-		})
+		Ok(Self { url: value.raw_get("url")?, cha: value.raw_get("cha")?, ..Default::default() })
 	}
 }
 

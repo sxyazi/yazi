@@ -42,10 +42,10 @@ impl Sendable {
 			}
 			Value::UserData(ud) => match ud.type_id() {
 				Some(t) if t == TypeId::of::<UrlBuf>() => {
-					return Ok(Data::Url(ud.take::<UrlBuf>()?.into()));
+					return Ok(Data::Url(ud.take()?));
 				}
 				Some(t) if t == TypeId::of::<PathBufDyn>() => {
-					return Ok(Data::Path(ud.take::<PathBufDyn>()?.into()));
+					return Ok(Data::Path(ud.take()?));
 				}
 				Some(t) if t == TypeId::of::<Id>() => {
 					return Ok(Data::Id(*ud.borrow::<Id>()?));
@@ -202,10 +202,8 @@ impl Sendable {
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
 			Value::UserData(ud) => match ud.type_id() {
-				Some(t) if t == TypeId::of::<UrlBuf>() => DataKey::Url(ud.take::<UrlBuf>()?.into()),
-				Some(t) if t == TypeId::of::<PathBufDyn>() => {
-					DataKey::Path(ud.take::<PathBufDyn>()?.into())
-				}
+				Some(t) if t == TypeId::of::<UrlBuf>() => DataKey::Url(ud.take()?),
+				Some(t) if t == TypeId::of::<PathBufDyn>() => DataKey::Path(ud.take()?),
 				Some(t) if t == TypeId::of::<Id>() => DataKey::Id(*ud.borrow::<Id>()?),
 				_ => Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?,
 			},

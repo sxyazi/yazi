@@ -52,7 +52,7 @@ impl TryFrom<Table> for OpenerRuleMatcher {
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		let id: Id = t.raw_get("id").unwrap_or_default();
 
-		Ok(OpenerRuleMatcher { id, ..Default::default() }.into())
+		Ok(Self { id, ..Default::default() })
 	}
 }
 

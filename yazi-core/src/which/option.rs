@@ -25,7 +25,7 @@ impl TryFrom<ActionCow> for WhichOpt {
 
 		Ok(Self {
 			tx:     a.take_any2("tx").transpose()?,
-			cands:  a.take_any_iter::<ChordArc>().map(Into::into).collect(),
+			cands:  a.take_any_iter().collect(),
 			silent: a.bool("silent"),
 			times:  a.get("times").unwrap_or(0),
 		})
@@ -56,11 +56,7 @@ impl FromLua for WhichOpt {
 
 		Ok(Self {
 			tx:     t.raw_get::<yazi_binding::MpscUnboundedTx<_>>("tx").ok().map(|t| t.0),
-			cands:  t
-				.raw_get::<Table>("cands")?
-				.sequence_values::<ChordArc>()
-				.map(|c| c.map(Into::into))
-				.collect::<mlua::Result<Vec<_>>>()?,
+			cands:  t.raw_get::<Table>("cands")?.sequence_values().collect::<mlua::Result<Vec<_>>>()?,
 			times:  t.raw_get("times").unwrap_or_default(),
 			silent: t.raw_get("silent")?,
 		})

@@ -11,7 +11,7 @@ impl Utils {
 		lua.create_async_function(|lua, url: UrlRef| async move {
 			let path = url.as_url().unified_path().into_owned();
 			match ImageInfo::new(path).await {
-				Ok(info) => ImageInfo::from(info).into_lua_multi(&lua),
+				Ok(info) => info.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::custom(e.to_string())).into_lua_multi(&lua),
 			}
 		})

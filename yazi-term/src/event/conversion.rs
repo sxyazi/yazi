@@ -14,10 +14,10 @@ impl FromStr for KeyEvent {
 
 		if !s.starts_with('<') || !s.ends_with('>') {
 			let c = s.chars().next().unwrap();
-			return Ok(KeyEvent::new(KeyCode::Char(c), Modifiers::for_char(c)));
+			return Ok(Self::new(KeyCode::Char(c), Modifiers::for_char(c)));
 		}
 
-		let mut key: KeyEvent = KeyCode::Null.into();
+		let mut key: Self = KeyCode::Null.into();
 		let mut it = s[1..s.len() - 1].split_inclusive('-').peekable();
 		while let Some(next) = it.next() {
 			match next.to_ascii_lowercase().as_str() {

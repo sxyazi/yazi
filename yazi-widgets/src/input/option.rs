@@ -41,7 +41,7 @@ impl TryFrom<&Table> for InputOpt {
 	type Error = mlua::Error;
 
 	fn try_from(t: &Table) -> Result<Self, Self::Error> {
-		Ok(InputOpt {
+		Ok(Self {
 			title:      t.raw_get("title").unwrap_or_default(),
 			value:      t.raw_get("value").unwrap_or_default(),
 			styles:     t.raw_get("styles")?,
