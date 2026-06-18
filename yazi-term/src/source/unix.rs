@@ -49,7 +49,7 @@ impl<'a> EventSource<'a> {
 		// Stop waiting for events.
 		if wakeup_ready {
 			while read_complete(&*self.waker, &mut [0u8; 1024])? != 0 {}
-			return Err(io::Error::from(io::ErrorKind::UnexpectedEof));
+			return Err(io::Error::from(io::ErrorKind::ConnectionAborted));
 		}
 
 		// More input is ready.

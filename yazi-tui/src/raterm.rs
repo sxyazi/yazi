@@ -97,16 +97,22 @@ impl Raterm {
 		let mut rx = self.stream.take().unwrap();
 
 		tokio::spawn(async move {
-			while let Some(Ok(event)) = rx.recv().await {
-				match event {
-					Event::Key(key) if key.kind != KeyEventKind::Press => continue,
-					Event::Mouse(mouse) if !YAZI.mgr.mouse_events.get().contains(mouse.kind.into()) => {
-						continue;
-					}
-					_ => yazi_shared::event::Event::Term(event).emit(),
+			loop {
+				match rx.recv().await {
+					Some(Ok(event)) => match event {
+						Event::Key(key) if key.kind != KeyEventKind::Press => continue,
+						Event::Mouse(mouse) if !YAZI.mgr.mouse_events.get().contains(mouse.kind.into()) => {
+							continue;
+						}
+						_ => yazi_shared::event::Event::Term(event).emit(),
+					},
+					Some(Err(_)) => {
+						AppProxy::quit(Default::default());
+						break;
+					},
+					None => break,
 				}
 			}
-			AppProxy::quit(Default::default());
 		});
 	}
 
