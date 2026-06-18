@@ -5,6 +5,7 @@ use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{CompletedFrame, Fram
 use yazi_config::YAZI;
 use yazi_emulator::{Emulator, Mux, TMUX};
 use yazi_macro::writef;
+use yazi_proxy::AppProxy;
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
 use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
@@ -105,6 +106,7 @@ impl Raterm {
 					_ => yazi_shared::event::Event::Term(event).emit(),
 				}
 			}
+			AppProxy::quit(Default::default());
 		});
 	}
 

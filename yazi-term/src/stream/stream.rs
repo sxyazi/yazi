@@ -31,7 +31,7 @@ impl EventStream {
 							break;
 						}
 					}
-					Err(e) if e.kind() == io::ErrorKind::Interrupted => break,
+					Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
 					Err(e) => {
 						tx.send(Err(e)).ok();
 						break;
