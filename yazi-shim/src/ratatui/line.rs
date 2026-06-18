@@ -1,6 +1,7 @@
 use std::{boxed::Box, iter, slice::Iter, str::{self, Lines}};
 
-use ratatui::{layout::Alignment, style::Style, text::Line, widgets::Wrap};
+use ratatui_core::{layout::Alignment, style::Style, text::Line};
+use ratatui_widgets::paragraph::Wrap;
 
 use super::wrapper::{LineComposer, WordWrapper};
 use crate::ratatui::SpanIter;

@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use ratatui::backend::ClearType;
+use ratatui_core::backend::ClearType;
 
 /// Erase entire display
 pub struct EraseScreen;

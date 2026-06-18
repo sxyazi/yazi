@@ -1,6 +1,6 @@
 use std::slice::Iter;
 
-use ratatui::{style::Style, text::{Line, Span, StyledGrapheme}};
+use ratatui_core::{style::Style, text::{Line, Span, StyledGrapheme}};
 use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
 #[allow(private_interfaces)]

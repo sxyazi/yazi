@@ -26,7 +26,8 @@ base64           = { workspace = true }
 hashbrown        = { workspace = true }
 mlua             = { workspace = true }
 percent-encoding = { workspace = true }
-ratatui          = { workspace = true }
+ratatui-core     = { workspace = true }
+ratatui-widgets  = { workspace = true }
 serde            = { workspace = true }
 thiserror        = { workspace = true }
 toml             = { workspace = true }

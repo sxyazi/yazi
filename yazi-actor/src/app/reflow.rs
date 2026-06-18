@@ -1,6 +1,6 @@
 use anyhow::Result;
 use mlua::Value;
-use ratatui::layout::Position;
+use ratatui_core::layout::Position;
 use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_config::LAYOUT;

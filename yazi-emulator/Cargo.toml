@@ -20,9 +20,9 @@ yazi-term   = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty    = { path = "../yazi-tty", version = "26.5.9" }
 
 # External dependencies
-anyhow     = { workspace = true }
-either     = { workspace = true }
-ratatui    = { workspace = true }
-scopeguard = { workspace = true }
-tokio      = { workspace = true }
-tracing    = { workspace = true }
+anyhow       = { workspace = true }
+either       = { workspace = true }
+ratatui-core = { workspace = true }
+scopeguard   = { workspace = true }
+tokio        = { workspace = true }
+tracing      = { workspace = true }

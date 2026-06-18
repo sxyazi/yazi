@@ -27,14 +27,14 @@ impl Debug for Area {
 }
 
 impl Area {
-	pub fn size(self) -> ratatui::layout::Size {
+	pub fn size(self) -> ratatui_core::layout::Size {
 		match self {
 			Self::Rect(rect) => (*rect).into(),
-			Self::Pos(pos) => ratatui::layout::Size { width: pos.width, height: pos.height },
+			Self::Pos(pos) => ratatui_core::layout::Size { width: pos.width, height: pos.height },
 		}
 	}
 
-	pub fn inner(self, padding: ratatui::widgets::Padding) -> Self {
+	pub fn inner(self, padding: ratatui_widgets::block::Padding) -> Self {
 		match self {
 			Self::Rect(rect) => Self::Rect(rect.pad(padding.into())),
 			Self::Pos(mut pos) => {
@@ -46,8 +46,8 @@ impl Area {
 
 	pub fn transform(
 		self,
-		f: impl FnOnce(Position) -> ratatui::layout::Rect,
-	) -> ratatui::layout::Rect {
+		f: impl FnOnce(Position) -> ratatui_core::layout::Rect,
+	) -> ratatui_core::layout::Rect {
 		match self {
 			Self::Rect(rect) => *rect,
 			Self::Pos(pos) => *Rect(f(*pos)).pad(pos.pad),
@@ -59,8 +59,8 @@ impl From<Rect> for Area {
 	fn from(rect: Rect) -> Self { Self::Rect(rect) }
 }
 
-impl From<ratatui::layout::Rect> for Area {
-	fn from(rect: ratatui::layout::Rect) -> Self { Self::Rect(rect.into()) }
+impl From<ratatui_core::layout::Rect> for Area {
+	fn from(rect: ratatui_core::layout::Rect) -> Self { Self::Rect(rect.into()) }
 }
 
 impl From<Position> for Area {

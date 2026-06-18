@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use parking_lot::Mutex;
-use ratatui::widgets::Widget;
+use ratatui_core::widgets::Widget;
 use yazi_binding::{elements::{Area, Spatial}, impl_area_method, position::{Offset, Origin, Position}};
 
 use crate::input::{Input, InputOpt, InputStyles};
@@ -66,7 +66,7 @@ impl Spatial for InputArc {
 }
 
 impl Widget for &InputArc {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{

@@ -1,4 +1,5 @@
-use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
+use ratatui_core::text::{Line, Text};
+use ratatui_widgets::paragraph::{Paragraph, Wrap};
 use yazi_binding::position::Position;
 use yazi_macro::impl_data_any;
 use yazi_shared::{strand::ToStrand, url::UrlBuf};

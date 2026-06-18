@@ -46,7 +46,8 @@ better-panic       = "0.3.0"
 fdlimit            = "0.3.0"
 mlua               = { workspace = true }
 paste              = { workspace = true }
-ratatui            = { workspace = true }
+ratatui-core       = { workspace = true }
+ratatui-widgets    = { workspace = true }
 tokio              = { workspace = true }
 tokio-stream       = { workspace = true }
 tracing            = { workspace = true }

@@ -1,7 +1,7 @@
 use std::{fs::File, io};
 
 use anyhow::Context;
-use ratatui::style::Color;
+use ratatui_core::style::Color;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;

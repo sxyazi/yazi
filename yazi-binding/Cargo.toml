@@ -22,21 +22,19 @@ yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
 
 # External dependencies
-ansi-to-tui   = { workspace = true }
-anyhow        = { workspace = true }
-futures       = { workspace = true }
-hashbrown     = { workspace = true }
-image         = { workspace = true }
-inventory     = { workspace = true }
-mlua          = { workspace = true }
-ordered-float = { workspace = true }
-ratatui       = { workspace = true }
-serde         = { workspace = true }
-serde_json    = { workspace = true }
-strum         = { workspace = true }
-tokio  	      = { workspace = true }
-tracing       = { workspace = true }
-unicode-width = { workspace = true }
+ansi-to-tui     = { workspace = true }
+anyhow          = { workspace = true }
+futures         = { workspace = true }
+hashbrown       = { workspace = true }
+image           = { workspace = true }
+mlua            = { workspace = true }
+ratatui-core    = { workspace = true }
+ratatui-widgets = { workspace = true }
+serde           = { workspace = true }
+serde_json      = { workspace = true }
+strum           = { workspace = true }
+tokio    	      = { workspace = true }
+unicode-width   = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }

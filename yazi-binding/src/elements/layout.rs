@@ -8,8 +8,8 @@ const VERTICAL: bool = false;
 #[derive(Clone, Default)]
 pub struct Layout {
 	direction:   bool,
-	margin:      Option<ratatui::layout::Margin>,
-	constraints: Vec<ratatui::layout::Constraint>,
+	margin:      Option<ratatui_core::layout::Margin>,
+	constraints: Vec<ratatui_core::layout::Constraint>,
 }
 
 impl Layout {
@@ -30,7 +30,7 @@ impl UserData for Layout {
 			Ok(ud)
 		});
 		methods.add_function("margin", |_, (ud, value): (AnyUserData, u16)| {
-			ud.borrow_mut::<Self>()?.margin = Some(ratatui::layout::Margin::new(value, value));
+			ud.borrow_mut::<Self>()?.margin = Some(ratatui_core::layout::Margin::new(value, value));
 			Ok(ud)
 		});
 		methods.add_function("margin_h", |_, (ud, value): (AnyUserData, u16)| {
@@ -39,7 +39,7 @@ impl UserData for Layout {
 				if let Some(margin) = &mut me.margin {
 					margin.horizontal = value;
 				} else {
-					me.margin = Some(ratatui::layout::Margin::new(value, 0));
+					me.margin = Some(ratatui_core::layout::Margin::new(value, 0));
 				}
 			}
 			Ok(ud)
@@ -50,7 +50,7 @@ impl UserData for Layout {
 				if let Some(margin) = &mut me.margin {
 					margin.vertical = value;
 				} else {
-					me.margin = Some(ratatui::layout::Margin::new(0, value));
+					me.margin = Some(ratatui_core::layout::Margin::new(0, value));
 				}
 			}
 			Ok(ud)
@@ -60,11 +60,11 @@ impl UserData for Layout {
 			Ok(ud)
 		});
 		methods.add_method("split", |lua, me, value: Rect| {
-			let mut layout = ratatui::layout::Layout::new(
+			let mut layout = ratatui_core::layout::Layout::new(
 				if me.direction == VERTICAL {
-					ratatui::layout::Direction::Vertical
+					ratatui_core::layout::Direction::Vertical
 				} else {
-					ratatui::layout::Direction::Horizontal
+					ratatui_core::layout::Direction::Horizontal
 				},
 				&me.constraints,
 			);

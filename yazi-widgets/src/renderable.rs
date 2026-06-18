@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Value};
-use ratatui::widgets::Widget;
+use ratatui_core::widgets::Widget;
 use yazi_binding::{Error, elements::{Area, Bar, Border, Fill, Gauge, Line, List, Spatial, Table, Text}, position::Position};
 
 use crate::{clear::Clear, input::InputArc};
@@ -26,9 +26,9 @@ impl Renderable {
 		self
 	}
 
-	pub fn render_with<T>(self, buf: &mut ratatui::buffer::Buffer, trans: T)
+	pub fn render_with<T>(self, buf: &mut ratatui_core::buffer::Buffer, trans: T)
 	where
-		T: FnOnce(Position) -> ratatui::layout::Rect,
+		T: FnOnce(Position) -> ratatui_core::layout::Rect,
 	{
 		let rect = self.area().transform(trans);
 		self.render(rect, buf);
@@ -57,7 +57,9 @@ impl TryFrom<&AnyUserData> for Renderable {
 
 impl From<yazi_binding::Error> for Renderable {
 	fn from(error: Error) -> Self {
-		Self::Text(Text::from(error.into_string()).wrap(ratatui::widgets::Wrap { trim: false }))
+		Self::Text(
+			Text::from(error.into_string()).wrap(ratatui_widgets::paragraph::Wrap { trim: false }),
+		)
 	}
 }
 
@@ -94,7 +96,7 @@ impl Spatial for Renderable {
 }
 
 impl Widget for Renderable {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
@@ -114,7 +116,7 @@ impl Widget for Renderable {
 }
 
 impl Widget for &Renderable {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{

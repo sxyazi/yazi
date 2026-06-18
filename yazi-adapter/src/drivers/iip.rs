@@ -3,7 +3,7 @@ use std::{fmt::Write as _, io::Write as _, path::PathBuf};
 use anyhow::Result;
 use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_config::{THEME, YAZI};
 use yazi_emulator::{CLOSE, Emulator, START};
 use yazi_tty::sequence::{MoveTo, ResetAttrs, SetBg};

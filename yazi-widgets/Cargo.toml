@@ -25,19 +25,20 @@ yazi-term    = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty     = { path = "../yazi-tty", version = "26.5.9" }
 
 # External dependencies
-anyhow        = { workspace = true }
-dyn-clone     = { workspace = true }
-futures       = { workspace = true }
-inventory     = { workspace = true }
-mlua          = { workspace = true }
-parking_lot   = { workspace = true }
-ratatui       = { workspace = true }
-serde         = { workspace = true }
-strum         = { workspace = true }
-tokio         = { workspace = true }
-tokio-stream  = { workspace = true }
-tracing       = { workspace = true }
-unicode-width = { workspace = true }
+anyhow          = { workspace = true }
+dyn-clone       = { workspace = true }
+futures         = { workspace = true }
+inventory       = { workspace = true }
+mlua            = { workspace = true }
+parking_lot     = { workspace = true }
+ratatui-core    = { workspace = true }
+ratatui-widgets = { workspace = true }
+serde           = { workspace = true }
+strum           = { workspace = true }
+tokio           = { workspace = true }
+tokio-stream    = { workspace = true }
+tracing         = { workspace = true }
+unicode-width   = { workspace = true }
 
 [target."cfg(windows)".dependencies]
 clipboard-win = "5.4.1"

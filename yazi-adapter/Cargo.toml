@@ -23,15 +23,15 @@ yazi-tty      = { path = "../yazi-tty", version = "26.5.9" }
 yazi-widgets  = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
-ansi-to-tui = { workspace = true }
-anyhow      = { workspace = true }
-base64      = { workspace = true }
-image       = { workspace = true }
-inventory   = { workspace = true }
-moxcms      = "0.8.1"
-palette     = { version = "0.7.6", default-features = false }
-quantette   = { version = "0.6.0", default-features = false }
-ratatui     = { workspace = true }
-strum       = { workspace = true }
-tokio       = { workspace = true }
-tracing     = { workspace = true }
+ansi-to-tui  = { workspace = true }
+anyhow       = { workspace = true }
+base64       = { workspace = true }
+image        = { workspace = true }
+inventory    = { workspace = true }
+moxcms       = "0.8.1"
+palette      = { version = "0.7.6", default-features = false }
+quantette    = { version = "0.6.0", default-features = false }
+ratatui-core = { workspace = true }
+strum        = { workspace = true }
+tokio        = { workspace = true }
+tracing      = { workspace = true }

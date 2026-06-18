@@ -1,6 +1,6 @@
 use std::{io::Write, sync::atomic::{AtomicU8, Ordering}};
 
-use ratatui::layout::Position;
+use ratatui_core::layout::Position;
 use yazi_macro::writef;
 use yazi_tty::{TTY, sequence::{BeginSyncUpdate, EndSyncUpdate, MoveTo, SetCursorStyle, ShowCursor}};
 

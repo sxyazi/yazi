@@ -1,6 +1,6 @@
 use std::iter;
 
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_binding::position::{Origin, Position};
 use yazi_fs::Splatable;
 use yazi_shared::url::{AsUrl, Url, UrlBuf};

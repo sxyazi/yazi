@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use strum::{Display, IntoStaticStr};
 
 use crate::drivers::{Chafa, Iip, Kgp, KgpOld, Sixel, Ueberzug};

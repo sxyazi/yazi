@@ -2,7 +2,7 @@ use std::{io::Write, path::PathBuf, process::Stdio};
 
 use ansi_to_tui::IntoText;
 use anyhow::{Result, anyhow, bail};
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use tokio::process::Command;
 use yazi_config::THEME;
 use yazi_emulator::Emulator;

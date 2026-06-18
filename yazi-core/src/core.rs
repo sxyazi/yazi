@@ -1,4 +1,4 @@
-use ratatui::layout::{Margin, Position, Rect};
+use ratatui_core::layout::{Margin, Position, Rect};
 use yazi_shared::Layer;
 use yazi_tty::sequence::SetCursorStyle;
 

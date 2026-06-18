@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::Widget;
+use ratatui_core::widgets::Widget;
 
 use super::Area;
 use crate::elements::Spatial;
@@ -8,7 +8,7 @@ use crate::elements::Spatial;
 pub struct Fill {
 	area: Area,
 
-	style: ratatui::style::Style,
+	style: ratatui_core::style::Style,
 }
 
 impl Fill {
@@ -36,7 +36,7 @@ impl Spatial for Fill {
 }
 
 impl Widget for &Fill {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{

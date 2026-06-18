@@ -18,12 +18,12 @@ yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
 
 # External dependencies
-base64      = { workspace = true }
-bitflags    = { workspace = true }
-mlua        = { workspace = true }
-parking_lot = { workspace = true }
-ratatui     = { workspace = true }
-tracing     = { workspace = true }
+base64       = { workspace = true }
+bitflags     = { workspace = true }
+mlua         = { workspace = true }
+parking_lot  = { workspace = true }
+ratatui-core = { workspace = true }
+tracing      = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }

@@ -1,7 +1,7 @@
 use std::{io::{self, Write}, ops::Deref};
 
 use anyhow::Result;
-use ratatui::{CompletedFrame, Frame, Terminal, buffer::Buffer, layout::Rect};
+use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{CompletedFrame, Frame, Terminal}};
 use yazi_config::YAZI;
 use yazi_emulator::{Emulator, Mux, TMUX};
 use yazi_macro::writef;

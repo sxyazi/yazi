@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use ratatui::style::Color;
+use ratatui_core::style::Color;
 
 /// Set foreground color from a `Color`.
 pub struct SetFg(pub Color);

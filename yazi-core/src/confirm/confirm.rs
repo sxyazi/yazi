@@ -1,4 +1,5 @@
-use ratatui::{text::Line, widgets::Paragraph};
+use ratatui_core::text::Line;
+use ratatui_widgets::paragraph::Paragraph;
 use yazi_binding::position::Position;
 use yazi_shared::CompletionToken;
 
