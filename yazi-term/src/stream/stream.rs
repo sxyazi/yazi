@@ -31,7 +31,8 @@ impl EventStream {
 							break;
 						}
 					}
-					Err(e) if e.kind() == io::ErrorKind::Interrupted => break,
+					// try_poll() already handles Interrupted, this is defensive.
+					Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
 					Err(e) => {
 						tx.send(Err(e)).ok();
 						break;

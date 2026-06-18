@@ -5316,6 +5316,7 @@ dependencies = [
  "yazi-config",
  "yazi-emulator",
  "yazi-macro",
+ "yazi-proxy",
  "yazi-shared",
  "yazi-shim",
  "yazi-term",
