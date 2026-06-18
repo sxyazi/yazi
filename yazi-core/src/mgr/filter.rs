@@ -1,6 +1,7 @@
 use yazi_fs::FilterCase;
 use yazi_macro::impl_data_any;
-use yazi_shared::{SStr, event::ActionCow};
+use yazi_shared::event::ActionCow;
+use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default)]
 pub struct FilterOpt {

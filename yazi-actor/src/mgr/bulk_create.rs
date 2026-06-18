@@ -1,18 +1,18 @@
-use std::{fmt::{self, Display}, io::{self, Read, Write}, path::{MAIN_SEPARATOR, Path}, sync::Arc};
+use std::{fmt::{self, Display}, io::{self, Read, Write}, path::{MAIN_SEPARATOR, Path}};
 
 use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use yazi_binding::Permit;
-use yazi_config::{YAZI, opener::OpenerRule};
-use yazi_fs::{File, FilesOp, Splatter, provider::{Provider, local::Local}};
+use yazi_config::{YAZI, opener::OpenerRuleArc};
+use yazi_fs::{FilesOp, Splatter, file::File, provider::{Provider, local::Local}};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy};
 use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
-use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
-use yazi_tty::TTY;
+use yazi_term::YIELD_TO_SUBPROCESS;
+use yazi_tty::{TTY, sequence::EraseScreen};
 use yazi_vfs::{VfsFile, provider};
 use yazi_watcher::WATCHER;
 
@@ -106,7 +106,7 @@ impl BulkCreate {
 		Ok(())
 	}
 
-	fn opener() -> Option<Arc<OpenerRule>> {
+	fn opener() -> Option<OpenerRuleArc> {
 		YAZI
 			.open
 			.match_dummy(Path::new("bulk-create.txt"), "text/plain")

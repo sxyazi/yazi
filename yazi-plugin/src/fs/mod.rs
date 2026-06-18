@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(fs op);
+yazi_macro::mod_flat!(calculator fs op);

@@ -2,8 +2,7 @@ use std::{io::Write, sync::atomic::{AtomicU8, Ordering}};
 
 use ratatui::layout::Position;
 use yazi_macro::writef;
-use yazi_term::{CursorStyle, sequence::{BeginSyncUpdate, EndSyncUpdate, MoveTo, SetCursorStyle, ShowCursor}};
-use yazi_tty::TTY;
+use yazi_tty::{TTY, sequence::{BeginSyncUpdate, EndSyncUpdate, MoveTo, SetCursorStyle, ShowCursor}};
 
 static DEPTH: AtomicU8 = AtomicU8::new(0);
 
@@ -20,19 +19,14 @@ impl SyncGuard {
 		Self { finished: false }
 	}
 
-	pub(super) fn finish(mut self, cursor: Option<(Position, CursorStyle)>) {
+	pub(super) fn finish(mut self, cursor: Option<(Position, SetCursorStyle)>) {
 		self.finished = true;
 		if DEPTH.fetch_sub(1, Ordering::Relaxed) != 1 {
 			return;
 		}
 
-		_ = if let Some((Position { x, y }, shape)) = cursor {
-			writef!(
-				TTY.writer(),
-				"{}{}{ShowCursor}{EndSyncUpdate}",
-				SetCursorStyle(shape as u8),
-				MoveTo(x, y),
-			)
+		_ = if let Some((Position { x, y }, style)) = cursor {
+			writef!(TTY.writer(), "{style}{}{ShowCursor}{EndSyncUpdate}", MoveTo(x, y))
 		} else {
 			writef!(TTY.writer(), "{EndSyncUpdate}")
 		};

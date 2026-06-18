@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yazi_shared::{Id, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{Task, TaskIn, TaskProg};
 

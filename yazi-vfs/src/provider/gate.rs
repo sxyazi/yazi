@@ -1,7 +1,9 @@
 use std::io;
 
+use mlua::{AnyUserData, IntoLuaMulti, UserData, UserDataMethods, Value};
+use yazi_binding::Error;
 use yazi_fs::provider::{Attrs, FileBuilder};
-use yazi_shared::{scheme::SchemeKind, url::AsUrl};
+use yazi_shared::{scheme::SchemeKind, url::{AsUrl, UrlRef}};
 
 #[derive(Clone, Copy, Default)]
 pub struct Gate {
@@ -92,5 +94,40 @@ impl Gate {
 			gate.write(true);
 		}
 		gate
+	}
+}
+
+impl UserData for Gate {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_function("append", |_, (ud, append): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.append(append);
+			Ok(ud)
+		});
+		methods.add_function("create", |_, (ud, create): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.create(create);
+			Ok(ud)
+		});
+		methods.add_function("create_new", |_, (ud, create_new): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.create_new(create_new);
+			Ok(ud)
+		});
+		methods.add_async_method("open", |lua, me, url: UrlRef| async move {
+			match me.open(&*url).await {
+				Ok(fd) => fd.into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			}
+		});
+		methods.add_function("read", |_, (ud, read): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.read(read);
+			Ok(ud)
+		});
+		methods.add_function("truncate", |_, (ud, truncate): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.truncate(truncate);
+			Ok(ud)
+		});
+		methods.add_function("write", |_, (ud, write): (AnyUserData, bool)| {
+			ud.borrow_mut::<Self>()?.write(write);
+			Ok(ud)
+		});
 	}
 }

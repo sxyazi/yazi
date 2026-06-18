@@ -3,8 +3,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ParseError, Result, bail, event::Modifiers};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Serialize)]
 pub struct KeyEvent {
+	#[serde(flatten)]
 	pub code:      KeyCode,
 	pub kind:      KeyEventKind,
 	pub modifiers: Modifiers,
@@ -14,6 +15,15 @@ pub struct KeyEvent {
 impl KeyEvent {
 	pub const fn new(code: KeyCode, modifiers: Modifiers) -> Self {
 		Self { code, kind: KeyEventKind::Press, modifiers, state: KeyEventState::empty() }
+	}
+
+	pub fn plain(&self) -> Option<char> {
+		use Modifiers as M;
+
+		match self.code {
+			KeyCode::Char(c) if !self.modifiers.intersects(M::CONTROL | M::ALT | M::SUPER) => Some(c),
+			_ => None,
+		}
 	}
 }
 
@@ -29,7 +39,8 @@ impl From<KeyCode> for KeyEvent {
 }
 
 // --- Kind
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum KeyEventKind {
 	#[default]
 	Press,
@@ -49,7 +60,7 @@ impl KeyEventKind {
 
 // --- State
 bitflags! {
-	#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+	#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Serialize)]
 	pub struct KeyEventState: u8 {
 		const KEYPAD    = 1;
 		const CAPS_LOCK = 2;
@@ -72,7 +83,7 @@ impl KeyEventState {
 }
 
 // --- Code
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(tag = "type", content = "value")]
 pub enum KeyCode {
 	Char(char),
@@ -97,6 +108,7 @@ pub enum KeyCode {
 	PrintScreen,
 	Pause,
 	Menu,
+	#[default]
 	Null,
 	Fn(u8),
 	Modifier(ModifierKeyCode),

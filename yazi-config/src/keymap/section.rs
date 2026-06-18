@@ -1,12 +1,14 @@
 use std::ops::Deref;
 
 use hashbrown::HashSet;
+use mlua::{UserData, UserDataFields};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_shared::Layer;
-use yazi_shim::toml::DeserializeOverHook;
+use yazi_shim::{mlua::UserDataFieldsExt, toml::DeserializeOverHook};
+use yazi_term::event::KeyEvent;
 
-use super::{Chord, Chords, Key};
+use super::{Chord, Chords, chords::layer_default};
 use crate::{keymap::ChordArc, mix};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
@@ -16,6 +18,8 @@ pub struct KeymapSection<const L: u8 = { Layer::Null as u8 }> {
 	prepend_keymap: Vec<Chord<L>>,
 	#[serde(default)]
 	append_keymap:  Vec<Chord<L>>,
+	#[serde(default = "layer_default::<L>")]
+	layer:          Layer,
 }
 
 impl<const L: u8> Deref for KeymapSection<L> {
@@ -33,7 +37,7 @@ impl<const L: u8> KeymapSection<L> {
 impl<const L: u8> DeserializeOverHook for KeymapSection<L> {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		#[inline]
-		fn on<const L: u8>(Chord { on, .. }: &Chord<L>) -> [Key; 2] {
+		fn on<const L: u8>(Chord { on, .. }: &Chord<L>) -> [KeyEvent; 2] {
 			[on.first().copied().unwrap_or_default(), on.get(1).copied().unwrap_or_default()]
 		}
 
@@ -47,6 +51,12 @@ impl<const L: u8> DeserializeOverHook for KeymapSection<L> {
 			self.append_keymap.into_iter().filter(|v| !b_seen.contains(&on(v))),
 		);
 
-		Ok(Self { keymap: keymap.into(), ..Default::default() })
+		Ok(Self { keymap: keymap.into(), layer: self.layer, ..Default::default() })
+	}
+}
+
+impl UserData for &'static KeymapSection {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_cached_field("rules", |_, me| Ok(&me.keymap));
 	}
 }

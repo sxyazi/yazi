@@ -3,15 +3,15 @@ use std::borrow::Cow;
 use indexmap::IndexSet;
 use mlua::{AnyUserData, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
-use yazi_binding::get_metatable;
 use yazi_macro::impl_data_any;
-use yazi_shared::url::UrlBufCov;
+use yazi_shared::url::{UrlBuf, UrlBufCov};
+use yazi_shim::mlua::get_metatable;
 
 use super::Ember;
 
 type Iter = yazi_binding::Iter<
-	std::iter::Map<indexmap::set::IntoIter<UrlBufCov>, fn(UrlBufCov) -> yazi_binding::Url>,
-	yazi_binding::Url,
+	std::iter::Map<indexmap::set::IntoIter<UrlBufCov>, fn(UrlBufCov) -> UrlBuf>,
+	UrlBuf,
 >;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -54,7 +54,7 @@ impl FromLua for EmberYank<'static> {
 impl IntoLua for EmberYank<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let len = self.urls.len();
-		let iter = Iter::new(self.urls.into_owned().into_iter().map(yazi_binding::Url::new), Some(len));
+		let iter = Iter::new(self.urls.into_owned().into_iter().map(UrlBuf::from), Some(len));
 		EmberYankIter { cut: self.cut, len, inner: lua.create_userdata(iter)? }.into_lua(lua)
 	}
 }

@@ -1,5 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, SStr, event::ActionCow};
+use yazi_shared::{event::ActionCow, id::Id};
+use yazi_shim::SStr;
 
 #[derive(Debug)]
 pub struct TriggerForm {

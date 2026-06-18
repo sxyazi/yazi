@@ -1,9 +1,9 @@
 use anyhow::Result;
-use yazi_binding::{Sendable, runtime_scope};
+use yazi_binding::runtime_scope;
 use yazi_macro::succ;
 use yazi_parser::app::LuaForm;
 use yazi_plugin::LUA;
-use yazi_shared::data::Data;
+use yazi_shared::data::{Data, Sendable};
 
 use crate::{Actor, Ctx, lives::Lives};
 

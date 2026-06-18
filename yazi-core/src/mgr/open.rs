@@ -1,4 +1,4 @@
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_macro::impl_data_any;
 use yazi_shared::{event::ActionCow, url::UrlBuf};
 

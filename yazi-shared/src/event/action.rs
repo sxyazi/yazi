@@ -1,9 +1,11 @@
 use std::{borrow::Cow, fmt::{self, Display}, ops::{Deref, DerefMut}, str::FromStr};
 
 use anyhow::{Result, bail};
+use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 use serde_with::DeserializeFromStr;
+use yazi_shim::{SStr, mlua::UserDataFieldsExt};
 
-use crate::{Layer, SStr, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}};
+use crate::{Layer, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}};
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Action {
@@ -260,5 +262,25 @@ impl FromStr for Action {
 		me.args = cmd.args;
 
 		Ok(me)
+	}
+}
+
+impl FromLua for Action {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		Ok(match value {
+			Value::String(s) => s.to_str()?.parse()?,
+			Value::UserData(ud) => ud.take()?,
+			_ => Err(mlua::Error::FromLuaConversionError {
+				from:    value.type_name(),
+				to:      "Action".to_owned(),
+				message: Some("expected a string or an Action".to_string()),
+			})?,
+		})
+	}
+}
+
+impl UserData for Action {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_cached_field("cmd", |_, me| Ok(me.cmd.clone()));
 	}
 }

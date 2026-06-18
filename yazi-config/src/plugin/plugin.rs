@@ -6,7 +6,7 @@ use yazi_codegen::DeserializeOver2;
 use yazi_shim::toml::DeserializeOverHook;
 
 use super::{Fetcher, Fetchers, Preloader, Preloaders, Previewer, Previewers, Spotter, Spotters};
-use crate::{mix, plugin::{MAX_FETCHERS, MAX_PRELOADERS}};
+use crate::{mix, plugin::{FetcherArc, MAX_FETCHERS, MAX_PRELOADERS, PreloaderArc, PreviewerArc, SpotterArc}};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Plugin {
@@ -37,13 +37,13 @@ pub struct Plugin {
 
 impl DeserializeOverHook for Plugin {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
-		let mut fetchers: Vec<Arc<Fetcher>> =
+		let mut fetchers: Vec<FetcherArc> =
 			mix(self.prepend_fetchers, self.fetchers.unwrap_unchecked(), self.append_fetchers);
-		let spotters: Vec<Arc<Spotter>> =
+		let spotters: Vec<SpotterArc> =
 			mix(self.prepend_spotters, self.spotters.unwrap_unchecked(), self.append_spotters);
-		let mut preloaders: Vec<Arc<Preloader>> =
+		let mut preloaders: Vec<PreloaderArc> =
 			mix(self.prepend_preloaders, self.preloaders.unwrap_unchecked(), self.append_preloaders);
-		let previewers: Vec<Arc<Previewer>> =
+		let previewers: Vec<PreviewerArc> =
 			mix(self.prepend_previewers, self.previewers.unwrap_unchecked(), self.append_previewers);
 
 		if fetchers.len() > MAX_FETCHERS as usize {

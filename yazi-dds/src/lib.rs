@@ -6,7 +6,7 @@ pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
 	// Client
-	ID.init(yazi_boot::ARGS.client_id.unwrap_or(yazi_shared::Id::unique()));
+	ID.init(yazi_boot::ARGS.client_id.unwrap_or(yazi_shared::id::Id::unique()));
 	PEERS.with(<_>::default);
 	QUEUE_TX.init(tx);
 	QUEUE_RX.init(rx);

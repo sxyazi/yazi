@@ -8,6 +8,7 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FsHash64;
 use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
+use yazi_shared::id::Id;
 
 use crate::{HIGH, LOW, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadOut}};
 
@@ -16,7 +17,7 @@ pub struct Preload {
 	tx:  async_priority_channel::Sender<PreloadIn, u8>,
 
 	pub loaded:  Mutex<LruCache<u64, u16>>,
-	pub loading: Mutex<LruCache<u64, yazi_shared::Id>>,
+	pub loading: Mutex<LruCache<u64, Id>>,
 }
 
 impl Preload {

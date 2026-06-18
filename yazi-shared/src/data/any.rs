@@ -48,7 +48,7 @@ impl Debug for dyn DataAny {
 
 impl<T: Clone + Send + Sync + 'static> DataAny for Vec<T> {
 	fn as_any(&self, id: TypeId) -> Option<&dyn Any> {
-		(id == TypeId::of::<Self>()).then(|| self as &dyn Any)
+		(id == TypeId::of::<Self>()).then_some(self as &dyn Any)
 	}
 
 	fn into_any(self: Box<Self>, id: TypeId) -> Result<Box<dyn Any>, Box<dyn DataAny>> {
@@ -60,7 +60,7 @@ impl<T: Clone + Send + Sync + 'static> DataAny for Vec<T> {
 
 impl<T: Send + 'static> DataAny for tokio::sync::mpsc::UnboundedSender<T> {
 	fn as_any(&self, id: TypeId) -> Option<&dyn Any> {
-		(id == TypeId::of::<Self>()).then(|| self as &dyn Any)
+		(id == TypeId::of::<Self>()).then_some(self as &dyn Any)
 	}
 
 	fn into_any(self: Box<Self>, id: TypeId) -> Result<Box<dyn Any>, Box<dyn DataAny>> {

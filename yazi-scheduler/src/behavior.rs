@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 pub struct Behavior {
 	first_id: AtomicU64,

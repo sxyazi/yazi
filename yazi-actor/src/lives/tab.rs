@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ops::Deref};
 
 use mlua::{AnyUserData, UserData, UserDataFields, UserDataMethods};
-use yazi_binding::{Id, UrlRef};
+use yazi_shared::url::UrlRef;
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::{Finder, Folder, Lives, Mode, Preference, Preview, PtrCell, Selected};
@@ -24,7 +24,7 @@ impl Tab {
 
 impl UserData for Tab {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
+		fields.add_field_method_get("id", |_, me| Ok(me.id));
 		fields.add_cached_field("name", |lua, me| match me.name() {
 			Cow::Borrowed(s) => lua.create_string(s),
 			Cow::Owned(s) => lua.create_external_string(s),

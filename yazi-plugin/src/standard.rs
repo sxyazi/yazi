@@ -22,7 +22,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 
 	// Base
 	let globals = lua.globals();
-	globals.raw_set("ui", crate::elements::compose())?;
+	globals.raw_set("ui", crate::ui::compose())?;
 	globals.raw_set("ya", crate::utils::compose(false))?;
 	globals.raw_set("fs", crate::fs::compose())?;
 	globals.raw_set("ps", crate::pubsub::compose())?;
@@ -31,11 +31,11 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	globals.raw_set("th", crate::theme::compose())?;
 
 	yazi_binding::Error::install(lua)?;
-	yazi_binding::Cha::install(lua)?;
+	yazi_fs::cha::Cha::install(lua)?;
 	yazi_binding::process::install(lua)?;
-	yazi_binding::File::install(lua)?;
-	yazi_binding::Url::install(lua)?;
-	yazi_binding::Path::install(lua)?;
+	yazi_fs::file::File::install(lua)?;
+	yazi_shared::url::UrlBuf::install(lua)?;
+	yazi_shared::path::PathBufDyn::install(lua)?;
 	yazi_runner::loader::install(lua)?;
 
 	// Addons

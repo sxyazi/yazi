@@ -1,20 +1,11 @@
-use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, keymap::KeymapSection};
-use yazi_shared::Layer;
+use mlua::{ExternalResult, IntoLua, Lua, Value};
+use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_config::KEYMAP;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
-		match key {
-			b"mgr" => KeymapSection::try_from(Layer::Mgr)?.into_lua(lua),
-			b"tasks" => KeymapSection::try_from(Layer::Tasks)?.into_lua(lua),
-			b"spot" => KeymapSection::try_from(Layer::Spot)?.into_lua(lua),
-			b"pick" => KeymapSection::try_from(Layer::Pick)?.into_lua(lua),
-			b"input" => KeymapSection::try_from(Layer::Input)?.into_lua(lua),
-			b"confirm" => KeymapSection::try_from(Layer::Confirm)?.into_lua(lua),
-			b"cmp" => KeymapSection::try_from(Layer::Cmp)?.into_lua(lua),
-			b"help" => KeymapSection::try_from(Layer::Help)?.into_lua(lua),
-			_ => Ok(Value::Nil),
-		}
+		let layer = str::from_utf8(key)?.parse().into_lua_err()?;
+		KEYMAP.section(layer).into_lua(lua)
 	}
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }

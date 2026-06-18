@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use yazi_dds::Pubsub;
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_macro::err;
 
 use crate::tab::{Folder, Tab};

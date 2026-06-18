@@ -1,6 +1,6 @@
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 use super::Ember;
 

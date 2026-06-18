@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_config::popup::InputCfg;
+use yazi_config::YAZI;
 use yazi_core::mgr::FilterOpt;
 use yazi_macro::{input, succ};
 use yazi_parser::mgr::FilterForm;
@@ -21,7 +21,7 @@ impl Actor for Filter {
 	const NAME: &str = "filter";
 
 	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
-		let input = input!(cx, InputCfg::filter())?;
+		let input = input!(cx, YAZI.input.filter())?;
 
 		tokio::spawn(async move {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));

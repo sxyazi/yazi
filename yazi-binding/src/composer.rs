@@ -5,10 +5,9 @@ pub type ComposerGet = fn(&Lua, &[u8]) -> mlua::Result<Value>;
 pub type ComposerSet = fn(&Lua, &[u8], Value) -> mlua::Result<Value>;
 
 pub struct Composer<G, S> {
-	get:    G,
-	set:    S,
-	parent: Option<(G, S)>,
-	cache:  HashMap<Vec<u8>, Value>,
+	get:   G,
+	set:   S,
+	cache: HashMap<Vec<u8>, Value>,
 }
 
 impl<G, S> Composer<G, S>
@@ -16,13 +15,7 @@ where
 	G: Fn(&Lua, &[u8]) -> mlua::Result<Value> + 'static,
 	S: Fn(&Lua, &[u8], Value) -> mlua::Result<Value> + 'static,
 {
-	#[inline]
-	pub fn new(get: G, set: S) -> Self { Self { get, set, parent: None, cache: Default::default() } }
-
-	#[inline]
-	pub fn with_parent(get: G, set: S, p_get: G, p_set: S) -> Self {
-		Self { get, set, parent: Some((p_get, p_set)), cache: Default::default() }
-	}
+	pub fn new(get: G, set: S) -> Self { Self { get, set, cache: Default::default() } }
 }
 
 impl<G, S> UserData for Composer<G, S>
@@ -37,14 +30,9 @@ where
 				return Ok(v.clone());
 			}
 
-			let mut value = (me.get)(lua, &key)?;
-			if value.is_nil()
-				&& let Some((p_get, _)) = &me.parent
-			{
-				value = p_get(lua, &key)?;
-			}
-
+			let value = (me.get)(lua, &key)?;
 			me.cache.insert(key.to_owned(), value.clone());
+
 			Ok(value)
 		});
 
@@ -56,11 +44,6 @@ where
 
 				if value.is_nil() {
 					me.cache.remove(key.as_ref());
-				} else if let Some((_, p_set)) = &me.parent {
-					match p_set(lua, key.as_ref(), value)? {
-						Value::Nil => me.cache.remove(key.as_ref()),
-						v => me.cache.insert(key.to_owned(), v),
-					};
 				} else {
 					me.cache.insert(key.to_owned(), value);
 				}

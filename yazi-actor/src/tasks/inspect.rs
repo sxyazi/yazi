@@ -8,8 +8,8 @@ use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_scheduler::AppProxy;
 use yazi_shared::data::Data;
-use yazi_term::{TERM, YIELD_TO_SUBPROCESS, sequence::EraseScreen};
-use yazi_tty::TTY;
+use yazi_term::{TERM, YIELD_TO_SUBPROCESS};
+use yazi_tty::{TTY, sequence::EraseScreen};
 
 use crate::{Actor, Ctx};
 

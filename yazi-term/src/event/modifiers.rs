@@ -1,7 +1,8 @@
 use bitflags::bitflags;
+use serde::Serialize;
 
 bitflags! {
-	#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+	#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Serialize)]
 	pub struct Modifiers: u8 {
 		const SHIFT   = 1;
 		const ALT     = 2;

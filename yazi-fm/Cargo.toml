@@ -47,7 +47,6 @@ fdlimit            = "0.3.0"
 mlua               = { workspace = true }
 paste              = { workspace = true }
 ratatui            = { workspace = true }
-scopeguard         = { workspace = true }
 tokio              = { workspace = true }
 tokio-stream       = { workspace = true }
 tracing            = { workspace = true }

@@ -19,14 +19,15 @@ yazi-fs       = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro    = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shared   = { path = "../yazi-shared", version = "26.5.6" }
 yazi-shim     = { path = "../yazi-shim", version = "26.5.6" }
-yazi-term     = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty      = { path = "../yazi-tty", version = "26.5.9" }
+yazi-widgets  = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
 ansi-to-tui = { workspace = true }
 anyhow      = { workspace = true }
 base64      = { workspace = true }
-image       = { version = "0.25.10", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
+image       = { workspace = true }
+inventory   = { workspace = true }
 moxcms      = "0.8.1"
 palette     = { version = "0.7.6", default-features = false }
 quantette   = { version = "0.6.0", default-features = false }

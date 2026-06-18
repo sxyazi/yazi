@@ -2,7 +2,8 @@ use std::borrow::Cow;
 
 use yazi_macro::impl_data_any;
 use yazi_scheduler::{TaskIn, file::FileInCut, plugin::PluginInEntry};
-use yazi_shared::{Id, SStr};
+use yazi_shared::id::Id;
+use yazi_shim::SStr;
 
 #[derive(Clone, Debug)]
 pub enum TaskOpt {

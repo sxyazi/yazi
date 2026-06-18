@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use yazi_shared::{CompletionToken, Id};
+use yazi_shared::{CompletionToken, id::Id};
 
 use crate::{TaskIn, TaskProg, hook::HookIn};
 

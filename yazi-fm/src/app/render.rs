@@ -2,12 +2,12 @@ use std::{sync::atomic::Ordering, time::Instant};
 
 use anyhow::Result;
 use yazi_actor::{Ctx, lives::Lives};
+use yazi_adapter::ADAPTOR;
 use yazi_binding::runtime_scope;
 use yazi_config::LAYOUT;
 use yazi_macro::{act, succ};
 use yazi_plugin::LUA;
 use yazi_shared::{data::Data, event::NEED_RENDER};
-use yazi_widgets::COLLISION;
 
 use super::SyncGuard;
 use crate::{app::App, root::Root};
@@ -23,7 +23,7 @@ impl App {
 		}
 
 		let guard = SyncGuard::enter();
-		let collision = COLLISION.swap(false, Ordering::Relaxed);
+		let collision = ADAPTOR.collision.replace(false);
 		let preview_rect = LAYOUT.get().preview;
 		term.draw(|f| {
 			_ = Lives::scope(&mut self.core, |core| {
@@ -36,7 +36,7 @@ impl App {
 		}
 
 		let cx = &mut Ctx::active(&mut self.core, &mut self.term);
-		if collision && !COLLISION.load(Ordering::Relaxed) {
+		if collision && !ADAPTOR.collision.get() {
 			act!(mgr:peek, cx, true)?; // Reload preview if collision is resolved
 		} else if preview_rect != LAYOUT.get().preview {
 			act!(mgr:peek, cx)?; // Reload preview if layout changed

@@ -1,16 +1,16 @@
-use std::{borrow::Cow, sync::Arc};
+use std::borrow::Cow;
 
-use yazi_config::plugin::Fetcher;
+use yazi_config::plugin::FetcherArc;
 use yazi_runner::fetcher::FetchJob;
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 use crate::{TaskIn, fetch::FetchProg};
 
 #[derive(Debug)]
 pub(crate) struct FetchIn {
 	pub(crate) id:      Id,
-	pub(crate) fetcher: Arc<Fetcher>,
-	pub(crate) targets: Vec<yazi_fs::File>,
+	pub(crate) fetcher: FetcherArc,
+	pub(crate) targets: Vec<yazi_fs::file::File>,
 }
 
 impl TaskIn for FetchIn {

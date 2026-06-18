@@ -2,9 +2,9 @@ use std::borrow::Cow;
 
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, Lua, Value};
-use yazi_binding::Sendable;
 use yazi_runner::entry::EntryJob;
-use yazi_shared::{Id, SStr, data::{Data, DataKey}};
+use yazi_shared::{data::{Data, DataKey, Sendable}, id::Id};
+use yazi_shim::SStr;
 
 use crate::{TaskIn, plugin::PluginProgEntry};
 

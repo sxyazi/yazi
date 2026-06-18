@@ -1,12 +1,12 @@
 use anyhow::Result;
-use yazi_config::keymap::Key;
 use yazi_macro::{act, render, succ};
 use yazi_shared::{data::Data, replace_cow};
+use yazi_term::event::KeyEvent;
 
 use crate::input::{Input, InputMode};
 
 impl Input {
-	pub fn r#type(&mut self, key: &Key) -> Result<bool> {
+	pub fn r#type(&mut self, key: KeyEvent) -> Result<bool> {
 		let Some(c) = key.plain() else { return Ok(false) };
 
 		if self.mode() == InputMode::Insert {

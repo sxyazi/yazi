@@ -126,7 +126,7 @@ pub enum Spark<'a> {
 	InputKill(yazi_widgets::input::parser::KillOpt),
 	InputMove(yazi_widgets::input::parser::MoveOpt),
 	InputPaste(yazi_widgets::input::parser::PasteOpt),
-	InputShow(yazi_widgets::input::InputOpt),
+	InputShow(crate::input::ShowForm),
 
 	// Notify
 	NotifyPush(crate::notify::PushForm),
@@ -452,7 +452,7 @@ try_from_spark!(crate::tasks::SpawnForm, tasks:spawn);
 try_from_spark!(crate::tasks::UpdateSucceedForm, tasks:update_succeed);
 try_from_spark!(crate::which::ActivateForm, which:activate);
 try_from_spark!(yazi_dds::Payload<'a>, app:accept_payload);
-try_from_spark!(yazi_widgets::input::InputOpt, input:show);
+try_from_spark!(crate::input::ShowForm, input:show);
 try_from_spark!(yazi_widgets::input::parser::BackspaceOpt, input:backspace);
 try_from_spark!(yazi_widgets::input::parser::BackwardOpt, input:backward);
 try_from_spark!(yazi_widgets::input::parser::CompleteOpt, input:complete);

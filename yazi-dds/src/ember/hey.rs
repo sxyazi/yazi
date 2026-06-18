@@ -1,7 +1,8 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::{Id, SStr};
+use yazi_shared::id::Id;
+use yazi_shim::SStr;
 
 use super::Ember;
 use crate::Peer;

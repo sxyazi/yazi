@@ -1,6 +1,6 @@
 use hashbrown::{HashMap, hash_map::Entry};
 use yazi_config::YAZI;
-use yazi_shared::{CompletionToken, Id, Ids};
+use yazi_shared::{CompletionToken, id::{Id, Ids}};
 
 use super::Task;
 use crate::{TaskIn, TaskProg, hook::HookIn};

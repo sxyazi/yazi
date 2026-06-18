@@ -3,7 +3,7 @@ use std::{borrow::Cow, mem, path::PathBuf};
 use mlua::{ExternalError, FromLua, Lua, Value};
 use tokio::sync::mpsc;
 use yazi_fs::cha::Cha;
-use yazi_shared::{Id, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{TaskIn, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}};
 
@@ -242,11 +242,7 @@ impl FromLua for FileInCut {
 			return Err("constructing FileInCut from non-table value".into_lua_err());
 		};
 
-		Ok(Self::new(
-			t.raw_get::<yazi_binding::Url>("from")?.into(),
-			t.raw_get::<yazi_binding::Url>("to")?.into(),
-			t.raw_get("force")?,
-		))
+		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?))
 	}
 }
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use parking_lot::Mutex;
-use yazi_config::popup::Position;
+use yazi_binding::position::Position;
 
 use crate::input::{InputGuard, InputMutGuard};
 

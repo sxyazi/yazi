@@ -6,14 +6,14 @@ use ratatui::layout::Rect;
 use tokio::process::Command;
 use yazi_config::THEME;
 use yazi_emulator::Emulator;
-use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg};
+use yazi_tty::sequence::{MoveTo, ResetAttrs, SetBg};
 
-use crate::Adapter;
+use crate::ADAPTOR;
 
-pub(crate) struct Chafa;
+pub(super) struct Chafa;
 
 impl Chafa {
-	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
+	pub(super) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let child = Command::new("chafa")
 			.args([
 				"-f",
@@ -58,8 +58,8 @@ impl Chafa {
 			height: lines.len() as u16,
 		};
 
-		Adapter::Chafa.image_hide()?;
-		Adapter::shown_store(area);
+		ADAPTOR.image_hide()?;
+		ADAPTOR.shown_store(area);
 		Emulator::move_lock((max.x, max.y), |w| {
 			for (i, line) in lines.into_iter().enumerate() {
 				w.write_all(line)?;
@@ -69,7 +69,7 @@ impl Chafa {
 		})
 	}
 
-	pub(crate) fn image_erase(area: Rect) -> Result<()> {
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
 			if let Some(c) = THEME.app.overall.get().bg {

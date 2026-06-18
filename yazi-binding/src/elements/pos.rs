@@ -4,29 +4,28 @@ use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, Me
 use yazi_shim::strum::IntoStr;
 
 use super::Pad;
+use crate::position::{Offset, Origin, Position};
 
 const EXPECTED: &str = "expected a Pos";
 
 #[derive(Clone, Copy, Default)]
 pub struct Pos {
-	inner: yazi_config::popup::Position,
+	inner: Position,
 
 	pub(super) pad: Pad,
 }
 
 impl Deref for Pos {
-	type Target = yazi_config::popup::Position;
+	type Target = Position;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl From<yazi_config::popup::Position> for Pos {
-	fn from(value: yazi_config::popup::Position) -> Self {
-		Self { inner: value, ..Default::default() }
-	}
+impl From<Position> for Pos {
+	fn from(value: Position) -> Self { Self { inner: value, ..Default::default() } }
 }
 
-impl From<Pos> for yazi_config::popup::Position {
+impl From<Pos> for Position {
 	fn from(value: Pos) -> Self { value.inner }
 }
 
@@ -42,8 +41,6 @@ impl TryFrom<Table> for Pos {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		use yazi_config::popup::{Offset, Origin, Position};
-
 		Ok(Self::from(Position {
 			origin: Origin::from_str(&t.raw_get::<mlua::String>(1)?.to_str()?).into_lua_err()?,
 			offset: Offset {

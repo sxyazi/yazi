@@ -14,6 +14,6 @@ impl WhichProxy {
 			silent,
 			times: 0,
 		})));
-		Some(rx.recv().await??.into())
+		rx.recv().await?
 	}
 }

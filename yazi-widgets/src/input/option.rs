@@ -1,32 +1,66 @@
-use anyhow::bail;
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_config::popup::InputCfg;
-use yazi_shared::event::ActionCow;
+use mlua::{ExternalError, FromLua, Lua, Table, Value};
+use yazi_binding::{elements::Pos, position::Position};
+use yazi_macro::impl_data_any;
 
-use crate::input::InputCallback;
+use crate::input::{InputCallback, InputStyles};
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct InputOpt {
-	pub cfg: InputCfg,
-	pub cb:  Option<Box<dyn InputCallback>>,
+	pub title:      String,
+	pub value:      String,
+	pub styles:     InputStyles,
+	pub cursor:     Option<usize>,
+	pub obscure:    bool,
+	pub blinking:   bool,
+	pub position:   Position,
+	pub realtime:   bool,
+	pub completion: bool,
+	pub cb:         Option<Box<dyn InputCallback>>,
 }
 
-impl TryFrom<ActionCow> for InputOpt {
-	type Error = anyhow::Error;
+impl_data_any!(InputOpt);
 
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		let Some(cfg) = a.take_any("cfg") else {
-			bail!("invalid 'cfg' in InputOpt");
-		};
+impl InputOpt {
+	pub fn with_value(mut self, value: impl Into<String>) -> Self {
+		self.value = value.into();
+		self
+	}
 
-		Ok(Self { cfg, cb: a.take_any("cb") })
+	pub fn with_cursor(mut self, cursor: Option<usize>) -> Self {
+		self.cursor = cursor;
+		self
+	}
+
+	pub fn with_cb(mut self, cb: impl InputCallback) -> Self {
+		self.cb = Some(Box::new(cb));
+		self
+	}
+}
+
+impl TryFrom<&Table> for InputOpt {
+	type Error = mlua::Error;
+
+	fn try_from(t: &Table) -> Result<Self, Self::Error> {
+		Ok(Self {
+			title:      t.raw_get("title").unwrap_or_default(),
+			value:      t.raw_get("value").unwrap_or_default(),
+			styles:     t.raw_get("styles")?,
+			cursor:     None,
+			obscure:    t.raw_get("obscure")?,
+			blinking:   false,
+			position:   t.raw_get::<Pos>("pos")?.with_height(3).into(),
+			realtime:   t.raw_get("realtime")?,
+			completion: false,
+			cb:         None,
+		})
 	}
 }
 
 impl FromLua for InputOpt {
-	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
-}
-
-impl IntoLua for InputOpt {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Table(tb) => Self::try_from(&tb),
+			_ => Err("expected a table".into_lua_err()),
+		}
+	}
 }

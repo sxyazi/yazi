@@ -49,7 +49,7 @@ impl Dependency {
 		use std::io::IsTerminal;
 
 		use yazi_macro::writef;
-		use yazi_term::sequence::{If, SetSgr};
+		use yazi_tty::sequence::{If, SetSgr};
 
 		let ansi = env::var_os("YA_FORCE_ANSI").is_some_and(|v| v == "1") || io::stdout().is_terminal();
 		writef!(

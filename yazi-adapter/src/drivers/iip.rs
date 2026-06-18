@@ -6,27 +6,27 @@ use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEn
 use ratatui::layout::Rect;
 use yazi_config::{THEME, YAZI};
 use yazi_emulator::{CLOSE, Emulator, START};
-use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg};
+use yazi_tty::sequence::{MoveTo, ResetAttrs, SetBg};
 
-use crate::{Image, adapter::Adapter};
+use crate::{ADAPTOR, Image};
 
-pub(crate) struct Iip;
+pub(super) struct Iip;
 
 impl Iip {
-	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
+	pub(super) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adapter::Iip.image_hide()?;
-		Adapter::shown_store(area);
+		ADAPTOR.image_hide()?;
+		ADAPTOR.shown_store(area);
 		Emulator::move_lock((max.x, max.y), |w| {
 			w.write_all(&b)?;
 			Ok(area)
 		})
 	}
 
-	pub(crate) fn image_erase(area: Rect) -> Result<()> {
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
 			if let Some(c) = THEME.app.overall.get().bg {

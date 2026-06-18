@@ -5,7 +5,7 @@ use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, url::{Url, UrlBuf, UrlBufCov}};
+use yazi_shared::{id::Id, url::{Url, UrlBuf, UrlBufCov}};
 use yazi_shim::cell::RoCell;
 
 use crate::{Client, ID, PEERS, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};

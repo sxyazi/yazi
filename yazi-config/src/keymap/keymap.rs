@@ -22,20 +22,29 @@ pub struct Keymap {
 }
 
 impl Keymap {
-	pub fn get(&self, layer: Layer) -> Arc<Vec<ChordArc>> {
-		match layer {
-			Layer::Null | Layer::App => Arc::new(Vec::new()),
-			Layer::Mgr => self.mgr.deref().as_erased(),
-			Layer::Tasks => self.tasks.deref().as_erased(),
-			Layer::Spot => self.spot.deref().as_erased(),
-			Layer::Pick => self.pick.deref().as_erased(),
-			Layer::Input => self.input.deref().as_erased(),
-			Layer::Confirm => self.confirm.deref().as_erased(),
-			Layer::Help => self.help.deref().as_erased(),
-			Layer::Cmp => self.cmp.deref().as_erased(),
-			Layer::Which => Arc::new(Vec::new()),
-			Layer::Notify => Arc::new(Vec::new()),
+	pub fn chords(&self, layer: Layer) -> Arc<Vec<ChordArc>> {
+		match self.section(layer) {
+			Some(s) => s.deref().as_erased(),
+			None => Arc::new(Vec::new()),
 		}
+	}
+
+	pub fn section(&self, layer: Layer) -> Option<&KeymapSection> {
+		use Layer as L;
+
+		Some(match layer {
+			L::Null | L::App => None?,
+			L::Mgr => self.mgr.as_erased(),
+			L::Tasks => self.tasks.as_erased(),
+			L::Spot => self.spot.as_erased(),
+			L::Pick => self.pick.as_erased(),
+			L::Input => self.input.as_erased(),
+			L::Confirm => self.confirm.as_erased(),
+			L::Help => self.help.as_erased(),
+			L::Cmp => self.cmp.as_erased(),
+			L::Which => None?,
+			L::Notify => None?,
+		})
 	}
 }
 

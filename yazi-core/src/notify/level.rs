@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use yazi_config::{Style, THEME};
+use yazi_binding::style::StyleFlat;
+use yazi_config::THEME;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -21,7 +22,7 @@ impl MessageLevel {
 		}
 	}
 
-	pub fn style(self) -> Style {
+	pub fn style(self) -> StyleFlat {
 		match self {
 			Self::Info => THEME.notify.title_info.get(),
 			Self::Warn => THEME.notify.title_warn.get(),

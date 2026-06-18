@@ -63,9 +63,7 @@ impl UserData for Core {
 				b"yanked" => reuse!(yanked, super::Yanked::make(&me.mgr.yanked)),
 				b"input" => reuse!(input, super::Input::make(&me.input)),
 				b"which" => reuse!(which, super::Which::make(&me.which)),
-				b"layer" => {
-					reuse!(layer, Ok::<_, mlua::Error>(yazi_binding::Layer::from(me.layer())))
-				}
+				b"layer" => reuse!(layer, Ok::<_, mlua::Error>(me.layer())),
 				_ => Value::Nil,
 			})
 		});

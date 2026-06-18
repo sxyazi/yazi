@@ -1,20 +1,20 @@
-use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path, sync::Arc};
+use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
 
 use anyhow::{Result, anyhow};
 use hashbrown::HashMap;
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_binding::Permit;
-use yazi_config::{YAZI, opener::OpenerRule};
+use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
+use yazi_fs::{FilesOp, Splatter, file::File, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
-use yazi_term::{YIELD_TO_SUBPROCESS, sequence::EraseScreen};
-use yazi_tty::TTY;
+use yazi_term::YIELD_TO_SUBPROCESS;
+use yazi_tty::{TTY, sequence::EraseScreen};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
@@ -152,7 +152,7 @@ impl BulkRename {
 		Ok(())
 	}
 
-	fn opener() -> Option<Arc<OpenerRule>> {
+	fn opener() -> Option<OpenerRuleArc> {
 		YAZI
 			.open
 			.match_dummy(Path::new("bulk-rename.txt"), "text/plain")

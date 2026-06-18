@@ -1,4 +1,4 @@
-use yazi_fs::File;
+use yazi_fs::file::File;
 
 use crate::Pattern;
 

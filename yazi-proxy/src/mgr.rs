@@ -1,7 +1,7 @@
 use yazi_core::{mgr::{CdSource, DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt}, spot::SpotLock};
 use yazi_macro::{emit, relay};
-use yazi_shared::{Id, SStr, url::UrlBuf};
-use yazi_shim::strum::IntoStr;
+use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shim::{SStr, strum::IntoStr};
 
 pub struct MgrProxy;
 

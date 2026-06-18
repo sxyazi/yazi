@@ -3,7 +3,7 @@ use std::{any::TypeId, mem};
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
-use yazi_shared::SStr;
+use yazi_shim::SStr;
 
 use super::{Area, Line, Span, Wrap};
 use crate::{Error, elements::{Align, Spatial}};

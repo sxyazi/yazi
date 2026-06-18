@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use yazi_config::popup::InputCfg;
+use yazi_config::YAZI;
 use yazi_macro::{act, input, render, succ};
 use yazi_parser::mgr::TabRenameForm;
 use yazi_proxy::MgrProxy;
@@ -29,7 +29,7 @@ impl Actor for TabRename {
 
 		let mut input = input!(
 			cx,
-			InputCfg::tab_rename().with_value(form.name.unwrap_or(Cow::Borrowed(&pref.name)))
+			YAZI.input.tab_rename().with_value(form.name.unwrap_or(Cow::Borrowed(&pref.name)))
 		)?;
 
 		tokio::spawn(async move {

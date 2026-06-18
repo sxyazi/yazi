@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_fs::{File, cha::Cha};
+use yazi_fs::{cha::Cha, file::File};
 use yazi_shared::url::{UrlBuf, UrlCow};
 
 use crate::{VfsCha, provider};

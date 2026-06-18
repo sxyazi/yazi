@@ -1,9 +1,10 @@
 use anyhow::Result;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::{KEYMAP, YAZI, keymap::{ChordArc, Key}};
+use yazi_config::{KEYMAP, keymap::ChordArc};
 use yazi_macro::{act, render, render_and};
 use yazi_shared::Layer;
-use yazi_term::{CursorStyle, TERM, event::KeyCode};
+use yazi_term::{TERM, event::{KeyCode, KeyEvent}};
+use yazi_tty::sequence::SetCursorStyle;
 use yazi_widgets::Scrollable;
 
 use crate::help::HELP_MARGIN;
@@ -23,18 +24,18 @@ pub struct Help {
 }
 
 impl Help {
-	pub fn r#type(&mut self, key: &Key) -> Result<bool> {
+	pub fn r#type(&mut self, key: KeyEvent) -> Result<bool> {
 		let Some(input) = &mut self.in_filter else { return Ok(false) };
 		match key {
-			Key { code: KeyCode::Escape, shift: false, ctrl: false, alt: false, super_: false } => {
+			KeyEvent { code: KeyCode::Escape, modifiers, .. } if modifiers.is_empty() => {
 				self.in_filter = None;
 				render!();
 			}
-			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false, super_: false } => {
+			KeyEvent { code: KeyCode::Enter, modifiers, .. } if modifiers.is_empty() => {
 				self.in_filter = None;
 				return Ok(render_and!(true)); // Don't do the `filter_apply` below, since we already have the filtered results.
 			}
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false, super_: false } => {
+			KeyEvent { code: KeyCode::Backspace, modifiers, .. } if modifiers.is_empty() => {
 				act!(backspace, input)?;
 			}
 			_ => {
@@ -51,10 +52,11 @@ impl Help {
 
 		if kw.is_empty() {
 			self.keyword = String::new();
-			self.bindings = KEYMAP.get(self.layer).iter().cloned().collect();
+			self.bindings = KEYMAP.chords(self.layer).iter().cloned().collect();
 		} else if self.keyword != kw {
 			self.keyword = kw.to_owned();
-			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).cloned().collect();
+			self.bindings =
+				KEYMAP.chords(self.layer).iter().filter(|&c| c.contains(kw)).cloned().collect();
 		}
 
 		render!(self.scroll(0));
@@ -91,8 +93,8 @@ impl Help {
 
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 
-	pub fn cursor_shape(&self) -> CursorStyle {
-		if YAZI.input.cursor_blink { CursorStyle::BlinkingBlock } else { CursorStyle::SteadyBlock }
+	pub fn cursor_shape(&self) -> Option<SetCursorStyle> {
+		Some(self.in_filter.as_ref()?.cursor_shape())
 	}
 }
 

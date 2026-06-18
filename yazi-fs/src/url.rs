@@ -1,6 +1,7 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use yazi_shared::{path::{AsPath, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{AsPath, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlBufInventory, UrlCow}};
+use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{FsHash128, FsScheme, path::PercentEncoding};
 
@@ -82,6 +83,15 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 			Self::Archive { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
+		}
+	}
+}
+
+// --- Inject
+inventory::submit! {
+	UrlBufInventory {
+		register: |registry| {
+			registry.add_cached_field("cache", |_, me| Ok(me.cache()));
 		}
 	}
 }

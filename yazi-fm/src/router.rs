@@ -1,8 +1,9 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
-use yazi_config::{KEYMAP, keymap::{Chord, Key}};
+use yazi_config::{KEYMAP, keymap::Chord};
 use yazi_macro::act;
 use yazi_shared::Layer;
+use yazi_term::event::KeyEvent;
 
 use crate::{Dispatcher, app::App};
 
@@ -13,16 +14,16 @@ pub(super) struct Router<'a> {
 impl<'a> Router<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
-	pub(super) fn route(&mut self, key: Key) -> Result<bool> {
+	pub(super) fn route(&mut self, key: KeyEvent) -> Result<bool> {
 		use Layer as L;
 
 		let core = &mut self.app.core;
-		if core.help.visible && core.help.r#type(&key)? {
+		if core.help.visible && core.help.r#type(key)? {
 			return Ok(true);
 		}
 
 		if let Some(mut guard) = core.input.lock_mut()
-			&& guard.r#type(&key)?
+			&& guard.r#type(key)?
 		{
 			return Ok(true);
 		}
@@ -38,8 +39,8 @@ impl<'a> Router<'a> {
 		})
 	}
 
-	fn matches(&mut self, layer: Layer, key: Key) -> bool {
-		for chord in &*KEYMAP.get(layer) {
+	fn matches(&mut self, layer: Layer, key: KeyEvent) -> bool {
+		for chord in &*KEYMAP.chords(layer) {
 			let Chord { on, .. } = chord.as_ref();
 			if on.is_empty() || on[0] != key {
 				continue;

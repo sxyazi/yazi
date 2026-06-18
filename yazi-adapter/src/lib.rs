@@ -1,15 +1,12 @@
 yazi_macro::mod_pub!(drivers);
 
-yazi_macro::mod_flat!(adapter adapters icc image info);
+yazi_macro::mod_flat!(adapter icc image);
 
 use yazi_emulator::{Brand, CLOSE, EMULATOR, ESCAPE, Emulator, Mux, START, TMUX};
 use yazi_shared::in_wsl;
-use yazi_shim::cell::SyncCell;
+use yazi_shim::cell::{RoCell, SyncCell};
 
-pub static ADAPTOR: SyncCell<Adapter> = SyncCell::new(Adapter::Chafa);
-
-// Image state
-static SHOWN: SyncCell<Option<ratatui::layout::Rect>> = SyncCell::new(None);
+pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
 
 // WSL support
 pub static WSL: SyncCell<bool> = SyncCell::new(false);
@@ -34,7 +31,7 @@ pub fn init() -> anyhow::Result<()> {
 	EMULATOR.init(emulator);
 	yazi_config::init_flavor(EMULATOR.light)?;
 
-	ADAPTOR.set(Adapter::matches(&EMULATOR));
-	ADAPTOR.get().start();
+	ADAPTOR.init(Adapter::new());
+	ADAPTOR.start();
 	Ok(())
 }

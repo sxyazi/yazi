@@ -4,7 +4,7 @@ use hashbrown::HashMap;
 use rand::{Rng, make_rng, rngs::SmallRng};
 use yazi_shared::{natsort, path::PathBufDyn, translit::Transliterator, url::UrlLike};
 
-use crate::{File, SortBy, SortFallback};
+use crate::{SortBy, SortFallback, file::File};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FilesSorter {

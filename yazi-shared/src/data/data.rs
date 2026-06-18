@@ -3,8 +3,9 @@ use std::borrow::Cow;
 use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
+use yazi_shim::SStr;
 
-use crate::{Id, SStr, data::{DataAny, DataKey}, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{Url, UrlBuf, UrlCow}};
+use crate::{data::{DataAny, DataKey}, id::Id, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{Url, UrlBuf, UrlCow}};
 
 // --- Data
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -244,7 +245,7 @@ impl TryFrom<&Data> for StrandBuf {
 }
 
 impl PartialEq<bool> for Data {
-	fn eq(&self, other: &bool) -> bool { self.try_into().is_ok_and(|b| *other == b) }
+	fn eq(&self, other: &bool) -> bool { self.try_into().is_ok_and(|b: bool| b == *other) }
 }
 
 impl Data {
@@ -288,5 +289,5 @@ impl Data {
 	}
 }
 
-impl_into_integer!(Data, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, crate::Id);
+impl_into_integer!(Data, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, crate::id::Id);
 impl_into_number!(Data, f32, f64);

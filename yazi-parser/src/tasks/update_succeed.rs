@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{Id, event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::ActionCow, id::Id, url::UrlBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateSucceedForm {

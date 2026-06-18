@@ -8,9 +8,9 @@ use ratatui::{layout::Rect, style::Color};
 use yazi_config::THEME;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_shim::cell::SyncCell;
-use yazi_term::sequence::{MoveTo, ResetAttrs, SetBg, SetFg};
+use yazi_tty::sequence::{MoveTo, ResetAttrs, SetBg, SetFg};
 
-use crate::{adapter::Adapter, image::Image};
+use crate::{ADAPTOR, image::Image};
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',
@@ -312,18 +312,18 @@ static DIACRITICS: [char; 297] = [
 	'\u{1D244}',
 ];
 
-pub(crate) struct Kgp;
+pub(super) struct Kgp;
 
 impl Kgp {
-	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
+	pub(super) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 
 		let b1 = Self::encode(img).await?;
 		let b2 = Self::place(&area)?;
 
-		Adapter::Kgp.image_hide()?;
-		Adapter::shown_store(area);
+		ADAPTOR.image_hide()?;
+		ADAPTOR.shown_store(area);
 		Emulator::move_lock((area.x, area.y), |w| {
 			w.write_all(&b1)?;
 			w.write_all(&b2)?;
@@ -331,7 +331,7 @@ impl Kgp {
 		})
 	}
 
-	pub(crate) fn image_erase(area: Rect) -> Result<()> {
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
 			if let Some(c) = THEME.app.overall.get().bg {

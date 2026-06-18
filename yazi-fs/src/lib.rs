@@ -1,6 +1,8 @@
-yazi_macro::mod_pub!(cha error mounts path provider);
+extern crate self as yazi_fs;
 
-yazi_macro::mod_flat!(cwd file files filter fns hash op scheme sorter sorting splatter stage url xdg);
+yazi_macro::mod_pub!(cha file mounts path provider);
+
+yazi_macro::mod_flat!(cwd files filter fns hash op scheme sorter sorting splatter stage url xdg);
 
 pub fn init() {
 	CWD.init(<_>::default());

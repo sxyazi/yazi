@@ -34,7 +34,7 @@ impl Env {
 		writeln!(s, "    Emulator.detect     : {:?}", *yazi_emulator::EMULATOR)?;
 
 		writeln!(s, "\nAdapter")?;
-		writeln!(s, "    Adapter.matches    : {:?}", yazi_adapter::ADAPTOR)?;
+		writeln!(s, "    Adapter.matches    : {:?}", *yazi_adapter::ADAPTOR)?;
 		writeln!(s, "    Dimension.available: {:?}", TERM.dimension())?;
 
 		writeln!(s, "\nDesktop")?;

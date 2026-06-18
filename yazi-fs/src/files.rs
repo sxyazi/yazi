@@ -1,10 +1,10 @@
 use std::{mem, ops::{Deref, DerefMut, Not}};
 
 use hashbrown::{HashMap, HashSet};
-use yazi_shared::{Id, path::{PathBufDyn, PathDyn}};
+use yazi_shared::{id::Id, path::{PathBufDyn, PathDyn}};
 
 use super::{FilesSorter, Filter};
-use crate::{FILES_TICKET, File, SortBy};
+use crate::{FILES_TICKET, SortBy, file::File};
 
 #[derive(Default)]
 pub struct Files {

@@ -1,110 +1,9 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
+use yazi_binding::position::Position;
 use yazi_macro::impl_data_any;
-use yazi_shared::{scheme::Encode as EncodeScheme, strand::ToStrand, url::{Url, UrlBuf}};
+use yazi_shared::{strand::ToStrand, url::UrlBuf};
 
-use super::{Offset, Position};
-use crate::{YAZI, popup::Origin};
-
-// --- InputCfg
-#[derive(Clone, Debug, Default)]
-pub struct InputCfg {
-	pub title:      String,
-	pub value:      String,
-	pub cursor:     Option<usize>,
-	pub obscure:    bool,
-	pub position:   Position,
-	pub realtime:   bool,
-	pub completion: bool,
-}
-
-impl_data_any!(InputCfg);
-
-impl InputCfg {
-	pub fn cd(cwd: Url) -> Self {
-		Self {
-			title: YAZI.input.cd_title.clone(),
-			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
-			position: Position::new(YAZI.input.cd_origin, YAZI.input.cd_offset),
-			completion: true,
-			..Default::default()
-		}
-	}
-
-	pub fn create(dir: bool) -> Self {
-		Self {
-			title: YAZI.input.create_title[dir as usize].clone(),
-			position: Position::new(YAZI.input.create_origin, YAZI.input.create_offset),
-			..Default::default()
-		}
-	}
-
-	pub fn rename() -> Self {
-		Self {
-			title: YAZI.input.rename_title.clone(),
-			position: Position::new(YAZI.input.rename_origin, YAZI.input.rename_offset),
-			..Default::default()
-		}
-	}
-
-	pub fn filter() -> Self {
-		Self {
-			title: YAZI.input.filter_title.clone(),
-			position: Position::new(YAZI.input.filter_origin, YAZI.input.filter_offset),
-			realtime: true,
-			..Default::default()
-		}
-	}
-
-	pub fn find(prev: bool) -> Self {
-		Self {
-			title: YAZI.input.find_title[prev as usize].clone(),
-			position: Position::new(YAZI.input.find_origin, YAZI.input.find_offset),
-			realtime: true,
-			..Default::default()
-		}
-	}
-
-	pub fn search(name: &str) -> Self {
-		Self {
-			title: YAZI.input.search_title.replace("{n}", name),
-			position: Position::new(YAZI.input.search_origin, YAZI.input.search_offset),
-			..Default::default()
-		}
-	}
-
-	pub fn shell(block: bool) -> Self {
-		Self {
-			title: YAZI.input.shell_title[block as usize].clone(),
-			position: Position::new(YAZI.input.shell_origin, YAZI.input.shell_offset),
-			..Default::default()
-		}
-	}
-
-	pub fn tab_rename() -> Self {
-		Self {
-			title: "Rename tab:".to_owned(),
-			position: Position::new(Origin::TopCenter, Offset {
-				x:      0,
-				y:      2,
-				width:  50,
-				height: 3,
-			}),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn with_value(mut self, value: impl Into<String>) -> Self {
-		self.value = value.into();
-		self
-	}
-
-	#[inline]
-	pub fn with_cursor(mut self, cursor: Option<usize>) -> Self {
-		self.cursor = cursor;
-		self
-	}
-}
+use crate::YAZI;
 
 // --- PickCfg
 #[derive(Clone, Debug, Default)]
@@ -115,24 +14,6 @@ pub struct PickCfg {
 }
 
 impl_data_any!(PickCfg);
-
-impl PickCfg {
-	fn max_height(len: usize) -> u16 {
-		YAZI.pick.open_offset.height.min(YAZI.pick.border().saturating_add(len as u16))
-	}
-
-	pub fn open(items: Vec<String>) -> Self {
-		let max_height = Self::max_height(items.len());
-		Self {
-			title: YAZI.pick.open_title.clone(),
-			items,
-			position: Position::new(YAZI.pick.open_origin, Offset {
-				height: max_height,
-				..YAZI.pick.open_offset
-			}),
-		}
-	}
-}
 
 // --- ConfirmCfg
 #[derive(Clone, Debug, Default)]

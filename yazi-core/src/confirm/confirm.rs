@@ -1,5 +1,5 @@
 use ratatui::{text::Line, widgets::Paragraph};
-use yazi_config::popup::Position;
+use yazi_binding::position::Position;
 use yazi_shared::CompletionToken;
 
 #[derive(Default)]

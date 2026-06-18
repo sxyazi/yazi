@@ -4,7 +4,7 @@ use tokio::{pin, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
-use yazi_fs::{File, Files, FilesOp, cha::Cha};
+use yazi_fs::{Files, FilesOp, cha::Cha, file::File};
 use yazi_macro::render;
 use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
 use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
@@ -86,13 +86,13 @@ impl Preview {
 
 	pub fn reset(&mut self) {
 		self.abort();
-		ADAPTOR.get().image_hide().ok();
+		ADAPTOR.image_hide().ok();
 		render!(self.lock.take().is_some())
 	}
 
 	pub fn reset_image(&mut self) {
 		self.abort();
-		ADAPTOR.get().image_hide().ok();
+		ADAPTOR.image_hide().ok();
 	}
 
 	pub fn same_url(&self, url: &UrlBuf) -> bool { matches!(&self.lock, Some(l) if l.url == *url) }
