@@ -115,7 +115,8 @@ impl Preview {
 	}
 
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
-		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
+		self.same_file(file, mime)
+			&& matches!(&self.lock, Some(l) if l.skip == self.skip && l.search_idx == self.search_idx)
 	}
 
 	pub fn same_folder(&self, url: &UrlBuf) -> bool {

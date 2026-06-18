@@ -43,11 +43,12 @@ impl MgrProxy {
 	pub fn update_peeked_error(job: PeekJob, error: String) {
 		let area = LAYOUT.get().preview;
 		Self::update_peeked(PreviewLock {
-			url:  job.file.url,
-			cha:  job.file.cha,
+			url: job.file.url,
+			cha: job.file.cha,
 			mime: job.mime,
 
 			skip: job.skip,
+			search_idx: job.search_idx,
 			area: area.into(),
 			data: vec![
 				Renderable::Clear(yazi_binding::elements::Clear { area: area.into() }),

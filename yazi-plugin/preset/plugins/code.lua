@@ -41,6 +41,17 @@ function M:peek(job)
 	local subject_len, search_occurrences = get_search_occurrences(job.file.url)
 	local search_idx = job.search_idx
 
+	if search_idx == nil and search_occurrences then
+		local occurrence = search_occurrences[1]
+		local line = occurrence[1]
+		ya.emit("peek", {
+			math.max(0, line - 1),
+			only_if = job.file.url,
+			search_idx = 1,
+		})
+		return
+	end
+
 	local occurrence
 	if search_occurrences and search_idx then
 		occurrence = search_occurrences[search_idx]
@@ -53,7 +64,7 @@ function M:peek(job)
 
 	local err, bound = ya.preview_code(job)
 	if bound then
-		ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true })
+		ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true, search_idx = search_idx })
 	elseif err and not err:find("cancelled", 1, true) then
 		require("empty").msg(job, err)
 	end
@@ -61,7 +72,6 @@ end
 
 function M:seek(job)
 	local direction = job.units > 0 and "down" or "up"
-
 	local search_idx = cx.active.preview.search_idx
 
 	local h = cx.active.current.hovered
@@ -74,13 +84,10 @@ function M:seek(job)
 		local next_occurrence_idx = get_next_occurrence_idx(search_idx, direction, #search_occurrences)
 		local occurrence = search_occurrences[next_occurrence_idx]
 		local line = occurrence[1]
-		-- local col = occurrence[2]
 
 		ya.emit("peek", { math.max(0, line - 1), only_if = job.file.url, search_idx = next_occurrence_idx })
 		return
 	end
-
-	-- ya.emit("peek", { math.max(0, line - 1), only_if = job.file.url })
 
 	local step = math.floor(job.units * job.area.h / 10)
 	step = step == 0 and ya.clamp(-1, job.units, 1) or step
