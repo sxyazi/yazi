@@ -28,7 +28,7 @@ impl<'a> EventSource<'a> {
 			// More input is ready.
 			WAIT_OBJECT_0 => Ok(()),
 			// Stop waiting for events.
-			r if r == WAIT_OBJECT_0 + 1 => Err(io::Error::from(io::ErrorKind::UnexpectedEof)),
+			r if r == WAIT_OBJECT_0 + 1 => Err(io::Error::from(io::ErrorKind::ConnectionAborted)),
 			// Timeout expired.
 			WAIT_TIMEOUT => Err(io::Error::from(io::ErrorKind::TimedOut)),
 			// An error occurred.
