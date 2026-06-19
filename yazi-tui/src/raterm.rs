@@ -109,7 +109,7 @@ impl Raterm {
 					Some(Err(_)) => {
 						AppProxy::quit(Default::default());
 						break;
-					},
+					}
 					None => break,
 				}
 			}
