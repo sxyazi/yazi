@@ -25,7 +25,7 @@ impl Actor for Close {
 		}
 
 		drop(guard);
-		cx.input.main_visible = false;
+		cx.input.main.visible = false;
 
 		act!(cmp:close, cx)?;
 		succ!(render!());

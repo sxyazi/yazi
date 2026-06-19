@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 
 use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, Value};
+use yazi_shim::ratatui::Padable;
 
-use super::{Pos, Rect};
+use super::Rect;
 use crate::position::Position;
 
 const EXPECTED: &str = "expected a Pos or Rect";
@@ -10,7 +11,7 @@ const EXPECTED: &str = "expected a Pos or Rect";
 #[derive(Clone, Copy)]
 pub enum Area {
 	Rect(Rect),
-	Pos(Pos),
+	Pos(Position),
 }
 
 impl Default for Area {
@@ -26,6 +27,15 @@ impl Debug for Area {
 	}
 }
 
+impl From<Area> for Position {
+	fn from(value: Area) -> Self {
+		match value {
+			Area::Rect(rect) => Self::from(*rect),
+			Area::Pos(pos) => pos,
+		}
+	}
+}
+
 impl Area {
 	pub fn size(self) -> ratatui_core::layout::Size {
 		match self {
@@ -34,13 +44,10 @@ impl Area {
 		}
 	}
 
-	pub fn inner(self, padding: ratatui_widgets::block::Padding) -> Self {
+	pub fn padding(self, padding: ratatui_widgets::block::Padding) -> Self {
 		match self {
-			Self::Rect(rect) => Self::Rect(rect.pad(padding.into())),
-			Self::Pos(mut pos) => {
-				pos.pad += padding;
-				Self::Pos(pos)
-			}
+			Self::Rect(rect) => Self::Rect(rect.padding(padding).into()),
+			Self::Pos(pos) => Self::Pos(pos.padding(padding)),
 		}
 	}
 
@@ -50,7 +57,7 @@ impl Area {
 	) -> ratatui_core::layout::Rect {
 		match self {
 			Self::Rect(rect) => *rect,
-			Self::Pos(pos) => *Rect(f(*pos)).pad(pos.pad),
+			Self::Pos(pos) => f(pos),
 		}
 	}
 }
@@ -73,7 +80,7 @@ impl TryFrom<&AnyUserData> for Area {
 	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> {
 		Ok(if let Ok(rect) = value.borrow::<Rect>() {
 			Self::Rect(*rect)
-		} else if let Ok(pos) = value.borrow::<Pos>() {
+		} else if let Ok(pos) = value.borrow::<Position>() {
 			Self::Pos(*pos)
 		} else {
 			return Err(EXPECTED.into_lua_err());

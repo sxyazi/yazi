@@ -18,7 +18,7 @@ pub struct InputSnap {
 }
 
 impl InputSnap {
-	pub(super) fn new(value: String, obscure: bool, limit: usize) -> Self {
+	pub(super) fn new(value: String, obscure: bool) -> Self {
 		let mut snap = Self {
 			value,
 
@@ -30,7 +30,7 @@ impl InputSnap {
 			offset: 0,
 			cursor: usize::MAX,
 		};
-		snap.resize(limit);
+		snap.resize(0);
 		snap
 	}
 

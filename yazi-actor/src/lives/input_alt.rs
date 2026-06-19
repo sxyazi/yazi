@@ -1,21 +1,20 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
 use mlua::{AnyUserData, UserData, UserDataFields};
-use parking_lot::Mutex;
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::{Lives, PtrCell};
 
-pub(super) struct InputAlt(PtrCell<Arc<Mutex<yazi_widgets::input::Input>>>);
+pub(super) struct InputAlt(PtrCell<yazi_core::input::InputAlt>);
 
 impl Deref for InputAlt {
-	type Target = Arc<Mutex<yazi_widgets::input::Input>>;
+	type Target = yazi_core::input::InputAlt;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl InputAlt {
-	pub(super) fn make(inner: &Arc<Mutex<yazi_widgets::input::Input>>) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &yazi_core::input::InputAlt) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self(inner.into()))
 	}
 }

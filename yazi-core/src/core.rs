@@ -34,8 +34,8 @@ impl Core {
 	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
 		if let Some(guard) = self.input.lock() {
 			let Rect { x, y, .. } = match &guard {
-				InputGuard::Main(_) => self.mgr.area(self.input.main_position).inner(Margin::new(1, 1)),
-				InputGuard::Alt(alt) => self.mgr.area(alt.pos),
+				InputGuard::Main(_) => self.mgr.area(self.input.position()?).inner(Margin::new(1, 1)),
+				InputGuard::Alt(_) => self.mgr.area(self.input.position()?),
 			};
 			return Some((Position { x: x + guard.cursor(), y }, guard.cursor_shape()));
 		}

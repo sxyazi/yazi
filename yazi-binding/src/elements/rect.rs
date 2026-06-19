@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_shim::ratatui::Padable;
 
 use super::Pad;
 
@@ -44,16 +45,6 @@ impl Rect {
 		rect.into_lua(lua)
 	}
 
-	pub(super) fn pad(self, pad: Pad) -> Self {
-		let mut r = *self;
-		r.x = r.x.saturating_add(pad.left);
-		r.y = r.y.saturating_add(pad.top);
-
-		r.width = r.width.saturating_sub(pad.left + pad.right);
-		r.height = r.height.saturating_sub(pad.top + pad.bottom);
-		Self(r)
-	}
-
 	fn patch(self, t: Table) -> mlua::Result<Self> {
 		Ok(Self(ratatui_core::layout::Rect {
 			x:      t.raw_get::<Option<_>>("x")?.unwrap_or(self.x),
@@ -83,7 +74,7 @@ impl UserData for Rect {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_method("pad", |_, me, pad: Pad| Ok(me.pad(pad)));
+		methods.add_method("pad", |_, me, pad: Pad| Ok(Self(me.padding(pad))));
 		methods.add_method("contains", |_, me, Self(rect)| Ok(me.contains(rect.into())));
 
 		methods.add_meta_method(MetaMethod::Call, |_, me, t: Table| me.patch(t));

@@ -11,6 +11,11 @@ impl Tty {
 		let mut w = self.writer();
 
 		let result = match kind {
+			b"Print" => {
+				write!(w, "{}", t.raw_get::<ByteString>(1)?)
+			}
+
+			// DnD
 			b"AgreeDrag" => {
 				let it = t.raw_get::<Table>("mimes")?.sequence_iter::<ByteString>(lua).flatten();
 				write!(w, "{}", match &*t.raw_get::<BorrowedBytes>("type")? {
@@ -48,6 +53,7 @@ impl Tty {
 				b"move" => write!(w, "{}", FinishDrop::Move),
 				_ => return Err("invalid FinishDrop type".into_lua_err()),
 			},
+
 			_ => return Err("invalid sequence kind".into_lua_err()),
 		};
 
