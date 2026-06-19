@@ -10,6 +10,17 @@ pub struct Offset {
 	pub height: u16,
 }
 
+impl From<ratatui_core::layout::Rect> for Offset {
+	fn from(value: ratatui_core::layout::Rect) -> Self {
+		Self {
+			x:      value.x as i16,
+			y:      value.y as i16,
+			width:  value.width,
+			height: value.height,
+		}
+	}
+}
+
 impl TryFrom<[i16; 4]> for Offset {
 	type Error = anyhow::Error;
 
@@ -31,9 +42,4 @@ impl TryFrom<[i16; 4]> for Offset {
 			height: values[3] as u16,
 		})
 	}
-}
-
-impl Offset {
-	#[inline]
-	pub fn line() -> Self { Self { x: 0, y: 0, width: u16::MAX, height: 1 } }
 }

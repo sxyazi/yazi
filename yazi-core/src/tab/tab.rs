@@ -93,7 +93,7 @@ impl Tab {
 	pub fn hovered_rect_based(&self, pos: Position) -> Rect {
 		let area = TERM.dimension().area();
 		if let Some(r) = self.hovered_rect() {
-			Position::sticky(area, r, pos.offset)
+			pos.sticky(r, area)
 		} else {
 			Position::new(Origin::TopCenter, pos.offset).rect(area)
 		}

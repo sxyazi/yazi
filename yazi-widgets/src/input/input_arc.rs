@@ -1,17 +1,24 @@
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use parking_lot::Mutex;
 use ratatui_core::widgets::Widget;
-use yazi_binding::{elements::{Area, Spatial}, impl_area_method, position::{Offset, Origin, Position}};
+use yazi_binding::{elements::{Area, Spatial}, impl_area_method};
 
 use crate::input::{Input, InputOpt, InputStyles};
 
 #[derive(Clone, Debug, Default)]
 pub struct InputArc {
-	pub focus: bool,
-
+	area:  Area,
 	inner: Arc<Mutex<Input>>,
+
+	pub focus: bool,
+}
+
+impl Deref for InputArc {
+	type Target = Arc<Mutex<Input>>;
+
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl InputArc {
@@ -47,22 +54,9 @@ impl TryFrom<&AnyUserData> for InputArc {
 }
 
 impl Spatial for InputArc {
-	fn area(&self) -> Area { self.inner.lock().pos.into() }
+	fn area(&self) -> Area { self.area }
 
-	fn set_area(&mut self, area: Area) {
-		self.inner.lock().repos(match area {
-			Area::Rect(rect) => Position {
-				origin: Origin::TopLeft,
-				offset: Offset {
-					x:      rect.x as i16,
-					y:      rect.y as i16,
-					width:  rect.width,
-					height: rect.height,
-				},
-			},
-			Area::Pos(pos) => pos.into(),
-		});
-	}
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for &InputArc {
@@ -70,7 +64,9 @@ impl Widget for &InputArc {
 	where
 		Self: Sized,
 	{
-		self.inner.lock().render(rect, buf)
+		let mut guard = self.inner.lock();
+		guard.repos(rect);
+		guard.render(rect, buf)
 	}
 }
 

@@ -39,13 +39,14 @@ impl Widget for Cmp<'_> {
 			})
 			.collect();
 
-		let input_area = self.core.mgr.area(self.core.input.main_position);
-		let mut area = Position::sticky(TERM.dimension().area(), input_area, Offset {
+		let input_area = self.core.mgr.area(self.core.input.main.position);
+		let mut area = Position::hovered(Offset {
 			x:      1,
 			y:      0,
 			width:  input_area.width.saturating_sub(2),
 			height: items.len() as u16 + 2,
-		});
+		})
+		.sticky(input_area, TERM.dimension().area());
 
 		if area.y > input_area.y {
 			area.y = area.y.saturating_sub(1);

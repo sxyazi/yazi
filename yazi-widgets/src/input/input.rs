@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ops::Range};
 
 use anyhow::Result;
-use yazi_binding::position::Position;
+use ratatui_core::layout::{Rect, Size};
 use yazi_macro::act;
 use yazi_shared::id::Ids;
 use yazi_shim::path::CROSS_SEPARATOR;
@@ -12,7 +12,7 @@ use crate::{CLIPBOARD, input::{InputCallback, InputEvent, InputOpt, InputStyles}
 
 #[derive(Debug, Default)]
 pub struct Input {
-	pub pos:        Position,
+	pub size:       Size,
 	pub snaps:      InputSnaps,
 	pub styles:     InputStyles,
 	pub obscure:    bool,
@@ -26,10 +26,8 @@ pub struct Input {
 
 impl Input {
 	pub fn new(opt: InputOpt) -> Result<Self> {
-		let limit = opt.position.width as usize;
 		let mut input = Self {
-			pos: opt.position,
-			snaps: InputSnaps::new(opt.value, opt.obscure, limit),
+			snaps: InputSnaps::new(opt.value, opt.obscure),
 			styles: opt.styles,
 			obscure: opt.obscure,
 			blinking: opt.blinking,
@@ -48,9 +46,13 @@ impl Input {
 		Ok(input)
 	}
 
-	pub fn repos(&mut self, pos: Position) {
-		self.pos = pos;
-		self.snap_mut().resize(pos.width as usize);
+	pub fn repos(&mut self, area: Rect) {
+		let size = area.into();
+
+		if self.size != size {
+			self.size = size;
+			self.snap_mut().resize(size.width as usize);
+		}
 	}
 
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
@@ -89,7 +91,7 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag(self.pos.width as usize).then(|| self.flush_type());
+			self.snaps.tag(self.size.width as usize).then(|| self.flush_type());
 		}
 		true
 	}
@@ -118,9 +120,9 @@ impl Input {
 
 	pub fn display(&self) -> Cow<'_, str> {
 		if self.obscure {
-			"•".repeat(self.snap().window(self.pos.width as usize).len()).into()
+			"•".repeat(self.snap().window(self.size.width as usize).len()).into()
 		} else {
-			self.snap().slice(self.snap().window(self.pos.width as usize)).into()
+			self.snap().slice(self.snap().window(self.size.width as usize)).into()
 		}
 	}
 
@@ -149,7 +151,7 @@ impl Input {
 		let (start, end) =
 			if start < snap.cursor { (start, snap.cursor) } else { (snap.cursor + 1, start + 1) };
 
-		let win = snap.window(self.pos.width as usize);
+		let win = snap.window(self.size.width as usize);
 		let Range { start, end } = start.max(win.start)..end.min(win.end);
 
 		let s = snap.width(snap.offset..start);

@@ -12,7 +12,11 @@ impl Deref for Pad {
 }
 
 impl From<ratatui_widgets::block::Padding> for Pad {
-	fn from(pad: ratatui_widgets::block::Padding) -> Self { Self(pad) }
+	fn from(value: ratatui_widgets::block::Padding) -> Self { Self(value) }
+}
+
+impl From<Pad> for ratatui_widgets::block::Padding {
+	fn from(value: Pad) -> Self { value.0 }
 }
 
 impl Pad {

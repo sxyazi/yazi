@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::{Align, Bar, Border, Color, Constraint, Edge, Fill, Gauge, Layout, Line, List, Pad, Pos, Rect, Row, Span, Table, Text, Wrap}, style::Style};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::{Align, Bar, Border, Color, Constraint, Edge, Fill, Gauge, Layout, Line, List, Pad, Rect, Row, Span, Table, Text, Wrap}, position::Position, style::Style};
 use yazi_config::THEME;
 use yazi_widgets::{clear::Clear, input::InputArc};
 
@@ -21,7 +21,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"Line" => Line::compose(lua)?,
 			b"List" => List::compose(lua)?,
 			b"Pad" => Pad::compose(lua)?,
-			b"Pos" => Pos::compose(lua)?,
+			b"Pos" => Position::compose(lua)?,
 			b"Rect" => Rect::compose(lua)?,
 			b"Row" => Row::compose(lua)?,
 			b"Span" => Span::compose(lua)?,

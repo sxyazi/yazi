@@ -14,7 +14,7 @@ impl Utils {
 			let mut table = yazi_binding::elements::Table::try_from(&table)?;
 
 			let area = table.area();
-			table.set_area(area.inner(ratatui_widgets::block::Padding::uniform(1)));
+			table.set_area(area.padding(ratatui_widgets::block::Padding::uniform(1)));
 
 			lock.data = vec![
 				Renderable::Clear(Default::default()).with_area(area),

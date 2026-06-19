@@ -2,7 +2,7 @@ use std::{str::FromStr, time::Duration};
 
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{elements::{Line, Pos, Text}, runtime};
+use yazi_binding::{elements::{Line, Text}, runtime};
 use yazi_config::{Platform, keymap::{Chord, ChordArc}, popup::ConfirmCfg};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
@@ -79,7 +79,7 @@ impl Utils {
 			}
 
 			let result = ConfirmProxy::show(ConfirmCfg {
-				position: t.raw_get::<Pos>("pos")?.into(),
+				position: t.raw_get("pos")?,
 				title:    t.raw_get::<Line>("title")?.into(),
 				body:     t.raw_get::<Option<Text>>("body")?.unwrap_or_default().into(),
 				list:     Default::default(), // TODO

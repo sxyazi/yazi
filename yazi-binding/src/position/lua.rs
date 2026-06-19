@@ -1,35 +1,13 @@
-use std::{ops::Deref, str::FromStr};
+use std::str::FromStr;
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_shim::strum::IntoStr;
 
-use super::Pad;
-use crate::position::{Offset, Origin, Position};
+use crate::{elements::Pad, position::{Offset, Origin, Position}};
 
 const EXPECTED: &str = "expected a Pos";
 
-#[derive(Clone, Copy, Default)]
-pub struct Pos {
-	inner: Position,
-
-	pub(super) pad: Pad,
-}
-
-impl Deref for Pos {
-	type Target = Position;
-
-	fn deref(&self) -> &Self::Target { &self.inner }
-}
-
-impl From<Position> for Pos {
-	fn from(value: Position) -> Self { Self { inner: value, ..Default::default() } }
-}
-
-impl From<Pos> for Position {
-	fn from(value: Pos) -> Self { value.inner }
-}
-
-impl TryFrom<&AnyUserData> for Pos {
+impl TryFrom<&AnyUserData> for Position {
 	type Error = mlua::Error;
 
 	fn try_from(ud: &AnyUserData) -> Result<Self, Self::Error> {
@@ -37,23 +15,24 @@ impl TryFrom<&AnyUserData> for Pos {
 	}
 }
 
-impl TryFrom<Table> for Pos {
+impl TryFrom<Table> for Position {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		Ok(Self::from(Position {
-			origin: Origin::from_str(&t.raw_get::<mlua::String>(1)?.to_str()?).into_lua_err()?,
-			offset: Offset {
+			origin:  Origin::from_str(&t.raw_get::<mlua::String>(1)?.to_str()?).into_lua_err()?,
+			offset:  Offset {
 				x:      t.raw_get("x").unwrap_or_default(),
 				y:      t.raw_get("y").unwrap_or_default(),
 				width:  t.raw_get("w").unwrap_or_default(),
 				height: t.raw_get("h").unwrap_or_default(),
 			},
+			padding: Default::default(),
 		}))
 	}
 }
 
-impl FromLua for Pos {
+impl FromLua for Position {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
 			Value::Table(tbl) => Self::try_from(tbl),
@@ -63,23 +42,18 @@ impl FromLua for Pos {
 	}
 }
 
-impl Pos {
+impl Position {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, t): (Table, Table)| Self::try_from(t))?;
 
-		let position = lua.create_table()?;
-		position.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
+		let pos = lua.create_table()?;
+		pos.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
-		position.into_lua(lua)
-	}
-
-	pub fn with_height(mut self, height: u16) -> Self {
-		self.inner.height = height;
-		self
+		pos.into_lua(lua)
 	}
 }
 
-impl UserData for Pos {
+impl UserData for Position {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		// TODO: cache
 		fields.add_field_method_get("1", |_, me| Ok(me.origin.into_str()));
@@ -91,7 +65,7 @@ impl UserData for Pos {
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_function("pad", |_, (ud, pad): (AnyUserData, Pad)| {
-			ud.borrow_mut::<Self>()?.pad = pad;
+			ud.borrow_mut::<Self>()?.padding = pad.into();
 			Ok(ud)
 		});
 	}
