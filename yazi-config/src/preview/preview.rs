@@ -3,12 +3,11 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::{Xdg, create_owned_dir_blocking};
+use yazi_fs::{Xdg, create_owned_dir_blocking, path::sanitize_path};
 use yazi_shared::timestamp_us;
 use yazi_shim::{SStr, toml::DeserializeOverHook};
 
 use super::PreviewWrap;
-use crate::normalize_path;
 
 #[derive(Debug, Deserialize, DeserializeOver2, Serialize)]
 pub struct Preview {
@@ -65,7 +64,7 @@ where
 	if path.as_os_str().is_empty() {
 		Ok(Xdg::temp_dir().to_owned())
 	} else {
-		normalize_path(path).ok_or_else(|| {
+		sanitize_path(path).ok_or_else(|| {
 			serde::de::Error::custom("cache_dir must be either empty or an absolute path.")
 		})
 	}

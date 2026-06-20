@@ -1,5 +1,6 @@
-use ratatui_core::layout::{Margin, Position, Rect};
+use ratatui_core::layout::{Position, Rect};
 use yazi_shared::Layer;
+use yazi_shim::ratatui::Padable;
 use yazi_tty::sequence::SetCursorStyle;
 
 use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::{Input, InputGuard}, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
@@ -34,7 +35,7 @@ impl Core {
 	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
 		if let Some(guard) = self.input.lock() {
 			let Rect { x, y, .. } = match &guard {
-				InputGuard::Main(_) => self.mgr.area(self.input.position()?).inner(Margin::new(1, 1)),
+				InputGuard::Main(_) => self.mgr.area(self.input.position()?).padding(self.input.padding()),
 				InputGuard::Alt(_) => self.mgr.area(self.input.position()?),
 			};
 			return Some((Position { x: x + guard.cursor(), y }, guard.cursor_shape()));

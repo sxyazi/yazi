@@ -4,6 +4,9 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMetho
 use parking_lot::Mutex;
 use ratatui_core::widgets::Widget;
 use yazi_binding::{elements::{Area, Spatial}, impl_area_method};
+use yazi_dds::Pubsub;
+use yazi_macro::err;
+use yazi_shim::strum::IntoStr;
 
 use crate::input::{Input, InputOpt, InputStyles};
 
@@ -26,6 +29,7 @@ impl InputArc {
 		let new = lua.create_function(move |_, (_, mut opt): (Table, InputOpt)| {
 			opt.styles.normal = opt.styles.normal.or(styles.normal);
 			opt.styles.selected = opt.styles.selected.or(styles.selected);
+			opt = opt.with_cb(|e| err!(Pubsub::pub_after_input((&e).into_str(), e.value())));
 			Ok(Self::from(Input::new(opt)?))
 		})?;
 

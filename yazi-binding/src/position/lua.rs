@@ -19,7 +19,7 @@ impl TryFrom<Table> for Position {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		Ok(Self::from(Position {
+		Ok(Self {
 			origin:  Origin::from_str(&t.raw_get::<mlua::String>(1)?.to_str()?).into_lua_err()?,
 			offset:  Offset {
 				x:      t.raw_get("x").unwrap_or_default(),
@@ -28,7 +28,7 @@ impl TryFrom<Table> for Position {
 				height: t.raw_get("h").unwrap_or_default(),
 			},
 			padding: Default::default(),
-		}))
+		})
 	}
 }
 

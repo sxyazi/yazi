@@ -1,15 +1,15 @@
 use mlua::{FromLua, IntoLua, Lua, Value};
+use yazi_config::keymap::Key;
 use yazi_core::which::WhichOpt;
 use yazi_shared::{Layer, event::ActionCow};
-use yazi_term::event::KeyEvent;
 
 #[derive(Clone, Debug)]
 pub struct ActivateForm {
 	pub opt: WhichOpt,
 }
 
-impl From<(Layer, KeyEvent)> for ActivateForm {
-	fn from(value: (Layer, KeyEvent)) -> Self { Self { opt: value.into() } }
+impl From<(Layer, Key)> for ActivateForm {
+	fn from(value: (Layer, Key)) -> Self { Self { opt: value.into() } }
 }
 
 impl TryFrom<ActionCow> for ActivateForm {

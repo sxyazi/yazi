@@ -6,7 +6,7 @@ macro_rules! config_preset {
 			std::borrow::Cow::from(
 				std::fs::read_to_string(concat!(
 					env!("CARGO_MANIFEST_DIR"),
-					"/preset/",
+					"/../yazi-config/preset/",
 					$name,
 					"-default.toml"
 				))
@@ -17,7 +17,7 @@ macro_rules! config_preset {
 		{
 			std::borrow::Cow::from(include_str!(concat!(
 				env!("CARGO_MANIFEST_DIR"),
-				"/preset/",
+				"/../yazi-config/preset/",
 				$name,
 				"-default.toml"
 			)))

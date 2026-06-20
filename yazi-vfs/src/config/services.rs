@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer, Serialize, de, de::{MapAccess, Visitor}};
 use yazi_codegen::DeserializeOver;
 use yazi_shim::toml::DeserializeOverWith;
 
-use crate::vfs::Service;
+use crate::config::Service;
 
 #[derive(Serialize, Deserialize, DeserializeOver)]
 pub struct Services(HashMap<String, Service>);

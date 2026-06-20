@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::vfs::ServiceSftp;
+use crate::config::ServiceSftp;
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]

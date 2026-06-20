@@ -1,13 +1,12 @@
 use std::{io, sync::Arc};
 
 use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
-use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::{cha::ChaMode, provider::{Capabilities, DirReader, FileHolder, Provider}};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{loc::LocBuf, path::{AsPath, PathBufDyn}, pool::InternStr, scheme::SchemeKind, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
-use crate::provider::sftp::Conn;
+use crate::{config::{ServiceSftp, Vfs}, provider::sftp::Conn};
 
 #[derive(Clone)]
 pub struct Sftp<'a> {

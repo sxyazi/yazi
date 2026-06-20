@@ -6,9 +6,8 @@ use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_shared::Layer;
 use yazi_shim::{mlua::UserDataFieldsExt, toml::DeserializeOverHook};
-use yazi_term::event::KeyEvent;
 
-use super::{Chord, Chords, chords::layer_default};
+use super::{Key, Chord, Chords, chords::layer_default};
 use crate::{keymap::ChordArc, mix};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
@@ -37,7 +36,7 @@ impl<const L: u8> KeymapSection<L> {
 impl<const L: u8> DeserializeOverHook for KeymapSection<L> {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		#[inline]
-		fn on<const L: u8>(Chord { on, .. }: &Chord<L>) -> [KeyEvent; 2] {
+		fn on<const L: u8>(Chord { on, .. }: &Chord<L>) -> [Key; 2] {
 			[on.first().copied().unwrap_or_default(), on.get(1).copied().unwrap_or_default()]
 		}
 

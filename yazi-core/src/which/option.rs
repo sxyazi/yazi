@@ -1,9 +1,8 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use tokio::sync::mpsc;
-use yazi_config::{KEYMAP, keymap::ChordArc};
+use yazi_config::{KEYMAP, keymap::{ChordArc, Key}};
 use yazi_macro::impl_data_any;
 use yazi_shared::{Layer, event::ActionCow};
-use yazi_term::event::KeyEvent;
 
 #[derive(Clone, Debug)]
 pub struct WhichOpt {
@@ -32,8 +31,8 @@ impl TryFrom<ActionCow> for WhichOpt {
 	}
 }
 
-impl From<(Layer, KeyEvent)> for WhichOpt {
-	fn from((layer, key): (Layer, KeyEvent)) -> Self {
+impl From<(Layer, Key)> for WhichOpt {
+	fn from((layer, key): (Layer, Key)) -> Self {
 		Self {
 			tx:     None,
 			cands:  KEYMAP

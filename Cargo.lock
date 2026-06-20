@@ -543,9 +543,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.64"
+version = "1.2.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dad887fd958be91b5098c0248def011f4523ab786cd411be668777e55063501f"
+checksum = "e228eec9be7c17ccb640b59b36a5cd805ea2a564a4c5e162c2f659fea30d3b96"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -2880,14 +2880,14 @@ checksum = "63b8176103e19a2643978565ca18b50549f6101881c443590420e4dc998a3c69"
 
 [[package]]
 name = "ratatui-core"
-version = "0.1.1"
-source = "git+https://github.com/yazi-rs/ratatui.git?rev=a1c4922a242861d755163ae85d7e41b85ed277d2#a1c4922a242861d755163ae85d7e41b85ed277d2"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbb175c433c8e28a809d1f5773a2ae96e68c0ce40db865cbab1020bf33ae479c"
 dependencies = [
  "bitflags",
  "compact_str",
  "critical-section",
  "hashbrown 0.17.1",
- "indoc",
  "itertools",
  "kasuari",
  "lru",
@@ -2902,8 +2902,9 @@ dependencies = [
 
 [[package]]
 name = "ratatui-widgets"
-version = "0.3.1"
-source = "git+https://github.com/yazi-rs/ratatui.git?rev=a1c4922a242861d755163ae85d7e41b85ed277d2#a1c4922a242861d755163ae85d7e41b85ed277d2"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66e3d19bcc9130ca376277d93b60767ff121ace3be06f5f95f81dd68956407d1"
 dependencies = [
  "bitflags",
  "hashbrown 0.17.1",
@@ -4705,10 +4706,8 @@ dependencies = [
  "indexmap 2.14.0",
  "libc",
  "mlua",
- "parking_lot",
  "paste",
  "ratatui-core",
- "ratatui-widgets",
  "scopeguard",
  "tokio",
  "tokio-stream",
@@ -4867,7 +4866,6 @@ dependencies = [
  "regex",
  "serde",
  "serde_with",
- "tokio",
  "toml",
  "tracing",
  "yazi-binding",
@@ -5343,11 +5341,13 @@ dependencies = [
  "mlua",
  "parking_lot",
  "russh",
+ "serde",
  "tokio",
+ "toml",
  "tracing",
  "typed-path",
  "yazi-binding",
- "yazi-config",
+ "yazi-codegen",
  "yazi-fs",
  "yazi-macro",
  "yazi-sftp",
@@ -5396,6 +5396,7 @@ dependencies = [
  "tracing",
  "unicode-width",
  "yazi-binding",
+ "yazi-dds",
  "yazi-macro",
  "yazi-shared",
  "yazi-shim",

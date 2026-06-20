@@ -3,12 +3,11 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{elements::{Line, Text}, runtime};
-use yazi_config::{Platform, keymap::{Chord, ChordArc}, popup::ConfirmCfg};
+use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
 use yazi_shared::{Debounce, Layer};
-use yazi_term::event::KeyEvent;
 use yazi_widgets::input::{InputOpt, InputStream};
 
 use super::Utils;
@@ -93,15 +92,15 @@ impl Utils {
 		lua.create_function(|_, opt: MessageOpt| Ok(NotifyProxy::push(opt)))
 	}
 
-	fn parse_keys(value: Value) -> mlua::Result<Vec<KeyEvent>> {
+	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {
 		Ok(match value {
 			Value::String(s) => {
-				vec![KeyEvent::from_str(&s.to_str()?).into_lua_err()?]
+				vec![Key::from_str(&s.to_str()?).into_lua_err()?]
 			}
 			Value::Table(t) => {
 				let mut v = Vec::with_capacity(10);
 				for s in t.sequence_values::<mlua::String>() {
-					v.push(KeyEvent::from_str(&s?.to_str()?).into_lua_err()?);
+					v.push(Key::from_str(&s?.to_str()?).into_lua_err()?);
 				}
 				v
 			}
