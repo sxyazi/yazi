@@ -7,9 +7,8 @@ use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
 use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
 use yazi_shared::{Layer, event::{Actions, deserialize_actions}, id::Id};
-use yazi_term::event::KeyEvent;
 
-use super::ids::chord_id;
+use super::{Key, ids::chord_id};
 use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
 
 static RE: OnceLock<Regex> = OnceLock::new();
@@ -19,7 +18,7 @@ pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
 	#[serde(skip, default = "chord_id")]
 	pub id:    Id,
 	#[serde(deserialize_with = "deserialize_on")]
-	pub on:    Vec<KeyEvent>,
+	pub on:    Vec<Key>,
 	#[serde(deserialize_with = "deserialize_actions::<L, _>")]
 	pub run:   Actions,
 	#[serde(default)]
@@ -84,11 +83,11 @@ impl<const L: u8> Mixable for Chord<L> {
 	fn filter(&self) -> bool { self.r#for.matches() && !self.noop() }
 }
 
-fn deserialize_on<'de, D>(deserializer: D) -> Result<Vec<KeyEvent>, D::Error>
+fn deserialize_on<'de, D>(deserializer: D) -> Result<Vec<Key>, D::Error>
 where
 	D: Deserializer<'de>,
 {
-	let keys: Vec<KeyEvent> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
+	let keys: Vec<Key> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
 	if keys.is_empty() {
 		return Err(de::Error::custom("'on' cannot be empty"));
 	}

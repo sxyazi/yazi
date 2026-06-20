@@ -8,7 +8,7 @@ use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shim::toml::DeserializeOver;
 
 use super::Service;
-use crate::{Preset, vfs::Services};
+use crate::config::Services;
 
 #[derive(Deserialize, Serialize, DeserializeOver, DeserializeOver1)]
 pub struct Vfs {
@@ -21,7 +21,8 @@ impl Vfs {
 
 		async fn init() -> io::Result<Vfs> {
 			tokio::task::spawn_blocking(|| -> anyhow::Result<Vfs> {
-				Ok(Preset::vfs()?.deserialize_over(&Vfs::read()?)?)
+				let vfs: Vfs = toml::from_str(&yazi_macro::config_preset!("vfs"))?;
+				Ok(vfs.deserialize_over(&Vfs::read()?)?)
 			})
 			.await?
 			.map_err(io::Error::other)

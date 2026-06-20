@@ -71,7 +71,7 @@ impl From<ratatui_core::layout::Rect> for Area {
 }
 
 impl From<Position> for Area {
-	fn from(value: Position) -> Self { Self::Pos(value.into()) }
+	fn from(value: Position) -> Self { Self::Pos(value) }
 }
 
 impl TryFrom<&AnyUserData> for Area {

@@ -1,11 +1,10 @@
 use std::io;
 
-use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::provider::{Attrs, FileBuilder};
 use yazi_sftp::fs::Flags;
 use yazi_shared::url::{AsUrl, Url};
 
-use crate::provider::sftp::Conn;
+use crate::{config::{ServiceSftp, Vfs}, provider::sftp::Conn};
 
 #[derive(Clone, Copy, Default)]
 pub struct Gate(crate::provider::Gate);

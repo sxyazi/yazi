@@ -1,4 +1,4 @@
-use crate::{Yazi, keymap::Keymap, theme::Theme, vfs::Vfs};
+use crate::{Yazi, keymap::Keymap, theme::Theme};
 
 pub(crate) struct Preset;
 
@@ -17,9 +17,5 @@ impl Preset {
 		} else {
 			yazi_macro::theme_preset!("dark")
 		})
-	}
-
-	pub(super) fn vfs() -> Result<Vfs, toml::de::Error> {
-		toml::from_str(&yazi_macro::config_preset!("vfs"))
 	}
 }

@@ -37,6 +37,5 @@ ratatui-widgets = { workspace = true }
 regex           = { workspace = true }
 serde           = { workspace = true }
 serde_with      = { workspace = true }
-tokio           = { workspace = true }
 toml            = { workspace = true }
 tracing         = { workspace = true }

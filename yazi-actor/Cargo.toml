@@ -46,10 +46,8 @@ futures         = { workspace = true }
 hashbrown       = { workspace = true }
 indexmap        = { workspace = true }
 mlua            = { workspace = true }
-parking_lot     = { workspace = true }
 paste           = { workspace = true }
 ratatui-core    = { workspace = true }
-ratatui-widgets = { workspace = true }
 scopeguard      = { workspace = true }
 tokio           = { workspace = true }
 tokio-stream    = { workspace = true }

@@ -1,8 +1,7 @@
 use std::{env, path::PathBuf};
 
 use serde::{Deserialize, Deserializer, Serialize, de};
-
-use crate::normalize_path;
+use yazi_fs::path::sanitize_path;
 
 #[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ServiceSftp {
@@ -27,7 +26,7 @@ where
 {
 	let mut path = PathBuf::deserialize(deserializer)?;
 	if !path.as_os_str().is_empty() {
-		path = normalize_path(path)
+		path = sanitize_path(path)
 			.ok_or_else(|| de::Error::custom("path must be either empty or an absolute path"))?;
 	}
 
@@ -46,7 +45,7 @@ where
 	if path.as_os_str().is_empty() {
 		Ok(default_identity_agent())
 	} else {
-		normalize_path(path)
+		sanitize_path(path)
 			.ok_or_else(|| de::Error::custom("identity_agent must be either empty or an absolute path"))
 	}
 }

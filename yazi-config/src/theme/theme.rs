@@ -5,11 +5,10 @@ use arc_swap::ArcSwap;
 use serde::{Deserialize, Deserializer, de};
 use yazi_binding::style::StyleFlat;
 use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2, Overlay};
-use yazi_fs::{Xdg, ok_or_not_found};
+use yazi_fs::{Xdg, ok_or_not_found, path::sanitize_path};
 use yazi_shim::{arc_swap::IntoPointee, cell::SyncCell};
 
 use super::{Custom, Filetype, Flavor, Icon};
-use crate::normalize_path;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1, Overlay)]
 pub struct Theme {
@@ -274,7 +273,7 @@ where
 {
 	let mut path = PathBuf::deserialize(deserializer)?;
 	if !path.as_os_str().is_empty() {
-		path = normalize_path(path).ok_or_else(|| {
+		path = sanitize_path(path).ok_or_else(|| {
 			de::Error::custom("syntect_theme must be either empty or an absolute path.")
 		})?;
 	}
