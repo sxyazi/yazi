@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
+- Normalize `\\?\`-prefixed Verbatim paths when creating relative symlinks on Windows
 - Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
 - Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
 
