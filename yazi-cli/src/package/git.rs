@@ -45,11 +45,15 @@ impl Git {
 	async fn exec(f: impl FnOnce(&mut Command) -> &mut Command) -> Result<()> {
 		let status = f(Command::new("git").args([
 			"-c",
-			"advice.detachedHead=false",
+			"core.eol=lf",
+			"-c",
+			"core.autocrlf=false",
+			"-c",
+			"clone.defaultRemoteName=origin",
 			"-c",
 			"checkout.defaultRemote=origin",
 			"-c",
-			"clone.defaultRemoteName=origin",
+			"advice.detachedHead=false",
 		]))
 		.status()
 		.await
