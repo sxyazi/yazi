@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Normalize `\\?\`-prefixed Verbatim paths when creating relative symlinks on Windows ([#4067])
 - Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
 - Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
+- Use cleaned and normalized `$PWD` as startup CWD to avoid MSYS2/git-bash path quirks
 
 ### Improved
 

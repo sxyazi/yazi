@@ -4,7 +4,7 @@ use arc_swap::ArcSwap;
 use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 use yazi_shim::cell::RoCell;
 
-use crate::{FsUrl, Xdg};
+use crate::{FsUrl, Xdg, path::clean_url};
 
 pub static CWD: RoCell<Cwd> = RoCell::new();
 
@@ -18,13 +18,14 @@ impl Deref for Cwd {
 
 impl Default for Cwd {
 	fn default() -> Self {
-		let p = std::env::var_os("PWD")
+		let u = std::env::var_os("PWD")
 			.map(PathBuf::from)
 			.filter(|p| p.is_absolute())
-			.or_else(|| current_dir().ok())
+			.map(clean_url)
+			.or_else(|| current_dir().ok().map(UrlBuf::from))
 			.expect("failed to get current working directory");
 
-		Self(ArcSwap::new(Arc::new(UrlBuf::from(p))))
+		Self(ArcSwap::new(Arc::new(u)))
 	}
 }
 
