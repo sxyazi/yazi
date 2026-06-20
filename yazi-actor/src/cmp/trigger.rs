@@ -53,7 +53,7 @@ impl Actor for Trigger {
 
 			if !cache.is_empty() {
 				cache
-					.sort_unstable_by(|a, b| natsort(a.name.encoded_bytes(), b.name.encoded_bytes(), false));
+					.sort_unstable_by(|a, b| natsort(a.name.encoded_bytes(), b.name.encoded_bytes(), true));
 				CmpProxy::show(CmpOpt { cache, cache_name: parent, word, ticket });
 			}
 
