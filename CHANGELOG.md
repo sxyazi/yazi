@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Normalize `\\?\`-prefixed Verbatim paths when creating relative symlinks on Windows ([#4067])
 - Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
 - Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
-- Use cleaned and normalized `$PWD` as startup CWD to avoid MSYS2/git-bash path quirks
+- Use cleaned and normalized `$PWD` as startup CWD to avoid MSYS2/git-bash path quirks ([#4068])
 
 ### Improved
 
@@ -1756,3 +1756,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4064]: https://github.com/sxyazi/yazi/pull/4064
 [#4065]: https://github.com/sxyazi/yazi/pull/4065
 [#4067]: https://github.com/sxyazi/yazi/pull/4067
+[#4068]: https://github.com/sxyazi/yazi/pull/4068
