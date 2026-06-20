@@ -49,7 +49,7 @@ function M:preload(job)
 		cmd:arg { "-background", job.args.bg, "-alpha", "remove" }
 	end
 
-	local status, err = cmd:arg(string.format("JPG:%s", cache)):status()
+	local status, err = cmd:arg(string.format("WEBP:%s", cache)):status()
 	if not status then
 		return true, Err("Failed to start `magick`, error: %s", err)
 	elseif not status.success then
