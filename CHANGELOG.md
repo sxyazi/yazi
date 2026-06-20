@@ -32,7 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
-- Keep package hashes indifferent to line endings when `ya pkg` pulls packages
+- Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
+- Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
 
 ### Improved
 
@@ -1750,3 +1751,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4022]: https://github.com/sxyazi/yazi/pull/4022
 [#4031]: https://github.com/sxyazi/yazi/pull/4031
 [#4040]: https://github.com/sxyazi/yazi/pull/4040
+[#4064]: https://github.com/sxyazi/yazi/pull/4064
+[#4065]: https://github.com/sxyazi/yazi/pull/4065
