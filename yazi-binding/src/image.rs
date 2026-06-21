@@ -1,17 +1,43 @@
-use std::ops::Deref;
+use std::path::PathBuf;
 
+use image::{ImageDecoder, ImageError};
 use mlua::{MetaMethod, UserData, UserDataFields, UserDataMethods};
 
-pub struct ImageInfo(yazi_adapter::ImageInfo);
-
-impl Deref for ImageInfo {
-	type Target = yazi_adapter::ImageInfo;
-
-	fn deref(&self) -> &Self::Target { &self.0 }
+// --- ImageInfo
+#[derive(Clone, Copy)]
+pub struct ImageInfo {
+	pub format:      image::ImageFormat,
+	pub width:       u32,
+	pub height:      u32,
+	pub color:       image::ColorType,
+	pub orientation: Option<image::metadata::Orientation>,
 }
 
-impl From<yazi_adapter::ImageInfo> for ImageInfo {
-	fn from(value: yazi_adapter::ImageInfo) -> Self { Self(value) }
+impl ImageInfo {
+	pub async fn new(path: PathBuf) -> image::ImageResult<Self> {
+		tokio::task::spawn_blocking(move || {
+			let reader = image::ImageReader::open(path)?.with_guessed_format()?;
+
+			let Some(format) = reader.format() else {
+				return Err(ImageError::IoError(std::io::Error::new(
+					std::io::ErrorKind::InvalidData,
+					"unknown image format",
+				)));
+			};
+
+			let mut decoder = reader.into_decoder()?;
+			let (width, height) = decoder.dimensions();
+			Ok(Self {
+				format,
+				width,
+				height,
+				color: decoder.color_type(),
+				orientation: decoder.orientation().ok(),
+			})
+		})
+		.await
+		.map_err(|e| ImageError::IoError(e.into()))?
+	}
 }
 
 impl UserData for ImageInfo {
@@ -25,12 +51,12 @@ impl UserData for ImageInfo {
 }
 
 // --- ImageFormat
-struct ImageFormat(yazi_adapter::ImageFormat);
+struct ImageFormat(image::ImageFormat);
 
 impl UserData for ImageFormat {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| {
-			use yazi_adapter::ImageFormat as F;
+			use image::ImageFormat as F;
 
 			Ok(match me.0 {
 				F::Png => "PNG",
@@ -55,12 +81,12 @@ impl UserData for ImageFormat {
 }
 
 // --- ImageColor
-struct ImageColor(yazi_adapter::ImageColor);
+struct ImageColor(image::ColorType);
 
 impl UserData for ImageColor {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| {
-			use yazi_adapter::ImageColor as C;
+			use image::ColorType as C;
 
 			Ok(match me.0 {
 				C::L8 => "L8",

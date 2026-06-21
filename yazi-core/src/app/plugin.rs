@@ -6,8 +6,10 @@ use hashbrown::HashMap;
 use mlua::{Lua, Table};
 use serde::Deserialize;
 use strum::EnumString;
+use yazi_macro::impl_data_any;
 use yazi_scheduler::plugin::PluginInEntry;
-use yazi_shared::{SStr, data::{Data, DataKey}, event::{ActionCow, Cmd}};
+use yazi_shared::{data::{Data, DataKey}, event::{ActionCow, Cmd}};
+use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
@@ -16,6 +18,8 @@ pub struct PluginOpt {
 	pub mode:     PluginMode,
 	pub callback: Option<Box<dyn PluginCallback>>,
 }
+
+impl_data_any!(PluginOpt);
 
 impl TryFrom<ActionCow> for PluginOpt {
 	type Error = anyhow::Error;

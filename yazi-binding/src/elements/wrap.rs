@@ -1,13 +1,12 @@
 use std::ops::Deref;
 
 use mlua::{FromLua, IntoLua, Lua, Value};
-use yazi_config::preview::PreviewWrap;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Wrap(pub(super) Option<ratatui::widgets::Wrap>);
+pub struct Wrap(pub Option<ratatui_widgets::paragraph::Wrap>);
 
 impl Deref for Wrap {
-	type Target = Option<ratatui::widgets::Wrap>;
+	type Target = Option<ratatui_widgets::paragraph::Wrap>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -18,21 +17,12 @@ impl Wrap {
 	}
 }
 
-impl From<Wrap> for Option<ratatui::widgets::Wrap> {
+impl From<Wrap> for Option<ratatui_widgets::paragraph::Wrap> {
 	fn from(value: Wrap) -> Self { value.0 }
 }
 
-impl From<ratatui::widgets::Wrap> for Wrap {
-	fn from(value: ratatui::widgets::Wrap) -> Self { Self(Some(value)) }
-}
-
-impl From<PreviewWrap> for Wrap {
-	fn from(value: PreviewWrap) -> Self {
-		Self(match value {
-			PreviewWrap::No => None,
-			PreviewWrap::Yes => Some(ratatui::widgets::Wrap { trim: false }),
-		})
-	}
+impl From<ratatui_widgets::paragraph::Wrap> for Wrap {
+	fn from(value: ratatui_widgets::paragraph::Wrap) -> Self { Self(Some(value)) }
 }
 
 impl FromLua for Wrap {
@@ -46,8 +36,8 @@ impl FromLua for Wrap {
 		};
 		Ok(Self(match n {
 			0 => None,
-			1 => Some(ratatui::widgets::Wrap { trim: false }),
-			2 => Some(ratatui::widgets::Wrap { trim: true }),
+			1 => Some(ratatui_widgets::paragraph::Wrap { trim: false }),
+			2 => Some(ratatui_widgets::paragraph::Wrap { trim: true }),
 			_ => Err(mlua::Error::FromLuaConversionError {
 				from:    value.type_name(),
 				to:      "Wrap".to_string(),
@@ -61,8 +51,8 @@ impl IntoLua for Wrap {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		match self.0 {
 			None => 0.into_lua(lua),
-			Some(ratatui::widgets::Wrap { trim: false }) => 1.into_lua(lua),
-			Some(ratatui::widgets::Wrap { trim: true }) => 2.into_lua(lua),
+			Some(ratatui_widgets::paragraph::Wrap { trim: false }) => 1.into_lua(lua),
+			Some(ratatui_widgets::paragraph::Wrap { trim: true }) => 2.into_lua(lua),
 		}
 	}
 }

@@ -30,6 +30,7 @@ impl Default for Loader {
 			("archive".to_owned(), preset!("plugins/archive").into()),
 			("code".to_owned(), preset!("plugins/code").into()),
 			("dds".to_owned(), preset!("plugins/dds").into()),
+			("dnd".to_owned(), preset!("plugins/dnd").into()),
 			("empty".to_owned(), preset!("plugins/empty").into()),
 			("extract".to_owned(), preset!("plugins/extract").into()),
 			("file".to_owned(), preset!("plugins/file").into()),
@@ -54,6 +55,8 @@ impl Default for Loader {
 			("video".to_owned(), preset!("plugins/video").into()),
 			("zoxide".to_owned(), preset!("plugins/zoxide").into()),
 			// Components
+			("app".to_owned(), [][..].into()),
+			("backdrop".to_owned(), [][..].into()),
 			("current".to_owned(), [][..].into()),
 			("entity".to_owned(), [][..].into()),
 			("header".to_owned(), [][..].into()),
@@ -71,6 +74,7 @@ impl Default for Loader {
 			("tab".to_owned(), [][..].into()),
 			("tabs".to_owned(), [][..].into()),
 			("tasks".to_owned(), [][..].into()),
+			("tip".to_owned(), [][..].into()),
 			// Reserved
 			("inline".to_owned(), [][..].into()),
 		]);
@@ -168,7 +172,7 @@ impl Loader {
 		bail!(
 			"Plugin `{id}` requires at least Yazi {}, but your current version is Yazi {}.",
 			chunk.since,
-			yazi_boot::actions::Actions::version()
+			yazi_version::version_long()
 		);
 	}
 

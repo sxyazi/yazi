@@ -31,7 +31,10 @@ impl EventStream {
 							break;
 						}
 					}
-					Err(e) if e.kind() == io::ErrorKind::Interrupted => break,
+					// try_poll() already handles Interrupted, this is defensive.
+					Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
+					// event source was gracefully stopped, stop the stream as well.
+					Err(e) if e.kind() == io::ErrorKind::ConnectionAborted => break,
 					Err(e) => {
 						tx.send(Err(e)).ok();
 						break;

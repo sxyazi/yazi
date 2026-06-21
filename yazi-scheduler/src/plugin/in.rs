@@ -2,9 +2,9 @@ use std::borrow::Cow;
 
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, Lua, Value};
-use yazi_dds::Sendable;
 use yazi_runner::entry::EntryJob;
-use yazi_shared::{Id, SStr, data::{Data, DataKey}};
+use yazi_shared::{data::{Data, DataKey, Sendable}, id::Id};
+use yazi_shim::SStr;
 
 use crate::{TaskIn, plugin::PluginProgEntry};
 
@@ -72,9 +72,9 @@ impl TaskIn for PluginInEntry {
 	}
 }
 
-impl PluginInEntry {
-	pub(crate) fn into_job(self) -> EntryJob {
-		EntryJob { id: self.id, args: self.args, plugin: self.plugin }
+impl From<PluginInEntry> for EntryJob {
+	fn from(value: PluginInEntry) -> Self {
+		Self { id: value.id, args: value.args, plugin: value.plugin }
 	}
 }
 

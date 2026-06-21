@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{FromLua, IntoLua, Lua, Value};
-use ratatui::widgets::Borders;
+use ratatui_widgets::borders::Borders;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Edge(pub Borders);

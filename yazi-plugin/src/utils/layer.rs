@@ -2,12 +2,13 @@ use std::{str::FromStr, time::Duration};
 
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{InputRx, elements::{Line, Pos, Text}, runtime};
-use yazi_config::{Platform, keymap::{Chord, ChordCow, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_binding::{elements::{Line, Text}, runtime};
+use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
 use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
 use yazi_shared::{Debounce, Layer};
+use yazi_widgets::input::{InputOpt, InputStream};
 
 use super::Utils;
 
@@ -24,9 +25,10 @@ impl Utils {
 				.enumerate()
 				.map(|(i, cand)| {
 					let cand = cand?;
-					Ok(ChordCow::Owned(Chord {
+					Ok(ChordArc::from(Chord::<{ Layer::Null as u8 }> {
+						id:    yazi_config::keymap::chord_id(),
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
-						run:   vec![relay!(which:callback, [i + 1])],
+						run:   relay!(which:callback, [i + 1]).into(),
 						desc:  cand.raw_get("desc").unwrap_or_default(),
 						r#for: Platform::All,
 					}))
@@ -50,28 +52,21 @@ impl Utils {
 				return Err("Cannot call `ya.input()` while main thread is blocked".into_lua_err());
 			}
 
-			let realtime = t.raw_get("realtime")?;
-			let rx = UnboundedReceiverStream::new(InputProxy::show(InputCfg {
-				title: t.raw_get("title")?,
-				value: t.raw_get("value").unwrap_or_default(),
-				cursor: None, // TODO
-				obscure: t.raw_get("obscure")?,
-				position: t.raw_get::<Pos>("pos")?.with_height(3).into(),
-				realtime,
-				completion: false,
-			}));
+			let opt = InputOpt::try_from(&t)?;
+			let realtime = opt.realtime;
 
+			let rx = UnboundedReceiverStream::new(InputProxy::show(opt));
 			if !realtime {
-				return InputRx::consume(rx).await.into_lua_multi(&lua);
+				return InputStream::consume(rx).await.into_lua_multi(&lua);
 			}
 
 			let debounce = t.raw_get::<f64>("debounce").unwrap_or_default();
 			if debounce < 0.0 {
 				Err("negative debounce duration".into_lua_err())
 			} else if debounce == 0.0 {
-				InputRx::new(rx).into_lua_multi(&lua)
+				InputStream::new(rx).into_lua_multi(&lua)
 			} else {
-				InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))).into_lua_multi(&lua)
+				InputStream::new(Debounce::new(rx, Duration::from_secs_f64(debounce))).into_lua_multi(&lua)
 			}
 		})
 	}
@@ -83,7 +78,7 @@ impl Utils {
 			}
 
 			let result = ConfirmProxy::show(ConfirmCfg {
-				position: t.raw_get::<Pos>("pos")?.into(),
+				position: t.raw_get("pos")?,
 				title:    t.raw_get::<Line>("title")?.into(),
 				body:     t.raw_get::<Option<Text>>("body")?.unwrap_or_default().into(),
 				list:     Default::default(), // TODO

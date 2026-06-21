@@ -1,8 +1,11 @@
 use anyhow::bail;
 use serde::Deserialize;
 use strum::{EnumString, IntoStaticStr};
-use yazi_shared::{SStr, event::ActionCow, url::{UrlBuf, UrlLike}};
+use yazi_macro::impl_data_any;
+use yazi_shared::{event::ActionCow, url::{UrlBuf, UrlLike}};
+use yazi_shim::SStr;
 
+// --- SearchOpt
 #[derive(Clone, Debug)]
 pub struct SearchOpt {
 	pub via:      SearchVia,
@@ -11,6 +14,8 @@ pub struct SearchOpt {
 	pub args_raw: SStr,
 	pub r#in:     Option<UrlBuf>,
 }
+
+impl_data_any!(SearchOpt);
 
 impl TryFrom<ActionCow> for SearchOpt {
 	type Error = anyhow::Error;
@@ -37,7 +42,7 @@ impl TryFrom<ActionCow> for SearchOpt {
 	}
 }
 
-// Via
+// --- Via
 #[derive(Clone, Copy, Debug, Deserialize, EnumString, Eq, IntoStaticStr, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]

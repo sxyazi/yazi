@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::UrlBuf};
 
 use super::Ember;
 
@@ -34,8 +34,8 @@ impl IntoLua for EmberRename<'_> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("from", yazi_binding::Url::new(self.from).into_lua(lua)?),
-				("to", yazi_binding::Url::new(self.to).into_lua(lua)?),
+				("from", self.from.into_owned().into_lua(lua)?),
+				("to", self.to.into_owned().into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

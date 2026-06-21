@@ -3,6 +3,7 @@ use image::{ColorType, DynamicImage, GrayAlphaImage, GrayImage, ImageDecoder, Rg
 use moxcms::{CicpColorPrimaries, ColorProfile, DataColorSpace, Layout, TransferCharacteristics, TransformOptions};
 
 pub(super) struct Icc;
+
 impl Icc {
 	pub(super) fn transform(mut decoder: impl ImageDecoder) -> anyhow::Result<DynamicImage> {
 		if let Some(layout) = Self::color_type_to_layout(decoder.color_type())

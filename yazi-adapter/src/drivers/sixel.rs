@@ -4,13 +4,14 @@ use anyhow::{Result, bail};
 use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
 use quantette::{PaletteSize, color_map::IndexedColorMap, wu::{BinnerU8x3, WuU8x3}};
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
+use yazi_config::THEME;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
-use yazi_term::sequence::MoveTo;
+use yazi_tty::sequence::{MoveTo, ResetAttrs, SetBg};
 
-use crate::{Image, adapter::Adapter};
+use crate::{ADAPTOR, Image};
 
-pub(crate) struct Sixel;
+pub(super) struct Sixel;
 
 struct QuantizeOutput<T> {
 	indices: Vec<u8>,
@@ -18,27 +19,30 @@ struct QuantizeOutput<T> {
 }
 
 impl Sixel {
-	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
+	pub(super) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adapter::Sixel.image_hide()?;
-		Adapter::shown_store(area);
+		ADAPTOR.image_hide()?;
+		ADAPTOR.shown_store(area);
 		Emulator::move_lock((area.x, area.y), |w| {
 			w.write_all(&b)?;
 			Ok(area)
 		})
 	}
 
-	pub(crate) fn image_erase(area: Rect) -> Result<()> {
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |w| {
+			if let Some(c) = THEME.app.overall.get().bg {
+				write!(w, "{}", SetBg(c))?;
+			}
 			for y in area.top()..area.bottom() {
 				write!(w, "{}", MoveTo(area.x, y))?;
 				write!(w, "{s}")?;
 			}
-			Ok(())
+			Ok(write!(w, "{ResetAttrs}")?)
 		})
 	}
 

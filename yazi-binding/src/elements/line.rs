@@ -1,24 +1,24 @@
 use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::Widget;
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use ratatui_core::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
 use super::{Area, Span};
-use crate::elements::Align;
+use crate::elements::{Align, Spatial};
 
 const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 
 #[derive(Clone, Debug, Default)]
 pub struct Line {
-	pub(super) area: Area,
+	area: Area,
 
-	pub(super) inner: ratatui::text::Line<'static>,
+	pub(super) inner: ratatui_core::text::Line<'static>,
 }
 
 impl Deref for Line {
-	type Target = ratatui::text::Line<'static>;
+	type Target = ratatui_core::text::Line<'static>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
@@ -51,9 +51,23 @@ impl Line {
 	}
 }
 
-impl From<ratatui::text::Line<'static>> for Line {
-	fn from(value: ratatui::text::Line<'static>) -> Self {
+impl From<ratatui_core::text::Line<'static>> for Line {
+	fn from(value: ratatui_core::text::Line<'static>) -> Self {
 		Self { inner: value, ..Default::default() }
+	}
+}
+
+impl TryFrom<&AnyUserData> for Line {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> {
+		Ok(if let Ok(line) = value.take() {
+			line
+		} else if let Ok(Span(span)) = value.take() {
+			Self { inner: span.into(), ..Default::default() }
+		} else {
+			Err(EXPECTED.into_lua_err())?
+		})
 	}
 }
 
@@ -82,21 +96,18 @@ impl TryFrom<Table> for Line {
 	}
 }
 
-impl From<Line> for ratatui::text::Line<'static> {
+impl From<Line> for ratatui_core::text::Line<'static> {
 	fn from(value: Line) -> Self { value.inner }
 }
 
-impl Widget for Line {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
-	where
-		Self: Sized,
-	{
-		(&self).render(rect, buf);
-	}
+impl Spatial for Line {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for &Line {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{
@@ -106,22 +117,11 @@ impl Widget for &Line {
 
 impl FromLua for Line {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(Self {
-			inner: match value {
-				Value::Table(tb) => return Self::try_from(tb),
-				Value::String(s) => s.to_string_lossy().into(),
-				Value::UserData(ud) => {
-					if let Ok(Span(span)) = ud.take() {
-						span.into()
-					} else if let Ok(line) = ud.take() {
-						return Ok(line);
-					} else {
-						Err(EXPECTED.into_lua_err())?
-					}
-				}
-				_ => Err(EXPECTED.into_lua_err())?,
-			},
-			..Default::default()
+		Ok(match value {
+			Value::Table(tb) => Self::try_from(tb)?,
+			Value::String(s) => Self { inner: s.to_string_lossy().into(), ..Default::default() },
+			Value::UserData(ud) => Self::try_from(&ud)?,
+			_ => Err(EXPECTED.into_lua_err())?,
 		})
 	}
 }
@@ -140,6 +140,13 @@ impl UserData for Line {
 		methods.add_method("visible", |_, me, ()| {
 			Ok(me.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
 		});
+		methods.add_function("map", |_, (ud, f): (AnyUserData, Function)| {
+			let mut me = ud.borrow_mut::<Self>()?;
+			for span in &mut me.spans {
+				*span = f.call::<Span>(Span(mem::take(span)))?.0;
+			}
+			Ok(ud)
+		});
 		methods.add_function("truncate", |lua, (ud, t): (AnyUserData, Table)| {
 			let mut me = ud.borrow_mut::<Self>()?;
 
@@ -150,7 +157,7 @@ impl UserData for Line {
 			}
 
 			let ellipsis = match t.raw_get::<Value>("ellipsis")? {
-				Value::Nil => (1, ratatui::text::Span::raw("…")),
+				Value::Nil => (1, ratatui_core::text::Span::raw("…")),
 				v => {
 					let mut span = Span::from_lua(v, lua)?;
 					(span.truncate(max), span.0)

@@ -1,11 +1,13 @@
 use std::str::FromStr;
 
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
-use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, SizeCalculator, Url, UrlRef, deprecate};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Error};
 use yazi_config::Pattern;
-use yazi_fs::{mounts::PARTITIONS, provider::{Attrs, DirReader, FileHolder}};
-use yazi_shared::url::{UrlCow, UrlLike};
+use yazi_fs::{file::File, mounts::PARTITIONS, provider::{Attrs, DirReader, FileHolder}};
+use yazi_shared::url::{UrlBuf, UrlCow, UrlLike, UrlRef};
 use yazi_vfs::{VfsFile, provider};
+
+use crate::fs::SizeCalculator;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
@@ -23,7 +25,6 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"remove" => remove(lua)?,
 			b"rename" => rename(lua)?,
 			b"unique" => unique(lua)?,
-			b"unique_name" => unique_name(lua)?,
 			b"write" => write(lua)?,
 			_ => return Ok(Value::Nil),
 		}
@@ -36,7 +37,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 }
 
 fn access(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, ()| Ok(yazi_binding::Access::default()))
+	lua.create_function(|_, ()| Ok(yazi_vfs::provider::Gate::default()))
 }
 
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
@@ -63,7 +64,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match cha {
-			Ok(c) => Cha(c).into_lua_multi(&lua),
+			Ok(c) => c.into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -95,7 +96,7 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 
 fn cwd(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, ()| match std::env::current_dir() {
-		Ok(p) => Url::new(p).into_lua_multi(lua),
+		Ok(p) => UrlBuf::from(p).into_lua_multi(lua),
 		Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
 	})
 }
@@ -105,12 +106,12 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, value: Value| {
 		use yazi_fs::path::expand_url;
 		match &value {
-			Value::String(s) => Url::new(expand_url(UrlCow::try_from(&*s.as_bytes())?)).into_lua(lua),
+			Value::String(s) => expand_url(UrlCow::try_from(&*s.as_bytes())?).into_owned().into_lua(lua),
 			Value::UserData(ud) => {
-				if let u = expand_url(&*ud.borrow::<yazi_binding::Url>()?)
+				if let u = expand_url(&*ud.borrow::<UrlBuf>()?)
 					&& u.is_owned()
 				{
-					Url::new(u.into_owned()).into_lua(lua)
+					u.into_owned().into_lua(lua)
 				} else {
 					Ok(value)
 				}
@@ -173,14 +174,14 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 			}
 
 			let file = if !resolve {
-				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
+				File::from_dummy(url, next.file_type().await.ok())
 			} else if let Ok(cha) = next.metadata().await {
-				yazi_fs::File::from_follow(url, cha).await
+				File::from_follow(url, cha).await
 			} else {
-				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
+				File::from_dummy(url, next.file_type().await.ok())
 			};
 
-			files.push(File::new(file));
+			files.push(file);
 			if files.len() == limit {
 				break;
 			}
@@ -225,17 +226,7 @@ fn unique(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(u) => Url::new(u).into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
-		}
-	})
-}
-
-fn unique_name(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, url: UrlRef| async move {
-		deprecate!(lua, "`fs.unique_name()` is deprecated, use `fs.unique()` instead, in your {}\nSee #3677 for more details: https://github.com/sxyazi/yazi/pull/3677");
-		match yazi_vfs::unique_name(url.clone(), async { false }).await {
-			Ok(u) => Url::new(u).into_lua_multi(&lua),
+			Ok(u) => u.into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})

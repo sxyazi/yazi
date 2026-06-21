@@ -15,7 +15,7 @@ impl Input {
 		render!(self.handle_op(opt.step.add(&snap.value, snap.cursor), false));
 		let n_cur = self.snap().cursor;
 
-		let (limit, snap) = (self.limit, self.snap_mut());
+		let (limit, snap) = (self.size.width as usize, self.snap_mut());
 		if snap.value.is_empty() {
 			succ!(snap.offset = 0);
 		}

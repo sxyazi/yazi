@@ -1,7 +1,9 @@
 use std::path::MAIN_SEPARATOR_STR;
 
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
-use yazi_config::{THEME, popup::{Offset, Position}};
+use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType, list::{List, ListItem}};
+use yazi_binding::position::{Offset, Position};
+use yazi_config::THEME;
 use yazi_core::Core;
 use yazi_shared::strand::StrandLike;
 use yazi_term::TERM;
@@ -37,13 +39,14 @@ impl Widget for Cmp<'_> {
 			})
 			.collect();
 
-		let input_area = self.core.mgr.area(self.core.input.position);
-		let mut area = Position::sticky(TERM.dimension(), input_area, Offset {
+		let input_area = self.core.mgr.area(self.core.input.main.position);
+		let mut area = Position::hovered(Offset {
 			x:      1,
 			y:      0,
 			width:  input_area.width.saturating_sub(2),
 			height: items.len() as u16 + 2,
-		});
+		})
+		.sticky(input_area, TERM.dimension().area());
 
 		if area.y > input_area.y {
 			area.y = area.y.saturating_sub(1);
@@ -52,7 +55,7 @@ impl Widget for Cmp<'_> {
 			area.height = rect.height.saturating_sub(area.y).min(area.height);
 		}
 
-		yazi_widgets::Clear.render(area, buf);
+		yazi_widgets::clear::Clear::default().render(area, buf);
 		List::new(items)
 			.block(
 				Block::bordered().border_type(BorderType::Rounded).border_style(THEME.cmp.border.get()),

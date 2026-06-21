@@ -2,8 +2,9 @@ use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
 use chrono::DateTime;
 use russh::keys::{PrivateKeyWithHashAlg, agent::AgentIdentity};
-use yazi_config::vfs::ServiceSftp;
 use yazi_fs::provider::local::Local;
+
+use crate::config::ServiceSftp;
 
 #[derive(Clone, Copy)]
 pub(super) struct Conn {

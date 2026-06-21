@@ -4,9 +4,8 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValu
 use tokio::sync::mpsc;
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
-use yazi_dds::Sendable;
 use yazi_runner::loader::LOADER;
-use yazi_shared::{LOCAL_SET, data::Data};
+use yazi_shared::{LOCAL_SET, data::{Data, Sendable}};
 
 use super::Utils;
 

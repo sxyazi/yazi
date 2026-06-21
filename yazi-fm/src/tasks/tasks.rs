@@ -1,15 +1,16 @@
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::{Block, BorderType, Widget}};
+use ratatui_core::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType};
 use yazi_config::THEME;
 use yazi_core::{Core, tasks::TASKS_PERCENT};
 
 use crate::tasks::List;
 
 pub(crate) struct Tasks<'a> {
-	core: &'a Core,
+	core: &'a mut Core,
 }
 
 impl<'a> Tasks<'a> {
-	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
+	pub(crate) fn new(core: &'a mut Core) -> Self { Self { core } }
 
 	pub(super) fn area(area: Rect) -> Rect {
 		let chunk = layout::Layout::vertical([
@@ -32,7 +33,7 @@ impl Widget for Tasks<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let area = Self::area(area);
 
-		yazi_widgets::Clear.render(area, buf);
+		yazi_widgets::clear::Clear::default().render(area, buf);
 
 		let block = Block::bordered()
 			.title(Line::styled("Tasks", THEME.tasks.title.get()))

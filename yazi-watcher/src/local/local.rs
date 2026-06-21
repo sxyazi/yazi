@@ -5,7 +5,7 @@ use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_fs::{File, FilesOp, mounts::PARTITIONS, provider::{self, Provider}};
+use yazi_fs::{FilesOp, file::File, mounts::PARTITIONS, provider::{self, Provider}};
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 

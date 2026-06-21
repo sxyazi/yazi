@@ -3,10 +3,9 @@ use std::sync::atomic::Ordering;
 use anyhow::Result;
 use tracing::warn;
 use yazi_actor::Ctx;
-use yazi_config::keymap::Key;
 use yazi_macro::{act, emit};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
-use yazi_term::event::{Event as TermEvent, KeyEvent, MouseEvent};
+use yazi_term::event::{DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 use yazi_widgets::input::InputMode;
 
 use crate::{Executor, Router, app::App};
@@ -29,6 +28,7 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::FocusIn) => self.dispatch_focus(),
 			Event::Term(TermEvent::FocusOut) => Ok(()),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
+			Event::Term(TermEvent::Dnd(dnd)) => self.dispatch_dnd(dnd),
 		};
 
 		if let Err(e) = &result {
@@ -67,7 +67,7 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) -> Result<()> {
-		Router::new(self.app).route(Key::from(key))?;
+		Router::new(self.app).route(key)?;
 		Ok(())
 	}
 
@@ -87,14 +87,18 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {
-		if self.app.core.input.visible {
-			let input = &mut self.app.core.input;
-			if input.mode() == InputMode::Insert {
-				input.type_str(&str)?;
-			} else if input.mode() == InputMode::Replace {
-				input.replace_str(&str)?;
+		if let Some(mut guard) = self.app.core.input.lock_mut() {
+			if guard.mode() == InputMode::Insert {
+				guard.type_str(&str)?;
+			} else if guard.mode() == InputMode::Replace {
+				guard.replace_str(&str)?;
 			}
 		}
 		Ok(())
+	}
+
+	fn dispatch_dnd(&mut self, dnd: DndEvent) -> Result<()> {
+		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		act!(app:dnd, cx, dnd).map(|_| ())
 	}
 }

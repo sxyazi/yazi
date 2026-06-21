@@ -1,5 +1,5 @@
 use yazi_config::{YAZI, plugin::MAX_FETCHERS};
-use yazi_fs::{File, Files, FsHash64, SortBy};
+use yazi_fs::{Files, FsHash64, SortBy, file::File};
 
 use super::Tasks;
 use crate::mgr::Mimetype;

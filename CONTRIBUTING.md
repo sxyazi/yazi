@@ -11,6 +11,7 @@ This guide will help you understand how to contribute to the project.
 3. [Development Setup](#development-setup)
 4. [How to Contribute](#how-to-contribute)
 5. [Pull Requests](#pull-requests)
+6. [AI Policy](#ai-policy)
 
 ## Getting Started
 
@@ -164,3 +165,10 @@ We want you to succeed, and it can be discouraging to find that a lot of re-work
    - Your code passes all tests and lints.
    - Your pull request description clearly explains the changes and why they are needed.
 4. Address any review comments. Make sure to push updates to the same branch on your fork.
+
+## AI Policy
+
+1. All issue, PR, and discussion descriptions must be written by humans, not AI.
+2. Any use of AI must be disclosed. You must declare which model you used and the extent of AI assistance.
+3. Any AI-generated code must be reviewed, tested, and simplified by a human before publishing. This requires you to fully understand how it interacts with the greater system without AI assistance.
+4. Any AI tools used must explicitly state they do not assert copyright over the work.

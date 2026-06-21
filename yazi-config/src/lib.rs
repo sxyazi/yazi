@@ -1,12 +1,11 @@
-yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which vfs);
+yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which);
 
-yazi_macro::mod_flat!(icon layout mixing pattern platform preset priority selectable selector style utils yazi);
+yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority selectable selector yazi);
 
 use std::io::{Read, Write};
 
 use yazi_shim::{cell::{RoCell, SyncCell}, toml::{DeserializeOver, DeserializeOverWith}};
-use yazi_term::sequence::SetSgr;
-use yazi_tty::TTY;
+use yazi_tty::{TTY, sequence::SetSgr};
 
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();

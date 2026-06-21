@@ -55,8 +55,7 @@ impl Clipboard {
 
 		use tokio::{io::AsyncWriteExt, process::Command};
 		use yazi_macro::writef;
-		use yazi_term::sequence::SetClipboard;
-		use yazi_tty::TTY;
+		use yazi_tty::{TTY, sequence::SetClipboard};
 
 		s.as_ref().clone_into(&mut self.content.lock());
 		writef!(TTY.writer(), "{}", SetClipboard::new(s.as_ref())).ok();

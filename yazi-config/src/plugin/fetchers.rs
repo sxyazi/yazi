@@ -1,29 +1,30 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
+use mlua::{MetaMethod, UserData, UserDataMethods};
 use serde::Deserialize;
 use tracing::warn;
-use yazi_fs::File;
+use yazi_fs::file::File;
 use yazi_shim::arc_swap::IntoPointee;
 
-use super::{Fetcher, MAX_FETCHERS};
-use crate::plugin::FetcherMatcher;
+use super::MAX_FETCHERS;
+use crate::plugin::{FetcherArc, FetcherMatcher};
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Fetchers(ArcSwap<Vec<Arc<Fetcher>>>);
+pub struct Fetchers(ArcSwap<Vec<FetcherArc>>);
 
 impl Deref for Fetchers {
-	type Target = ArcSwap<Vec<Arc<Fetcher>>>;
+	type Target = ArcSwap<Vec<FetcherArc>>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl From<Vec<Arc<Fetcher>>> for Fetchers {
-	fn from(inner: Vec<Arc<Fetcher>>) -> Self { Self(inner.into_pointee()) }
+impl From<Vec<FetcherArc>> for Fetchers {
+	fn from(inner: Vec<FetcherArc>) -> Self { Self(inner.into_pointee()) }
 }
 
-impl From<Arc<Vec<Arc<Fetcher>>>> for Fetchers {
-	fn from(inner: Arc<Vec<Arc<Fetcher>>>) -> Self { Self(inner.into()) }
+impl From<Arc<Vec<FetcherArc>>> for Fetchers {
+	fn from(inner: Arc<Vec<FetcherArc>>) -> Self { Self(inner.into()) }
 }
 
 impl Fetchers {
@@ -44,7 +45,7 @@ impl Fetchers {
 		}
 	}
 
-	pub fn mime(&self, files: Vec<File>) -> impl Iterator<Item = (Arc<Fetcher>, Vec<File>)> {
+	pub fn mime(&self, files: Vec<File>) -> impl Iterator<Item = (FetcherArc, Vec<File>)> {
 		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
 
 		for file in files {
@@ -62,7 +63,20 @@ impl Fetchers {
 		})
 	}
 
-	pub(crate) fn unwrap_unchecked(self) -> Vec<Arc<Fetcher>> {
+	pub(crate) fn unwrap_unchecked(self) -> Vec<FetcherArc> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique fetchers arc")
+	}
+}
+
+impl UserData for &'static Fetchers {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_method("match", |_, &me, matcher: Option<FetcherMatcher>| {
+			Ok(match matcher {
+				Some(matcher) => matcher,
+				None => me.into(),
+			})
+		});
+
+		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.load().len()));
 	}
 }

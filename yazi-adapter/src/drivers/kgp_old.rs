@@ -4,29 +4,29 @@ use std::{io::Write, path::PathBuf};
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_emulator::{CLOSE, ESCAPE, Emulator, START};
 use yazi_tty::TTY;
 
-use crate::{Image, adapter::Adapter};
+use crate::{ADAPTOR, Image};
 
-pub(crate) struct KgpOld;
+pub(super) struct KgpOld;
 
 impl KgpOld {
-	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
+	pub(super) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adapter::KgpOld.image_hide()?;
-		Adapter::shown_store(area);
+		ADAPTOR.image_hide()?;
+		ADAPTOR.shown_store(area);
 		Emulator::move_lock((area.x, area.y), |w| {
 			w.write_all(&b)?;
 			Ok(area)
 		})
 	}
 
-	pub(crate) fn image_erase(_: Rect) -> Result<()> {
+	pub(super) fn image_erase(_: Rect) -> Result<()> {
 		let mut w = TTY.lockout();
 		write!(w, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
 		w.flush()?;

@@ -1,8 +1,9 @@
 use mlua::{AnyUserData, Function, Lua, Table};
-use yazi_binding::elements::{Edge, Renderable};
+use yazi_binding::elements::{Edge, Spatial};
 use yazi_config::THEME;
 use yazi_core::spot::SpotLock;
 use yazi_proxy::MgrProxy;
+use yazi_widgets::Renderable;
 
 use super::Utils;
 
@@ -10,21 +11,22 @@ impl Utils {
 	pub(super) fn spot_table(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (t, table): (mlua::Table, AnyUserData)| {
 			let mut lock = SpotLock::try_from(t)?;
-			let mut table = yazi_binding::elements::Table::try_from(table)?;
+			let mut table = yazi_binding::elements::Table::try_from(&table)?;
 
-			let area = table.area;
-			table.area = area.inner(ratatui::widgets::Padding::uniform(1));
+			let area = table.area();
+			table.set_area(area.padding(ratatui_widgets::block::Padding::uniform(1)));
 
 			lock.data = vec![
-				Renderable::Clear(yazi_binding::elements::Clear { area }),
+				Renderable::Clear(Default::default()).with_area(area),
 				Renderable::Border(yazi_binding::elements::Border {
 					area,
-					edge: Edge(ratatui::widgets::Borders::ALL),
-					r#type: ratatui::widgets::BorderType::Rounded,
+					edge: Edge(ratatui_widgets::borders::Borders::ALL),
+					r#type: ratatui_widgets::borders::BorderType::Rounded,
 					style: THEME.spot.border.get().into(),
+					merge: Default::default(),
 					titles: vec![(
-						ratatui::widgets::TitlePosition::Top,
-						ratatui::text::Line::raw("Spot").centered().style(THEME.spot.title.get()),
+						ratatui_widgets::block::TitlePosition::Top,
+						ratatui_core::text::Line::raw("Spot").centered().style(THEME.spot.title.get()),
 					)],
 				}),
 				Renderable::Table(Box::new(table)),

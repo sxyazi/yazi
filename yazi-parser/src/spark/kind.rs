@@ -20,6 +20,10 @@ pub enum SparkKind {
 	// mgr:quit
 	KeyQuit,
 
+	// input:close
+	KeyInputClose,
+	IndInputClose,
+
 	// which:activate
 	IndWhichActivate,
 

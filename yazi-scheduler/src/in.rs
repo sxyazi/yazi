@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use yazi_shared::{Id, SStr};
+use yazi_shared::id::Id;
+use yazi_shim::SStr;
 
 pub trait TaskIn {
 	type Prog;

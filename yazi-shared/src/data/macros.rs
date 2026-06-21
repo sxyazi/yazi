@@ -65,10 +65,10 @@ macro_rules! impl_into_number {
 				fn try_from(value: $a) -> Result<Self, Self::Error> {
 					paste::paste! {
 						Ok(match ref_or_owned!($kind, value) {
-							$t::Integer(i) if *i == (*i as $b as _) => *i as $b,
-							$t::Number(n) if f64::from(*n) == (f64::from(*n) as $b as _) => f64::from(*n) as $b,
+							$t::Integer(i) if *i == *i as $b as i64 => *i as $b,
+							$t::Number(n) if f64::from(*n) == f64::from(*n) as $b as f64 => f64::from(*n) as $b,
 							$t::String(s) => s.parse()?,
-							$t::Id(i) if i.get() == (i.get() as $b as _) => i.get() as $b,
+							$t::Id(i) if i.get() == i.get() as $b as u64 => i.get() as $b,
 							_ => anyhow::bail!("not a number"),
 						})
 					}

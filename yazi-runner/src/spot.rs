@@ -1,13 +1,10 @@
-use std::sync::Arc;
-
 use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
-use yazi_binding::{File, Id};
-use yazi_config::plugin::Spotter;
-use yazi_dds::Sendable;
-use yazi_shared::{Ids, pool::Symbol};
+use yazi_config::plugin::SpotterArc;
+use yazi_fs::file::File;
+use yazi_shared::{data::Sendable, id::Ids, pool::Symbol};
 
 use crate::{Runner, loader::LOADER};
 
@@ -16,8 +13,8 @@ static IDS: Ids = Ids::new();
 impl Runner {
 	pub fn spot(
 		&'static self,
-		spotter: Arc<Spotter>,
-		file: yazi_fs::File,
+		spotter: SpotterArc,
+		file: File,
 		mime: Symbol<str>,
 		skip: usize,
 	) -> CancellationToken {
@@ -42,9 +39,9 @@ impl Runner {
 
 				let plugin = LOADER.load(&lua, &spotter.name).await?;
 				let job = lua.create_table_from([
-					("id", Id(IDS.next()).into_lua(&lua)?),
+					("id", IDS.next().into_lua(&lua)?),
 					("args", Sendable::args_to_table_ref(&lua, &spotter.args)?.into_lua(&lua)?),
-					("file", File::new(file).into_lua(&lua)?),
+					("file", file.into_lua(&lua)?),
 					("mime", mime.into_lua(&lua)?),
 					("skip", skip.into_lua(&lua)?),
 				])?;

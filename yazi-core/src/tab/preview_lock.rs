@@ -1,9 +1,9 @@
 use mlua::Table;
-use yazi_binding::{
-	FileRef,
-	elements::{Rect, Renderable},
-};
+use yazi_binding::elements::Rect;
+use yazi_fs::file::FileRef;
+use yazi_macro::impl_data_any;
 use yazi_shared::pool::{InternStr, Symbol};
+use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug, Default)]
 pub struct PreviewLock {
@@ -16,6 +16,8 @@ pub struct PreviewLock {
 	pub area: Rect,
 	pub data: Vec<Renderable>,
 }
+
+impl_data_any!(PreviewLock);
 
 impl TryFrom<Table> for PreviewLock {
 	type Error = mlua::Error;

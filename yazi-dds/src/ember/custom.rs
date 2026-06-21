@@ -1,9 +1,8 @@
 use mlua::{IntoLua, Lua, Value};
 use serde::Serialize;
-use yazi_shared::data::Data;
+use yazi_shared::data::{Data, Sendable};
 
 use super::Ember;
-use crate::Sendable;
 
 #[derive(Clone, Debug)]
 pub struct EmberCustom {

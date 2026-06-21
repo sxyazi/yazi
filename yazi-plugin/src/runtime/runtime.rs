@@ -1,16 +1,20 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, SER_OPT, Url, config::{OpenRules, Opener}, elements::Wrap};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::Wrap};
 use yazi_boot::ARGS;
 use yazi_config::YAZI;
+use yazi_shared::url::UrlBuf;
+use yazi_shim::mlua::SER_OPT;
+use yazi_tty::TTY;
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"args" => args().into_lua(lua)?,
+			b"tty" => TTY.into_lua(lua)?,
 			b"term" => super::term().into_lua(lua)?,
 			b"mgr" => mgr().into_lua(lua)?,
 			b"open" => open().into_lua(lua)?,
-			b"opener" => Opener.into_lua(lua)?,
+			b"opener" => YAZI.opener.into_lua(lua)?,
 			b"plugin" => super::plugin().into_lua(lua)?,
 			b"preview" => preview().into_lua(lua)?,
 			b"tasks" => tasks().into_lua(lua)?,
@@ -27,7 +31,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 fn open() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"rules" => OpenRules.into_lua(lua),
+			b"rules" => YAZI.open.into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}
@@ -40,9 +44,9 @@ fn open() -> Composer<ComposerGet, ComposerSet> {
 fn args() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"entries" => lua.create_sequence_from(ARGS.entries.iter().map(Url::new))?.into_lua(lua),
-			b"cwd_file" => ARGS.cwd_file.as_ref().map(Url::new).into_lua(lua),
-			b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::new).into_lua(lua),
+			b"entries" => lua.create_sequence_from(ARGS.entries.iter().cloned())?.into_lua(lua),
+			b"cwd_file" => ARGS.cwd_file.as_ref().map(UrlBuf::from).into_lua(lua),
+			b"chooser_file" => ARGS.chooser_file.as_ref().map(UrlBuf::from).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}

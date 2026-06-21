@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::input::CloseForm;
-use yazi_shared::data::Data;
+use yazi_parser::{input::CloseForm, spark::SparkKind};
+use yazi_shared::{Source, data::Data};
 use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
@@ -14,16 +14,28 @@ impl Actor for Close {
 	const NAME: &str = "close";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let input = &mut cx.input;
-		input.visible = false;
-		input.ticket.next();
+		let Some(mut guard) = cx.input.lock_mut() else {
+			succ!();
+		};
 
-		if let Some(tx) = input.tx.take() {
-			let value = input.snap().value.clone();
-			_ = tx.send(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
+		guard.ticket.next();
+		if let Some(cb) = guard.cb.take() {
+			let value = guard.snap().value.clone();
+			cb(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
 		}
+
+		drop(guard);
+		cx.input.main.visible = false;
 
 		act!(cmp:close, cx)?;
 		succ!(render!());
+	}
+
+	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {
+		match cx.source() {
+			Source::Key => Some(SparkKind::KeyInputClose),
+			Source::Ind => Some(SparkKind::IndInputClose),
+			_ => None,
+		}
 	}
 }

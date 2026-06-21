@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_config::popup::InputCfg;
+use yazi_config::YAZI;
 use yazi_core::mgr::FindDoOpt;
 use yazi_macro::{input, succ};
 use yazi_parser::mgr::FindForm;
@@ -21,7 +21,7 @@ impl Actor for Find {
 	const NAME: &str = "find";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let input = input!(cx, InputCfg::find(form.prev))?;
+		let input = input!(cx, YAZI.input.find(form.prev))?;
 
 		tokio::spawn(async move {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));

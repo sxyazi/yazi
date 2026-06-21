@@ -22,7 +22,7 @@ impl Actor for Trigger {
 		if form.ticket.is_some_and(|t| t != cx.cmp.ticket) {
 			succ!();
 		} else if form.ticket.is_none() {
-			cx.cmp.ticket = cx.input.ticket.current();
+			cx.cmp.ticket = cx.input.lock().map(|g| g.ticket.current()).unwrap_or_default();
 		}
 
 		cx.cmp.handle.take().map(|h| h.abort());
@@ -53,7 +53,7 @@ impl Actor for Trigger {
 
 			if !cache.is_empty() {
 				cache
-					.sort_unstable_by(|a, b| natsort(a.name.encoded_bytes(), b.name.encoded_bytes(), false));
+					.sort_unstable_by(|a, b| natsort(a.name.encoded_bytes(), b.name.encoded_bytes(), true));
 				CmpProxy::show(CmpOpt { cache, cache_name: parent, word, ticket });
 			}
 

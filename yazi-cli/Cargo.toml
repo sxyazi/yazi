@@ -13,17 +13,23 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-boot   = { path = "../yazi-boot", version = "26.5.6" }
-yazi-dds    = { path = "../yazi-dds", version = "26.5.6" }
-yazi-fs     = { path = "../yazi-fs", version = "26.5.6" }
-yazi-macro  = { path = "../yazi-macro", version = "26.5.6" }
-yazi-shared = { path = "../yazi-shared", version = "26.5.6" }
-yazi-term   = { path = "../yazi-term", version = "26.5.6" }
+yazi-adapter  = { path = "../yazi-adapter", version = "26.5.6" }
+yazi-boot     = { path = "../yazi-boot", version = "26.5.6" }
+yazi-config   = { path = "../yazi-config", version = "26.5.6" }
+yazi-dds      = { path = "../yazi-dds", version = "26.5.6" }
+yazi-emulator = { path = "../yazi-emulator", version = "26.5.6" }
+yazi-fs       = { path = "../yazi-fs", version = "26.5.6" }
+yazi-macro    = { path = "../yazi-macro", version = "26.5.6" }
+yazi-shared   = { path = "../yazi-shared", version = "26.5.6" }
+yazi-term     = { path = "../yazi-term", version = "26.5.6" }
+yazi-tty      = { path = "../yazi-tty", version = "26.5.6" }
+yazi-version  = { path = "../yazi-version", version = "26.5.6" }
 
 # External dependencies
 anyhow     = { workspace = true }
 clap       = { workspace = true }
 hashbrown  = { workspace = true }
+regex      = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 tokio      = { workspace = true }
@@ -41,7 +47,6 @@ clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.6.0"
 serde                 = { workspace = true }
 serde_json            = { workspace = true }
-vergen-gitcl          = { version = "9.1.0", features = [ "build" ] }
 
 [[bin]]
 name = "ya"

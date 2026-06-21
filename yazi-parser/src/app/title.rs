@@ -1,7 +1,6 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_binding::SER_OPT;
-use yazi_shared::SStr;
+use yazi_shim::{SStr, mlua::SER_OPT};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct TitleForm {

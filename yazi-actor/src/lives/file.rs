@@ -1,37 +1,27 @@
 use std::{ops::Deref, ptr};
 
-use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::{Range, Style, cached_field};
+use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
+use yazi_binding::{Range, style::Style};
 use yazi_config::THEME;
 use yazi_shared::{path::AsPath, url::UrlLike};
 
-use super::Lives;
-use crate::lives::PtrCell;
+use super::{FILE_CACHE, Lives};
+use crate::lives::{CoreRef, PtrCell};
 
 pub(super) struct File {
 	idx:    usize,
 	folder: PtrCell<yazi_core::tab::Folder>,
 	tab:    PtrCell<yazi_core::tab::Tab>,
-
-	v_cha:     Option<Value>,
-	v_url:     Option<Value>,
-	v_link_to: Option<Value>,
-
-	v_name:  Option<Value>,
-	v_path:  Option<Value>,
-	v_cache: Option<Value>,
-
-	v_bare: Option<Value>,
 }
 
 impl Deref for File {
-	type Target = yazi_fs::File;
+	type Target = yazi_fs::file::File;
 
 	fn deref(&self) -> &Self::Target { &self.folder.files[self.idx] }
 }
 
-impl AsRef<yazi_fs::File> for File {
-	fn as_ref(&self) -> &yazi_fs::File { self }
+impl AsRef<yazi_fs::file::File> for File {
+	fn as_ref(&self) -> &yazi_fs::file::File { self }
 }
 
 impl File {
@@ -42,24 +32,10 @@ impl File {
 	) -> mlua::Result<AnyUserData> {
 		use hashbrown::hash_map::Entry;
 
-		Ok(match super::FILE_CACHE.borrow_mut().entry(PtrCell(&folder.files[idx])) {
+		Ok(match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.files[idx])) {
 			Entry::Occupied(oe) => oe.into_mut().clone(),
 			Entry::Vacant(ve) => {
-				let ud = Lives::scoped_userdata(Self {
-					idx,
-					folder: folder.into(),
-					tab: tab.into(),
-
-					v_cha: None,
-					v_url: None,
-					v_link_to: None,
-
-					v_name: None,
-					v_path: None,
-					v_cache: None,
-
-					v_bare: None,
-				})?;
+				let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
 				ve.insert(ud.clone());
 				ud
 			}
@@ -73,7 +49,7 @@ impl File {
 impl UserData for File {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		yazi_binding::impl_file_fields!(fields);
-		cached_field!(fields, bare, |_, me| Ok(yazi_binding::File::new(&**me)));
+		fields.add_cached_field("bare", |_, me| Ok(yazi_fs::file::File::from(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.is_hovered()));
@@ -87,17 +63,15 @@ impl UserData for File {
 		yazi_binding::impl_file_methods!(methods);
 
 		methods.add_method("icon", |_, me, ()| {
-			use yazi_binding::Icon;
 			// TODO: use a cache
-			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()).map(Icon::from))
+			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
 		methods.add_method("size", |_, me, ()| {
 			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				core.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
-			})?
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			core.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
 		});
 		methods.add_method("prefix", |lua, me, ()| {
 			if !me.url.has_trail() {
@@ -109,20 +83,18 @@ impl UserData for File {
 			Some(lua.create_string(comp.as_path().encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				let mime = core.mgr.mimetype.get(&me.url).unwrap_or_default();
-				THEME.filetype.match_style(me, mime).map(Style::from)
-			})
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			let mime = core.mgr.mimetype.get(&me.url).unwrap_or_default();
+			Ok(THEME.filetype.match_style(me, mime).map(Style::from))
 		});
 		methods.add_method("is_yanked", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				if !core.mgr.yanked.contains(&me.url) {
-					0u8
-				} else if core.mgr.yanked.cut {
-					2u8
-				} else {
-					1u8
-				}
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			Ok(if !core.mgr.yanked.contains(&me.url) {
+				0u8
+			} else if core.mgr.yanked.cut {
+				2u8
+			} else {
+				1u8
 			})
 		});
 		methods.add_method("is_marked", |_, me, ()| {
@@ -139,31 +111,30 @@ impl UserData for File {
 		});
 		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains(&me.url)));
 		methods.add_method("found", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				let Some(finder) = &core.active().finder else {
-					return Ok(None);
-				};
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			let Some(finder) = &core.active().finder else {
+				return Ok(None);
+			};
 
-				let Some(idx) = finder.matched_idx(&me.folder, me.urn()) else {
-					return Ok(None);
-				};
+			let Some(idx) = finder.matched_idx(&me.folder, me.urn()) else {
+				return Ok(None);
+			};
 
-				Some(lua.create_sequence_from([idx.into_lua(lua)?, finder.matched.len().into_lua(lua)?]))
-					.transpose()
-			})
+			lua.create_sequence_from([idx.into_lua(lua)?, finder.matched.len().into_lua(lua)?]).map(Some)
 		});
 		methods.add_method("highlights", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
-				let Some(finder) = &core.active().finder else {
-					return None;
-				};
-				if me.folder.url != me.tab.current.url {
-					return None;
-				}
+			let core: CoreRef = lua.named_registry_value("cx")?;
+			let Some(finder) = &core.active().finder else {
+				return Ok(None);
+			};
+			if me.folder.url != me.tab.current.url {
+				return Ok(None);
+			}
+			let Some(Some(h)) = me.url.name().map(|s| finder.filter.highlighted(s)) else {
+				return Ok(None);
+			};
 
-				let h = finder.filter.highlighted(me.url.name()?)?;
-				Some(h.into_iter().map(Range::from).collect::<Vec<_>>())
-			})
+			lua.create_sequence_from(h.into_iter().map(Range::from)).map(Some)
 		});
 	}
 }

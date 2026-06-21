@@ -2,6 +2,7 @@ yazi_macro::mod_flat!(
 	accept_payload
 	bootstrap
 	deprecate
+	dnd
 	focus
 	lua
 	mouse

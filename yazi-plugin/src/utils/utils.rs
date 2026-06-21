@@ -17,7 +17,6 @@ pub fn compose(
 
 			// Call
 			b"emit" => Utils::emit(lua)?,
-			b"mgr_emit" => Utils::mgr_emit(lua)?,
 			b"exec" => Utils::exec(lua)?,
 
 			// Image
@@ -66,6 +65,8 @@ pub fn compose(
 			b"hash" => Utils::hash(lua)?,
 			b"quote" => Utils::quote(lua)?,
 			b"clipboard" => Utils::clipboard(lua)?,
+			b"percent_encode" => Utils::percent_encode(lua)?,
+			b"percent_decode" => Utils::percent_decode(lua)?,
 
 			// Time
 			b"time" => Utils::time(lua)?,

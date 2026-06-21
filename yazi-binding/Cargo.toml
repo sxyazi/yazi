@@ -17,30 +17,24 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "26.5.6" }
 yazi-codegen = { path = "../yazi-codegen", version = "26.5.6" }
-yazi-config  = { path = "../yazi-config", version = "26.5.6" }
-yazi-fs      = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
-yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
 yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
-yazi-term    = { path = "../yazi-term", version = "26.5.6" }
-yazi-vfs     = { path = "../yazi-vfs", version = "26.5.6" }
-yazi-widgets = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
-ansi-to-tui   = { workspace = true }
-anyhow        = { workspace = true }
-futures       = { workspace = true }
-hashbrown     = { workspace = true }
-mlua          = { workspace = true }
-paste         = { workspace = true }
-ratatui       = { workspace = true }
-serde_json    = { workspace = true }
-tokio  	      = { workspace = true }
-tokio-stream  = { workspace = true }
-tracing       = { workspace = true }
-unicode-width = { workspace = true }
+ansi-to-tui     = { workspace = true }
+anyhow          = { workspace = true }
+futures         = { workspace = true }
+hashbrown       = { workspace = true }
+image           = { workspace = true }
+mlua            = { workspace = true }
+ratatui-core    = { workspace = true }
+ratatui-widgets = { workspace = true }
+serde           = { workspace = true }
+serde_json      = { workspace = true }
+strum           = { workspace = true }
+tokio    	      = { workspace = true }
+unicode-width   = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }

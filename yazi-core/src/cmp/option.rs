@@ -1,4 +1,5 @@
-use yazi_shared::{Id, path::PathBufDyn, url::UrlBuf};
+use yazi_macro::impl_data_any;
+use yazi_shared::{id::Id, path::PathBufDyn, url::UrlBuf};
 
 use crate::cmp::CmpItem;
 
@@ -9,3 +10,5 @@ pub struct CmpOpt {
 	pub word:       PathBufDyn,
 	pub ticket:     Id,
 }
+
+impl_data_any!(CmpOpt);

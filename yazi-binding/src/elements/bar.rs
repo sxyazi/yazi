@@ -1,15 +1,17 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::{Borders, Widget};
+use ratatui_core::widgets::Widget;
+use ratatui_widgets::borders::Borders;
 
 use super::{Area, Edge};
+use crate::elements::Spatial;
 
 #[derive(Clone, Debug, Default)]
 pub struct Bar {
-	pub(super) area: Area,
+	area: Area,
 
 	edge:   Edge,
 	symbol: String,
-	style:  ratatui::style::Style,
+	style:  ratatui_core::style::Style,
 }
 
 impl Bar {
@@ -23,17 +25,20 @@ impl Bar {
 	}
 }
 
-impl Widget for Bar {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
-	where
-		Self: Sized,
-	{
-		(&self).render(rect, buf);
-	}
+impl TryFrom<&AnyUserData> for Bar {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for Bar {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for &Bar {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{

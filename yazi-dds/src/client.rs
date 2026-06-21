@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use tracing::error;
 use yazi_macro::try_format;
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 use yazi_shim::cell::RoCell;
 
 use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberHey}};
@@ -48,8 +48,8 @@ impl Client {
 							writer.write_all(payload.as_bytes()).await.ok(); // Retry once
 						}
 					}
-					Ok(next) = lines.next_line() => {
-						let Some(line) = next else {
+					next = lines.next_line() => {
+						let Ok(Some(line)) = next else {
 							(lines, writer) = Self::reconnect(&mut server).await;
 							continue;
 						};

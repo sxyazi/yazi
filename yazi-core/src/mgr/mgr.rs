@@ -1,7 +1,7 @@
 use std::iter;
 
-use ratatui::layout::Rect;
-use yazi_config::popup::{Origin, Position};
+use ratatui_core::layout::Rect;
+use yazi_binding::position::{Origin, Position};
 use yazi_fs::Splatable;
 use yazi_shared::url::{AsUrl, Url, UrlBuf};
 use yazi_term::TERM;
@@ -35,7 +35,7 @@ impl Mgr {
 		if pos.origin == Origin::Hovered {
 			self.active().hovered_rect_based(pos)
 		} else {
-			pos.rect(TERM.dimension())
+			pos.rect(TERM.dimension().area())
 		}
 	}
 

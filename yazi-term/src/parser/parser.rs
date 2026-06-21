@@ -1,13 +1,13 @@
-use std::{collections::VecDeque, num::NonZeroU8, str};
+use std::{collections::VecDeque, mem, num::NonZeroU8, str};
 
 use yazi_shim::utf8_char_width;
 
 use super::state::State;
-use crate::event::{Event, KeyCode, KeyEvent, Modifiers};
+use crate::event::{DndEvent, Event, KeyCode, KeyEvent, Modifiers};
 
 #[derive(Debug)]
 pub struct Parser {
-	state:             State,
+	pub(super) state:  State,
 	pub(super) seq:    Vec<u8>,
 	pub(crate) events: VecDeque<Event>,
 }
@@ -30,7 +30,7 @@ impl Parser {
 	}
 
 	fn step(&mut self, b: u8) {
-		match self.state {
+		match &self.state {
 			State::Ground => self.on_ground(b),
 			State::Esc => self.on_esc(b),
 			State::EscO => self.on_esco(b),
@@ -38,9 +38,10 @@ impl Parser {
 			State::NormalMouse => self.on_normal_mouse(b),
 			State::BracketedPaste => self.on_bracketed_paste(b),
 			State::Osc | State::OscSt => self.on_osc(b),
+			State::Osc72(_) => self.on_osc72(b),
 			State::Dcs | State::DcsSt => self.on_dcs(b),
-			State::Utf8(n) => self.on_utf8(b, n),
-			State::AltUtf8(n) => self.on_alt_utf8(b, n),
+			State::Utf8(n) => self.on_utf8(b, *n),
+			State::AltUtf8(n) => self.on_alt_utf8(b, *n),
 		}
 	}
 
@@ -51,9 +52,12 @@ impl Parser {
 	/// been seen but no follow-up bytes arrived), this emits a bare
 	/// [`KeyCode::Escape`] event and resets to [`State::Ground`].
 	pub fn flush(&mut self) {
-		if self.state == State::Esc {
-			self.emit_key(KeyCode::Escape);
+		match &self.state {
+			State::Esc => self.emit_key(KeyCode::Escape),
+			State::Osc72(s) if s.has_more => return,
+			_ => {}
 		}
+
 		self.reset();
 	}
 
@@ -193,8 +197,11 @@ impl Parser {
 	fn on_osc(&mut self, b: u8) {
 		self.seq.push(b);
 
-		match (self.state, b) {
+		match (&self.state, b) {
 			(State::Osc, b'\x07') => self.reset(), // BEL — OSC complete (discard)
+			(State::Osc, _) if self.seq.starts_with(b"\x1b]72;") => {
+				self.state = State::Osc72(Default::default());
+			}
 			(State::Osc, b'\x1B') => self.state = State::OscSt,
 			(State::Osc, _) => {}                         // keep accumulating
 			(State::OscSt, b'\\') => self.reset(),        // ST (`\x1B\\`) — OSC complete (discard)
@@ -204,10 +211,34 @@ impl Parser {
 		}
 	}
 
+	fn on_osc72(&mut self, b: u8) {
+		self.seq.push(b);
+
+		if !self.seq.ends_with(b"\x1b\\") {
+			return;
+		} else if self.parse_osc72().is_err() {
+			return self.reset();
+		}
+
+		match mem::take(&mut self.state) {
+			State::Osc72(s) if s.has_more => {
+				self.seq.clear();
+				self.state = State::Osc72(s);
+			}
+			State::Osc72(s) => {
+				if let Some(e) = DndEvent::from_state(s) {
+					self.emit(Event::Dnd(e));
+				}
+				self.reset();
+			}
+			_ => unreachable!(),
+		}
+	}
+
 	fn on_dcs(&mut self, b: u8) {
 		self.seq.push(b);
 
-		match (self.state, b) {
+		match (&self.state, b) {
 			(State::Dcs, b'\x1B') => self.state = State::DcsSt,
 			(State::Dcs, _) => {}
 			(State::DcsSt, b'\\') => self.reset(), // ST — DCS complete (discard)

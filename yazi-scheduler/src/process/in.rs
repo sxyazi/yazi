@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsString};
 
-use yazi_shared::{CompletionToken, Id, url::{UrlBuf, UrlCow}};
+use yazi_shared::{CompletionToken, id::Id, url::{UrlBuf, UrlCow}};
 
 use super::ShellOpt;
 use crate::{TaskIn, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};

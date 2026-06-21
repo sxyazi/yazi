@@ -1,5 +1,6 @@
 use std::ffi::OsString;
 
+use yazi_macro::impl_data_any;
 use yazi_shared::url::{UrlBuf, UrlCow};
 
 // TODO: remove in favor of ShellForm
@@ -13,3 +14,5 @@ pub struct ProcessOpt {
 
 	pub spread: bool, // TODO: remove
 }
+
+impl_data_any!(ProcessOpt);

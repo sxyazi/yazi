@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use anyhow::Result;
-use ratatui::layout::Rect;
+use ratatui_core::layout::Rect;
 use yazi_core::notify::Notify;
 use yazi_macro::{render, render_partial, succ};
 use yazi_parser::notify::TickForm;

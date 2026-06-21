@@ -1,10 +1,12 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use serde::Deserialize;
-use yazi_fs::File;
-use yazi_shared::{Id, event::Cmd};
+use yazi_binding::Iter;
+use yazi_fs::file::{File, FileRef};
+use yazi_shared::{event::Cmd, id::Id};
 
-use crate::{Mixable, Pattern, Priority, Selectable, Selector, plugin::{Preloaders, preloader_id}};
+use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{PreloaderArc, Preloaders, preloader_id}};
 
 #[derive(Debug, Deserialize)]
 pub struct Preloader {
@@ -38,7 +40,7 @@ impl Mixable for Preloader {}
 // --- Matcher
 #[derive(Default)]
 pub struct PreloaderMatcher<'a> {
-	pub preloaders: Arc<Vec<Arc<Preloader>>>,
+	pub preloaders: Arc<Vec<PreloaderArc>>,
 	pub id:         Id,
 	pub file:       Option<Cow<'a, File>>,
 	pub mime:       Option<Cow<'a, str>>,
@@ -66,7 +68,7 @@ impl PreloaderMatcher<'_> {
 }
 
 impl Iterator for PreloaderMatcher<'_> {
-	type Item = Arc<Preloader>;
+	type Item = PreloaderArc;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.stop && !self.all {
@@ -82,4 +84,35 @@ impl Iterator for PreloaderMatcher<'_> {
 		}
 		None
 	}
+}
+
+impl TryFrom<Table> for PreloaderMatcher<'static> {
+	type Error = mlua::Error;
+
+	fn try_from(value: Table) -> Result<Self, Self::Error> {
+		let id: Id = value.raw_get("id").unwrap_or_default();
+		let file: Option<FileRef> = value.raw_get("file")?;
+		let mime: Option<String> = value.raw_get("mime")?;
+
+		Ok(Self {
+			preloaders: YAZI.plugin.preloaders.load_full(),
+			id,
+			file: file.map(|f| f.clone().into()),
+			mime: mime.map(Into::into),
+			..Default::default()
+		})
+	}
+}
+
+impl FromLua for PreloaderMatcher<'static> {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Table(t) => t.try_into(),
+			_ => Err("expected a table of PreloaderMatcher".into_lua_err()),
+		}
+	}
+}
+
+impl IntoLua for PreloaderMatcher<'static> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
 }

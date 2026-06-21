@@ -25,8 +25,7 @@ impl<'a> From<EmberTrash<'a>> for Ember<'a> {
 
 impl IntoLua for EmberTrash<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		let urls =
-			lua.create_sequence_from(self.urls.into_owned().into_iter().map(yazi_binding::Url::new))?;
+		let urls = lua.create_sequence_from(self.urls.into_owned())?;
 
 		lua.create_table_from([("urls", urls)])?.into_lua(lua)
 	}

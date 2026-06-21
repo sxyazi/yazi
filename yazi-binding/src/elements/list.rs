@@ -1,20 +1,21 @@
-use mlua::{IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
-use ratatui::widgets::Widget;
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use ratatui_core::widgets::Widget;
 
 use super::{Area, Text};
+use crate::elements::Spatial;
 
 // --- List
 #[derive(Clone, Debug, Default)]
 pub struct List {
-	pub(super) area: Area,
+	area: Area,
 
-	inner: ratatui::widgets::List<'static>,
+	inner: ratatui_widgets::list::List<'static>,
 }
 
 impl List {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, items): (Table, Vec<Text>)| {
-			Ok(Self { inner: ratatui::widgets::List::new(items), ..Default::default() })
+			Ok(Self { inner: ratatui_widgets::list::List::new(items), ..Default::default() })
 		})?;
 
 		let list = lua.create_table()?;
@@ -24,17 +25,20 @@ impl List {
 	}
 }
 
-impl Widget for List {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
-	where
-		Self: Sized,
-	{
-		(&self).render(rect, buf);
-	}
+impl TryFrom<&AnyUserData> for List {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> { value.take() }
+}
+
+impl Spatial for List {
+	fn area(&self) -> Area { self.area }
+
+	fn set_area(&mut self, area: Area) { self.area = area; }
 }
 
 impl Widget for &List {
-	fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
 	where
 		Self: Sized,
 	{

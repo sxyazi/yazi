@@ -49,18 +49,22 @@ impl<'a> EventSource<'a> {
 		// Stop waiting for events.
 		if wakeup_ready {
 			while read_complete(&*self.waker, &mut [0u8; 1024])? != 0 {}
-			return Err(io::Error::from(io::ErrorKind::UnexpectedEof));
+			return Err(io::Error::from(io::ErrorKind::ConnectionAborted));
 		}
 
 		// More input is ready.
 		if read_ready {
 			let mut buf = [0u8; 1024];
+
 			let len = read_complete(&mut *reader, &mut buf)?;
+			if len == 0 {
+				return Err(io::Error::from(io::ErrorKind::UnexpectedEof));
+			}
 
 			let mut parser = self.parser.lock();
 			parser.parse(&buf[..len]);
 
-			if len > 0 && len < buf.len() {
+			if len < buf.len() {
 				parser.flush();
 			}
 			return Ok(());

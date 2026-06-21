@@ -1,10 +1,11 @@
 use mlua::ObjectLike;
-use yazi_binding::{Error, elements::Renderable};
+use yazi_binding::Error;
 use yazi_config::LAYOUT;
 use yazi_macro::{emit, relay};
 use yazi_runner::previewer::PeekJob;
 use yazi_scheduler::TaskSummary;
 use yazi_shared::url::AsUrl;
+use yazi_widgets::Renderable;
 
 use crate::{app::PluginOpt, tab::PreviewLock};
 
@@ -51,7 +52,7 @@ impl MgrProxy {
 			search_idx: job.search_idx,
 			area: area.into(),
 			data: vec![
-				Renderable::Clear(yazi_binding::elements::Clear { area: area.into() }),
+				Renderable::Clear(Default::default()).with_area(area),
 				Renderable::from(Error::custom(error)).with_area(area),
 			],
 		});

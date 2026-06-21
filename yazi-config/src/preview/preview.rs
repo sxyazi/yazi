@@ -1,16 +1,13 @@
-#[cfg(unix)]
-use std::os::unix::fs::DirBuilderExt;
-use std::{fs::DirBuilder, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::Xdg;
-use yazi_shared::{SStr, timestamp_us};
-use yazi_shim::toml::DeserializeOverHook;
+use yazi_fs::{Xdg, create_owned_dir_blocking, path::sanitize_path};
+use yazi_shared::timestamp_us;
+use yazi_shim::{SStr, toml::DeserializeOverHook};
 
 use super::PreviewWrap;
-use crate::normalize_path;
 
 #[derive(Debug, Deserialize, DeserializeOver2, Serialize)]
 pub struct Preview {
@@ -51,12 +48,7 @@ impl Preview {
 
 impl DeserializeOverHook for Preview {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
-		#[cfg(unix)]
-		let result = DirBuilder::new().mode(0o700).recursive(true).create(&self.cache_dir);
-		#[cfg(not(unix))]
-		let result = DirBuilder::new().recursive(true).create(&self.cache_dir);
-
-		result
+		create_owned_dir_blocking(&self.cache_dir)
 			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
 			.map_err(serde::de::Error::custom)?;
 
@@ -72,7 +64,7 @@ where
 	if path.as_os_str().is_empty() {
 		Ok(Xdg::temp_dir().to_owned())
 	} else {
-		normalize_path(path).ok_or_else(|| {
+		sanitize_path(path).ok_or_else(|| {
 			serde::de::Error::custom("cache_dir must be either empty or an absolute path.")
 		})
 	}

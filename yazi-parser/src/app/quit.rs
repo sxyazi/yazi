@@ -1,8 +1,8 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_binding::SER_OPT;
 use yazi_core::app::QuitOpt;
 use yazi_shared::event::ActionCow;
+use yazi_shim::mlua::SER_OPT;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct QuitForm {

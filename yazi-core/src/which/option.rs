@@ -1,15 +1,18 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use tokio::sync::mpsc;
-use yazi_config::{KEYMAP, keymap::{ChordCow, Key}};
+use yazi_config::{KEYMAP, keymap::{ChordArc, Key}};
+use yazi_macro::impl_data_any;
 use yazi_shared::{Layer, event::ActionCow};
 
 #[derive(Clone, Debug)]
 pub struct WhichOpt {
-	pub tx:     Option<mpsc::UnboundedSender<Option<yazi_binding::ChordCow>>>,
-	pub cands:  Vec<ChordCow>,
+	pub tx:     Option<mpsc::UnboundedSender<Option<ChordArc>>>,
+	pub cands:  Vec<ChordArc>,
 	pub silent: bool,
 	pub times:  usize,
 }
+
+impl_data_any!(WhichOpt);
 
 impl TryFrom<ActionCow> for WhichOpt {
 	type Error = anyhow::Error;
@@ -21,7 +24,7 @@ impl TryFrom<ActionCow> for WhichOpt {
 
 		Ok(Self {
 			tx:     a.take_any2("tx").transpose()?,
-			cands:  a.take_any_iter::<yazi_binding::ChordCow>().map(Into::into).collect(),
+			cands:  a.take_any_iter().collect(),
 			silent: a.bool("silent"),
 			times:  a.get("times").unwrap_or(0),
 		})
@@ -33,10 +36,10 @@ impl From<(Layer, Key)> for WhichOpt {
 		Self {
 			tx:     None,
 			cands:  KEYMAP
-				.get(layer)
+				.chords(layer)
 				.iter()
-				.filter(|c| c.on.len() > 1 && c.on[0] == key)
-				.map(Into::into)
+				.filter(|&c| c.on.len() > 1 && c.on[0] == key)
+				.cloned()
 				.collect(),
 			times:  1,
 			silent: false,
@@ -52,11 +55,7 @@ impl FromLua for WhichOpt {
 
 		Ok(Self {
 			tx:     t.raw_get::<yazi_binding::MpscUnboundedTx<_>>("tx").ok().map(|t| t.0),
-			cands:  t
-				.raw_get::<Table>("cands")?
-				.sequence_values::<yazi_binding::ChordCow>()
-				.map(|c| c.map(Into::into))
-				.collect::<mlua::Result<Vec<_>>>()?,
+			cands:  t.raw_get::<Table>("cands")?.sequence_values().collect::<mlua::Result<Vec<_>>>()?,
 			times:  t.raw_get("times").unwrap_or_default(),
 			silent: t.raw_get("silent")?,
 		})
@@ -69,7 +68,7 @@ impl IntoLua for WhichOpt {
 		lua
 			.create_table_from([
 				("tx", self.tx.map(yazi_binding::MpscUnboundedTx).into_lua(lua)?),
-				("cands", lua.create_sequence_from(self.cands.into_iter().map(yazi_binding::ChordCow))?.into_lua(lua)?),
+				("cands", lua.create_sequence_from(self.cands)?.into_lua(lua)?),
 				("times", self.times.into_lua(lua)?),
 				("silent", self.silent.into_lua(lua)?),
 			])?

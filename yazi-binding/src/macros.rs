@@ -44,59 +44,19 @@ macro_rules! deprecate {
 }
 
 #[macro_export]
-macro_rules! cached_field {
-	($fields:ident, $key:ident, $value:expr) => {
-		$fields.add_field_function_get(stringify!($key), |lua, ud| {
-			use mlua::{Error::UserDataDestructed, IntoLua, Lua, Result, Value, Value::UserData};
-			ud.borrow_mut_scoped::<Self, Result<Value>>(|me| match paste::paste! { &me.[<v_ $key>] } {
-				Some(v) if !v.is_userdata() => Ok(v.clone()),
-				Some(v @ UserData(ud)) if !matches!(ud.borrow::<()>(), Err(UserDataDestructed)) => {
-					Ok(v.clone())
-				}
-				_ => {
-					let v = ($value as fn(&Lua, &Self) -> Result<_>)(lua, me)?.into_lua(lua)?;
-					paste::paste! { me.[<v_ $key>] = Some(v.clone()) };
-					Ok(v)
-				}
-			})?
-		});
-	};
-}
-
-#[macro_export]
-macro_rules! cached_field_mut {
-	($fields:ident, $key:ident, $value:expr) => {
-		$fields.add_field_function_get(stringify!($key), |lua, ud| {
-			use mlua::{Error::UserDataDestructed, IntoLua, Lua, Result, Value, Value::UserData};
-			ud.borrow_mut_scoped::<Self, Result<Value>>(|me| match paste::paste! { &me.[<v_ $key>] } {
-				Some(Ok(v)) if !v.is_userdata() => Ok(v.clone()),
-				Some(Ok(v @ UserData(ud))) if !matches!(ud.borrow::<()>(), Err(UserDataDestructed)) => {
-					Ok(v.clone())
-				}
-				Some(Err(e)) => Err(e.clone()),
-				_ => {
-					let v =
-						($value as fn(&Lua, &mut Self) -> Result<_>)(lua, me).and_then(|v| v.into_lua(lua));
-					paste::paste! { me.[<v_ $key>] = Some(v.clone()) };
-					v
-				}
-			})?
-		});
-	};
-}
-
-#[macro_export]
 macro_rules! impl_area_method {
 	($methods:ident) => {
 		$methods.add_function(
 			"area",
 			|lua, (ud, area): (mlua::AnyUserData, Option<mlua::AnyUserData>)| {
 				use mlua::IntoLua;
+				use $crate::elements::Spatial;
+
 				if let Some(v) = area {
-					ud.borrow_mut::<Self>()?.area = $crate::elements::Area::try_from(v)?;
+					ud.borrow_mut::<Self>()?.set_area((&v).try_into()?);
 					ud.into_lua(lua)
 				} else {
-					ud.borrow::<Self>()?.area.into_lua(lua)
+					ud.borrow::<Self>()?.area().into_lua(lua)
 				}
 			},
 		);
@@ -106,7 +66,7 @@ macro_rules! impl_area_method {
 #[macro_export]
 macro_rules! impl_style_method {
 	($methods:ident, $($field:tt).+) => {
-		$methods.add_function("style", |_, (ud, style): (mlua::AnyUserData, $crate::Style)| {
+		$methods.add_function("style", |_, (ud, style): (mlua::AnyUserData, $crate::style::Style)| {
 			ud.borrow_mut::<Self>()?.$($field).+ = style.0;
 			Ok(ud)
 		});
@@ -119,7 +79,7 @@ macro_rules! impl_style_shorthands {
 		$methods.add_function("fg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
 			use $crate::elements::Color;
 			use mlua::FromLua;
-			use ratatui::style::Modifier;
+			use ratatui_core::style::Modifier;
 
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			match value {
@@ -138,7 +98,7 @@ macro_rules! impl_style_shorthands {
 		$methods.add_function("bg", |lua, (ud, value): (mlua::AnyUserData, mlua::Value)| {
 			use $crate::elements::Color;
 			use mlua::FromLua;
-			use ratatui::style::Modifier;
+			use ratatui_core::style::Modifier;
 
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			match value {
@@ -157,86 +117,86 @@ macro_rules! impl_style_shorthands {
 		$methods.add_function("bold", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::BOLD);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::BOLD);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::BOLD);
+				*me = me.add_modifier(ratatui_core::style::Modifier::BOLD);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("dim", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::DIM);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::DIM);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::DIM);
+				*me = me.add_modifier(ratatui_core::style::Modifier::DIM);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("italic", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::ITALIC);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::ITALIC);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::ITALIC);
+				*me = me.add_modifier(ratatui_core::style::Modifier::ITALIC);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("underline", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::UNDERLINED);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::UNDERLINED);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::UNDERLINED);
+				*me = me.add_modifier(ratatui_core::style::Modifier::UNDERLINED);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("blink", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::SLOW_BLINK);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::SLOW_BLINK);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::SLOW_BLINK);
+				*me = me.add_modifier(ratatui_core::style::Modifier::SLOW_BLINK);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("blink_rapid", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::RAPID_BLINK);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::RAPID_BLINK);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::RAPID_BLINK);
+				*me = me.add_modifier(ratatui_core::style::Modifier::RAPID_BLINK);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("reverse", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::REVERSED);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::REVERSED);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::REVERSED);
+				*me = me.add_modifier(ratatui_core::style::Modifier::REVERSED);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("hidden", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::HIDDEN);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::HIDDEN);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::HIDDEN);
+				*me = me.add_modifier(ratatui_core::style::Modifier::HIDDEN);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("crossed", |_, (ud, remove): (mlua::AnyUserData, bool)| {
 			let me = &mut ud.borrow_mut::<Self>()?.$($field).+;
 			if remove {
-				*me = me.remove_modifier(ratatui::style::Modifier::CROSSED_OUT);
+				*me = me.remove_modifier(ratatui_core::style::Modifier::CROSSED_OUT);
 			} else {
-				*me = me.add_modifier(ratatui::style::Modifier::CROSSED_OUT);
+				*me = me.add_modifier(ratatui_core::style::Modifier::CROSSED_OUT);
 			}
 			Ok(ud)
 		});
 		$methods.add_function("reset", |_, ud: mlua::AnyUserData| {
-			ud.borrow_mut::<Self>()?.$($field).+ = ratatui::style::Style::reset();
+			ud.borrow_mut::<Self>()?.$($field).+ = ratatui_core::style::Style::reset();
 			Ok(ud)
 		});
 	};
@@ -245,21 +205,24 @@ macro_rules! impl_style_shorthands {
 #[macro_export]
 macro_rules! impl_file_fields {
 	($fields:ident) => {
-		$crate::cached_field!($fields, cha, |_, me| Ok($crate::Cha(me.cha)));
-		$crate::cached_field!($fields, url, |_, me| Ok($crate::Url::new(me.url_owned())));
-		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to.as_ref().map($crate::Path::new)));
+		use yazi_shim::mlua::UserDataFieldsExt;
 
-		$crate::cached_field!($fields, name, |lua, me| {
+		$fields.add_cached_field("cha", |_, me| Ok(me.cha));
+		$fields.add_cached_field("url", |_, me| Ok(me.url_owned()));
+		$fields.add_cached_field("link_to", |_, me| Ok(me.link_to.clone()));
+
+		$fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		$crate::cached_field!($fields, path, |_, me| {
+		$fields.add_cached_field("path", |_, me| {
 			use yazi_fs::FsUrl;
-			use yazi_shared::url::AsUrl;
-			Ok($crate::Path::new(me.url.as_url().unified_path()))
+			use yazi_shared::{path::PathBufDyn, url::AsUrl};
+			Ok(PathBufDyn::from(me.url.as_url().unified_path()))
 		});
-		$crate::cached_field!($fields, cache, |_, me| {
+		$fields.add_cached_field("cache", |_, me| {
 			use yazi_fs::FsUrl;
-			Ok(me.url.cache().map($crate::Path::new))
+			use yazi_shared::path::PathBufDyn;
+			Ok(me.url.cache().map(PathBufDyn::from))
 		});
 	};
 }

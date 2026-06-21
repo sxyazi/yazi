@@ -3,8 +3,8 @@ use std::{fmt::Display, io::Write, str::FromStr};
 use anyhow::{Result, anyhow};
 use mlua::{IntoLua, Lua, Value};
 use yazi_boot::BOOT;
-use yazi_macro::{emit, relay};
-use yazi_shared::{Id, event::ActionCow};
+use yazi_macro::{emit, impl_data_any, relay};
+use yazi_shared::{event::ActionCow, id::Id};
 
 use crate::{ID, ember::Ember};
 
@@ -14,6 +14,8 @@ pub struct Payload<'a> {
 	pub sender:   Id,
 	pub body:     Ember<'a>,
 }
+
+impl_data_any!(Payload<'static>);
 
 impl<'a> Payload<'a> {
 	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id::ZERO, sender: *ID, body } }
@@ -101,6 +103,7 @@ impl Display for Payload<'_> {
 			Ember::Trash(b) => serde_json::to_string(b),
 			Ember::Delete(b) => serde_json::to_string(b),
 			Ember::Download(b) => serde_json::to_string(b),
+			Ember::Input(b) => serde_json::to_string(b),
 			Ember::Mount(b) => serde_json::to_string(b),
 			Ember::Custom(b) => serde_json::to_string(b),
 		};
@@ -117,8 +120,8 @@ impl<'a> IntoLua for Payload<'a> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("receiver", yazi_binding::Id(self.receiver).into_lua(lua)?),
-				("sender", yazi_binding::Id(self.sender).into_lua(lua)?),
+				("receiver", self.receiver.into_lua(lua)?),
+				("sender", self.sender.into_lua(lua)?),
 				("body", self.body.into_lua(lua)?),
 			])?
 			.into_lua(lua)

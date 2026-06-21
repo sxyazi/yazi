@@ -11,6 +11,7 @@ pub enum Spark<'a> {
 	AppAcceptPayload(yazi_dds::Payload<'a>),
 	AppBootstrap(crate::VoidForm),
 	AppDeprecate(crate::app::DeprecateForm),
+	AppDnd(crate::app::DndForm),
 	AppFocus(crate::VoidForm),
 	AppLua(crate::app::LuaForm),
 	AppMouse(crate::app::MouseForm),
@@ -125,7 +126,7 @@ pub enum Spark<'a> {
 	InputKill(yazi_widgets::input::parser::KillOpt),
 	InputMove(yazi_widgets::input::parser::MoveOpt),
 	InputPaste(yazi_widgets::input::parser::PasteOpt),
-	InputShow(yazi_widgets::input::InputOpt),
+	InputShow(crate::input::ShowForm),
 
 	// Notify
 	NotifyPush(crate::notify::PushForm),
@@ -180,6 +181,10 @@ impl<'a> Spark<'a> {
 			// mgr:quit
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
 
+			// input:close
+			KeyInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
+			IndInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
+
 			// which:activate
 			IndWhichActivate => Self::WhichActivate(<_>::from_lua(value, lua)?),
 
@@ -199,6 +204,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppAcceptPayload(b) => b.into_lua(lua),
 			Self::AppBootstrap(b) => b.into_lua(lua),
 			Self::AppDeprecate(b) => b.into_lua(lua),
+			Self::AppDnd(b) => b.into_lua(lua),
 			Self::AppFocus(b) => b.into_lua(lua),
 			Self::AppLua(b) => b.into_lua(lua),
 			Self::AppMouse(b) => b.into_lua(lua),
@@ -376,6 +382,7 @@ try_from_spark!(
 // App
 try_from_spark!(crate::ArrowForm, mgr:arrow, mgr:tab_swap);
 try_from_spark!(crate::app::DeprecateForm, app:deprecate);
+try_from_spark!(crate::app::DndForm, app:dnd);
 try_from_spark!(crate::app::LuaForm, app:lua);
 try_from_spark!(crate::app::MouseForm, app:mouse);
 try_from_spark!(crate::app::PluginForm, app:plugin, app:plugin_do);
@@ -445,7 +452,7 @@ try_from_spark!(crate::tasks::SpawnForm, tasks:spawn);
 try_from_spark!(crate::tasks::UpdateSucceedForm, tasks:update_succeed);
 try_from_spark!(crate::which::ActivateForm, which:activate);
 try_from_spark!(yazi_dds::Payload<'a>, app:accept_payload);
-try_from_spark!(yazi_widgets::input::InputOpt, input:show);
+try_from_spark!(crate::input::ShowForm, input:show);
 try_from_spark!(yazi_widgets::input::parser::BackspaceOpt, input:backspace);
 try_from_spark!(yazi_widgets::input::parser::BackwardOpt, input:backward);
 try_from_spark!(yazi_widgets::input::parser::CompleteOpt, input:complete);

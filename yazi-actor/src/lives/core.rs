@@ -1,9 +1,11 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataMethods, UserDataRef, Value};
 use paste::paste;
 
 use super::{Lives, PtrCell};
+
+pub(super) type CoreRef = UserDataRef<Core>;
 
 pub(super) struct Core {
 	inner: PtrCell<yazi_core::Core>,
@@ -12,8 +14,9 @@ pub(super) struct Core {
 	c_tabs:   Option<Value>,
 	c_tasks:  Option<Value>,
 	c_yanked: Option<Value>,
-	c_layer:  Option<Value>,
+	c_input:  Option<Value>,
 	c_which:  Option<Value>,
+	c_layer:  Option<Value>,
 }
 
 impl Deref for Core {
@@ -31,8 +34,9 @@ impl Core {
 			c_tabs:   None,
 			c_tasks:  None,
 			c_yanked: None,
-			c_layer:  None,
+			c_input:  None,
 			c_which:  None,
+			c_layer:  None,
 		})
 	}
 }
@@ -57,10 +61,9 @@ impl UserData for Core {
 				b"tabs" => reuse!(tabs, super::Tabs::make(&me.mgr.tabs)),
 				b"tasks" => reuse!(tasks, super::Tasks::make(&me.tasks)),
 				b"yanked" => reuse!(yanked, super::Yanked::make(&me.mgr.yanked)),
-				b"layer" => {
-					reuse!(layer, Ok::<_, mlua::Error>(yazi_binding::Layer::from(me.layer())))
-				}
+				b"input" => reuse!(input, super::Input::make(&me.input)),
 				b"which" => reuse!(which, super::Which::make(&me.which)),
+				b"layer" => reuse!(layer, Ok::<_, mlua::Error>(me.layer())),
 				_ => Value::Nil,
 			})
 		});

@@ -1,10 +1,9 @@
 use anyhow::Result;
 use yazi_binding::runtime_scope;
-use yazi_dds::Sendable;
 use yazi_macro::succ;
 use yazi_parser::app::LuaForm;
 use yazi_plugin::LUA;
-use yazi_shared::data::Data;
+use yazi_shared::data::{Data, Sendable};
 
 use crate::{Actor, Ctx, lives::Lives};
 
@@ -17,7 +16,7 @@ impl Actor for Lua {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let chunk = LUA.load(&*form.code).set_name("anonymous");
-		let result = Lives::scope(cx.core, || {
+		let result = Lives::scope(cx.core, |_| {
 			runtime_scope!(LUA, "inline", Sendable::value_to_data(&LUA, chunk.eval()?))
 		});
 		succ!(result?);

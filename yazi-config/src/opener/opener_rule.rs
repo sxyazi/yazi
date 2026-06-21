@@ -1,0 +1,46 @@
+use serde::Deserialize;
+use yazi_fs::Splatter;
+use yazi_shared::{NonEmptyString, id::Id};
+
+use crate::{Platform, plugin::opener_rule_id};
+
+#[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct OpenerRule {
+	#[serde(skip, default = "opener_rule_id")]
+	pub id:     Id,
+	pub run:    NonEmptyString,
+	#[serde(default)]
+	pub block:  bool,
+	#[serde(default)]
+	pub orphan: bool,
+	#[serde(default)]
+	pub desc:   String,
+	#[serde(default)]
+	pub r#for:  Platform,
+	#[serde(skip)]
+	pub spread: bool,
+}
+
+impl OpenerRule {
+	pub fn desc(&self) -> String {
+		if !self.desc.is_empty() {
+			self.desc.clone()
+		} else if let Some(first) = self.run.split_whitespace().next() {
+			first.to_owned()
+		} else {
+			String::new()
+		}
+	}
+
+	pub fn fill(&mut self) {
+		#[cfg(unix)]
+		{
+			self.spread =
+				Splatter::<()>::spread(&self.run) || self.run.contains("$@") || self.run.contains("$*");
+		}
+		#[cfg(windows)]
+		{
+			self.spread = Splatter::<()>::spread(&self.run) || self.run.contains("%*");
+		}
+	}
+}

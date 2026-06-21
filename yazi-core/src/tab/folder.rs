@@ -2,9 +2,9 @@ use std::mem;
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
+use yazi_fs::{Files, FilesOp, FolderStage, cha::Cha, file::File};
 use yazi_macro::err;
-use yazi_shared::{Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
+use yazi_shared::{id::Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_widgets::{Scrollable, Step};
 
 use crate::MgrProxy;
@@ -155,7 +155,8 @@ impl Folder {
 			len.saturating_sub(limit).min(self.offset)
 		} else {
 			len.saturating_sub(limit).min(self.cursor.saturating_sub(limit) + 1 + scrolloff)
-		};
+		}
+		.min(self.cursor);
 
 		old != self.offset
 	}

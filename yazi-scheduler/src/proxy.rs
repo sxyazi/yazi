@@ -1,6 +1,7 @@
 use tokio::sync::mpsc;
 use yazi_macro::{emit, relay};
-use yazi_shared::{Id, SStr, url::UrlBuf};
+use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shim::SStr;
 
 pub struct AppProxy;
 

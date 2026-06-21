@@ -1,8 +1,9 @@
 use std::{borrow::Cow, mem, path::PathBuf};
 
+use mlua::{ExternalError, FromLua, Lua, Value};
 use tokio::sync::mpsc;
 use yazi_fs::cha::Cha;
-use yazi_shared::{Id, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{TaskIn, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}};
 
@@ -172,7 +173,7 @@ impl FileInCopy {
 
 // --- Cut
 #[derive(Clone, Debug)]
-pub(crate) struct FileInCut {
+pub struct FileInCut {
 	pub(crate) id:     Id,
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
@@ -203,6 +204,19 @@ impl Drop for FileInCut {
 }
 
 impl FileInCut {
+	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
+		Self {
+			follow: !from.scheme().covariant(to.scheme()),
+			id: Id::ZERO,
+			from,
+			to,
+			force,
+			cha: None,
+			retry: 0,
+			drop: None,
+		}
+	}
+
 	pub(super) fn into_link(mut self) -> FileInLink {
 		FileInLink {
 			id:       self.id,
@@ -219,6 +233,16 @@ impl FileInCut {
 	pub(super) fn with_drop(mut self, drop: &mpsc::Sender<()>) -> Self {
 		self.drop = Some(drop.clone());
 		self
+	}
+}
+
+impl FromLua for FileInCut {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		let Value::Table(t) = value else {
+			return Err("constructing FileInCut from non-table value".into_lua_err());
+		};
+
+		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?))
 	}
 }
 

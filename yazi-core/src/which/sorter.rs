@@ -1,6 +1,6 @@
 use std::{borrow::Cow, mem};
 
-use yazi_config::{YAZI, keymap::ChordCow, which::SortBy};
+use yazi_config::{YAZI, keymap::ChordArc, which::SortBy};
 use yazi_shared::{natsort, translit::Transliterator};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -23,7 +23,7 @@ impl Default for WhichSorter {
 }
 
 impl WhichSorter {
-	pub fn sort(&self, items: &mut Vec<ChordCow>) {
+	pub fn sort(&self, items: &mut Vec<ChordArc>) {
 		if self.by == SortBy::None || items.is_empty() {
 			return;
 		}
@@ -53,6 +53,7 @@ impl WhichSorter {
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
+		// TODO: remove the `mem::take` since that involves Arc atomics refcount changes
 		*items = indices.into_iter().map(|i| mem::take(&mut items[i])).collect();
 	}
 }

@@ -2,9 +2,11 @@ use std::{mem, str::FromStr};
 
 use anyhow::{Result, bail};
 use hashbrown::HashMap;
+use mlua::{UserData, UserDataFields};
 use serde_with::DeserializeFromStr;
+use yazi_shim::{SStr, mlua::UserDataFieldsExt};
 
-use crate::{SStr, data::{Data, DataKey}};
+use crate::data::{Data, DataKey, Sendable};
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Cmd {
@@ -53,5 +55,15 @@ impl Cmd {
 				Ok((key.to_owned().into(), val))
 			})
 			.collect()
+	}
+}
+
+impl UserData for Cmd {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_cached_field_mut("name", |_, me| Ok(mem::take(&mut me.name)));
+
+		fields.add_cached_field_mut("args", |lua, me| {
+			Sendable::args_to_table(lua, mem::take(&mut me.args))
+		});
 	}
 }

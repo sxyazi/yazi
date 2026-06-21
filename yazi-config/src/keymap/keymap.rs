@@ -1,38 +1,50 @@
+use std::{ops::Deref, sync::Arc};
+
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shared::Layer;
 
-use super::{Chord, KeymapRules};
+use super::KeymapSection;
+use crate::keymap::ChordArc;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Keymap {
-	pub mgr:     KeymapRules<{ Layer::Mgr as u8 }>,
-	pub tasks:   KeymapRules<{ Layer::Tasks as u8 }>,
-	pub spot:    KeymapRules<{ Layer::Spot as u8 }>,
-	pub pick:    KeymapRules<{ Layer::Pick as u8 }>,
-	pub input:   KeymapRules<{ Layer::Input as u8 }>,
-	pub confirm: KeymapRules<{ Layer::Confirm as u8 }>,
-	pub help:    KeymapRules<{ Layer::Help as u8 }>,
-	pub cmp:     KeymapRules<{ Layer::Cmp as u8 }>,
+	pub mgr:     KeymapSection<{ Layer::Mgr as u8 }>,
+	pub tasks:   KeymapSection<{ Layer::Tasks as u8 }>,
+	pub spot:    KeymapSection<{ Layer::Spot as u8 }>,
+	pub pick:    KeymapSection<{ Layer::Pick as u8 }>,
+	pub input:   KeymapSection<{ Layer::Input as u8 }>,
+	pub confirm: KeymapSection<{ Layer::Confirm as u8 }>,
+	pub help:    KeymapSection<{ Layer::Help as u8 }>,
+	pub cmp:     KeymapSection<{ Layer::Cmp as u8 }>,
 }
 
 impl Keymap {
-	pub fn get(&self, layer: Layer) -> &[Chord] {
-		match layer {
-			Layer::Null | Layer::App => &[],
-			Layer::Mgr => self.mgr.as_erased_slice(),
-			Layer::Tasks => self.tasks.as_erased_slice(),
-			Layer::Spot => self.spot.as_erased_slice(),
-			Layer::Pick => self.pick.as_erased_slice(),
-			Layer::Input => self.input.as_erased_slice(),
-			Layer::Confirm => self.confirm.as_erased_slice(),
-			Layer::Help => self.help.as_erased_slice(),
-			Layer::Cmp => self.cmp.as_erased_slice(),
-			Layer::Which => &[],
-			Layer::Notify => &[],
+	pub fn chords(&self, layer: Layer) -> Arc<Vec<ChordArc>> {
+		match self.section(layer) {
+			Some(s) => s.deref().as_erased(),
+			None => Arc::new(Vec::new()),
 		}
+	}
+
+	pub fn section(&self, layer: Layer) -> Option<&KeymapSection> {
+		use Layer as L;
+
+		Some(match layer {
+			L::Null | L::App => None?,
+			L::Mgr => self.mgr.as_erased(),
+			L::Tasks => self.tasks.as_erased(),
+			L::Spot => self.spot.as_erased(),
+			L::Pick => self.pick.as_erased(),
+			L::Input => self.input.as_erased(),
+			L::Confirm => self.confirm.as_erased(),
+			L::Help => self.help.as_erased(),
+			L::Cmp => self.cmp.as_erased(),
+			L::Which => None?,
+			L::Notify => None?,
+		})
 	}
 }
 

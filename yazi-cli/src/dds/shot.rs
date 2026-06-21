@@ -5,7 +5,7 @@ use hashbrown::HashMap;
 use tokio::io::AsyncWriteExt;
 use yazi_dds::{ID, Payload, Peer, Stream, ember::{Ember, EmberBye, EmberHi}};
 use yazi_macro::try_format;
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 use crate::dds::Dds;
 
@@ -44,10 +44,10 @@ impl Dds {
 	}
 
 	pub(super) fn ensure_version(version: Option<&str>) -> Result<()> {
-		if version != Some(EmberHi::version()) {
+		if version != Some(yazi_version::version()) {
 			bail!(
-				"Incompatible version (Ya {}, Yazi {}). Restart all `ya` and `yazi` processes if you upgrade either one.",
-				EmberHi::version(),
+				"Incompatible version (Ya {}, Yazi {}). Restart all `ya` and `yazi` processes if you upgraded either.",
+				yazi_version::version(),
 				version.unwrap_or("Unknown")
 			);
 		}

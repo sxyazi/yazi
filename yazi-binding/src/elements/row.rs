@@ -10,7 +10,7 @@ pub struct Row {
 	height:           u16,
 	top_margin:       u16,
 	bottom_margin:    u16,
-	style:            ratatui::style::Style,
+	style:            ratatui_core::style::Style,
 }
 
 impl Row {
@@ -26,7 +26,7 @@ impl Row {
 	}
 }
 
-impl From<Row> for ratatui::widgets::Row<'static> {
+impl From<Row> for ratatui_widgets::table::Row<'static> {
 	fn from(value: Row) -> Self {
 		Self::new(value.cells)
 			.height(value.height.max(1))
@@ -36,18 +36,20 @@ impl From<Row> for ratatui::widgets::Row<'static> {
 	}
 }
 
+impl TryFrom<&AnyUserData> for Row {
+	type Error = mlua::Error;
+
+	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> {
+		if let Ok(row) = value.take() { Ok(row) } else { Err(EXPECTED.into_lua_err()) }
+	}
+}
+
 impl FromLua for Row {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		Ok(match value {
-			Value::UserData(ud) => {
-				if let Ok(row) = ud.take() {
-					row
-				} else {
-					Err(EXPECTED.into_lua_err())?
-				}
-			}
-			_ => Err(EXPECTED.into_lua_err())?,
-		})
+		match value {
+			Value::UserData(ud) => Self::try_from(&ud),
+			_ => Err(EXPECTED.into_lua_err()),
+		}
 	}
 }
 

@@ -1,11 +1,10 @@
 use std::path::Path;
 
 use hashbrown::{HashMap, HashSet};
-use yazi_macro::relay;
-use yazi_shared::{Id, Ids, path::PathBufDyn, url::{UrlBuf, UrlLike, UrlMapExt}};
+use yazi_macro::{impl_data_any, relay};
+use yazi_shared::{id::{Id, Ids}, path::PathBufDyn, url::{UrlBuf, UrlLike, UrlMapExt}};
 
-use super::File;
-use crate::{cha::Cha, error::Error};
+use crate::{cha::Cha, file::File};
 
 pub static FILES_TICKET: Ids = Ids::new();
 
@@ -15,13 +14,15 @@ pub enum FilesOp {
 	Part(UrlBuf, Vec<File>, Id),
 	Done(UrlBuf, Cha, Id),
 	Size(UrlBuf, HashMap<PathBufDyn, u64>),
-	IOErr(UrlBuf, Error),
+	IOErr(UrlBuf, yazi_shim::fs::Error),
 
 	Creating(UrlBuf, Vec<File>),
 	Deleting(UrlBuf, HashSet<PathBufDyn>),
 	Updating(UrlBuf, HashMap<PathBufDyn, File>),
 	Upserting(UrlBuf, HashMap<PathBufDyn, File>),
 }
+
+impl_data_any!(FilesOp);
 
 impl FilesOp {
 	#[inline]

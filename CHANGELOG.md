@@ -14,13 +14,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- Drag and drop ([#4005])
 - Bulk create ([#3793])
+- Dynamic keymap Lua API ([#4031])
+- New `ui.Input` element ([#4040])
 - Image preview with Überzug++ on Niri ([#3990])
+- New gait for input `backward` and `forward` actions ([#4012])
 
 ### Changed
 
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
 - Remove Legacy Console Mode on Windows ([#3989])
+
+### Deprecated
+
+- Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
+
+### Fixed
+
+- Normalize `\\?\`-prefixed Verbatim paths when creating relative symlinks on Windows ([#4067])
+- Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
+- Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
+- Use cleaned and normalized `$PWD` as startup CWD to avoid MSYS2/git-bash path quirks ([#4068])
+
+### Improved
+
+- Eliminate hacks in image and UI conflict resolution ([#4022])
 
 ## [v26.5.6]
 
@@ -1729,3 +1748,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3943]: https://github.com/sxyazi/yazi/pull/3943
 [#3989]: https://github.com/sxyazi/yazi/pull/3989
 [#3990]: https://github.com/sxyazi/yazi/pull/3990
+[#4005]: https://github.com/sxyazi/yazi/pull/4005
+[#4012]: https://github.com/sxyazi/yazi/pull/4012
+[#4022]: https://github.com/sxyazi/yazi/pull/4022
+[#4031]: https://github.com/sxyazi/yazi/pull/4031
+[#4040]: https://github.com/sxyazi/yazi/pull/4040
+[#4064]: https://github.com/sxyazi/yazi/pull/4064
+[#4065]: https://github.com/sxyazi/yazi/pull/4065
+[#4067]: https://github.com/sxyazi/yazi/pull/4067
+[#4068]: https://github.com/sxyazi/yazi/pull/4068

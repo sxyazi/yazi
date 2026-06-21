@@ -1,8 +1,9 @@
 use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use anyhow::Result;
+use yazi_shim::wtf8::FromWtf8Vec;
 
-use crate::{path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}, wtf8::FromWtf8Vec};
+use crate::{path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}};
 
 // --- StrandBuf
 #[derive(Clone, Debug, Eq)]

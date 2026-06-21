@@ -1,13 +1,10 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
-// use ratatui::style::Color;
-use yazi_binding::{
-	Error,
-	elements::{Area, HighlightPosition, Renderable, Text},
-};
+use yazi_binding::{Error, elements::Area};
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::FsUrl;
 use yazi_runner::previewer::PeekError;
 use yazi_shared::url::AsUrl;
+use yazi_widgets::Renderable;
 
 use super::Utils;
 
@@ -31,7 +28,7 @@ impl Utils {
 				}
 			};
 
-			lock.data = vec![Renderable::Text(Text { area, inner, ..Default::default() })];
+			lock.data = vec![Renderable::Text(inner.into()).with_area(area)];
 
 			MgrProxy::update_peeked(lock);
 			().into_lua_multi(&lua)
@@ -51,7 +48,7 @@ impl Utils {
 					Err(e) => {
 						if let Ok(err) = ud.take::<Error>() {
 							vec![
-								Renderable::Clear(yazi_binding::elements::Clear { area: lock.area.into() }),
+								Renderable::Clear(Default::default()).with_area(lock.area),
 								Renderable::from(err).with_area(lock.area),
 							]
 						} else {

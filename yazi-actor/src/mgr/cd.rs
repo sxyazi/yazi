@@ -3,10 +3,10 @@ use std::{mem, time::Duration};
 use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_config::popup::InputCfg;
+use yazi_config::YAZI;
 use yazi_core::mgr::CdSource;
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, path::{clean_url, expand_url}};
+use yazi_fs::{FilesOp, file::File, path::{clean_url, expand_url}};
 use yazi_macro::{act, err, input, render, succ};
 use yazi_parser::mgr::CdForm;
 use yazi_proxy::{CmpProxy, MgrProxy};
@@ -63,7 +63,7 @@ impl Actor for Cd {
 
 impl Cd {
 	fn cd_interactive(cx: &mut Ctx) -> Result<Data> {
-		let input = input!(cx, InputCfg::cd(cx.cwd().as_url()))?;
+		let input = input!(cx, YAZI.input.cd(cx.cwd().as_url()))?;
 
 		tokio::spawn(async move {
 			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));

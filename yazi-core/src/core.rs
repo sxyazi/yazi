@@ -1,8 +1,9 @@
-use ratatui::layout::{Position, Rect};
+use ratatui_core::layout::{Position, Rect};
 use yazi_shared::Layer;
-use yazi_term::CursorStyle;
+use yazi_shim::ratatui::Padable;
+use yazi_tty::sequence::SetCursorStyle;
 
-use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
+use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::{Input, InputGuard}, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
 
 pub struct Core {
 	pub mgr:     Mgr,
@@ -31,17 +32,19 @@ impl Core {
 		}
 	}
 
-	pub fn cursor(&self) -> Option<(Position, CursorStyle)> {
-		if self.input.visible {
-			let Rect { x, y, .. } = self.mgr.area(self.input.position);
-			return Some((
-				Position { x: x + 1 + self.input.cursor(), y: y + 1 },
-				self.input.cursor_shape(),
-			));
+	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
+		if let Some(guard) = self.input.lock() {
+			let Rect { x, y, .. } = match &guard {
+				InputGuard::Main(_) => self.mgr.area(self.input.position()?).padding(self.input.padding()),
+				InputGuard::Alt(_) => self.mgr.area(self.input.position()?),
+			};
+			return Some((Position { x: x + guard.cursor(), y }, guard.cursor_shape()));
 		}
+
 		if let Some((x, y)) = self.help.cursor() {
-			return Some((Position { x, y }, self.help.cursor_shape()));
+			return Some((Position { x, y }, self.help.cursor_shape()?));
 		}
+
 		None
 	}
 
@@ -54,7 +57,7 @@ impl Core {
 			Layer::Help
 		} else if self.confirm.visible {
 			Layer::Confirm
-		} else if self.input.visible {
+		} else if self.input.focus() {
 			Layer::Input
 		} else if self.pick.visible {
 			Layer::Pick

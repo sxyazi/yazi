@@ -1,11 +1,13 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use hashbrown::HashSet;
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use serde::Deserialize;
-use yazi_fs::File;
-use yazi_shared::{Id, event::Cmd};
+use yazi_binding::Iter;
+use yazi_fs::file::{File, FileRef};
+use yazi_shared::{event::Cmd, id::Id};
 
-use crate::{Mixable, Pattern, Priority, Selectable, Selector, plugin::{Fetchers, fetcher_id}};
+use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{FetcherArc, Fetchers, fetcher_id}};
 
 #[derive(Debug, Deserialize)]
 pub struct Fetcher {
@@ -38,7 +40,7 @@ impl Mixable for Fetcher {}
 // --- Matcher
 #[derive(Default)]
 pub struct FetcherMatcher<'a> {
-	pub fetchers: Arc<Vec<Arc<Fetcher>>>,
+	pub fetchers: Arc<Vec<FetcherArc>>,
 	pub id:       Id,
 	pub file:     Option<Cow<'a, File>>,
 	pub mime:     Option<Cow<'a, str>>,
@@ -66,7 +68,7 @@ impl FetcherMatcher<'_> {
 }
 
 impl Iterator for FetcherMatcher<'_> {
-	type Item = Arc<Fetcher>;
+	type Item = FetcherArc;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some(fetcher) = self.fetchers.get(self.offset) {
@@ -80,4 +82,35 @@ impl Iterator for FetcherMatcher<'_> {
 		}
 		None
 	}
+}
+
+impl TryFrom<Table> for FetcherMatcher<'static> {
+	type Error = mlua::Error;
+
+	fn try_from(value: Table) -> Result<Self, Self::Error> {
+		let id: Id = value.raw_get("id").unwrap_or_default();
+		let file: Option<FileRef> = value.raw_get("file")?;
+		let mime: Option<String> = value.raw_get("mime")?;
+
+		Ok(Self {
+			fetchers: YAZI.plugin.fetchers.load_full(),
+			id,
+			file: file.map(|f| f.clone().into()),
+			mime: mime.map(Into::into),
+			..Default::default()
+		})
+	}
+}
+
+impl FromLua for FetcherMatcher<'static> {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Table(t) => t.try_into(),
+			_ => Err("expected a table of FetcherMatcher".into_lua_err()),
+		}
+	}
+}
+
+impl IntoLua for FetcherMatcher<'static> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
 }

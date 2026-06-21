@@ -1,8 +1,8 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_binding::{SER_OPT, Url};
 use yazi_core::mgr::CdSource;
 use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shim::mlua::SER_OPT;
 
 use crate::mgr::CdForm;
 
@@ -26,10 +26,8 @@ impl From<&CdForm> for StashForm {
 impl FromLua for StashForm {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		let tbl = value.as_table().ok_or_else(|| "expected table".into_lua_err())?;
-		Ok(Self {
-			target: tbl.get::<Url>("target")?.into(),
-			source: lua.from_value(tbl.get("source")?)?,
-		})
+
+		Ok(Self { target: tbl.get("target")?, source: lua.from_value(tbl.get("source")?)? })
 	}
 }
 
@@ -37,7 +35,7 @@ impl IntoLua for StashForm {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("target", Url::new(self.target).into_lua(lua)?),
+				("target", self.target.into_lua(lua)?),
 				("source", lua.to_value_with(&self.source, SER_OPT)?),
 			])?
 			.into_lua(lua)

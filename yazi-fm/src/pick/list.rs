@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{ListItem, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget}};
+use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, widgets::{StatefulWidget, Widget}};
+use ratatui_widgets::{list::ListItem, scrollbar::{Scrollbar, ScrollbarOrientation, ScrollbarState}};
 use yazi_config::THEME;
 use yazi_core::Core;
 use yazi_widgets::Scrollable;
@@ -33,6 +34,6 @@ impl Widget for List<'_> {
 				ListItem::new(format!("  {v}")).style(THEME.pick.inactive.get())
 			}
 		});
-		Widget::render(ratatui::widgets::List::new(items), inner, buf);
+		Widget::render(ratatui_widgets::list::List::new(items), inner, buf);
 	}
 }

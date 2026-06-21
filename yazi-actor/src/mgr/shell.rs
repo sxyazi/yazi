@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use yazi_config::popup::InputCfg;
+use yazi_config::YAZI;
 use yazi_macro::{act, input, succ};
 use yazi_parser::mgr::ShellForm;
 use yazi_proxy::TasksProxy;
@@ -25,7 +25,10 @@ impl Actor for Shell {
 		let selected: Vec<_> = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
 
 		let input = if form.interactive {
-			Some(input!(cx, InputCfg::shell(form.block).with_value(&*form.run).with_cursor(form.cursor))?)
+			Some(input!(
+				cx,
+				YAZI.input.shell(form.block).with_value(&*form.run).with_cursor(form.cursor)
+			)?)
 		} else {
 			None
 		};

@@ -1,3 +1,5 @@
+use std::path::PrefixComponent;
+
 use anyhow::{Result, bail};
 use yazi_shared::path::{PathBufDyn, PathCow, PathDyn, PathLike};
 
@@ -28,7 +30,7 @@ fn path_relative_to_impl<'a>(from: PathCow<'_>, to: PathCow<'a>) -> Result<PathC
 	let (f_head, t_head) = loop {
 		match (f_it.next(), t_it.next()) {
 			(Some(RootDir), Some(RootDir)) => {}
-			(Some(Prefix(a)), Some(Prefix(b))) if a == b => {}
+			(Some(Prefix(a)), Some(Prefix(b))) if path_prefix_eq(a, b) => {}
 			(Some(Prefix(_) | RootDir), _) | (_, Some(Prefix(_) | RootDir)) => {
 				return Ok(to);
 			}
@@ -44,6 +46,20 @@ fn path_relative_to_impl<'a>(from: PathCow<'_>, to: PathCow<'a>) -> Result<PathC
 	let buf = PathBufDyn::from_components(from.kind(), dots.chain(rest))?;
 	Ok(buf.into())
 }
+
+#[cfg(windows)]
+fn path_prefix_eq(a: PrefixComponent<'_>, b: PrefixComponent<'_>) -> bool {
+	use std::path::Prefix::*;
+
+	match (a.kind(), b.kind()) {
+		(Disk(a), VerbatimDisk(b)) | (VerbatimDisk(a), Disk(b)) => a == b,
+		(UNC(a1, a2), VerbatimUNC(b1, b2)) | (VerbatimUNC(a1, a2), UNC(b1, b2)) => a1 == b1 && a2 == b2,
+		_ => a == b,
+	}
+}
+
+#[cfg(not(windows))]
+fn path_prefix_eq(a: PrefixComponent<'_>, b: PrefixComponent<'_>) -> bool { a == b }
 
 #[cfg(test)]
 mod tests {
@@ -80,6 +96,14 @@ mod tests {
 			(r"C:\a\b\d", r"C:\a\b\c", r"..\c"),
 			(r"C:\a\b\c", r"C:\a", r"..\.."),
 			(r"C:\a\b\b", r"C:\a\a\b", r"..\..\a\b"),
+			// Verbatim (`\\?\`-prefixed) paths
+			(r"\\?\C:\a\b", r"C:\a\b\c", "c"),
+			(r"C:\a\b", r"\\?\C:\a\b\c", "c"),
+			(r"\\?\C:\a\b", r"\\?\C:\a\b\c", "c"),
+			(r"\\?\C:\a\b\c", r"C:\a\b", r".."),
+			(r"\\?\C:\a\b\d", r"C:\a\b\c", r"..\c"),
+			(r"\\?\C:\a\b\c", r"\\?\C:\a", r"..\.."),
+			(r"\\?\C:\a\b", r"D:\a\b\c", r"D:\a\b\c"),
 		];
 
 		for (from, to, expected) in cases {

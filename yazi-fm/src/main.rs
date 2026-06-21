@@ -4,7 +4,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 yazi_macro::mod_pub!(app cmp confirm help input mgr notify pick spot tasks which);
 
-yazi_macro::mod_flat!(dispatcher executor logs panic root router signals);
+yazi_macro::mod_flat!(dispatcher executor logs panic renderer root router signals);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -14,19 +14,19 @@ async fn main() -> anyhow::Result<()> {
 	Logs::start()?;
 	_ = fdlimit::raise_fd_limit();
 
-	yazi_tty::init();
-
-	yazi_term::init()?;
-
 	yazi_fs::init();
-
-	yazi_config::init()?;
 
 	yazi_vfs::init();
 
-	yazi_adapter::init()?;
+	yazi_tty::init();
+
+	yazi_config::init()?;
 
 	yazi_boot::init();
+
+	yazi_term::init()?;
+
+	yazi_adapter::init()?;
 
 	yazi_dds::init();
 
@@ -39,6 +39,8 @@ async fn main() -> anyhow::Result<()> {
 	yazi_plugin::init()?;
 
 	yazi_dds::serve();
+
+	yazi_actor::init();
 
 	yazi_shared::LOCAL_SET.run_until(app::App::serve()).await
 }

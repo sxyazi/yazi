@@ -2,6 +2,7 @@ use std::{any::TypeId, fmt::Write};
 
 use mlua::{Function, Lua, MultiValue, Value};
 use tracing::{debug, error};
+use yazi_shared::{id::Id, path::PathBufDyn, url::UrlBuf};
 
 use super::Utils;
 
@@ -33,15 +34,13 @@ impl Utils {
 		let id = ud.type_id();
 		let ptr = ud.to_pointer();
 		Ok(match id {
-			Some(t) if t == TypeId::of::<yazi_binding::Url>() => {
-				write!(buf, "Url({ptr:?}): {:?}", **ud.borrow::<yazi_binding::Url>()?)?
+			Some(t) if t == TypeId::of::<UrlBuf>() => {
+				write!(buf, "Url({ptr:?}): {:?}", *ud.borrow::<UrlBuf>()?)?
 			}
-			Some(t) if t == TypeId::of::<yazi_binding::Path>() => {
-				write!(buf, "Path({ptr:?}): {:?}", **ud.borrow::<yazi_binding::Path>()?)?
+			Some(t) if t == TypeId::of::<PathBufDyn>() => {
+				write!(buf, "Path({ptr:?}): {:?}", *ud.borrow::<PathBufDyn>()?)?
 			}
-			Some(t) if t == TypeId::of::<yazi_binding::Id>() => {
-				write!(buf, "Id({ptr:?}): {}", **ud.borrow::<yazi_binding::Id>()?)?
-			}
+			Some(t) if t == TypeId::of::<Id>() => write!(buf, "Id({ptr:?}): {}", *ud.borrow::<Id>()?)?,
 			_ => write!(buf, "{value:#?}")?,
 		})
 	}

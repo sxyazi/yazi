@@ -22,8 +22,10 @@ anyhow      = { workspace = true }
 base64      = { workspace = true }
 bitflags    = { workspace = true }
 futures     = { workspace = true }
+mlua        = { workspace = true }
 parking_lot = { workspace = true }
-ratatui     = { workspace = true }
+serde       = { workspace = true }
+strum       = { workspace = true }
 thiserror   = { workspace = true }
 tokio       = { workspace = true }
 

@@ -1,8 +1,9 @@
 use std::{io::{self, Write}, ops::{Deref, DerefMut}};
 
-use ratatui::{backend::{Backend, ClearType, WindowSize}, buffer::Cell, layout::{Position, Size}, style::{Color, Modifier}};
+use ratatui_core::{backend::{Backend, ClearType, WindowSize}, buffer::Cell, layout::{Position, Size}, style::{Color, Modifier}};
 use yazi_macro::writef;
-use yazi_term::{TERM, sequence::{EraseRegion, HideCursor, MoveTo, ResetAttrs, SetBg, SetFg, SetSgr, SetUnderlineColor, ShowCursor}};
+use yazi_term::TERM;
+use yazi_tty::sequence::{EraseRegion, HideCursor, MoveTo, ResetAttrs, SetBg, SetFg, SetSgr, SetUnderlineColor, ShowCursor};
 
 pub struct RatermBackend<W> {
 	writer:     W,

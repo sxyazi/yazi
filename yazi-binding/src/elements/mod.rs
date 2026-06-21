@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(align area bar border cell clear color constraint edge highlight elements gauge layout line list pad pos rect renderable row span table text wrap);
+yazi_macro::mod_flat!(align area bar border cell color constraint edge fill gauge highlight layout line list pad rect row span spatial table text wrap);

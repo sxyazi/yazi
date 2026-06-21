@@ -3,7 +3,8 @@ use std::borrow::Cow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
 use strum::EnumString;
-use yazi_shared::{SStr, event::ActionCow, strand::AsStrand};
+use yazi_shared::{event::ActionCow, strand::AsStrand};
+use yazi_shim::SStr;
 
 #[derive(Debug, Deserialize)]
 pub struct CopyForm {

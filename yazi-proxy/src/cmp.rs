@@ -1,6 +1,6 @@
 use yazi_core::cmp::CmpOpt;
 use yazi_macro::{emit, relay};
-use yazi_shared::Id;
+use yazi_shared::id::Id;
 
 pub struct CmpProxy;
 

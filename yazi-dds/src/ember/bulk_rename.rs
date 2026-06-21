@@ -39,10 +39,7 @@ impl IntoLua for EmberBulkRename<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from(
-				self
-					.changes
-					.into_iter()
-					.map(|(from, to)| (yazi_binding::Url::new(from), yazi_binding::Url::new(to))),
+				self.changes.into_iter().map(|(from, to)| (from.into_owned(), to.into_owned())),
 			)?
 			.into_lua(lua)
 	}

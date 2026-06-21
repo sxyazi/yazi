@@ -16,7 +16,7 @@ impl Preflight {
 			return Ok(opt.1);
 		};
 
-		Ok(Lives::scope(cx.core, || {
+		Ok(Lives::scope(cx.core, |_| {
 			let mut body = opt.1.into_lua(&LUA)?;
 			for (id, cb) in handlers {
 				match runtime_scope!(LUA, &id, cb.call::<Value>(&body)) {

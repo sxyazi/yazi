@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
+use ratatui_core::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType, paragraph::{Paragraph, Wrap}};
 use yazi_core::{Core, notify::Message};
 
 pub(crate) struct Notify<'a> {
@@ -43,7 +44,7 @@ impl Widget for Notify<'_> {
 				tiles[i].offset(Offset { x: (100 - m.percent) as i32 * tiles[i].width as i32 / 100, y: 0 });
 			rect.width -= rect.x - tiles[i].x;
 
-			yazi_widgets::Clear.render(rect, buf);
+			yazi_widgets::clear::Clear::default().render(rect, buf);
 			Paragraph::new(m.content.as_str())
 				.wrap(Wrap { trim: false })
 				.block(

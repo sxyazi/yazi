@@ -1,0 +1,16 @@
+[package]
+name                   = "yazi-version"
+description            = "Yazi version information"
+version.workspace      = true
+edition.workspace      = true
+license.workspace      = true
+authors.workspace      = true
+homepage.workspace     = true
+repository.workspace   = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[build-dependencies]
+vergen-gitcl = { version = "10.0.0", features = [ "build", "rustc" ] }

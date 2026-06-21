@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{Margin, Rect}, text::Line, widgets::{Block, BorderType, Widget}};
+use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, text::Line, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType};
 use yazi_config::THEME;
 use yazi_core::Core;
 
@@ -13,16 +14,16 @@ impl<'a> Input<'a> {
 impl Widget for Input<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let input = &self.core.input;
-		let area = self.core.mgr.area(input.position);
 
-		yazi_widgets::Clear.render(area, buf);
+		let outer = self.core.mgr.area(input.main.position);
+		yazi_widgets::clear::Clear::default().render(outer, buf);
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.input.border.get())
-			.title(Line::styled(&input.title, THEME.input.title.get()))
-			.render(area, buf);
+			.title(Line::styled(&input.main.title, THEME.input.title.get()))
+			.render(outer, buf);
 
-		input.render(area.inner(Margin::new(1, 1)), buf);
+		input.main.render(outer.inner(Margin::new(1, 1)), buf);
 	}
 }

@@ -1,1 +1,5 @@
-yazi_macro::mod_flat!(core file files filter finder folder lives mode preference preview ptr selected tab tabs task tasks which yanked);
+yazi_macro::mod_flat!(behavior core file files filter finder folder input input_alt lives mode mut_cell preference preview ptr selected tab tabs task tasks which yanked);
+
+pub(super) fn init() {
+	unsafe { FILE_CACHE.get().write(std::mem::MaybeUninit::new(<_>::default())) };
+}

@@ -41,7 +41,7 @@ function Status:mode()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(th.status.sep_left.open):fg(style.main:bg()):bg("reset"),
+		ui.Span(th.status.sep_left.open):fg(style.main:bg()):bg(App.bg()),
 		ui.Span(" " .. mode .. " "):style(style.main),
 		ui.Span(th.status.sep_left.close):fg(style.main:bg()):bg(style.alt:bg()),
 	}
@@ -127,7 +127,7 @@ function Status:position()
 	return ui.Line {
 		ui.Span(th.status.sep_right.open):fg(style.main:bg()):bg(style.alt:bg()),
 		ui.Span(string.format(" %2d/%-2d ", math.min(cursor + 1, length), length)):style(style.main),
-		ui.Span(th.status.sep_right.close):fg(style.main:bg()):bg("reset"),
+		ui.Span(th.status.sep_right.close):fg(style.main:bg()):bg(App.bg()),
 	}
 end
 

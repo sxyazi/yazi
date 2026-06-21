@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, widgets::{List, ListItem, Widget}};
+use ratatui_core::{buffer::Buffer, layout::{self, Constraint, Rect}, widgets::Widget};
+use ratatui_widgets::list::{List, ListItem};
 use yazi_config::THEME;
 use yazi_core::Core;
 

@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(dds package shared);
+yazi_macro::mod_pub!(cache dds env package shared);
 
 yazi_macro::mod_flat!(args);
 
@@ -31,12 +31,7 @@ async fn main() -> ExitCode {
 
 async fn run() -> anyhow::Result<()> {
 	if std::env::args_os().nth(1).is_some_and(|s| s == "-V" || s == "--version") {
-		outln!(
-			"Ya {} ({} {})",
-			env!("CARGO_PKG_VERSION"),
-			env!("VERGEN_GIT_SHA"),
-			env!("VERGEN_BUILD_DATE")
-		)?;
+		outln!("Ya\n{}", yazi_version::version_full())?;
 		return Ok(());
 	}
 
@@ -109,6 +104,25 @@ async fn run() -> anyhow::Result<()> {
 			dds::Dds::draw(cmd.kinds.split(',').collect()).await?;
 
 			tokio::signal::ctrl_c().await?;
+		}
+
+		Command::Cache(cmd) => {
+			yazi_tty::init();
+			yazi_config::init()?;
+
+			match cmd {
+				CommandCache::Clear => {
+					cache::Cache::clear()?;
+				}
+			}
+		}
+
+		Command::Env => {
+			yazi_tty::init();
+			yazi_term::init()?;
+			yazi_config::init()?;
+			yazi_adapter::init()?;
+			outln!("{}", env::Env::print()?)?;
 		}
 	}
 

@@ -3,10 +3,10 @@ use std::ops::Deref;
 use mlua::{FromLua, IntoLua, Lua, Value};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct Align(pub(super) ratatui::layout::Alignment);
+pub struct Align(pub(super) ratatui_core::layout::Alignment);
 
 impl Deref for Align {
-	type Target = ratatui::layout::Alignment;
+	type Target = ratatui_core::layout::Alignment;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -27,9 +27,9 @@ impl FromLua for Align {
 			});
 		};
 		Ok(Self(match n {
-			0 => ratatui::layout::Alignment::Left,
-			1 => ratatui::layout::Alignment::Center,
-			2 => ratatui::layout::Alignment::Right,
+			0 => ratatui_core::layout::Alignment::Left,
+			1 => ratatui_core::layout::Alignment::Center,
+			2 => ratatui_core::layout::Alignment::Right,
 			_ => Err(mlua::Error::FromLuaConversionError {
 				from:    value.type_name(),
 				to:      "Align".to_string(),

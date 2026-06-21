@@ -1,9 +1,10 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::{Id, SStr};
+use yazi_shared::id::Id;
+use yazi_shim::SStr;
 
-use super::{Ember, EmberHi};
+use super::Ember;
 use crate::Peer;
 
 /// Server handshake
@@ -15,7 +16,7 @@ pub struct EmberHey {
 
 impl EmberHey {
 	pub fn owned(peers: HashMap<Id, Peer>) -> Ember<'static> {
-		Self { peers, version: EmberHi::version().into() }.into()
+		Self { peers, version: yazi_version::version().into() }.into()
 	}
 }
 

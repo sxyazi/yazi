@@ -1,4 +1,4 @@
-use yazi_shared::{Id, Ids};
+use yazi_shared::id::{Id, Ids};
 
 pub fn fetcher_id() -> Id {
 	static IDS: Ids = Ids::new();

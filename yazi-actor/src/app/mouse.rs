@@ -19,31 +19,29 @@ impl Actor for Mouse {
 	const NAME: &str = "mouse";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let event = yazi_binding::MouseEvent::from(form.event);
-
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let area = yazi_binding::elements::Rect::from(size);
 
-		let result = Lives::scope(cx.core, move || {
-			let root = runtime_scope!(LUA, "root", {
-				LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)
-			})?;
+		let result = Lives::scope(cx.core, move |_| {
+			runtime_scope!(LUA, "root", {
+				let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
-			match event.kind {
-				MouseEventKind::Down(_) => root.call_method("click", (event, false))?,
-				MouseEventKind::Up(_) => root.call_method("click", (event, true))?,
+				match form.event.kind {
+					MouseEventKind::Down(_) => root.call_method("click", (form.event, false))?,
+					MouseEventKind::Up(_) => root.call_method("click", (form.event, true))?,
 
-				MouseEventKind::ScrollDown => root.call_method("scroll", (event, 1))?,
-				MouseEventKind::ScrollUp => root.call_method("scroll", (event, -1))?,
+					MouseEventKind::ScrollDown => root.call_method("scroll", (form.event, 1))?,
+					MouseEventKind::ScrollUp => root.call_method("scroll", (form.event, -1))?,
 
-				MouseEventKind::ScrollRight => root.call_method("touch", (event, 1))?,
-				MouseEventKind::ScrollLeft => root.call_method("touch", (event, -1))?,
+					MouseEventKind::ScrollRight => root.call_method("touch", (form.event, 1))?,
+					MouseEventKind::ScrollLeft => root.call_method("touch", (form.event, -1))?,
 
-				MouseEventKind::Moved => root.call_method("move", event)?,
-				MouseEventKind::Drag(_) => root.call_method("drag", event)?,
-			}
+					MouseEventKind::Moved => root.call_method("move", form.event)?,
+					MouseEventKind::Drag(_) => root.call_method("drag", form.event)?,
+				}
 
-			Ok(())
+				Ok(())
+			})
 		});
 
 		if let Err(ref e) = result {
