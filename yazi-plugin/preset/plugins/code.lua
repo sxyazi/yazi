@@ -44,8 +44,9 @@ function M:peek(job)
 	if search_idx == nil and search_occurrences then
 		local occurrence = search_occurrences[1]
 		local line = occurrence[1]
+		local skip = math.max(0, line - 1)
 		ya.emit("peek", {
-			math.max(0, line - 1),
+			skip,
 			only_if = job.file.url,
 			search_idx = 1,
 		})
@@ -84,16 +85,18 @@ function M:seek(job)
 		local next_occurrence_idx = get_next_occurrence_idx(search_idx, direction, #search_occurrences)
 		local occurrence = search_occurrences[next_occurrence_idx]
 		local line = occurrence[1]
+		local skip = math.max(0, line - 1)
 
-		ya.emit("peek", { math.max(0, line - 1), only_if = job.file.url, search_idx = next_occurrence_idx })
+		ya.emit("peek", { skip, only_if = job.file.url, search_idx = next_occurrence_idx })
 		return
 	end
 
 	local step = math.floor(job.units * job.area.h / 10)
 	step = step == 0 and ya.clamp(-1, job.units, 1) or step
+	local skip = math.max(0, cx.active.preview.skip + step)
 
 	ya.emit("peek", {
-		math.max(0, cx.active.preview.skip + step),
+		skip,
 		only_if = job.file.url,
 		search_idx = search_idx,
 	})

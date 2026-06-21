@@ -39,11 +39,7 @@ impl Actor for Peek {
 
 		let preview = &mut cx.tab_mut().preview;
 		if let Some(skip) = form.skip {
-			if form.upper_bound {
-				preview.skip = preview.skip.min(skip);
-			} else {
-				preview.skip = skip;
-			}
+			preview.skip = skip;
 		}
 
 		match form.search_idx {
