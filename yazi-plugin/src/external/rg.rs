@@ -1,7 +1,11 @@
 use std::{fmt::format, process::Stdio};
 
 use anyhow::Result;
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
+use tokio::{
+	io::{AsyncBufReadExt, BufReader},
+	process::Command,
+	sync::mpsc::{self, UnboundedReceiver},
+};
 use yazi_fs::{FsUrl, file::File};
 use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
@@ -29,8 +33,6 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 	let (tx, rx) = mpsc::unbounded_channel();
 
 	tokio::spawn(async move {
-		// let mut occurrences_per_file: HashMap<String, Vec<(u32, u32)>> = HashMap::new();
-		// let mut current_file_path: String = String::new();
 		let mut current_file: String = String::new();
 		let mut current_occurrences: Vec<(u32, u32)> = vec![];
 
