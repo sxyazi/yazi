@@ -42,11 +42,8 @@ impl Actor for Peek {
 			preview.skip = skip;
 		}
 
-		match form.search_idx {
-			Some(index) => {
-				preview.search_idx = Some(index);
-			}
-			None => {}
+		if let Some(index) = form.search_idx {
+			preview.search_idx = Some(index);
 		}
 
 		if hovered.is_dir() {
