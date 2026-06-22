@@ -39,8 +39,8 @@ impl Clone for Chord {
 	}
 }
 
-impl AsRef<Chord> for Chord {
-	fn as_ref(&self) -> &Chord { self }
+impl AsRef<Self> for Chord {
+	fn as_ref(&self) -> &Self { self }
 }
 
 impl PartialEq for Chord {
@@ -69,13 +69,6 @@ impl Chord {
 	}
 
 	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }
-
-	pub fn contains(&self, s: &str) -> bool {
-		let s = s.to_lowercase();
-		self.desc().map(|d| d.to_lowercase().contains(&s)) == Some(true)
-			|| self.run().to_lowercase().contains(&s)
-			|| self.on().to_lowercase().contains(&s)
-	}
 
 	#[inline]
 	pub(super) fn noop(&self) -> bool {

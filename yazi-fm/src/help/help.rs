@@ -1,4 +1,4 @@
-use ratatui_core::{buffer::Buffer, layout::{self, Alignment, Constraint, Layout, Margin, Rect}, symbols::merge::MergeStrategy, widgets::Widget};
+use ratatui_core::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Rect}, symbols::merge::MergeStrategy, widgets::Widget};
 use ratatui_widgets::{block::{Block, Padding}, borders::BorderType};
 use yazi_config::THEME;
 use yazi_core::Core;

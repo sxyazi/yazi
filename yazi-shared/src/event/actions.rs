@@ -4,7 +4,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserializer;
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
 
-use crate::{Layer, Source, event::Action};
+use crate::{Source, event::Action};
 
 #[derive(Clone, Debug, Default)]
 pub struct Actions(pub Vec<Action>);

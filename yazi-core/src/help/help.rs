@@ -41,9 +41,14 @@ impl Help {
 			self.keyword.clear();
 			self.bindings = KEYMAP.chords(self.layer).iter().cloned().collect();
 		} else if self.keyword != kw {
+			let lowercased = kw.to_lowercase();
 			self.keyword = kw.to_owned();
-			self.bindings =
-				KEYMAP.chords(self.layer).iter().filter(|&c| c.contains(kw)).cloned().collect();
+			self.bindings = KEYMAP
+				.chords(self.layer)
+				.iter()
+				.filter(|&c| c.desc_or_run().to_lowercase().contains(&lowercased))
+				.cloned()
+				.collect();
 		}
 
 		render!(self.scroll(0));

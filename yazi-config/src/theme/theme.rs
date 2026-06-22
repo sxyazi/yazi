@@ -264,11 +264,10 @@ pub struct Tasks {
 // --- Help
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Help {
-	pub on:   SyncCell<StyleFlat>,
-	pub desc: SyncCell<StyleFlat>,
-
-	pub hovered: SyncCell<StyleFlat>,
 	pub border:  SyncCell<StyleFlat>,
+	pub chord:   SyncCell<StyleFlat>,
+	pub action:  SyncCell<StyleFlat>,
+	pub hovered: SyncCell<StyleFlat>,
 }
 
 fn deserialize_syntect_theme<'de, D>(deserializer: D) -> Result<ArcSwap<PathBuf>, D::Error>

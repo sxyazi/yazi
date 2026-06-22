@@ -10,23 +10,21 @@ use crate::keymap::{Chord, ChordArc, ChordIter, ChordMatcher};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(transparent)]
-pub struct Chords {
-	pub(super) chords: ArcSwap<Vec<ChordArc>>,
-}
+pub struct Chords(ArcSwap<Vec<ChordArc>>);
 
 impl Deref for Chords {
 	type Target = ArcSwap<Vec<ChordArc>>;
 
-	fn deref(&self) -> &Self::Target { &self.chords }
+	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl From<Vec<ChordArc>> for Chords {
-	fn from(inner: Vec<ChordArc>) -> Self { Self { chords: inner.into_pointee() } }
+	fn from(inner: Vec<ChordArc>) -> Self { Self(inner.into_pointee()) }
 }
 
 impl Chords {
 	pub fn insert(&self, index: isize, rule: ChordArc) -> Result<(), IndexAtError> {
-		self.chords.try_rcu(|rules| {
+		self.0.try_rcu(|rules| {
 			let (before, after) = rules.split_at(rules.index_at(index)?);
 			Ok(
 				before
@@ -42,7 +40,7 @@ impl Chords {
 	}
 
 	pub fn remove(&self, matcher: ChordMatcher) {
-		self.chords.rcu(|chords| {
+		self.0.rcu(|chords| {
 			let mut next = Vec::clone(chords);
 			next.retain(|arc| !matcher.matches(arc));
 			next
@@ -54,7 +52,7 @@ impl Chords {
 		matcher: ChordMatcher,
 		f: impl Fn(Chord) -> Result<Chord, E>,
 	) -> Result<(), E> {
-		self.chords.try_rcu(|rules| {
+		self.0.try_rcu(|rules| {
 			let mut next = Vec::clone(rules);
 			for arc in &mut next {
 				if matcher.matches(arc) {
@@ -68,7 +66,7 @@ impl Chords {
 	}
 
 	pub(crate) fn unwrap_unchecked(self) -> Vec<ChordArc> {
-		Arc::try_unwrap(self.chords.into_inner()).expect("unique chords arc")
+		Arc::try_unwrap(self.0.into_inner()).expect("unique chords arc")
 	}
 }
 

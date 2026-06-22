@@ -371,4 +371,7 @@ keymap = [
 
 	{ on = "<Up>",   run = "arrow prev", desc = "Previous line" },
 	{ on = "<Down>", run = "arrow next", desc = "Next line" },
+
+	{ on = "<C-p>", run = "arrow prev", desc = "Previous line" },
+	{ on = "<C-n>", run = "arrow next", desc = "Next line" },
 ]

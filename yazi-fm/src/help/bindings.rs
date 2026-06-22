@@ -18,14 +18,14 @@ impl Widget for Bindings<'_> {
 			return;
 		}
 
-		// On
+		// Chord
 		let col1: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on.get())).collect();
+			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.chord.get())).collect();
 
-		// Desc (or run)
+		// Action
 		let col2: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc_or_run()).style(THEME.help.desc.get()))
+			.map(|c| ListItem::new(c.desc_or_run()).style(THEME.help.action.get()))
 			.collect();
 
 		let chunks =
