@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
 use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
-use yazi_shared::{Layer, event::{Actions, deserialize_actions}, id::Id};
+use yazi_shared::{event::{Actions, deserialize_actions}, id::Id};
 
 use super::{Key, ids::chord_id};
 use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
@@ -14,12 +14,12 @@ use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
 static RE: OnceLock<Regex> = OnceLock::new();
 
 #[derive(Debug, Default, Deserialize, DeserializeOver2)]
-pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
+pub struct Chord {
 	#[serde(skip, default = "chord_id")]
 	pub id:    Id,
 	#[serde(deserialize_with = "deserialize_on")]
 	pub on:    Vec<Key>,
-	#[serde(deserialize_with = "deserialize_actions::<L, _>")]
+	#[serde(deserialize_with = "deserialize_actions")]
 	pub run:   Actions,
 	#[serde(default)]
 	pub desc:  String,
@@ -27,7 +27,7 @@ pub struct Chord<const L: u8 = { Layer::Null as u8 }> {
 	pub r#for: Platform,
 }
 
-impl<const L: u8> Clone for Chord<L> {
+impl Clone for Chord {
 	fn clone(&self) -> Self {
 		Self {
 			id:    chord_id(),
@@ -39,17 +39,21 @@ impl<const L: u8> Clone for Chord<L> {
 	}
 }
 
-impl<const L: u8> PartialEq for Chord<L> {
+impl AsRef<Chord> for Chord {
+	fn as_ref(&self) -> &Chord { self }
+}
+
+impl PartialEq for Chord {
 	fn eq(&self, other: &Self) -> bool { self.on == other.on }
 }
 
-impl<const L: u8> Eq for Chord<L> {}
+impl Eq for Chord {}
 
-impl<const L: u8> Hash for Chord<L> {
+impl Hash for Chord {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.on.hash(state) }
 }
 
-impl<const L: u8> Chord<L> {
+impl Chord {
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	pub fn run(&self) -> String {
@@ -79,7 +83,7 @@ impl<const L: u8> Chord<L> {
 	}
 }
 
-impl<const L: u8> Mixable for Chord<L> {
+impl Mixable for Chord {
 	fn filter(&self) -> bool { self.r#for.matches() && !self.noop() }
 }
 

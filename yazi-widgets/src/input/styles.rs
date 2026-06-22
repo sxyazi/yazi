@@ -5,6 +5,7 @@ use ratatui_core::style::Style;
 pub struct InputStyles {
 	pub normal:   Option<Style>,
 	pub selected: Option<Style>,
+	pub blink:    Option<bool>,
 }
 
 impl TryFrom<Table> for InputStyles {
@@ -14,6 +15,7 @@ impl TryFrom<Table> for InputStyles {
 		Ok(Self {
 			normal:   t.raw_get::<Option<yazi_binding::style::Style>>("normal")?.map(Into::into),
 			selected: t.raw_get::<Option<yazi_binding::style::Style>>("selected")?.map(Into::into),
+			blink:    t.raw_get::<Option<bool>>("blink")?,
 		})
 	}
 }

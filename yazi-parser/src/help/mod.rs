@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(toggle);
+yazi_macro::mod_flat!(close toggle);

@@ -23,8 +23,9 @@ impl Actor for Activate {
 
 		let which = &mut cx.which;
 		which.tx = opt.tx;
-		which.times = opt.times;
+		which.layer = opt.layer;
 		which.cands = opt.cands;
+		which.times = opt.times;
 
 		which.active = true;
 		which.silent = opt.silent;

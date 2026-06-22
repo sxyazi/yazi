@@ -22,22 +22,14 @@ impl Widget for Bindings<'_> {
 		let col1: Vec<_> =
 			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on.get())).collect();
 
-		// Run
-		let col2: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.run()).style(THEME.help.run.get())).collect();
-
-		// Desc
-		let col3: Vec<_> = bindings
+		// Desc (or run)
+		let col2: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc().unwrap_or("-".into())).style(THEME.help.desc.get()))
+			.map(|c| ListItem::new(c.desc_or_run()).style(THEME.help.desc.get()))
 			.collect();
 
-		let chunks = layout::Layout::horizontal([
-			Constraint::Ratio(2, 10),
-			Constraint::Ratio(3, 10),
-			Constraint::Ratio(5, 10),
-		])
-		.split(area);
+		let chunks =
+			layout::Layout::horizontal([Constraint::Length(20), Constraint::Fill(1)]).split(area);
 
 		let cursor = self.core.help.rel_cursor() as u16;
 		buf.set_style(
@@ -47,6 +39,5 @@ impl Widget for Bindings<'_> {
 
 		List::new(col1).render(chunks[0], buf);
 		List::new(col2).render(chunks[1], buf);
-		List::new(col3).render(chunks[2], buf);
 	}
 }

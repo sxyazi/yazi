@@ -4,53 +4,45 @@ use hashbrown::HashSet;
 use mlua::{UserData, UserDataFields};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
-use yazi_shared::Layer;
 use yazi_shim::{mlua::UserDataFieldsExt, toml::DeserializeOverHook};
 
-use super::{Key, Chord, Chords, chords::layer_default};
+use super::{Chord, Chords, Key};
 use crate::{keymap::ChordArc, mix};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
-pub struct KeymapSection<const L: u8 = { Layer::Null as u8 }> {
-	keymap:         Chords<L>,
+pub struct KeymapSection {
+	keymap:         Chords,
 	#[serde(default)]
-	prepend_keymap: Vec<Chord<L>>,
+	prepend_keymap: Vec<Chord>,
 	#[serde(default)]
-	append_keymap:  Vec<Chord<L>>,
-	#[serde(default = "layer_default::<L>")]
-	layer:          Layer,
+	append_keymap:  Vec<Chord>,
 }
 
-impl<const L: u8> Deref for KeymapSection<L> {
-	type Target = Chords<L>;
+impl Deref for KeymapSection {
+	type Target = Chords;
 
 	fn deref(&self) -> &Self::Target { &self.keymap }
 }
 
-impl<const L: u8> KeymapSection<L> {
-	pub fn as_erased<const M: u8>(&self) -> &KeymapSection<M> {
-		unsafe { &*(self as *const Self as *const KeymapSection<M>) }
-	}
-}
-
-impl<const L: u8> DeserializeOverHook for KeymapSection<L> {
+impl DeserializeOverHook for KeymapSection {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		#[inline]
-		fn on<const L: u8>(Chord { on, .. }: &Chord<L>) -> [Key; 2] {
-			[on.first().copied().unwrap_or_default(), on.get(1).copied().unwrap_or_default()]
+		fn on<T: AsRef<Chord>>(chord: T) -> [Key; 2] {
+			let c = chord.as_ref();
+			[c.on.first().copied().unwrap_or_default(), c.on.get(1).copied().unwrap_or_default()]
 		}
 
 		let keymap = self.keymap.unwrap_unchecked();
 		let a_seen: HashSet<_> = self.prepend_keymap.iter().map(on).collect();
-		let b_seen: HashSet<_> = keymap.iter().map(|c| on(c)).collect();
+		let b_seen: HashSet<_> = keymap.iter().map(on).collect();
 
-		let keymap: Vec<ChordArc<L>> = mix(
+		let keymap: Vec<ChordArc> = mix(
 			self.prepend_keymap,
 			keymap.into_iter().filter(|v| !a_seen.contains(&on(v))),
 			self.append_keymap.into_iter().filter(|v| !b_seen.contains(&on(v))),
 		);
 
-		Ok(Self { keymap: keymap.into(), layer: self.layer, ..Default::default() })
+		Ok(Self { keymap: keymap.into(), ..Default::default() })
 	}
 }
 

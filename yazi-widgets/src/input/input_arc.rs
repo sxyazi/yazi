@@ -29,6 +29,7 @@ impl InputArc {
 		let new = lua.create_function(move |_, (_, mut opt): (Table, InputOpt)| {
 			opt.styles.normal = opt.styles.normal.or(styles.normal);
 			opt.styles.selected = opt.styles.selected.or(styles.selected);
+			opt.styles.blink = opt.styles.blink.or(styles.blink);
 			opt = opt.with_cb(|e| err!(Pubsub::pub_after_input((&e).into_str(), e.value())));
 			Ok(Self::from(Input::new(opt)?))
 		})?;

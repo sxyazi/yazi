@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
@@ -11,20 +11,20 @@ use crate::keymap::ChordArc;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Keymap {
-	pub mgr:     KeymapSection<{ Layer::Mgr as u8 }>,
-	pub tasks:   KeymapSection<{ Layer::Tasks as u8 }>,
-	pub spot:    KeymapSection<{ Layer::Spot as u8 }>,
-	pub pick:    KeymapSection<{ Layer::Pick as u8 }>,
-	pub input:   KeymapSection<{ Layer::Input as u8 }>,
-	pub confirm: KeymapSection<{ Layer::Confirm as u8 }>,
-	pub help:    KeymapSection<{ Layer::Help as u8 }>,
-	pub cmp:     KeymapSection<{ Layer::Cmp as u8 }>,
+	pub mgr:     KeymapSection,
+	pub tasks:   KeymapSection,
+	pub spot:    KeymapSection,
+	pub pick:    KeymapSection,
+	pub input:   KeymapSection,
+	pub confirm: KeymapSection,
+	pub help:    KeymapSection,
+	pub cmp:     KeymapSection,
 }
 
 impl Keymap {
 	pub fn chords(&self, layer: Layer) -> Arc<Vec<ChordArc>> {
 		match self.section(layer) {
-			Some(s) => s.deref().as_erased(),
+			Some(s) => s.load_full(),
 			None => Arc::new(Vec::new()),
 		}
 	}
@@ -34,14 +34,14 @@ impl Keymap {
 
 		Some(match layer {
 			L::Null | L::App => None?,
-			L::Mgr => self.mgr.as_erased(),
-			L::Tasks => self.tasks.as_erased(),
-			L::Spot => self.spot.as_erased(),
-			L::Pick => self.pick.as_erased(),
-			L::Input => self.input.as_erased(),
-			L::Confirm => self.confirm.as_erased(),
-			L::Help => self.help.as_erased(),
-			L::Cmp => self.cmp.as_erased(),
+			L::Mgr => &self.mgr,
+			L::Tasks => &self.tasks,
+			L::Spot => &self.spot,
+			L::Pick => &self.pick,
+			L::Input => &self.input,
+			L::Confirm => &self.confirm,
+			L::Help => &self.help,
+			L::Cmp => &self.cmp,
 			L::Which => None?,
 			L::Notify => None?,
 		})

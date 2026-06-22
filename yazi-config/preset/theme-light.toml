@@ -227,10 +227,9 @@ hovered = { fg = "magenta", bold = true }
 
 [help]
 on      = { fg = "cyan" }
-run     = { fg = "magenta" }
 desc    = {}
 hovered = { reversed = true, bold = true }
-footer  = { fg = "black", bg = "white" }
+border  = { fg = "blue" }
 
 # : }}}
 
