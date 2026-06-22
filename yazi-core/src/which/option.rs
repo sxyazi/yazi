@@ -7,9 +7,10 @@ use yazi_shared::{Layer, event::ActionCow};
 #[derive(Clone, Debug)]
 pub struct WhichOpt {
 	pub tx:     Option<mpsc::UnboundedSender<Option<ChordArc>>>,
+	pub layer:  Layer,
 	pub cands:  Vec<ChordArc>,
-	pub silent: bool,
 	pub times:  usize,
+	pub silent: bool,
 }
 
 impl_data_any!(WhichOpt);
@@ -24,19 +25,21 @@ impl TryFrom<ActionCow> for WhichOpt {
 
 		Ok(Self {
 			tx:     a.take_any2("tx").transpose()?,
+			layer:  a.str("layer").parse()?,
 			cands:  a.take_any_iter().collect(),
-			silent: a.bool("silent"),
 			times:  a.get("times").unwrap_or(0),
+			silent: a.bool("silent"),
 		})
 	}
 }
 
-impl From<(Layer, Key)> for WhichOpt {
-	fn from((layer, key): (Layer, Key)) -> Self {
+impl WhichOpt {
+	pub fn new(src: Layer, dist: Layer, key: Key) -> Self {
 		Self {
 			tx:     None,
+			layer:  dist,
 			cands:  KEYMAP
-				.chords(layer)
+				.chords(src)
 				.iter()
 				.filter(|&c| c.on.len() > 1 && c.on[0] == key)
 				.cloned()
@@ -55,6 +58,7 @@ impl FromLua for WhichOpt {
 
 		Ok(Self {
 			tx:     t.raw_get::<yazi_binding::MpscUnboundedTx<_>>("tx").ok().map(|t| t.0),
+			layer:  t.raw_get("layer")?,
 			cands:  t.raw_get::<Table>("cands")?.sequence_values().collect::<mlua::Result<Vec<_>>>()?,
 			times:  t.raw_get("times").unwrap_or_default(),
 			silent: t.raw_get("silent")?,
@@ -68,6 +72,7 @@ impl IntoLua for WhichOpt {
 		lua
 			.create_table_from([
 				("tx", self.tx.map(yazi_binding::MpscUnboundedTx).into_lua(lua)?),
+				("layer", self.layer.into_lua(lua)?),
 				("cands", lua.create_sequence_from(self.cands)?.into_lua(lua)?),
 				("times", self.times.into_lua(lua)?),
 				("silent", self.silent.into_lua(lua)?),

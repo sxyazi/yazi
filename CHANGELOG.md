@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Drag and drop ([#4005])
 - Bulk create ([#3793])
+- Make help menu a command palette ([#4074])
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])
 - Image preview with Überzug++ on Niri ([#3990])
@@ -24,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Changed
 
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
+- Remove `help:filter` action since the filter input is now always available ([#4074])
+- `[help]` of `theme.toml`: supersede `on` with `chord`, supersede `run` and `desc` with `action`, remove `footer` ([#4074])
 - Remove Legacy Console Mode on Windows ([#3989])
 
 ### Deprecated
@@ -1757,3 +1760,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4065]: https://github.com/sxyazi/yazi/pull/4065
 [#4067]: https://github.com/sxyazi/yazi/pull/4067
 [#4068]: https://github.com/sxyazi/yazi/pull/4068
+[#4074]: https://github.com/sxyazi/yazi/pull/4074

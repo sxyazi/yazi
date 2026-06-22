@@ -361,12 +361,10 @@ fn help() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.help;
 		match key {
-			b"on" => Style::from(&t.on).into_lua(lua),
-			b"run" => Style::from(&t.run).into_lua(lua),
-			b"desc" => Style::from(&t.desc).into_lua(lua),
-
+			b"border" => Style::from(&t.border).into_lua(lua),
+			b"chord" => Style::from(&t.chord).into_lua(lua),
+			b"action" => Style::from(&t.action).into_lua(lua),
 			b"hovered" => Style::from(&t.hovered).into_lua(lua),
-			b"footer" => Style::from(&t.footer).into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}

@@ -2,6 +2,7 @@ use strum::IntoStaticStr;
 use yazi_shared::id::Id;
 
 #[derive(Debug, IntoStaticStr)]
+#[strum(serialize_all = "lowercase")]
 pub enum InputEvent {
 	Submit(String),
 	Cancel(String),

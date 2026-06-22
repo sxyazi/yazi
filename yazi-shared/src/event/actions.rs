@@ -1,10 +1,10 @@
 use std::{ops::{Deref, DerefMut}, slice, vec};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use serde::{Deserializer, de};
+use serde::Deserializer;
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
 
-use crate::{Layer, Source, event::Action};
+use crate::{Source, event::Action};
 
 #[derive(Clone, Debug, Default)]
 pub struct Actions(pub Vec<Action>);
@@ -28,12 +28,9 @@ impl From<Vec<Action>> for Actions {
 }
 
 impl Actions {
-	pub fn set(&mut self, layer: Layer, source: Source) {
+	pub fn set_source(&mut self, source: Source) {
 		for action in &mut self.0 {
 			action.source = source;
-			if action.layer == Layer::Null {
-				action.layer = layer;
-			}
 		}
 	}
 }
@@ -68,16 +65,12 @@ impl IntoLua for Actions {
 	}
 }
 
-pub fn deserialize_actions<'de, const L: u8, D>(deserializer: D) -> Result<Actions, D::Error>
+pub fn deserialize_actions<'de, D>(deserializer: D) -> Result<Actions, D::Error>
 where
 	D: Deserializer<'de>,
 {
-	let Some(layer) = Layer::from_repr(L) else {
-		return Err(de::Error::custom(format!("invalid keymap layer const: {L}")));
-	};
-
 	let mut actions = Actions(OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?);
-	actions.set(layer, Source::Key);
+	actions.set_source(Source::Key);
 
 	Ok(actions)
 }

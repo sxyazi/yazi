@@ -110,8 +110,8 @@ pub enum Spark<'a> {
 
 	// Help
 	HelpArrow(crate::ArrowForm),
+	HelpClose(crate::help::CloseForm),
 	HelpEscape(crate::VoidForm),
-	HelpFilter(crate::VoidForm),
 	HelpToggle(crate::help::ToggleForm),
 
 	// Input
@@ -303,8 +303,8 @@ impl<'a> IntoLua for Spark<'a> {
 
 			// Help
 			Self::HelpArrow(b) => b.into_lua(lua),
+			Self::HelpClose(b) => b.into_lua(lua),
 			Self::HelpEscape(b) => b.into_lua(lua),
-			Self::HelpFilter(b) => b.into_lua(lua),
 			Self::HelpToggle(b) => b.into_lua(lua),
 
 			// Input
@@ -395,6 +395,7 @@ try_from_spark!(crate::cmp::ShowForm, cmp:show);
 try_from_spark!(crate::cmp::TriggerForm, cmp:trigger);
 try_from_spark!(crate::confirm::CloseForm, confirm:close);
 try_from_spark!(crate::confirm::ShowForm, confirm:show);
+try_from_spark!(crate::help::CloseForm, help:close);
 try_from_spark!(crate::help::ToggleForm, help:toggle);
 try_from_spark!(crate::input::CloseForm, input:close);
 try_from_spark!(crate::mgr::BulkExitForm, mgr:bulk_exit);

@@ -16,7 +16,6 @@ pub struct Input {
 	pub snaps:      InputSnaps,
 	pub styles:     InputStyles,
 	pub obscure:    bool,
-	pub blinking:   bool,
 	pub realtime:   bool,
 	pub completion: bool,
 
@@ -30,7 +29,6 @@ impl Input {
 			snaps: InputSnaps::new(opt.value, opt.obscure),
 			styles: opt.styles,
 			obscure: opt.obscure,
-			blinking: opt.blinking,
 			realtime: opt.realtime,
 			completion: opt.completion,
 
@@ -133,13 +131,14 @@ impl Input {
 	pub fn cursor_shape(&self) -> SetCursorStyle {
 		use InputMode as M;
 
+		let blink = self.styles.blink.unwrap_or(false);
 		match self.mode() {
-			M::Normal if self.blinking => SetCursorStyle::BlinkingBlock,
-			M::Normal if !self.blinking => SetCursorStyle::SteadyBlock,
-			M::Insert if self.blinking => SetCursorStyle::BlinkingBar,
-			M::Insert if !self.blinking => SetCursorStyle::SteadyBar,
-			M::Replace if self.blinking => SetCursorStyle::BlinkingUnderline,
-			M::Replace if !self.blinking => SetCursorStyle::SteadyUnderline,
+			M::Normal if blink => SetCursorStyle::BlinkingBlock,
+			M::Normal if !blink => SetCursorStyle::SteadyBlock,
+			M::Insert if blink => SetCursorStyle::BlinkingBar,
+			M::Insert if !blink => SetCursorStyle::SteadyBar,
+			M::Replace if blink => SetCursorStyle::BlinkingUnderline,
+			M::Replace if !blink => SetCursorStyle::SteadyUnderline,
 			M::Normal | M::Insert | M::Replace => unreachable!(),
 		}
 	}

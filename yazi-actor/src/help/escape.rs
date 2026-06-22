@@ -2,6 +2,7 @@ use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
+use yazi_widgets::input::InputMode;
 
 use crate::{Actor, Ctx};
 
@@ -13,15 +14,11 @@ impl Actor for Escape {
 	const NAME: &str = "escape";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		if cx.help.keyword().is_none() {
-			return act!(help:toggle, cx, cx.help.layer);
+		if cx.help.input.mode() == InputMode::Normal {
+			return act!(help:close, cx);
 		}
 
-		let help = &mut cx.help;
-		help.keyword = String::new();
-		help.in_filter = None;
-		help.filter_apply();
-
+		act!(escape, cx.help.input)?;
 		succ!(render!());
 	}
 }
