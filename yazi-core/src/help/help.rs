@@ -43,12 +43,48 @@ impl Help {
 		} else if self.keyword != kw {
 			let lowercased = kw.to_lowercase();
 			self.keyword = kw.to_owned();
-			self.bindings = KEYMAP
-				.chords(self.layer)
-				.iter()
-				.filter(|&c| c.desc_or_run().to_lowercase().contains(&lowercased))
-				.cloned()
-				.collect();
+
+			let exact_prefix = |on: &str| on.starts_with(kw);
+			let icase_prefix = |on: &str| on.to_lowercase().starts_with(&lowercased);
+
+			let all = KEYMAP.chords(self.layer);
+			// Priority 1: exact case-sensitive prefix (`y` -> `y`; `<C-` -> `<C-u>`)
+			let mut bindings: Vec<ChordArc> =
+				all.iter().filter(|c| exact_prefix(&c.on())).cloned().collect();
+			// Priority 2: case-insensitive prefix not in group 1 (`y` -> `Y`; `<e` -> `<Escape`)
+			bindings.extend(
+				all
+					.iter()
+					.filter(|c| {
+						let on = c.on();
+						!exact_prefix(&on) && icase_prefix(&on)
+					})
+					.cloned(),
+			);
+			// Priority 3: on() substring match (`enter` -> `<Enter>`, `<S-Enter>`)
+			let on_contains = |on: &str| on.to_lowercase().contains(&lowercased);
+			bindings.extend(
+				all
+					.iter()
+					.filter(|c| {
+						let on = c.on();
+						!icase_prefix(&on) && on_contains(&on)
+					})
+					.cloned(),
+			);
+			// Priority 4: desc-only match (`enter` -> `l` "Enter the child directory")
+			bindings.extend(
+				all
+					.iter()
+					.filter(|c| {
+						let on = c.on();
+						!icase_prefix(&on)
+							&& !on_contains(&on)
+							&& c.desc_or_run().to_lowercase().contains(&lowercased)
+					})
+					.cloned(),
+			);
+			self.bindings = bindings;
 		}
 
 		render!(self.scroll(0));
