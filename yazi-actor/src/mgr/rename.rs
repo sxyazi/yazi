@@ -42,7 +42,8 @@ impl Actor for Rename {
 		};
 
 		let (tab, old) = (cx.tab().id, hovered.url_owned());
-		let mut input = input!(cx, YAZI.input.rename().with_value(name).with_cursor(cursor))?;
+		let mut input =
+			input!(cx, YAZI.input.rename(hovered.is_dir()).with_value(name).with_cursor(cursor))?;
 
 		tokio::spawn(async move {
 			let Some(InputEvent::Submit(name)) = input.recv().await else { return };

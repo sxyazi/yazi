@@ -6,6 +6,7 @@ use crate::input::{InputCallback, InputStyles};
 
 #[derive(Clone, Debug, Default)]
 pub struct InputOpt {
+	pub id:         String,
 	pub title:      String,
 	pub value:      String,
 	pub styles:     InputStyles,
@@ -42,6 +43,7 @@ impl TryFrom<&Table> for InputOpt {
 
 	fn try_from(t: &Table) -> Result<Self, Self::Error> {
 		Ok(Self {
+			id:         t.raw_get("id").unwrap_or_default(),
 			title:      t.raw_get("title").unwrap_or_default(),
 			value:      t.raw_get("value").unwrap_or_default(),
 			styles:     t.raw_get("styles")?,

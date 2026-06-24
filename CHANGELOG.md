@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
 - H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
+- Context-aware icons for inputs ([#4080])
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])
 - Image preview with Überzug++ on Niri ([#3990])
@@ -1763,3 +1764,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4067]: https://github.com/sxyazi/yazi/pull/4067
 [#4068]: https://github.com/sxyazi/yazi/pull/4068
 [#4074]: https://github.com/sxyazi/yazi/pull/4074
+[#4080]: https://github.com/sxyazi/yazi/pull/4080

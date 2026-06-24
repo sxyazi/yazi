@@ -47,6 +47,7 @@ pub struct Input {
 impl Input {
 	pub fn cd(&self, cwd: Url) -> InputOpt {
 		InputOpt {
+			id: "cd".to_owned(),
 			title: self.cd_title.clone(),
 			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
 			position: Position::new(self.cd_origin, self.cd_offset),
@@ -57,14 +58,16 @@ impl Input {
 
 	pub fn create(&self, dir: bool) -> InputOpt {
 		InputOpt {
+			id: "create".to_owned(),
 			title: self.create_title[dir as usize].clone(),
 			position: Position::new(self.create_origin, self.create_offset),
 			..Default::default()
 		}
 	}
 
-	pub fn rename(&self) -> InputOpt {
+	pub fn rename(&self, is_dir: bool) -> InputOpt {
 		InputOpt {
+			id: format!("rename-{}", if is_dir { "dir" } else { "file" }),
 			title: self.rename_title.clone(),
 			position: Position::new(self.rename_origin, self.rename_offset),
 			..Default::default()
@@ -73,6 +76,7 @@ impl Input {
 
 	pub fn filter(&self) -> InputOpt {
 		InputOpt {
+			id: "filter".to_owned(),
 			title: self.filter_title.clone(),
 			position: Position::new(self.filter_origin, self.filter_offset),
 			realtime: true,
@@ -82,6 +86,7 @@ impl Input {
 
 	pub fn find(&self, prev: bool) -> InputOpt {
 		InputOpt {
+			id: "find".to_owned(),
 			title: self.find_title[prev as usize].clone(),
 			position: Position::new(self.find_origin, self.find_offset),
 			realtime: true,
@@ -91,6 +96,7 @@ impl Input {
 
 	pub fn search(&self, name: &str) -> InputOpt {
 		InputOpt {
+			id: "search".to_owned(),
 			title: self.search_title.replace("{n}", name),
 			position: Position::new(self.search_origin, self.search_offset),
 			..Default::default()
@@ -99,6 +105,7 @@ impl Input {
 
 	pub fn shell(&self, block: bool) -> InputOpt {
 		InputOpt {
+			id: "shell".to_owned(),
 			title: self.shell_title[block as usize].clone(),
 			position: Position::new(self.shell_origin, self.shell_offset),
 			..Default::default()
@@ -107,6 +114,7 @@ impl Input {
 
 	pub fn tab_rename(&self) -> InputOpt {
 		InputOpt {
+			id: "tab-rename".to_owned(),
 			title: "Rename tab:".to_owned(),
 			position: Position::new(Origin::TopCenter, Offset {
 				x:      0,
