@@ -10,6 +10,7 @@ pub enum Step {
 	Next,
 	Offset(isize),
 	Percent(i8),
+	Vp(i8),
 }
 
 impl Default for Step {
@@ -30,6 +31,7 @@ impl FromStr for Step {
 			"prev" => Self::Prev,
 			"next" => Self::Next,
 			s if s.ends_with('%') => Self::Percent(s[..s.len() - 1].parse()?),
+			s if s.ends_with("vp") => Self::Vp(s[..s.len() - 2].parse()?),
 			s => Self::Offset(s.parse()?),
 		})
 	}
@@ -76,7 +78,7 @@ impl<'de> Deserialize<'de> for Step {
 }
 
 impl Step {
-	pub fn add(self, pos: usize, len: usize, limit: usize) -> usize {
+	pub fn add(self, pos: usize, len: usize, limit: usize, offset: usize, scrolloff: usize) -> usize {
 		if len == 0 {
 			return 0;
 		}
@@ -84,6 +86,20 @@ impl Step {
 		let off = match self {
 			Self::Top => return 0,
 			Self::Bot => return len - 1,
+			Self::Vp(n) if limit == 0 => n as isize * len as isize / 100,
+			Self::Vp(n) => {
+				let end = len.min(offset + limit);
+				let Some(count) = end.checked_sub(offset + 1) else { return 0 };
+				let scrolloff = scrolloff.min(count / 2);
+
+				// Clamp relative position in window to not reach into any scrolloff region.
+				// Still allow reaching the real list start and end if already visible.
+				let target = offset.saturating_add_signed(n as isize * count as isize / 100);
+				let min = if offset == 0 { 0 } else { offset + scrolloff };
+				let max = end - 1 - if end == len { 0 } else { scrolloff };
+
+				target.clamp(min, max) as isize - pos as isize
+			}
 			Self::Prev => -1,
 			Self::Next => 1,
 			Self::Offset(n) => n,
@@ -93,10 +109,8 @@ impl Step {
 
 		if matches!(self, Self::Prev | Self::Next) {
 			off.saturating_add_unsigned(pos).rem_euclid(len as _) as _
-		} else if off >= 0 {
-			pos.saturating_add_signed(off)
 		} else {
-			pos.saturating_sub(off.unsigned_abs())
+			pos.saturating_add_signed(off)
 		}
 		.min(len - 1)
 	}

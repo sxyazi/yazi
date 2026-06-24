@@ -16,7 +16,7 @@ impl Actor for TabSwap {
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tabs = cx.tabs_mut();
 
-		let new = form.step.add(tabs.cursor, tabs.len(), 0);
+		let new = form.step.add(tabs.cursor, tabs.len(), 0, 0, 0);
 		if new == tabs.cursor {
 			succ!();
 		}
