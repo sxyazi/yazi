@@ -1,84 +1,90 @@
 Header = {
-	-- TODO: remove these two constants
-	LEFT = 0,
-	RIGHT = 1,
+    -- TODO: remove these two constants
+    LEFT = 0,
+    RIGHT = 1,
 
-	_id = "header",
-	_inc = 1000,
-	_left = {
-		{ "cwd", id = 1, order = 1000 },
-	},
-	_right = {
-		{ "count", id = 1, order = 1000 },
-	},
+    _id = "header",
+    _inc = 1000,
+    _left = {
+        { "cwd", id = 1, order = 1000 },
+    },
+    _right = {
+        { "count", id = 1, order = 1000 },
+    },
 }
 
 function Header:new(area, tab)
-	return setmetatable({
-		_area = area,
-		_tab = tab,
-		_current = tab.current,
-	}, { __index = self })
+    return setmetatable({
+        _area = area,
+        _tab = tab,
+        _current = tab.current,
+    }, { __index = self })
 end
 
 function Header:cwd()
-	local max = self._area.w - self._right_width
-	if max <= 0 then
-		return ""
-	end
+    local max = self._area.w - self._right_width
+    if max <= 0 then
+        return ""
+    end
 
-	local s = ya.readable_path(tostring(self._current.cwd)) .. self:flags()
-	return ui.Span(ui.truncate(s, { max = max, rtl = true })):style(th.mgr.cwd)
+    local path = ya.readable_path(tostring(self._current.cwd))
+    local flags = self:flags()
+    local flag_str = #flags == 0 and "" or " (" .. table.concat(flags, ", ") .. ")"
+
+    return ui.Line {
+        ui.Span(ui.truncate(path, { max = max - #flag_str, rtl = true })):style(th.mgr.cwd),
+        ui.Span(flag_str):style(th.mgr.filter_keyword),
+    }
 end
 
 function Header:flags()
-	local cwd = self._current.cwd
-	local filter = self._current.files.filter
-	local finder = self._tab.finder
+    local cwd = self._current.cwd
+    local filter = self._current.files.filter
+    local finder = self._tab.finder
 
-	local t = {}
-	if cwd.is_search then
-		t[#t + 1] = string.format("search: %s", cwd.domain)
-	end
-	if filter then
-		t[#t + 1] = string.format("filter: %s", filter)
-	end
-	if finder then
-		t[#t + 1] = string.format("find: %s", finder)
-	end
-	return #t == 0 and "" or " (" .. table.concat(t, ", ") .. ")"
+    local t = {}
+    if cwd.is_search then
+        t[#t + 1] = string.format("search: %s", cwd.domain)
+    end
+    if filter then
+        t[#t + 1] = string.format("filter: %s", filter)
+    end
+    if finder then
+        t[#t + 1] = string.format("find: %s", finder)
+    end
+    return t
 end
 
 function Header:count()
-	local selected = #self._tab.selected
-	local yanked = selected > 0 and 0 or #cx.yanked
+    local selected = #self._tab.selected
+    local yanked = selected > 0 and 0 or #cx.yanked
 
-	local span
-	if selected > 0 then
-		span = ui.Span(" " .. selected .. " "):style(th.mgr.count_selected)
-	elseif yanked <= 0 then
-		return ""
-	elseif cx.yanked.is_cut then
-		span = ui.Span(" " .. yanked .. " "):style(th.mgr.count_cut)
-	else
-		span = ui.Span(" " .. yanked .. " "):style(th.mgr.count_copied)
-	end
+    local span
+    if selected > 0 then
+        span = ui.Span(" " .. selected .. " "):style(th.mgr.count_selected)
+    elseif yanked <= 0 then
+        return ""
+    elseif cx.yanked.is_cut then
+        span = ui.Span(" " .. yanked .. " "):style(th.mgr.count_cut)
+    else
+        span = ui.Span(" " .. yanked .. " "):style(th.mgr.count_copied)
+    end
 
-	return ui.Line { span, " " }
+    return ui.Line { span, " " }
 end
 
 function Header:reflow() return { self } end
 
 function Header:redraw()
-	local right = self:children_redraw(self.RIGHT)
-	self._right_width = right:width()
+    local right = self:children_redraw(self.RIGHT)
+    self._right_width = right:width()
 
-	local left = self:children_redraw(self.LEFT)
+    local left = self:children_redraw(self.LEFT)
 
-	return {
-		ui.Line(left):area(self._area),
-		ui.Line(right):area(self._area):align(ui.Align.RIGHT),
-	}
+    return {
+        ui.Line(left):area(self._area),
+        ui.Line(right):area(self._area):align(ui.Align.RIGHT),
+    }
 end
 
 -- Mouse events
@@ -90,29 +96,29 @@ function Header:touch(event, step) end
 
 -- Children
 function Header:children_add(fn, order, side)
-	self._inc = self._inc + 1
-	local children = side == self.RIGHT and self._right or self._left
+    self._inc = self._inc + 1
+    local children = side == self.RIGHT and self._right or self._left
 
-	children[#children + 1] = { fn, id = self._inc, order = order }
-	table.sort(children, function(a, b) return a.order < b.order end)
+    children[#children + 1] = { fn, id = self._inc, order = order }
+    table.sort(children, function(a, b) return a.order < b.order end)
 
-	return self._inc
+    return self._inc
 end
 
 function Header:children_remove(id, side)
-	local children = side == self.RIGHT and self._right or self._left
-	for i, child in ipairs(children) do
-		if child.id == id then
-			table.remove(children, i)
-			break
-		end
-	end
+    local children = side == self.RIGHT and self._right or self._left
+    for i, child in ipairs(children) do
+        if child.id == id then
+            table.remove(children, i)
+            break
+        end
+    end
 end
 
 function Header:children_redraw(side)
-	local lines = {}
-	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
-		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
-	end
-	return ui.Line(lines)
+    local lines = {}
+    for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
+        lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
+    end
+    return ui.Line(lines)
 end
