@@ -1,6 +1,6 @@
 #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 yazi_macro::mod_pub!(app cmp confirm help input mgr notify pick spot tasks which);
 
