@@ -20,15 +20,33 @@ impl Actor for Create {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().to_owned();
-		let mut input = input!(cx, YAZI.input.create(form.dir))?;
+
+		let target = if let Some(target) = form.target {
+			let target_str = target.loc().to_str()?.to_string();
+			if target_str.is_empty() { None } else { Some(target_str) }
+		} else { None };
+
+		let input = if target.is_some() {
+			None
+		} else {
+			Some(input!(cx, YAZI.input.create(form.dir))?)
+		};
 
 		tokio::spawn(async move {
-			let Some(InputEvent::Submit(name)) = input.recv().await else { return };
-			if name.is_empty() {
+
+			let target = match input {
+				Some(mut input) => {
+					let Some(InputEvent::Submit(name)) = input.recv().await else { return };
+					name
+				},
+				None => target.unwrap(),
+			};
+
+			if target.is_empty() {
 				return;
 			}
 
-			let Ok(new) = cwd.try_join(&name) else {
+			let Ok(new) = cwd.try_join(&target) else {
 				return;
 			};
 
@@ -39,7 +57,7 @@ impl Actor for Create {
 				return;
 			}
 
-			_ = Self::r#do(new, form.dir || name.ends_with('/') || name.ends_with('\\')).await;
+			_ = Self::r#do(new, form.dir || target.ends_with('/') || target.ends_with('\\')).await;
 		});
 		succ!();
 	}
