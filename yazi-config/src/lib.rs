@@ -4,6 +4,7 @@ yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority
 
 use std::io::{Read, Write};
 
+use yazi_macro::writef;
 use yazi_shim::{cell::{RoCell, SyncCell}, toml::{DeserializeOver, DeserializeOverWith}};
 use yazi_tty::{TTY, sequence::SetSgr};
 
@@ -67,14 +68,14 @@ pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<theme::Theme> {
 }
 
 fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
-	let stdout = &mut *TTY.lockout();
+	let mut stdout = &mut *TTY.lockout();
 
 	writeln!(stdout, "{e}")?;
 	if let Some(src) = e.source() {
 		writeln!(stdout, "\nCaused by:\n{src}")?;
 	}
 
-	writeln!(
+	writef!(
 		stdout,
 		"{}{}Press <Enter> to continue with preset settings...{}",
 		SetSgr::Reverse,

@@ -36,7 +36,7 @@ debug = false
 
 [workspace.dependencies]
 ansi-to-tui         = "8.0.1"
-anyhow              = "1.0.102"
+anyhow              = "1.0.103"
 arc-swap            = { version = "1.9.1", features = [ "serde" ] }
 base64              = "0.22.1"
 bitflags            = { version = "2.13.0", features = [ "serde" ] }

@@ -1,7 +1,7 @@
-use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::Wrap};
 use yazi_boot::ARGS;
-use yazi_config::YAZI;
+use yazi_config::{YAZI, mgr::MgrRatio};
 use yazi_shared::url::UrlBuf;
 use yazi_shim::mlua::SER_OPT;
 use yazi_tty::TTY;
@@ -60,7 +60,7 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let m = &YAZI.mgr;
 		match key {
-			b"ratio" => lua.to_value_with(&m.ratio, SER_OPT)?,
+			b"ratio" => m.ratio.get().into_lua(lua)?,
 
 			b"sort_by" => lua.to_value_with(&m.sort_by, SER_OPT)?,
 			b"sort_sensitive" => m.sort_sensitive.get().into_lua(lua)?,
@@ -83,7 +83,7 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 		let m = &YAZI.mgr;
 		Ok(match key {
 			b"ratio" => {
-				m.ratio.set(lua.from_value(value)?);
+				m.ratio.set(MgrRatio::from_lua(value, lua)?);
 				Value::Nil
 			}
 			_ => value,
