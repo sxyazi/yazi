@@ -7,7 +7,6 @@
 
   installShellFiles,
   fetchFromGitHub,
-  rust-jemalloc-sys,
 
   imagemagick,
 }:
@@ -39,10 +38,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   nativeBuildInputs = [
     installShellFiles
     imagemagick
-  ];
-
-  buildInputs = [
-    rust-jemalloc-sys
   ];
 
   postInstall = ''
