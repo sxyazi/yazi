@@ -1,13 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::{event::ActionCow, strand::StrandBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct CreateForm {
+	#[serde(alias = "0", default)]
+	pub target: StrandBuf,
 	#[serde(default)]
-	pub dir:   bool,
+	pub dir:    bool,
 	#[serde(default)]
-	pub force: bool,
+	pub force:  bool,
 }
 
 impl TryFrom<ActionCow> for CreateForm {
