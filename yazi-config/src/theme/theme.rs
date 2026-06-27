@@ -13,22 +13,22 @@ use crate::YAZI;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1, Overlay)]
 pub struct Theme {
-	pub flavor:   Flavor,
-	pub app:      App,
-	pub mgr:      Mgr,
-	pub tabs:     Tabs,
-	pub mode:     Mode,
+	pub flavor:    Flavor,
+	pub app:       App,
+	pub mgr:       Mgr,
+	pub tabs:      Tabs,
+	pub mode:      Mode,
 	pub indicator: Indicator,
-	pub status:   Status,
-	pub which:    Which,
-	pub confirm:  Confirm,
-	pub spot:     Spot,
-	pub notify:   Notify,
-	pub pick:     Pick,
-	pub input:    Input,
-	pub cmp:      Cmp,
-	pub tasks:    Tasks,
-	pub help:     Help,
+	pub status:    Status,
+	pub which:     Which,
+	pub confirm:   Confirm,
+	pub spot:      Spot,
+	pub notify:    Notify,
+	pub pick:      Pick,
+	pub input:     Input,
+	pub cmp:       Cmp,
+	pub tasks:     Tasks,
+	pub help:      Help,
 
 	// File-specific styles
 	pub filetype: Filetype,
@@ -85,8 +85,8 @@ pub struct Mgr {
 	pub marker_symbol:   ArcSwap<String>,
 
 	// Count
-	pub count_copied: SyncCell<StyleFlat>,
-	pub count_cut: SyncCell<StyleFlat>,
+	pub count_copied:   SyncCell<StyleFlat>,
+	pub count_cut:      SyncCell<StyleFlat>,
 	pub count_selected: SyncCell<StyleFlat>,
 
 	// Border
