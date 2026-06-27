@@ -123,8 +123,8 @@ pub struct Mode {
 	pub select_main: SyncCell<StyleFlat>,
 	pub select_alt:  SyncCell<StyleFlat>,
 
-	pub unset_main:  SyncCell<StyleFlat>,
-	pub unset_alt:   SyncCell<StyleFlat>,
+	pub unset_main: SyncCell<StyleFlat>,
+	pub unset_alt:  SyncCell<StyleFlat>,
 }
 
 // --- Indicator
