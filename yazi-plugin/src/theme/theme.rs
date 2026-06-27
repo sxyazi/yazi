@@ -33,8 +33,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	Composer::new(get, set)
 }
 
-pub fn reset() -> mlua::Result<()> {
-	LUA.globals().raw_set("th", compose()) }
+pub fn reset() -> mlua::Result<()> { LUA.globals().raw_set("th", compose()) }
 
 fn app() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
