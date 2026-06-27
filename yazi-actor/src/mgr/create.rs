@@ -1,13 +1,16 @@
+use std::pin::Pin;
+
 use anyhow::{Result, bail};
+use futures::{Stream, StreamExt};
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_fs::{FilesOp, file::File};
 use yazi_macro::{input, ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
-use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
+use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, strand::{StrandBuf, StrandLike}, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
-use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
 
@@ -18,28 +21,35 @@ impl Actor for Create {
 
 	const NAME: &str = "create";
 
-	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, CreateForm { target, dir, force }: Self::Form) -> Result<Data> {
 		let cwd = cx.cwd().to_owned();
-		let mut input = input!(cx, YAZI.input.create(form.dir))?;
+
+		let mut target: Pin<Box<dyn Stream<Item = StrandBuf> + Send>> = if target.is_empty() {
+			let input = input!(cx, YAZI.input.create(dir))?;
+			Box::pin(
+				UnboundedReceiverStream::new(input).filter_map(|event| async { event.map(Into::into) }),
+			)
+		} else {
+			Box::pin(tokio_stream::iter(vec![target]))
+		};
 
 		tokio::spawn(async move {
-			let Some(InputEvent::Submit(name)) = input.recv().await else { return };
+			let Some(name) = target.next().await else { return };
 			if name.is_empty() {
 				return;
 			}
 
-			let Ok(new) = cwd.try_join(&name) else {
-				return;
-			};
+			let Ok(new) = cwd.try_join(&name) else { return };
 
-			if !form.force
+			if !force
 				&& maybe_exists(&new).await
 				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
 			{
 				return;
 			}
 
-			_ = Self::r#do(new, form.dir || name.ends_with('/') || name.ends_with('\\')).await;
+			let end_sep = AnyAsciiChar::SEP.predicate(*name.encoded_bytes().last().unwrap());
+			_ = Self::r#do(new, dir || end_sep).await;
 		});
 		succ!();
 	}

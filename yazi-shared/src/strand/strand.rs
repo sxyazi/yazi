@@ -156,6 +156,10 @@ impl<'a> Strand<'a> {
 		}
 	}
 
+	pub fn ends_with(self, needle: impl AsStrand) -> bool {
+		self.encoded_bytes().ends_with(needle.as_strand().encoded_bytes())
+	}
+
 	pub fn eq_ignore_ascii_case(self, other: impl AsStrand) -> bool {
 		self.encoded_bytes().eq_ignore_ascii_case(other.as_strand().encoded_bytes())
 	}

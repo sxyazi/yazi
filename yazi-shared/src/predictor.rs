@@ -12,6 +12,11 @@ pub trait Utf8BytePredictor {
 pub struct AnyAsciiChar<'a>(&'a [u8]);
 
 impl<'a> AnyAsciiChar<'a> {
+	#[cfg(windows)]
+	pub const SEP: Self = Self(b"/\\");
+	#[cfg(not(windows))]
+	pub const SEP: Self = Self(b"/");
+
 	pub fn new(chars: &'a [u8]) -> Option<Self> {
 		if chars.iter().all(|&b| b <= 0x7f) { Some(Self(chars)) } else { None }
 	}
