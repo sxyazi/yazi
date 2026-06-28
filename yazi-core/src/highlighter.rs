@@ -1,36 +1,56 @@
-use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::OnceLock};
-
 use anyhow::{Result, anyhow, bail};
-use ratatui_core::{layout::Size, text::{Line, Span, Text}};
-use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
+use ratatui_core::{
+	layout::Size,
+	text::{Line, Span, Text},
+};
+use std::{
+	io::{BufRead, BufReader, Cursor, Seek},
+	path::PathBuf,
+	sync::OnceLock,
+};
+use syntect::{
+	LoadingError, dumps,
+	easy::HighlightLines,
+	highlighting::{self, Theme, ThemeSet},
+	parsing::{SyntaxReference, SyntaxSet},
+};
+use yazi_binding::elements::HighlightPosition;
 use yazi_config::{THEME, YAZI};
 use yazi_runner::previewer::PeekError;
-use yazi_shared::{id::{Id, Ids}, replace_to_printable};
+use yazi_shared::{
+	id::{Id, Ids},
+	replace_to_printable,
+};
 use yazi_shim::ratatui::LineIter;
 
 static INCR: Ids = Ids::new();
 
 pub struct Highlighter {
-	path:   PathBuf,
+	path: PathBuf,
 	reader: BufReader<std::fs::File>,
 
-	skip:   usize,
-	size:   Size,
+	skip: usize,
+	size: Size,
 	ticket: Id,
 
-	theme:    &'static Theme,
+	theme: &'static Theme,
 	syntaxes: &'static SyntaxSet,
-	inner:    Option<HighlightLines<'static>>,
-	syntax:   Option<&'static SyntaxReference>,
+	inner: Option<HighlightLines<'static>>,
+	syntax: Option<&'static SyntaxReference>,
 }
 
 impl Highlighter {
-	pub async fn oneshot<P>(path: P, skip: usize, size: Size) -> Result<Text<'static>, PeekError>
+	pub async fn oneshot<P>(
+		path: P,
+		skip: usize,
+		size: Size,
+		position: Option<HighlightPosition>,
+	) -> Result<Text<'static>, PeekError>
 	where
 		P: Into<PathBuf>,
 	{
 		let path = path.into();
-		tokio::task::spawn_blocking(move || Self::make(path, skip, size)?.highlight()).await?
+		tokio::task::spawn_blocking(move || Self::make(path, skip, size)?.highlight(position)).await?
 	}
 
 	fn make<P>(path: P, skip: usize, size: Size) -> Result<Self>
@@ -57,9 +77,11 @@ impl Highlighter {
 		})
 	}
 
-	pub fn abort() { INCR.next(); }
+	pub fn abort() {
+		INCR.next();
+	}
 
-	fn highlight(mut self) -> Result<Text<'static>, PeekError> {
+	fn highlight(mut self, position: Option<HighlightPosition>) -> Result<Text<'static>, PeekError> {
 		self.load_syntax()?;
 		let mut plain = self.syntax.is_none();
 
@@ -78,9 +100,9 @@ impl Highlighter {
 			}
 
 			self.ensure_not_cancelled()?;
-			if plain && !self.process_plain(&buf, &mut i, &mut lines)? {
+			if plain && !self.process_plain(&buf, &mut i, &position, &mut lines)? {
 				break;
-			} else if !plain && !self.process_hyper(&buf, &mut i, &mut lines)? {
+			} else if !plain && !self.process_hyper(&buf, &mut i, &position, &mut lines)? {
 				break;
 			}
 			buf.clear();
@@ -89,11 +111,16 @@ impl Highlighter {
 		if self.skip > 0 && i < self.skip + self.size.height as usize {
 			return Err(PeekError::Exceeded(i.saturating_sub(self.size.height as _)));
 		}
-
 		Ok(Text::from(lines))
 	}
 
-	fn process_plain(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+	fn process_plain(
+		&mut self,
+		buf: &[u8],
+		i: &mut usize,
+		position: &Option<HighlightPosition>,
+		lines: &mut Vec<Line>,
+	) -> Result<bool> {
 		let b = replace_to_printable(buf, true, YAZI.preview.tab_size, false);
 		let s = String::from_utf8_lossy(&b);
 
@@ -107,20 +134,31 @@ impl Highlighter {
 			if *i > self.skip + self.size.height as usize {
 				return Ok(false);
 			} else if *i > self.skip {
-				lines.push(spans.into_static_line());
+				let mut static_line = spans.into_static_line();
+				if let Some(pos) = position
+					&& pos.line == *i
+				{
+					static_line.style = ratatui_core::style::Style::new().bg(ratatui_core::style::Color::Red);
+				}
+				lines.push(static_line);
 			}
 			self.ensure_not_cancelled()?;
 		}
 		Ok(true)
 	}
 
-	fn process_hyper(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+	fn process_hyper(
+		&mut self,
+		buf: &[u8],
+		i: &mut usize,
+		position: &Option<HighlightPosition>,
+		lines: &mut Vec<Line>,
+	) -> Result<bool> {
 		let Some(syntax) = self.syntax else { bail!("No syntax") };
 		let h = self.inner.get_or_insert_with(|| HighlightLines::new(syntax, self.theme));
-
 		let s = String::from_utf8_lossy(buf);
-		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 
+		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 		let mut it = LineIter::parsed(&line, YAZI.preview.tab_size);
 		if let Some(wrap) = YAZI.preview.wrap.into() {
 			it = it.wrapped(wrap, self.size.width);
@@ -131,10 +169,17 @@ impl Highlighter {
 			if *i > self.skip + self.size.height as usize {
 				return Ok(false);
 			} else if *i > self.skip {
-				lines.push(spans.into_static_line());
+				let mut static_line = spans.into_static_line();
+				if let Some(pos) = position
+					&& pos.line == *i
+				{
+					static_line.style = ratatui_core::style::Style::new().bg(ratatui_core::style::Color::Red);
+				}
+				lines.push(static_line);
 			}
 			self.ensure_not_cancelled()?;
 		}
+
 		Ok(true)
 	}
 
@@ -220,7 +265,7 @@ impl Highlighter {
 
 			Span {
 				content: s.into(),
-				style:   ratatui_core::style::Style {
+				style: ratatui_core::style::Style {
 					fg: Self::to_ansi_color(style.foreground),
 					// bg: Self::to_ansi_color(style.background),
 					add_modifier: modifier,

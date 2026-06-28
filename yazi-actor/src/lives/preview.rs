@@ -13,7 +13,9 @@ pub(super) struct Preview {
 impl Deref for Preview {
 	type Target = yazi_core::tab::Preview;
 
-	fn deref(&self) -> &Self::Target { &self.tab.preview }
+	fn deref(&self) -> &Self::Target {
+		&self.tab.preview
+	}
 }
 
 impl Preview {
@@ -25,6 +27,8 @@ impl Preview {
 impl UserData for Preview {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("skip", |_, me| Ok(me.skip));
+		fields.add_field_method_get("search_idx", |_, me| Ok(me.search_idx));
+
 		fields.add_static_field("folder", |_, me| {
 			me.tab
 				.hovered_folder()
