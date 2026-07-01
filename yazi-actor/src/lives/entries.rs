@@ -5,19 +5,19 @@ use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::{File, Filter, Lives, PtrCell};
 
-pub(super) struct Files {
+pub(super) struct Entries {
 	window: Range<usize>,
 	folder: PtrCell<yazi_core::tab::Folder>,
 	tab:    PtrCell<yazi_core::tab::Tab>,
 }
 
-impl Deref for Files {
-	type Target = yazi_fs::Files;
+impl Deref for Entries {
+	type Target = yazi_fs::Entries;
 
-	fn deref(&self) -> &Self::Target { &self.folder.files }
+	fn deref(&self) -> &Self::Target { &self.folder.entries }
 }
 
-impl Files {
+impl Entries {
 	pub(super) fn make(
 		window: Range<usize>,
 		folder: &yazi_core::tab::Folder,
@@ -27,7 +27,7 @@ impl Files {
 	}
 }
 
-impl UserData for Files {
+impl UserData for Entries {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_static_field("filter", |_, me| me.filter().map(Filter::make).transpose());
 	}

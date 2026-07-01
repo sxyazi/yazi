@@ -32,7 +32,7 @@ impl Actor for BulkRename {
 			succ!(NotifyProxy::push_warn("Bulk rename", "No text opener found"));
 		};
 
-		let selected: Vec<_> = cx.tab().selected_or_hovered().cloned().collect();
+		let selected: Vec<_> = cx.tab().selected_or_hovered_urls().cloned().collect();
 		if selected.is_empty() {
 			succ!(NotifyProxy::push_warn("Bulk rename", "No files selected"));
 		}

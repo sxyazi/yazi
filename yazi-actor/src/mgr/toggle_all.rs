@@ -17,14 +17,14 @@ impl Actor for ToggleAll {
 		use either::Either::*;
 		let tab = cx.tab_mut();
 
-		let it = tab.current.files.iter().map(|f| &f.url);
+		let it = tab.current.entries.iter();
 		let either = match form.state {
-			Some(true) if form.urls.is_empty() => Left((vec![], it.collect())),
-			Some(true) => Right((vec![], form.urls)),
-			Some(false) if form.urls.is_empty() => Left((it.collect(), vec![])),
-			Some(false) => Right((form.urls, vec![])),
-			None if form.urls.is_empty() => Left(it.partition(|&u| tab.selected.contains(u))),
-			None => Right(form.urls.into_iter().partition(|u| tab.selected.contains(u))),
+			Some(true) if form.files.is_empty() => Left((vec![], it.collect())),
+			Some(true) => Right((vec![], form.files)),
+			Some(false) if form.files.is_empty() => Left((it.collect(), vec![])),
+			Some(false) => Right((form.files, vec![])),
+			None if form.files.is_empty() => Left(it.partition(|&f| tab.selected.contains(f))),
+			None => Right(form.files.into_iter().partition(|f| tab.selected.contains(f))),
 		};
 
 		let warn = match either {
@@ -34,14 +34,14 @@ impl Actor for ToggleAll {
 			}
 			Right((removal, addition)) => {
 				render!(tab.selected.remove_many(&removal) > 0);
-				render!(tab.selected.add_many(&addition), > 0) != addition.len()
+				addition.len() != render!(tab.selected.add_many(&addition), > 0)
 			}
 		};
 
 		if warn {
 			NotifyProxy::push_warn(
 				"Toggle all",
-				"Some files cannot be selected, due to path nesting conflict.",
+				"Some files cannot be selected due to path nesting conflict.",
 			);
 		}
 		succ!();

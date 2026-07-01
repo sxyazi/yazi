@@ -14,11 +14,11 @@ impl Actor for UpdateYanked {
 	const NAME: &str = "update_yanked";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		if form.urls.is_empty() && cx.mgr.yanked.is_empty() {
+		if form.files.is_empty() && cx.mgr.yanked.is_empty() {
 			succ!();
 		}
 
-		cx.mgr.yanked = Yanked::new(form.cut, form.0.urls.into_owned());
+		cx.mgr.yanked = Yanked::new(form.cut, form.0.files.into_owned());
 		succ!(render!());
 	}
 }

@@ -99,10 +99,10 @@ macro_rules! impl_data_any {
 		}
 	};
 	(@from_lua_inherit) => {
-		fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Box<dyn ::yazi_shared::data::DataAny>> {
+		fn from_lua(value: &mlua::Value, lua: &mlua::Lua) -> mlua::Result<Box<dyn ::yazi_shared::data::DataAny>> {
 			use mlua::FromLua;
 
-			<Self as FromLua>::from_lua(value, lua)
+			<Self as FromLua>::from_lua(value.clone(), lua)
 				.map(|v| Box::new(v) as Box<dyn ::yazi_shared::data::DataAny>)
 		}
 	};

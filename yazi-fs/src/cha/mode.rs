@@ -2,11 +2,12 @@ use std::ops::Deref;
 
 use anyhow::{anyhow, bail};
 use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
 
 use crate::cha::ChaType;
 
 bitflags! {
-	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+	#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
 	pub struct ChaMode: u16 {
 		// File type
 		const T_MASK   = 0b1111_0000_0000_0000;

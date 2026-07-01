@@ -27,7 +27,7 @@ impl Actor for Open {
 				Quit::with_selected(cx.hovered().map(|h| &h.url))
 			} else {
 				act!(mgr:escape_visual, cx)?;
-				Quit::with_selected(cx.tab().selected_or_hovered())
+				Quit::with_selected(cx.tab().selected_or_hovered_urls())
 			});
 		}
 
@@ -36,7 +36,7 @@ impl Actor for Open {
 				cx.hovered().map(|h| vec![h.url.clone()]).unwrap_or_default()
 			} else {
 				act!(mgr:escape_visual, cx)?;
-				cx.tab().selected_or_hovered().cloned().collect()
+				cx.tab().selected_or_hovered_urls().cloned().collect()
 			};
 		}
 		if opt.targets.is_empty() {

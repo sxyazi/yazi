@@ -14,7 +14,7 @@ pub trait DataAny: Any + Send + Sync + DynClone {
 
 	fn to_lua(&self, lua: &Lua) -> mlua::Result<Value> { dyn_clone::clone_box(self).into_lua(lua) }
 
-	fn from_lua(_value: Value, _lua: &Lua) -> mlua::Result<Box<dyn DataAny>>
+	fn from_lua(_value: &Value, _lua: &Lua) -> mlua::Result<Box<dyn DataAny>>
 	where
 		Self: Sized,
 	{

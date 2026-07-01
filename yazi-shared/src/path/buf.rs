@@ -1,6 +1,7 @@
 use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::wtf8::FromWtf8Vec;
 
@@ -187,5 +188,31 @@ impl PathBufDyn {
 			PathKind::Os => Self::Os(s.into()),
 			PathKind::Unix => Self::Unix(s.into()),
 		}
+	}
+}
+
+impl Serialize for PathBufDyn {
+	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		#[derive(Serialize)]
+		struct Shadow<'a> {
+			kind: PathKind,
+			path: &'a [u8],
+		}
+
+		let path = self.as_path();
+		Shadow { kind: path.kind(), path: path.encoded_bytes() }.serialize(serializer)
+	}
+}
+
+impl<'de> Deserialize<'de> for PathBufDyn {
+	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+		#[derive(Deserialize)]
+		struct Shadow {
+			kind: PathKind,
+			path: Vec<u8>,
+		}
+
+		let Shadow { kind, path } = Shadow::deserialize(deserializer)?;
+		Self::with(kind, path).map_err(de::Error::custom)
 	}
 }

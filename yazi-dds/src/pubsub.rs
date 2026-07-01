@@ -4,8 +4,8 @@ use indexmap::IndexSet;
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
-use yazi_fs::FolderStage;
-use yazi_shared::{id::Id, url::{Url, UrlBuf, UrlBufCov}};
+use yazi_fs::{FolderStage, file::FileCov};
+use yazi_shared::{id::Id, url::{Url, UrlBuf}};
 use yazi_shim::cell::RoCell;
 
 use crate::{Client, ID, PEERS, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};
@@ -162,7 +162,7 @@ impl Pubsub {
 
 	pub_after!(rename(tab: Id, from: &UrlBuf, to: &UrlBuf), (tab, from, to));
 
-	pub_after!(@yank(cut: bool, urls: &IndexSet<UrlBufCov>), (cut, urls));
+	pub_after!(@yank(cut: bool, files: &IndexSet<FileCov>), (cut, files));
 
 	pub_after!(duplicate(items: Vec<EmberDuplicateItem>), (&items), (items));
 

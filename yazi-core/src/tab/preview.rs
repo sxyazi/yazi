@@ -4,11 +4,11 @@ use tokio::{pin, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
-use yazi_fs::{Files, FilesOp, cha::Cha, file::File};
+use yazi_fs::{Entries, FilesOp, cha::Cha, file::File};
 use yazi_macro::render;
 use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
 use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFiles, VfsFilesOp};
+use yazi_vfs::{VfsEntries, VfsFilesOp};
 
 use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
 
@@ -60,9 +60,9 @@ impl Preview {
 		self.folder_lock = Some(wd.clone());
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
-			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or_default()).await else { return };
+			let Some(new) = Entries::assert_stale(&wd, dir.unwrap_or_default()).await else { return };
 
-			let rx = match Files::from_dir(&wd).await {
+			let rx = match Entries::from_dir(&wd).await {
 				Ok(rx) => rx,
 				Err(e) => return FilesOp::issue_error(&wd, e).await,
 			};
