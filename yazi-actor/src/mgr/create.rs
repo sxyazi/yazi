@@ -9,7 +9,7 @@ use yazi_macro::{input, ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, strand::{StrandBuf, StrandLike}, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, maybe_exists, provider};
+use yazi_vfs::{VfsFile, provider};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -34,22 +34,24 @@ impl Actor for Create {
 		};
 
 		tokio::spawn(async move {
-			let Some(name) = target.next().await else { return };
+			let Some(name) = target.next().await else { return Ok(()) };
 			if name.is_empty() {
-				return;
+				return Ok(());
 			}
 
-			let Ok(new) = cwd.try_join(&name) else { return };
+			let Ok(new) = cwd.try_join(&name) else {
+				bail!("Failed to join new name with CWD");
+			};
 
 			if !force
-				&& maybe_exists(&new).await
-				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
+				&& let Some(file) = File::maybe_new(&new).await?
+				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&file)).await
 			{
-				return;
+				return Ok(());
 			}
 
 			let end_sep = AnyAsciiChar::SEP.predicate(*name.encoded_bytes().last().unwrap());
-			_ = Self::r#do(new, dir || end_sep).await;
+			Self::r#do(new, dir || end_sep).await
 		});
 		succ!();
 	}

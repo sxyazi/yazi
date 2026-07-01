@@ -7,7 +7,7 @@ use super::{FilesSorter, Filter};
 use crate::{FILES_TICKET, SortBy, file::File};
 
 #[derive(Default)]
-pub struct Files {
+pub struct Entries {
 	hidden:       Vec<File>,
 	items:        Vec<File>,
 	ticket:       Id,
@@ -21,17 +21,17 @@ pub struct Files {
 	show_hidden: bool,
 }
 
-impl Deref for Files {
+impl Deref for Entries {
 	type Target = Vec<File>;
 
 	fn deref(&self) -> &Self::Target { &self.items }
 }
 
-impl DerefMut for Files {
+impl DerefMut for Entries {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.items }
 }
 
-impl Files {
+impl Entries {
 	pub fn new(show_hidden: bool) -> Self { Self { show_hidden, ..Default::default() } }
 
 	pub fn update_full(&mut self, files: Vec<File>) {
@@ -267,7 +267,7 @@ impl Files {
 	}
 }
 
-impl Files {
+impl Entries {
 	// --- Items
 	#[inline]
 	pub fn position(&self, urn: PathDyn) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }

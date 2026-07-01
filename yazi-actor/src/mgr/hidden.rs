@@ -24,8 +24,8 @@ impl Actor for Hidden {
 				render!();
 				false
 			} else {
-				f.files.set_show_hidden(state);
-				render_and!(f.files.catchup_revision())
+				f.entries.set_show_hidden(state);
+				render_and!(f.entries.catchup_revision())
 			}
 		};
 

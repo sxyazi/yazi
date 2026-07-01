@@ -1,10 +1,11 @@
 use std::fs::Metadata;
 
 use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
 use yazi_shared::strand::AsStrand;
 
 bitflags! {
-	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+	#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
 	pub struct ChaKind: u8 {
 		const FOLLOW = 0b0000_0001;
 		const HIDDEN = 0b0000_0010;

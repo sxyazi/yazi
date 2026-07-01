@@ -82,7 +82,7 @@ impl Tab {
 	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.current.hovered_mut() }
 
 	pub fn hovered_rect(&self) -> Option<Rect> {
-		let y = self.current.files.position(self.hovered()?.urn())? - self.current.offset;
+		let y = self.current.entries.position(self.hovered()?.urn())? - self.current.offset;
 
 		let mut rect = LAYOUT.get().current;
 		rect.y = rect.y.saturating_sub(1) + y as u16;
@@ -99,22 +99,30 @@ impl Tab {
 		}
 	}
 
-	pub fn selected_or_hovered(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
+	pub fn selected_or_hovered_files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
+		if self.selected.is_empty() {
+			Box::new(self.hovered().into_iter())
+		} else {
+			Box::new(self.selected.files())
+		}
+	}
+
+	pub fn selected_or_hovered_urls(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
 		if self.selected.is_empty() {
 			Box::new(self.hovered().map(|h| &h.url).into_iter())
 		} else {
-			Box::new(self.selected.values())
+			Box::new(self.selected.urls())
 		}
 	}
 
 	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
 		let Some(h) = self.hovered() else {
-			return Box::new([UrlBuf::new()].into_iter().chain(self.selected.values()));
+			return Box::new([UrlBuf::new()].into_iter().chain(self.selected.urls()));
 		};
 		if self.selected.is_empty() {
 			Box::new([&h.url, &h.url].into_iter())
 		} else {
-			Box::new([&h.url].into_iter().chain(self.selected.values()))
+			Box::new([&h.url].into_iter().chain(self.selected.urls()))
 		}
 	}
 

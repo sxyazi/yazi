@@ -16,7 +16,7 @@ impl Actor for UpdateFiles {
 	const NAME: &str = "update_files";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let revision = cx.current().files.revision;
+		let revision = cx.current().entries.revision;
 		let linked: Vec<_> = LINKED.read().from_dir(form.op.cwd()).map(|u| form.op.chdir(u)).collect();
 
 		for op in [form.op].into_iter().chain(linked) {
@@ -28,7 +28,7 @@ impl Actor for UpdateFiles {
 		act!(mgr:hidden, cx).ok();
 		act!(mgr:sort, cx).ok();
 
-		if revision != cx.current().files.revision {
+		if revision != cx.current().entries.revision {
 			act!(mgr:hover, cx)?;
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
@@ -80,7 +80,7 @@ impl UpdateFiles {
 		}
 
 		if calc {
-			cx.tasks.prework_sorted(&cx.current().files);
+			cx.tasks.prework_sorted(&cx.current().entries);
 		}
 		succ!();
 	}

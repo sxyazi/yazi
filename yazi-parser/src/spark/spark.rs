@@ -66,7 +66,7 @@ pub enum Spark<'a> {
 	Quit(crate::app::QuitForm),
 	Refresh(crate::VoidForm),
 	Remove(crate::mgr::RemoveForm),
-	RemoveDo(crate::mgr::RemoveForm),
+	RemoveDo(crate::mgr::RemoveDoForm),
 	Rename(crate::mgr::RenameForm),
 	Reveal(crate::mgr::RevealForm),
 	Search(crate::mgr::SearchForm),
@@ -419,7 +419,8 @@ try_from_spark!(crate::mgr::OpenDoForm, mgr:open_do);
 try_from_spark!(crate::mgr::OpenForm, mgr:open);
 try_from_spark!(crate::mgr::PasteForm, mgr:paste);
 try_from_spark!(crate::mgr::PeekForm, mgr:peek);
-try_from_spark!(crate::mgr::RemoveForm, mgr:remove, mgr:remove_do);
+try_from_spark!(crate::mgr::RemoveForm, mgr:remove);
+try_from_spark!(crate::mgr::RemoveDoForm, mgr:remove_do);
 try_from_spark!(crate::mgr::RenameForm, mgr:rename);
 try_from_spark!(crate::mgr::RevealForm, mgr:reveal);
 try_from_spark!(crate::mgr::SearchForm, mgr:search, mgr:search_do);

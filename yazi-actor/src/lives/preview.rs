@@ -30,7 +30,7 @@ impl UserData for Preview {
 				.hovered_folder()
 				.map(|f| {
 					let limit = LAYOUT.get().preview.height as usize;
-					Folder::make(Some(me.skip..f.files.len().min(me.skip + limit)), f, &me.tab)
+					Folder::make(Some(me.skip..f.entries.len().min(me.skip + limit)), f, &me.tab)
 				})
 				.transpose()
 		});

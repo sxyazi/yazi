@@ -2,7 +2,7 @@ use std::mem;
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{Files, FilesOp, FolderStage, cha::Cha, file::File};
+use yazi_fs::{Entries, FilesOp, FolderStage, cha::Cha, file::File};
 use yazi_macro::err;
 use yazi_shared::{id::Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_widgets::{Scrollable, Step};
@@ -10,10 +10,10 @@ use yazi_widgets::{Scrollable, Step};
 use crate::MgrProxy;
 
 pub struct Folder {
-	pub url:   UrlBuf,
-	pub cha:   Cha,
-	pub files: Files,
-	pub stage: FolderStage,
+	pub url:     UrlBuf,
+	pub cha:     Cha,
+	pub entries: Entries,
+	pub stage:   FolderStage,
 
 	pub offset: usize,
 	pub cursor: usize,
@@ -25,14 +25,14 @@ pub struct Folder {
 impl Default for Folder {
 	fn default() -> Self {
 		Self {
-			url:    Default::default(),
-			cha:    Default::default(),
-			files:  Files::new(YAZI.mgr.show_hidden.get()),
-			stage:  Default::default(),
-			offset: Default::default(),
-			cursor: Default::default(),
-			page:   Default::default(),
-			trace:  Default::default(),
+			url:     Default::default(),
+			cha:     Default::default(),
+			entries: Entries::new(YAZI.mgr.show_hidden.get()),
+			stage:   Default::default(),
+			offset:  Default::default(),
+			cursor:  Default::default(),
+			page:    Default::default(),
+			trace:   Default::default(),
 		}
 	}
 }
@@ -43,7 +43,7 @@ impl<T: Into<UrlBuf>> From<T> for Folder {
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
-		let (stage, revision) = (self.stage.clone(), self.files.revision);
+		let (stage, revision) = (self.stage.clone(), self.entries.revision);
 		match op {
 			FilesOp::Full(_, _, cha) => {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
@@ -51,10 +51,10 @@ impl Folder {
 			FilesOp::Part(_, ref files, _) if files.is_empty() => {
 				(self.cha, self.stage) = (Cha::default(), FolderStage::Loading);
 			}
-			FilesOp::Part(_, _, ticket) if ticket == self.files.ticket() => {
+			FilesOp::Part(_, _, ticket) if ticket == self.entries.ticket() => {
 				self.stage = FolderStage::Loading;
 			}
-			FilesOp::Done(_, cha, ticket) if ticket == self.files.ticket() => {
+			FilesOp::Done(_, cha, ticket) if ticket == self.entries.ticket() => {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
 			}
 			FilesOp::IOErr(_, ref err) => {
@@ -65,23 +65,23 @@ impl Folder {
 
 		let mut deleted = vec![];
 		match op {
-			FilesOp::Full(_, files, _) => self.files.update_full(files),
-			FilesOp::Part(_, files, ticket) => self.files.update_part(files, ticket),
+			FilesOp::Full(_, files, _) => self.entries.update_full(files),
+			FilesOp::Part(_, files, ticket) => self.entries.update_part(files, ticket),
 			FilesOp::Done(..) => {}
-			FilesOp::Size(_, sizes) => self.files.update_size(sizes),
-			FilesOp::IOErr(..) => self.files.update_ioerr(),
+			FilesOp::Size(_, sizes) => self.entries.update_size(sizes),
+			FilesOp::IOErr(..) => self.entries.update_ioerr(),
 
-			FilesOp::Creating(_, files) => self.files.update_creating(files),
-			FilesOp::Deleting(_, urns) => deleted = self.files.update_deleting(urns),
-			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
-			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
+			FilesOp::Creating(_, files) => self.entries.update_creating(files),
+			FilesOp::Deleting(_, urns) => deleted = self.entries.update_deleting(urns),
+			FilesOp::Updating(_, files) => _ = self.entries.update_updating(files),
+			FilesOp::Upserting(_, files) => self.entries.update_upserting(files),
 		};
 
-		self.trace.take_if(|_| self.files.is_empty() && !self.stage.is_loading());
+		self.trace.take_if(|_| self.entries.is_empty() && !self.stage.is_loading());
 		self.arrow(-(deleted.into_iter().filter(|&i| i < self.cursor).count() as isize));
 		self.repos(None);
 
-		(&stage, revision) != (&self.stage, self.files.revision)
+		(&stage, revision) != (&self.stage, self.entries.revision)
 	}
 
 	pub fn update_pub(&mut self, tab: Id, op: FilesOp) -> bool {
@@ -93,7 +93,7 @@ impl Folder {
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
-		let mut b = if self.files.is_empty() {
+		let mut b = if self.entries.is_empty() {
 			(mem::take(&mut self.cursor), mem::take(&mut self.offset)) != (0, 0)
 		} else {
 			self.scroll(step)
@@ -109,7 +109,7 @@ impl Folder {
 			return self.arrow(0);
 		}
 
-		let new = self.files.position(urn).unwrap_or(self.cursor) as isize;
+		let new = self.entries.position(urn).unwrap_or(self.cursor) as isize;
 		let b = self.arrow(new - self.cursor as isize);
 
 		self.retrace();
@@ -146,7 +146,7 @@ impl Folder {
 
 	fn squeeze_offset(&mut self) -> bool {
 		let old = self.offset;
-		let len = self.files.len();
+		let len = self.entries.len();
 
 		let limit = LAYOUT.get().folder_limit();
 		let scrolloff = (limit / 2).min(YAZI.mgr.scrolloff.get() as usize);
@@ -164,23 +164,23 @@ impl Folder {
 
 impl Folder {
 	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.files.get(self.cursor) }
+	pub fn hovered(&self) -> Option<&File> { self.entries.get(self.cursor) }
 
 	#[inline]
-	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.files.get_mut(self.cursor) }
+	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.entries.get_mut(self.cursor) }
 
 	pub fn paginate(&self, page: usize) -> &[File] {
-		let len = self.files.len();
+		let len = self.entries.len();
 		let limit = LAYOUT.get().folder_limit();
 
 		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
 		let end = ((page + 2) * limit).min(len);
-		&self.files[start..end]
+		&self.entries[start..end]
 	}
 }
 
 impl Scrollable for Folder {
-	fn total(&self) -> usize { self.files.len() }
+	fn total(&self) -> usize { self.entries.len() }
 
 	fn limit(&self) -> usize { LAYOUT.get().folder_limit() }
 

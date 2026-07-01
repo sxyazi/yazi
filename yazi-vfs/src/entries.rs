@@ -1,12 +1,12 @@
 use std::io;
 
 use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_fs::{Files, FilesOp, cha::Cha, file::File, mounts::PARTITIONS, provider::{DirReader, FileHolder}};
+use yazi_fs::{Entries, FilesOp, cha::Cha, file::File, mounts::PARTITIONS, provider::{DirReader, FileHolder}};
 use yazi_shared::url::UrlBuf;
 
 use crate::{VfsCha, VfsFile, VfsFilesOp, provider::{self, DirEntry}};
 
-pub trait VfsFiles {
+pub trait VfsEntries {
 	fn from_dir(dir: &UrlBuf) -> impl Future<Output = io::Result<UnboundedReceiver<File>>>;
 
 	fn from_dir_bulk(dir: &UrlBuf) -> impl Future<Output = io::Result<Vec<File>>>;
@@ -14,7 +14,7 @@ pub trait VfsFiles {
 	fn assert_stale(dir: &UrlBuf, cha: Cha) -> impl Future<Output = Option<Cha>>;
 }
 
-impl VfsFiles for Files {
+impl VfsEntries for Entries {
 	async fn from_dir(dir: &UrlBuf) -> std::io::Result<UnboundedReceiver<File>> {
 		let mut it = provider::read_dir(dir).await?;
 		let (tx, rx) = mpsc::unbounded_channel();

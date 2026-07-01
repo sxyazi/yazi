@@ -4,7 +4,7 @@ use mlua::{AnyUserData, UserData, UserDataFields};
 use yazi_config::LAYOUT;
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use super::{File, Files, Lives, PtrCell};
+use super::{Entries, File, Lives, PtrCell};
 
 pub(super) struct Folder {
 	window: Range<usize>,
@@ -28,7 +28,7 @@ impl Folder {
 			Some(w) => w,
 			None => {
 				let limit = LAYOUT.get().preview.height as usize;
-				inner.offset..inner.files.len().min(inner.offset + limit)
+				inner.offset..inner.entries.len().min(inner.offset + limit)
 			}
 		};
 
@@ -39,9 +39,9 @@ impl Folder {
 impl UserData for Folder {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_cached_field("cwd", |_, me| Ok(me.url.clone()));
-		fields.add_static_field("files", |_, me| Files::make(0..me.files.len(), me, &me.tab));
+		fields.add_static_field("files", |_, me| Entries::make(0..me.entries.len(), me, &me.tab));
 		fields.add_cached_field("stage", |_, me| Ok(me.stage.clone()));
-		fields.add_static_field("window", |_, me| Files::make(me.window.clone(), me, &me.tab));
+		fields.add_static_field("window", |_, me| Entries::make(me.window.clone(), me, &me.tab));
 
 		fields.add_field_method_get("offset", |_, me| Ok(me.offset));
 		fields.add_field_method_get("cursor", |_, me| Ok(me.cursor));

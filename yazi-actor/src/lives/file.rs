@@ -17,7 +17,7 @@ pub(super) struct File {
 impl Deref for File {
 	type Target = yazi_fs::file::File;
 
-	fn deref(&self) -> &Self::Target { &self.folder.files[self.idx] }
+	fn deref(&self) -> &Self::Target { &self.folder.entries[self.idx] }
 }
 
 impl AsRef<yazi_fs::file::File> for File {
@@ -32,14 +32,16 @@ impl File {
 	) -> mlua::Result<AnyUserData> {
 		use hashbrown::hash_map::Entry;
 
-		Ok(match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.files[idx])) {
-			Entry::Occupied(oe) => oe.into_mut().clone(),
-			Entry::Vacant(ve) => {
-				let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
-				ve.insert(ud.clone());
-				ud
-			}
-		})
+		Ok(
+			match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.entries[idx])) {
+				Entry::Occupied(oe) => oe.into_mut().clone(),
+				Entry::Vacant(ve) => {
+					let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
+					ve.insert(ud.clone());
+					ud
+				}
+			},
+		)
 	}
 
 	#[inline]
@@ -67,7 +69,7 @@ impl UserData for File {
 			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
 		methods.add_method("size", |_, me, ()| {
-			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })
+			Ok(if me.is_dir() { me.folder.entries.sizes.get(&me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;

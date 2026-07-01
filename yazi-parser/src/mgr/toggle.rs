@@ -1,16 +1,17 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_fs::file::File;
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct ToggleForm {
-	pub url:   Option<UrlBuf>,
+	pub file:  Option<File>,
 	pub state: Option<bool>,
 }
 
 impl From<ActionCow> for ToggleForm {
 	fn from(mut a: ActionCow) -> Self {
 		Self {
-			url:   a.take_first().ok(),
+			file:  a.take_first().ok(),
 			state: match a.get("state") {
 				Ok("on") => Some(true),
 				Ok("off") => Some(false),

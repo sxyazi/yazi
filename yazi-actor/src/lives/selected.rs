@@ -1,8 +1,6 @@
 use mlua::AnyUserData;
-use yazi_shared::url::UrlBuf;
 
-use super::Lives;
-use crate::lives::PtrCell;
+use super::{Lives, PtrCell};
 
 #[derive(Clone, Copy)]
 pub(super) struct Selected;
@@ -12,7 +10,7 @@ impl Selected {
 		let inner = PtrCell::from(inner);
 
 		Lives::scoped_userdata(yazi_binding::Iter::new(
-			inner.as_static().values().map(UrlBuf::from),
+			inner.as_static().files().cloned(),
 			Some(inner.len()),
 		))
 	}

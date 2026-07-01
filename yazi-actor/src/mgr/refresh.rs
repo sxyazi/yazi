@@ -1,10 +1,10 @@
 use anyhow::Result;
 use yazi_core::tab::Folder;
-use yazi_fs::{CWD, Files, FilesOp, cha::Cha};
+use yazi_fs::{CWD, Entries, FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
 use yazi_parser::VoidForm;
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFiles, VfsFilesOp};
+use yazi_vfs::{VfsEntries, VfsFilesOp};
 use yazi_watcher::MgrProxy;
 
 use crate::{Actor, Ctx};
@@ -29,7 +29,7 @@ impl Actor for Refresh {
 		act!(mgr:watch, cx)?;
 		act!(mgr:update_paged, cx)?;
 
-		cx.tasks.prework_sorted(&cx.current().files);
+		cx.tasks.prework_sorted(&cx.current().entries);
 		succ!();
 	}
 }
@@ -44,9 +44,9 @@ impl Refresh {
 	// TODO: performance improvement
 	fn trigger_dirs(folders: &[&Folder]) {
 		async fn go(dir: UrlBuf, cha: Cha) {
-			let Some(cha) = Files::assert_stale(&dir, cha).await else { return };
+			let Some(cha) = Entries::assert_stale(&dir, cha).await else { return };
 
-			match Files::from_dir_bulk(&dir).await {
+			match Entries::from_dir_bulk(&dir).await {
 				Ok(files) => FilesOp::Full(dir, files, cha).emit(),
 				Err(e) => FilesOp::issue_error(&dir, e).await,
 			}

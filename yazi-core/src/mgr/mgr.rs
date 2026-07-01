@@ -67,7 +67,7 @@ impl Splatable for Mgr {
 		tab
 			.checked_sub(1)
 			.and_then(|tab| self.tabs.get(tab))
-			.map(|tab| tab.selected_or_hovered())
+			.map(|tab| tab.selected_or_hovered_urls())
 			.unwrap_or_else(|| Box::new(iter::empty()))
 			.skip(idx.unwrap_or(0))
 			.take(if idx.is_some() { 1 } else { usize::MAX })
@@ -82,5 +82,5 @@ impl Splatable for Mgr {
 			.map(|h| h.url.as_url())
 	}
 
-	fn yanked(&self) -> impl Iterator<Item = Url<'_>> { self.yanked.iter().map(|u| u.as_url()) }
+	fn yanked(&self) -> impl Iterator<Item = Url<'_>> { self.yanked.iter().map(|f| f.url.as_url()) }
 }
