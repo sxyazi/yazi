@@ -28,6 +28,8 @@ function M:preload(job)
 	local cmd = M.with_limit():arg(tostring(job.file.path))
 	if job.args.flatten then
 		cmd:arg("-flatten")
+	else
+		cmd:arg { "-delete", "1--1" }
 	end
 	cmd:arg { "-auto-orient", "-strip" }
 
