@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Show file icons in trash/delete/overwrite confirmations ([#4096])
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])
+- Copying and pasting files with the system clipboard ([#4035])
 - Image preview with Überzug++ on Niri ([#3990])
 - New gait for input `backward` and `forward` actions ([#4012])
 
@@ -1768,6 +1769,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4012]: https://github.com/sxyazi/yazi/pull/4012
 [#4022]: https://github.com/sxyazi/yazi/pull/4022
 [#4031]: https://github.com/sxyazi/yazi/pull/4031
+[#4035]: https://github.com/sxyazi/yazi/pull/4035
 [#4040]: https://github.com/sxyazi/yazi/pull/4040
 [#4064]: https://github.com/sxyazi/yazi/pull/4064
 [#4065]: https://github.com/sxyazi/yazi/pull/4065
