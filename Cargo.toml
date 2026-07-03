@@ -61,11 +61,11 @@ ordered-float       = { version = "5.3.0", features = [ "serde" ] }
 parking_lot         = "0.12.5"
 paste               = "1.0.15"
 percent-encoding    = "2.3.2"
-rand                = { version = "0.10.1", default-features = false, features = [ "std", "sys_rng" ] }
+rand                = { version = "0.10.2", default-features = false, features = [ "std", "sys_rng" ] }
 ratatui-core        = { version = "0.1.2", default-features = false, features = [ "std", "layout-cache", "serde", "underline-color" ] }
 ratatui-widgets     = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
 regex               = "1.12.4"
-russh               = { version = "0.61.2", default-features = false, features = [ "ring", "rsa" ] }
+russh               = { version = "0.62.1", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
 serde_json          = "1.0.150"
