@@ -33,6 +33,7 @@ yazi_macro::mod_flat!(
 	quit
 	refresh
 	remove
+	remove_do
 	rename
 	reveal
 	search

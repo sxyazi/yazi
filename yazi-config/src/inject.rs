@@ -10,6 +10,7 @@ inventory::submit! {
 				// TODO: use a cache
 				Ok(THEME.icon.matches(me, false))
 			});
-		}
+		},
+		from_lua: |_| Err(mlua::Error::UserDataTypeMismatch),
 	}
 }

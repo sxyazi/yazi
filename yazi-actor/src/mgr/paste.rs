@@ -20,7 +20,7 @@ impl Actor for Paste {
 		if mgr.yanked.cut {
 			cx.core.tasks.file_cut(&mgr.yanked, dest, form.force);
 
-			mgr.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(&*mgr.yanked));
+			mgr.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(mgr.yanked.urls()));
 			act!(mgr:unyank, cx)
 		} else {
 			succ!(cx.core.tasks.file_copy(&mgr.yanked, dest, form.force, form.follow));

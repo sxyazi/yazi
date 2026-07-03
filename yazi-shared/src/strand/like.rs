@@ -17,6 +17,8 @@ pub trait StrandLike: AsStrand {
 
 	fn encoded_bytes(&self) -> &[u8] { self.as_strand().encoded_bytes() }
 
+	fn ends_with(&self, needle: impl AsStrand) -> bool { self.as_strand().ends_with(needle) }
+
 	fn eq_ignore_ascii_case(&self, other: impl AsStrand) -> bool {
 		self.as_strand().eq_ignore_ascii_case(other)
 	}

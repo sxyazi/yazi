@@ -15,14 +15,14 @@ impl Actor for Toggle {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
-		let Some(url) = form.url.or_else(|| tab.hovered().map(|h| h.url.clone())) else {
+		let Some(file) = form.file.or_else(|| tab.hovered().cloned()) else {
 			succ!();
 		};
 
 		let b = match form.state {
-			Some(true) => render_and!(tab.selected.add(&url)),
-			Some(false) => render_and!(tab.selected.remove(&url)) | true,
-			None => render_and!(tab.selected.remove(&url) || tab.selected.add(&url)),
+			Some(true) => render_and!(tab.selected.add(file)),
+			Some(false) => render_and!(tab.selected.remove(&file.url)) | true,
+			None => render_and!(tab.selected.remove(&file.url) || tab.selected.add(file)),
 		};
 
 		if !b {

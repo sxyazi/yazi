@@ -45,7 +45,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.10
 
       - name: Rustfmt
-        run: rustfmt +nightly --check **/*.rs
+        run: find . -name '*.rs' -not -path './target/*' -exec rustfmt +nightly --check {} +
 
   stylua:
     runs-on: ubuntu-22.04

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{iter, path::Path};
 
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::{impl_data_any, relay};
@@ -25,7 +25,6 @@ pub enum FilesOp {
 impl_data_any!(FilesOp);
 
 impl FilesOp {
-	#[inline]
 	pub fn cwd(&self) -> &UrlBuf {
 		match self {
 			Self::Full(u, ..) => u,
@@ -41,7 +40,21 @@ impl FilesOp {
 		}
 	}
 
-	#[inline]
+	pub fn files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
+		match self {
+			Self::Full(_, files, _) => Box::new(files.iter()),
+			Self::Part(_, files, _) => Box::new(files.iter()),
+			Self::Done(..) => Box::new(iter::empty()),
+			Self::Size(..) => Box::new(iter::empty()),
+			Self::IOErr(..) => Box::new(iter::empty()),
+
+			Self::Creating(_, files) => Box::new(files.iter()),
+			Self::Deleting(..) => Box::new(iter::empty()),
+			Self::Updating(_, map) => Box::new(map.values()),
+			Self::Upserting(_, map) => Box::new(map.values()),
+		}
+	}
+
 	pub fn emit(self) {
 		yazi_shared::event::Event::Call(relay!(mgr:update_files).with_any("op", self).into()).emit();
 	}
@@ -134,7 +147,7 @@ impl FilesOp {
 		}
 	}
 
-	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<UrlBuf>) {
+	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<File>) {
 		match self {
 			Self::Deleting(cwd, urns) => {
 				(urns.iter().filter_map(|u| cwd.try_join(u).ok()).collect(), vec![])
@@ -144,7 +157,7 @@ impl FilesOp {
 				.filter(|&(u, f)| u != f.urn())
 				.filter_map(|(u, f)| cwd.try_join(u).ok().map(|u| (u, f)))
 				.filter(|(u, _)| contains(u))
-				.map(|(u, f)| (u, f.url_owned()))
+				.map(|(u, f)| (u, f.clone()))
 				.unzip(),
 			_ => (vec![], vec![]),
 		}

@@ -1,10 +1,11 @@
 use std::{borrow::Cow, hash::{Hash, Hasher}, ops::Deref, path::Path};
 
-use yazi_shared::{path::{PathBufDyn, PathDyn}, strand::Strand, url::{UrlBuf, UrlLike}};
+use serde::{Deserialize, Serialize};
+use yazi_shared::{path::{PathBufDyn, PathDyn}, strand::Strand, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
 use crate::cha::{Cha, ChaType};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct File {
 	pub url:     UrlBuf,
 	pub cha:     Cha,
@@ -27,6 +28,14 @@ impl From<File> for Cow<'_, File> {
 
 impl<'a> From<&'a File> for Cow<'a, File> {
 	fn from(value: &'a File) -> Self { Cow::Borrowed(value) }
+}
+
+impl AsUrl for File {
+	fn as_url(&self) -> Url<'_> { self.url.as_url() }
+}
+
+impl AsUrl for &File {
+	fn as_url(&self) -> Url<'_> { self.url.as_url() }
 }
 
 impl File {

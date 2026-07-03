@@ -1,5 +1,5 @@
 use yazi_config::{YAZI, plugin::MAX_FETCHERS};
-use yazi_fs::{Files, FsHash64, SortBy, file::File};
+use yazi_fs::{Entries, FsHash64, SortBy, file::File};
 
 use super::Tasks;
 use crate::mgr::Mimetype;
@@ -44,7 +44,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn prework_sorted(&self, targets: &Files) {
+	pub fn prework_sorted(&self, targets: &Entries) {
 		if targets.sorter().by != SortBy::Size {
 			return;
 		}

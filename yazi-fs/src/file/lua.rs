@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, FromLua, Lua, ObjectLike, Table, UserData, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_binding::{impl_file_fields, impl_file_methods};
 
 use crate::file::{File, FileInventory};
@@ -25,7 +25,19 @@ impl TryFrom<AnyUserData> for File {
 	type Error = mlua::Error;
 
 	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> {
-		Ok(if let Ok(me) = value.take::<Self>() { me } else { value.get("bare")? })
+		if let Ok(me) = value.take::<Self>() {
+			return Ok(me);
+		}
+
+		for inv in inventory::iter::<FileInventory>() {
+			match (inv.from_lua)(&value) {
+				Ok(file) => return Ok(file),
+				Err(mlua::Error::UserDataTypeMismatch) => continue,
+				Err(e) => return Err(e),
+			}
+		}
+
+		Err(mlua::Error::UserDataTypeMismatch)
 	}
 }
 

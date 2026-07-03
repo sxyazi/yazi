@@ -21,6 +21,7 @@ yazi_macro::mod_flat!(
 	paste
 	peek
 	remove
+	remove_do
 	rename
 	reveal
 	search

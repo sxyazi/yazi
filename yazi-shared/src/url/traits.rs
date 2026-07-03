@@ -1,6 +1,7 @@
 use std::{hash::BuildHasher, path::{Path, PathBuf}};
 
 use hashbrown::{HashMap, hash_map::EntryRef};
+use indexmap::{IndexMap, map::RawEntryApiV1};
 
 use crate::{loc::Loc, url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlCow}};
 
@@ -124,6 +125,28 @@ where
 			EntryRef::Occupied(oe) => oe.into_mut(),
 			EntryRef::Vacant(ve) => ve.insert_with_key(url.into(), default(url)),
 		}
+	}
+}
+
+impl<V, S> UrlMapExt<V> for IndexMap<UrlBuf, V, S>
+where
+	S: BuildHasher,
+{
+	fn get_or_insert_default<U>(&mut self, url: U) -> &mut V
+	where
+		U: AsUrl,
+		V: Default,
+	{
+		self.get_or_insert_with(url, |_| Default::default())
+	}
+
+	fn get_or_insert_with<U, F>(&mut self, url: U, default: F) -> &mut V
+	where
+		U: AsUrl,
+		F: FnOnce(Url<'_>) -> V,
+	{
+		let url = url.as_url();
+		self.raw_entry_mut_v1().from_key(&url).or_insert_with(|| (url.into(), default(url))).1
 	}
 }
 

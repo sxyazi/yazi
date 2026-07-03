@@ -19,6 +19,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"create" => create(lua)?,
 			b"cwd" => cwd(lua)?,
 			b"expand_url" => expand_url(lua)?,
+			b"file" => file(lua)?,
 			b"op" => op(lua)?,
 			b"partitions" => partitions(lua)?,
 			b"read_dir" => read_dir(lua)?,
@@ -117,6 +118,15 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 				}
 			}
 			_ => Err("must be a string or a Url".into_lua_err())?,
+		}
+	})
+}
+
+fn file(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, url: UrlRef| async move {
+		match File::new(&*url).await {
+			Ok(file) => file.into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }

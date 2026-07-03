@@ -1,7 +1,7 @@
 use std::hash::{BuildHasher, Hash};
 
 use mlua::UserDataMethods;
-use yazi_shared::url::{AsUrl, UrlBufInventory};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlBufInventory};
 use yazi_shim::Twox128;
 
 use crate::{cha::Cha, file::File};
@@ -14,7 +14,7 @@ impl FsHash64 for File {
 	fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 }
 
-impl<T: AsUrl> FsHash64 for T {
+impl FsHash64 for UrlBuf {
 	fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self.as_url()) }
 }
 

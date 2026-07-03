@@ -3,6 +3,7 @@ use std::{ops::Deref, ptr};
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
 use yazi_binding::{Range, style::Style};
 use yazi_config::THEME;
+use yazi_fs::file::FileInventory;
 use yazi_shared::{path::AsPath, url::UrlLike};
 
 use super::{FILE_CACHE, Lives};
@@ -17,7 +18,7 @@ pub(super) struct File {
 impl Deref for File {
 	type Target = yazi_fs::file::File;
 
-	fn deref(&self) -> &Self::Target { &self.folder.files[self.idx] }
+	fn deref(&self) -> &Self::Target { &self.folder.entries[self.idx] }
 }
 
 impl AsRef<yazi_fs::file::File> for File {
@@ -32,14 +33,16 @@ impl File {
 	) -> mlua::Result<AnyUserData> {
 		use hashbrown::hash_map::Entry;
 
-		Ok(match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.files[idx])) {
-			Entry::Occupied(oe) => oe.into_mut().clone(),
-			Entry::Vacant(ve) => {
-				let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
-				ve.insert(ud.clone());
-				ud
-			}
-		})
+		Ok(
+			match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.entries[idx])) {
+				Entry::Occupied(oe) => oe.into_mut().clone(),
+				Entry::Vacant(ve) => {
+					let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
+					ve.insert(ud.clone());
+					ud
+				}
+			},
+		)
 	}
 
 	#[inline]
@@ -49,7 +52,6 @@ impl File {
 impl UserData for File {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		yazi_binding::impl_file_fields!(fields);
-		fields.add_cached_field("bare", |_, me| Ok(yazi_fs::file::File::from(&**me)));
 
 		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 		fields.add_field_method_get("is_hovered", |_, me| Ok(me.is_hovered()));
@@ -67,7 +69,7 @@ impl UserData for File {
 			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
 		methods.add_method("size", |_, me, ()| {
-			Ok(if me.is_dir() { me.folder.files.sizes.get(&me.urn()).copied() } else { Some(me.len) })
+			Ok(if me.is_dir() { me.folder.entries.sizes.get(&me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;
@@ -136,5 +138,12 @@ impl UserData for File {
 
 			lua.create_sequence_from(h.into_iter().map(Range::from)).map(Some)
 		});
+	}
+}
+
+inventory::submit! {
+	FileInventory {
+		register: |_| {},
+		from_lua: |ud| Ok(ud.borrow::<File>()?.clone()),
 	}
 }

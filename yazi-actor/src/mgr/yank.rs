@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::mgr::Yanked;
 use yazi_macro::{act, render};
 use yazi_parser::mgr::YankForm;
-use yazi_shared::{data::Data, url::UrlBufCov};
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -17,7 +17,7 @@ impl Actor for Yank {
 		act!(mgr:escape_visual, cx)?;
 
 		cx.mgr.yanked =
-			Yanked::new(form.cut, cx.tab().selected_or_hovered().cloned().map(UrlBufCov).collect());
+			Yanked::new(form.cut, cx.tab().selected_or_hovered_files().map(Into::into).collect());
 		render!(cx.mgr.yanked.catchup_revision(true));
 
 		act!(mgr:escape_select, cx)

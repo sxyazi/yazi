@@ -3,34 +3,31 @@ use std::borrow::Cow;
 use indexmap::IndexSet;
 use mlua::{AnyUserData, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
+use yazi_fs::file::FileCov;
 use yazi_macro::impl_data_any;
-use yazi_shared::url::{UrlBuf, UrlBufCov};
 use yazi_shim::mlua::get_metatable;
 
 use super::Ember;
 
-type Iter = yazi_binding::Iter<
-	std::iter::Map<indexmap::set::IntoIter<UrlBufCov>, fn(UrlBufCov) -> UrlBuf>,
-	UrlBuf,
->;
+type Iter = yazi_binding::Iter<indexmap::set::IntoIter<FileCov>, FileCov>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberYank<'a> {
-	pub cut:  bool,
-	pub urls: Cow<'a, IndexSet<UrlBufCov>>,
+	pub cut:   bool,
+	pub files: Cow<'a, IndexSet<FileCov>>,
 }
 
 impl_data_any!(EmberYank<'static>, from_into_lua = inherit);
 
 impl<'a> EmberYank<'a> {
-	pub fn borrowed(cut: bool, urls: &'a IndexSet<UrlBufCov>) -> Ember<'a> {
-		Self { cut, urls: Cow::Borrowed(urls) }.into()
+	pub fn borrowed(cut: bool, files: &'a IndexSet<FileCov>) -> Ember<'a> {
+		Self { cut, files: Cow::Borrowed(files) }.into()
 	}
 }
 
 impl EmberYank<'static> {
-	pub fn owned(cut: bool, _: &IndexSet<UrlBufCov>) -> Ember<'static> {
-		Self { cut, urls: Default::default() }.into()
+	pub fn owned(cut: bool, _: &IndexSet<FileCov>) -> Ember<'static> {
+		Self { cut, files: Default::default() }.into()
 	}
 }
 
@@ -53,8 +50,8 @@ impl FromLua for EmberYank<'static> {
 
 impl IntoLua for EmberYank<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		let len = self.urls.len();
-		let iter = Iter::new(self.urls.into_owned().into_iter().map(UrlBuf::from), Some(len));
+		let len = self.files.len();
+		let iter = Iter::new(self.files.into_owned().into_iter(), Some(len));
 		EmberYankIter { cut: self.cut, len, inner: lua.create_userdata(iter)? }.into_lua(lua)
 	}
 }
@@ -69,15 +66,8 @@ pub struct EmberYankIter {
 impl EmberYankIter {
 	pub fn collect(self, lua: &Lua) -> mlua::Result<EmberYank<'static>> {
 		Ok(EmberYank {
-			cut:  self.cut,
-			urls: Cow::Owned(
-				self
-					.inner
-					.take::<Iter>()?
-					.into_iter(lua)
-					.map(|result| result.map(Into::into))
-					.collect::<mlua::Result<_>>()?,
-			),
+			cut:   self.cut,
+			files: Cow::Owned(self.inner.take::<Iter>()?.into_iter(lua).collect::<mlua::Result<_>>()?),
 		})
 	}
 }
