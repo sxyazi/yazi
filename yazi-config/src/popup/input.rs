@@ -58,7 +58,7 @@ impl Input {
 
 	pub fn create(&self, dir: bool) -> InputOpt {
 		InputOpt {
-			id: "create".to_owned(),
+			id: if dir { "create-dir" } else { "create" }.to_owned(),
 			title: self.create_title[dir as usize].clone(),
 			position: Position::new(self.create_origin, self.create_offset),
 			..Default::default()
