@@ -2,7 +2,7 @@ use std::path::Path;
 
 use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, text::Line, widgets::Widget};
 use ratatui_widgets::{block::Block, borders::BorderType};
-use yazi_config::{Icon, THEME};
+use yazi_config::{Icon, THEME, YAZI};
 use yazi_core::Core;
 use yazi_fs::{cha::{Cha, ChaKind}, file::File};
 use yazi_shim::path::CROSS_SEPARATOR;
@@ -15,6 +15,10 @@ impl<'a> Input<'a> {
 	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 
 	fn icon(&self) -> Option<Icon> {
+		if !YAZI.input.show_icons {
+			return None;
+		}
+
 		let input = &self.core.input.main;
 
 		let is_dir = input.value().ends_with(CROSS_SEPARATOR);

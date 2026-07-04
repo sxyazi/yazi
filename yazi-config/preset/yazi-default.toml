@@ -176,6 +176,7 @@ previewers = [
 
 [input]
 cursor_blink = false
+show_icons   = true
 
 # cd
 cd_title  = "Change directory:"

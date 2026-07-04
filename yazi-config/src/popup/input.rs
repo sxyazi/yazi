@@ -7,6 +7,7 @@ use yazi_widgets::input::InputOpt;
 #[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Input {
 	pub cursor_blink: bool,
+	pub show_icons:   bool,
 
 	// cd
 	pub cd_title:  String,

@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Make help menu a command palette ([#4074])
 - H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
 - Context-aware icons for inputs ([#4080])
+- New `show_icons` option under `[input]` to toggle icons on input popups ([#4100])
 - Show file icons in trash/delete/overwrite confirmations ([#4096])
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])
@@ -1768,3 +1769,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4074]: https://github.com/sxyazi/yazi/pull/4074
 [#4080]: https://github.com/sxyazi/yazi/pull/4080
 [#4096]: https://github.com/sxyazi/yazi/pull/4096
+[#4100]: https://github.com/sxyazi/yazi/pull/4100
