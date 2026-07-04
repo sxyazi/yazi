@@ -4882,6 +4882,7 @@ dependencies = [
  "serde_with",
  "toml",
  "tracing",
+ "unicode-width",
  "yazi-binding",
  "yazi-codegen",
  "yazi-fs",

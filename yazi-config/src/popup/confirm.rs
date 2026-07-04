@@ -4,6 +4,9 @@ use yazi_codegen::{DeserializeOver, DeserializeOver2};
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Confirm {
+	pub truncate_paths: bool,
+	pub show_icons:     bool,
+
 	// trash
 	pub trash_title:  String,
 	pub trash_origin: Origin,

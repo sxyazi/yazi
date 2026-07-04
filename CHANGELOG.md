@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
 - Context-aware icons for inputs ([#4080])
 - New `show_icons` option under `[input]` to toggle icons on input popups ([#4100])
+- New `show_icons` and `truncate_paths` options under `[confirm]` to toggle icons and RTL-ellipsis-truncate long paths on trash/delete/overwrite confirmations ([#4100])
 - Show file icons in trash/delete/overwrite confirmations ([#4096])
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])

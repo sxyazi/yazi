@@ -214,6 +214,9 @@ shell_origin = "top-center"
 shell_offset = [ 0, 2, 50, 3 ]
 
 [confirm]
+truncate_paths = false
+show_icons     = true
+
 # trash
 trash_title 	= "Trash {n} selected file{s}?"
 trash_origin	= "center"
