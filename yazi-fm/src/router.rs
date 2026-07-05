@@ -1,6 +1,7 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
+use yazi_core::which::WhichOpt;
 use yazi_macro::act;
 use yazi_shared::Layer;
 use yazi_term::event::KeyEvent;
@@ -32,16 +33,17 @@ impl<'a> Router<'a> {
 		let key = Key::from(key);
 		Ok(match layer {
 			L::Null | L::App | L::Notify => unreachable!(),
-			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm | L::Help => {
-				self.matches(layer, key)
+			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm => {
+				self.matches(layer, layer, key)
 			}
-			L::Cmp => self.matches(L::Cmp, key) || self.matches(L::Input, key),
+			L::Help => self.matches(L::Help, L::Help, key) || self.matches(L::Input, L::Help, key),
+			L::Cmp => self.matches(L::Cmp, L::Cmp, key) || self.matches(L::Input, L::Input, key),
 			L::Which => core.which.r#type(key),
 		})
 	}
 
-	fn matches(&mut self, layer: Layer, key: Key) -> bool {
-		for chord in &*KEYMAP.chords(layer) {
+	fn matches(&mut self, src: Layer, dist: Layer, key: Key) -> bool {
+		for chord in &*KEYMAP.chords(src) {
 			let Chord { on, .. } = chord.as_ref();
 			if on.is_empty() || on[0] != key {
 				continue;
@@ -49,9 +51,9 @@ impl<'a> Router<'a> {
 
 			if on.len() > 1 {
 				let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
-				act!(which:activate, cx, (layer, key)).ok();
+				act!(which:activate, cx, WhichOpt::new(src, dist, key)).ok();
 			} else {
-				Dispatcher::new(self.app).dispatch_seq(chord.to_seq());
+				Dispatcher::new(self.app).dispatch_seq(chord.to_seq(dist));
 			}
 			return true;
 		}

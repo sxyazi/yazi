@@ -1,9 +1,7 @@
-use mlua::{AnyUserData, ExternalError, FromLua, Lua, ObjectLike, Table, UserData, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, UserDataRegistry, Value};
 use yazi_binding::{impl_file_fields, impl_file_methods};
 
-use crate::file::{File, FileInventory};
-
-pub type FileRef = UserDataRef<File>;
+use crate::file::{File, FileInventory, FileRef};
 
 const EXPECTED: &str = "expected a table, File, or fs::File";
 
@@ -25,7 +23,11 @@ impl TryFrom<AnyUserData> for File {
 	type Error = mlua::Error;
 
 	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> {
-		Ok(if let Ok(me) = value.take::<Self>() { me } else { value.get("bare")? })
+		match value.take::<Self>() {
+			Ok(me) => Ok(me),
+			Err(mlua::Error::UserDataTypeMismatch) => FileRef(value).try_into(),
+			Err(e) => Err(e),
+		}
 	}
 }
 

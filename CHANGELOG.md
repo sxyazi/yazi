@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Drag and drop ([#4005])
 - Bulk create ([#3793])
+- Make help menu a command palette ([#4074])
+- Make visual mode support wraparound scrolling ([#4101])
+- H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
+- Context-aware icons for inputs ([#4080])
+- Show file icons in trash/delete/overwrite confirmations ([#4096])
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])
 - Image preview with Überzug++ on Niri ([#3990])
@@ -24,11 +29,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Changed
 
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
+- Make `mgr::Yanked`, `tab::Selected`, and the `@yank` DDS event return `File` instead of `Url` from `__pairs()` ([#4096])
+- Remove `help:filter` action since the filter input is now always available ([#4074])
+- `[help]` of `theme.toml`: supersede `on` with `chord`, supersede `run` and `desc` with `action`, remove `footer` ([#4074])
 - Remove Legacy Console Mode on Windows ([#3989])
 
 ### Deprecated
 
 - Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
+- Deprecate `tab::Mode.is_visual` in favor of the new `tab::Mode.is_normal` ([#4101])
 
 ### Fixed
 
@@ -1746,6 +1755,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3906]: https://github.com/sxyazi/yazi/pull/3906
 [#3934]: https://github.com/sxyazi/yazi/pull/3934
 [#3943]: https://github.com/sxyazi/yazi/pull/3943
+[#3970]: https://github.com/sxyazi/yazi/pull/3970
 [#3989]: https://github.com/sxyazi/yazi/pull/3989
 [#3990]: https://github.com/sxyazi/yazi/pull/3990
 [#4005]: https://github.com/sxyazi/yazi/pull/4005
@@ -1757,3 +1767,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4065]: https://github.com/sxyazi/yazi/pull/4065
 [#4067]: https://github.com/sxyazi/yazi/pull/4067
 [#4068]: https://github.com/sxyazi/yazi/pull/4068
+[#4074]: https://github.com/sxyazi/yazi/pull/4074
+[#4080]: https://github.com/sxyazi/yazi/pull/4080
+[#4096]: https://github.com/sxyazi/yazi/pull/4096
+[#4101]: https://github.com/sxyazi/yazi/pull/4101

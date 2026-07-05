@@ -2,8 +2,8 @@ local M = {}
 
 local state = ya.sync(function()
 	local selected = {}
-	for _, url in pairs(cx.active.selected) do
-		selected[#selected + 1] = url
+	for _, f in pairs(cx.active.selected) do
+		selected[#selected + 1] = f.url
 	end
 	return cx.active.current.cwd, selected
 end)
@@ -25,12 +25,20 @@ function M:entry()
 	end
 
 	local urls = M.split_urls(cwd, output)
-	if #urls == 1 then
+	if #urls == 0 then
+		return
+	elseif #urls == 1 then
 		local cha = #selected == 0 and fs.cha(urls[1])
-		ya.emit(cha and cha.is_dir and "cd" or "reveal", { urls[1], raw = true })
-	elseif #urls > 1 then
-		urls.state = #selected > 0 and "off" or "on"
-		ya.emit("toggle_all", urls)
+		return ya.emit(cha and cha.is_dir and "cd" or "reveal", { urls[1], raw = true })
+	end
+
+	local files = {}
+	for _, url in ipairs(urls) do
+		files[#files + 1] = fs.file(url)
+	end
+	if #files > 0 then
+		files.state = #selected > 0 and "off" or "on"
+		ya.emit("toggle_all", files)
 	end
 end
 
@@ -69,11 +77,7 @@ function M.split_urls(cwd, output)
 	local t = {}
 	for line in output:gmatch("[^\r\n]+") do
 		local u = Url(line)
-		if u.is_absolute then
-			t[#t + 1] = u
-		else
-			t[#t + 1] = cwd:join(u)
-		end
+		t[#t + 1] = u.is_absolute and u or cwd:join(u)
 	end
 	return t
 end

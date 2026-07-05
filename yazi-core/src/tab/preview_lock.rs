@@ -24,15 +24,17 @@ impl TryFrom<Table> for PreviewLock {
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		let file: FileRef = t.raw_get("file")?;
-		Ok(Self {
-			url: file.url_owned(),
-			cha: file.cha,
-			mime: t.raw_get::<mlua::String>("mime")?.to_str()?.intern(),
+		file.borrow(|f| {
+			Ok(Self {
+				url: f.url_owned(),
+				cha: f.cha,
+				mime: t.raw_get::<mlua::String>("mime")?.to_str()?.intern(),
 
-			skip: t.raw_get("skip")?,
-			search_idx: t.raw_get("search_idx")?,
-			area: t.raw_get("area")?,
-			data: Default::default(),
+				skip: t.raw_get("skip")?,
+				search_idx: t.raw_get("search_idx")?,
+				area: t.raw_get("area")?,
+				data: Default::default(),
+			})
 		})
 	}
 }

@@ -1,21 +1,19 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct RemoveForm {
 	pub force:       bool,
 	pub permanently: bool,
 	pub hovered:     bool,
-	pub targets:     Vec<UrlBuf>,
 }
 
 impl From<ActionCow> for RemoveForm {
-	fn from(mut a: ActionCow) -> Self {
+	fn from(a: ActionCow) -> Self {
 		Self {
 			force:       a.bool("force"),
 			permanently: a.bool("permanently"),
 			hovered:     a.bool("hovered"),
-			targets:     a.take_any("targets").unwrap_or_default(),
 		}
 	}
 }

@@ -2,13 +2,14 @@ use std::{fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use anyhow::bail;
 use mlua::FromLua;
+use serde::{Deserialize, Serialize};
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::{strand::AsStrand, url::AsUrl};
 
 use super::ChaKind;
 use crate::cha::{ChaMode, ChaType};
 
-#[derive(Clone, Copy, Debug, Eq, FromLua, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, FromLua, PartialEq, Serialize)]
 pub struct Cha {
 	pub kind:  ChaKind,
 	pub mode:  ChaMode,

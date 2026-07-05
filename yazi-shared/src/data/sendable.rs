@@ -61,7 +61,7 @@ impl Sendable {
 		}
 
 		for inv in inventory::iter::<DataInventory> {
-			match (inv.from_lua)(value.clone(), lua) {
+			match (inv.from_lua)(&value, lua) {
 				Ok(data) => return Ok(Data::Any(data)),
 				Err(mlua::Error::UserDataTypeMismatch) => continue,
 				Err(e) => return Err(e),

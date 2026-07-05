@@ -30,8 +30,8 @@ impl Actor for Sort {
 				render!();
 				false
 			} else {
-				f.files.set_sorter(sorter);
-				render_and!(f.files.catchup_revision())
+				f.entries.set_sorter(sorter);
+				render_and!(f.entries.catchup_revision())
 			}
 		};
 
@@ -41,7 +41,7 @@ impl Actor for Sort {
 		{
 			act!(mgr:hover, cx)?;
 			act!(mgr:update_paged, cx)?;
-			cx.tasks.prework_sorted(&cx.mgr.tabs[cx.tab].current.files);
+			cx.tasks.prework_sorted(&cx.mgr.tabs[cx.tab].current.entries);
 		}
 
 		// Apply to hovered

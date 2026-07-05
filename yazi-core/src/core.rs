@@ -33,16 +33,17 @@ impl Core {
 	}
 
 	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
+		if let Some(cursor) = self.help.cursor() {
+			let Rect { x, y, .. } = self.mgr.area(self.help.position).padding(self.help.padding());
+			return Some((Position { x: x + cursor, y }, self.help.cursor_shape()?));
+		}
+
 		if let Some(guard) = self.input.lock() {
 			let Rect { x, y, .. } = match &guard {
 				InputGuard::Main(_) => self.mgr.area(self.input.position()?).padding(self.input.padding()),
 				InputGuard::Alt(_) => self.mgr.area(self.input.position()?),
 			};
 			return Some((Position { x: x + guard.cursor(), y }, guard.cursor_shape()));
-		}
-
-		if let Some((x, y)) = self.help.cursor() {
-			return Some((Position { x, y }, self.help.cursor_shape()?));
 		}
 
 		None

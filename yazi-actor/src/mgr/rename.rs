@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{FilesOp, file::File};
@@ -6,7 +6,7 @@ use yazi_macro::{act, err, input, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{data::Data, id::Id, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, maybe_exists, provider};
+use yazi_vfs::{VfsFile, provider};
 use yazi_watcher::WATCHER;
 use yazi_widgets::input::InputEvent;
 
@@ -42,23 +42,23 @@ impl Actor for Rename {
 		};
 
 		let (tab, old) = (cx.tab().id, hovered.url_owned());
-		let mut input = input!(cx, YAZI.input.rename().with_value(name).with_cursor(cursor))?;
+		let mut input =
+			input!(cx, YAZI.input.rename(hovered.is_dir()).with_value(name).with_cursor(cursor))?;
 
 		tokio::spawn(async move {
-			let Some(InputEvent::Submit(name)) = input.recv().await else { return };
+			let Some(InputEvent::Submit(name)) = input.recv().await else { return Ok(()) };
 			if name.is_empty() {
-				return;
+				return Ok(());
 			}
 
 			let Some(Ok(new)) = old.parent().map(|u| u.try_join(name)) else {
-				return;
+				bail!("Failed to join new name with parent directory");
 			};
 
-			if form.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
-				Self::r#do(tab, old, new).await.ok();
-			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
-				Self::r#do(tab, old, new).await.ok();
+			if form.force || Self::try_ask(&old, &new).await? {
+				Self::r#do(tab, old, new).await?;
 			}
+			Ok::<(), anyhow::Error>(())
 		});
 		succ!();
 	}
@@ -95,6 +95,17 @@ impl Rename {
 		MgrProxy::reveal(&new);
 		err!(Pubsub::pub_after_rename(tab, &old, &new));
 		Ok(())
+	}
+
+	async fn try_ask(old: &UrlBuf, new: &UrlBuf) -> Result<bool> {
+		let Some(file) = File::maybe_new(&new).await? else {
+			return Ok(true);
+		};
+
+		Ok(
+			provider::must_identical(old, new).await
+				|| ConfirmProxy::show(ConfirmCfg::overwrite(&file)).await,
+		)
 	}
 
 	fn empty_url_part(url: &UrlBuf, by: &str) -> String {

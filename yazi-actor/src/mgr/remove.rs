@@ -1,7 +1,8 @@
 use anyhow::Result;
 use yazi_config::popup::ConfirmCfg;
+use yazi_fs::file::Files;
 use yazi_macro::{act, confirm, succ};
-use yazi_parser::mgr::RemoveForm;
+use yazi_parser::mgr::{RemoveDoForm, RemoveForm};
 use yazi_proxy::MgrProxy;
 use yazi_shared::data::Data;
 
@@ -14,58 +15,31 @@ impl Actor for Remove {
 
 	const NAME: &str = "remove";
 
-	fn act(cx: &mut Ctx, mut form: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		form.targets = if form.hovered {
-			cx.hovered().map_or(vec![], |h| vec![h.url.clone()])
+		let targets = Files(if form.hovered {
+			cx.hovered().map_or(vec![], |h| vec![h.clone()])
 		} else {
-			cx.tab().selected_or_hovered().cloned().collect()
-		};
+			cx.tab().selected_or_hovered_files().cloned().collect()
+		});
 
-		if form.targets.is_empty() {
+		if targets.is_empty() {
 			succ!();
 		} else if form.force {
-			return act!(mgr:remove_do, cx, form);
+			return act!(mgr:remove_do, cx, RemoveDoForm { permanently: form.permanently, targets: targets.into() });
 		}
 
 		let confirm = confirm!(
 			cx,
-			if form.permanently {
-				ConfirmCfg::delete(&form.targets)
-			} else {
-				ConfirmCfg::trash(&form.targets)
-			}
+			if form.permanently { ConfirmCfg::delete(&targets) } else { ConfirmCfg::trash(&targets) }
 		)?;
 
 		tokio::spawn(async move {
 			if confirm.future().await {
-				MgrProxy::remove_do(form.targets, form.permanently);
+				MgrProxy::remove_do(form.permanently, targets);
 			}
 		});
-		succ!();
-	}
-}
-
-// --- Do
-pub struct RemoveDo;
-
-impl Actor for RemoveDo {
-	type Form = RemoveForm;
-
-	const NAME: &str = "remove_do";
-
-	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let mgr = &mut cx.mgr;
-
-		mgr.tabs.iter_mut().for_each(|t| {
-			t.selected.remove_many(&form.targets);
-		});
-
-		mgr.yanked.remove_many(&form.targets);
-		mgr.yanked.catchup_revision(false);
-
-		cx.tasks.file_remove(form.targets, form.permanently);
 		succ!();
 	}
 }

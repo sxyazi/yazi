@@ -22,14 +22,16 @@ impl TryFrom<Table> for SpotLock {
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		let file: FileRef = t.raw_get("file")?;
-		Ok(Self {
-			url:  file.url_owned(),
-			cha:  file.cha,
-			mime: t.raw_get("mime")?,
+		file.borrow(|f| {
+			Ok(Self {
+				url:  f.url_owned(),
+				cha:  f.cha,
+				mime: t.raw_get("mime")?,
 
-			id:   t.raw_get("id")?,
-			skip: t.raw_get("skip")?,
-			data: Default::default(),
+				id:   t.raw_get("id")?,
+				skip: t.raw_get("skip")?,
+				data: Default::default(),
+			})
 		})
 	}
 }

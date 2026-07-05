@@ -3,7 +3,7 @@ use yazi_binding::{Composer, ComposerGet, ComposerSet, style::Style};
 use yazi_config::{THEME, theme::CustomSectionArc};
 use yazi_shared::url::UrlBuf;
 
-use crate::LUA;
+use crate::{LUA, theme::icon};
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
@@ -23,6 +23,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"cmp" => cmp(),
 			b"tasks" => tasks(),
 			b"help" => help(),
+			b"icon" => icon(),
 			_ => return custom(lua, key),
 		}
 		.into_lua(lua)
@@ -361,12 +362,10 @@ fn help() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.help;
 		match key {
-			b"on" => Style::from(&t.on).into_lua(lua),
-			b"run" => Style::from(&t.run).into_lua(lua),
-			b"desc" => Style::from(&t.desc).into_lua(lua),
-
+			b"border" => Style::from(&t.border).into_lua(lua),
+			b"chord" => Style::from(&t.chord).into_lua(lua),
+			b"action" => Style::from(&t.action).into_lua(lua),
 			b"hovered" => Style::from(&t.hovered).into_lua(lua),
-			b"footer" => Style::from(&t.footer).into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}

@@ -25,7 +25,7 @@ impl Utils {
 				.enumerate()
 				.map(|(i, cand)| {
 					let cand = cand?;
-					Ok(ChordArc::from(Chord::<{ Layer::Null as u8 }> {
+					Ok(ChordArc::from(Chord {
 						id:    yazi_config::keymap::chord_id(),
 						on:    Self::parse_keys(cand.raw_get("on")?)?,
 						run:   relay!(which:callback, [i + 1]).into(),

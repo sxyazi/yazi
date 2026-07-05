@@ -67,15 +67,16 @@ impl Actor for EscapeVisual {
 		let tab = cx.tab_mut();
 
 		let select = tab.mode.is_select();
-		let Some((_, indices)) = tab.mode.take_visual() else { succ!(false) };
+		let Some(indices) = tab.mode.take_visual(tab.current.cursor, tab.current.entries.len()) else {
+			succ!(false)
+		};
 
 		render!();
-		let urls: Vec<_> =
-			indices.into_iter().filter_map(|i| tab.current.files.get(i)).map(|f| &f.url).collect();
+		let files: Vec<_> = indices.into_iter().filter_map(|i| tab.current.entries.get(i)).collect();
 
 		if !select {
-			tab.selected.remove_many(urls);
-		} else if urls.len() != tab.selected.add_many(urls) {
+			tab.selected.remove_many(files);
+		} else if files.len() != tab.selected.add_many(files) {
 			NotifyProxy::push_warn(
 				"Escape visual mode",
 				"Some files cannot be selected, due to path nesting conflict.",
@@ -96,7 +97,7 @@ impl Actor for EscapeFilter {
 	const NAME: &str = "escape_filter";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		if cx.current_mut().files.filter().is_none() {
+		if cx.current_mut().entries.filter().is_none() {
 			succ!(false);
 		}
 

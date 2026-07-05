@@ -19,7 +19,7 @@ impl Actor for Arrow {
 		let len = confirm.list.line_count(area.width);
 
 		let old = confirm.offset;
-		confirm.offset = form.step.add(confirm.offset, len, area.height as _);
+		confirm.offset = form.step.add(confirm.offset, len, area.height as _, 0, 0);
 
 		succ!(render!(old != confirm.offset));
 	}

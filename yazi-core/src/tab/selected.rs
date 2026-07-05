@@ -1,13 +1,11 @@
-use std::ops::Deref;
-
 use hashbrown::HashMap;
-use indexmap::IndexMap;
-use yazi_fs::FilesOp;
-use yazi_shared::{timestamp_us, url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlCovMapExt}};
+use indexmap::{IndexMap, map::MutableKeys};
+use yazi_fs::{FilesOp, file::{File, FileCov}};
+use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlBuf, UrlBufCov, UrlCov, UrlCovMapExt, UrlLike, UrlMapExt}};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   IndexMap<UrlBufCov, u64>,
+	inner:   IndexMap<FileCov, u64>,
 	parents: HashMap<UrlBufCov, usize>,
 }
 
@@ -16,64 +14,70 @@ impl Selected {
 
 	pub fn is_empty(&self) -> bool { self.inner.is_empty() }
 
-	pub fn values(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(Deref::deref) }
+	pub fn files(&self) -> impl Iterator<Item = &File> { self.inner.keys().map(|f| &f.0) }
 
-	pub fn contains<'a>(&self, url: impl Into<Url<'a>>) -> bool {
-		self.inner.contains_key(&UrlCov::new(url))
+	pub fn urls(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(|f| &f.url) }
+
+	pub fn contains(&self, url: impl AsUrl) -> bool {
+		self.inner.contains_key(&UrlCov::new(url.as_url()))
 	}
 
-	pub fn add<'a>(&mut self, url: impl Into<Url<'a>>) -> bool { self.add_same([url]) == 1 }
+	pub fn add(&mut self, file: impl AsUrl + Into<File>) -> bool { self.add_same([file]) == 1 }
 
-	pub fn add_many<'a, I, T>(&mut self, urls: I) -> usize
+	pub fn add_many<I, T>(&mut self, files: I) -> usize
 	where
 		I: IntoIterator<Item = T>,
-		T: Into<Url<'a>>,
+		T: AsUrl + Into<File>,
 	{
 		let mut grouped: IndexMap<_, Vec<_>> = Default::default();
-		for url in urls.into_iter().map(Into::into) {
-			if let Some(p) = url.parent() {
-				grouped.entry(p).or_default().push(url);
+		for file in files {
+			if let Some(p) = file.as_url().parent() {
+				grouped.get_or_insert_default(p).push(file);
 			}
 		}
 		grouped.into_values().map(|v| self.add_same(v)).sum()
 	}
 
-	fn add_same<'a, I, T>(&mut self, urls: I) -> usize
+	fn add_same<I, T>(&mut self, files: I) -> usize
 	where
 		I: IntoIterator<Item = T>,
-		T: Into<Url<'a>>,
+		T: AsUrl + Into<File>,
 	{
 		// If it has appeared as a parent
-		let urls: Vec<_> =
-			urls.into_iter().map(UrlCov::new).filter(|u| !self.parents.contains_key(u)).collect();
-		if urls.is_empty() {
+		let files: Vec<_> =
+			files.into_iter().filter(|f| !self.parents.contains_key(&UrlCov::new(f.as_url()))).collect();
+		if files.is_empty() {
 			return 0;
 		}
 
 		// If it has appeared as a child
-		let mut parent = urls[0].parent();
-		let mut parents = vec![];
+		let mut parent = files[0].as_url().parent();
 		while let Some(u) = parent {
 			if self.inner.contains_key(&UrlCov::new(u)) {
 				return 0;
 			}
-
 			parent = u.parent();
-			parents.push(u);
 		}
 
-		let (now, len) = (timestamp_us(), self.inner.len());
-		self.inner.extend(urls.iter().enumerate().map(|(i, u)| (u.into(), now + i as u64)));
+		// Mark the files as selected children with a timestamp
+		let (now, fl, il) = (timestamp_us(), files.len(), self.inner.len());
+		self
+			.inner
+			.extend(files.into_iter().enumerate().map(|(i, f)| (FileCov(f.into()), now + i as u64)));
 
-		for u in parents {
-			*self.parents.get_or_insert_default(UrlCov::new(u)) += self.inner.len() - len;
+		// Update the parent counts
+		if let Some((first, _)) = self.inner.get_index(il) {
+			let mut parent = first.url.parent();
+			while let Some(u) = parent {
+				*self.parents.get_or_insert_default(UrlCov::new(u)) += self.inner.len() - il;
+				parent = u.parent();
+			}
 		}
-		urls.len()
+
+		fl
 	}
 
-	pub fn remove<'a>(&mut self, url: impl Into<Url<'a>> + Clone) -> bool {
-		self.remove_same([url]) == 1
-	}
+	pub fn remove(&mut self, url: impl AsUrl) -> bool { self.remove_same([url]) == 1 }
 
 	pub fn remove_many<'a, I, T>(&mut self, urls: I) -> usize
 	where
@@ -95,21 +99,21 @@ impl Selected {
 		affected
 	}
 
-	fn remove_same<'a, I, T>(&mut self, urls: I) -> usize
+	fn remove_same<I, T>(&mut self, urls: I) -> usize
 	where
 		I: IntoIterator<Item = T>,
-		T: Into<Url<'a>> + Clone,
+		T: AsUrl,
 	{
-		let mut it = urls.into_iter().peekable();
-		let Some(first) = it.peek().cloned().map(UrlCov::new) else { return 0 };
+		let mut it = urls.into_iter();
+		let Some(first) = it.next() else { return 0 };
 
-		let count = it.filter_map(|u| self.inner.swap_remove(&UrlCov::new(u))).count();
+		let count = self.inner.swap_remove(&UrlCov::new(first.as_url())).is_some() as usize
+			+ it.filter_map(|u| self.inner.swap_remove(&UrlCov::new(u.as_url()))).count();
 		if count == 0 {
 			return 0;
 		}
 
-		// FIXME: use UrlCov::parent() instead
-		let mut parent = first.parent();
+		let mut parent = first.as_url().parent();
 		while let Some(u) = parent {
 			let n = self.parents.get_mut(&UrlCov::new(u)).unwrap();
 
@@ -134,23 +138,28 @@ impl Selected {
 			self.remove_many(&removal);
 		}
 		if !addition.is_empty() {
-			self.add_many(&addition);
+			self.add_many(addition);
+		}
+		for f in op.files() {
+			self.inner.get_full_mut2(&UrlCov::new(&f.url)).map(|(_, k, _)| *k = f.into());
 		}
 	}
 }
 
 #[cfg(test)]
 mod tests {
-	use std::path::Path;
+	use std::{ffi::OsStr, path::Path};
 
 	use super::*;
+
+	fn f<S: AsRef<OsStr> + ?Sized>(s: &S) -> File { File::from_dummy(Path::new(s), None) }
 
 	#[test]
 	fn test_insert_non_conflicting() {
 		let mut s = Selected::default();
 
-		assert!(s.add(Path::new("/a/b")));
-		assert!(s.add(Path::new("/c/d")));
+		assert!(s.add(f("/a/b")));
+		assert!(s.add(f("/c/d")));
 		assert_eq!(s.inner.len(), 2);
 	}
 
@@ -158,24 +167,24 @@ mod tests {
 	fn test_insert_conflicting_parent() {
 		let mut s = Selected::default();
 
-		assert!(s.add(Path::new("/a")));
-		assert!(!s.add(Path::new("/a/b")));
+		assert!(s.add(f("/a")));
+		assert!(!s.add(f("/a/b")));
 	}
 
 	#[test]
 	fn test_insert_conflicting_child() {
 		let mut s = Selected::default();
 
-		assert!(s.add(Path::new("/a/b/c")));
-		assert!(!s.add(Path::new("/a/b")));
-		assert!(s.add(Path::new("/a/b/d")));
+		assert!(s.add(f("/a/b/c")));
+		assert!(!s.add(f("/a/b")));
+		assert!(s.add(f("/a/b/d")));
 	}
 
 	#[test]
 	fn test_remove() {
 		let mut s = Selected::default();
 
-		assert!(s.add(Path::new("/a/b")));
+		assert!(s.add(f("/a/b")));
 		assert!(!s.remove(Path::new("/a/c")));
 		assert!(s.remove(Path::new("/a/b")));
 		assert!(!s.remove(Path::new("/a/b")));
@@ -184,92 +193,83 @@ mod tests {
 	}
 
 	#[test]
-	fn insert_many_success() {
+	fn add_many_success() {
 		let mut s = Selected::default();
 
-		assert_eq!(
-			3,
-			s.add_same([
-				Path::new("/parent/child1"),
-				Path::new("/parent/child2"),
-				Path::new("/parent/child3")
-			])
-		);
+		assert_eq!(3, s.add_same([f("/parent/child1"), f("/parent/child2"), f("/parent/child3")]));
 	}
 
 	#[test]
-	fn insert_many_with_existing_parent_fails() {
+	fn add_many_with_existing_parent_fails() {
 		let mut s = Selected::default();
 
-		s.add(Path::new("/parent"));
-		assert_eq!(0, s.add_same([Path::new("/parent/child1"), Path::new("/parent/child2")]));
+		s.add(f("/parent"));
+		assert_eq!(0, s.add_same([f("/parent/child1"), f("/parent/child2")]));
 	}
 
 	#[test]
-	fn insert_many_with_existing_child_fails() {
+	fn add_many_with_existing_child_fails() {
 		let mut s = Selected::default();
 
-		s.add(Path::new("/parent/child1"));
-		assert_eq!(2, s.add_same([Path::new("/parent/child1"), Path::new("/parent/child2")]));
+		s.add(f("/parent/child1"));
+		assert_eq!(2, s.add_same([f("/parent/child1"), f("/parent/child2")]));
 	}
 
 	#[test]
-	fn insert_many_empty_urls_list() {
+	fn add_many_empty_files_list() {
 		let mut s = Selected::default();
 
-		assert_eq!(0, s.add_same([] as [Url; 0]));
+		assert_eq!(0, s.add_same([] as [File; 0]));
 	}
 
 	#[test]
-	fn insert_many_with_parent_as_child_of_another_url() {
+	fn add_many_with_parent_as_child_of_another_url() {
 		let mut s = Selected::default();
 
-		s.add(Path::new("/parent/child"));
-		assert_eq!(
-			0,
-			s.add_same([Path::new("/parent/child/child1"), Path::new("/parent/child/child2")])
-		);
-	}
-	#[test]
-	fn insert_many_with_direct_parent_fails() {
-		let mut s = Selected::default();
-
-		s.add(Path::new("/a"));
-		assert_eq!(0, s.add_same([Path::new("/a/b")]));
+		s.add(f("/parent/child"));
+		assert_eq!(0, s.add_same([f("/parent/child/child1"), f("/parent/child/child2")]));
 	}
 
 	#[test]
-	fn insert_many_with_nested_child_fails() {
+	fn add_many_with_direct_parent_fails() {
 		let mut s = Selected::default();
 
-		s.add(Path::new("/a/b"));
-		assert_eq!(0, s.add_same([Path::new("/a")]));
-		assert_eq!(1, s.add_same([Path::new("/b"), Path::new("/a")]));
+		s.add(f("/a"));
+		assert_eq!(0, s.add_same([f("/a/b")]));
 	}
 
 	#[test]
-	fn insert_many_sibling_directories_success() {
+	fn add_many_with_nested_child_fails() {
 		let mut s = Selected::default();
 
-		assert_eq!(2, s.add_same([Path::new("/a/b"), Path::new("/a/c")]));
+		s.add(f("/a/b"));
+		assert_eq!(0, s.add_same([f("/a")]));
+		assert_eq!(1, s.add_same([f("/b"), f("/a")]));
 	}
 
 	#[test]
-	fn insert_many_with_grandchild_fails() {
+	fn add_many_sibling_directories_success() {
 		let mut s = Selected::default();
 
-		s.add(Path::new("/a/b"));
-		assert_eq!(0, s.add_same([Path::new("/a/b/c")]));
+		assert_eq!(2, s.add_same([f("/a/b"), f("/a/c")]));
 	}
 
 	#[test]
-	fn test_insert_many_with_remove() {
+	fn add_many_with_grandchild_fails() {
+		let mut s = Selected::default();
+
+		s.add(f("/a/b"));
+		assert_eq!(0, s.add_same([f("/a/b/c")]));
+	}
+
+	#[test]
+	fn test_add_many_with_remove() {
 		let mut s = Selected::default();
 
 		let child1 = Path::new("/parent/child1");
 		let child2 = Path::new("/parent/child2");
 		let child3 = Path::new("/parent/child3");
-		assert_eq!(3, s.add_same([child1, child2, child3]));
+		assert_eq!(3, s.add_same([f(child1), f(child2), f(child3)]));
 
 		assert!(s.remove(child1));
 		assert_eq!(s.inner.len(), 2);
@@ -281,5 +281,14 @@ mod tests {
 		assert!(s.remove(child3));
 		assert!(s.inner.is_empty());
 		assert!(s.parents.is_empty());
+	}
+
+	#[test]
+	fn add_same_all_duplicates() {
+		let mut s = Selected::default();
+
+		s.add(f("/a/b"));
+		assert_eq!(1, s.add_same([f("/a/b")]));
+		assert_eq!(s.inner.len(), 1);
 	}
 }

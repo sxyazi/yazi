@@ -66,14 +66,8 @@ impl Actor for Trigger {
 
 impl Trigger {
 	fn split_url(s: &str) -> Option<(UrlBuf, PathBufDyn)> {
-		let sep = if cfg!(windows) {
-			AnyAsciiChar::new(b"/\\").unwrap()
-		} else {
-			AnyAsciiChar::new(b"/").unwrap()
-		};
-
 		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
-		if path.is_empty() && !sep.predicate(s.bytes().last()?) {
+		if path.is_empty() && !AnyAsciiChar::SEP.predicate(s.bytes().last()?) {
 			return None; // We don't complete a `sftp://test`, but `sftp://test/`
 		}
 
@@ -84,7 +78,7 @@ impl Trigger {
 		}
 
 		// Child
-		let child = path.rsplit_pred(sep).map_or(path.as_path(), |(_, c)| c).to_owned();
+		let child = path.rsplit_pred(AnyAsciiChar::SEP).map_or(path.as_path(), |(_, c)| c).to_owned();
 
 		// Parent
 		let url = UrlCow::try_from((scheme.clone().zeroed(), path)).ok()?;

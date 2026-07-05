@@ -90,7 +90,7 @@ impl TryFrom<Table> for PreviewerMatcher<'static> {
 		Ok(Self {
 			previewers: YAZI.plugin.previewers.load_full(),
 			id,
-			file: file.map(|f| f.clone().into()),
+			file: file.map(TryInto::try_into).transpose()?,
 			mime: mime.map(Into::into),
 			..Default::default()
 		})

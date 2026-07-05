@@ -13,12 +13,16 @@ keymap = [
 	{ on = "<C-c>", run = "close",              desc = "Close the current tab, or quit if it's last" },
 	{ on = "<C-z>", run = "suspend",            desc = "Suspend the process" },
 
-	# Hopping
-	{ on = "k", run = "arrow prev", desc = "Previous file" },
-	{ on = "j", run = "arrow next", desc = "Next file" },
-
+	# Hop around
+	{ on = "k",      run = "arrow prev", desc = "Previous file" },
+	{ on = "j",      run = "arrow next", desc = "Next file" },
 	{ on = "<Up>",   run = "arrow prev", desc = "Previous file" },
 	{ on = "<Down>", run = "arrow next", desc = "Next file" },
+
+	{ on = [ "g", "g" ], run = "arrow top", desc = "Go to top" },
+	{ on = "G",          run = "arrow bot", desc = "Go to bottom" },
+	{ on = "<Home>",     run = "arrow top", desc = "Go to top" },
+	{ on = "<End>",      run = "arrow bot", desc = "Go to bottom" },
 
 	{ on = "<C-u>", run = "arrow -50%",  desc = "Move cursor up half page" },
 	{ on = "<C-d>", run = "arrow 50%",   desc = "Move cursor down half page" },
@@ -29,9 +33,6 @@ keymap = [
 	{ on = "<S-PageDown>", run = "arrow 50%",   desc = "Move cursor down half page" },
 	{ on = "<PageUp>",     run = "arrow -100%", desc = "Move cursor up one page" },
 	{ on = "<PageDown>",   run = "arrow 100%",  desc = "Move cursor down one page" },
-
-	{ on = [ "g", "g" ], run = "arrow top", desc = "Go to top" },
-	{ on = "G",          run = "arrow bot", desc = "Go to bottom" },
 
 	# Navigation
 	{ on = "h", run = "leave", desc = "Back to the parent directory" },
@@ -360,9 +361,10 @@ keymap = [
 [help]
 
 keymap = [
-	{ on = "<Esc>", run = "escape", desc = "Clear the filter, or hide the help" },
-	{ on = "<C-[>", run = "escape", desc = "Clear the filter, or hide the help" },
-	{ on = "<C-c>", run = "close",  desc = "Hide the help" },
+	{ on = "<Esc>",   run = "escape",         desc = "Enter normal mode, or hide help menu" },
+	{ on = "<C-[>",   run = "escape",         desc = "Enter normal mode, or hide help menu" },
+	{ on = "<C-c>",   run = "close",          desc = "Close help menu" },
+	{ on = "<Enter>", run = "close --submit", desc = "Close help menu and run selected action(s)" },
 
 	# Navigation
 	{ on = "k", run = "arrow prev", desc = "Previous line" },
@@ -371,6 +373,6 @@ keymap = [
 	{ on = "<Up>",   run = "arrow prev", desc = "Previous line" },
 	{ on = "<Down>", run = "arrow next", desc = "Next line" },
 
-	# Filtering
-	{ on = "f", run = "filter", desc = "Filter help items" },
+	{ on = "<C-p>", run = "arrow prev", desc = "Previous line" },
+	{ on = "<C-n>", run = "arrow next", desc = "Next line" },
 ]

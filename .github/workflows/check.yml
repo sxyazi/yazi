@@ -17,7 +17,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Rust toolchain
         run: |
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Rust toolchain
         run: |
@@ -45,12 +45,12 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.10
 
       - name: Rustfmt
-        run: rustfmt +nightly --check **/*.rs
+        run: find . -name '*.rs' -not -path './target/*' -exec rustfmt +nightly --check {} +
 
   stylua:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: JohnnyMorganz/stylua-action@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

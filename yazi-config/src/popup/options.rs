@@ -1,10 +1,13 @@
-use ratatui_core::text::{Line, Text};
+use std::slice;
+
+use ratatui_core::text::{Line, Span, Text};
 use ratatui_widgets::paragraph::{Paragraph, Wrap};
 use yazi_binding::position::Position;
+use yazi_fs::file::File;
 use yazi_macro::impl_data_any;
-use yazi_shared::{strand::ToStrand, url::UrlBuf};
+use yazi_shared::strand::ToStrand;
 
-use crate::YAZI;
+use crate::{THEME, YAZI};
 
 // --- PickCfg
 #[derive(Clone, Debug, Default)]
@@ -42,30 +45,30 @@ impl ConfirmCfg {
 		}
 	}
 
-	pub fn trash(urls: &[yazi_shared::url::UrlBuf]) -> Self {
+	pub fn trash(files: &[File]) -> Self {
 		Self::new(
-			Self::replace_number(&YAZI.confirm.trash_title, urls.len()),
+			Self::replace_number(&YAZI.confirm.trash_title, files.len()),
 			YAZI.confirm.trash_position(),
 			None,
-			Self::truncate_list(urls, urls.len(), 100),
+			Self::truncate_files(files, 100),
 		)
 	}
 
-	pub fn delete(urls: &[yazi_shared::url::UrlBuf]) -> Self {
+	pub fn delete(files: &[File]) -> Self {
 		Self::new(
-			Self::replace_number(&YAZI.confirm.delete_title, urls.len()),
+			Self::replace_number(&YAZI.confirm.delete_title, files.len()),
 			YAZI.confirm.delete_position(),
 			None,
-			Self::truncate_list(urls, urls.len(), 100),
+			Self::truncate_files(files, 100),
 		)
 	}
 
-	pub fn overwrite(url: &UrlBuf) -> Self {
+	pub fn overwrite(file: &File) -> Self {
 		Self::new(
 			YAZI.confirm.overwrite_title.clone(),
 			YAZI.confirm.overwrite_position(),
 			Some(Text::raw(&YAZI.confirm.overwrite_body)),
-			Some(url.to_strand().into_string_lossy().into()),
+			Self::truncate_files(slice::from_ref(file), 1),
 		)
 	}
 
@@ -74,7 +77,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.quit_title, len),
 			YAZI.confirm.quit_position(),
 			Some(Text::raw(&YAZI.confirm.quit_body)),
-			Self::truncate_list(names, len, 10),
+			Self::truncate_lines(names, len, 10),
 		)
 	}
 
@@ -82,7 +85,7 @@ impl ConfirmCfg {
 		tpl.replace("{n}", &n.to_string()).replace("{s}", if n > 1 { "s" } else { "" })
 	}
 
-	fn truncate_list<I>(it: I, len: usize, max: usize) -> Option<Text<'static>>
+	fn truncate_lines<I>(it: I, len: usize, max: usize) -> Option<Text<'static>>
 	where
 		I: IntoIterator,
 		I::Item: ToStrand,
@@ -96,5 +99,23 @@ impl ConfirmCfg {
 			lines.push(s.to_strand().into_string_lossy());
 		}
 		Some(Text::from_iter(lines))
+	}
+
+	fn truncate_files(files: &[File], max: usize) -> Option<Text<'static>> {
+		let mut lines = Vec::with_capacity(files.len().min(max + 1));
+		for (i, f) in files.iter().enumerate() {
+			if i >= max {
+				lines.push(Line::raw(format!("... and {} more", files.len() - max)));
+				break;
+			}
+
+			lines.push(Line::default());
+			if let Some(icon) = THEME.icon.matches(f, false) {
+				lines[i].push_span(Span::styled(icon.text, icon.style));
+				lines[i].push_span(" ");
+			}
+			lines[i].push_span(f.url.to_strand().into_string_lossy());
+		}
+		Some(lines.into())
 	}
 }

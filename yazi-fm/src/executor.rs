@@ -321,16 +321,18 @@ impl<'a> Executor<'a> {
 
 		on!(escape);
 		on!(arrow);
-		on!(filter);
+		on!(close);
 
 		match action.name.as_ref() {
-			// Help
-			"close" => act!(help:toggle, cx, Layer::Help),
 			// Plugin
 			"plugin" => act!(app:plugin, cx, action),
 			// Lua
 			"lua" => act!(app:lua, cx, action),
-			_ => succ!(),
+			_ => {
+				cx.help.input.execute(action)?;
+				cx.help.filter_apply();
+				succ!()
+			}
 		}
 	}
 

@@ -20,7 +20,7 @@ impl Actor for Copy {
 		let mut it = if form.hovered {
 			Box::new(cx.hovered().map(|h| &h.url).into_iter())
 		} else {
-			cx.tab().selected_or_hovered()
+			cx.tab().selected_or_hovered_urls()
 		}
 		.peekable();
 

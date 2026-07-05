@@ -1,6 +1,6 @@
 use std::{io::{self, Write}, os::windows::io::AsRawHandle};
 
-use windows_sys::Win32::System::Console::{CONSOLE_MODE, GetConsoleCP, GetConsoleMode, GetConsoleOutputCP, SetConsoleCP, SetConsoleMode, SetConsoleOutputCP};
+use windows_sys::Win32::System::Console::{CONSOLE_MODE, FlushConsoleInputBuffer, GetConsoleCP, GetConsoleMode, GetConsoleOutputCP, SetConsoleCP, SetConsoleMode, SetConsoleOutputCP};
 use yazi_shim::{bool_ok, nz_ok};
 use yazi_tty::Tty;
 
@@ -29,6 +29,7 @@ impl Restorer {
 	pub fn restore(&self, tty: &Tty) {
 		tty.writer().flush().ok();
 		unsafe {
+			FlushConsoleInputBuffer(tty.reader().as_raw_handle());
 			SetConsoleCP(self.input_cp);
 			SetConsoleMode(tty.reader().as_raw_handle(), self.input_mode);
 			SetConsoleOutputCP(self.output_cp);

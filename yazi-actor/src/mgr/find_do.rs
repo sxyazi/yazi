@@ -24,9 +24,9 @@ impl Actor for FindDo {
 		}
 
 		let step = if opt.prev {
-			finder.prev(&cx.current().files, cx.current().cursor, true)
+			finder.prev(&cx.current().entries, cx.current().cursor, true)
 		} else {
-			finder.next(&cx.current().files, cx.current().cursor, true)
+			finder.next(&cx.current().entries, cx.current().cursor, true)
 		};
 
 		if let Some(step) = step {

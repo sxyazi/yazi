@@ -1,7 +1,5 @@
-use std::collections::BTreeSet;
-
 use anyhow::Result;
-use yazi_core::tab::Mode;
+use yazi_core::tab::{Mode, Visual};
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::VisualModeForm;
 use yazi_shared::data::Data;
@@ -20,9 +18,9 @@ impl Actor for VisualMode {
 
 		let idx = tab.current.cursor;
 		if form.unset {
-			tab.mode = Mode::Unset(idx, BTreeSet::from([idx]));
+			tab.mode = Mode::Unset(Visual::new(idx));
 		} else {
-			tab.mode = Mode::Select(idx, BTreeSet::from([idx]));
+			tab.mode = Mode::Select(Visual::new(idx));
 		};
 
 		succ!(render!());

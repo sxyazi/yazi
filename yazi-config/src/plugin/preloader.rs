@@ -97,7 +97,7 @@ impl TryFrom<Table> for PreloaderMatcher<'static> {
 		Ok(Self {
 			preloaders: YAZI.plugin.preloaders.load_full(),
 			id,
-			file: file.map(|f| f.clone().into()),
+			file: file.map(TryInto::try_into).transpose()?,
 			mime: mime.map(Into::into),
 			..Default::default()
 		})

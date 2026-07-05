@@ -1,6 +1,6 @@
 use anyhow::Result;
 use hashbrown::HashMap;
-use yazi_fs::{Files, Filter, FilterCase};
+use yazi_fs::{Entries, Filter, FilterCase};
 use yazi_shared::{path::{AsPath, PathBufDyn}, url::UrlBuf};
 
 use crate::tab::Folder;
@@ -26,10 +26,10 @@ impl Finder {
 		})
 	}
 
-	pub fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
-		for i in !include as usize..files.len() {
-			let idx = (cursor + files.len() - i) % files.len();
-			if let Some(s) = files[idx].name()
+	pub fn prev(&self, entries: &Entries, cursor: usize, include: bool) -> Option<isize> {
+		for i in !include as usize..entries.len() {
+			let idx = (cursor + entries.len() - i) % entries.len();
+			if let Some(s) = entries[idx].name()
 				&& self.filter.matches(s)
 			{
 				return Some(idx as isize - cursor as isize);
@@ -38,10 +38,10 @@ impl Finder {
 		None
 	}
 
-	pub fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
-		for i in !include as usize..files.len() {
-			let idx = (cursor + i) % files.len();
-			if let Some(s) = files[idx].name()
+	pub fn next(&self, entries: &Entries, cursor: usize, include: bool) -> Option<isize> {
+		for i in !include as usize..entries.len() {
+			let idx = (cursor + i) % entries.len();
+			if let Some(s) = entries[idx].name()
 				&& self.filter.matches(s)
 			{
 				return Some(idx as isize - cursor as isize);
@@ -57,7 +57,7 @@ impl Finder {
 		self.matched.clear();
 
 		let mut i = 0u8;
-		for file in folder.files.iter() {
+		for file in folder.entries.iter() {
 			if file.name().is_none_or(|s| !self.filter.matches(s)) {
 				continue;
 			}
@@ -87,12 +87,12 @@ impl Finder {
 // --- Lock
 impl From<&Folder> for FinderLock {
 	fn from(value: &Folder) -> Self {
-		Self { cwd: value.url.clone(), revision: value.files.revision }
+		Self { cwd: value.url.clone(), revision: value.entries.revision }
 	}
 }
 
 impl PartialEq<Folder> for FinderLock {
 	fn eq(&self, other: &Folder) -> bool {
-		self.revision == other.files.revision && self.cwd == other.url
+		self.revision == other.entries.revision && self.cwd == other.url
 	}
 }

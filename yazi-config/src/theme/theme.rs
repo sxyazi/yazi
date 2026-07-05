@@ -9,6 +9,7 @@ use yazi_fs::{Xdg, ok_or_not_found, path::sanitize_path};
 use yazi_shim::{arc_swap::IntoPointee, cell::SyncCell};
 
 use super::{Custom, Filetype, Flavor, Icon};
+use crate::YAZI;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1, Overlay)]
 pub struct Theme {
@@ -232,7 +233,11 @@ pub struct Input {
 
 impl From<&Input> for yazi_widgets::input::InputStyles {
 	fn from(input: &Input) -> Self {
-		Self { normal: Some(input.value.get().into()), selected: Some(input.selected.get().into()) }
+		Self {
+			normal:   Some(input.value.get().into()),
+			selected: Some(input.selected.get().into()),
+			blink:    Some(YAZI.input.cursor_blink),
+		}
 	}
 }
 
@@ -259,12 +264,10 @@ pub struct Tasks {
 // --- Help
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Help {
-	pub on:   SyncCell<StyleFlat>,
-	pub run:  SyncCell<StyleFlat>,
-	pub desc: SyncCell<StyleFlat>,
-
+	pub border:  SyncCell<StyleFlat>,
+	pub chord:   SyncCell<StyleFlat>,
+	pub action:  SyncCell<StyleFlat>,
 	pub hovered: SyncCell<StyleFlat>,
-	pub footer:  SyncCell<StyleFlat>,
 }
 
 fn deserialize_syntect_theme<'de, D>(deserializer: D) -> Result<ArcSwap<PathBuf>, D::Error>

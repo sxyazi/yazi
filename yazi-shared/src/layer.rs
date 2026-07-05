@@ -1,4 +1,4 @@
-use mlua::{MetaMethod, UserData, UserDataMethods};
+use mlua::{ExternalError, ExternalResult, FromLua, MetaMethod, UserData, UserDataMethods, Value};
 use serde::Deserialize;
 use strum::{Display, EnumString, FromRepr, IntoStaticStr};
 use yazi_shim::strum::IntoStr;
@@ -17,8 +17,8 @@ use yazi_shim::strum::IntoStr;
 	IntoStaticStr,
 	PartialEq,
 )]
-#[serde(rename_all = "kebab-case")]
-#[strum(serialize_all = "kebab-case")]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 #[repr(u8)]
 pub enum Layer {
 	#[default]
@@ -34,6 +34,20 @@ pub enum Layer {
 	Cmp,
 	Which,
 	Notify,
+}
+
+impl Layer {
+	pub fn or(self, other: Self) -> Self { if self == Self::Null { other } else { self } }
+}
+
+impl FromLua for Layer {
+	fn from_lua(value: Value, _: &mlua::Lua) -> mlua::Result<Self> {
+		Ok(match value {
+			Value::String(s) => s.to_str()?.parse().into_lua_err()?,
+			Value::UserData(ud) => *ud.borrow::<Self>()?,
+			_ => Err("expected a string or a Layer".into_lua_err())?,
+		})
+	}
 }
 
 impl UserData for Layer {

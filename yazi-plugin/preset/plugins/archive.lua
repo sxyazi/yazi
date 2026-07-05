@@ -20,10 +20,10 @@ function M:peek(job)
 	local left, right = {}, {}
 	for i = job.skip + 1, #items do
 		local f = items[i]
-		local icon = File({
+		local icon = th.icon:match(File {
 			url = Url(f.path),
 			cha = Cha { mode = tonumber(f.is_dir and "40700" or "100644", 8) },
-		}):icon()
+		})
 
 		if f.size > 0 then
 			right[#right + 1] = " " .. ya.readable_size(f.size) .. " "

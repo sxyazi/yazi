@@ -226,11 +226,10 @@ hovered = { fg = "magenta", bold = true }
 # : Help menu {{{
 
 [help]
-on      = { fg = "cyan" }
-run     = { fg = "magenta" }
-desc    = {}
+border  = { fg = "blue" }
+chord   = { fg = "cyan" }
+action  = {}
 hovered = { reversed = true, bold = true }
-footer  = { fg = "black", bg = "white" }
 
 # : }}}
 

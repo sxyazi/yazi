@@ -42,7 +42,7 @@ function Rail:drag(event)
 	end
 
 	local r = rt.mgr.ratio
-	if r.parent ~= parent or r.current ~= current or r.preview ~= preview then
+	if r[1] ~= parent or r[2] ~= current or r[3] ~= preview then
 		rt.mgr.ratio = { parent, current, preview }
 		ui.render()
 	end
