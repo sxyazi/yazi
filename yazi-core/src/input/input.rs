@@ -52,7 +52,7 @@ impl Input {
 #[derive(Default)]
 pub struct InputMain {
 	inner:        yazi_widgets::input::Input,
-	pub id:       String,
+	pub name:     String,
 	pub title:    String,
 	pub position: Position,
 	pub visible:  bool,

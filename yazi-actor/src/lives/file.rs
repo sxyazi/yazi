@@ -64,7 +64,11 @@ impl UserData for File {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		yazi_binding::impl_file_methods!(methods);
 
-		methods.add_method("icon", |_, me, ()| {
+		methods.add_method("icon", |lua, me, ()| {
+			yazi_binding::deprecate!(
+				lua,
+				"{}: `File:icon()` is deprecated, use `th.icon:match(file)` instead"
+			);
 			// TODO: use a cache
 			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
@@ -100,16 +104,16 @@ impl UserData for File {
 			})
 		});
 		methods.add_method("is_marked", |_, me, ()| {
-			use yazi_core::tab::Mode::*;
-			if !me.tab.mode.is_visual() || me.folder.url != me.tab.current.url {
+			let Some(visual) = me.tab.mode.visual() else {
+				return Ok(0u8);
+			};
+			if !visual.contains(me.idx, me.tab.current.cursor, me.folder.entries.len()) {
 				return Ok(0u8);
 			}
-
-			Ok(match &me.tab.mode {
-				Select(_, indices) if indices.contains(&me.idx) => 1u8,
-				Unset(_, indices) if indices.contains(&me.idx) => 2u8,
-				_ => 0u8,
-			})
+			if me.folder.url != me.tab.current.url {
+				return Ok(0u8);
+			}
+			Ok(if me.tab.mode.is_select() { 1u8 } else { 2u8 })
 		});
 		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains(&me.url)));
 		methods.add_method("found", |lua, me, ()| {
@@ -144,6 +148,6 @@ impl UserData for File {
 inventory::submit! {
 	FileInventory {
 		register: |_| {},
-		from_lua: |ud| Ok(ud.borrow::<File>()?.clone()),
+		borrow: |ud, f| f(&*ud.borrow::<File>()?),
 	}
 }

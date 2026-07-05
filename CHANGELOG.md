@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Drag and drop ([#4005])
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
+- Make visual mode support wraparound scrolling ([#4101])
 - H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
 - Context-aware icons for inputs ([#4080])
 - Show file icons in trash/delete/overwrite confirmations ([#4096])
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Deprecated
 
 - Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
+- Deprecate `tab::Mode.is_visual` in favor of the new `tab::Mode.is_normal` ([#4101])
 
 ### Fixed
 
@@ -1768,3 +1770,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4074]: https://github.com/sxyazi/yazi/pull/4074
 [#4080]: https://github.com/sxyazi/yazi/pull/4080
 [#4096]: https://github.com/sxyazi/yazi/pull/4096
+[#4101]: https://github.com/sxyazi/yazi/pull/4101

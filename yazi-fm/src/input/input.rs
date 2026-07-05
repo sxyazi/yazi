@@ -18,11 +18,12 @@ impl<'a> Input<'a> {
 		let input = &self.core.input.main;
 
 		let is_dir = input.value().ends_with(CROSS_SEPARATOR);
-		let is_hovered = input.id.starts_with("rename-");
+		let is_hovered = input.name.starts_with("rename-");
 
-		let (path, mode): (&str, u16) = match input.id.as_str() {
+		let (path, mode): (&str, u16) = match input.name.as_str() {
 			"cd" => (input.value(), if is_dir { 0o40755 } else { 0o100644 }),
-			"create" => (input.value(), if is_dir { 0o40755 } else { 0o100644 }),
+			"create-file" => (input.value(), if is_dir { 0o40755 } else { 0o100644 }),
+			"create-dir" => (input.value(), 0o40755),
 			"rename-file" => (input.value(), 0o100644),
 			"rename-dir" => (input.value(), 0o40755),
 			"shell" => ("icon.sh", 0o100644),

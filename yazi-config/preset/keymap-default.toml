@@ -13,12 +13,16 @@ keymap = [
 	{ on = "<C-c>", run = "close",              desc = "Close the current tab, or quit if it's last" },
 	{ on = "<C-z>", run = "suspend",            desc = "Suspend the process" },
 
-	# Hopping
-	{ on = "k", run = "arrow prev", desc = "Previous file" },
-	{ on = "j", run = "arrow next", desc = "Next file" },
-
+	# Hop around
+	{ on = "k",      run = "arrow prev", desc = "Previous file" },
+	{ on = "j",      run = "arrow next", desc = "Next file" },
 	{ on = "<Up>",   run = "arrow prev", desc = "Previous file" },
 	{ on = "<Down>", run = "arrow next", desc = "Next file" },
+
+	{ on = [ "g", "g" ], run = "arrow top", desc = "Go to top" },
+	{ on = "G",          run = "arrow bot", desc = "Go to bottom" },
+	{ on = "<Home>",     run = "arrow top", desc = "Go to top" },
+	{ on = "<End>",      run = "arrow bot", desc = "Go to bottom" },
 
 	{ on = "<C-u>", run = "arrow -50%",  desc = "Move cursor up half page" },
 	{ on = "<C-d>", run = "arrow 50%",   desc = "Move cursor down half page" },
@@ -29,9 +33,6 @@ keymap = [
 	{ on = "<S-PageDown>", run = "arrow 50%",   desc = "Move cursor down half page" },
 	{ on = "<PageUp>",     run = "arrow -100%", desc = "Move cursor up one page" },
 	{ on = "<PageDown>",   run = "arrow 100%",  desc = "Move cursor down one page" },
-
-	{ on = [ "g", "g" ], run = "arrow top", desc = "Go to top" },
-	{ on = "G",          run = "arrow bot", desc = "Go to bottom" },
 
 	# Navigation
 	{ on = "h", run = "leave", desc = "Back to the parent directory" },

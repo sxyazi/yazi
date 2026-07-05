@@ -21,7 +21,7 @@ impl Actor for Show {
 
 		let area = cx.mgr.area(opt.position).padding(cx.input.padding());
 		let input = &mut cx.input;
-		input.main.id = opt.id.clone();
+		input.main.name = opt.name.clone();
 		input.main.title = opt.title.clone();
 		input.main.position = opt.position;
 		input.main.visible = true;
