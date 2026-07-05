@@ -27,7 +27,7 @@ impl UserData for Mode {
 		fields.add_field_method_get("is_select", |_, me| Ok(me.is_select()));
 		fields.add_field_method_get("is_unset", |_, me| Ok(me.is_unset()));
 		fields.add_field_method_get("is_visual", |lua, me| {
-			deprecate!(lua, "{}: `mode.is_visual` is deprecated, use `not mode.is_normal` instead.");
+			deprecate!(lua, "{}: `mode.is_visual` is deprecated, use `not mode.is_normal` instead. \nSee #4101 for more details: https://github.com/sxyazi/yazi/pull/4101.");
 			Ok(!me.is_normal())
 		});
 	}
