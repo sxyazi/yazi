@@ -95,7 +95,7 @@ impl TryFrom<Table> for FetcherMatcher<'static> {
 		Ok(Self {
 			fetchers: YAZI.plugin.fetchers.load_full(),
 			id,
-			file: file.map(|f| f.clone().into()),
+			file: file.map(TryInto::try_into).transpose()?,
 			mime: mime.map(Into::into),
 			..Default::default()
 		})

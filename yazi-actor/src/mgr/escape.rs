@@ -67,7 +67,9 @@ impl Actor for EscapeVisual {
 		let tab = cx.tab_mut();
 
 		let select = tab.mode.is_select();
-		let Some((_, indices)) = tab.mode.take_visual() else { succ!(false) };
+		let Some(indices) = tab.mode.take_visual(tab.current.cursor, tab.current.entries.len()) else {
+			succ!(false)
+		};
 
 		render!();
 		let files: Vec<_> = indices.into_iter().filter_map(|i| tab.current.entries.get(i)).collect();

@@ -90,7 +90,7 @@ impl TryFrom<Table> for SpotterMatcher<'static> {
 		Ok(Self {
 			spotters: YAZI.plugin.spotters.load_full(),
 			id,
-			file: file.map(|f| f.clone().into()),
+			file: file.map(TryInto::try_into).transpose()?,
 			mime: mime.map(Into::into),
 			..Default::default()
 		})

@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
+use yazi_binding::deprecate;
 
 use super::{Lives, PtrCell};
 
@@ -22,9 +23,13 @@ impl Mode {
 
 impl UserData for Mode {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("is_normal", |_, me| Ok(me.is_normal()));
 		fields.add_field_method_get("is_select", |_, me| Ok(me.is_select()));
 		fields.add_field_method_get("is_unset", |_, me| Ok(me.is_unset()));
-		fields.add_field_method_get("is_visual", |_, me| Ok(me.is_visual()));
+		fields.add_field_method_get("is_visual", |lua, me| {
+			deprecate!(lua, "{}: `mode.is_visual` is deprecated, use `not mode.is_normal` instead.");
+			Ok(!me.is_normal())
+		});
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {

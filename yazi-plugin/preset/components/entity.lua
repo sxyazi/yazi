@@ -26,7 +26,7 @@ function Entity:padding()
 end
 
 function Entity:icon()
-	local icon = self._file:icon()
+	local icon = th.icon:match(self._file, { hovered = self._file.is_hovered })
 	if not icon then
 		return ""
 	elseif self._file.is_hovered then

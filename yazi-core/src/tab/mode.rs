@@ -1,41 +1,43 @@
-use std::{collections::BTreeSet, fmt::Display, mem};
+use std::{fmt::{self, Display}, mem};
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+use strum::EnumIs;
+
+use super::Visual;
+use crate::tab::VisualIndices;
+
+#[derive(Clone, Debug, Default, EnumIs, Eq, PartialEq)]
 pub enum Mode {
 	#[default]
 	Normal,
-	Select(usize, BTreeSet<usize>),
-	Unset(usize, BTreeSet<usize>),
+	Select(Visual),
+	Unset(Visual),
 }
 
 impl Mode {
-	pub fn visual_mut(&mut self) -> Option<(usize, &mut BTreeSet<usize>)> {
+	pub fn visual(&self) -> Option<Visual> {
 		match self {
 			Self::Normal => None,
-			Self::Select(start, indices) => Some((*start, indices)),
-			Self::Unset(start, indices) => Some((*start, indices)),
+			Self::Select(visual) | Self::Unset(visual) => Some(*visual),
 		}
 	}
 
-	pub fn take_visual(&mut self) -> Option<(usize, BTreeSet<usize>)> {
+	pub fn visual_mut(&mut self) -> Option<&mut Visual> {
+		match self {
+			Self::Normal => None,
+			Self::Select(visual) | Self::Unset(visual) => Some(visual),
+		}
+	}
+
+	pub fn take_visual(&mut self, end: usize, len: usize) -> Option<VisualIndices> {
 		match mem::take(self) {
 			Self::Normal => None,
-			Self::Select(start, indices) => Some((start, indices)),
-			Self::Unset(start, indices) => Some((start, indices)),
+			Self::Select(visual) | Self::Unset(visual) => Some(visual.indices(end, len)),
 		}
 	}
-}
-
-impl Mode {
-	pub fn is_select(&self) -> bool { matches!(self, Self::Select(..)) }
-
-	pub fn is_unset(&self) -> bool { matches!(self, Self::Unset(..)) }
-
-	pub fn is_visual(&self) -> bool { matches!(self, Self::Select(..) | Self::Unset(..)) }
 }
 
 impl Display for Mode {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str(match self {
 			Self::Normal => "normal",
 			Self::Select(..) => "select",
