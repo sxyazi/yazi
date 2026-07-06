@@ -31,7 +31,7 @@ impl Input {
 		}
 
 		act!(r#move, self, s.chars().count() as isize)?;
-		self.flush_type();
+		self.flush_all();
 		succ!(render!());
 	}
 }

@@ -21,7 +21,7 @@ impl Input {
 			act!(r#move, self, -1)?;
 		}
 
-		self.flush_type();
+		self.flush_all();
 		succ!(render!());
 	}
 }

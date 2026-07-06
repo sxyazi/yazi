@@ -126,6 +126,8 @@ pub enum Spark<'a> {
 	InputKill(yazi_widgets::input::parser::KillOpt),
 	InputMove(yazi_widgets::input::parser::MoveOpt),
 	InputPaste(yazi_widgets::input::parser::PasteOpt),
+	InputRecall(crate::input::RecallForm),
+	InputRemember(crate::VoidForm),
 	InputShow(crate::input::ShowForm),
 
 	// Notify
@@ -319,6 +321,8 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::InputKill(b) => b.into_lua(lua),
 			Self::InputMove(b) => b.into_lua(lua),
 			Self::InputPaste(b) => b.into_lua(lua),
+			Self::InputRecall(b) => b.into_lua(lua),
+			Self::InputRemember(b) => b.into_lua(lua),
 			Self::InputShow(b) => b.into_lua(lua),
 
 			// Notify
@@ -376,6 +380,7 @@ try_from_spark!(
 	mgr:suspend,
 	mgr:unyank,
 	mgr:watch,
+	input:remember,
 	which:dismiss
 );
 
@@ -464,3 +469,4 @@ try_from_spark!(yazi_widgets::input::parser::InsertOpt, input:insert);
 try_from_spark!(yazi_widgets::input::parser::KillOpt, input:kill);
 try_from_spark!(yazi_widgets::input::parser::MoveOpt, input:move);
 try_from_spark!(yazi_widgets::input::parser::PasteOpt, input:paste);
+try_from_spark!(crate::input::RecallForm, input:recall);

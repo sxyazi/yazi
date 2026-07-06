@@ -1,6 +1,8 @@
 use std::ops::{Deref, DerefMut};
 
-use parking_lot::MutexGuard;
+use parking_lot::{ArcMutexGuard, MutexGuard, RawMutex};
+
+use crate::input::Input;
 
 // --- InputGuard
 pub enum InputGuard<'a> {
@@ -21,8 +23,8 @@ impl Deref for InputGuard<'_> {
 
 // --- InputMutGuard
 pub enum InputMutGuard<'a> {
-	Main(&'a mut yazi_widgets::input::Input),
-	Alt(MutexGuard<'a, yazi_widgets::input::Input>),
+	Main(&'a mut Input),
+	Alt(&'a mut Input, ArcMutexGuard<RawMutex, yazi_widgets::input::Input>),
 }
 
 impl Deref for InputMutGuard<'_> {
@@ -30,8 +32,8 @@ impl Deref for InputMutGuard<'_> {
 
 	fn deref(&self) -> &Self::Target {
 		match self {
-			Self::Main(main) => main,
-			Self::Alt(alt) => alt,
+			Self::Main(input) => &input.main.inner,
+			Self::Alt(_, guard) => guard,
 		}
 	}
 }
@@ -39,8 +41,8 @@ impl Deref for InputMutGuard<'_> {
 impl DerefMut for InputMutGuard<'_> {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		match self {
-			Self::Main(main) => main,
-			Self::Alt(alt) => alt,
+			Self::Main(input) => &mut input.main.inner,
+			Self::Alt(_, guard) => guard,
 		}
 	}
 }

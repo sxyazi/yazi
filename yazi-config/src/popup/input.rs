@@ -50,6 +50,7 @@ impl Input {
 			name: "cd".to_owned(),
 			title: self.cd_title.clone(),
 			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
+			history: "shared".to_owned(),
 			position: Position::new(self.cd_origin, self.cd_offset),
 			completion: true,
 			..Default::default()
@@ -60,6 +61,7 @@ impl Input {
 		InputOpt {
 			name: format!("create-{}", if dir { "dir" } else { "file" }),
 			title: self.create_title[dir as usize].clone(),
+			history: "shared".to_owned(),
 			position: Position::new(self.create_origin, self.create_offset),
 			..Default::default()
 		}
@@ -69,6 +71,7 @@ impl Input {
 		InputOpt {
 			name: format!("rename-{}", if is_dir { "dir" } else { "file" }),
 			title: self.rename_title.clone(),
+			history: "shared".to_owned(),
 			position: Position::new(self.rename_origin, self.rename_offset),
 			..Default::default()
 		}
@@ -78,6 +81,7 @@ impl Input {
 		InputOpt {
 			name: "filter".to_owned(),
 			title: self.filter_title.clone(),
+			history: "shared".to_owned(),
 			position: Position::new(self.filter_origin, self.filter_offset),
 			realtime: true,
 			..Default::default()
@@ -88,6 +92,7 @@ impl Input {
 		InputOpt {
 			name: "find".to_owned(),
 			title: self.find_title[prev as usize].clone(),
+			history: "shared".to_owned(),
 			position: Position::new(self.find_origin, self.find_offset),
 			realtime: true,
 			..Default::default()
@@ -98,6 +103,7 @@ impl Input {
 		InputOpt {
 			name: "search".to_owned(),
 			title: self.search_title.replace("{n}", name),
+			history: "shared".to_owned(),
 			position: Position::new(self.search_origin, self.search_offset),
 			..Default::default()
 		}
@@ -107,6 +113,7 @@ impl Input {
 		InputOpt {
 			name: "shell".to_owned(),
 			title: self.shell_title[block as usize].clone(),
+			history: "shared".to_owned(),
 			position: Position::new(self.shell_origin, self.shell_offset),
 			..Default::default()
 		}
@@ -116,6 +123,7 @@ impl Input {
 		InputOpt {
 			name: "tab-rename".to_owned(),
 			title: "Rename tab:".to_owned(),
+			history: "shared".to_owned(),
 			position: Position::new(Origin::TopCenter, Offset {
 				x:      0,
 				y:      2,

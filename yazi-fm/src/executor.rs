@@ -267,6 +267,8 @@ impl<'a> Executor<'a> {
 		on!(escape);
 		on!(show);
 		on!(close);
+		on!(recall);
+		on!(remember);
 
 		guard = match self.app.core.input.lock_mut() {
 			Some(g) => g,

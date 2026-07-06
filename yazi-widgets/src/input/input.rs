@@ -7,13 +7,14 @@ use yazi_shared::id::Ids;
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_tty::sequence::SetCursorStyle;
 
-use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
+use super::{InputHistory, InputSnap, InputSnaps, mode::InputMode, op::InputOp};
 use crate::{CLIPBOARD, input::{InputCallback, InputEvent, InputOpt, InputStyles}};
 
 #[derive(Debug, Default)]
 pub struct Input {
 	pub size:       Size,
 	pub snaps:      InputSnaps,
+	pub history:    InputHistory,
 	pub styles:     InputStyles,
 	pub obscure:    bool,
 	pub realtime:   bool,
@@ -27,6 +28,7 @@ impl Input {
 	pub fn new(opt: InputOpt) -> Result<Self> {
 		let mut input = Self {
 			snaps: InputSnaps::new(opt.value, opt.obscure),
+			history: InputHistory::new(opt.history),
 			styles: opt.styles,
 			obscure: opt.obscure,
 			realtime: opt.realtime,
@@ -89,9 +91,14 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag(self.size.width as usize).then(|| self.flush_type());
+			self.snaps.tag(self.size.width as usize).then(|| self.flush_all());
 		}
 		true
+	}
+
+	pub(super) fn flush_all(&mut self) {
+		self.history.take();
+		self.flush_type();
 	}
 
 	pub(super) fn flush_type(&mut self) {

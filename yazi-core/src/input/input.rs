@@ -4,12 +4,13 @@ use parking_lot::Mutex;
 use ratatui_widgets::block::Padding;
 use yazi_binding::{elements::Spatial, position::Position};
 
-use crate::input::{InputGuard, InputMutGuard};
+use crate::input::{InputGuard, InputHistories, InputMutGuard};
 
 #[derive(Default)]
 pub struct Input {
-	pub main: InputMain,
-	pub alt:  Option<InputAlt>,
+	pub main:      InputMain,
+	pub alt:       Option<InputAlt>,
+	pub histories: InputHistories,
 }
 
 impl Input {
@@ -39,9 +40,10 @@ impl Input {
 
 	pub fn lock_mut(&mut self) -> Option<InputMutGuard<'_>> {
 		if self.main.visible {
-			Some(InputMutGuard::Main(&mut self.main.inner))
-		} else if let Some(alt) = &self.alt {
-			Some(InputMutGuard::Alt(alt.inner.lock()))
+			Some(InputMutGuard::Main(self))
+		} else if let Some(alt) = &mut self.alt {
+			let guard = alt.inner.lock_arc();
+			Some(InputMutGuard::Alt(self, guard))
 		} else {
 			None
 		}
@@ -51,11 +53,11 @@ impl Input {
 // --- InputMain
 #[derive(Default)]
 pub struct InputMain {
-	inner:        yazi_widgets::input::Input,
-	pub name:     String,
-	pub title:    String,
-	pub position: Position,
-	pub visible:  bool,
+	pub(super) inner: yazi_widgets::input::Input,
+	pub name:         String,
+	pub title:        String,
+	pub position:     Position,
+	pub visible:      bool,
 }
 
 impl Deref for InputMain {
