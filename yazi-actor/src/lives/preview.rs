@@ -13,9 +13,7 @@ pub(super) struct Preview {
 impl Deref for Preview {
 	type Target = yazi_core::tab::Preview;
 
-	fn deref(&self) -> &Self::Target {
-		&self.tab.preview
-	}
+	fn deref(&self) -> &Self::Target { &self.tab.preview }
 }
 
 impl Preview {

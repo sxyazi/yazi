@@ -6,27 +6,21 @@ use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
 use yazi_fs::{Entries, FilesOp, cha::Cha, file::File};
 use yazi_macro::render;
-use yazi_runner::{
-	RUNNER,
-	previewer::{PeekError, PeekJob},
-};
-use yazi_shared::{
-	pool::Symbol,
-	url::{UrlBuf, UrlLike},
-};
+use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
+use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsEntries, VfsFilesOp};
 
 use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
 
 #[derive(Default, Debug)]
 pub struct Preview {
-	pub lock: Option<PreviewLock>,
-	pub skip: usize,
+	pub lock:       Option<PreviewLock>,
+	pub skip:       usize,
 	pub search_idx: Option<usize>,
 
-	handle: Option<JoinHandle<()>>,
+	handle:          Option<JoinHandle<()>>,
 	pub folder_lock: Option<UrlBuf>,
-	folder_loader: Option<JoinHandle<()>>,
+	folder_loader:   Option<JoinHandle<()>>,
 }
 
 impl Preview {
@@ -104,9 +98,7 @@ impl Preview {
 		ADAPTOR.image_hide().ok();
 	}
 
-	pub fn same_url(&self, url: &UrlBuf) -> bool {
-		matches!(&self.lock, Some(l) if l.url == *url)
-	}
+	pub fn same_url(&self, url: &UrlBuf) -> bool { matches!(&self.lock, Some(l) if l.url == *url) }
 
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {
 		self.same_url(&file.url)
@@ -118,7 +110,5 @@ impl Preview {
 			&& matches!(&self.lock, Some(l) if l.skip == self.skip && l.search_idx == self.search_idx)
 	}
 
-	pub fn same_folder(&self, url: &UrlBuf) -> bool {
-		self.folder_lock.as_ref() == Some(url)
-	}
+	pub fn same_folder(&self, url: &UrlBuf) -> bool { self.folder_lock.as_ref() == Some(url) }
 }

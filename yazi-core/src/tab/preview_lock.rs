@@ -7,14 +7,14 @@ use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug, Default)]
 pub struct PreviewLock {
-	pub url: yazi_shared::url::UrlBuf,
-	pub cha: yazi_fs::cha::Cha,
+	pub url:  yazi_shared::url::UrlBuf,
+	pub cha:  yazi_fs::cha::Cha,
 	pub mime: Symbol<str>,
 
-	pub skip: usize,
+	pub skip:       usize,
 	pub search_idx: Option<usize>,
-	pub area: Rect,
-	pub data: Vec<Renderable>,
+	pub area:       Rect,
+	pub data:       Vec<Renderable>,
 }
 
 impl_data_any!(PreviewLock);
@@ -26,14 +26,14 @@ impl TryFrom<Table> for PreviewLock {
 		let file: FileRef = t.raw_get("file")?;
 		file.borrow(|f| {
 			Ok(Self {
-				url: f.url_owned(),
-				cha: f.cha,
+				url:  f.url_owned(),
+				cha:  f.cha,
 				mime: t.raw_get::<mlua::String>("mime")?.to_str()?.intern(),
 
-				skip: t.raw_get("skip")?,
+				skip:       t.raw_get("skip")?,
 				search_idx: t.raw_get("search_idx")?,
-				area: t.raw_get("area")?,
-				data: Default::default(),
+				area:       t.raw_get("area")?,
+				data:       Default::default(),
 			})
 		})
 	}

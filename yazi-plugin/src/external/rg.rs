@@ -1,20 +1,16 @@
-use std::{fmt::format, process::Stdio};
+use std::process::Stdio;
 
 use anyhow::Result;
-use tokio::{
-	io::{AsyncBufReadExt, BufReader},
-	process::Command,
-	sync::mpsc::{self, UnboundedReceiver},
-};
+use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::{FsUrl, file::File};
 use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
 pub struct RgOpt {
-	pub cwd: UrlBuf,
-	pub hidden: bool,
+	pub cwd:     UrlBuf,
+	pub hidden:  bool,
 	pub subject: String,
-	pub args: Vec<String>,
+	pub args:    Vec<String>,
 }
 
 pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {

@@ -1,8 +1,5 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
-use yazi_binding::{
-	Error,
-	elements::{Area, HighlightPosition},
-};
+use yazi_binding::{Error, elements::{Area, HighlightPosition}};
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::FsUrl;
 use yazi_runner::previewer::PeekError;
@@ -38,7 +35,8 @@ impl Utils {
 		})
 	}
 
-	// Note: You need to implement or update Highlighter::oneshot_with_highlight to accept line/column and highlight accordingly.
+	// Note: You need to implement or update Highlighter::oneshot_with_highlight to
+	// accept line/column and highlight accordingly.
 
 	pub(super) fn preview_widget(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|_, (t, value): (Table, Value)| async move {

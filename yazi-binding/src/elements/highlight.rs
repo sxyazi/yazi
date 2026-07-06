@@ -4,8 +4,8 @@ const EXPECTED: &str = "expected a table containing a line and a length";
 
 #[derive(Clone, Debug)]
 pub struct HighlightPosition {
-	pub line: usize,
-	pub col: usize,
+	pub line:   usize,
+	pub col:    usize,
 	pub length: usize,
 }
 
@@ -24,8 +24,8 @@ impl FromLua for HighlightPosition {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
 			Value::Table(tbl) => Ok(Self {
-				line: tbl.raw_get("line")?,
-				col: tbl.raw_get("col")?,
+				line:   tbl.raw_get("line")?,
+				col:    tbl.raw_get("col")?,
 				length: tbl.raw_get("length")?,
 			}),
 			_ => Err(EXPECTED.into_lua_err()),
