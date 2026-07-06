@@ -1,18 +1,20 @@
-name: Validate Form
+name: Validate PR
 
 on:
-  issues:
-    types: [opened, edited]
-  schedule:
-    - cron: "20 * * * *"
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
-  check-version:
+  check-list:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -24,7 +26,7 @@ jobs:
           cd scripts/validate-form
           npm ci
 
-      - name: Validate Form
+      - name: Validate PR
         uses: actions/github-script@v9
         with:
           script: |

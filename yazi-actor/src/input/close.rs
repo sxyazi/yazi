@@ -1,4 +1,5 @@
 use anyhow::Result;
+use yazi_core::input::InputMutGuard;
 use yazi_macro::{act, render, succ};
 use yazi_parser::{input::CloseForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
@@ -20,11 +21,16 @@ impl Actor for Close {
 
 		guard.ticket.next();
 		if let Some(cb) = guard.cb.take() {
-			let value = guard.snap().value.clone();
+			let value = guard.value().to_owned();
 			cb(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
 		}
 
-		drop(guard);
+		if form.submit
+			&& let InputMutGuard::Main(input) = guard
+		{
+			input.histories.remember(&input.main.history.name, input.main.value());
+		}
+
 		cx.input.main.visible = false;
 
 		act!(cmp:close, cx)?;

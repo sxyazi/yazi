@@ -25,7 +25,7 @@ impl Input {
 		snap.value = new;
 
 		act!(r#move, self, delta)?;
-		self.flush_type();
+		self.flush_all();
 		succ!(render!());
 	}
 }

@@ -2,6 +2,15 @@ const LABEL_NAME = "needs info"
 const RE_VERSION = /Yazi\s+Version\s*:\s\d+\.\d+\.\d+\s\(/gm
 const RE_DEPENDENCIES = /Dependencies\s+[/a-z]+\s*:\s/gm
 const RE_CHECKLIST = /#{3}\s+Checklist\s+(?:^-\s+\[x]\s+.+?(?:\n|\r\n|$)){2}/gm
+const RE_PR_CHECKLIST = /#{2}\s+Checklist\s+(?:^-\s+\[x]\s+.+?(?:\n|\r\n|$)){2}/gm
+
+function pullRequestBody(content) {
+	if (RE_PR_CHECKLIST.test(content)) {
+		return null
+	}
+
+	return "All required checklist items must be checked in the PR description."
+}
 
 function bugReportBody(creator, content, hash) {
 	if (RE_DEPENDENCIES.test(content) && RE_CHECKLIST.test(content) && new RegExp(` \\(${hash}[a-f0-9]? `).test(content)) {
@@ -39,6 +48,12 @@ Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper c
 
 Our maintainers work on Yazi in their free time, this helps them work efficiently, understand your setup quickly, and find a more appropriate solution. Thanks for your understanding! 🙏
 `
+}
+
+function skipValidation(context) {
+	const login = context.payload.issue?.user?.login || context.payload.pull_request?.user?.login
+	const owner = context.payload.repository?.owner?.login || context.repo.owner
+	return !!login && login === owner
 }
 
 module.exports = async ({ github, context, core }) => {
@@ -214,11 +229,12 @@ Either the [Bug Report](https://github.com/sxyazi/yazi/issues/new?template=bug.y
 	}
 
 	async function main() {
-		const hash = await nightlyHash()
-		if (!hash) return
-
 		if (context.eventName === "schedule") {
 			await closeOldIssues()
+			return
+		}
+
+		if (skipValidation(context)) {
 			return
 		}
 
@@ -226,6 +242,9 @@ Either the [Bug Report](https://github.com/sxyazi/yazi/issues/new?template=bug.y
 			const id = context.payload.issue.number
 			const content = context.payload.issue.body || ""
 			const creator = context.payload.issue.user.login
+
+			const hash = await nightlyHash()
+			if (!hash) return
 
 			if (await hasLabel(id, "bug")) {
 				const body = bugReportBody(creator, content, hash)
@@ -235,6 +254,13 @@ Either the [Bug Report](https://github.com/sxyazi/yazi/issues/new?template=bug.y
 				await updateLabels(id, !!body, body)
 			} else if (context.payload.action === "opened") {
 				await closeUnsupportedIssue(id)
+			}
+		} else if (context.eventName === "pull_request" || context.eventName === "pull_request_target") {
+			const content = context.payload.pull_request.body || ""
+
+			const body = pullRequestBody(content)
+			if (body) {
+				core.setFailed(body)
 			}
 		}
 	}
