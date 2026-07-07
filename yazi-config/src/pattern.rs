@@ -123,6 +123,7 @@ enum PatternScheme {
 	Search,
 	Archive,
 	Sftp,
+	Rclone,
 }
 
 impl PatternScheme {
@@ -141,6 +142,7 @@ impl PatternScheme {
 			"search" => Self::Search,
 			"archive" => Self::Archive,
 			"sftp" => Self::Sftp,
+			"rclone" => Self::Rclone,
 
 			"" => bail!("Invalid URL pattern: protocol is empty"),
 			_ => bail!("Unknown protocol in URL pattern: {protocol}"),
@@ -163,6 +165,7 @@ impl PatternScheme {
 			(Self::Search, K::Search) => true,
 			(Self::Archive, K::Archive) => true,
 			(Self::Sftp, K::Sftp) => true,
+			(Self::Rclone, K::Rclone) => true,
 
 			_ => false,
 		}

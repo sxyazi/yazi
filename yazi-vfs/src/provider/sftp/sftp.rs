@@ -145,7 +145,7 @@ impl<'a> Provider for Sftp<'a> {
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
 		match url {
-			Url::Regular(_) | Url::Search { .. } | Url::Archive { .. } => {
+			Url::Regular(_) | Url::Search { .. } | Url::Archive { .. } | Url::Rclone { .. } => {
 				Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url:?}")))
 			}
 			Url::Sftp { loc, domain } => {

@@ -44,19 +44,31 @@ impl Watched {
 
 		// Parse domain
 		let domain = it.next()?.as_normal()?.to_str().ok()?;
-		let domain = percent_decode_str(domain.strip_prefix("sftp-")?).decode_utf8().ok()?.intern();
+		let (kind, domain) = if let Some(d) = domain.strip_prefix("sftp-") {
+			(SchemeKind::Sftp, d)
+		} else if let Some(d) = domain.strip_prefix("rclone-") {
+			(SchemeKind::Rclone, d)
+		} else {
+			return None;
+		};
+		let domain = percent_decode_str(domain).decode_utf8().ok()?.intern();
 
 		// Parse path
 		let (path, abs) =
 			if let Ok(p) = it.path().try_strip_prefix(".%2F") { (p, false) } else { (it.path(), true) };
-		let path = path.percent_decode(SchemeKind::Sftp).ok()?;
+		let path = path.percent_decode(kind).ok()?;
 		let path = PathBufDyn::from_components(
-			SchemeKind::Sftp,
+			kind,
 			abs.then_some(Component::RootDir).into_iter().chain(path.components()),
 		)
 		.ok()?;
 
-		let url = UrlBuf::Sftp { loc: path.into_unix().ok()?.into(), domain };
+		let loc = path.into_unix().ok()?.into();
+		let url = match kind {
+			SchemeKind::Sftp => UrlBuf::Sftp { loc, domain },
+			SchemeKind::Rclone => UrlBuf::Rclone { loc, domain },
+			_ => return None,
+		};
 		if self.contains_url(&url) { Some(url) } else { None }
 	}
 }

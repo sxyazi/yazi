@@ -8,6 +8,7 @@ use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBu
 pub(super) enum Providers<'a> {
 	Local(yazi_fs::provider::local::Local<'a>),
 	Sftp(super::sftp::Sftp<'a>),
+	Rclone(super::rclone::Rclone<'a>),
 }
 
 impl<'a> Provider for Providers<'a> {
@@ -21,6 +22,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.absolute().await,
 			Self::Sftp(p) => p.absolute().await,
+			Self::Rclone(p) => p.absolute().await,
 		}
 	}
 
@@ -28,6 +30,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.canonicalize().await,
 			Self::Sftp(p) => p.canonicalize().await,
+			Self::Rclone(p) => p.canonicalize().await,
 		}
 	}
 
@@ -35,6 +38,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.capabilities(),
 			Self::Sftp(p) => p.capabilities(),
+			Self::Rclone(p) => p.capabilities(),
 		}
 	}
 
@@ -42,6 +46,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.casefold().await,
 			Self::Sftp(p) => p.casefold().await,
+			Self::Rclone(p) => p.casefold().await,
 		}
 	}
 
@@ -52,6 +57,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.copy(to, attrs).await,
 			Self::Sftp(p) => p.copy(to, attrs).await,
+			Self::Rclone(p) => p.copy(to, attrs).await,
 		}
 	}
 
@@ -63,6 +69,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.copy_with_progress(to, attrs),
 			Self::Sftp(p) => p.copy_with_progress(to, attrs),
+			Self::Rclone(p) => p.copy_with_progress(to, attrs),
 		}
 	}
 
@@ -70,6 +77,7 @@ impl<'a> Provider for Providers<'a> {
 		Ok(match self {
 			Self::Local(p) => p.create().await?.into(),
 			Self::Sftp(p) => p.create().await?.into(),
+			Self::Rclone(p) => p.create().await?.into(),
 		})
 	}
 
@@ -77,6 +85,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.create_dir().await,
 			Self::Sftp(p) => p.create_dir().await,
+			Self::Rclone(p) => p.create_dir().await,
 		}
 	}
 
@@ -84,6 +93,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.create_dir_all().await,
 			Self::Sftp(p) => p.create_dir_all().await,
+			Self::Rclone(p) => p.create_dir_all().await,
 		}
 	}
 
@@ -91,6 +101,7 @@ impl<'a> Provider for Providers<'a> {
 		Ok(match self {
 			Self::Local(p) => p.create_new().await?.into(),
 			Self::Sftp(p) => p.create_new().await?.into(),
+			Self::Rclone(p) => p.create_new().await?.into(),
 		})
 	}
 
@@ -101,6 +112,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.hard_link(to).await,
 			Self::Sftp(p) => p.hard_link(to).await,
+			Self::Rclone(p) => p.hard_link(to).await,
 		}
 	}
 
@@ -108,6 +120,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.metadata().await,
 			Self::Sftp(p) => p.metadata().await,
+			Self::Rclone(p) => p.metadata().await,
 		}
 	}
 
@@ -120,6 +133,7 @@ impl<'a> Provider for Providers<'a> {
 				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
 			}
 			K::Sftp => Self::Me::Sftp(super::sftp::Sftp::new(url).await?),
+			K::Rclone => Self::Me::Rclone(super::rclone::Rclone::new(url).await?),
 		})
 	}
 
@@ -127,6 +141,7 @@ impl<'a> Provider for Providers<'a> {
 		Ok(match self {
 			Self::Local(p) => p.open().await?.into(),
 			Self::Sftp(p) => p.open().await?.into(),
+			Self::Rclone(p) => p.open().await?.into(),
 		})
 	}
 
@@ -134,6 +149,7 @@ impl<'a> Provider for Providers<'a> {
 		Ok(match self {
 			Self::Local(p) => Self::ReadDir::Local(p.read_dir().await?),
 			Self::Sftp(p) => Self::ReadDir::Sftp(p.read_dir().await?),
+			Self::Rclone(p) => Self::ReadDir::Rclone(p.read_dir().await?),
 		})
 	}
 
@@ -141,6 +157,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.read_link().await,
 			Self::Sftp(p) => p.read_link().await,
+			Self::Rclone(p) => p.read_link().await,
 		}
 	}
 
@@ -148,6 +165,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.remove_dir().await,
 			Self::Sftp(p) => p.remove_dir().await,
+			Self::Rclone(p) => p.remove_dir().await,
 		}
 	}
 
@@ -155,6 +173,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.remove_dir_all().await,
 			Self::Sftp(p) => p.remove_dir_all().await,
+			Self::Rclone(p) => p.remove_dir_all().await,
 		}
 	}
 
@@ -162,6 +181,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.remove_file().await,
 			Self::Sftp(p) => p.remove_file().await,
+			Self::Rclone(p) => p.remove_file().await,
 		}
 	}
 
@@ -172,6 +192,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.rename(to).await,
 			Self::Sftp(p) => p.rename(to).await,
+			Self::Rclone(p) => p.rename(to).await,
 		}
 	}
 
@@ -179,6 +200,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.set_mode(mode).await,
 			Self::Sftp(p) => p.set_mode(mode).await,
+			Self::Rclone(p) => p.set_mode(mode).await,
 		}
 	}
 
@@ -190,6 +212,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.symlink(original, is_dir).await,
 			Self::Sftp(p) => p.symlink(original, is_dir).await,
+			Self::Rclone(p) => p.symlink(original, is_dir).await,
 		}
 	}
 
@@ -200,6 +223,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.symlink_dir(original).await,
 			Self::Sftp(p) => p.symlink_dir(original).await,
+			Self::Rclone(p) => p.symlink_dir(original).await,
 		}
 	}
 
@@ -210,6 +234,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.symlink_file(original).await,
 			Self::Sftp(p) => p.symlink_file(original).await,
+			Self::Rclone(p) => p.symlink_file(original).await,
 		}
 	}
 
@@ -217,6 +242,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.symlink_metadata().await,
 			Self::Sftp(p) => p.symlink_metadata().await,
+			Self::Rclone(p) => p.symlink_metadata().await,
 		}
 	}
 
@@ -224,6 +250,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.trash().await,
 			Self::Sftp(p) => p.trash().await,
+			Self::Rclone(p) => p.trash().await,
 		}
 	}
 
@@ -231,6 +258,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.url(),
 			Self::Sftp(p) => p.url(),
+			Self::Rclone(p) => p.url(),
 		}
 	}
 
@@ -241,6 +269,7 @@ impl<'a> Provider for Providers<'a> {
 		match self {
 			Self::Local(p) => p.write(contents).await,
 			Self::Sftp(p) => p.write(contents).await,
+			Self::Rclone(p) => p.write(contents).await,
 		}
 	}
 }

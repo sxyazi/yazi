@@ -32,6 +32,7 @@ mlua        = { workspace = true }
 parking_lot = { workspace = true }
 russh       = { workspace = true }
 serde       = { workspace = true }
+serde_json  = { workspace = true }
 tokio       = { workspace = true }
 toml        = { workspace = true }
 tracing     = { workspace = true }

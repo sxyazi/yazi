@@ -43,6 +43,7 @@ impl AsUrl for UrlBuf {
 			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
 			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
 			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+			Self::Rclone { loc, domain } => Url::Rclone { loc: loc.as_loc(), domain },
 		}
 	}
 }
@@ -64,6 +65,7 @@ impl AsUrl for UrlCow<'_> {
 			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
 			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
 			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+			Self::Rclone { loc, domain } => Url::Rclone { loc: loc.as_loc(), domain },
 		}
 	}
 }

@@ -13,6 +13,7 @@ pub enum UrlBuf {
 	Search { loc: LocBuf, domain: Symbol<str> },
 	Archive { loc: LocBuf, domain: Symbol<str> },
 	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, domain: Symbol<str> },
+	Rclone { loc: LocBuf<typed_path::UnixPathBuf>, domain: Symbol<str> },
 }
 
 impl_data_any!(UrlBuf);
@@ -33,6 +34,7 @@ impl From<Url<'_>> for UrlBuf {
 			Url::Search { loc, domain } => Self::Search { loc: loc.into(), domain: domain.intern() },
 			Url::Archive { loc, domain } => Self::Archive { loc: loc.into(), domain: domain.intern() },
 			Url::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.intern() },
+			Url::Rclone { loc, domain } => Self::Rclone { loc: loc.into(), domain: domain.intern() },
 		}
 	}
 }
@@ -138,7 +140,7 @@ impl UrlBuf {
 			Self::Regular(loc) => loc.into_inner().into(),
 			Self::Search { loc, .. } => loc.into_inner().into(),
 			Self::Archive { loc, .. } => loc.into_inner().into(),
-			Self::Sftp { loc, .. } => loc.into_inner().into(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.into_inner().into(),
 		}
 	}
 
@@ -153,7 +155,9 @@ impl UrlBuf {
 			Self::Regular(loc) => loc.try_set_name(name.as_os()?)?,
 			Self::Search { loc, .. } => loc.try_set_name(name.as_os()?)?,
 			Self::Archive { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Sftp { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => {
+				loc.try_set_name(name.encoded_bytes())?
+			}
 		})
 	}
 
@@ -169,6 +173,10 @@ impl UrlBuf {
 			Self::Sftp { loc, domain } => {
 				todo!();
 				// Self::Sftp { loc: loc.rebase(base), domain: domain.clone() }
+			}
+			Self::Rclone { loc, domain } => {
+				todo!();
+				// Self::Rclone { loc: loc.rebase(base), domain: domain.clone() }
 			}
 		}
 	}

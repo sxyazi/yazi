@@ -6,6 +6,7 @@ use yazi_fs::provider::Attrs;
 pub enum RwFile {
 	Tokio(tokio::fs::File),
 	Sftp(Box<yazi_sftp::fs::File>),
+	Rclone(Box<super::rclone::File>),
 }
 
 impl From<tokio::fs::File> for RwFile {
@@ -16,12 +17,17 @@ impl From<yazi_sftp::fs::File> for RwFile {
 	fn from(f: yazi_sftp::fs::File) -> Self { Self::Sftp(Box::new(f)) }
 }
 
+impl From<super::rclone::File> for RwFile {
+	fn from(f: super::rclone::File) -> Self { Self::Rclone(Box::new(f)) }
+}
+
 impl RwFile {
 	// FIXME: path
 	pub async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
 		Ok(match self {
 			Self::Tokio(f) => yazi_fs::cha::Cha::new("// FIXME", f.metadata().await?),
 			Self::Sftp(f) => super::sftp::Cha::try_from(("// FIXME".as_bytes(), &f.fstat().await?))?.0,
+			Self::Rclone(f) => f.cha()?,
 		})
 	}
 
@@ -45,6 +51,7 @@ impl RwFile {
 					f.fsetstat(&attrs).await?;
 				}
 			}
+			Self::Rclone(_) => {}
 		}
 
 		Ok(())
@@ -56,6 +63,7 @@ impl RwFile {
 			Self::Sftp(f) => {
 				f.fsetstat(&yazi_sftp::fs::Attrs { size: Some(size), ..Default::default() }).await?
 			}
+			Self::Rclone(_) => Err(io::Error::new(io::ErrorKind::Unsupported, "Read-only file"))?,
 		})
 	}
 }
@@ -70,6 +78,7 @@ impl AsyncRead for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_read(cx, buf),
 			Self::Sftp(f) => Pin::new(f).poll_read(cx, buf),
+			Self::Rclone(f) => Pin::new(f).poll_read(cx, buf),
 		}
 	}
 }
@@ -80,6 +89,7 @@ impl AsyncSeek for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).start_seek(position),
 			Self::Sftp(f) => Pin::new(f).start_seek(position),
+			Self::Rclone(f) => Pin::new(f).start_seek(position),
 		}
 	}
 
@@ -91,6 +101,7 @@ impl AsyncSeek for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_complete(cx),
 			Self::Sftp(f) => Pin::new(f).poll_complete(cx),
+			Self::Rclone(f) => Pin::new(f).poll_complete(cx),
 		}
 	}
 }
@@ -105,6 +116,7 @@ impl AsyncWrite for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_write(cx, buf),
 			Self::Sftp(f) => Pin::new(f).poll_write(cx, buf),
+			Self::Rclone(f) => Pin::new(f).poll_write(cx, buf),
 		}
 	}
 
@@ -116,6 +128,7 @@ impl AsyncWrite for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_flush(cx),
 			Self::Sftp(f) => Pin::new(f).poll_flush(cx),
+			Self::Rclone(f) => Pin::new(f).poll_flush(cx),
 		}
 	}
 
@@ -127,6 +140,7 @@ impl AsyncWrite for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_shutdown(cx),
 			Self::Sftp(f) => Pin::new(f).poll_shutdown(cx),
+			Self::Rclone(f) => Pin::new(f).poll_shutdown(cx),
 		}
 	}
 
@@ -139,6 +153,7 @@ impl AsyncWrite for RwFile {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_write_vectored(cx, bufs),
 			Self::Sftp(f) => Pin::new(f).poll_write_vectored(cx, bufs),
+			Self::Rclone(f) => Pin::new(f).poll_write_vectored(cx, bufs),
 		}
 	}
 
@@ -147,6 +162,7 @@ impl AsyncWrite for RwFile {
 		match self {
 			Self::Tokio(f) => f.is_write_vectored(),
 			Self::Sftp(f) => f.is_write_vectored(),
+			Self::Rclone(_) => false,
 		}
 	}
 }

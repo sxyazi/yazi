@@ -44,6 +44,10 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
 			domain: domain.intern(),
 		},
+		Url::Rclone { domain, .. } => UrlBuf::Rclone {
+			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+			domain: domain.intern(),
+		},
 	}
 	.into()
 }

@@ -52,6 +52,7 @@ impl FileBuilder for Gate {
 				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
 			}
 			SchemeKind::Sftp => self.build::<super::sftp::Gate>().open(url).await?.into(),
+			SchemeKind::Rclone => self.build::<super::rclone::Gate>().open(url).await?.into(),
 		})
 	}
 

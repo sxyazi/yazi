@@ -11,6 +11,7 @@ pub enum Scheme {
 	Search { domain: Symbol<str>, uri: usize, urn: usize },
 	Archive { domain: Symbol<str>, uri: usize, urn: usize },
 	Sftp { domain: Symbol<str>, uri: usize, urn: usize },
+	Rclone { domain: Symbol<str>, uri: usize, urn: usize },
 }
 
 impl Hash for Scheme {
@@ -26,9 +27,10 @@ impl Scheme {
 	pub fn into_domain(self) -> Option<Symbol<str>> {
 		match self {
 			Self::Regular { .. } => None,
-			Self::Search { domain, .. } | Self::Archive { domain, .. } | Self::Sftp { domain, .. } => {
-				Some(domain)
-			}
+			Self::Search { domain, .. }
+			| Self::Archive { domain, .. }
+			| Self::Sftp { domain, .. }
+			| Self::Rclone { domain, .. } => Some(domain),
 		}
 	}
 
@@ -39,6 +41,7 @@ impl Scheme {
 			Self::Search { domain, .. } => Self::Search { domain, uri, urn },
 			Self::Archive { domain, .. } => Self::Archive { domain, uri, urn },
 			Self::Sftp { domain, .. } => Self::Sftp { domain, uri, urn },
+			Self::Rclone { domain, .. } => Self::Rclone { domain, uri, urn },
 		}
 	}
 

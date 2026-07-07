@@ -67,6 +67,16 @@ impl<'a> SchemeCow<'a> {
 		}
 	}
 
+	pub fn rclone<T>(domain: T, uri: usize, urn: usize) -> Self
+	where
+		T: Into<Cow<'a, str>>,
+	{
+		match domain.into() {
+			Cow::Borrowed(domain) => SchemeRef::Rclone { domain, uri, urn }.into(),
+			Cow::Owned(domain) => Scheme::Rclone { domain: domain.intern(), uri, urn }.into(),
+		}
+	}
+
 	pub fn parse(bytes: &'a [u8]) -> Result<(Self, PathCow<'a>)> {
 		let Some((kind, tilde)) = SchemeKind::parse(bytes)? else {
 			let path = Self::decode_path(SchemeKind::Regular, false, bytes)?;
@@ -81,6 +91,7 @@ impl<'a> SchemeCow<'a> {
 			SchemeKind::Search => Self::decode_param(&bytes[skip..], &mut skip)?,
 			SchemeKind::Archive => Self::decode_param(&bytes[skip..], &mut skip)?,
 			SchemeKind::Sftp => Self::decode_param(&bytes[skip..], &mut skip)?,
+			SchemeKind::Rclone => Self::decode_param(&bytes[skip..], &mut skip)?,
 		};
 
 		// Decode path
@@ -93,6 +104,7 @@ impl<'a> SchemeCow<'a> {
 			SchemeKind::Search => Self::search(domain, uri, urn),
 			SchemeKind::Archive => Self::archive(domain, uri, urn),
 			SchemeKind::Sftp => Self::sftp(domain, uri, urn),
+			SchemeKind::Rclone => Self::rclone(domain, uri, urn),
 		};
 
 		Ok((scheme, path))
@@ -154,7 +166,7 @@ impl<'a> SchemeCow<'a> {
 				(uri, urn)
 			}
 			SchemeKind::Archive => (uri.unwrap_or(0), urn.unwrap_or(0)),
-			SchemeKind::Sftp => {
+			SchemeKind::Sftp | SchemeKind::Rclone => {
 				let uri = uri.unwrap_or(path.name().is_some() as usize);
 				let urn = urn.unwrap_or(path.name().is_some() as usize);
 				(uri, urn)
@@ -168,6 +180,7 @@ impl<'a> SchemeCow<'a> {
 			Url::Search { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 			Url::Archive { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 			Url::Sftp { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::Rclone { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 		}
 	}
 }

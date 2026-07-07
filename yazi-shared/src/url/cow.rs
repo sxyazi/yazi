@@ -12,6 +12,7 @@ pub enum UrlCow<'a> {
 	Search { loc: LocCow<'a>, domain: SymbolCow<'a, str> },
 	Archive { loc: LocCow<'a>, domain: SymbolCow<'a, str> },
 	Sftp { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, domain: SymbolCow<'a, str> },
+	Rclone { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, domain: SymbolCow<'a, str> },
 }
 
 // FIXME: remove
@@ -26,6 +27,7 @@ impl<'a> From<Url<'a>> for UrlCow<'a> {
 			Url::Search { loc, domain } => Self::Search { loc: loc.into(), domain: domain.into() },
 			Url::Archive { loc, domain } => Self::Archive { loc: loc.into(), domain: domain.into() },
 			Url::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.into() },
+			Url::Rclone { loc, domain } => Self::Rclone { loc: loc.into(), domain: domain.into() },
 		}
 	}
 }
@@ -46,6 +48,7 @@ impl From<UrlBuf> for UrlCow<'_> {
 				Self::Archive { loc: loc.into(), domain: domain.into() }
 			}
 			UrlBuf::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.into() },
+			UrlBuf::Rclone { loc, domain } => Self::Rclone { loc: loc.into(), domain: domain.into() },
 		}
 	}
 }
@@ -157,6 +160,10 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathDyn<'a>)> for UrlCow<'a> {
 				loc:    Loc::with(path.as_unix()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
 			},
+			SchemeKind::Rclone => Self::Rclone {
+				loc:    Loc::with(path.as_unix()?, uri, urn)?.into(),
+				domain: domain.ok_or_else(|| anyhow!("missing domain for rclone scheme"))?,
+			},
 		})
 	}
 }
@@ -184,6 +191,10 @@ impl<'a> TryFrom<(SchemeCow<'a>, PathBufDyn)> for UrlCow<'a> {
 				loc:    LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(),
 				domain: domain.ok_or_else(|| anyhow!("missing domain for sftp scheme"))?,
 			},
+			SchemeKind::Rclone => Self::Rclone {
+				loc:    LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(),
+				domain: domain.ok_or_else(|| anyhow!("missing domain for rclone scheme"))?,
+			},
 		})
 	}
 }
@@ -210,7 +221,7 @@ impl<'a> UrlCow<'a> {
 			Self::Regular(loc) => loc.is_owned(),
 			Self::Search { loc, .. } => loc.is_owned(),
 			Self::Archive { loc, .. } => loc.is_owned(),
-			Self::Sftp { loc, .. } => loc.is_owned(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.is_owned(),
 		}
 	}
 
@@ -225,6 +236,9 @@ impl<'a> UrlCow<'a> {
 			}
 			Self::Sftp { loc, domain } => {
 				UrlBuf::Sftp { loc: loc.into_owned(), domain: domain.into() }
+			}
+			Self::Rclone { loc, domain } => {
+				UrlBuf::Rclone { loc: loc.into_owned(), domain: domain.into() }
 			}
 		}
 	}
@@ -253,6 +267,12 @@ impl<'a> UrlCow<'a> {
 					(SchemeRef::Sftp { domain, uri, urn }.into(), loc.into_path())
 				}
 				SymbolCow::Owned(domain) => (Scheme::Sftp { domain, uri, urn }.into(), loc.into_path()),
+			},
+			Self::Rclone { loc, domain } => match domain {
+				SymbolCow::Borrowed(domain) => {
+					(SchemeRef::Rclone { domain, uri, urn }.into(), loc.into_path())
+				}
+				SymbolCow::Owned(domain) => (Scheme::Rclone { domain, uri, urn }.into(), loc.into_path()),
 			},
 		}
 	}

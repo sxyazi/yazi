@@ -19,6 +19,9 @@ impl FsScheme for SchemeRef<'_> {
 			Self::Sftp { domain, .. } => {
 				Some(Xdg::temp_dir().join(format!("sftp-{}", yazi_shared::scheme::Encode::domain(domain))))
 			}
+			Self::Rclone { domain, .. } => Some(
+				Xdg::temp_dir().join(format!("rclone-{}", yazi_shared::scheme::Encode::domain(domain))),
+			),
 		}
 	}
 }

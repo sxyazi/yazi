@@ -5357,6 +5357,7 @@ dependencies = [
  "parking_lot",
  "russh",
  "serde",
+ "serde_json",
  "tokio",
  "toml",
  "tracing",

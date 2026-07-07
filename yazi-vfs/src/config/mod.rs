@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(service services sftp vfs);
+yazi_macro::mod_flat!(rclone service services sftp vfs);

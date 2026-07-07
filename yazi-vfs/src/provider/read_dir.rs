@@ -5,6 +5,7 @@ use yazi_fs::provider::DirReader;
 pub enum ReadDir {
 	Local(yazi_fs::provider::local::ReadDir),
 	Sftp(super::sftp::ReadDir),
+	Rclone(super::rclone::ReadDir),
 }
 
 impl DirReader for ReadDir {
@@ -14,6 +15,7 @@ impl DirReader for ReadDir {
 		Ok(match self {
 			Self::Local(reader) => reader.next().await?.map(Self::Entry::Local),
 			Self::Sftp(reader) => reader.next().await?.map(Self::Entry::Sftp),
+			Self::Rclone(reader) => reader.next().await?.map(Self::Entry::Rclone),
 		})
 	}
 }

@@ -26,6 +26,18 @@ jobs:
       - name: Setup Rust toolchain
         run: rustup toolchain install stable --profile minimal
 
+      # For the rclone VFS provider's hermetic tests (Unix only; they drive an
+      # rclone `local` remote, so no cloud account or credentials are needed).
+      - name: Install rclone
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install rclone
+          else
+            sudo apt-get update && sudo apt-get install -y rclone
+          fi
+
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.10
 

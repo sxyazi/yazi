@@ -13,6 +13,7 @@ pub enum Url<'a> {
 	Search { loc: Loc<'a>, domain: &'a str },
 	Archive { loc: Loc<'a>, domain: &'a str },
 	Sftp { loc: Loc<'a, &'a typed_path::UnixPath>, domain: &'a str },
+	Rclone { loc: Loc<'a, &'a typed_path::UnixPath>, domain: &'a str },
 }
 
 // --- Eq
@@ -64,6 +65,7 @@ impl<'a> Url<'a> {
 			Self::Search { loc, domain } => Self::Search { loc: Loc::zeroed(loc.base()), domain },
 			Self::Archive { loc, domain } => Self::Archive { loc: Loc::zeroed(loc.base()), domain },
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.base()), domain },
+			Self::Rclone { loc, domain } => Self::Rclone { loc: Loc::bare(loc.base()), domain },
 		}
 	}
 
@@ -82,7 +84,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.extension()?.as_strand(),
 			Self::Search { loc, .. } => loc.extension()?.as_strand(),
 			Self::Archive { loc, .. } => loc.extension()?.as_strand(),
-			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.extension()?.as_strand(),
 		})
 	}
 
@@ -92,7 +94,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.has_base(),
 			Self::Search { loc, .. } => loc.has_base(),
 			Self::Archive { loc, .. } => loc.has_base(),
-			Self::Sftp { loc, .. } => loc.has_base(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.has_base(),
 		}
 	}
 
@@ -105,7 +107,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.has_trail(),
 			Self::Search { loc, .. } => loc.has_trail(),
 			Self::Archive { loc, .. } => loc.has_trail(),
-			Self::Sftp { loc, .. } => loc.has_trail(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.has_trail(),
 		}
 	}
 
@@ -118,7 +120,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn is_internal(self) -> bool {
 		match self {
-			Self::Regular(_) | Self::Sftp { .. } => true,
+			Self::Regular(_) | Self::Sftp { .. } | Self::Rclone { .. } => true,
 			Self::Search { .. } => !self.uri().is_empty(),
 			Self::Archive { .. } => false,
 		}
@@ -137,6 +139,7 @@ impl<'a> Url<'a> {
 			Self::Search { .. } => SchemeKind::Search,
 			Self::Archive { .. } => SchemeKind::Archive,
 			Self::Sftp { .. } => SchemeKind::Sftp,
+			Self::Rclone { .. } => SchemeKind::Rclone,
 		}
 	}
 
@@ -146,7 +149,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.as_path(),
 			Self::Search { loc, .. } => loc.as_path(),
 			Self::Archive { loc, .. } => loc.as_path(),
-			Self::Sftp { loc, .. } => loc.as_path(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.as_path(),
 		}
 	}
 
@@ -156,7 +159,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.file_name()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Archive { loc, .. } => loc.file_name()?.as_strand(),
-			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.file_name()?.as_strand(),
 		})
 	}
 
@@ -190,6 +193,9 @@ impl<'a> Url<'a> {
 
 			// SFTP
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.parent()?), domain },
+
+			// Rclone
+			Self::Rclone { loc, domain } => Self::Rclone { loc: Loc::bare(loc.parent()?), domain },
 		})
 	}
 
@@ -206,6 +212,7 @@ impl<'a> Url<'a> {
 			Self::Search { domain, .. } => SchemeRef::Search { domain, uri, urn },
 			Self::Archive { domain, .. } => SchemeRef::Archive { domain, uri, urn },
 			Self::Sftp { domain, .. } => SchemeRef::Sftp { domain, uri, urn },
+			Self::Rclone { domain, .. } => SchemeRef::Rclone { domain, uri, urn },
 		}
 	}
 
@@ -215,7 +222,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.file_stem()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Archive { loc, .. } => loc.file_stem()?.as_strand(),
-			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.file_stem()?.as_strand(),
 		})
 	}
 
@@ -249,6 +256,8 @@ impl<'a> Url<'a> {
 			}
 
 			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.trail()), domain },
+
+			Self::Rclone { loc, domain } => Self::Rclone { loc: Loc::bare(loc.trail()), domain },
 		}
 	}
 
@@ -258,7 +267,7 @@ impl<'a> Url<'a> {
 				let (base, rest, urn) = loc.triple();
 				(base.as_path(), rest.as_path(), urn.as_path())
 			}
-			Self::Sftp { loc, .. } => {
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
 				(base.as_path(), rest.as_path(), urn.as_path())
 			}
@@ -298,6 +307,10 @@ impl<'a> Url<'a> {
 			Self::Sftp { domain, .. } => {
 				UrlBuf::Sftp { loc: joined.into_unix()?.into(), domain: domain.intern() }
 			}
+
+			Self::Rclone { domain, .. } => {
+				UrlBuf::Rclone { loc: joined.into_unix()?.into(), domain: domain.intern() }
+			}
 		})
 	}
 
@@ -332,6 +345,10 @@ impl<'a> Url<'a> {
 				loc:    LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
 				domain: domain.intern(),
 			},
+			Self::Rclone { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Rclone {
+				loc:    LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
+				domain: domain.intern(),
+			},
 
 			Self::Search { domain, .. } => UrlBuf::Search {
 				loc:    LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
@@ -342,6 +359,10 @@ impl<'a> Url<'a> {
 				domain: domain.intern(),
 			},
 			Self::Sftp { domain, .. } => UrlBuf::Sftp {
+				loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
+				domain: domain.intern(),
+			},
+			Self::Rclone { domain, .. } => UrlBuf::Rclone {
 				loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
 				domain: domain.intern(),
 			},
@@ -373,6 +394,9 @@ impl<'a> Url<'a> {
 			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
 				(a == b).then_some(prefix).ok_or(Exotic)
 			}
+			(U::Rclone { domain: a, .. }, U::Rclone { domain: b, .. }) => {
+				(a == b).then_some(prefix).ok_or(Exotic)
+			}
 
 			// Both are local files
 			(U::Regular(_), U::Search { .. }) => Ok(prefix),
@@ -392,13 +416,8 @@ impl<'a> Url<'a> {
 				self.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
 
-			// Independent virtual file space
-			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
-			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
-			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+			// Independent virtual file space (Sftp/Rclone crossed with anything else)
+			_ => Err(Exotic),
 		}
 	}
 
@@ -417,6 +436,9 @@ impl<'a> Url<'a> {
 				(a == b).then_some(suffix).ok_or(Exotic)
 			}
 			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
+				(a == b).then_some(suffix).ok_or(Exotic)
+			}
+			(U::Rclone { domain: a, .. }, U::Rclone { domain: b, .. }) => {
 				(a == b).then_some(suffix).ok_or(Exotic)
 			}
 
@@ -438,13 +460,8 @@ impl<'a> Url<'a> {
 				self.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
 
-			// Independent virtual file space
-			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
-			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
-			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+			// Independent virtual file space (Sftp/Rclone crossed with anything else)
+			_ => Err(Exotic),
 		}
 	}
 
@@ -454,7 +471,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.uri().as_path(),
 			Self::Search { loc, .. } => loc.uri().as_path(),
 			Self::Archive { loc, .. } => loc.uri().as_path(),
-			Self::Sftp { loc, .. } => loc.uri().as_path(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.uri().as_path(),
 		}
 	}
 
@@ -464,7 +481,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.urn().as_path(),
 			Self::Search { loc, .. } => loc.urn().as_path(),
 			Self::Archive { loc, .. } => loc.urn().as_path(),
-			Self::Sftp { loc, .. } => loc.urn().as_path(),
+			Self::Sftp { loc, .. } | Self::Rclone { loc, .. } => loc.urn().as_path(),
 		}
 	}
 }

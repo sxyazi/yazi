@@ -15,7 +15,7 @@ impl From<SchemeKind> for PathKind {
 			SchemeKind::Regular => Self::Os,
 			SchemeKind::Search => Self::Os,
 			SchemeKind::Archive => Self::Os,
-			SchemeKind::Sftp => Self::Unix,
+			SchemeKind::Sftp | SchemeKind::Rclone => Self::Unix,
 		}
 	}
 }
