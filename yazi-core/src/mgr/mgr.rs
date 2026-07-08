@@ -1,9 +1,6 @@
-use std::iter;
-
 use ratatui_core::layout::Rect;
 use yazi_binding::position::{Origin, Position};
-use yazi_fs::Splatable;
-use yazi_shared::url::{AsUrl, Url, UrlBuf};
+use yazi_shared::url::UrlBuf;
 use yazi_term::TERM;
 use yazi_watcher::Watcher;
 
@@ -53,34 +50,11 @@ impl Mgr {
 	pub fn active_mut(&mut self) -> &mut Tab { self.tabs.active_mut() }
 
 	#[inline]
+	pub fn current(&self) -> &Folder { &self.active().current }
+
+	#[inline]
 	pub fn current_mut(&mut self) -> &mut Folder { &mut self.active_mut().current }
 
 	#[inline]
 	pub fn parent_mut(&mut self) -> Option<&mut Folder> { self.active_mut().parent.as_mut() }
-}
-
-impl Splatable for Mgr {
-	fn tab(&self) -> usize { self.tabs.cursor }
-
-	fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = Url<'_>> {
-		idx = idx.and_then(|i| i.checked_sub(1));
-		tab
-			.checked_sub(1)
-			.and_then(|tab| self.tabs.get(tab))
-			.map(|tab| tab.selected_or_hovered_urls())
-			.unwrap_or_else(|| Box::new(iter::empty()))
-			.skip(idx.unwrap_or(0))
-			.take(if idx.is_some() { 1 } else { usize::MAX })
-			.map(|u| u.as_url())
-	}
-
-	fn hovered(&self, tab: usize) -> Option<Url<'_>> {
-		tab
-			.checked_sub(1)
-			.and_then(|tab| self.tabs.get(tab))
-			.and_then(|tab| tab.hovered())
-			.map(|h| h.url.as_url())
-	}
-
-	fn yanked(&self) -> impl Iterator<Item = Url<'_>> { self.yanked.iter().map(|f| f.url.as_url()) }
 }

@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
 - Input history ([#4104])
+- Experimental `%y`, `%Y`, `%t`, `%T`, `%yN`, `%YN`, `%tN`, `%TN` shell formatting parameters ([#4108])
 - Make visual mode support wraparound scrolling ([#4101])
 - H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
 - Context-aware icons for inputs ([#4080])
@@ -1773,3 +1774,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4096]: https://github.com/sxyazi/yazi/pull/4096
 [#4101]: https://github.com/sxyazi/yazi/pull/4101
 [#4104]: https://github.com/sxyazi/yazi/pull/4104
+[#4108]: https://github.com/sxyazi/yazi/pull/4108

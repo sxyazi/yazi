@@ -182,7 +182,6 @@ impl<'a> Executor<'a> {
 		on!(inspect);
 		on!(cancel);
 		on!(process_open);
-		on!(open_shell_compat);
 
 		match action.name.as_ref() {
 			// Help

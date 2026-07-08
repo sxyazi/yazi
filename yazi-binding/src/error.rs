@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fmt::Display};
 
-use mlua::{ExternalError, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{ExternalError, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::SStr;
 
@@ -19,9 +19,9 @@ impl Error {
 		let fs = lua.create_function(|_, value: Value| {
 			Ok(Self::Fs(match value {
 				Value::Table(t) => yazi_shim::fs::Error::custom(
-					&t.raw_get::<mlua::String>("kind")?.to_str()?,
+					&t.raw_get::<LuaString>("kind")?.to_str()?,
 					t.raw_get("code")?,
-					&t.raw_get::<mlua::String>("message")?.to_str()?,
+					&t.raw_get::<LuaString>("message")?.to_str()?,
 				)?,
 				_ => Err("expected a table".into_lua_err())?,
 			}))

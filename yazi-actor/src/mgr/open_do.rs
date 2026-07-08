@@ -1,13 +1,13 @@
 use anyhow::Result;
 use hashbrown::HashMap;
 use indexmap::IndexSet;
-use yazi_config::YAZI;
-use yazi_fs::file::File;
+use yazi_config::{YAZI, opener::OpenerRule};
+use yazi_fs::{Splatter, file::File};
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenDoForm;
 use yazi_proxy::{PickProxy, TasksProxy};
-use yazi_scheduler::process::ProcessOpt;
-use yazi_shared::{data::Data, url::{UrlBuf, UrlCow}};
+use yazi_scheduler::process::ShellOpt;
+use yazi_shared::{data::Data, url::UrlBuf};
 
 use crate::{Actor, Ctx};
 
@@ -32,7 +32,7 @@ impl Actor for OpenDo {
 		if targets.is_empty() {
 			succ!();
 		} else if !opt.interactive {
-			succ!(Self::match_and_open(cx, opt.cwd, targets));
+			succ!(Self::match_and_open(opt.cwd, targets));
 		}
 
 		let openers: IndexSet<_> =
@@ -42,20 +42,10 @@ impl Actor for OpenDo {
 		}
 
 		let pick = PickProxy::show(YAZI.pick.open(openers.iter().map(|o| o.desc()).collect()));
-		let urls: Vec<_> = [UrlCow::default()]
-			.into_iter()
-			.chain(targets.into_iter().map(|(file, _)| file.url.into()))
-			.collect();
+		let urls: Vec<_> = targets.into_iter().map(|(file, _)| file.url).collect();
 		tokio::spawn(async move {
 			if let Some(choice) = pick.await {
-				TasksProxy::open_shell_compat(ProcessOpt {
-					cwd:    opt.cwd,
-					cmd:    openers[choice].run.clone().into(),
-					args:   urls,
-					block:  openers[choice].block,
-					orphan: openers[choice].orphan,
-					spread: openers[choice].spread,
-				});
+				Self::open_with(&openers[choice], &opt.cwd, &urls);
 			}
 		});
 		succ!();
@@ -63,24 +53,28 @@ impl Actor for OpenDo {
 }
 
 impl OpenDo {
-	// TODO: remove
-	fn match_and_open(cx: &Ctx, cwd: UrlBuf, targets: Vec<(File, &str)>) {
-		let mut openers = HashMap::new();
+	fn match_and_open(cwd: UrlBuf, targets: Vec<(File, &str)>) {
+		let mut openers: HashMap<_, Vec<_>> = Default::default();
 		for (file, mime) in targets {
 			if let Some(open) = YAZI.open.matches(&file, mime)
 				&& let Some(opener) = YAZI.opener.first(&open)
 			{
-				openers.entry(opener).or_insert_with(|| vec![UrlCow::default()]).push(file.url.into());
+				openers.entry(opener).or_default().push(file.url);
 			}
 		}
-		for (opener, args) in openers {
-			cx.tasks.open_shell_compat(ProcessOpt {
-				cwd: cwd.clone(),
-				cmd: opener.run.clone().into(),
-				args,
-				block: opener.block,
+		for (opener, urls) in openers {
+			Self::open_with(&opener, &cwd, &urls);
+		}
+	}
+
+	fn open_with(opener: &OpenerRule, cwd: &UrlBuf, urls: &[UrlBuf]) {
+		let size = if opener.spread { urls.len().max(1) } else { 1 };
+		for urls in urls.chunks(size) {
+			TasksProxy::process_open(ShellOpt {
+				cwd:    cwd.clone(),
+				cmd:    Splatter::new(urls).splat(&opener.run),
+				block:  opener.block,
 				orphan: opener.orphan,
-				spread: opener.spread,
 			});
 		}
 	}

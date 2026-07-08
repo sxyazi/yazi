@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, UserData, UserDataMethods};
+use mlua::{AnyUserData, LuaString, UserData, UserDataMethods};
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::TaskIn;
 
@@ -9,7 +9,7 @@ pub(crate) struct TaskOpt(pub(crate) yazi_core::tasks::TaskOpt);
 
 impl UserData for TaskOpt {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_function("name", |_, (ud, name): (AnyUserData, mlua::String)| {
+		methods.add_function("name", |_, (ud, name): (AnyUserData, LuaString)| {
 			ud.borrow_mut::<Self>()?.0.set_title(name.to_string_lossy());
 			Ok(ud)
 		});

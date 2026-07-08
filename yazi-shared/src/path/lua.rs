@@ -1,7 +1,7 @@
-use mlua::{ExternalError, ExternalResult, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
+use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
 
 pub type PathRef = UserDataRef<PathBufDyn>;
 
@@ -11,7 +11,7 @@ impl PathBufDyn {
 			"Path",
 			lua.create_table_from([(
 				"os",
-				lua.create_function(|_, s: mlua::String| {
+				lua.create_function(|_, s: LuaString| {
 					Ok(Self::from(s.as_bytes().as_strand().as_os_path().into_lua_err()?))
 				})?,
 			)])?,
@@ -89,11 +89,17 @@ impl UserData for PathBufDyn {
 		methods.add_method("starts_with", |_, me, base: Value| me.starts_with(base));
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
-		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: mlua::String| {
+		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: LuaString| {
 			lua.create_external_string([lhs.encoded_bytes(), &rhs.as_bytes()].concat())
 		});
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: PathRef| Ok(*me == *other));
 		methods
 			.add_meta_method(MetaMethod::ToString, |lua, me, ()| lua.create_string(me.encoded_bytes()));
+
+		if !LOG_LEVEL.get().is_none() {
+			methods.add_meta_function(MetaMethod::ToDebugString, |_, ud: AnyUserData| {
+				Ok(format!("Path({:?}): {:?}", ud.to_pointer(), *ud.borrow::<Self>()?))
+			});
+		}
 	}
 }

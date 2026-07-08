@@ -1,6 +1,6 @@
 use anyhow::Context;
 use futures::future::join_all;
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Table, Value, Variadic};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, MultiValue, Table, Value, Variadic};
 use tokio::sync::mpsc;
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
@@ -88,7 +88,7 @@ impl Utils {
 	}
 
 	pub(super) fn chan(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (r#type, buffer): (mlua::String, Option<usize>)| {
+		lua.create_function(|lua, (r#type, buffer): (LuaString, Option<usize>)| {
 			match (&*r#type.as_bytes(), buffer) {
 				(b"mpsc", Some(buffer)) if buffer < 1 => {
 					Err("Buffer size must be greater than 0".into_lua_err())
@@ -103,7 +103,7 @@ impl Utils {
 				}
 				(b"oneshot", _) => {
 					let (tx, rx) = tokio::sync::oneshot::channel::<Value>();
-					(OneshotTx(Some(tx)), OneshotRx(Some(rx))).into_lua_multi(lua)
+					(OneshotTx(tx), OneshotRx(rx)).into_lua_multi(lua)
 				}
 				_ => Err("Channel type must be `mpsc` or `oneshot`".into_lua_err()),
 			}

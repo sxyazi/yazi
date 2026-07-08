@@ -2,7 +2,7 @@ use std::{borrow::Cow, ops::Deref};
 
 use anyhow::{Context, Result, bail, ensure};
 use hashbrown::HashMap;
-use mlua::{ChunkMode, ExternalError, Lua, Table};
+use mlua::{ExternalError, Lua, Table, chunk::ChunkMode};
 use parking_lot::RwLock;
 use yazi_fs::{Xdg, provider::local::Local};
 use yazi_macro::plugin_preset as preset;

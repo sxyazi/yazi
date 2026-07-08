@@ -19,12 +19,12 @@ impl<'a> Router<'a> {
 		use Layer as L;
 
 		let core = &mut self.app.core;
-		if core.help.visible && core.help.r#type(key)? {
+		if core.help.visible && core.help.r#type(&key)? {
 			return Ok(true);
 		}
 
 		if let Some(mut guard) = core.input.lock_mut()
-			&& guard.r#type(key)?
+			&& guard.r#type(&key)?
 		{
 			return Ok(true);
 		}

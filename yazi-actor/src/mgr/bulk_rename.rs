@@ -11,8 +11,8 @@ use yazi_fs::{FilesOp, Splatter, file::File, max_common_root, path::skip_url, pr
 use yazi_macro::{err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
-use yazi_scheduler::{AppProxy, NotifyProxy};
-use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
+use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::{TTY, sequence::EraseScreen};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
@@ -63,13 +63,12 @@ impl Actor for BulkRename {
 			}
 
 			batcher.prime(&tmp);
-			TasksProxy::process_exec(
+			TasksProxy::process_exec(ShellOpt {
 				cwd,
-				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
-				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
-				opener.block,
-				opener.orphan,
-			)
+				cmd: Splatter::new(&[tmp.as_url()]).splat(&opener.run),
+				block: opener.block,
+				orphan: opener.orphan,
+			})
 			.await;
 
 			let _permit = Permit::new(YIELD_TO_SUBPROCESS.acquire().await.unwrap(), AppProxy::resume());

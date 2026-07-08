@@ -24,7 +24,7 @@ impl Actor for Open {
 			succ!(if !opt.targets.is_empty() {
 				Quit::with_selected(opt.targets)
 			} else if opt.hovered {
-				Quit::with_selected(cx.hovered().map(|h| &h.url))
+				Quit::with_selected(cx.hovered_url())
 			} else {
 				act!(mgr:escape_visual, cx)?;
 				Quit::with_selected(cx.tab().selected_or_hovered_urls())

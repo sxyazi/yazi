@@ -1,4 +1,4 @@
-use mlua::{IntoLuaMulti, UserData, UserDataMethods, Value};
+use mlua::{IntoLuaMulti, LuaString, UserData, UserDataMethods, Value};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use yazi_binding::Error;
 
@@ -22,7 +22,7 @@ impl UserData for RwFile {
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
-		methods.add_async_method_mut("write_all", |lua, mut me, src: mlua::String| async move {
+		methods.add_async_method_mut("write_all", |lua, mut me, src: LuaString| async move {
 			match me.write_all(&src.as_bytes()).await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),

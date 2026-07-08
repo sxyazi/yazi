@@ -32,15 +32,5 @@ impl OpenerRule {
 		}
 	}
 
-	pub fn fill(&mut self) {
-		#[cfg(unix)]
-		{
-			self.spread =
-				Splatter::<()>::spread(&self.run) || self.run.contains("$@") || self.run.contains("$*");
-		}
-		#[cfg(windows)]
-		{
-			self.spread = Splatter::<()>::spread(&self.run) || self.run.contains("%*");
-		}
-	}
+	pub fn fill(&mut self) { self.spread = Splatter::<()>::spread(&self.run); }
 }

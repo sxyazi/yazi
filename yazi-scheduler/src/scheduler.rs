@@ -5,7 +5,7 @@ use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
 use yazi_fs::FsHash64;
 use yazi_shared::{CompletionToken, Throttle, id::Id, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt}, size::SizeIn};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
 pub struct Scheduler {
 	pub worker:   Worker,
@@ -227,20 +227,14 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(&self, opt: ProcessOpt) -> CompletionToken {
+	pub fn process_open(&self, opt: ShellOpt) -> CompletionToken {
 		let mut r#in: ProcessIn = if opt.block {
-			ProcessInBlock { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }.into()
+			ProcessInBlock { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		} else if opt.orphan {
-			ProcessInOrphan { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }.into()
+			ProcessInOrphan { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		} else {
-			ProcessInBg {
-				id:   Id::ZERO,
-				cwd:  opt.cwd,
-				cmd:  opt.cmd,
-				args: opt.args,
-				done: CompletionToken::default(),
-			}
-			.into()
+			ProcessInBg { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, done: CompletionToken::default() }
+				.into()
 		};
 
 		let done = match &mut r#in {

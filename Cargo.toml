@@ -42,6 +42,7 @@ base64              = "0.22.1"
 bitflags            = { version = "2.13.0", features = [ "serde" ] }
 chrono              = "0.4.45"
 clap                = { version = "4.6.1", features = [ "derive" ] }
+compact_str         = { version = "0.9.1", features = [ "serde" ] }
 core-foundation-sys = "0.8.7"
 dirs                = "6.0.0"
 dyn-clone           = "1.0.20"
@@ -55,7 +56,7 @@ indexmap            = { version = "2.14.0", features = [ "serde" ] }
 inventory           = "0.3.24"
 libc                = "0.2.186"
 lru                 = "0.18.0"
-mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
+mlua                = { version = "0.12.0", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2               = "0.6.4"
 ordered-float       = { version = "5.3.0", features = [ "serde" ] }
 parking_lot         = "0.12.5"
@@ -65,7 +66,7 @@ rand                = { version = "0.10.2", default-features = false, features =
 ratatui-core        = { version = "0.1.2", default-features = false, features = [ "std", "layout-cache", "serde", "underline-color" ] }
 ratatui-widgets     = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
 regex               = "1.12.4"
-russh               = { version = "0.62.1", default-features = false, features = [ "ring", "rsa" ] }
+russh               = { version = "0.62.2", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
 serde_json          = "1.0.150"

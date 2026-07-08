@@ -1,7 +1,7 @@
 use std::{any::TypeId, mem};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
 use yazi_shim::SStr;
 
@@ -24,7 +24,7 @@ impl Text {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, text): (Table, Self)| Ok(text))?;
 
-		let parse = lua.create_function(|_, code: mlua::String| {
+		let parse = lua.create_function(|_, code: LuaString| {
 			Ok(Self { inner: code.as_bytes().into_text().into_lua_err()?, ..Default::default() })
 		})?;
 

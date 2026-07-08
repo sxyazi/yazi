@@ -1,6 +1,6 @@
 use std::any::TypeId;
 
-use mlua::{AnyUserData, ExternalError, Function, Lua};
+use mlua::{AnyUserData, ExternalError, Function, Lua, LuaString};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use yazi_vfs::provider::RwFile;
 
@@ -8,7 +8,7 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, r#type: mlua::String| {
+		lua.create_function(|_, r#type: LuaString| {
 			Ok(match &*r#type.as_bytes() {
 				b"app" => *yazi_dds::ID,
 				b"ft" => yazi_fs::FILES_TICKET.next(),

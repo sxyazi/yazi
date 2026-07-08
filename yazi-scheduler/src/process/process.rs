@@ -54,14 +54,8 @@ impl Process {
 	}
 
 	pub(crate) async fn bg(&self, task: ProcessInBg) -> Result<(), ProcessOutBg> {
-		let mut child = super::shell(ShellOpt {
-			cwd:    task.cwd,
-			cmd:    task.cmd,
-			args:   task.args,
-			piped:  true,
-			orphan: false,
-		})
-		.await?;
+		let mut child =
+			super::shell(ShellOpt { cwd: task.cwd, cmd: task.cmd, block: false, orphan: false }).await?;
 
 		let done = task.done;
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();

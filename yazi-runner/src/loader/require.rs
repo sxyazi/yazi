@@ -1,6 +1,6 @@
 use std::{borrow::Cow, sync::Arc};
 
-use mlua::{ExternalResult, Function, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, Table, Value};
+use mlua::{ExternalResult, Function, IntoLua, Lua, LuaString, MetaMethod, MultiValue, ObjectLike, Table, Value};
 use yazi_binding::{runtime, runtime_mut};
 
 use super::LOADER;
@@ -11,7 +11,7 @@ impl Require {
 	pub(super) fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
 			"require",
-			lua.create_async_function(|lua, id: mlua::String| async move {
+			lua.create_async_function(|lua, id: LuaString| async move {
 				let id = id.to_str()?;
 				let id = Self::absolute_id(&lua, &id)?;
 				LOADER.ensure(&id, |_| ()).await.into_lua_err()?;
@@ -30,7 +30,7 @@ impl Require {
 		let mt = lua.create_table_from([
 			(
 				MetaMethod::Index.name(),
-				lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
+				lua.create_function(move |lua, (ts, key): (Table, LuaString)| {
 					match ts.raw_get::<Table>("__mod")?.raw_get::<Value>(&key)? {
 						Value::Function(_) => {
 							Self::create_wrapper(lua, id.clone(), &key.to_str()?)?.into_lua(lua)
@@ -41,7 +41,7 @@ impl Require {
 			),
 			(
 				MetaMethod::NewIndex.name(),
-				lua.create_function(move |_, (ts, key, value): (Table, mlua::String, Value)| {
+				lua.create_function(move |_, (ts, key, value): (Table, LuaString, Value)| {
 					ts.raw_get::<Table>("__mod")?.raw_set(key, value)
 				})?,
 			),

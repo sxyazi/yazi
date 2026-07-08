@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, FromLua, MetaMethod, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, ExternalResult, FromLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
 use serde::Deserialize;
 use strum::{Display, EnumString, FromRepr, IntoStaticStr};
 use yazi_shim::strum::IntoStr;
@@ -41,7 +41,7 @@ impl Layer {
 }
 
 impl FromLua for Layer {
-	fn from_lua(value: Value, _: &mlua::Lua) -> mlua::Result<Self> {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
 			Value::String(s) => s.to_str()?.parse().into_lua_err()?,
 			Value::UserData(ud) => *ud.borrow::<Self>()?,

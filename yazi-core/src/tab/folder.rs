@@ -169,6 +169,9 @@ impl Folder {
 	#[inline]
 	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.entries.get_mut(self.cursor) }
 
+	#[inline]
+	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.hovered().map(|f| &f.url) }
+
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.entries.len();
 		let limit = LAYOUT.get().folder_limit();
