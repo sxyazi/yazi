@@ -3,25 +3,28 @@ use std::{ffi::OsString, process::Stdio};
 use anyhow::Result;
 use tokio::process::{Child, Command};
 use yazi_fs::Cwd;
-use yazi_shared::url::{AsUrl, UrlBuf, UrlCow};
+use yazi_macro::impl_data_any;
+use yazi_shared::url::{AsUrl, UrlBuf};
 
-pub(crate) struct ShellOpt {
-	pub(crate) cwd:    UrlBuf,
-	pub(crate) cmd:    OsString,
-	pub(crate) args:   Vec<UrlCow<'static>>,
-	pub(crate) piped:  bool,
-	pub(crate) orphan: bool,
+#[derive(Clone, Debug)]
+pub struct ShellOpt {
+	pub cwd:    UrlBuf,
+	pub cmd:    OsString,
+	pub block:  bool,
+	pub orphan: bool,
 }
+
+impl_data_any!(ShellOpt);
 
 impl ShellOpt {
 	#[inline]
 	fn stdio(&self) -> Stdio {
-		if self.orphan {
-			Stdio::null()
-		} else if self.piped {
-			Stdio::piped()
-		} else {
+		if self.block {
 			Stdio::inherit()
+		} else if self.orphan {
+			Stdio::null()
+		} else {
+			Stdio::piped()
 		}
 	}
 }
@@ -32,21 +35,16 @@ pub(crate) async fn shell(opt: ShellOpt) -> Result<Child> {
 
 		#[cfg(unix)]
 		return Ok(unsafe {
-			use yazi_fs::FsUrl;
-			use yazi_shared::url::AsUrl;
-
 			Command::new("sh")
 				.stdin(opt.stdio())
 				.stdout(opt.stdio())
 				.stderr(opt.stdio())
 				.arg("-c")
 				.arg(opt.cmd)
-				// TODO: remove
-				.args(opt.args.iter().map(|u| u.as_url().unified_path_str()))
 				.current_dir(cwd)
 				.kill_on_drop(!opt.orphan)
 				.pre_exec(move || {
-					if (opt.piped || opt.orphan) && libc::setsid() < 0 {
+					if !opt.block && libc::setsid() < 0 {
 						return Err(std::io::Error::last_os_error());
 					}
 					Ok(())

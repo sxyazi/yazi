@@ -36,7 +36,7 @@ impl Actor for Hover {
 
 		// Publish through DDS
 		let tab = tab!(cx);
-		err!(Pubsub::pub_after_hover(tab.id, tab.hovered().map(|h| &h.url)));
+		err!(Pubsub::pub_after_hover(tab.id, tab.hovered_url()));
 		succ!();
 	}
 }

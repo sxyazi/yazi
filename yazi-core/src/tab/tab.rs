@@ -79,6 +79,9 @@ impl Tab {
 	pub fn hovered(&self) -> Option<&File> { self.current.hovered() }
 
 	#[inline]
+	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.current.hovered_url() }
+
+	#[inline]
 	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.current.hovered_mut() }
 
 	pub fn hovered_rect(&self) -> Option<Rect> {
@@ -109,7 +112,7 @@ impl Tab {
 
 	pub fn selected_or_hovered_urls(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
 		if self.selected.is_empty() {
-			Box::new(self.hovered().map(|h| &h.url).into_iter())
+			Box::new(self.hovered_url().into_iter())
 		} else {
 			Box::new(self.selected.urls())
 		}

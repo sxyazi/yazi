@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, LuaString, Table, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, Error};
 use yazi_config::Pattern;
 use yazi_fs::{file::File, mounts::PARTITIONS, provider::{Attrs, DirReader, FileHolder}};
@@ -81,7 +81,7 @@ fn copy(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn create(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
+	lua.create_async_function(|lua, (r#type, url): (LuaString, UrlRef)| async move {
 		let result = match &*r#type.as_bytes() {
 			b"dir" => provider::create_dir(&*url).await,
 			b"dir_all" => provider::create_dir_all(&*url).await,
@@ -132,7 +132,7 @@ fn file(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn op(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|lua, (name, t): (mlua::String, Table)| match &*name.as_bytes() {
+	lua.create_function(|lua, (name, t): (LuaString, Table)| match &*name.as_bytes() {
 		b"part" => super::FilesOp::part(lua, t),
 		b"done" => super::FilesOp::done(lua, t),
 		b"size" => super::FilesOp::size(lua, t),
@@ -162,7 +162,7 @@ fn partitions(lua: &Lua) -> mlua::Result<Function> {
 
 fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (dir, options): (UrlRef, Table)| async move {
-		let pat = if let Ok(s) = options.raw_get::<mlua::String>("glob") {
+		let pat = if let Ok(s) = options.raw_get::<LuaString>("glob") {
 			Some(Pattern::from_str(&s.to_str()?)?)
 		} else {
 			None
@@ -202,7 +202,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn remove(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
+	lua.create_async_function(|lua, (r#type, url): (LuaString, UrlRef)| async move {
 		let result = match &*r#type.as_bytes() {
 			b"file" => provider::remove_file(&*url).await,
 			b"dir" => provider::remove_dir(&*url).await,
@@ -228,7 +228,7 @@ fn rename(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn unique(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
+	lua.create_async_function(|lua, (r#type, url): (LuaString, UrlRef)| async move {
 		let result = match &*r#type.as_bytes() {
 			b"dir" => yazi_vfs::unique_file(url.clone(), true).await,
 			b"file" => yazi_vfs::unique_file(url.clone(), false).await,
@@ -243,7 +243,7 @@ fn unique(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn write(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
+	lua.create_async_function(|lua, (url, data): (UrlRef, LuaString)| async move {
 		match provider::write(&*url, data.as_bytes()).await {
 			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),

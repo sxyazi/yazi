@@ -13,7 +13,7 @@ impl Actor for UpdatePeeked {
 	const NAME: &str = "update_peeked";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let Some(hovered) = cx.hovered().map(|h| &h.url) else {
+		let Some(hovered) = cx.hovered_url() else {
 			succ!(cx.tab_mut().preview.reset());
 		};
 

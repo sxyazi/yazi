@@ -8,8 +8,8 @@ use yazi_fs::{FilesOp, Splatter, file::File, provider::{Provider, local::Local}}
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
-use yazi_scheduler::{AppProxy, NotifyProxy};
-use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
+use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::{TTY, sequence::EraseScreen};
@@ -40,13 +40,12 @@ impl Actor for BulkCreate {
 				});
 			}
 
-			TasksProxy::process_exec(
-				cwd.clone(),
-				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
-				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
-				opener.block,
-				opener.orphan,
-			)
+			TasksProxy::process_exec(ShellOpt {
+				cwd:    cwd.clone(),
+				cmd:    Splatter::new(&[tmp.as_url()]).splat(&opener.run),
+				block:  opener.block,
+				orphan: opener.orphan,
+			})
 			.await;
 
 			let _permit = Permit::new(YIELD_TO_SUBPROCESS.acquire().await.unwrap(), AppProxy::resume());

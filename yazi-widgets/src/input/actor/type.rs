@@ -6,14 +6,15 @@ use yazi_term::event::KeyEvent;
 use crate::input::{Input, InputMode};
 
 impl Input {
-	pub fn r#type(&mut self, key: KeyEvent) -> Result<bool> {
-		let Some(c) = key.plain() else { return Ok(false) };
+	pub fn r#type(&mut self, key: &KeyEvent) -> Result<bool> {
+		let mut buf = [0; 4];
+		let Some(text) = key.text(&mut buf) else { return Ok(false) };
 
 		if self.mode() == InputMode::Insert {
-			self.type_str(c.encode_utf8(&mut [0; 4]))?;
+			self.type_str(text)?;
 			return Ok(true);
 		} else if self.mode() == InputMode::Replace {
-			self.replace_str(c.encode_utf8(&mut [0; 4]))?;
+			self.replace_str(text)?;
 			return Ok(true);
 		}
 

@@ -19,9 +19,14 @@ pub struct Key {
 
 impl Key {
 	pub fn plain(&self) -> Option<char> {
-		match self.code {
-			KeyCode::Char(c) if !self.ctrl && !self.alt && !self.super_ => Some(c),
-			_ => None,
+		if self.ctrl || self.alt || self.super_ {
+			None
+		} else if self.shift && !self.code.implies_shift() {
+			None
+		} else if let KeyCode::Char(c) = self.code {
+			Some(c)
+		} else {
+			None
 		}
 	}
 }
@@ -130,7 +135,7 @@ impl Display for Key {
 		if self.alt {
 			write!(f, "A-")?;
 		}
-		if self.shift && !matches!(self.code, KeyCode::Char(_)) {
+		if self.shift && !self.code.implies_shift() {
 			write!(f, "S-")?;
 		}
 

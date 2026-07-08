@@ -2,7 +2,6 @@ use crate::RatermOption;
 
 #[derive(Clone, Copy)]
 pub struct RatermState {
-	pub csi_u:        bool,
 	pub mouse:        bool,
 	pub title:        bool,
 	pub cursor_shape: u8,
@@ -11,18 +10,10 @@ pub struct RatermState {
 
 impl RatermState {
 	pub(super) const fn default() -> Self {
-		Self {
-			csi_u:        false,
-			mouse:        false,
-			title:        false,
-			cursor_shape: 0,
-			cursor_blink: false,
-		}
+		Self { mouse: false, title: false, cursor_shape: 0, cursor_blink: false }
 	}
 
 	pub(super) fn new(resp: &str, opt: &RatermOption) -> Self {
-		let csi_u = resp.contains("\x1b[?0u");
-
 		let cursor_shape = resp
 			.split_once("\x1bP1$r")
 			.and_then(|(_, s)| s.bytes().next())
@@ -31,6 +22,6 @@ impl RatermState {
 
 		let cursor_blink = resp.contains("\x1b[?12;1$y");
 
-		Self { csi_u, mouse: opt.mouse, title: false, cursor_shape, cursor_blink }
+		Self { mouse: opt.mouse, title: false, cursor_shape, cursor_blink }
 	}
 }

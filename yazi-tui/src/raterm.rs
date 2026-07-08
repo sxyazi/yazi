@@ -1,4 +1,4 @@
-use std::{io::{self, Write}, ops::Deref};
+use std::{io, ops::Deref};
 
 use anyhow::Result;
 use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{CompletedFrame, Frame, Terminal}};
@@ -8,7 +8,7 @@ use yazi_macro::writef;
 use yazi_proxy::AppProxy;
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
-use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
+use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RestoreCursorStyle, SetTitle, ShowCursor}};
 
 use crate::{RatermBackend, RatermOption, RatermState};
 
@@ -43,9 +43,12 @@ impl Raterm {
 		let opt = RatermOption::default();
 		writef!(
 			TTY.writer(),
-			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestKeyboardFlags}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}",
+			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{}",
 			If(!TMUX.get(), EnterAlternateScreen),
 			If(TMUX.get(), EnterAlternateScreen),
+			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
+				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
+				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES,
 			EnableDrag(""),
 			EnableDrop(&["text/uri-list"]),
 			If(opt.mouse, EnableMouseCapture),
@@ -55,14 +58,6 @@ impl Raterm {
 		Mux::tmux_drain()?;
 
 		STATE.set(RatermState::new(&resp, &opt));
-		if STATE.get().csi_u {
-			write!(
-				TTY.writer(),
-				"{}",
-				PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES | PushKeyboardFlags::REPORT_ALTERNATE_KEYS,
-			)?;
-		}
-
 		let mut term = Self {
 			inner:       Terminal::new(RatermBackend::new(TTY.writer()))?,
 			stream:      EventStream::from(&*TERM),
@@ -82,9 +77,8 @@ impl Raterm {
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{DisableDrop}{DisableDrag}{}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
+			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
-			If(state.csi_u, PopKeyboardFlags),
 			RestoreCursorStyle { shape: state.cursor_shape, blink: state.cursor_blink },
 			If(state.title, SetTitle("")),
 		);
@@ -100,7 +94,7 @@ impl Raterm {
 			loop {
 				match rx.recv().await {
 					Some(Ok(event)) => match event {
-						Event::Key(key) if key.kind != KeyEventKind::Press => continue,
+						Event::Key(key) if key.kind == KeyEventKind::Release => continue,
 						Event::Mouse(mouse) if !YAZI.mgr.mouse_events.get().contains(mouse.kind.into()) => {
 							continue;
 						}

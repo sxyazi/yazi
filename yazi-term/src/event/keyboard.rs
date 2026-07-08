@@ -1,41 +1,39 @@
 use bitflags::bitflags;
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 
 use crate::{ParseError, Result, bail, event::Modifiers};
 
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq, Serialize)]
 pub struct KeyEvent {
 	#[serde(flatten)]
 	pub code:      KeyCode,
 	pub kind:      KeyEventKind,
 	pub modifiers: Modifiers,
 	pub state:     KeyEventState,
+	#[serde(skip_serializing_if = "CompactString::is_empty")]
+	pub text:      CompactString,
 }
 
 impl KeyEvent {
-	pub const fn new(code: KeyCode, modifiers: Modifiers) -> Self {
-		Self { code, kind: KeyEventKind::Press, modifiers, state: KeyEventState::empty() }
+	pub fn new(code: KeyCode, modifiers: Modifiers) -> Self {
+		Self { code, modifiers, ..Default::default() }
 	}
 
-	pub fn plain(&self) -> Option<char> {
+	pub fn text<'a>(&'a self, buf: &'a mut [u8; 4]) -> Option<&'a str> {
 		use Modifiers as M;
 
 		match self.code {
-			KeyCode::Char(c) if !self.modifiers.intersects(M::CONTROL | M::ALT | M::SUPER) => Some(c),
+			_ if self.modifiers.intersects(M::CONTROL | M::ALT | M::SUPER) => None,
+			KeyCode::Char(c) if self.text.is_empty() => Some(c.encode_utf8(buf)),
+			KeyCode::Char(_) | KeyCode::Null if !self.text.is_empty() => Some(&self.text),
 			_ => None,
 		}
 	}
 }
 
 impl From<KeyCode> for KeyEvent {
-	fn from(code: KeyCode) -> Self {
-		Self {
-			code,
-			kind: KeyEventKind::Press,
-			modifiers: Modifiers::empty(),
-			state: KeyEventState::empty(),
-		}
-	}
+	fn from(code: KeyCode) -> Self { Self { code, ..Default::default() } }
 }
 
 // --- Kind
@@ -116,6 +114,8 @@ pub enum KeyCode {
 }
 
 impl KeyCode {
+	pub fn implies_shift(self) -> bool { matches!(self, Self::Char(c) if c.is_uppercase()) }
+
 	pub(crate) fn from_xterm_modifier(r#final: u8) -> Result<Self> {
 		Ok(match r#final {
 			b'A' => Self::Up,
@@ -138,6 +138,7 @@ impl KeyCode {
 		}
 
 		let code = match char::from_u32(codepoint).ok_or(ParseError::Invalid)? {
+			'\0' => Self::Null,
 			'\x1B' => Self::Escape,
 			'\r' => Self::Enter,
 			'\t' => Self::Tab,

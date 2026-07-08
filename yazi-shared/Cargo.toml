@@ -26,7 +26,7 @@ futures          = { workspace = true }
 hashbrown        = { workspace = true }
 indexmap         = { workspace = true }
 inventory        = { workspace = true }
-memchr           = "2.8.2"
+memchr           = "2.8.3"
 mlua             = { workspace = true }
 ordered-float    = { workspace = true }
 parking_lot      = { workspace = true }

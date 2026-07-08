@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_shim::strum::IntoStr;
 
 use crate::{elements::Pad, position::{Offset, Origin, Position}};
@@ -20,7 +20,7 @@ impl TryFrom<Table> for Position {
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		Ok(Self {
-			origin:  Origin::from_str(&t.raw_get::<mlua::String>(1)?.to_str()?).into_lua_err()?,
+			origin:  Origin::from_str(&t.raw_get::<LuaString>(1)?.to_str()?).into_lua_err()?,
 			offset:  Offset {
 				x:      t.raw_get("x").unwrap_or_default(),
 				y:      t.raw_get("y").unwrap_or_default(),

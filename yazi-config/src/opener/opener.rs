@@ -2,7 +2,7 @@ use std::{mem, ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
 use hashbrown::HashMap;
-use mlua::{ExternalError, FromLua, IntoLua, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, FromLua, IntoLua, IntoLuaMulti, LuaString, MetaMethod, UserData, UserDataMethods, Value};
 use serde::{Deserialize, Deserializer};
 use yazi_shim::{arc_swap::IntoPointee, toml::{DeserializeOverHook, DeserializeOverWith}};
 
@@ -86,7 +86,7 @@ impl DeserializeOverWith for Opener {
 
 impl UserData for &'static Opener {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Index, |lua, &me, key: mlua::String| {
+		methods.add_meta_method(MetaMethod::Index, |lua, &me, key: LuaString| {
 			let key = key.to_str()?;
 			match me.load().get(&*key) {
 				Some(rules) => rules.clone().into_lua(lua),
@@ -94,22 +94,19 @@ impl UserData for &'static Opener {
 			}
 		});
 
-		methods.add_meta_method(
-			MetaMethod::NewIndex,
-			|lua, &me, (key, value): (mlua::String, Value)| {
-				let key = key.to_str()?;
-				match value {
-					t @ Value::Table(_) => {
-						me.insert(&key, &OpenerRulesArc::from_lua(t, lua)?);
-					}
-					Value::Nil => {
-						me.remove(&key);
-					}
-					_ => return Err("expected a table or nil".into_lua_err()),
+		methods.add_meta_method(MetaMethod::NewIndex, |lua, &me, (key, value): (LuaString, Value)| {
+			let key = key.to_str()?;
+			match value {
+				t @ Value::Table(_) => {
+					me.insert(&key, &OpenerRulesArc::from_lua(t, lua)?);
 				}
-				Ok(())
-			},
-		);
+				Value::Nil => {
+					me.remove(&key);
+				}
+				_ => return Err("expected a table or nil".into_lua_err()),
+			}
+			Ok(())
+		});
 
 		methods.add_meta_method(MetaMethod::Pairs, |lua, &me, ()| {
 			let mut matcher = OpenerRulesMatcher::from(me);

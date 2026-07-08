@@ -1,7 +1,7 @@
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, scheme::{SchemeCow, SchemeLike}, strand::{StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, scheme::{SchemeCow, SchemeLike}, strand::{StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 
 pub type UrlRef = UserDataRef<UrlBuf>;
 
@@ -124,17 +124,23 @@ impl UserData for UrlBuf {
 		methods.add_method("starts_with", |_, me, base: Value| me.starts_with(base));
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
-		methods.add_function("into_search", |_, (ud, domain): (AnyUserData, mlua::String)| {
-			ud.take::<Self>()?.into_search(domain.to_str()?).into_lua_err()
+		methods.add_method_once("into_search", |_, me, domain: LuaString| {
+			me.into_search(domain.to_str()?).into_lua_err()
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(*me == *other));
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 			lua.create_string(me.to_strand().encoded_bytes())
 		});
-		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: mlua::String| {
+		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: LuaString| {
 			lua.create_external_string([lhs.to_strand().encoded_bytes(), &rhs.as_bytes()].concat())
 		});
+
+		if !LOG_LEVEL.get().is_none() {
+			methods.add_meta_function(MetaMethod::ToDebugString, |_, ud: AnyUserData| {
+				Ok(format!("Url({:?}): {:?}", ud.to_pointer(), *ud.borrow::<Self>()?))
+			});
+		}
 	}
 
 	fn register(registry: &mut UserDataRegistry<Self>) {
