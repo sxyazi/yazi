@@ -2,7 +2,7 @@ use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
 use chrono::DateTime;
 use russh::keys::{PrivateKeyWithHashAlg, agent::AgentIdentity, known_hosts};
-use yazi_fs::{provider::local::Local, Xdg};
+use yazi_fs::{Xdg, provider::local::Local};
 
 use crate::config::ServiceSftp;
 
@@ -27,10 +27,20 @@ impl russh::client::Handler for Conn {
 	) -> Result<bool, Self::Error> {
 		let path = Xdg::config_dir().join("known_hosts");
 
-		match known_hosts::check_known_hosts_path(&self.config.host, self.config.port, server_public_key, &path) {
+		match known_hosts::check_known_hosts_path(
+			&self.config.host,
+			self.config.port,
+			server_public_key,
+			&path,
+		) {
 			Ok(true) => Ok(true),
 			Ok(false) => {
-				if let Err(e) = known_hosts::learn_known_hosts_path(&self.config.host, self.config.port, server_public_key, &path) {
+				if let Err(e) = known_hosts::learn_known_hosts_path(
+					&self.config.host,
+					self.config.port,
+					server_public_key,
+					&path,
+				) {
 					tracing::warn!("Failed to record host key in known_hosts: {e}");
 				}
 				Ok(true)
@@ -38,7 +48,8 @@ impl russh::client::Handler for Conn {
 			Err(russh::keys::Error::KeyChanged { line }) => {
 				tracing::error!(
 					"Host key for `{}` has changed (known_hosts:{}). Possible MITM attack!",
-					self.config.host, line
+					self.config.host,
+					line
 				);
 				Ok(false)
 			}
