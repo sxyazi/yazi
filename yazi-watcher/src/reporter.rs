@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use percent_encoding::percent_decode;
 use tokio::sync::mpsc;
-use yazi_shared::{scheme::SchemeKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{auth::AuthKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::{WATCHED, local::LINKED};
 
@@ -20,9 +20,9 @@ impl Reporter {
 	{
 		for url in urls.into_iter().map(Into::into) {
 			match url.as_url().kind() {
-				SchemeKind::Regular | SchemeKind::Search => self.report_local(url),
-				SchemeKind::Archive => {}
-				SchemeKind::Sftp => self.report_remote(url),
+				AuthKind::Regular | AuthKind::Search => self.report_local(url),
+				AuthKind::Mount => {} // TODO: mounted VFS cache invalidation
+				AuthKind::Scope | AuthKind::Sftp => self.report_remote(url),
 			}
 		}
 	}

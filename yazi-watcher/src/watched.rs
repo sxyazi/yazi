@@ -1,9 +1,8 @@
 use std::{ops::{Deref, DerefMut}, path::Path};
 
 use hashbrown::HashSet;
-use percent_encoding::percent_decode_str;
 use yazi_fs::{Xdg, path::PercentEncoding};
-use yazi_shared::{path::{Component, PathBufDyn, PathDyn, PathLike}, pool::InternStr, scheme::SchemeKind, url::{AsUrl, UrlBuf}};
+use yazi_shared::{auth::{Auth, AuthKind}, path::{Component, PathBufDyn, PathDyn, PathLike}, url::{AsUrl, UrlBuf}};
 
 use crate::Watchee;
 
@@ -42,21 +41,26 @@ impl Watched {
 	pub(super) fn find_by_cache(&self, cache: PathDyn) -> Option<UrlBuf> {
 		let mut it = cache.try_strip_prefix(Xdg::temp_dir()).ok()?.components();
 
-		// Parse domain
-		let domain = it.next()?.as_normal()?.to_str().ok()?;
-		let domain = percent_decode_str(domain.strip_prefix("sftp-")?).decode_utf8().ok()?.intern();
+		// Parse authority
+		let cache = it.next()?.as_normal()?.to_str().ok()?;
+		let auth = Auth::parse_cache(cache).ok()?;
 
 		// Parse path
 		let (path, abs) =
 			if let Ok(p) = it.path().try_strip_prefix(".%2F") { (p, false) } else { (it.path(), true) };
-		let path = path.percent_decode(SchemeKind::Sftp).ok()?;
+		let path = path.percent_decode(auth.kind).ok()?;
 		let path = PathBufDyn::from_components(
-			SchemeKind::Sftp,
+			auth.kind,
 			abs.then_some(Component::RootDir).into_iter().chain(path.components()),
 		)
 		.ok()?;
 
-		let url = UrlBuf::Sftp { loc: path.into_unix().ok()?.into(), domain };
+		let url = match auth.kind {
+			AuthKind::Mount => UrlBuf::Mount { loc: path.into_os().ok()?.into(), auth },
+			AuthKind::Scope => UrlBuf::Scope { loc: path.into_unix().ok()?.into(), auth },
+			AuthKind::Sftp => UrlBuf::Sftp { loc: path.into_unix().ok()?.into(), auth },
+			AuthKind::Regular | AuthKind::Search => return None,
+		};
 		if self.contains_url(&url) { Some(url) } else { None }
 	}
 }

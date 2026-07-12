@@ -4,7 +4,7 @@ use anyhow::{Context, Result, bail, ensure};
 use hashbrown::HashMap;
 use mlua::{ExternalError, Lua, Table, chunk::ChunkMode};
 use parking_lot::RwLock;
-use yazi_fs::{Xdg, provider::local::Local};
+use yazi_fs::{Xdg, engine::local::Local};
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::{BytesExt, LOG_LEVEL};
 use yazi_shim::cell::RoCell;

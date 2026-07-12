@@ -7,7 +7,7 @@ use yazi_config::{LAYOUT, YAZI};
 use yazi_fs::{Entries, FilesOp, cha::Cha, file::File};
 use yazi_macro::render;
 use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
-use yazi_shared::{pool::Symbol, url::{UrlBuf, UrlLike}};
+use yazi_shared::{pool::Symbol, url::UrlBuf};
 use yazi_vfs::{VfsEntries, VfsFilesOp};
 
 use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
@@ -48,9 +48,7 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, mime: Symbol<str>, force: bool) {
-		if !file.url.is_internal() {
-			return self.go(file, mime, force);
-		} else if self.folder_lock.as_ref() == Some(&file.url) {
+		if self.folder_lock.as_ref() == Some(&file.url) {
 			return self.go(file, mime, force);
 		}
 

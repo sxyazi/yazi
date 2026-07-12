@@ -1,18 +1,19 @@
-use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr};
+use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr, sync::Arc};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
 use yazi_codegen::FromLuaOwned;
 use yazi_macro::impl_data_any;
 
-use crate::{loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, pool::{InternStr, Pool, Symbol}, scheme::{Scheme, SchemeLike}, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
+use crate::{auth::Auth, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
 
 #[derive(Clone, Eq, FromLuaOwned)]
 pub enum UrlBuf {
 	Regular(LocBuf),
-	Search { loc: LocBuf, domain: Symbol<str> },
-	Archive { loc: LocBuf, domain: Symbol<str> },
-	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, domain: Symbol<str> },
+	Search { loc: LocBuf, auth: Arc<Auth> },
+	Mount { loc: LocBuf, auth: Arc<Auth> },
+	Scope { loc: LocBuf<typed_path::UnixPathBuf>, auth: Arc<Auth> },
+	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, auth: Arc<Auth> },
 }
 
 impl_data_any!(UrlBuf);
@@ -30,9 +31,10 @@ impl From<Url<'_>> for UrlBuf {
 	fn from(url: Url<'_>) -> Self {
 		match url {
 			Url::Regular(loc) => Self::Regular(loc.into()),
-			Url::Search { loc, domain } => Self::Search { loc: loc.into(), domain: domain.intern() },
-			Url::Archive { loc, domain } => Self::Archive { loc: loc.into(), domain: domain.intern() },
-			Url::Sftp { loc, domain } => Self::Sftp { loc: loc.into(), domain: domain.intern() },
+			Url::Search { loc, auth } => Self::Search { loc: loc.into(), auth: auth.clone() },
+			Url::Mount { loc, auth } => Self::Mount { loc: loc.into(), auth: auth.clone() },
+			Url::Scope { loc, auth } => Self::Scope { loc: loc.into(), auth: auth.clone() },
+			Url::Sftp { loc, auth } => Self::Sftp { loc: loc.into(), auth: auth.clone() },
 		}
 	}
 }
@@ -71,10 +73,10 @@ impl TryFrom<String> for UrlBuf {
 	}
 }
 
-impl TryFrom<(Scheme, PathBufDyn)> for UrlBuf {
+impl TryFrom<(Spec, PathBufDyn)> for UrlBuf {
 	type Error = anyhow::Error;
 
-	fn try_from(value: (Scheme, PathBufDyn)) -> Result<Self, Self::Error> {
+	fn try_from(value: (Spec, PathBufDyn)) -> Result<Self, Self::Error> {
 		Ok(UrlCow::try_from(value)?.into_owned())
 	}
 }
@@ -137,7 +139,8 @@ impl UrlBuf {
 		match self {
 			Self::Regular(loc) => loc.into_inner().into(),
 			Self::Search { loc, .. } => loc.into_inner().into(),
-			Self::Archive { loc, .. } => loc.into_inner().into(),
+			Self::Mount { loc, .. } => loc.into_inner().into(),
+			Self::Scope { loc, .. } => loc.into_inner().into(),
 			Self::Sftp { loc, .. } => loc.into_inner().into(),
 		}
 	}
@@ -152,7 +155,8 @@ impl UrlBuf {
 		Ok(match self {
 			Self::Regular(loc) => loc.try_set_name(name.as_os()?)?,
 			Self::Search { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Archive { loc, .. } => loc.try_set_name(name.as_os()?)?,
+			Self::Mount { loc, .. } => loc.try_set_name(name.as_os()?)?,
+			Self::Scope { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
 			Self::Sftp { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
 		})
 	}
@@ -160,16 +164,10 @@ impl UrlBuf {
 	pub fn rebase(&self, base: &Path) -> Self {
 		match self {
 			Self::Regular(loc) => Self::Regular(loc.rebase(base)),
-			Self::Search { loc, domain } => {
-				Self::Search { loc: loc.rebase(base), domain: domain.clone() }
-			}
-			Self::Archive { loc, domain } => {
-				Self::Archive { loc: loc.rebase(base), domain: domain.clone() }
-			}
-			Self::Sftp { loc, domain } => {
-				todo!();
-				// Self::Sftp { loc: loc.rebase(base), domain: domain.clone() }
-			}
+			Self::Search { loc, auth } => Self::Search { loc: loc.rebase(base), auth: auth.clone() },
+			Self::Mount { loc, auth } => Self::Mount { loc: loc.rebase(base), auth: auth.clone() },
+			Self::Scope { .. } => todo!(),
+			Self::Sftp { .. } => todo!(),
 		}
 	}
 }
@@ -184,10 +182,10 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn into_search(self, domain: impl AsRef<str>) -> Result<Self, PathDynError> {
+	pub fn into_search(self, query: impl AsRef<str>) -> Result<Self, PathDynError> {
 		Ok(Self::Search {
-			loc:    LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
-			domain: Pool::<str>::intern(domain),
+			loc:  LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
+			auth: Auth::search(query.as_ref()),
 		})
 	}
 }
@@ -237,14 +235,14 @@ impl<'de> Deserialize<'de> for UrlBuf {
 				#[derive(Deserialize)]
 				struct Shadow {
 					#[serde(flatten)]
-					scheme: Scheme,
-					path:   Vec<u8>,
+					spec: Spec,
+					path: Vec<u8>,
 				}
 
-				let Shadow { scheme, path } = Deserialize::deserialize(deserializer)?;
-				let path = PathBufDyn::with(scheme.kind(), path).map_err(de::Error::custom)?;
+				let Shadow { spec, path } = Deserialize::deserialize(deserializer)?;
+				let path = PathBufDyn::with(spec.kind, path).map_err(de::Error::custom)?;
 
-				UrlBuf::try_from((scheme, path)).map_err(de::Error::custom)
+				UrlBuf::try_from((spec, path)).map_err(de::Error::custom)
 			}
 		}
 
@@ -281,13 +279,13 @@ mod tests {
 			// Search
 			("search://kw//a", "b/c", "search://kw:2:2//a/b/c"),
 			("search://kw:2:2//a/b/c", "d/e", "search://kw:4:4//a/b/c/d/e"),
-			// Archive
-			("archive:////a/b.zip", "c/d", "archive://:2:1//a/b.zip/c/d"),
-			("archive://:2:1//a/b.zip/c/d", "e/f", "archive://:4:1//a/b.zip/c/d/e/f"),
-			("archive://:2:2//a/b.zip/c/d", "e/f", "archive://:4:1//a/b.zip/c/d/e/f"),
+			// Mount
+			("test-mount://7z//a/b.zip", "c/d", "test-mount://7z:2:1//a/b.zip/c/d"),
+			("test-mount://7z:2:1//a/b.zip/c/d", "e/f", "test-mount://7z:4:1//a/b.zip/c/d/e/f"),
+			("test-mount://7z:2:2//a/b.zip/c/d", "e/f", "test-mount://7z:4:1//a/b.zip/c/d/e/f"),
 			// SFTP
-			("sftp://remote//a", "b/c", "sftp://remote//a/b/c"),
-			("sftp://remote:1:1//a/b/c", "d/e", "sftp://remote//a/b/c/d/e"),
+			("sftp://vps//a", "b/c", "sftp://vps//a/b/c"),
+			("sftp://vps:1:1//a/b/c", "d/e", "sftp://vps//a/b/c/d/e"),
 			// Relative
 			("search://kw", "b/c", "search://kw:2:2/b/c"),
 			("search://kw/", "b/c", "search://kw:2:2/b/c"),
@@ -318,17 +316,17 @@ mod tests {
 			("search://kw:2:2//a/b/c", Some("search://kw:1:1//a/b")),
 			("search://kw:1:1//a/b", Some("search://kw//a")),
 			("search://kw//a", Some("/")),
-			// Archive
-			("archive://:2:1//a/b.zip/c/d", Some("archive://:1:1//a/b.zip/c")),
-			("archive://:1:1//a/b.zip/c", Some("archive:////a/b.zip")),
-			("archive:////a/b.zip", Some("/a")),
+			// Mount
+			("test-mount://7z:2:1//a/b.zip/c/d", Some("test-mount://7z:1:1//a/b.zip/c")),
+			("test-mount://7z:1:1//a/b.zip/c", Some("test-mount://7z//a/b.zip")),
+			("test-mount://7z//a/b.zip", Some("/a")),
 			// SFTP
-			("sftp://remote:3:1//a/b", Some("sftp://remote//a")),
-			("sftp://remote:2:1//a", Some("sftp://remote//")),
-			("sftp://remote:1:1//a", Some("sftp://remote//")),
-			("sftp://remote//a", Some("sftp://remote//")),
-			("sftp://remote:1//", None),
-			("sftp://remote//", None),
+			("sftp://vps:3:1//a/b", Some("sftp://vps//a")),
+			("sftp://vps:2:1//a", Some("sftp://vps//")),
+			("sftp://vps:1:1//a", Some("sftp://vps//")),
+			("sftp://vps//a", Some("sftp://vps//")),
+			("sftp://vps:1//", None),
+			("sftp://vps//", None),
 			// Relative
 			("search://kw:2:2/a/b", Some("search://kw:1:1/a")),
 			("search://kw:1:1/a", None),

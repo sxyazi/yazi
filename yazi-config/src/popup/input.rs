@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use yazi_binding::position::{Offset, Origin, Position};
 use yazi_codegen::{DeserializeOver, DeserializeOver2};
-use yazi_shared::{scheme::Encode as EncodeScheme, url::Url};
+use yazi_shared::{spec::Encode as EncodeSpec, url::Url};
 use yazi_widgets::input::InputOpt;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver2)]
@@ -49,7 +49,7 @@ impl Input {
 		InputOpt {
 			name: "cd".to_owned(),
 			title: self.cd_title.clone(),
-			value: if cwd.kind().is_local() { String::new() } else { EncodeScheme(cwd).to_string() },
+			value: if cwd.kind().is_local() { String::new() } else { EncodeSpec(cwd).to_string() },
 			history: "shared".to_owned(),
 			position: Position::new(self.cd_origin, self.cd_offset),
 			completion: true,

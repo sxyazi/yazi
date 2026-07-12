@@ -4,7 +4,7 @@ use yazi_macro::succ;
 use yazi_parser::VoidForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::UrlLike};
-use yazi_vfs::provider;
+use yazi_vfs::engine;
 
 use crate::{Actor, Ctx};
 
@@ -24,7 +24,7 @@ impl Actor for Displace {
 		let from = cx.cwd().to_owned();
 		tokio::spawn(async move {
 			MgrProxy::displace_do(tab, DisplaceOpt {
-				to: provider::canonicalize(&from).await.map_err(Into::into),
+				to: engine::canonicalize(&from).await.map_err(Into::into),
 				from,
 			});
 		});

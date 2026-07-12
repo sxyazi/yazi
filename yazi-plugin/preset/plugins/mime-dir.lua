@@ -1,7 +1,7 @@
 local function fetch(_, job)
 	local updates = {}
 	for _, file in ipairs(job.files) do
-		if file.url.scheme.is_virtual then
+		if file.url.spec.is_virtual then
 			updates[file.url] = "folder/remote"
 		else
 			updates[file.url] = "folder/local"

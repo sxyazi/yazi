@@ -11,7 +11,7 @@ use yazi_macro::{act, err, input, render, succ};
 use yazi_parser::mgr::CdForm;
 use yazi_proxy::{CmpProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data, url::{AsUrl, UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, provider};
+use yazi_vfs::{VfsFile, engine};
 use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
@@ -73,7 +73,7 @@ impl Cd {
 				match result {
 					InputEvent::Submit(s) => {
 						let Ok(url) = UrlBuf::try_from(s).map(expand_url) else { return };
-						let Ok(url) = provider::absolute(&url).await else { return };
+						let Ok(url) = engine::absolute(&url).await else { return };
 						let url = clean_url(url);
 
 						let Ok(file) = File::new(&url).await else { return };

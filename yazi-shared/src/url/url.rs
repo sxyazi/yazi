@@ -1,18 +1,19 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}, sync::Arc};
 
 use anyhow::Result;
 use hashbrown::Equivalent;
 use serde::Serialize;
 
 use super::Encode as EncodeUrl;
-use crate::{loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, pool::{InternStr, Pool}, scheme::{Encode as EncodeScheme, SchemeCow, SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
+use crate::{auth::{Auth, AuthKind}, loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, spec::{Encode as EncodeSpec, ParsedSpec, Spec}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Url<'a> {
 	Regular(Loc<'a>),
-	Search { loc: Loc<'a>, domain: &'a str },
-	Archive { loc: Loc<'a>, domain: &'a str },
-	Sftp { loc: Loc<'a, &'a typed_path::UnixPath>, domain: &'a str },
+	Search { loc: Loc<'a>, auth: &'a Arc<Auth> },
+	Mount { loc: Loc<'a>, auth: &'a Arc<Auth> },
+	Scope { loc: Loc<'a, &'a typed_path::UnixPath>, auth: &'a Arc<Auth> },
+	Sftp { loc: Loc<'a, &'a typed_path::UnixPath>, auth: &'a Arc<Auth> },
 }
 
 // --- Eq
@@ -31,7 +32,7 @@ impl Debug for Url<'_> {
 		if self.is_regular() {
 			write!(f, "{}", self.loc().display())
 		} else {
-			write!(f, "{}{}", EncodeScheme(*self), self.loc().display())
+			write!(f, "{}{}", EncodeSpec(*self), self.loc().display())
 		}
 	}
 }
@@ -39,9 +40,9 @@ impl Debug for Url<'_> {
 impl Serialize for Url<'_> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		let (kind, loc) = (self.kind(), self.loc());
-		match (kind == SchemeKind::Regular, loc.to_str()) {
+		match (kind == AuthKind::Regular, loc.to_str()) {
 			(true, Ok(s)) => serializer.serialize_str(s),
-			(false, Ok(s)) => serializer.serialize_str(&format!("{}{s}", EncodeScheme(*self))),
+			(false, Ok(s)) => serializer.serialize_str(&format!("{}{s}", EncodeSpec(*self))),
 			(_, Err(_)) => serializer.collect_str(&EncodeUrl(*self)),
 		}
 	}
@@ -54,6 +55,17 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
+	pub fn auth(self) -> &'a Auth {
+		match self {
+			Self::Regular(_) => &Auth::DEFAULT,
+			Self::Search { auth, .. }
+			| Self::Mount { auth, .. }
+			| Self::Scope { auth, .. }
+			| Self::Sftp { auth, .. } => auth,
+		}
+	}
+
+	#[inline]
 	pub fn as_regular(self) -> Result<Self, PathDynError> {
 		Ok(Self::Regular(Loc::bare(self.loc().as_os()?)))
 	}
@@ -61,9 +73,10 @@ impl<'a> Url<'a> {
 	pub fn base(self) -> Self {
 		match self {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
-			Self::Search { loc, domain } => Self::Search { loc: Loc::zeroed(loc.base()), domain },
-			Self::Archive { loc, domain } => Self::Archive { loc: Loc::zeroed(loc.base()), domain },
-			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.base()), domain },
+			Self::Search { loc, auth } => Self::Search { loc: Loc::zeroed(loc.base()), auth },
+			Self::Mount { loc, auth } => Self::Mount { loc: Loc::zeroed(loc.base()), auth },
+			Self::Scope { loc, auth } => Self::Scope { loc: Loc::bare(loc.base()), auth },
+			Self::Sftp { loc, auth } => Self::Sftp { loc: Loc::bare(loc.base()), auth },
 		}
 	}
 
@@ -73,7 +86,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn covariant(self, other: impl AsUrl) -> bool {
 		let other = other.as_url();
-		self.loc() == other.loc() && self.scheme().covariant(other.scheme())
+		self.loc() == other.loc() && self.auth().covariant(other.auth())
 	}
 
 	#[inline]
@@ -81,7 +94,8 @@ impl<'a> Url<'a> {
 		Some(match self {
 			Self::Regular(loc) => loc.extension()?.as_strand(),
 			Self::Search { loc, .. } => loc.extension()?.as_strand(),
-			Self::Archive { loc, .. } => loc.extension()?.as_strand(),
+			Self::Mount { loc, .. } => loc.extension()?.as_strand(),
+			Self::Scope { loc, .. } => loc.extension()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
 		})
 	}
@@ -91,7 +105,8 @@ impl<'a> Url<'a> {
 		match self {
 			Self::Regular(loc) => loc.has_base(),
 			Self::Search { loc, .. } => loc.has_base(),
-			Self::Archive { loc, .. } => loc.has_base(),
+			Self::Mount { loc, .. } => loc.has_base(),
+			Self::Scope { loc, .. } => loc.has_base(),
 			Self::Sftp { loc, .. } => loc.has_base(),
 		}
 	}
@@ -104,7 +119,8 @@ impl<'a> Url<'a> {
 		match self {
 			Self::Regular(loc) => loc.has_trail(),
 			Self::Search { loc, .. } => loc.has_trail(),
-			Self::Archive { loc, .. } => loc.has_trail(),
+			Self::Mount { loc, .. } => loc.has_trail(),
+			Self::Scope { loc, .. } => loc.has_trail(),
 			Self::Sftp { loc, .. } => loc.has_trail(),
 		}
 	}
@@ -113,39 +129,21 @@ impl<'a> Url<'a> {
 	pub fn is_absolute(self) -> bool { self.loc().is_absolute() }
 
 	#[inline]
-	pub fn is_archive(self) -> bool { matches!(self, Self::Archive { .. }) }
-
-	#[inline]
-	pub fn is_internal(self) -> bool {
-		match self {
-			Self::Regular(_) | Self::Sftp { .. } => true,
-			Self::Search { .. } => !self.uri().is_empty(),
-			Self::Archive { .. } => false,
-		}
-	}
-
-	#[inline]
 	pub fn is_regular(self) -> bool { matches!(self, Self::Regular(_)) }
 
 	#[inline]
 	pub fn is_search(self) -> bool { matches!(self, Self::Search { .. }) }
 
 	#[inline]
-	pub fn kind(self) -> SchemeKind {
-		match self {
-			Self::Regular(_) => SchemeKind::Regular,
-			Self::Search { .. } => SchemeKind::Search,
-			Self::Archive { .. } => SchemeKind::Archive,
-			Self::Sftp { .. } => SchemeKind::Sftp,
-		}
-	}
+	pub fn kind(self) -> AuthKind { self.auth().kind }
 
 	#[inline]
 	pub fn loc(self) -> PathDyn<'a> {
 		match self {
 			Self::Regular(loc) => loc.as_path(),
 			Self::Search { loc, .. } => loc.as_path(),
-			Self::Archive { loc, .. } => loc.as_path(),
+			Self::Mount { loc, .. } => loc.as_path(),
+			Self::Scope { loc, .. } => loc.as_path(),
 			Self::Sftp { loc, .. } => loc.as_path(),
 		}
 	}
@@ -155,7 +153,8 @@ impl<'a> Url<'a> {
 		Some(match self {
 			Self::Regular(loc) => loc.file_name()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
-			Self::Archive { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Mount { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Scope { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
 		})
 	}
@@ -175,21 +174,24 @@ impl<'a> Url<'a> {
 
 			// Search
 			Self::Search { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
-			Self::Search { loc, domain } => {
-				Self::Search { loc: Loc::new(loc.parent()?, loc.base(), loc.base()), domain }
+			Self::Search { loc, auth } => {
+				Self::Search { loc: Loc::new(loc.parent()?, loc.base(), loc.base()), auth }
 			}
 
-			// Archive
-			Self::Archive { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
-			Self::Archive { loc, domain } if uri.components().nth(1).is_none() => {
-				Self::Archive { loc: Loc::zeroed(loc.parent()?), domain }
+			// Mount
+			Self::Mount { loc, .. } if uri.is_empty() => Self::regular(loc.parent()?),
+			Self::Mount { loc, auth } if uri.components().nth(1).is_none() => {
+				Self::Mount { loc: Loc::zeroed(loc.parent()?), auth }
 			}
-			Self::Archive { loc, domain } => {
-				Self::Archive { loc: Loc::floated(loc.parent()?, loc.base()), domain }
+			Self::Mount { loc, auth } => {
+				Self::Mount { loc: Loc::floated(loc.parent()?, loc.base()), auth }
 			}
+
+			// Scope
+			Self::Scope { loc, auth } => Self::Scope { loc: Loc::bare(loc.parent()?), auth },
 
 			// SFTP
-			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.parent()?), domain },
+			Self::Sftp { loc, auth } => Self::Sftp { loc: Loc::bare(loc.parent()?), auth },
 		})
 	}
 
@@ -198,15 +200,17 @@ impl<'a> Url<'a> {
 		Self::Regular(Loc::bare(path.as_ref()))
 	}
 
-	#[inline]
-	pub fn scheme(self) -> SchemeRef<'a> {
-		let (uri, urn) = SchemeCow::retrieve_ports(self);
-		match self {
-			Self::Regular(_) => SchemeRef::Regular { uri, urn },
-			Self::Search { domain, .. } => SchemeRef::Search { domain, uri, urn },
-			Self::Archive { domain, .. } => SchemeRef::Archive { domain, uri, urn },
-			Self::Sftp { domain, .. } => SchemeRef::Sftp { domain, uri, urn },
-		}
+	pub fn spec(self) -> Spec {
+		let auth = match self {
+			Self::Regular(_) => Auth::default_arc(),
+			Self::Search { auth, .. }
+			| Self::Mount { auth, .. }
+			| Self::Scope { auth, .. }
+			| Self::Sftp { auth, .. } => auth.clone(),
+		};
+
+		let (uri, urn) = Spec::retrieve_ports(self);
+		Spec { auth, uri, urn }
 	}
 
 	#[inline]
@@ -214,7 +218,8 @@ impl<'a> Url<'a> {
 		Some(match self {
 			Self::Regular(loc) => loc.file_stem()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
-			Self::Archive { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Mount { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Scope { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
 		})
 	}
@@ -222,10 +227,10 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }
 
-	pub fn to_search(self, domain: impl AsRef<str>) -> Result<UrlBuf, PathDynError> {
+	pub fn to_search(self, query: impl AsRef<str>) -> Result<UrlBuf, PathDynError> {
 		Ok(UrlBuf::Search {
-			loc:    LocBuf::<PathBuf>::zeroed(self.loc().to_os_owned()?),
-			domain: Pool::<str>::intern(domain),
+			loc:  LocBuf::<PathBuf>::zeroed(self.loc().to_os_owned()?),
+			auth: Auth::search(query.as_ref()),
 		})
 	}
 
@@ -234,31 +239,33 @@ impl<'a> Url<'a> {
 		match self {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.trail())),
 
-			Self::Search { loc, domain } if uri.is_empty() => {
-				Self::Search { loc: Loc::zeroed(loc.trail()), domain }
+			Self::Search { loc, auth } if uri.is_empty() => {
+				Self::Search { loc: Loc::zeroed(loc.trail()), auth }
 			}
-			Self::Search { loc, domain } => {
-				Self::Search { loc: Loc::new(loc.trail(), loc.base(), loc.base()), domain }
-			}
-
-			Self::Archive { loc, domain } if uri.is_empty() => {
-				Self::Archive { loc: Loc::zeroed(loc.trail()), domain }
-			}
-			Self::Archive { loc, domain } => {
-				Self::Archive { loc: Loc::new(loc.trail(), loc.base(), loc.base()), domain }
+			Self::Search { loc, auth } => {
+				Self::Search { loc: Loc::new(loc.trail(), loc.base(), loc.base()), auth }
 			}
 
-			Self::Sftp { loc, domain } => Self::Sftp { loc: Loc::bare(loc.trail()), domain },
+			Self::Mount { loc, auth } if uri.is_empty() => {
+				Self::Mount { loc: Loc::zeroed(loc.trail()), auth }
+			}
+			Self::Mount { loc, auth } => {
+				Self::Mount { loc: Loc::new(loc.trail(), loc.base(), loc.base()), auth }
+			}
+
+			Self::Scope { loc, auth } => Self::Scope { loc: Loc::bare(loc.trail()), auth },
+
+			Self::Sftp { loc, auth } => Self::Sftp { loc: Loc::bare(loc.trail()), auth },
 		}
 	}
 
 	pub fn triple(self) -> (PathDyn<'a>, PathDyn<'a>, PathDyn<'a>) {
 		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } | Self::Archive { loc, .. } => {
+			Self::Regular(loc) | Self::Search { loc, .. } | Self::Mount { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
 				(base.as_path(), rest.as_path(), urn.as_path())
 			}
-			Self::Sftp { loc, .. } => {
+			Self::Scope { loc, .. } | Self::Sftp { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
 				(base.as_path(), rest.as_path(), urn.as_path())
 			}
@@ -268,7 +275,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn try_ends_with(self, child: impl AsUrl) -> Result<bool, EndsWithError> {
 		let child = child.as_url();
-		Ok(self.loc().try_ends_with(child.loc())? && self.scheme().covariant(child.scheme()))
+		Ok(self.loc().try_ends_with(child.loc())? && self.auth().covariant(child.auth()))
 	}
 
 	pub fn try_join(self, path: impl AsStrand) -> Result<UrlBuf, JoinError> {
@@ -277,26 +284,28 @@ impl<'a> Url<'a> {
 		Ok(match self {
 			Self::Regular(_) => UrlBuf::Regular(joined.into_os()?.into()),
 
-			Self::Search { loc, domain } if joined.try_starts_with(loc.base())? => UrlBuf::Search {
-				loc:    LocBuf::<PathBuf>::new(joined.try_into()?, loc.base(), loc.base()),
-				domain: domain.intern(),
+			Self::Search { loc, auth } if joined.try_starts_with(loc.base())? => UrlBuf::Search {
+				loc:  LocBuf::<PathBuf>::new(joined.try_into()?, loc.base(), loc.base()),
+				auth: auth.clone(),
 			},
-			Self::Search { domain, .. } => UrlBuf::Search {
-				loc:    LocBuf::<PathBuf>::zeroed(joined.into_os()?),
-				domain: domain.intern(),
-			},
+			Self::Search { auth, .. } => {
+				UrlBuf::Search { loc: LocBuf::<PathBuf>::zeroed(joined.into_os()?), auth: auth.clone() }
+			}
 
-			Self::Archive { loc, domain } if joined.try_starts_with(loc.base())? => UrlBuf::Archive {
-				loc:    LocBuf::<PathBuf>::floated(joined.try_into()?, loc.base()),
-				domain: domain.intern(),
+			Self::Mount { loc, auth } if joined.try_starts_with(loc.base())? => UrlBuf::Mount {
+				loc:  LocBuf::<PathBuf>::floated(joined.try_into()?, loc.base()),
+				auth: auth.clone(),
 			},
-			Self::Archive { domain, .. } => UrlBuf::Archive {
-				loc:    LocBuf::<PathBuf>::zeroed(joined.into_os()?),
-				domain: domain.intern(),
-			},
+			Self::Mount { auth, .. } => {
+				UrlBuf::Mount { loc: LocBuf::<PathBuf>::zeroed(joined.into_os()?), auth: auth.clone() }
+			}
 
-			Self::Sftp { domain, .. } => {
-				UrlBuf::Sftp { loc: joined.into_unix()?.into(), domain: domain.intern() }
+			Self::Scope { auth, .. } => {
+				UrlBuf::Scope { loc: joined.into_unix()?.into(), auth: auth.clone() }
+			}
+
+			Self::Sftp { auth, .. } => {
+				UrlBuf::Sftp { loc: joined.into_unix()?.into(), auth: auth.clone() }
 			}
 		})
 	}
@@ -309,7 +318,7 @@ impl<'a> Url<'a> {
 		let b = rep.encoded_bytes();
 		if take == 0 {
 			return UrlCow::try_from(b);
-		} else if SchemeKind::parse(b)?.is_some() {
+		} else if ParsedSpec::parse(b)?.has_scheme() {
 			return UrlCow::try_from(b);
 		}
 
@@ -320,30 +329,38 @@ impl<'a> Url<'a> {
 		let url = match self {
 			Self::Regular(_) => UrlBuf::from(path.into_os()?),
 
-			Self::Search { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Search {
-				loc:    LocBuf::<PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
-				domain: domain.intern(),
+			Self::Search { loc, auth } if path.try_starts_with(loc.trail())? => UrlBuf::Search {
+				loc:  LocBuf::<PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
+				auth: auth.clone(),
 			},
-			Self::Archive { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Archive {
-				loc:    LocBuf::<std::path::PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
-				domain: domain.intern(),
+			Self::Mount { loc, auth } if path.try_starts_with(loc.trail())? => UrlBuf::Mount {
+				loc:  LocBuf::<std::path::PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
+				auth: auth.clone(),
 			},
-			Self::Sftp { loc, domain } if path.try_starts_with(loc.trail())? => UrlBuf::Sftp {
-				loc:    LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
-				domain: domain.intern(),
+			Self::Scope { loc, auth } if path.try_starts_with(loc.trail())? => UrlBuf::Scope {
+				loc:  LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
+				auth: auth.clone(),
+			},
+			Self::Sftp { loc, auth } if path.try_starts_with(loc.trail())? => UrlBuf::Sftp {
+				loc:  LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
+				auth: auth.clone(),
 			},
 
-			Self::Search { domain, .. } => UrlBuf::Search {
-				loc:    LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
-				domain: domain.intern(),
+			Self::Search { auth, .. } => UrlBuf::Search {
+				loc:  LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
+				auth: auth.clone(),
 			},
-			Self::Archive { domain, .. } => UrlBuf::Archive {
-				loc:    LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
-				domain: domain.intern(),
+			Self::Mount { auth, .. } => UrlBuf::Mount {
+				loc:  LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
+				auth: auth.clone(),
 			},
-			Self::Sftp { domain, .. } => UrlBuf::Sftp {
-				loc:    LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
-				domain: domain.intern(),
+			Self::Scope { auth, .. } => UrlBuf::Scope {
+				loc:  LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
+				auth: auth.clone(),
+			},
+			Self::Sftp { auth, .. } => UrlBuf::Sftp {
+				loc:  LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
+				auth: auth.clone(),
 			},
 		};
 
@@ -353,7 +370,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn try_starts_with(self, base: impl AsUrl) -> Result<bool, StartsWithError> {
 		let base = base.as_url();
-		Ok(self.loc().try_starts_with(base.loc())? && self.scheme().covariant(base.scheme()))
+		Ok(self.loc().try_starts_with(base.loc())? && self.auth().covariant(base.auth()))
 	}
 
 	pub fn try_strip_prefix(self, base: impl AsUrl) -> Result<PathDyn<'a>, StripPrefixError> {
@@ -362,43 +379,19 @@ impl<'a> Url<'a> {
 
 		let base = base.as_url();
 		let prefix = self.loc().try_strip_prefix(base.loc())?;
+		if self.auth().covariant(base.auth()) {
+			return Ok(prefix);
+		}
 
 		match (self, base) {
-			// Same scheme
-			(U::Regular(_), U::Regular(_)) => Ok(prefix),
-			(U::Search { .. }, U::Search { .. }) => Ok(prefix),
-			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
-				(a == b).then_some(prefix).ok_or(Exotic)
-			}
-			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
-				(a == b).then_some(prefix).ok_or(Exotic)
-			}
-
-			// Both are local files
-			(U::Regular(_), U::Search { .. }) => Ok(prefix),
-			(U::Search { .. }, U::Regular(_)) => Ok(prefix),
-
-			// Only the entry of archives is a local file
-			(U::Regular(_), U::Archive { .. }) => {
+			// A mount portal is the local source file until it gains an inner URI.
+			(U::Regular(_) | U::Search { .. }, U::Mount { .. }) => {
 				base.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
-			(U::Search { .. }, U::Archive { .. }) => {
-				base.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
-			}
-			(U::Archive { .. }, U::Regular(_)) => {
+			(U::Mount { .. }, U::Regular(_) | U::Search { .. }) => {
 				self.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
 			}
-			(U::Archive { .. }, U::Search { .. }) => {
-				self.uri().is_empty().then_some(prefix).ok_or(NotPrefix)
-			}
-
-			// Independent virtual file space
-			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
-			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
-			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+			_ => Err(Exotic),
 		}
 	}
 
@@ -408,43 +401,19 @@ impl<'a> Url<'a> {
 
 		let other = other.as_url();
 		let suffix = self.loc().try_strip_suffix(other.loc())?;
+		if self.auth().covariant(other.auth()) {
+			return Ok(suffix);
+		}
 
 		match (self, other) {
-			// Same scheme
-			(U::Regular(_), U::Regular(_)) => Ok(suffix),
-			(U::Search { .. }, U::Search { .. }) => Ok(suffix),
-			(U::Archive { domain: a, .. }, U::Archive { domain: b, .. }) => {
-				(a == b).then_some(suffix).ok_or(Exotic)
-			}
-			(U::Sftp { domain: a, .. }, U::Sftp { domain: b, .. }) => {
-				(a == b).then_some(suffix).ok_or(Exotic)
-			}
-
-			// Both are local files
-			(U::Regular(_), U::Search { .. }) => Ok(suffix),
-			(U::Search { .. }, U::Regular(_)) => Ok(suffix),
-
-			// Only the entry of archives is a local file
-			(U::Regular(_), U::Archive { .. }) => {
+			// A mount portal is the local source file until it gains an inner URI.
+			(U::Regular(_) | U::Search { .. }, U::Mount { .. }) => {
 				other.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
-			(U::Search { .. }, U::Archive { .. }) => {
-				other.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
-			}
-			(U::Archive { .. }, U::Regular(_)) => {
+			(U::Mount { .. }, U::Regular(_) | U::Search { .. }) => {
 				self.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
 			}
-			(U::Archive { .. }, U::Search { .. }) => {
-				self.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
-			}
-
-			// Independent virtual file space
-			(U::Regular(_), U::Sftp { .. }) => Err(Exotic),
-			(U::Search { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Archive { .. }, U::Sftp { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Regular(_)) => Err(Exotic),
-			(U::Sftp { .. }, U::Search { .. }) => Err(Exotic),
-			(U::Sftp { .. }, U::Archive { .. }) => Err(Exotic),
+			_ => Err(Exotic),
 		}
 	}
 
@@ -453,7 +422,8 @@ impl<'a> Url<'a> {
 		match self {
 			Self::Regular(loc) => loc.uri().as_path(),
 			Self::Search { loc, .. } => loc.uri().as_path(),
-			Self::Archive { loc, .. } => loc.uri().as_path(),
+			Self::Mount { loc, .. } => loc.uri().as_path(),
+			Self::Scope { loc, .. } => loc.uri().as_path(),
 			Self::Sftp { loc, .. } => loc.uri().as_path(),
 		}
 	}
@@ -463,7 +433,8 @@ impl<'a> Url<'a> {
 		match self {
 			Self::Regular(loc) => loc.urn().as_path(),
 			Self::Search { loc, .. } => loc.urn().as_path(),
-			Self::Archive { loc, .. } => loc.urn().as_path(),
+			Self::Mount { loc, .. } => loc.urn().as_path(),
+			Self::Scope { loc, .. } => loc.urn().as_path(),
 			Self::Sftp { loc, .. } => loc.urn().as_path(),
 		}
 	}

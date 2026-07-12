@@ -40,9 +40,10 @@ impl AsUrl for UrlBuf {
 	fn as_url(&self) -> Url<'_> {
 		match self {
 			Self::Regular(loc) => Url::Regular(loc.as_loc()),
-			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
-			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
-			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+			Self::Search { loc, auth } => Url::Search { loc: loc.as_loc(), auth },
+			Self::Mount { loc, auth } => Url::Mount { loc: loc.as_loc(), auth },
+			Self::Scope { loc, auth } => Url::Scope { loc: loc.as_loc(), auth },
+			Self::Sftp { loc, auth } => Url::Sftp { loc: loc.as_loc(), auth },
 		}
 	}
 }
@@ -61,9 +62,10 @@ impl AsUrl for UrlCow<'_> {
 	fn as_url(&self) -> Url<'_> {
 		match self {
 			Self::Regular(loc) => Url::Regular(loc.as_loc()),
-			Self::Search { loc, domain } => Url::Search { loc: loc.as_loc(), domain },
-			Self::Archive { loc, domain } => Url::Archive { loc: loc.as_loc(), domain },
-			Self::Sftp { loc, domain } => Url::Sftp { loc: loc.as_loc(), domain },
+			Self::Search { loc, auth } => Url::Search { loc: loc.as_loc(), auth },
+			Self::Mount { loc, auth } => Url::Mount { loc: loc.as_loc(), auth },
+			Self::Scope { loc, auth } => Url::Scope { loc: loc.as_loc(), auth },
+			Self::Sftp { loc, auth } => Url::Sftp { loc: loc.as_loc(), auth },
 		}
 	}
 }

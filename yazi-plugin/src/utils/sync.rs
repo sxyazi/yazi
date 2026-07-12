@@ -95,7 +95,7 @@ impl Utils {
 				}
 				(b"mpsc", Some(buffer)) => {
 					let (tx, rx) = tokio::sync::mpsc::channel::<Value>(buffer);
-					(MpscTx(tx), MpscRx(rx)).into_lua_multi(lua)
+					(MpscTx::new(tx), MpscRx(rx)).into_lua_multi(lua)
 				}
 				(b"mpsc", None) => {
 					let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Value>();

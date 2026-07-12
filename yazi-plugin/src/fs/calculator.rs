@@ -2,8 +2,8 @@ use mlua::{IntoLuaMulti, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_binding::Error;
 
 pub enum SizeCalculator {
-	Local(yazi_fs::provider::local::SizeCalculator),
-	Remote(yazi_vfs::provider::SizeCalculator),
+	Local(yazi_fs::engine::local::SizeCalculator),
+	Remote(yazi_vfs::engine::SizeCalculator),
 }
 
 impl UserData for SizeCalculator {

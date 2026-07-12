@@ -16,11 +16,13 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_fs::init();
 
-	yazi_vfs::init();
-
 	yazi_tty::init();
 
 	yazi_config::init()?;
+
+	yazi_vfs::init();
+
+	yazi_runner::init(yazi_plugin::slim_lua);
 
 	yazi_boot::init();
 
@@ -33,8 +35,6 @@ async fn main() -> anyhow::Result<()> {
 	yazi_widgets::init();
 
 	yazi_watcher::init();
-
-	yazi_runner::init(yazi_plugin::slim_lua);
 
 	yazi_plugin::init()?;
 

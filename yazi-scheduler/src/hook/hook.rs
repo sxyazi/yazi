@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use yazi_dds::Pump;
 use yazi_fs::ok_or_not_found;
-use yazi_vfs::provider;
+use yazi_vfs::engine;
 
 use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink, HookInPreload, HookInTrash, HookInUpload}, preload::{Preload, PreloadOut}};
 
@@ -31,7 +31,7 @@ impl Hook {
 			return self.ops.out(task.id, FileOutCut::Clean(Ok(())));
 		}
 
-		let result = ok_or_not_found(provider::remove_dir_clean(&task.from).await);
+		let result = ok_or_not_found(engine::remove_dir_clean(&task.from).await);
 		TasksProxy::update_succeed(task.id, [&task.to, &task.from], true);
 		Pump::push_move(task.from, task.to);
 
@@ -52,7 +52,7 @@ impl Hook {
 			return self.ops.out(task.id, FileOutDelete::Clean(Ok(())));
 		}
 
-		let result = ok_or_not_found(provider::remove_dir_all(&task.target).await);
+		let result = ok_or_not_found(engine::remove_dir_all(&task.target).await);
 		TasksProxy::update_succeed(task.id, [&task.target], false);
 		Pump::push_delete(task.target);
 

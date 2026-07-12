@@ -3,7 +3,7 @@ use serde::Deserialize;
 use yazi_core::mgr::CdSource;
 use yazi_fs::path::{clean_url, expand_url};
 use yazi_shared::{event::ActionCow, url::{Url, UrlBuf}};
-use yazi_vfs::provider;
+use yazi_vfs::engine;
 
 #[derive(Debug, Deserialize)]
 pub struct CdForm {
@@ -27,7 +27,7 @@ impl TryFrom<ActionCow> for CdForm {
 			me.target = expand_url(me.target).into_owned();
 		}
 
-		if let Some(u) = provider::try_absolute(&me.target)
+		if let Some(u) = engine::try_absolute(&me.target)
 			&& u.is_owned()
 		{
 			me.target = u.into_owned();

@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use anyhow::{anyhow, bail};
 use bitflags::bitflags;
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 
 use crate::cha::ChaType;
@@ -157,4 +158,8 @@ impl ChaMode {
 
 	#[inline]
 	pub const fn is_sticky(self) -> bool { self.contains(Self::S_STICKY) }
+}
+
+impl IntoLua for ChaMode {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.bits().into_lua(lua) }
 }

@@ -4,13 +4,24 @@ use yazi_codegen::FromLuaOwned;
 use crate::Error;
 
 #[derive(FromLuaOwned)]
-pub struct MpscTx<T: FromLua + 'static>(pub tokio::sync::mpsc::Sender<T>);
+pub struct MpscTx<T: FromLua + 'static, U: 'static = T> {
+	tx: tokio::sync::mpsc::Sender<U>,
+	f:  fn(T) -> U,
+}
 pub struct MpscRx<T: IntoLua + 'static>(pub tokio::sync::mpsc::Receiver<T>);
 
-impl<T: FromLua> UserData for MpscTx<T> {
+impl<T: FromLua> MpscTx<T> {
+	pub fn new(tx: tokio::sync::mpsc::Sender<T>) -> Self { Self { tx, f: |v| v } }
+}
+
+impl<T: FromLua, U> MpscTx<T, U> {
+	pub fn map(tx: tokio::sync::mpsc::Sender<U>, f: fn(T) -> U) -> Self { Self { tx, f } }
+}
+
+impl<T: FromLua, U: 'static> UserData for MpscTx<T, U> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method("send", |lua, me, value: Value| async move {
-			match me.0.send(T::from_lua(value, &lua)?).await {
+			match me.tx.send((me.f)(T::from_lua(value, &lua)?)).await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::custom(e.to_string())).into_lua_multi(&lua),
 			}

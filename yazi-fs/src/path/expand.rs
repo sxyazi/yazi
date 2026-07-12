@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathKind, PathLike}, pool::InternStr, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathKind, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 use yazi_shim::wtf8::FromWtf8Vec;
 
 #[inline]
@@ -32,17 +32,21 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 		Url::Regular(_) => UrlBuf::Regular(
 			LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
 		),
-		Url::Search { domain, .. } => UrlBuf::Search {
-			loc:    LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
-			domain: domain.intern(),
+		Url::Search { auth, .. } => UrlBuf::Search {
+			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+			auth: auth.clone(),
 		},
-		Url::Archive { domain, .. } => UrlBuf::Archive {
-			loc:    LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
-			domain: domain.intern(),
+		Url::Mount { auth, .. } => UrlBuf::Mount {
+			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+			auth: auth.clone(),
 		},
-		Url::Sftp { domain, .. } => UrlBuf::Sftp {
-			loc:    LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
-			domain: domain.intern(),
+		Url::Scope { auth, .. } => UrlBuf::Scope {
+			loc:  LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+			auth: auth.clone(),
+		},
+		Url::Sftp { auth, .. } => UrlBuf::Sftp {
+			loc:  LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+			auth: auth.clone(),
 		},
 	}
 	.into()
@@ -94,39 +98,48 @@ mod tests {
 
 		let cases = [
 			// Zero extra component expanded
-			("archive:////tmp/test.zip/$FOO/bar", "archive:////tmp/test.zip/foo/bar"),
-			("archive://:1//tmp/test.zip/$FOO/bar", "archive://:1//tmp/test.zip/foo/bar"),
-			("archive://:2//tmp/test.zip/bar/$FOO", "archive://:2//tmp/test.zip/bar/foo"),
-			("archive://:3//tmp/test.zip/$FOO/bar", "archive://:3//tmp/test.zip/foo/bar"),
-			("archive://:3:1//tmp/test.zip/bar/$FOO", "archive://:3:1//tmp/test.zip/bar/foo"),
-			("archive://:3:2//tmp/test.zip/$FOO/bar", "archive://:3:2//tmp/test.zip/foo/bar"),
-			("archive://:3:3//tmp/test.zip/bar/$FOO", "archive://:3:3//tmp/test.zip/bar/foo"),
+			("test-mount://7z//tmp/test.zip/$FOO/bar", "test-mount://7z//tmp/test.zip/foo/bar"),
+			("test-mount://7z:1//tmp/test.zip/$FOO/bar", "test-mount://7z:1//tmp/test.zip/foo/bar"),
+			("test-mount://7z:2//tmp/test.zip/bar/$FOO", "test-mount://7z:2//tmp/test.zip/bar/foo"),
+			("test-mount://7z:3//tmp/test.zip/$FOO/bar", "test-mount://7z:3//tmp/test.zip/foo/bar"),
+			("test-mount://7z:3:1//tmp/test.zip/bar/$FOO", "test-mount://7z:3:1//tmp/test.zip/bar/foo"),
+			("test-mount://7z:3:2//tmp/test.zip/$FOO/bar", "test-mount://7z:3:2//tmp/test.zip/foo/bar"),
+			("test-mount://7z:3:3//tmp/test.zip/bar/$FOO", "test-mount://7z:3:3//tmp/test.zip/bar/foo"),
 			// +1 component
-			("archive:////tmp/test.zip/$BAR_BAZ", "archive:////tmp/test.zip/bar/baz"),
-			("archive://:1//tmp/test.zip/$BAR_BAZ", "archive://:2//tmp/test.zip/bar/baz"),
-			("archive://:2//$BAR_BAZ/tmp/test.zip", "archive://:2//bar/baz/tmp/test.zip"),
-			("archive://:2:1//tmp/test.zip/$BAR_BAZ", "archive://:3:2//tmp/test.zip/bar/baz"),
-			("archive://:2:2//tmp/$BAR_BAZ/test.zip", "archive://:3:3//tmp/bar/baz/test.zip"),
-			("archive://:2:2//$BAR_BAZ/tmp/test.zip", "archive://:2:2//bar/baz/tmp/test.zip"),
+			("test-mount://7z//tmp/test.zip/$BAR_BAZ", "test-mount://7z//tmp/test.zip/bar/baz"),
+			("test-mount://7z:1//tmp/test.zip/$BAR_BAZ", "test-mount://7z:2//tmp/test.zip/bar/baz"),
+			("test-mount://7z:2//$BAR_BAZ/tmp/test.zip", "test-mount://7z:2//bar/baz/tmp/test.zip"),
+			("test-mount://7z:2:1//tmp/test.zip/$BAR_BAZ", "test-mount://7z:3:2//tmp/test.zip/bar/baz"),
+			("test-mount://7z:2:2//tmp/$BAR_BAZ/test.zip", "test-mount://7z:3:3//tmp/bar/baz/test.zip"),
+			("test-mount://7z:2:2//$BAR_BAZ/tmp/test.zip", "test-mount://7z:2:2//bar/baz/tmp/test.zip"),
 			// -1 component
-			("archive:////tmp/test.zip/${BAR/BAZ}", "archive:////tmp/test.zip/bar_baz"),
-			("archive://:1//tmp/test.zip/${BAR/BAZ}", "archive://:1//tmp/test.zip/${BAR/BAZ}"),
-			("archive://:1//tmp/${BAR/BAZ}/test.zip", "archive://:1//tmp/bar_baz/test.zip"),
-			("archive://:2//tmp/test.zip/${BAR/BAZ}", "archive://:1//tmp/test.zip/bar_baz"),
-			("archive://:2//tmp/${BAR/BAZ}/test.zip", "archive://:2//tmp/${BAR/BAZ}/test.zip"),
-			("archive://:2:1//tmp/test.zip/${BAR/BAZ}", "archive://:2:1//tmp/test.zip/${BAR/BAZ}"),
-			("archive://:2:1//tmp/${BAR/BAZ}/test.zip", "archive://:2:1//tmp/${BAR/BAZ}/test.zip"),
-			("archive://:2:1//${BAR/BAZ}/tmp/test.zip", "archive://:2:1//bar_baz/tmp/test.zip"),
-			("archive://:3:2//tmp/test.zip/${BAR/BAZ}", "archive://:2:1//tmp/test.zip/bar_baz"),
-			("archive://:3:2//tmp/${BAR/BAZ}/test.zip", "archive://:3:2//tmp/${BAR/BAZ}/test.zip"),
-			("archive://:3:3//tmp/test.zip/${BAR/BAZ}", "archive://:2:2//tmp/test.zip/bar_baz"),
-			("archive://:3:3//tmp/${BAR/BAZ}/test.zip", "archive://:2:2//tmp/bar_baz/test.zip"),
+			("test-mount://7z//tmp/test.zip/${BAR/BAZ}", "test-mount://7z//tmp/test.zip/bar_baz"),
+			("test-mount://7z:1//tmp/test.zip/${BAR/BAZ}", "test-mount://7z:1//tmp/test.zip/${BAR/BAZ}"),
+			("test-mount://7z:1//tmp/${BAR/BAZ}/test.zip", "test-mount://7z:1//tmp/bar_baz/test.zip"),
+			("test-mount://7z:2//tmp/test.zip/${BAR/BAZ}", "test-mount://7z:1//tmp/test.zip/bar_baz"),
+			("test-mount://7z:2//tmp/${BAR/BAZ}/test.zip", "test-mount://7z:2//tmp/${BAR/BAZ}/test.zip"),
+			(
+				"test-mount://7z:2:1//tmp/test.zip/${BAR/BAZ}",
+				"test-mount://7z:2:1//tmp/test.zip/${BAR/BAZ}",
+			),
+			(
+				"test-mount://7z:2:1//tmp/${BAR/BAZ}/test.zip",
+				"test-mount://7z:2:1//tmp/${BAR/BAZ}/test.zip",
+			),
+			("test-mount://7z:2:1//${BAR/BAZ}/tmp/test.zip", "test-mount://7z:2:1//bar_baz/tmp/test.zip"),
+			("test-mount://7z:3:2//tmp/test.zip/${BAR/BAZ}", "test-mount://7z:2:1//tmp/test.zip/bar_baz"),
+			(
+				"test-mount://7z:3:2//tmp/${BAR/BAZ}/test.zip",
+				"test-mount://7z:3:2//tmp/${BAR/BAZ}/test.zip",
+			),
+			("test-mount://7z:3:3//tmp/test.zip/${BAR/BAZ}", "test-mount://7z:2:2//tmp/test.zip/bar_baz"),
+			("test-mount://7z:3:3//tmp/${BAR/BAZ}/test.zip", "test-mount://7z:2:2//tmp/bar_baz/test.zip"),
 			// Zeros all components
-			("archive:////${EM/PT/Y}", "archive:////"),
-			("archive://:1//${EM/PT/Y}", "archive://:1//${EM/PT/Y}"),
-			("archive://:2//${EM/PT/Y}", "archive://:2//${EM/PT/Y}"),
-			("archive://:3//${EM/PT/Y}", "archive:////"),
-			("archive://:4//${EM/PT/Y}", "archive://:1//"),
+			("test-mount://7z//${EM/PT/Y}", "test-mount://7z//"),
+			("test-mount://7z:1//${EM/PT/Y}", "test-mount://7z:1//${EM/PT/Y}"),
+			("test-mount://7z:2//${EM/PT/Y}", "test-mount://7z:2//${EM/PT/Y}"),
+			("test-mount://7z:3//${EM/PT/Y}", "test-mount://7z//"),
+			("test-mount://7z:4//${EM/PT/Y}", "test-mount://7z:1//"),
 		];
 
 		for (input, expected) in cases {

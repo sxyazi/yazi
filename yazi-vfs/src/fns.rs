@@ -2,21 +2,18 @@ use std::io::{self};
 
 use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 
-use crate::provider;
+use crate::engine;
 
 pub async fn maybe_exists(url: impl AsUrl) -> bool {
-	match provider::symlink_metadata(url).await {
+	match engine::symlink_metadata(url).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
 }
 
 pub async fn unique_file(u: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
-	let result = if is_dir {
-		provider::create_dir(&u).await
-	} else {
-		provider::create_new(&u).await.map(|_| ())
-	};
+	let result =
+		if is_dir { engine::create_dir(&u).await } else { engine::create_new(&u).await.map(|_| ()) };
 
 	match result {
 		Ok(()) => Ok(u),
@@ -55,9 +52,9 @@ async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 
 		url.try_set_name(&name)?;
 		let result = if is_dir {
-			provider::create_dir(&url).await
+			engine::create_dir(&url).await
 		} else {
-			provider::create_new(&url).await.map(|_| ())
+			engine::create_new(&url).await.map(|_| ())
 		};
 
 		match result {

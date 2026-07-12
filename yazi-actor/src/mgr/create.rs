@@ -9,7 +9,7 @@ use yazi_macro::{input, ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, strand::{StrandBuf, StrandLike}, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, provider};
+use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -62,22 +62,22 @@ impl Create {
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		if dir {
-			provider::create_dir_all(&new).await?;
-		} else if let Ok(real) = provider::casefold(&new).await
+			engine::create_dir_all(&new).await?;
+		} else if let Ok(real) = engine::casefold(&new).await
 			&& let Some((parent, urn)) = real.pair()
 		{
-			ok_or_not_found!(provider::remove_file(&new).await);
+			ok_or_not_found!(engine::remove_file(&new).await);
 			FilesOp::Deleting(parent.into(), [urn.into()].into()).emit();
-			provider::create(&new).await?;
+			engine::create(&new).await?;
 		} else if let Some(parent) = new.parent() {
-			provider::create_dir_all(parent).await.ok();
-			ok_or_not_found!(provider::remove_file(&new).await);
-			provider::create(&new).await?;
+			engine::create_dir_all(parent).await.ok();
+			ok_or_not_found!(engine::remove_file(&new).await);
+			engine::create(&new).await?;
 		} else {
 			bail!("Cannot create file at root");
 		}
 
-		if let Ok(real) = provider::casefold(&new).await
+		if let Ok(real) = engine::casefold(&new).await
 			&& let Some((parent, urn)) = real.pair()
 		{
 			let file = File::new(&real).await?;

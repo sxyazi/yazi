@@ -1,5 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
+use mlua::{FromLua, Lua, Value};
 use yazi_shared::url::UrlBuf;
 
 use crate::file::File;
@@ -27,4 +28,10 @@ impl From<Files> for Vec<File> {
 
 impl From<Files> for Vec<UrlBuf> {
 	fn from(value: Files) -> Self { value.0.into_iter().map(|f| f.url).collect() }
+}
+
+impl FromLua for Files {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Vec::<File>::from_lua(value, lua).map(Self)
+	}
 }

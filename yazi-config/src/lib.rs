@@ -1,6 +1,6 @@
-yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which);
+yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme vfs which);
 
-yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority selectable selector yazi);
+yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority selectable selector tests yazi);
 
 use std::io::{Read, Write};
 
@@ -11,6 +11,7 @@ use yazi_tty::{TTY, sequence::SetSgr};
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static THEME: RoCell<theme::Theme> = RoCell::new();
+pub static VFS: RoCell<vfs::Vfs> = RoCell::new();
 pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
 
 pub fn init() -> anyhow::Result<()> {
@@ -24,14 +25,17 @@ pub fn init() -> anyhow::Result<()> {
 fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut yazi = Preset::yazi()?;
 	let mut keymap = Preset::keymap()?;
+	let mut vfs = Preset::vfs()?;
 
 	if merge {
 		yazi = yazi.deserialize_over(&yazi::Yazi::read()?)?;
 		keymap = keymap.deserialize_over(&keymap::Keymap::read()?)?;
+		vfs = vfs.deserialize_over(&vfs::Vfs::read()?)?;
 	}
 
 	YAZI.init(yazi);
 	KEYMAP.init(keymap);
+	VFS.init(vfs);
 	Ok(())
 }
 

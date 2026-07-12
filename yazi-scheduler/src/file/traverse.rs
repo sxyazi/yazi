@@ -1,8 +1,8 @@
 use std::{collections::VecDeque, fmt::Debug};
 
-use yazi_fs::{FsUrl, cha::Cha, path::skip_url, provider::{DirReader, FileHolder}};
+use yazi_fs::{FsUrl, cha::Cha, engine::{DirReader, FileHolder}, path::skip_url};
 use yazi_shared::{strand::StrandLike, url::{AsUrl, Url, UrlBuf, UrlLike}};
-use yazi_vfs::provider::{self};
+use yazi_vfs::engine::{self};
 
 use crate::{ctx, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInUpload}};
 
@@ -180,7 +180,7 @@ where
 	}
 
 	while let Some(src) = dirs.pop_front() {
-		let mut it = err!(provider::read_dir(&src).await, "Cannot read directory {src:?}");
+		let mut it = err!(engine::read_dir(&src).await, "Cannot read directory {src:?}");
 
 		let dest = if let Some(root) = root {
 			let s = skip_url(&src, skip);

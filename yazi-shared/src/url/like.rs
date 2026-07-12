@@ -2,13 +2,15 @@ use std::{borrow::Cow, ffi::OsStr, path::Path};
 
 use anyhow::Result;
 
-use crate::{path::{AsPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, scheme::{SchemeKind, SchemeRef}, strand::{AsStrand, Strand}, url::{AsUrl, Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{auth::{Auth, AuthKind}, path::{AsPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, spec::Spec, strand::{AsStrand, Strand}, url::{AsUrl, Components, Display, Url, UrlBuf, UrlCow}};
 
 pub trait UrlLike
 where
 	Self: AsUrl,
 {
 	fn as_local(&self) -> Option<&Path> { self.as_url().as_local() }
+
+	fn auth(&self) -> &Auth { self.as_url().auth() }
 
 	fn base(&self) -> Url<'_> { self.as_url().base() }
 
@@ -28,15 +30,11 @@ where
 
 	fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
 
-	fn is_archive(&self) -> bool { self.as_url().is_archive() }
-
-	fn is_internal(&self) -> bool { self.as_url().is_internal() }
-
 	fn is_regular(&self) -> bool { self.as_url().is_regular() }
 
 	fn is_search(&self) -> bool { self.as_url().is_search() }
 
-	fn kind(&self) -> SchemeKind { self.as_url().kind() }
+	fn kind(&self) -> AuthKind { self.as_url().kind() }
 
 	fn loc(&self) -> PathDyn<'_> { self.as_url().loc() }
 
@@ -48,7 +46,7 @@ where
 
 	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
-	fn scheme(&self) -> SchemeRef<'_> { self.as_url().scheme() }
+	fn spec(&self) -> Spec { self.as_url().spec() }
 
 	fn stem(&self) -> Option<Strand<'_>> { self.as_url().stem() }
 
