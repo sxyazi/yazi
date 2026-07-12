@@ -138,6 +138,8 @@ mod tests {
 	#[cfg(windows)]
 	#[test]
 	fn test_split() {
+		yazi_shared::init_tests();
+		yazi_config::init_tests();
 		yazi_fs::init();
 		compare("foo", "", "foo");
 
