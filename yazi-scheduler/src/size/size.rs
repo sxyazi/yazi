@@ -4,7 +4,7 @@ use parking_lot::RwLock;
 use tokio::sync::mpsc;
 use yazi_fs::FilesOp;
 use yazi_shared::url::{UrlBuf, UrlLike};
-use yazi_vfs::provider;
+use yazi_vfs::engine;
 
 use super::SizeIn;
 use crate::{TaskOp, TaskOps, size::SizeOut};
@@ -25,7 +25,7 @@ impl Size {
 	}
 
 	pub(crate) async fn size(&self, task: SizeIn) -> Result<(), SizeOut> {
-		let length = provider::calculate(&task.target).await.unwrap_or(0);
+		let length = engine::calculate(&task.target).await.unwrap_or(0);
 		task.throttle.done((task.target, length), |buf| {
 			{
 				let mut loading = self.sizing.write();

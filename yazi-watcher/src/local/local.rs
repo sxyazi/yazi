@@ -5,7 +5,7 @@ use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_fs::{FilesOp, file::File, mounts::PARTITIONS, provider::{self, Provider}};
+use yazi_fs::{FilesOp, engine::{self, Engine}, file::File, mounts::PARTITIONS};
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
@@ -79,7 +79,7 @@ impl Local {
 			return true;
 		}
 
-		match provider::local::Local::regular(path).metadata().await {
+		match engine::local::Local::regular(path).metadata().await {
 			Ok(cha) => PARTITIONS.read().soundless(cha),
 			Err(_) => true,
 		}
@@ -104,7 +104,7 @@ impl Local {
 				};
 
 				if let Some(p) = file.url.as_local()
-					&& !provider::local::match_name_case(p).await
+					&& !engine::local::match_name_case(p).await
 				{
 					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
 					continue;

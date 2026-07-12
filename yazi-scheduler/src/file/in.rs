@@ -206,7 +206,7 @@ impl Drop for FileInCut {
 impl FileInCut {
 	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
 		Self {
-			follow: !from.scheme().covariant(to.scheme()),
+			follow: !from.auth().covariant(to.auth()),
 			id: Id::ZERO,
 			from,
 			to,

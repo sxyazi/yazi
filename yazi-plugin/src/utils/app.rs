@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, Function, Lua, LuaString};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use yazi_vfs::provider::RwFile;
+use yazi_vfs::engine::RwFile;
 
 use super::Utils;
 

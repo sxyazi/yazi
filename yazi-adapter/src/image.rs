@@ -5,7 +5,7 @@ use image::{DynamicImage, ImageDecoder, ImageError, ImageReader, Limits, codecs:
 use ratatui_core::layout::Rect;
 use yazi_config::YAZI;
 use yazi_emulator::Dimension;
-use yazi_fs::provider::{Provider, local::Local};
+use yazi_fs::engine::{Engine, local::Local};
 
 use crate::Icc;
 

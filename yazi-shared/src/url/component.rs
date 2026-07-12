@@ -2,11 +2,11 @@ use std::path::PrefixComponent;
 
 use anyhow::Result;
 
-use crate::{path::{self, PathDynError}, scheme::SchemeRef, strand::Strand};
+use crate::{auth::Auth, path::{self, PathDynError}, strand::Strand};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Component<'a> {
-	Scheme(SchemeRef<'a>),
+	Auth(&'a Auth),
 	Prefix(PrefixComponent<'a>),
 	RootDir,
 	CurDir,
@@ -29,7 +29,7 @@ impl<'a> From<path::Component<'a>> for Component<'a> {
 impl<'a> Component<'a> {
 	pub fn downgrade(self) -> Option<path::Component<'a>> {
 		Some(match self {
-			Self::Scheme(_) => None?,
+			Self::Auth(_) => None?,
 			Self::Prefix(p) => path::Component::Prefix(p),
 			Self::RootDir => path::Component::RootDir,
 			Self::CurDir => path::Component::CurDir,
@@ -44,7 +44,7 @@ impl<'a> Component<'a> {
 // 		let mut buf = PathBuf::new();
 // 		let mut scheme = None;
 // 		iter.into_iter().for_each(|c| match c {
-// 			Component::Scheme(s) => scheme = Some(s),
+// 			Component::Auth(s) => scheme = Some(s),
 // 			Component::Prefix(p) => buf.push(path::Component::Prefix(p)),
 // 			Component::RootDir => buf.push(path::Component::RootDir),
 // 			Component::CurDir => buf.push(path::Component::CurDir),

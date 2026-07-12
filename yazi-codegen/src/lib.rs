@@ -54,7 +54,7 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 		impl #impl_generics yazi_shim::toml::DeserializeOverWith for #ident #ty_generics #where_clause {
 			fn deserialize_over_with<'__de, __D: serde::Deserializer<'__de>>(self, de: __D) -> Result<Self, __D::Error> {
 				use serde::de::{Error, IgnoredAny, MapAccess, Visitor};
-				use yazi_shared::KebabCasedString;
+				use yazi_shared::KebabCasedKey;
 				use yazi_shim::{serde::single_map_entry, toml::{DeserializeOverHook, DeserializeOverSeed, DeserializeOverWith}};
 
 				struct V #impl_generics (#ident #ty_generics) #where_clause;
@@ -67,7 +67,7 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 					}
 
 					fn visit_map<__M: MapAccess<'__de>>(mut self, mut map: __M) -> Result<Self::Value, __M::Error> {
-						while let Some(key) = map.next_key::<KebabCasedString>()? {
+						while let Some(key) = map.next_key::<KebabCasedKey>()? {
 							match key.as_ref() {
 								#(#normal_arms,)*
 								#flatten_arm

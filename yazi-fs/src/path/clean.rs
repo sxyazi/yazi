@@ -8,8 +8,8 @@ pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 		cow.trail().components().count() - 1,
 	);
 
-	let scheme = cow.into_scheme().into_owned().with_ports(uri, urn);
-	(scheme, path).try_into().expect("UrlBuf from cleaned path")
+	let spec = cow.into_spec().with_ports(uri, urn);
+	(spec, path).try_into().expect("UrlBuf from cleaned path")
 }
 
 fn clean_path_impl(path: PathDyn, base: usize, trail: usize) -> (PathBufDyn, usize, usize) {
@@ -76,19 +76,25 @@ mod tests {
 		yazi_shared::init_tests();
 		let cases = [
 			// CurDir
-			("archive://:3//./tmp/test.zip/foo/bar", "archive://:3//tmp/test.zip/foo/bar"),
-			("archive://:3//tmp/./test.zip/foo/bar", "archive://:3//tmp/test.zip/foo/bar"),
-			("archive://:3//tmp/./test.zip/./foo/bar", "archive://:3//tmp/test.zip/foo/bar"),
-			("archive://:3//tmp/./test.zip/./foo/./bar/.", "archive://:3//tmp/test.zip/foo/bar"),
+			("test-mount://7z:3//./tmp/test.zip/foo/bar", "test-mount://7z:3//tmp/test.zip/foo/bar"),
+			("test-mount://7z:3//tmp/./test.zip/foo/bar", "test-mount://7z:3//tmp/test.zip/foo/bar"),
+			("test-mount://7z:3//tmp/./test.zip/./foo/bar", "test-mount://7z:3//tmp/test.zip/foo/bar"),
+			(
+				"test-mount://7z:3//tmp/./test.zip/./foo/./bar/.",
+				"test-mount://7z:3//tmp/test.zip/foo/bar",
+			),
 			// ParentDir
-			("archive://:3:2//../../tmp/test.zip/foo/bar", "archive://:3:2//tmp/test.zip/foo/bar"),
-			("archive://:3:2//tmp/../../test.zip/foo/bar", "archive://:3:2//test.zip/foo/bar"),
-			("archive://:4:2//tmp/test.zip/../../foo/bar", "archive://:2:2//foo/bar"),
-			("archive://:5:2//tmp/test.zip/../../foo/bar", "archive://:2:2//foo/bar"),
-			("archive://:4:4//tmp/test.zip/foo/bar/../../", "archive:////tmp/test.zip"),
-			("archive://:5:4//tmp/test.zip/foo/bar/../../", "archive://:1//tmp/test.zip"),
-			("archive://:4:4//tmp/test.zip/foo/bar/../../../", "archive:////tmp"),
-			("sftp://test//root/.config/yazi/../../Downloads", "sftp://test//root/Downloads"),
+			(
+				"test-mount://7z:3:2//../../tmp/test.zip/foo/bar",
+				"test-mount://7z:3:2//tmp/test.zip/foo/bar",
+			),
+			("test-mount://7z:3:2//tmp/../../test.zip/foo/bar", "test-mount://7z:3:2//test.zip/foo/bar"),
+			("test-mount://7z:4:2//tmp/test.zip/../../foo/bar", "test-mount://7z:2:2//foo/bar"),
+			("test-mount://7z:5:2//tmp/test.zip/../../foo/bar", "test-mount://7z:2:2//foo/bar"),
+			("test-mount://7z:4:4//tmp/test.zip/foo/bar/../../", "test-mount://7z//tmp/test.zip"),
+			("test-mount://7z:5:4//tmp/test.zip/foo/bar/../../", "test-mount://7z:1//tmp/test.zip"),
+			("test-mount://7z:4:4//tmp/test.zip/foo/bar/../../../", "test-mount://7z//tmp"),
+			("sftp://vps//root/.config/yazi/../../Downloads", "sftp://vps//root/Downloads"),
 		];
 
 		for (input, expected) in cases {

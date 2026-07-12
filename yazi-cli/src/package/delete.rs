@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use yazi_fs::{ok_or_not_found, provider::{Provider, local::Local}};
+use yazi_fs::{engine::{Engine, local::Local}, ok_or_not_found};
 use yazi_macro::outln;
 
 use super::Dependency;

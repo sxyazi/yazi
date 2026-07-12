@@ -1,4 +1,4 @@
-use crate::{scheme::Encode, url::Url};
+use crate::{spec::Encode, url::Url};
 
 pub struct Display<'a>(pub Url<'a>);
 

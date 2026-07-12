@@ -2,7 +2,7 @@ use std::process;
 
 use anyhow::Result;
 use yazi_boot::ARGS;
-use yazi_fs::provider::{Provider, local::Local};
+use yazi_fs::engine::{Engine, local::Local};
 use yazi_parser::app::QuitForm;
 use yazi_shared::{data::Data, strand::{StrandBuf, StrandLike, ToStrand}};
 use yazi_tui::Raterm;

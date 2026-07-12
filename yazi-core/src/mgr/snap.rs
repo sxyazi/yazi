@@ -28,7 +28,7 @@ impl Splatable for MgrSnap {
 			.checked_sub(1)
 			.and_then(|tab| self.tabs.get(tab))
 			.map_or_else(|| &[][..], |s| &s.selected)
-			.into_iter()
+			.iter()
 			.skip(idx.unwrap_or(0))
 			.take(if idx.is_some() { 1 } else { usize::MAX })
 			.map(AsUrl::as_url)

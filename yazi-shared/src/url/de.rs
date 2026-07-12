@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserializer, de::{self, IntoDeserializer, MapAccess}};
 
-use crate::{data::BytesDeserializer, pool::SymbolCow, scheme::SchemeLike, url::UrlCow};
+use crate::{data::BytesDeserializer, pool::{InternStr, Symbol}, url::UrlCow};
 
 pub struct UrlDeserializer<'a>(pub(super) UrlCow<'a>);
 
@@ -32,7 +32,8 @@ impl<'de, 'a: 'de> Deserializer<'de> for UrlDeserializer<'a> {
 // --- Map
 struct MapDeserializer<'a> {
 	kind:   Option<&'static str>,
-	domain: Option<SymbolCow<'a, str>>,
+	scheme: Option<Symbol<str>>,
+	domain: Option<Symbol<str>>,
 	uri:    Option<usize>,
 	urn:    Option<usize>,
 	path:   Option<Cow<'a, [u8]>>,
@@ -40,13 +41,13 @@ struct MapDeserializer<'a> {
 
 impl<'a> MapDeserializer<'a> {
 	fn new(url: UrlCow<'a>) -> Self {
-		let (scheme, path) = url.into_pair();
-		let kind: &'static str = scheme.kind().into();
-		let (uri, urn) = scheme.ports();
+		let (spec, path) = url.into_pair();
+		let (uri, urn) = spec.ports();
 
 		Self {
-			kind:   Some(kind),
-			domain: scheme.into_domain(),
+			kind:   Some(spec.kind.into()),
+			scheme: Some(spec.scheme.intern()),
+			domain: Some(spec.domain.intern()),
 			uri:    Some(uri),
 			urn:    Some(urn),
 			path:   Some(path.into_encoded_bytes()),
@@ -63,6 +64,8 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 	{
 		let key = if self.kind.is_some() {
 			Some("kind")
+		} else if self.scheme.is_some() {
+			Some("scheme")
 		} else if self.domain.is_some() {
 			Some("domain")
 		} else if self.uri.is_some() {
@@ -85,8 +88,11 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 		if let Some(kind) = self.kind.take() {
 			return seed.deserialize(kind.into_deserializer());
 		}
+		if let Some(scheme) = self.scheme.take() {
+			return seed.deserialize(scheme.into_deserializer());
+		}
 		if let Some(domain) = self.domain.take() {
-			return seed.deserialize(domain.as_ref().into_deserializer());
+			return seed.deserialize(domain.into_deserializer());
 		}
 		if let Some(uri) = self.uri.take() {
 			return seed.deserialize(uri.into_deserializer());
@@ -104,6 +110,7 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 	fn size_hint(&self) -> Option<usize> {
 		Some(
 			self.kind.is_some() as usize
+				+ self.scheme.is_some() as usize
 				+ self.domain.is_some() as usize
 				+ self.uri.is_some() as usize
 				+ self.urn.is_some() as usize

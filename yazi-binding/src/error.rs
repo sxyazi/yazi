@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt::Display};
+use std::{borrow::Cow, fmt::Display, io};
 
 use mlua::{ExternalError, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_codegen::FromLuaOwned;
@@ -10,6 +10,17 @@ pub enum Error {
 	Fs(yazi_shim::fs::Error),
 	Serde(serde_json::Error),
 	Custom(SStr),
+}
+
+impl From<Error> for io::Error {
+	fn from(value: Error) -> Self {
+		match value {
+			Error::Io(e) => e,
+			Error::Fs(e) => e.into(),
+			Error::Serde(e) => Self::other(e),
+			Error::Custom(s) => Self::other(s.into_owned()),
+		}
+	}
 }
 
 impl Error {

@@ -2,12 +2,12 @@ use std::{io, mem};
 
 use anyhow::Result;
 use yazi_core::cmp::{CmpItem, CmpOpt};
-use yazi_fs::{path::clean_url, provider::{DirReader, FileHolder}};
+use yazi_fs::{engine::{DirReader, FileHolder}, path::clean_url};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::TriggerForm;
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, scheme::{SchemeCow, SchemeLike}, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
-use yazi_vfs::provider;
+use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, spec::Spec, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_vfs::engine;
 
 use crate::{Actor, Ctx};
 
@@ -36,7 +36,7 @@ impl Actor for Trigger {
 		}
 
 		cx.cmp.handle = Some(tokio::spawn(async move {
-			let mut dir = provider::read_dir(&parent).await?;
+			let mut dir = engine::read_dir(&parent).await?;
 			let mut cache = vec![];
 
 			// "/" is both a directory separator and the root directory per se
@@ -66,14 +66,14 @@ impl Actor for Trigger {
 
 impl Trigger {
 	fn split_url(s: &str) -> Option<(UrlBuf, PathBufDyn)> {
-		let (scheme, path) = SchemeCow::parse(s.as_bytes()).ok()?;
+		let (spec, path) = Spec::parse(s.as_bytes()).ok()?;
 		if path.is_empty() && !AnyAsciiChar::SEP.predicate(s.bytes().last()?) {
 			return None; // We don't complete a `sftp://test`, but `sftp://test/`
 		}
 
-		// Scheme
-		let scheme = scheme.zeroed();
-		if scheme.is_local() && path.as_strand() == "~" {
+		// Spec
+		let spec = spec.zeroed();
+		if spec.kind.is_local() && path.as_strand() == "~" {
 			return None; // We don't complete a `~`, but `~/`
 		}
 
@@ -81,11 +81,11 @@ impl Trigger {
 		let child = path.rsplit_pred(AnyAsciiChar::SEP).map_or(path.as_path(), |(_, c)| c).to_owned();
 
 		// Parent
-		let url = UrlCow::try_from((scheme.clone().zeroed(), path)).ok()?;
-		let abs = if let Some(u) = provider::try_absolute(&url) { u } else { url };
+		let url = UrlCow::try_from((spec.clone().zeroed(), path)).ok()?;
+		let abs = if let Some(u) = engine::try_absolute(&url) { u } else { url };
 		let parent = abs.loc().try_strip_suffix(&child).ok()?;
 
-		Some((clean_url(UrlCow::try_from((scheme, parent)).ok()?), child))
+		Some((clean_url(UrlCow::try_from((spec, parent)).ok()?), child))
 	}
 }
 

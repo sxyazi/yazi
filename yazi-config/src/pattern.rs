@@ -3,7 +3,7 @@ use std::{fmt::Debug, str::FromStr};
 use anyhow::{Result, bail};
 use globset::{Candidate, GlobBuilder};
 use serde::Deserialize;
-use yazi_shared::{scheme::SchemeKind, url::AsUrl};
+use yazi_shared::{auth::Auth, url::AsUrl};
 
 use crate::Mixable;
 
@@ -35,7 +35,7 @@ impl Pattern {
 
 		if is_dir != self.is_dir {
 			return false;
-		} else if !self.scheme.matches(url.kind()) {
+		} else if !self.scheme.matches(url.auth()) {
 			return false;
 		} else if self.is_star {
 			return true;
@@ -112,59 +112,43 @@ impl Mixable for Pattern {
 }
 
 // --- Scheme
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum PatternScheme {
 	Any,
 	Local,
 	Remote,
 	Virtual,
 
-	Regular,
-	Search,
-	Archive,
-	Sftp,
+	Custom(String),
 }
 
 impl PatternScheme {
 	fn parse(s: &str) -> Result<(Self, usize)> {
-		let Some((protocol, _)) = s.split_once("://") else {
+		let Some((s, _)) = s.split_once("://") else {
 			return Ok((Self::Any, 0));
 		};
 
-		let scheme = match protocol {
+		let scheme = match s {
 			"*" => Self::Any,
 			"local" => Self::Local,
 			"remote" => Self::Remote,
 			"virtual" => Self::Virtual,
 
-			"regular" => Self::Regular,
-			"search" => Self::Search,
-			"archive" => Self::Archive,
-			"sftp" => Self::Sftp,
-
-			"" => bail!("Invalid URL pattern: protocol is empty"),
-			_ => bail!("Unknown protocol in URL pattern: {protocol}"),
+			"" => bail!("Invalid URL pattern: scheme is empty"),
+			other => Self::Custom(other.to_owned()),
 		};
 
-		Ok((scheme, protocol.len() + 3))
+		Ok((scheme, s.len() + 3))
 	}
 
 	#[inline]
-	fn matches(self, kind: SchemeKind) -> bool {
-		use SchemeKind as K;
-
-		match (self, kind) {
-			(Self::Any, _) => true,
-			(Self::Local, s) => s.is_local(),
-			(Self::Remote, s) => s.is_remote(),
-			(Self::Virtual, s) => s.is_virtual(),
-
-			(Self::Regular, K::Regular) => true,
-			(Self::Search, K::Search) => true,
-			(Self::Archive, K::Archive) => true,
-			(Self::Sftp, K::Sftp) => true,
-
-			_ => false,
+	fn matches(&self, auth: &Auth) -> bool {
+		match self {
+			Self::Any => true,
+			Self::Local => auth.kind.is_local(),
+			Self::Remote => auth.kind.is_remote(),
+			Self::Virtual => auth.kind.is_virtual(),
+			Self::Custom(name) => auth.scheme == name,
 		}
 	}
 }
@@ -183,6 +167,8 @@ mod tests {
 	#[cfg(unix)]
 	#[test]
 	fn test_unix() {
+		yazi_shared::init_tests();
+
 		// Wildcard
 		assert!(matches("*", "/foo"));
 		assert!(matches("*", "/foo/bar"));
@@ -217,6 +203,8 @@ mod tests {
 	#[cfg(windows)]
 	#[test]
 	fn test_windows() {
+		yazi_shared::init_tests();
+
 		// Wildcard
 		assert!(matches("*", r#"C:\foo"#));
 		assert!(matches("*", r#"C:\foo\bar"#));

@@ -1,4 +1,4 @@
-use crate::{Yazi, keymap::Keymap, theme::Theme};
+use crate::{Yazi, keymap::Keymap, theme::Theme, vfs::Vfs};
 
 pub(crate) struct Preset;
 
@@ -9,6 +9,10 @@ impl Preset {
 
 	pub(super) fn keymap() -> Result<Keymap, toml::de::Error> {
 		toml::from_str(&yazi_macro::config_preset!("keymap"))
+	}
+
+	pub(super) fn vfs() -> Result<Vfs, toml::de::Error> {
+		toml::from_str(&yazi_macro::config_preset!("vfs"))
 	}
 
 	pub(super) fn theme(light: bool) -> Result<Theme, toml::de::Error> {

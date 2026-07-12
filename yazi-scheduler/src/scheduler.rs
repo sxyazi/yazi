@@ -78,7 +78,7 @@ impl Scheduler {
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let follow = follow || !from.scheme().covariant(to.scheme());
+		let follow = follow || !from.auth().covariant(to.auth());
 		let mut r#in = FileInCopy { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0 };
 
 		self.add(&mut r#in, |_| ());
@@ -109,7 +109,7 @@ impl Scheduler {
 		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, force, cha: None, follow };
 		self.add(&mut r#in, |_| ());
 
-		if !r#in.from.scheme().covariant(r#in.to.scheme()) {
+		if !r#in.from.auth().covariant(r#in.to.auth()) {
 			return self
 				.ops
 				.out(r#in.id, FileOutHardlink::Fail("Cannot hardlink cross filesystem".to_owned()));

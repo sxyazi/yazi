@@ -2,7 +2,7 @@ local M = {}
 
 local function stale_cache(file)
 	local url = file.url
-	local lock = url.scheme.cache:join(string.format("%%lock/%s", url:hash(true)))
+	local lock = url.spec.cache:join(string.format("%%lock/%s", url:hash(true)))
 
 	local fd = fs.access():read(true):open(Url(lock))
 	if not fd then

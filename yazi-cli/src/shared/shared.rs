@@ -1,7 +1,7 @@
 use std::{io, path::Path};
 
 use tokio::io::AsyncWriteExt;
-use yazi_fs::provider::{FileBuilder, Provider, local::{Gate, Local}};
+use yazi_fs::engine::{Engine, FileBuilder, local::{Demand, Local}};
 use yazi_macro::ok_or_not_found;
 
 #[inline]
@@ -21,7 +21,7 @@ pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
 	let b = Local::regular(from).read().await?;
 	ok_or_not_found!(remove_sealed(to).await);
 
-	let mut file = Gate::default().create_new(true).write(true).truncate(true).open(to).await?;
+	let mut file = Demand::default().create_new(true).write(true).truncate(true).open(to).await?;
 	file.write_all(&b).await?;
 
 	let mut perm = file.metadata().await?.permissions();

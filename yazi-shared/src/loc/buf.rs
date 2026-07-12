@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{AsPath, AsPathView, PathDyn, SetNameError}, scheme::SchemeKind, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{AsPath, AsPathView, PathDyn, SetNameError}, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct LocBuf<P = std::path::PathBuf> {
@@ -146,7 +146,7 @@ where
 		Self { inner: loc.inner, uri, urn }
 	}
 
-	pub fn saturated(path: P, kind: SchemeKind) -> Self {
+	pub fn saturated(path: P, kind: AuthKind) -> Self {
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::saturated(&loc.inner, kind);
 
@@ -332,18 +332,18 @@ mod tests {
 			// Regular
 			("/", "a", "/a"),
 			("/a/b", "c", "/a/c"),
-			// Archive
-			("archive:////", "a.zip", "archive:////a.zip"),
-			("archive:////a.zip/b", "c", "archive:////a.zip/c"),
-			("archive://:2//a.zip/b", "c", "archive://:2//a.zip/c"),
-			("archive://:2:1//a.zip/b", "c", "archive://:2:1//a.zip/c"),
+			// Mount
+			("test-mount://7z//", "a.zip", "test-mount://7z//a.zip"),
+			("test-mount://7z//a.zip/b", "c", "test-mount://7z//a.zip/c"),
+			("test-mount://7z:2//a.zip/b", "c", "test-mount://7z:2//a.zip/c"),
+			("test-mount://7z:2:1//a.zip/b", "c", "test-mount://7z:2:1//a.zip/c"),
 			// Empty
 			("/a", "", "/"),
-			("archive:////a.zip", "", "archive:////"),
-			("archive:////a.zip/b", "", "archive:////a.zip"),
-			("archive://:1:1//a.zip", "", "archive:////"),
-			("archive://:2//a.zip/b", "", "archive://:1//a.zip"),
-			("archive://:2:2//a.zip/b", "", "archive://:1:1//a.zip"),
+			("test-mount://7z//a.zip", "", "test-mount://7z//"),
+			("test-mount://7z//a.zip/b", "", "test-mount://7z//a.zip"),
+			("test-mount://7z:1:1//a.zip", "", "test-mount://7z//"),
+			("test-mount://7z:2//a.zip/b", "", "test-mount://7z:1//a.zip"),
+			("test-mount://7z:2:2//a.zip/b", "", "test-mount://7z:1:1//a.zip"),
 		];
 
 		for (input, name, expected) in cases {

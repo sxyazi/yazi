@@ -1,9 +1,10 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use yazi_shared::{path::{AsPath, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlBufInventory, UrlCow}};
+use mlua::UserDataFields;
+use yazi_shared::{path::{AsPath, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{FsHash128, FsScheme, path::PercentEncoding};
+use crate::{FsHash128, FsSpec, path::PercentEncoding};
 
 pub trait FsUrl<'a> {
 	fn cache(&self) -> Option<PathBuf>;
@@ -36,11 +37,11 @@ impl<'a> FsUrl<'a> for Url<'a> {
 			root
 		}
 
-		self.scheme().cache().map(|root| with_loc(self.loc(), root))
+		self.auth().cache().map(|root| with_loc(self.loc(), root))
 	}
 
 	fn cache_lock(&self) -> Option<PathBuf> {
-		self.scheme().cache().map(|mut root| {
+		self.auth().cache().map(|mut root| {
 			root.push("%lock");
 			root.push(format!("{:x}", self.hash_u128()));
 			root
@@ -50,7 +51,7 @@ impl<'a> FsUrl<'a> for Url<'a> {
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } => loc.as_inner().into(),
-			Self::Archive { .. } | Self::Sftp { .. } => {
+			Self::Mount { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}
@@ -65,7 +66,7 @@ impl FsUrl<'_> for UrlBuf {
 	fn unified_path(self) -> Cow<'static, Path> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner().into(),
-			Self::Archive { .. } | Self::Sftp { .. } => {
+			Self::Mount { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}
@@ -80,7 +81,7 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner(),
-			Self::Archive { .. } | Self::Sftp { .. } => {
+			Self::Mount { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}
@@ -92,6 +93,22 @@ inventory::submit! {
 	UrlBufInventory {
 		register: |registry| {
 			registry.add_cached_field("cache", |_, me| Ok(me.cache()));
+			registry.add_cached_field("domain", |lua, me| {
+				yazi_binding::deprecate!(lua, "{}: `Url.domain` is deprecated, use `Url.spec.domain` instead.");
+				lua.create_string(&*me.spec().domain)
+			});
+			registry.add_field_method_get("is_regular", |lua, me| {
+				yazi_binding::deprecate!(lua, "{}: `Url.is_regular` is deprecated, use `Url.spec.is_regular` instead.");
+				Ok(me.is_regular())
+			});
+			registry.add_field_method_get("is_search", |lua, me| {
+				yazi_binding::deprecate!(lua, "{}: `Url.is_search` is deprecated, use `Url.spec.is_search` instead.");
+				Ok(me.is_search())
+			});
+			registry.add_cached_field("scheme", |lua, me| {
+				yazi_binding::deprecate!(lua, "{}: `Url.scheme` is deprecated, use `Url.spec` instead.");
+				Ok(me.spec())
+			});
 		}
 	}
 }

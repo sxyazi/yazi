@@ -3,7 +3,7 @@ use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref};
 use anyhow::{Result, bail};
 
 use super::LocAbleImpl;
-use crate::{loc::{LocAble, LocBuf, LocBufAble, StrandAbleImpl}, path::{AsPath, AsPathView, PathDyn}, scheme::SchemeKind, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{LocAble, LocBuf, LocBufAble, StrandAbleImpl}, path::{AsPath, AsPathView, PathDyn}, strand::AsStrandView};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Loc<'p, P = &'p std::path::Path> {
@@ -147,15 +147,16 @@ where
 		self.inner.parent().filter(|p| !p.as_encoded_bytes().is_empty())
 	}
 
-	pub fn saturated<'a, T>(path: T, kind: SchemeKind) -> Self
+	pub fn saturated<'a, T>(path: T, kind: AuthKind) -> Self
 	where
 		T: AsPathView<'p, P>,
 	{
 		match kind {
-			SchemeKind::Regular => Self::bare(path),
-			SchemeKind::Search => Self::zeroed(path),
-			SchemeKind::Archive => Self::zeroed(path),
-			SchemeKind::Sftp => Self::bare(path),
+			AuthKind::Regular => Self::bare(path),
+			AuthKind::Search => Self::zeroed(path),
+			AuthKind::Mount => Self::zeroed(path),
+			AuthKind::Scope => Self::bare(path),
+			AuthKind::Sftp => Self::bare(path),
 		}
 	}
 

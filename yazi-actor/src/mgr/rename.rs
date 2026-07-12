@@ -6,7 +6,7 @@ use yazi_macro::{act, err, input, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{data::Data, id::Id, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, provider};
+use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 use yazi_widgets::input::InputEvent;
 
@@ -70,18 +70,18 @@ impl Rename {
 		let Some(_) = new.pair() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
-		let overwritten = provider::casefold(&new).await;
-		provider::rename(&old, &new).await?;
+		let overwritten = engine::casefold(&new).await;
+		engine::rename(&old, &new).await?;
 
 		if let Ok(u) = overwritten
 			&& u != new
 			&& let Some((parent, urn)) = u.pair()
 		{
-			ok_or_not_found!(provider::rename(&u, &new).await);
+			ok_or_not_found!(engine::rename(&u, &new).await);
 			FilesOp::Deleting(parent.to_owned(), [urn.into()].into()).emit();
 		}
 
-		let new = provider::casefold(&new).await?;
+		let new = engine::casefold(&new).await?;
 		let Some((new_p, new_n)) = new.pair() else { return Ok(()) };
 
 		let file = File::new(&new).await?;
@@ -103,7 +103,7 @@ impl Rename {
 		};
 
 		Ok(
-			provider::must_identical(old, new).await
+			engine::must_identical(old, new).await
 				|| ConfirmProxy::show(ConfirmCfg::overwrite(&file)).await,
 		)
 	}

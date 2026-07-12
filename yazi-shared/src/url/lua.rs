@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, scheme::{SchemeCow, SchemeLike}, strand::{StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, spec::Spec, strand::{StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 
 pub type UrlRef = UserDataRef<UrlBuf>;
 
@@ -41,16 +41,16 @@ impl UrlBuf {
 		match other {
 			Value::String(s) => {
 				let b = s.as_bytes();
-				let (scheme, path) = SchemeCow::parse(&b)?;
-				if scheme.covariant(self.scheme()) {
+				let (spec, path) = Spec::parse(&b)?;
+				if spec.covariant(self.auth()) {
 					self.try_join(path).into_lua_err()?.into_lua(lua)
 				} else {
-					UrlCow::try_from((scheme, path))?.into_owned().into_lua(lua)
+					UrlCow::try_from((spec, path))?.into_owned().into_lua(lua)
 				}
 			}
 			Value::UserData(ref ud) => {
 				if let Ok(url) = ud.borrow::<Self>() {
-					if url.scheme().covariant(self.scheme()) {
+					if url.auth().covariant(self.auth()) {
 						self.try_join(url.loc()).into_lua_err()?.into_lua(lua)
 					} else {
 						Ok(other)
@@ -106,14 +106,8 @@ impl UserData for UrlBuf {
 		});
 		fields.add_cached_field("parent", |_, me| Ok(me.parent().map(Self::from)));
 
-		fields.add_cached_field("scheme", |_, me| Ok(me.scheme().to_owned()));
-		fields.add_cached_field("domain", |lua, me| {
-			me.scheme().domain().map(|s| lua.create_string(s)).transpose()
-		});
+		fields.add_cached_field("spec", |_, me| Ok(me.spec()));
 
-		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
-		fields.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
-		fields.add_field_method_get("is_archive", |_, me| Ok(me.is_archive()));
 		fields.add_field_method_get("is_absolute", |_, me| Ok(me.is_absolute()));
 		fields.add_field_method_get("has_root", |_, me| Ok(me.has_root()));
 	}

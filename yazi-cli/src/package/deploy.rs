@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use yazi_fs::provider::{Provider, local::Local};
+use yazi_fs::engine::{Engine, local::Local};
 use yazi_macro::outln;
 
 use super::Dependency;
