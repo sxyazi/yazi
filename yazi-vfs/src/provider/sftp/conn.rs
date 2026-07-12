@@ -54,8 +54,8 @@ impl russh::client::Handler for Conn {
 				Ok(false)
 			}
 			Err(e) => {
-				tracing::warn!("Could not verify host key for `{}`: {e}", self.config.host);
-				Ok(true)
+				tracing::error!("Could not verify host key for `{}`: {e}", self.config.host);
+				Ok(false)
 			}
 		}
 	}
