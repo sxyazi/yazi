@@ -108,10 +108,11 @@ mod tests {
 	#[test]
 	fn test_split() {
 		yazi_shared::init_tests();
+		yazi_config::init_tests();
 		yazi_fs::init();
 
 		assert_eq!(Trigger::split_url(""), None);
-		assert_eq!(Trigger::split_url("sftp://test"), None);
+		assert_eq!(Trigger::split_url("sftp://vps"), None);
 		compare(" ", "", " ");
 
 		compare("/", "/", "");
@@ -127,11 +128,11 @@ mod tests {
 		compare("/foo/bar", "/foo/", "bar");
 		compare("///foo/bar", "/foo/", "bar");
 
-		CWD.set(&"sftp://test".parse::<UrlBuf>().unwrap(), || {});
-		compare("sftp://test/a", "sftp://test/.", "a");
-		compare("sftp://test//a", "sftp://test//", "a");
-		compare("sftp://test2/a", "sftp://test2/.", "a");
-		compare("sftp://test2//a", "sftp://test2//", "a");
+		CWD.set(&"sftp://vps".parse::<UrlBuf>().unwrap(), || {});
+		compare("sftp://vps/a", "sftp://vps/.", "a");
+		compare("sftp://vps//a", "sftp://vps//", "a");
+		compare("test-scope://aws/a", "test-scope://aws/.", "a");
+		compare("test-scope://aws//a", "test-scope://aws//", "a");
 	}
 
 	#[cfg(windows)]

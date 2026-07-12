@@ -1,6 +1,6 @@
 yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme vfs which);
 
-yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority selectable selector yazi);
+yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority selectable selector tests yazi);
 
 use std::io::{Read, Write};
 
