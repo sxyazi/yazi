@@ -167,8 +167,8 @@ impl UrlBuf {
 				Self::Archive { loc: loc.rebase(base), domain: domain.clone() }
 			}
 			Self::Sftp { loc, domain } => {
-				todo!();
-				// Self::Sftp { loc: loc.rebase(base), domain: domain.clone() }
+				let base = typed_path::UnixPath::new(base.as_os_str().as_encoded_bytes());
+				Self::Sftp { loc: loc.rebase(base), domain: domain.clone() }
 			}
 		}
 	}
