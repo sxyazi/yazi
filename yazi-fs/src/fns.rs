@@ -53,6 +53,8 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 #[cfg(unix)]
 #[test]
 fn test_max_common_root() {
+	yazi_shared::init_tests();
+
 	fn assert(input: &[&str], expected: &str) {
 		use std::{ffi::OsStr, str::FromStr};
 		let urls: Vec<_> =
