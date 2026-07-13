@@ -10,5 +10,6 @@ result-*
 
 .idea/
 .vscode/
+.zed/
 
 *.snap

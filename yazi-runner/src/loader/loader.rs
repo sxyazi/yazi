@@ -28,6 +28,7 @@ impl Default for Loader {
 		let cache = HashMap::from_iter([
 			// Plugins
 			("archive".to_owned(), preset!("plugins/archive").into()),
+			("clipboard".to_owned(), preset!("plugins/clipboard").into()),
 			("code".to_owned(), preset!("plugins/code").into()),
 			("dds".to_owned(), preset!("plugins/dds").into()),
 			("dnd".to_owned(), preset!("plugins/dnd").into()),

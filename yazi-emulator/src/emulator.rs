@@ -4,8 +4,8 @@ use anyhow::Result;
 use arc_swap::ArcSwap;
 use yazi_macro::writef;
 use yazi_shim::cell::RoCell;
-use yazi_term::{TERM, event::Report};
-use yazi_tty::{Handle, TTY, sequence::{HideCursor, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
+use yazi_term::TERM;
+use yazi_tty::{Handle, TTY, sequence::{HideCursor, If, KittyGraphicsQuery, MoveTo, QueryOSC5522, RequestBgColor, RequestCellPixelSize, RequestDA1, RequestXtVersion, RestoreCursorPos, SaveCursorPos, SetFg, SetSgr, ShowCursor}};
 
 use crate::{Brand, Mux};
 
@@ -13,17 +13,25 @@ pub static EMULATOR: RoCell<ArcSwap<Emulator>> = RoCell::new();
 
 #[derive(Clone, Debug, Default)]
 pub struct Emulator {
-	pub brand:        Brand,
-	pub version:      String,
-	pub kgp:          bool,
-	pub sixel:        bool,
-	pub background:   Option<[u16; 3]>,
-	pub color_scheme: Option<bool>,
-	pub csi_16t:      (u16, u16),
-	pub force_16t:    bool,
-	pub cursor_blink: bool,
-	pub cursor_shape: Option<u8>,
-	pub mux:          Option<Mux>,
+	pub kind:      Either<Brand, Unknown>,
+	pub version:   String,
+	pub light:     bool,
+	pub csi_16t:   (u16, u16),
+	pub force_16t: bool,
+	pub osc_5522:  bool,
+}
+
+impl Default for Emulator {
+	fn default() -> Self {
+		Self {
+			kind:      Either::Right(Unknown::default()),
+			version:   String::new(),
+			light:     false,
+			csi_16t:   (0, 0),
+			force_16t: false,
+			osc_5522:  false,
+		}
+	}
 }
 
 impl Emulator {
@@ -31,27 +39,17 @@ impl Emulator {
 		Self { brand: Brand::from_env().unwrap_or(Brand::Unknown), ..Default::default() }
 	}
 
-	pub fn apply(&mut self, report: &Report) {
-		match report {
-			Report::CursorBlink(blink) => self.cursor_blink = *blink,
-			Report::CursorShape(shape) => self.cursor_shape = Some(*shape),
-			Report::Da1(attrs) => self.sixel = attrs.contains(&4),
-			Report::XtVersion(version) => {
-				self.version = version.to_string();
-				if let Some(brand) = Brand::from_csi(version) {
-					self.brand = brand;
-				}
-			}
-			Report::CellPixelSize { width, height } => {
-				self.csi_16t = (*width, *height);
-				self.force_16t = Self::force_16t(self.csi_16t);
-			}
-			Report::BackgroundColor(rgb) => self.background = Some(*rgb),
-			Report::ColorScheme(light) => self.color_scheme = Some(*light),
-			Report::KittyGraphics { id: 31, ok } => self.kgp = *ok,
-			_ => {}
-		}
-	}
+		let resort = Brand::from_env();
+		writef!(
+			TTY.writer(),
+			"{SaveCursorPos}{}{}{}{}{}{}{RestoreCursorPos}",
+			If(resort.is_none(), Mux::wrap(KittyGraphicsQuery)),
+			Mux::wrap(RequestXtVersion),
+			RequestCellPixelSize,
+			RequestBgColor,
+			QueryOSC5522,
+			Mux::wrap(RequestDA1),
+		)?;
 
 	pub const fn light(&self) -> Option<bool> {
 		if let Some(light) = self.color_scheme {
@@ -61,8 +59,25 @@ impl Emulator {
 				r as f32 * 0.2627 / 65535.0 + g as f32 * 0.6780 / 65535.0 + b as f32 * 0.0593 / 65535.0;
 			Some(luma > 0.6)
 		} else {
-			None
-		}
+			Either::Right(Unknown {
+				kgp:   resp.contains("\x1b_Gi=31;OK"),
+				sixel: ["?4;", "?4c", ";4;", ";4c"].iter().any(|s| resp.contains(s)),
+			})
+		};
+
+		let csi_16t = Self::csi_16t(&resp).unwrap_or_default();
+
+		let osc_5522 =
+			["\x1b[?5522;1$y", "\x1b[?5522;2$y", "\x1b[?5522;3$y"].iter().any(|s| resp.contains(s));
+
+		Ok(Self {
+			kind,
+			version: Self::csi_gt_q(&resp).unwrap_or_default(),
+			light: Self::light_bg(&resp).unwrap_or_default(),
+			csi_16t,
+			force_16t: Self::force_16t(csi_16t),
+			osc_5522,
+		})
 	}
 
 	pub fn move_lock<F, T>((x, y): (u16, u16), cb: F) -> Result<T>

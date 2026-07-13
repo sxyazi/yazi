@@ -27,6 +27,7 @@ pub enum Spark<'a> {
 	AppTheme(crate::VoidForm),
 	AppTitle(crate::app::TitleForm),
 	AppUpdateProgress(crate::app::UpdateProgressForm),
+	AppClipboard(crate::app::ClipboardForm),
 
 	// Mgr
 	Arrow(crate::ArrowForm),
@@ -224,6 +225,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppTheme(b) => b.into_lua(lua),
 			Self::AppTitle(b) => b.into_lua(lua),
 			Self::AppUpdateProgress(b) => b.into_lua(lua),
+			Self::AppClipboard(b) => b.into_lua(lua),
 
 			// Mgr
 			Self::Arrow(b) => b.into_lua(lua),
@@ -401,6 +403,7 @@ try_from_spark!(crate::app::ReflowForm, app:reflow, app:resize, app:resume);
 try_from_spark!(crate::app::StopForm, app:stop);
 try_from_spark!(crate::app::TitleForm, app:title);
 try_from_spark!(crate::app::UpdateProgressForm, app:update_progress);
+try_from_spark!(crate::app::ClipboardForm, app:clipboard);
 try_from_spark!(crate::cmp::CloseForm, cmp:close);
 try_from_spark!(crate::cmp::ShowForm, cmp:show);
 try_from_spark!(crate::cmp::TriggerForm, cmp:trigger);

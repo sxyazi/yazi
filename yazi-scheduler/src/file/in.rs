@@ -131,7 +131,7 @@ impl FileIn {
 
 // --- Copy
 #[derive(Clone, Debug)]
-pub(crate) struct FileInCopy {
+pub struct FileInCopy {
 	pub(crate) id:     Id,
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
@@ -157,6 +157,18 @@ impl TaskIn for FileInCopy {
 }
 
 impl FileInCopy {
+	pub fn new(from: UrlBuf, to: UrlBuf, force: bool, follow: Option<bool>) -> Self {
+		Self {
+			follow: follow.unwrap_or(!from.auth().covariant(to.auth())),
+			id: Id::ZERO,
+			from,
+			to,
+			force,
+			cha: None,
+			retry: 0,
+		}
+	}
+
 	pub(super) fn into_link(self) -> FileInLink {
 		FileInLink {
 			id:       self.id,
@@ -171,6 +183,15 @@ impl FileInCopy {
 	}
 }
 
+impl FromLua for FileInCopy {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		let Value::Table(t) = value else {
+			return Err("constructing FileInCopy from non-table value".into_lua_err());
+		};
+
+		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?, None))
+	}
+}
 // --- Cut
 #[derive(Clone, Debug)]
 pub struct FileInCut {
