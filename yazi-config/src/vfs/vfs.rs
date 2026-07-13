@@ -1,31 +1,33 @@
 use std::io;
 
 use anyhow::{Context, Result};
-use serde::Deserialize;
-use yazi_codegen::{DeserializeOver, DeserializeOver1};
+use serde::{Deserialize, Deserializer};
+use yazi_codegen::DeserializeOver;
 use yazi_fs::{Xdg, ok_or_not_found};
-use yazi_shared::auth::AuthInventory;
+use yazi_shared::auth::{Auth, AuthInventory};
+use yazi_shim::toml::DeserializeOverWith;
 
-use super::{Service, Services};
+use super::{Authorities, Service};
 use crate::VFS;
 
-#[derive(Deserialize, DeserializeOver, DeserializeOver1)]
+#[derive(Deserialize, DeserializeOver)]
 pub struct Vfs {
-	pub services: Services,
+	#[serde(flatten)]
+	pub authorities: Authorities,
 }
 
 impl Vfs {
-	pub fn service<P>(domain: &str) -> io::Result<P>
+	pub fn service<P>(auth: &Auth) -> io::Result<P>
 	where
 		P: TryFrom<&'static Service, Error = &'static str>,
 	{
-		let Some((key, value)) = VFS.services.get_key_value(domain) else {
-			return Err(io::Error::other(format!("No such VFS service: {domain}")));
+		let Some(value) = VFS.authorities.get(&auth.scheme, &auth.domain) else {
+			return Err(io::Error::other(format!("No such VFS service: {auth}")));
 		};
 
 		match value.try_into() {
 			Ok(p) => Ok(p),
-			Err(e) => Err(io::Error::other(format!("VFS service `{key}` has wrong kind: {e}"))),
+			Err(e) => Err(io::Error::other(format!("VFS service `{auth}` has wrong kind: {e}"))),
 		}
 	}
 
@@ -36,18 +38,17 @@ impl Vfs {
 	}
 }
 
+impl DeserializeOverWith for Vfs {
+	fn deserialize_over_with<'de, D: Deserializer<'de>>(self, de: D) -> Result<Self, D::Error> {
+		Ok(Self { authorities: self.authorities.deserialize_over_with(de)? })
+	}
+}
+
 // --- Inject
 inventory::submit! {
 	AuthInventory {
 		get: |scheme, domain| {
-			VFS.services.get(domain).and_then(|service| {
-				let auth = service.auth();
-				if auth.scheme == scheme {
-					Some(auth.clone())
-				} else {
-					None
-				}
-			})
+			VFS.authorities.get(scheme, domain).map(|service| service.auth().clone())
 		},
 	}
 }

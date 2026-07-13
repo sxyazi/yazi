@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(lua service services sftp vfs);
+yazi_macro::mod_flat!(authorities domains lua service sftp vfs);

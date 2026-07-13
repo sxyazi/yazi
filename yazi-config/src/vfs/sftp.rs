@@ -2,11 +2,11 @@ use std::{env, ops::Deref, path::PathBuf, sync::Arc};
 
 use serde::{Deserialize, Deserializer, Serialize, de};
 use yazi_fs::path::sanitize_path;
-use yazi_shared::auth::{Auth, AuthKind, Scheme};
+use yazi_shared::auth::Auth;
 
 #[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ServiceSftp {
-	#[serde(skip, default = "default_auth")]
+	#[serde(skip, default)]
 	pub auth:           Arc<Auth>,
 	pub host:           String,
 	pub user:           String,
@@ -28,8 +28,6 @@ impl Deref for ServiceSftp {
 
 	fn deref(&self) -> &Self::Target { &self.auth }
 }
-
-fn default_auth() -> Arc<Auth> { Auth::new(AuthKind::Sftp, Scheme::Sftp, "") }
 
 fn deserialize_path<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
 where

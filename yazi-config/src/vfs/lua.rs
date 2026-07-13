@@ -5,7 +5,7 @@ use yazi_shared::{auth::Auth, event::Cmd};
 
 #[derive(Deserialize)]
 pub struct ServiceLua {
-	#[serde(flatten)]
+	#[serde(skip, default)]
 	pub auth: Arc<Auth>,
 	pub run:  Cmd,
 }

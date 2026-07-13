@@ -110,11 +110,7 @@ impl<'a> Engine for Lua<'a> {
 			));
 		};
 
-		let service = Vfs::service::<&ServiceLua>(&auth.domain)?;
-		if service.scheme != auth.scheme {
-			return Err(io::Error::other(format!("No such custom VFS authority: {auth}")));
-		}
-
+		let service = Vfs::service::<&ServiceLua>(auth)?;
 		Ok(Self::Me { url, run: &service.run })
 	}
 
