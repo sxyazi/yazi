@@ -31,9 +31,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Changed
 
+- Rename SFTP sections in `vfs.toml` from `[services.domain]` to `[sftp.domain]` ([#4120]).
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
-- Rename `type` field in `vfs.toml` to `kind`, leaving `type` available for future custom VFS parameters ([#4118])
-- Remove `Url.is_archive` so `archive://` can be registered as a custom scheme ([#4118])
+- Remove `Url.is_archive` since `archive://` now is not a built-in scheme ([#4118])
 - Make `mgr::Yanked`, `tab::Selected`, and the `@yank` DDS event return `File` instead of `Url` from `__pairs()` ([#4096])
 - Remove `help:filter` action since the filter input is now always available ([#4074])
 - `[help]` of `theme.toml`: supersede `on` with `chord`, supersede `run` and `desc` with `action`, remove `footer` ([#4074])
@@ -1780,3 +1780,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4104]: https://github.com/sxyazi/yazi/pull/4104
 [#4108]: https://github.com/sxyazi/yazi/pull/4108
 [#4118]: https://github.com/sxyazi/yazi/pull/4118
+[#4120]: https://github.com/sxyazi/yazi/pull/4120
