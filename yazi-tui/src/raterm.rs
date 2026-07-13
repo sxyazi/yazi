@@ -8,7 +8,7 @@ use yazi_macro::writef;
 use yazi_proxy::AppProxy;
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
-use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RestoreCursorStyle, SetTitle, ShowCursor}};
+use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, DisablePasteEvents, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnablePasteEvents, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RestoreCursorStyle, SetTitle, ShowCursor}};
 
 use crate::{RatermBackend, RatermOption, RatermState};
 
@@ -43,7 +43,7 @@ impl Raterm {
 		let opt = RatermOption::default();
 		writef!(
 			TTY.writer(),
-			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{}",
+			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{}{EnablePasteEvents}",
 			If(!TMUX.get(), EnterAlternateScreen),
 			If(TMUX.get(), EnterAlternateScreen),
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
@@ -77,7 +77,7 @@ impl Raterm {
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
+			"{}{PopKeyboardFlags}{DisableDrop}{DisablePasteEvents}{DisableDrag}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
 			RestoreCursorStyle { shape: state.cursor_shape, blink: state.cursor_blink },
 			If(state.title, SetTitle("")),

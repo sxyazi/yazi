@@ -40,19 +40,21 @@ yazi-watcher   = { path = "../yazi-watcher", version = "26.5.6" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 
 # External dependencies
-anyhow          = { workspace = true }
-either          = { workspace = true }
-futures         = { workspace = true }
-hashbrown       = { workspace = true }
-indexmap        = { workspace = true }
-inventory       = { workspace = true }
-mlua            = { workspace = true }
-paste           = { workspace = true }
-ratatui-core    = { workspace = true }
-scopeguard      = { workspace = true }
-tokio           = { workspace = true }
-tokio-stream    = { workspace = true }
-tracing         = { workspace = true }
+anyhow           = { workspace = true }
+either           = { workspace = true }
+futures          = { workspace = true }
+hashbrown        = { workspace = true }
+indexmap         = { workspace = true }
+inventory        = { workspace = true }
+mlua             = { workspace = true }
+parking_lot      = { workspace = true }
+paste            = { workspace = true }
+ratatui-core     = { workspace = true }
+scopeguard       = { workspace = true }
+tokio            = { workspace = true }
+tokio-stream     = { workspace = true }
+tracing          = { workspace = true }
+percent-encoding = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }

@@ -3,7 +3,7 @@ use std::mem;
 use mlua::{IntoLua, Lua, LuaSerdeExt, UserData, UserDataFields, Value};
 use yazi_shim::{mlua::{SER_OPT, UserDataFieldsExt}, strum::IntoStr};
 
-use crate::event::{DndDropArrive, DndEvent, KeyEvent, MouseButton, MouseEvent, MouseEventKind};
+use crate::event::{ClipboardEvent, ClipboardRead, DndDropArrive, DndEvent, KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 
 // --- DndEvent
 impl UserData for DndEvent {
@@ -30,6 +30,37 @@ impl UserData for DndEvent {
 			Self::DropArrive(DndDropArrive { data, .. }) => {
 				lua.create_external_string(mem::take(data))?.into_lua(lua)
 			}
+			_ => Ok(Value::Nil),
+		});
+	}
+}
+
+// --- ClipboardEvent
+impl UserData for ClipboardEvent {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("type", |_, me| Ok(me.r#type()));
+
+		fields.add_field_method_get("pw", |_, me| Ok(me.pw()));
+
+		fields.add_field_method_get("primary", |_, me| Ok(me.primary()));
+
+		fields.add_cached_field("mimes", |lua, me| {
+			if let Some(mimes) = me.mimes() {
+				lua.create_sequence_from(mimes.iter())?.into_lua(lua)
+			} else {
+				Ok(Value::Nil)
+			}
+		});
+
+		fields.add_cached_field_mut("data", |lua, me| match me {
+			Self::ReadData(ClipboardRead { data, .. }) => lua
+				.create_table_from(
+					data
+						.iter()
+						.map(|d| Ok((lua.create_string(&d.mime)?, lua.create_external_string(&*d.data)?)))
+						.collect::<Result<Vec<_>, mlua::Error>>()?,
+				)?
+				.into_lua(lua),
 			_ => Ok(Value::Nil),
 		});
 	}

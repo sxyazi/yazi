@@ -1,5 +1,5 @@
 use tracing::debug;
-use yazi_scheduler::file::FileInCut;
+use yazi_scheduler::file::{FileInCopy, FileInCut};
 use yazi_shared::url::{UrlBuf, UrlLike};
 
 use super::Tasks;
@@ -22,7 +22,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
+	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {
@@ -33,7 +33,7 @@ impl Tasks {
 			if force && u == to {
 				debug!("file_copy: same file, skip {to:?}");
 			} else {
-				self.scheduler.file_copy(u.clone(), to, force, follow);
+				self.scheduler.file_copy(FileInCopy::new(u.clone(), to, force));
 			}
 		}
 	}
