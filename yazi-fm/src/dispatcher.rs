@@ -104,14 +104,13 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
-		if self.app.core.input.main.visible && clip.is_read() {
+		if self.app.core.input.main.visible {
 			if let Some(text) = clip.text() {
 				self.dispatch_paste(text)?;
+				return Ok(());
 			}
-			Ok(())
-		} else {
-			let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
-			act!(app:clipboard, cx, clip).map(|_| ())
 		}
+		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		act!(app:clipboard, cx, clip).map(|_| ())
 	}
 }

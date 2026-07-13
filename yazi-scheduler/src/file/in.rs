@@ -157,9 +157,9 @@ impl TaskIn for FileInCopy {
 }
 
 impl FileInCopy {
-	pub fn new(from: UrlBuf, to: UrlBuf, force: bool, follow: Option<bool>) -> Self {
+	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
 		Self {
-			follow: follow.unwrap_or(!from.auth().covariant(to.auth())),
+			follow: !from.auth().covariant(to.auth()),
 			id: Id::ZERO,
 			from,
 			to,
@@ -189,7 +189,7 @@ impl FromLua for FileInCopy {
 			return Err("constructing FileInCopy from non-table value".into_lua_err());
 		};
 
-		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?, None))
+		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?))
 	}
 }
 // --- Cut
