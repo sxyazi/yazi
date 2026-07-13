@@ -54,13 +54,12 @@ impl UserData for ClipboardEvent {
 
 		fields.add_cached_field_mut("data", |lua, me| match me {
 			Self::ReadData(ClipboardRead { data, .. }) => lua
-				.create_table_from(data.iter().map(|d| {
-					(
-						lua.create_string(&d.mime).ok(),
-						// TODO !!5522!! is this the best way
-						lua.create_external_string(&*d.data).ok(),
-					)
-				}))?
+				.create_table_from(
+					data
+						.iter()
+						.map(|d| Ok((lua.create_string(&d.mime)?, lua.create_external_string(&*d.data)?)))
+						.collect::<Result<Vec<_>, mlua::Error>>()?,
+				)?
 				.into_lua(lua),
 			_ => Ok(Value::Nil),
 		});

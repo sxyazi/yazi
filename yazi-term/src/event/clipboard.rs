@@ -1,8 +1,6 @@
-use std::str::SplitWhitespace;
-
 use strum::{FromRepr, IntoStaticStr};
 
-use crate::parser::{Osc5522Status, StateOsc5522};
+use crate::{event::mime::MimeList, parser::{Osc5522Status, StateOsc5522}};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ClipboardEvent {
@@ -15,7 +13,7 @@ pub enum ClipboardEvent {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ClipboardPaste {
-	pub mimes:   ClipboardMimeList,
+	pub mimes:   MimeList,
 	pub primary: bool,
 	pub pw:      Vec<u8>,
 }
@@ -28,7 +26,7 @@ pub struct ClipboardData {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ClipboardRead {
-	pub mimes:   ClipboardMimeList,
+	pub mimes:   MimeList,
 	pub primary: bool,
 	pub data:    Vec<ClipboardData>,
 }
@@ -41,15 +39,15 @@ pub struct ClipboardError {
 impl ClipboardEvent {
 	pub fn r#type(&self) -> &'static str {
 		match self {
-			Self::ReadMimetypes(_) => "read_mimetypes",
-			Self::ReadData(_) => "read_data",
-			Self::ReadError(_) => "read_error",
-			Self::WriteSuccess => "write_success",
-			Self::WriteError(_) => "write_error",
+			Self::ReadMimetypes(_) => "mimetypes",
+			Self::ReadData(_) => "data",
+			Self::ReadError(_) => "error",
+			Self::WriteSuccess => "success",
+			Self::WriteError(_) => "error",
 		}
 	}
 
-	pub fn mimes(&self) -> Option<&ClipboardMimeList> {
+	pub fn mimes(&self) -> Option<&MimeList> {
 		match self {
 			Self::ReadMimetypes(e) => Some(&e.mimes),
 			Self::ReadData(e) => Some(&e.mimes),
@@ -80,16 +78,9 @@ impl ClipboardEvent {
 		}
 	}
 
-	pub fn is_paste_offer(&self) -> bool {
-		match self {
-			Self::ReadMimetypes(_) => true,
-			_ => false,
-		}
-	}
-
 	pub fn is_read(&self) -> bool {
 		match self {
-			Self::ReadError(_) | Self::ReadData(_) => true,
+			Self::ReadMimetypes(_) | Self::ReadError(_) | Self::ReadData(_) => true,
 			_ => false,
 		}
 	}
@@ -100,7 +91,7 @@ impl ClipboardEvent {
 				if mime.first()? == b"." =>
 			{
 				ClipboardEvent::ReadMimetypes(ClipboardPaste {
-					mimes:   ClipboardMimeList::new(s.payload.first()?.to_owned())?,
+					mimes:   MimeList::new(s.payload.first()?.to_owned())?,
 					primary: s.primary,
 					pw:      s.pw,
 				})
@@ -114,7 +105,7 @@ impl ClipboardEvent {
 					mimes.push(b' ');
 				}
 				ClipboardEvent::ReadData(ClipboardRead {
-					mimes: ClipboardMimeList::new(mimes)?,
+					mimes: MimeList::new(mimes)?,
 					primary: s.primary,
 					data,
 				})
@@ -138,16 +129,6 @@ impl ClipboardEvent {
 pub enum ClipboardType {
 	Read  = 1,
 	Write = 2,
-}
-
-// --- MIME list
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClipboardMimeList(String);
-
-impl ClipboardMimeList {
-	pub fn new(b: Vec<u8>) -> Option<Self> { Some(Self(String::from_utf8(b).ok()?)) }
-
-	pub fn iter(&self) -> SplitWhitespace<'_> { self.0.split_whitespace() }
 }
 
 // --- Error payload parsing

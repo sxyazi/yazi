@@ -70,15 +70,8 @@ impl Actor for Copy {
 				"uri_list" => {
 					data.push(ClipboardData {
 						mime:    b"text/uri-list".to_vec(),
-						payload: s.clone(),
+						payload: s,
 						alias:   b"text/plain".to_vec(),
-					});
-					#[cfg(target_os = "linux")]
-					// Because Thunar (and likely others) won't reconize `text/uri-list`
-					data.push(ClipboardData {
-						mime:    b"x-special/gnome-copied-files".to_vec(),
-						payload: [b"copy\n".to_vec(), s].concat(),
-						alias:   vec![],
 					});
 				}
 				_ => {

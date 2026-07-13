@@ -47,6 +47,7 @@ hashbrown        = { workspace = true }
 indexmap         = { workspace = true }
 inventory        = { workspace = true }
 mlua             = { workspace = true }
+parking_lot      = { workspace = true }
 paste            = { workspace = true }
 ratatui-core     = { workspace = true }
 scopeguard       = { workspace = true }

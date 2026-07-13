@@ -4744,6 +4744,7 @@ dependencies = [
  "inventory",
  "libc",
  "mlua",
+ "parking_lot",
  "paste",
  "percent-encoding",
  "ratatui-core",

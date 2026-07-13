@@ -1,10 +1,8 @@
-use std::str::SplitWhitespace;
-
 use base64::Engine;
 use strum::{FromRepr, IntoStaticStr};
 use yazi_shim::BASE64_SANE;
 
-use crate::parser::StateOsc72;
+use crate::{event::mime::MimeList, parser::StateOsc72};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DndEvent {
@@ -63,7 +61,7 @@ pub struct DndDropEnter {
 	pub x:     u32,
 	pub y:     u32,
 	pub op:    DndOp,
-	pub mimes: DndMimeList,
+	pub mimes: MimeList,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -71,7 +69,7 @@ pub struct DndDropReady {
 	pub x:     u32,
 	pub y:     u32,
 	pub op:    DndOp,
-	pub mimes: DndMimeList,
+	pub mimes: MimeList,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -144,7 +142,7 @@ impl DndEvent {
 		}
 	}
 
-	pub fn mimes(&self) -> Option<&DndMimeList> {
+	pub fn mimes(&self) -> Option<&MimeList> {
 		match self {
 			Self::DropEnter(e) => Some(&e.mimes),
 			Self::DropReady(e) => Some(&e.mimes),
@@ -185,13 +183,13 @@ impl DndEvent {
 				x:     s.x?.try_into().ok()?,
 				y:     s.y?.try_into().ok()?,
 				op:    DndOp::from_repr(s.op?)?,
-				mimes: DndMimeList::new(s.payload)?,
+				mimes: MimeList::new(s.payload)?,
 			}),
 			b'M' => Self::DropReady(DndDropReady {
 				x:     s.x?.try_into().ok()?,
 				y:     s.y?.try_into().ok()?,
 				op:    DndOp::from_repr(s.op?)?,
-				mimes: DndMimeList::new(s.payload)?,
+				mimes: MimeList::new(s.payload)?,
 			}),
 			b'r' => Self::DropArrive(DndDropArrive {
 				idx:  s.x?.try_into().ok()?,
@@ -217,14 +215,6 @@ pub enum DndOp {
 }
 
 // --- MIME list
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DndMimeList(String);
-
-impl DndMimeList {
-	pub fn new(b: Vec<u8>) -> Option<Self> { Some(Self(String::from_utf8(b).ok()?)) }
-
-	pub fn iter(&self) -> SplitWhitespace<'_> { self.0.split_whitespace() }
-}
 
 // --- Error payload parsing
 fn parse_error(payload: Vec<u8>) -> Option<(String, String)> {

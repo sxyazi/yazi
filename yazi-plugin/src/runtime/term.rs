@@ -7,7 +7,6 @@ pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 		match key {
 			b"light" => EMULATOR.light.into_lua(lua),
 			b"cell_size" => cell_size(lua)?.into_lua(lua),
-			b"osc5522_clipboard" => EMULATOR.osc_5522.into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}

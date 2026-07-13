@@ -25,13 +25,7 @@ impl Actor for Clipboard {
 			runtime_scope!(LUA, "root", {
 				let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
-				if form.event.is_paste_offer() {
-					root.call_method::<()>("paste_offer", form.event)?;
-				} else if form.event.is_read() {
-					root.call_method::<()>("paste_data", form.event)?;
-				} else {
-					root.call_method::<()>("write_result", form.event)?;
-				}
+				root.call_method::<()>("clipboard", form.event)?;
 
 				Ok(())
 			})
