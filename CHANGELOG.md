@@ -33,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rename SFTP sections in `vfs.toml` from `[services.domain]` to `[sftp.domain]` ([#4120]).
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
-- Remove `Url.is_archive` since `archive://` now is not a built-in scheme ([#4118])
+- Remove `Url.is_archive` - `archive://` is no longer built in and can now be registered by plugins ([#4118])
 - Make `mgr::Yanked`, `tab::Selected`, and the `@yank` DDS event return `File` instead of `Url` from `__pairs()` ([#4096])
 - Remove `help:filter` action since the filter input is now always available ([#4074])
 - `[help]` of `theme.toml`: supersede `on` with `chord`, supersede `run` and `desc` with `action`, remove `footer` ([#4074])
