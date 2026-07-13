@@ -4745,6 +4745,7 @@ dependencies = [
  "libc",
  "mlua",
  "paste",
+ "percent-encoding",
  "ratatui-core",
  "scopeguard",
  "tokio",

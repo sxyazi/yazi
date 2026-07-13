@@ -101,6 +101,7 @@ keymap = [
 	{ on = [ "c", "d" ], run = "copy dirname",          desc = "Copy directory URL" },
 	{ on = [ "c", "f" ], run = "copy filename",         desc = "Copy filename" },
 	{ on = [ "c", "n" ], run = "copy name_without_ext", desc = "Copy filename without extension" },
+	{ on = [ "c", "l" ], run = "copy uri_list",         desc = "Copy URI list" },
 
 	# Filter
 	{ on = "f", run = "filter --smart", desc = "Filter files" },
