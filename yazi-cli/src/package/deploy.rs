@@ -13,6 +13,8 @@ impl Dependency {
 
 		self.header("Deploying package `{name}`")?;
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
+		let files =
+			if self.is_flavor { Self::flavor_files() } else { Self::plugin_files(&from).await? };
 
 		let to = self.target();
 		let exists = maybe_exists(&to).await;
@@ -24,18 +26,21 @@ impl Dependency {
 		self.delete_assets().await?;
 
 		let res1 = Self::deploy_assets(from.join("assets"), to.join("assets")).await;
-		let res2 = Self::deploy_sources(&from, &to, self.is_flavor).await;
+		let res2 = Self::deploy_sources(&from, &to, files).await;
 		if !exists && (res2.is_err() || res1.is_err()) {
 			self.delete_assets().await?;
 			self.delete_sources().await?;
+		} else if exists && (res2.is_err() || res1.is_err()) {
+			self.hash = self.hash().await?;
 		}
 
 		Local::regular(&to).remove_dir_clean().await;
-		self.hash = self.hash().await?;
 		res2?;
 		res1?;
 
+		self.hash = self.hash().await?;
 		outln!("Done!")?;
+
 		Ok(())
 	}
 
@@ -56,8 +61,7 @@ impl Dependency {
 		Ok(())
 	}
 
-	async fn deploy_sources(from: &Path, to: &Path, is_flavor: bool) -> Result<()> {
-		let files = if is_flavor { Self::flavor_files() } else { Self::plugin_files(from).await? };
+	async fn deploy_sources(from: &Path, to: &Path, files: Vec<String>) -> Result<()> {
 		for file in files {
 			let (from, to) = (from.join(&file), to.join(&file));
 			copy_and_seal(&from, &to)
