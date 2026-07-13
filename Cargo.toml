@@ -55,7 +55,7 @@ image               = { version = "0.25.10", default-features = false, features 
 indexmap            = { version = "2.14.0", features = [ "serde" ] }
 inventory           = "0.3.24"
 libc                = "0.2.186"
-lru                 = "0.18.0"
+lru                 = "0.18.1"
 mlua                = { version = "0.12.0", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2               = "0.6.4"
 ordered-float       = { version = "5.3.0", features = [ "serde" ] }
@@ -65,7 +65,7 @@ percent-encoding    = "2.3.2"
 rand                = { version = "0.10.2", default-features = false, features = [ "std", "sys_rng" ] }
 ratatui-core        = { version = "0.1.2", default-features = false, features = [ "std", "layout-cache", "serde", "underline-color" ] }
 ratatui-widgets     = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
-regex               = "1.12.4"
+regex               = "1.13.0"
 russh               = { version = "0.62.2", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }

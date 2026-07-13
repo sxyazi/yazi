@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
+use strum::EnumIs;
 
 use crate::{ParseError, Result, bail, event::Modifiers};
 
@@ -81,7 +82,7 @@ impl KeyEventState {
 }
 
 // --- Code
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, EnumIs, Eq, Hash, PartialEq, Serialize)]
 #[serde(tag = "type", content = "value")]
 pub enum KeyCode {
 	Char(char),
