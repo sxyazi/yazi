@@ -11,10 +11,8 @@ pub(super) static DEFAULT_ARC: RoCell<Arc<Auth>> = RoCell::new();
 
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
 pub struct Auth {
-	#[serde(default)]
 	pub kind:   AuthKind,
 	pub scheme: Scheme,
-	#[serde(default)]
 	pub domain: SStr,
 }
 

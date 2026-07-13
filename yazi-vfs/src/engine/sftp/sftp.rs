@@ -155,7 +155,7 @@ impl<'a> Engine for Sftp<'a> {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url:?}")));
 		};
 
-		let config = Vfs::service::<&ServiceSftp>(&auth.domain)?;
+		let config = Vfs::service::<&ServiceSftp>(auth)?;
 		Ok(Self::Me { url, path: loc.as_inner(), config })
 	}
 
