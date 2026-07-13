@@ -17,8 +17,14 @@ impl Dependency {
 		}
 
 		self.delete_assets().await?;
-		self.delete_sources().await?;
-		Ok(())
+		if !self.delete_sources().await? {
+			outln!(
+				"For safety, user data will be preserved, manually delete them from: {}",
+				dir.display()
+			)?;
+		}
+
+		Ok(outln!("Done!")?)
 	}
 
 	pub(super) async fn delete_assets(&self) -> Result<()> {
@@ -39,7 +45,7 @@ impl Dependency {
 		Ok(())
 	}
 
-	pub(super) async fn delete_sources(&self) -> Result<()> {
+	pub(super) async fn delete_sources(&self) -> Result<bool> {
 		let dir = self.target();
 		let files =
 			if self.is_flavor { Self::flavor_files() } else { Self::plugin_files(&dir).await? };
@@ -49,15 +55,6 @@ impl Dependency {
 				.with_context(|| format!("failed to delete `{}`", path.display()))?;
 		}
 
-		if ok_or_not_found(Local::regular(&dir).remove_dir().await).is_ok() {
-			outln!("Done!")?;
-		} else {
-			outln!(
-				"Done!
-For safety, user data has been preserved, please manually delete them within: {}",
-				dir.display()
-			)?;
-		}
-		Ok(())
+		Ok(ok_or_not_found(Local::regular(&dir).remove_dir().await).is_ok())
 	}
 }
