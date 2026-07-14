@@ -16,7 +16,7 @@ jobs:
           merge-multiple: true
 
       - name: Publish to Winget
-        uses: vedantmgoyal9/winget-releaser@main
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           identifier: sxyazi.yazi
           installers-regex: 'yazi-(x86_64|aarch64)-pc-windows-msvc\.zip$'
