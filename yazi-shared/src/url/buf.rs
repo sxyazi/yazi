@@ -282,13 +282,14 @@ impl<'de> IntoDeserializer<'de, de::value::Error> for &'de UrlBuf {
 // --- Tests
 #[cfg(test)]
 mod tests {
+	use std::fmt::Debug;
+
 	use anyhow::Result;
-	use typed_path::UnixPath;
 
 	use super::*;
 	use crate::{path::PathKind, url::UrlLike};
 
-	const S: char = std::path::MAIN_SEPARATOR;
+	fn debug(value: impl Debug) -> String { format!("{value:?}").replace(r"\", "/") }
 
 	#[test]
 	fn test_join() -> anyhow::Result<()> {
@@ -313,13 +314,7 @@ mod tests {
 
 		for (base, path, expected) in cases {
 			let base: UrlBuf = base.parse()?;
-			#[cfg(unix)]
-			assert_eq!(format!("{:?}", base.try_join(path)?), expected);
-			#[cfg(windows)]
-			assert_eq!(
-				format!("{:?}", base.try_join(path)?).replace(r"\", "/"),
-				expected.replace(r"\", "/")
-			);
+			assert_eq!(debug(base.try_join(path)?), expected);
 		}
 
 		Ok(())
@@ -360,7 +355,7 @@ mod tests {
 
 		for (path, expected) in cases {
 			let path: UrlBuf = path.parse()?;
-			assert_eq!(path.parent().map(|u| format!("{u:?}")).as_deref(), expected);
+			assert_eq!(path.parent().map(debug).as_deref(), expected);
 		}
 
 		Ok(())
@@ -371,26 +366,26 @@ mod tests {
 		crate::init_tests();
 
 		let u: UrlBuf = "/root".parse()?;
-		assert_eq!(format!("{u:?}"), "/root");
+		assert_eq!(debug(&u), "/root");
 
 		let u = u.into_search("kw")?;
-		assert_eq!(format!("{u:?}"), "search://kw//root");
-		assert_eq!(format!("{:?}", u.parent().unwrap()), "/");
+		assert_eq!(debug(&u), "search://kw//root");
+		assert_eq!(debug(u.parent().unwrap()), "/");
 
 		let u = u.try_join("examples")?;
-		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
+		assert_eq!(debug(&u), "search://kw:1:1//root/examples");
 
 		let u = u.try_join("README.md")?;
-		assert_eq!(format!("{u:?}"), format!("search://kw:2:2//root{S}examples{S}README.md"));
+		assert_eq!(debug(&u), "search://kw:2:2//root/examples/README.md");
 
 		let u = u.parent().unwrap();
-		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
+		assert_eq!(debug(u), "search://kw:1:1//root/examples");
 
 		let u = u.parent().unwrap();
-		assert_eq!(format!("{u:?}"), "search://kw//root");
+		assert_eq!(debug(u), "search://kw//root");
 
 		let u = u.parent().unwrap();
-		assert_eq!(format!("{u:?}"), "/");
+		assert_eq!(debug(u), "/");
 
 		Ok(())
 	}
@@ -400,13 +395,13 @@ mod tests {
 		crate::init_tests();
 
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
-		assert_eq!(format!("{root:?}"), "test-hub://root/@/");
+		assert_eq!(debug(&root), "test-hub://root/@/");
 		assert_eq!(root.loc().kind(), PathKind::Os);
 
 		let encoded: UrlBuf = "test-hub://%252C/@/".parse()?;
-		assert_eq!(format!("{encoded:?}"), "test-hub://%252C/@/");
+		assert_eq!(debug(encoded), "test-hub://%252C/@/");
 		let encoded: UrlBuf = "test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar".parse()?;
-		assert_eq!(format!("{encoded:?}"), format!("test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo{S}bar"));
+		assert_eq!(debug(encoded), "test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar");
 
 		Ok(())
 	}
@@ -417,17 +412,17 @@ mod tests {
 
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
 		let foo = root.try_join("foo")?.into_domain("a1");
-		assert_eq!(format!("{foo:?}"), "test-hub://a1/@root/foo");
+		assert_eq!(debug(&foo), "test-hub://a1/@root/foo");
 
 		let bar = foo.try_join("bar")?.into_domain("b1");
 		assert_eq!(bar.entry_key(), "b1");
-		assert_eq!(format!("{bar:?}"), format!("test-hub://b1/@a1,root/foo{S}bar"));
-		assert_eq!(format!("{:?}", bar.parent().unwrap()), "test-hub://a1/@root/foo");
-		assert_eq!(format!("{:?}", bar.parent().unwrap().parent().unwrap()), "test-hub://root/@/");
+		assert_eq!(debug(&bar), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(debug(bar.parent().unwrap()), "test-hub://a1/@root/foo");
+		assert_eq!(debug(bar.parent().unwrap().parent().unwrap()), "test-hub://root/@/");
 
 		let relative = UrlCow::try_from("test-hub://a1/@/@abc")?;
-		assert_eq!(format!("{:?}", relative.as_url()), "test-hub://a1/@/@abc");
-		assert_eq!(format!("{:?}", relative.parent().unwrap().as_url()), "test-hub:///@/");
+		assert_eq!(debug(relative.as_url()), "test-hub://a1/@/@abc");
+		assert_eq!(debug(relative.parent().unwrap().as_url()), "test-hub:///@/");
 		assert_eq!(relative.entry_key(), "a1");
 		assert!(!relative.is_owned());
 		assert!(relative.parent().unwrap().entry_key().is_empty());
@@ -442,26 +437,17 @@ mod tests {
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
 		let bar: UrlBuf = "test-hub://b1/@a1,root/foo/bar".parse()?;
 
-		assert_eq!(format!("{:?}", bar.try_join(".")?), format!("test-hub://b1/@a1,root/foo{S}bar"));
-		assert_eq!(
-			format!("{:?}", bar.try_join("..")?),
-			format!("test-hub:///@b1,a1,root/foo{S}bar{S}..")
-		);
+		assert_eq!(debug(bar.try_join(".")?), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(debug(bar.try_join("..")?), "test-hub:///@b1,a1,root/foo/bar/..");
 
-		assert_eq!(format!("{:?}", bar.try_join("/x/y")?), format!("test-hub:///@,/{S}x{S}y"));
-		assert_eq!(
-			format!("{:?}", root.try_join("../../..")?),
-			format!("test-hub:///@,,root/..{S}..{S}..")
-		);
+		assert_eq!(debug(bar.try_join("/x/y")?), "test-hub:///@,//x/y");
+		assert_eq!(debug(root.try_join("../../..")?), "test-hub:///@,,root/../../..");
 
 		let absolute = root.try_join("/foo")?;
-		assert_eq!(format!("{absolute:?}"), format!("test-hub:///@/{S}foo"));
+		assert_eq!(debug(&absolute), "test-hub:///@//foo");
 		let absolute = absolute.into_domain("a1");
-		assert_eq!(format!("{absolute:?}"), format!("test-hub://a1/@/{S}foo"));
-		assert_eq!(
-			format!("{:?}", absolute.parent().unwrap().try_join("..")?),
-			format!("test-hub:///@/{S}..")
-		);
+		assert_eq!(debug(&absolute), "test-hub://a1/@//foo");
+		assert_eq!(debug(absolute.parent().unwrap().try_join("..")?), "test-hub:///@//..");
 
 		Ok(())
 	}
@@ -471,16 +457,16 @@ mod tests {
 		crate::init_tests();
 
 		let ports: UrlBuf = "test-hub://b1:2:1/@a1,root/foo/bar".parse()?;
-		assert_eq!(format!("{:?}", ports.base()), "test-hub://root/@/");
-		assert_eq!(format!("{:?}", ports.trail()), "test-hub://a1/@root/foo");
+		assert_eq!(debug(ports.base()), "test-hub://root/@/");
+		assert_eq!(debug(ports.trail()), "test-hub://a1/@root/foo");
 
 		let ports: UrlBuf = "test-hub://b1:3:1/@a1,root//foo/bar".parse()?;
-		assert_eq!(format!("{:?}", ports.base()), "test-hub://root/@/");
-		assert_eq!(format!("{:?}", ports.trail()), format!("test-hub://a1/@root/{S}foo"));
+		assert_eq!(debug(ports.base()), "test-hub://root/@/");
+		assert_eq!(debug(ports.trail()), "test-hub://a1/@root//foo");
 
 		let zeroed: UrlBuf = "test-hub://b1:0:0/@a1,root/foo/bar".parse()?;
-		assert_eq!(format!("{:?}", zeroed.base()), format!("test-hub://b1/@a1,root/foo{S}bar"));
-		assert_eq!(format!("{:?}", zeroed.trail()), format!("test-hub://b1/@a1,root/foo{S}bar"));
+		assert_eq!(debug(zeroed.base()), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(debug(zeroed.trail()), "test-hub://b1/@a1,root/foo/bar");
 
 		Ok(())
 	}
@@ -499,13 +485,10 @@ mod tests {
 
 		let url: UrlBuf = "test-hub://b1/@a1,root/foo/bar".parse()?;
 		assert_eq!(
-			format!("{:?}", url.try_replace(2, Path::new("baz/qux"))?.as_url()),
-			format!("test-hub://b1:2:2/@,a1,root/foo{S}baz{S}qux")
+			debug(url.try_replace(2, Path::new("baz/qux"))?.as_url()),
+			"test-hub://b1:2:2/@,a1,root/foo/baz/qux"
 		);
-		assert_eq!(
-			format!("{:?}", url.try_replace(1, Path::new("qux"))?.as_url()),
-			"test-hub://b1/@root/qux"
-		);
+		assert_eq!(debug(url.try_replace(1, Path::new("qux"))?.as_url()), "test-hub://b1/@root/qux");
 
 		Ok(())
 	}
