@@ -4,8 +4,16 @@ use anyhow::Result;
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode, percent_encode};
 use yazi_shared::path::{PathCow, PathDyn, PathKind};
 
-const SET: &AsciiSet =
-	&CONTROLS.add(b'"').add(b'*').add(b':').add(b'<').add(b'>').add(b'?').add(b'\\').add(b'|');
+const SET: &AsciiSet = &CONTROLS
+	.add(b'"')
+	.add(b'*')
+	.add(b':')
+	.add(b'<')
+	.add(b'>')
+	.add(b'?')
+	.add(b'\\')
+	.add(b'|')
+	.add(b'%');
 
 pub trait PercentEncoding<'a> {
 	fn percent_encode(self) -> Cow<'a, Path>;

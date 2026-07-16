@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, path::Path};
 
 use anyhow::Result;
 
-use crate::{auth::{Auth, AuthKind}, path::{AsPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, spec::Spec, strand::{AsStrand, Strand}, url::{AsUrl, Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{auth::{Auth, AuthKind}, path::{DynPathRef, EndsWithError, JoinError, PathDyn, StartsWithError, StripPrefixError}, spec::Spec, strand::{AsStrand, Strand}, url::{AsUrl, Components, Display, Url, UrlBuf, UrlCow}};
 
 pub trait UrlLike
 where
@@ -21,6 +21,8 @@ where
 	fn display(&self) -> Display<'_> { Display(self.as_url()) }
 
 	fn ext(&self) -> Option<Strand<'_>> { self.as_url().ext() }
+
+	fn entry_key(&self) -> PathDyn<'_> { self.as_url().entry_key() }
 
 	fn has_base(&self) -> bool { self.as_url().has_base() }
 
@@ -44,6 +46,8 @@ where
 
 	fn pair(&self) -> Option<(Url<'_>, PathDyn<'_>)> { self.as_url().pair() }
 
+	fn pair2(&self) -> Option<(Url<'_>, PathDyn<'_>)> { self.as_url().pair2() }
+
 	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
 	fn spec(&self) -> Spec { self.as_url().spec() }
@@ -62,8 +66,8 @@ where
 		self.as_url().try_join(path)
 	}
 
-	fn try_replace<'a>(&self, take: usize, path: impl AsPathRef<'a>) -> Result<UrlCow<'a>> {
-		self.as_url().try_replace(take, path)
+	fn try_replace<'a>(&self, take: usize, to: impl DynPathRef<'a>) -> Result<UrlCow<'a>> {
+		self.as_url().try_replace(take, to)
 	}
 
 	fn try_starts_with(&self, base: impl AsUrl) -> Result<bool, StartsWithError> {

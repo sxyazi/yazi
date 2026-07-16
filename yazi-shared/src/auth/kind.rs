@@ -11,6 +11,7 @@ pub enum AuthKind {
 	Regular,
 	Search,
 	Mount,
+	Hub,
 	Scope,
 	Sftp,
 }
@@ -20,7 +21,7 @@ impl AuthKind {
 	pub fn is_local(self) -> bool {
 		match self {
 			Self::Regular | Self::Search => true,
-			Self::Mount | Self::Scope | Self::Sftp => false,
+			Self::Mount | Self::Hub | Self::Scope | Self::Sftp => false,
 		}
 	}
 
@@ -28,7 +29,7 @@ impl AuthKind {
 	pub fn is_remote(self) -> bool {
 		match self {
 			Self::Regular | Self::Search | Self::Mount => false,
-			Self::Scope | Self::Sftp => true,
+			Self::Hub | Self::Scope | Self::Sftp => true,
 		}
 	}
 
@@ -36,7 +37,7 @@ impl AuthKind {
 	pub fn is_virtual(self) -> bool {
 		match self {
 			Self::Regular | Self::Search => false,
-			Self::Mount | Self::Scope | Self::Sftp => true,
+			Self::Mount | Self::Hub | Self::Scope | Self::Sftp => true,
 		}
 	}
 }

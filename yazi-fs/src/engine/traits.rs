@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{path::{AsPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
+use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
 use crate::{cha::{Cha, ChaType}, engine::{Attrs, Capabilities}};
 
@@ -23,11 +23,11 @@ pub trait Engine: Sized {
 
 	fn copy<P>(&self, to: P, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
 	where
-		P: AsPath;
+		P: DynPath;
 
 	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
 	where
-		P: AsPath,
+		P: DynPath,
 		A: Into<Attrs>;
 
 	fn create(&self) -> impl Future<Output = io::Result<Self::File>> {
@@ -80,7 +80,7 @@ pub trait Engine: Sized {
 
 	fn hard_link<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPath;
+		P: DynPath;
 
 	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
@@ -157,7 +157,7 @@ pub trait Engine: Sized {
 
 	fn rename<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
-		P: AsPath;
+		P: DynPath;
 
 	fn set_attrs(&self, attrs: Attrs) -> impl Future<Output = io::Result<()>>;
 

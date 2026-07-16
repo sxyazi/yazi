@@ -2,7 +2,7 @@ use std::{iter, path::Path};
 
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::{impl_data_any, relay};
-use yazi_shared::{id::{Id, Ids}, path::PathBufDyn, url::{UrlBuf, UrlLike, UrlMapExt}};
+use yazi_shared::{id::{Id, Ids}, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike, UrlMapExt}};
 
 use crate::{cha::Cha, file::File};
 
@@ -42,16 +42,17 @@ impl FilesOp {
 
 	pub fn files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
 		match self {
-			Self::Full(_, files, _) => Box::new(files.iter()),
-			Self::Part(_, files, _) => Box::new(files.iter()),
+			Self::Full(_, files, _) | Self::Part(_, files, _) | Self::Creating(_, files) => {
+				Box::new(files.iter().filter(|f| !f.entry_key().is_empty()))
+			}
 			Self::Done(..) => Box::new(iter::empty()),
 			Self::Size(..) => Box::new(iter::empty()),
 			Self::IOErr(..) => Box::new(iter::empty()),
 
-			Self::Creating(_, files) => Box::new(files.iter()),
 			Self::Deleting(..) => Box::new(iter::empty()),
-			Self::Updating(_, map) => Box::new(map.values()),
-			Self::Upserting(_, map) => Box::new(map.values()),
+			Self::Updating(_, map) | Self::Upserting(_, map) => {
+				Box::new(map.values().filter(|f| !f.entry_key().is_empty()))
+			}
 		}
 	}
 
@@ -68,7 +69,7 @@ impl FilesOp {
 	pub fn create(files: Vec<File>) {
 		let mut parents: HashMap<UrlBuf, Vec<_>> = Default::default();
 		for file in files {
-			if let Some(p) = file.url.parent() {
+			if let Some((p, _)) = file.url.pair2() {
 				parents.get_or_insert_default(p).push(file);
 			}
 		}
@@ -80,18 +81,18 @@ impl FilesOp {
 	pub fn rename(map: HashMap<UrlBuf, File>) {
 		let mut parents: HashMap<UrlBuf, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
-			let Some(o_p) = o.parent() else { continue };
-			let Some(n_p) = n.url.parent() else { continue };
+			let Some((o_p, o_k)) = o.pair2() else { continue };
+			let Some((n_p, n_k)) = n.url.pair2() else { continue };
 			if o_p == n_p {
-				parents.get_or_insert_default(o_p).1.insert(o.urn().into(), n);
+				parents.get_or_insert_default(o_p).1.insert(o_k.into(), n);
 			} else {
-				parents.get_or_insert_default(o_p).0.insert(o.urn().into());
-				parents.get_or_insert_default(n_p).1.insert(n.urn().into(), n);
+				parents.get_or_insert_default(o_p).0.insert(o_k.into());
+				parents.get_or_insert_default(n_p).1.insert(n_k.into(), n);
 			}
 		}
 		for (p, (o, n)) in parents {
 			match (o.is_empty(), n.is_empty()) {
-				(true, true) => unreachable!(),
+				(true, true) => {}
 				(true, false) => Self::Upserting(p, n).emit(),
 				(false, true) => Self::Deleting(p, o).emit(),
 				(false, false) => {
@@ -106,14 +107,20 @@ impl FilesOp {
 		let mut parents: HashMap<_, (HashMap<_, _>, HashSet<_>)> = Default::default();
 		for op in ops {
 			match op {
-				Self::Upserting(p, map) => parents.entry(p).or_default().0.extend(map),
-				Self::Deleting(p, urns) => parents.entry(p).or_default().1.extend(urns),
+				Self::Upserting(p, map) => parents
+					.entry(p)
+					.or_default()
+					.0
+					.extend(map.into_iter().filter(|(k, f)| !k.is_empty() && !f.entry_key().is_empty())),
+				Self::Deleting(p, keys) => {
+					parents.entry(p).or_default().1.extend(keys.into_iter().filter(|k| !k.is_empty()))
+				}
 				_ => unreachable!(),
 			}
 		}
 		for (p, (u, d)) in parents {
 			match (u.is_empty(), d.is_empty()) {
-				(true, true) => unreachable!(),
+				(true, true) => {}
 				(true, false) => Self::Deleting(p, d).emit(),
 				(false, true) => Self::Upserting(p, u).emit(),
 				(false, false) => {
@@ -147,17 +154,25 @@ impl FilesOp {
 		}
 	}
 
-	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<File>) {
+	pub fn diff_recoverable<'a, I>(&self, urls: I) -> (Vec<UrlBuf>, Vec<File>)
+	where
+		I: IntoIterator<Item = &'a UrlBuf>,
+	{
+		let cwd = self.cwd();
+		let it = urls
+			.into_iter()
+			.filter(|u| u.parent().is_some_and(|p| p == *cwd))
+			.filter(|u| !u.entry_key().is_empty());
+
 		match self {
-			Self::Deleting(cwd, urns) => {
-				(urns.iter().filter_map(|u| cwd.try_join(u).ok()).collect(), vec![])
+			Self::Deleting(_, keys) => {
+				(it.filter(|u| keys.contains(&u.entry_key())).cloned().collect(), vec![])
 			}
-			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns
-				.iter()
-				.filter(|&(u, f)| u != f.urn())
-				.filter_map(|(u, f)| cwd.try_join(u).ok().map(|u| (u, f)))
-				.filter(|(u, _)| contains(u))
-				.map(|(u, f)| (u, f.clone()))
+			Self::Updating(_, files) | Self::Upserting(_, files) => it
+				.filter_map(|u| files.get(&u.entry_key()).map(|f| (u, f)))
+				.filter(|(_, f)| !f.entry_key().is_empty())
+				.filter(|&(u, f)| u != f.url)
+				.map(|(u, f)| (u.clone(), f.clone()))
 				.unzip(),
 			_ => (vec![], vec![]),
 		}

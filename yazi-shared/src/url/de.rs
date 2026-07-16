@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserializer, de::{self, IntoDeserializer, MapAccess}};
 
-use crate::{data::BytesDeserializer, pool::{InternStr, Symbol}, url::UrlCow};
+use crate::{auth::Domain, data::BytesDeserializer, pool::{InternStr, Symbol}, url::UrlCow};
 
 pub struct UrlDeserializer<'a>(pub(super) UrlCow<'a>);
 
@@ -33,7 +33,7 @@ impl<'de, 'a: 'de> Deserializer<'de> for UrlDeserializer<'a> {
 struct MapDeserializer<'a> {
 	kind:   Option<&'static str>,
 	scheme: Option<Symbol<str>>,
-	domain: Option<Symbol<str>>,
+	domain: Option<Domain<'static>>,
 	uri:    Option<usize>,
 	urn:    Option<usize>,
 	path:   Option<Cow<'a, [u8]>>,
@@ -47,7 +47,7 @@ impl<'a> MapDeserializer<'a> {
 		Self {
 			kind:   Some(spec.kind.into()),
 			scheme: Some(spec.scheme.intern()),
-			domain: Some(spec.domain.intern()),
+			domain: Some(spec.domain.clone()),
 			uri:    Some(uri),
 			urn:    Some(urn),
 			path:   Some(path.into_encoded_bytes()),

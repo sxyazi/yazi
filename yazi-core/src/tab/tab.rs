@@ -85,7 +85,7 @@ impl Tab {
 	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.current.hovered_mut() }
 
 	pub fn hovered_rect(&self) -> Option<Rect> {
-		let y = self.current.entries.position(self.hovered()?.urn())? - self.current.offset;
+		let y = self.current.entries.position(self.hovered()?.entry_key())? - self.current.offset;
 
 		let mut rect = LAYOUT.get().current;
 		rect.y = rect.y.saturating_sub(1) + y as u16;

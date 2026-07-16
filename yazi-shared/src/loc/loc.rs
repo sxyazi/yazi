@@ -3,7 +3,7 @@ use std::{hash::{Hash, Hasher}, marker::PhantomData, ops::Deref};
 use anyhow::{Result, bail};
 
 use super::LocAbleImpl;
-use crate::{auth::AuthKind, loc::{LocAble, LocBuf, LocBufAble, StrandAbleImpl}, path::{AsPath, AsPathView, PathDyn}, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{LocAble, LocBuf, LocBufAble, StrandAbleImpl}, path::{DynPath, PathDyn, PathView}, strand::AsStrandView};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Loc<'p, P = &'p std::path::Path> {
@@ -29,11 +29,11 @@ where
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl<'p, P> AsPath for Loc<'p, P>
+impl<'p, P> DynPath for Loc<'p, P>
 where
-	P: LocAble<'p> + AsPath,
+	P: LocAble<'p> + DynPath,
 {
-	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
+	fn dyn_path(&self) -> PathDyn<'_> { self.inner.dyn_path() }
 }
 
 // FIXME: remove
@@ -81,9 +81,9 @@ where
 
 	pub fn bare<T>(path: T) -> Self
 	where
-		T: AsPathView<'p, P>,
+		T: PathView<'p, P>,
 	{
-		let path = path.as_path_view();
+		let path = path.path_view();
 		let Some(name) = path.file_name() else {
 			let p = path.strip_prefix(P::empty()).unwrap();
 			return Self { inner: p, uri: 0, urn: 0, _phantom: PhantomData };
@@ -114,7 +114,7 @@ where
 
 	pub fn floated<'a, T, S>(path: T, base: S) -> Self
 	where
-		T: AsPathView<'p, P>,
+		T: PathView<'p, P>,
 		S: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let mut loc = Self::bare(path);
@@ -133,7 +133,7 @@ where
 
 	pub fn new<'a, T, S>(path: T, base: S, trail: S) -> Self
 	where
-		T: AsPathView<'p, P>,
+		T: PathView<'p, P>,
 		S: AsStrandView<'a, P::Strand<'a>>,
 	{
 		let mut loc = Self::bare(path);
@@ -143,18 +143,17 @@ where
 	}
 
 	#[inline]
-	pub fn parent(self) -> Option<P> {
-		self.inner.parent().filter(|p| !p.as_encoded_bytes().is_empty())
-	}
+	pub fn parent(self) -> Option<P> { self.inner.parent() }
 
 	pub fn saturated<'a, T>(path: T, kind: AuthKind) -> Self
 	where
-		T: AsPathView<'p, P>,
+		T: PathView<'p, P>,
 	{
 		match kind {
 			AuthKind::Regular => Self::bare(path),
 			AuthKind::Search => Self::zeroed(path),
 			AuthKind::Mount => Self::zeroed(path),
+			AuthKind::Hub => Self::bare(path),
 			AuthKind::Scope => Self::bare(path),
 			AuthKind::Sftp => Self::bare(path),
 		}
@@ -206,7 +205,7 @@ where
 
 	pub fn with<T>(path: T, uri: usize, urn: usize) -> Result<Self>
 	where
-		T: AsPathView<'p, P>,
+		T: PathView<'p, P>,
 	{
 		if urn > uri {
 			bail!("URN cannot be longer than URI");
@@ -238,7 +237,7 @@ where
 
 	pub fn zeroed<T>(path: T) -> Self
 	where
-		T: AsPathView<'p, P>,
+		T: PathView<'p, P>,
 	{
 		let mut loc = Self::bare(path);
 		(loc.uri, loc.urn) = (0, 0);
@@ -248,7 +247,20 @@ where
 
 #[cfg(test)]
 mod tests {
+	use std::path::Path;
+
+	use typed_path::UnixPath;
+
 	use super::*;
+
+	#[test]
+	fn test_parent() {
+		assert_eq!(Loc::bare(Path::new("foo")).parent(), Some(Path::new("")));
+		assert_eq!(Loc::bare(Path::new("")).parent(), None);
+
+		assert_eq!(Loc::bare(UnixPath::new("foo")).parent(), Some(UnixPath::new("")));
+		assert_eq!(Loc::bare(UnixPath::new("")).parent(), None);
+	}
 
 	#[test]
 	fn test_with() -> Result<()> {
@@ -268,11 +280,11 @@ mod tests {
 		];
 
 		for (path, uri, urn, expect_uri, expect_urn) in cases {
-			let loc = Loc::with(std::path::Path::new(path), uri, urn)?;
+			let loc = Loc::with(Path::new(path), uri, urn)?;
 			assert_eq!(loc.uri().to_str().unwrap(), expect_uri);
 			assert_eq!(loc.urn().to_str().unwrap(), expect_urn);
 
-			let loc = Loc::with(typed_path::UnixPath::new(path), uri, urn)?;
+			let loc = Loc::with(UnixPath::new(path), uri, urn)?;
 			assert_eq!(loc.uri().to_str().unwrap(), expect_uri);
 			assert_eq!(loc.urn().to_str().unwrap(), expect_urn);
 		}

@@ -66,8 +66,8 @@ impl Actor for Rename {
 
 impl Rename {
 	async fn r#do(tab: Id, old: UrlBuf, new: UrlBuf) -> Result<()> {
-		let Some((old_p, old_n)) = old.pair() else { return Ok(()) };
-		let Some(_) = new.pair() else { return Ok(()) };
+		let Some((old_p, old_k)) = old.pair2() else { return Ok(()) };
+		let Some(_) = new.pair2() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		let overwritten = engine::casefold(&new).await;
@@ -75,21 +75,21 @@ impl Rename {
 
 		if let Ok(u) = overwritten
 			&& u != new
-			&& let Some((parent, urn)) = u.pair()
+			&& let Some((parent, key)) = u.pair2()
 		{
 			ok_or_not_found!(engine::rename(&u, &new).await);
-			FilesOp::Deleting(parent.to_owned(), [urn.into()].into()).emit();
+			FilesOp::Deleting(parent.to_owned(), [key.into()].into()).emit();
 		}
 
 		let new = engine::casefold(&new).await?;
-		let Some((new_p, new_n)) = new.pair() else { return Ok(()) };
+		let Some((new_p, new_k)) = new.pair2() else { return Ok(()) };
 
 		let file = File::new(&new).await?;
 		if new_p == old_p {
-			FilesOp::Upserting(old_p.into(), [(old_n.into(), file)].into()).emit();
+			FilesOp::Upserting(old_p.into(), [(old_k.into(), file)].into()).emit();
 		} else {
-			FilesOp::Deleting(old_p.into(), [old_n.into()].into()).emit();
-			FilesOp::Upserting(new_p.into(), [(new_n.into(), file)].into()).emit();
+			FilesOp::Deleting(old_p.into(), [old_k.into()].into()).emit();
+			FilesOp::Upserting(new_p.into(), [(new_k.into(), file)].into()).emit();
 		}
 
 		MgrProxy::reveal(&new);

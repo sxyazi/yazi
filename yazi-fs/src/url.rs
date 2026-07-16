@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
 use mlua::UserDataFields;
-use yazi_shared::{path::{AsPath, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use yazi_shared::{path::{DynPath, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{FsHash128, FsSpec, path::PercentEncoding};
@@ -29,7 +29,7 @@ impl<'a> FsUrl<'a> for Url<'a> {
 		fn with_loc(loc: PathDyn, mut root: PathBuf) -> PathBuf {
 			let mut it = loc.components();
 			if it.next() == Some(yazi_shared::path::Component::RootDir) {
-				root.push(it.as_path().percent_encode());
+				root.push(it.dyn_path().percent_encode());
 			} else {
 				root.push(".%2F");
 				root.push(loc.percent_encode());
@@ -51,7 +51,7 @@ impl<'a> FsUrl<'a> for Url<'a> {
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } => loc.as_inner().into(),
-			Self::Mount { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
+			Self::Mount { .. } | Self::Hub { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}
@@ -66,7 +66,7 @@ impl FsUrl<'_> for UrlBuf {
 	fn unified_path(self) -> Cow<'static, Path> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner().into(),
-			Self::Mount { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
+			Self::Mount { .. } | Self::Hub { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}
@@ -81,7 +81,7 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 	fn unified_path(self) -> Cow<'a, Path> {
 		match self {
 			Self::Regular(loc) | Self::Search { loc, .. } => loc.into_inner(),
-			Self::Mount { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
+			Self::Mount { .. } | Self::Hub { .. } | Self::Scope { .. } | Self::Sftp { .. } => {
 				self.cache().expect("non-local URL should have a cache path").into()
 			}
 		}

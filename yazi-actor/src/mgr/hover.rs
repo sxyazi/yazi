@@ -18,19 +18,19 @@ impl Actor for Hover {
 
 		// Parent should always track CWD
 		if let Some(p) = &mut tab.parent {
-			render!(p.repos(tab.current.url.try_strip_prefix(&p.url).ok()));
+			render!(p.repos(Some(tab.current.url.entry_key())));
 		}
 
 		// Repos CWD
-		render!(tab.current.repos(form.urn.as_ref().map(Into::into)));
+		render!(tab.current.repos(form.key.as_ref().map(Into::into)));
 
 		// Turn on tracing
-		if let (Some(h), Some(u)) = (tab.hovered(), form.urn)
-			&& h.urn() == u
+		if let (Some(h), Some(key)) = (tab.hovered(), form.key)
+			&& h.entry_key() == key
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
-			// At this point, it's intuitive to track the file location regardless.
-			tab.current.trace = Some(u.clone());
+			// At this point, it's intuitive to track the entry regardless.
+			tab.current.trace = Some(key.clone());
 			cx.tasks.scheduler.behavior.reset();
 		}
 

@@ -4,7 +4,7 @@ use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::engine::{Capabilities, DirReader, Engine, FileHolder};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{auth::AuthKind, loc::LocBuf, path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{auth::AuthKind, loc::LocBuf, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
 use crate::engine::sftp::Conn;
@@ -83,9 +83,9 @@ impl<'a> Engine for Sftp<'a> {
 
 	async fn copy<P>(&self, to: P, attrs: yazi_fs::engine::Attrs) -> io::Result<u64>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
-		let to = to.as_path().as_unix()?;
+		let to = to.dyn_path().as_unix()?;
 		let attrs = super::Attrs(attrs).try_into().unwrap_or_default();
 
 		let op = self.op().await?;
@@ -107,12 +107,12 @@ impl<'a> Engine for Sftp<'a> {
 
 	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<Receiver<io::Result<u64>>>
 	where
-		P: AsPath,
+		P: DynPath,
 		A: Into<yazi_fs::engine::Attrs>,
 	{
 		let to = UrlBuf::Sftp {
 			loc:  LocBuf::<typed_path::UnixPathBuf>::saturated(
-				to.as_path().to_unix_owned()?,
+				to.dyn_path().to_unix_owned()?,
 				AuthKind::Sftp,
 			),
 			auth: self.config.auth.clone(),
@@ -138,9 +138,9 @@ impl<'a> Engine for Sftp<'a> {
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
-		let to = to.as_path().as_unix()?;
+		let to = to.dyn_path().as_unix()?;
 
 		Ok(self.op().await?.hardlink(self.path, to).await?)
 	}
@@ -176,9 +176,9 @@ impl<'a> Engine for Sftp<'a> {
 
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
-		let to = to.as_path().as_unix()?;
+		let to = to.dyn_path().as_unix()?;
 		let op = self.op().await?;
 
 		match op.rename_posix(self.path, &to).await {

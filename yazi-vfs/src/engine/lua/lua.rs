@@ -6,7 +6,7 @@ use yazi_binding::MpscTx;
 use yazi_config::vfs::{ServiceLua, Vfs};
 use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::Files};
 use yazi_runner::{RUNNER, provider::{ProvideResult, ProviderJob}};
-use yazi_shared::{event::Cmd, path::{AsPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{event::Cmd, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::engine::lua::ReadDir;
 
@@ -48,23 +48,23 @@ impl<'a> Engine for Lua<'a> {
 
 	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
 		let from = self.url.to_owned();
-		let to = to.as_path().to_owned();
+		let to = to.dyn_path().to_owned();
 
 		Ok(self.call(ProviderJob::Copy { from, to, attrs }).await?.0?)
 	}
 
 	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
 	where
-		P: AsPath,
+		P: DynPath,
 		A: Into<Attrs>,
 	{
 		let (tx, rx) = mpsc::channel(20);
 		let job = ProviderJob::CopyProgressive {
 			from:  self.url.to_owned(),
-			to:    to.as_path().to_owned(),
+			to:    to.dyn_path().to_owned(),
 			attrs: attrs.into(),
 			tx:    MpscTx::map(tx.clone(), Ok),
 		};
@@ -88,10 +88,10 @@ impl<'a> Engine for Lua<'a> {
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
 		let from = self.url.to_owned();
-		let to = to.as_path().to_owned();
+		let to = to.dyn_path().to_owned();
 
 		Ok(self.call(ProviderJob::HardLink { from, to }).await?.ok()?)
 	}
@@ -103,7 +103,7 @@ impl<'a> Engine for Lua<'a> {
 	}
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
-		let (Url::Mount { auth, .. } | Url::Scope { auth, .. }) = url else {
+		let (Url::Mount { auth, .. } | Url::Hub { auth, .. } | Url::Scope { auth, .. }) = url else {
 			return Err(io::Error::new(
 				io::ErrorKind::InvalidInput,
 				format!("Not a custom VFS URL: {url:?}"),
@@ -141,10 +141,10 @@ impl<'a> Engine for Lua<'a> {
 
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
 		let from = self.url.to_owned();
-		let to = to.as_path().to_owned();
+		let to = to.dyn_path().to_owned();
 
 		Ok(self.call(ProviderJob::Rename { from, to }).await?.ok()?)
 	}

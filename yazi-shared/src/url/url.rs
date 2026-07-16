@@ -5,13 +5,14 @@ use hashbrown::Equivalent;
 use serde::Serialize;
 
 use super::Encode as EncodeUrl;
-use crate::{auth::{Auth, AuthKind}, loc::{Loc, LocBuf}, path::{AsPath, AsPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, spec::{Encode as EncodeSpec, ParsedSpec, Spec}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
+use crate::{auth::{Auth, AuthKind}, loc::{Loc, LocBuf}, path::{DynPath, DynPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, spec::{EncodeSpec, ParsedSpec, Spec}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Url<'a> {
 	Regular(Loc<'a>),
 	Search { loc: Loc<'a>, auth: &'a Arc<Auth> },
 	Mount { loc: Loc<'a>, auth: &'a Arc<Auth> },
+	Hub { loc: Loc<'a>, auth: &'a Arc<Auth> },
 	Scope { loc: Loc<'a, &'a typed_path::UnixPath>, auth: &'a Arc<Auth> },
 	Sftp { loc: Loc<'a, &'a typed_path::UnixPath>, auth: &'a Arc<Auth> },
 }
@@ -60,9 +61,20 @@ impl<'a> Url<'a> {
 			Self::Regular(_) => &Auth::DEFAULT,
 			Self::Search { auth, .. }
 			| Self::Mount { auth, .. }
+			| Self::Hub { auth, .. }
 			| Self::Scope { auth, .. }
 			| Self::Sftp { auth, .. } => auth,
 		}
+	}
+
+	fn auth_at(self, base: Self) -> Option<&'a Auth> {
+		let (Self::Hub { auth, .. }, Self::Hub { .. }) = (self, base) else {
+			return self.auth().covariant(base.auth()).then_some(self.auth());
+		};
+
+		let depth =
+			self.loc().components().auth_depth().checked_sub(base.loc().components().auth_depth())?;
+		Some(auth.parent_at(depth))
 	}
 
 	#[inline]
@@ -75,6 +87,10 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
 			Self::Search { loc, auth } => Self::Search { loc: Loc::zeroed(loc.base()), auth },
 			Self::Mount { loc, auth } => Self::Mount { loc: Loc::zeroed(loc.base()), auth },
+			Self::Hub { loc, auth } => Self::Hub {
+				loc:  Loc::bare(loc.base()),
+				auth: auth.parent_at(loc.uri().dyn_path().components().auth_depth()),
+			},
 			Self::Scope { loc, auth } => Self::Scope { loc: Loc::bare(loc.base()), auth },
 			Self::Sftp { loc, auth } => Self::Sftp { loc: Loc::bare(loc.base()), auth },
 		}
@@ -95,6 +111,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.extension()?.as_strand(),
 			Self::Search { loc, .. } => loc.extension()?.as_strand(),
 			Self::Mount { loc, .. } => loc.extension()?.as_strand(),
+			Self::Hub { loc, .. } => loc.extension()?.as_strand(),
 			Self::Scope { loc, .. } => loc.extension()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.extension()?.as_strand(),
 		})
@@ -106,6 +123,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.has_base(),
 			Self::Search { loc, .. } => loc.has_base(),
 			Self::Mount { loc, .. } => loc.has_base(),
+			Self::Hub { loc, .. } => loc.has_base(),
 			Self::Scope { loc, .. } => loc.has_base(),
 			Self::Sftp { loc, .. } => loc.has_base(),
 		}
@@ -120,6 +138,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.has_trail(),
 			Self::Search { loc, .. } => loc.has_trail(),
 			Self::Mount { loc, .. } => loc.has_trail(),
+			Self::Hub { loc, .. } => loc.has_trail(),
 			Self::Scope { loc, .. } => loc.has_trail(),
 			Self::Sftp { loc, .. } => loc.has_trail(),
 		}
@@ -140,11 +159,12 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn loc(self) -> PathDyn<'a> {
 		match self {
-			Self::Regular(loc) => loc.as_path(),
-			Self::Search { loc, .. } => loc.as_path(),
-			Self::Mount { loc, .. } => loc.as_path(),
-			Self::Scope { loc, .. } => loc.as_path(),
-			Self::Sftp { loc, .. } => loc.as_path(),
+			Self::Regular(loc) => loc.dyn_path(),
+			Self::Search { loc, .. } => loc.dyn_path(),
+			Self::Mount { loc, .. } => loc.dyn_path(),
+			Self::Hub { loc, .. } => loc.dyn_path(),
+			Self::Scope { loc, .. } => loc.dyn_path(),
+			Self::Sftp { loc, .. } => loc.dyn_path(),
 		}
 	}
 
@@ -154,6 +174,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.file_name()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Mount { loc, .. } => loc.file_name()?.as_strand(),
+			Self::Hub { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Scope { loc, .. } => loc.file_name()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.file_name()?.as_strand(),
 		})
@@ -164,6 +185,19 @@ impl<'a> Url<'a> {
 
 	#[inline]
 	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> { Some((self.parent()?, self.urn())) }
+
+	#[inline]
+	pub fn pair2(self) -> Option<(Self, PathDyn<'a>)> {
+		Some((self.parent()?, Some(self.entry_key()).filter(|k| !k.is_empty())?))
+	}
+
+	#[inline]
+	pub fn entry_key(self) -> PathDyn<'a> {
+		match self {
+			Self::Hub { auth, .. } => PathDyn::Unix(typed_path::UnixPath::new(auth.domain.as_bytes())),
+			_ => self.urn(),
+		}
+	}
 
 	pub fn parent(self) -> Option<Self> {
 		let uri = self.uri();
@@ -187,6 +221,11 @@ impl<'a> Url<'a> {
 				Self::Mount { loc: Loc::floated(loc.parent()?, loc.base()), auth }
 			}
 
+			// Hub
+			Self::Hub { loc, auth } => {
+				Self::Hub { loc: Loc::bare(loc.parent()?), auth: auth.parent.as_ref()? }
+			}
+
 			// Scope
 			Self::Scope { loc, auth } => Self::Scope { loc: Loc::bare(loc.parent()?), auth },
 
@@ -205,6 +244,7 @@ impl<'a> Url<'a> {
 			Self::Regular(_) => Auth::default_arc(),
 			Self::Search { auth, .. }
 			| Self::Mount { auth, .. }
+			| Self::Hub { auth, .. }
 			| Self::Scope { auth, .. }
 			| Self::Sftp { auth, .. } => auth.clone(),
 		};
@@ -219,6 +259,7 @@ impl<'a> Url<'a> {
 			Self::Regular(loc) => loc.file_stem()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Mount { loc, .. } => loc.file_stem()?.as_strand(),
+			Self::Hub { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Scope { loc, .. } => loc.file_stem()?.as_strand(),
 			Self::Sftp { loc, .. } => loc.file_stem()?.as_strand(),
 		})
@@ -253,6 +294,11 @@ impl<'a> Url<'a> {
 				Self::Mount { loc: Loc::new(loc.trail(), loc.base(), loc.base()), auth }
 			}
 
+			Self::Hub { loc, auth } => Self::Hub {
+				loc:  Loc::bare(loc.trail()),
+				auth: auth.parent_at(loc.urn().dyn_path().components().auth_depth()),
+			},
+
 			Self::Scope { loc, auth } => Self::Scope { loc: Loc::bare(loc.trail()), auth },
 
 			Self::Sftp { loc, auth } => Self::Sftp { loc: Loc::bare(loc.trail()), auth },
@@ -261,13 +307,16 @@ impl<'a> Url<'a> {
 
 	pub fn triple(self) -> (PathDyn<'a>, PathDyn<'a>, PathDyn<'a>) {
 		match self {
-			Self::Regular(loc) | Self::Search { loc, .. } | Self::Mount { loc, .. } => {
+			Self::Regular(loc)
+			| Self::Search { loc, .. }
+			| Self::Mount { loc, .. }
+			| Self::Hub { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
-				(base.as_path(), rest.as_path(), urn.as_path())
+				(base.dyn_path(), rest.dyn_path(), urn.dyn_path())
 			}
 			Self::Scope { loc, .. } | Self::Sftp { loc, .. } => {
 				let (base, rest, urn) = loc.triple();
-				(base.as_path(), rest.as_path(), urn.as_path())
+				(base.dyn_path(), rest.dyn_path(), urn.dyn_path())
 			}
 		}
 	}
@@ -279,6 +328,7 @@ impl<'a> Url<'a> {
 	}
 
 	pub fn try_join(self, path: impl AsStrand) -> Result<UrlBuf, JoinError> {
+		let path = path.as_strand();
 		let joined = self.loc().try_join(path)?;
 
 		Ok(match self {
@@ -300,6 +350,11 @@ impl<'a> Url<'a> {
 				UrlBuf::Mount { loc: LocBuf::<PathBuf>::zeroed(joined.into_os()?), auth: auth.clone() }
 			}
 
+			Self::Hub { auth, .. } => UrlBuf::Hub {
+				loc:  joined.into_os()?.into(),
+				auth: auth.clone().descend(path.as_os_path()?),
+			},
+
 			Self::Scope { auth, .. } => {
 				UrlBuf::Scope { loc: joined.into_unix()?.into(), auth: auth.clone() }
 			}
@@ -310,8 +365,8 @@ impl<'a> Url<'a> {
 		})
 	}
 
-	pub fn try_replace<'b>(self, take: usize, to: impl AsPathRef<'b>) -> Result<UrlCow<'b>> {
-		self.try_replace_impl(take, to.as_path_ref())
+	pub fn try_replace<'b>(self, take: usize, to: impl DynPathRef<'b>) -> Result<UrlCow<'b>> {
+		self.try_replace_impl(take, to.dyn_path_ref())
 	}
 
 	fn try_replace_impl<'b>(self, take: usize, rep: PathDyn<'b>) -> Result<UrlCow<'b>> {
@@ -337,6 +392,10 @@ impl<'a> Url<'a> {
 				loc:  LocBuf::<std::path::PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
 				auth: auth.clone(),
 			},
+			Self::Hub { loc, auth } if path.try_starts_with(loc.trail())? => UrlBuf::Hub {
+				auth: auth.clone().with_parent_depth(path.components().auth_depth()),
+				loc:  LocBuf::<PathBuf>::new(path.into_os()?, loc.base(), loc.trail()),
+			},
 			Self::Scope { loc, auth } if path.try_starts_with(loc.trail())? => UrlBuf::Scope {
 				loc:  LocBuf::<typed_path::UnixPathBuf>::new(path.into_unix()?, loc.base(), loc.trail()),
 				auth: auth.clone(),
@@ -354,6 +413,10 @@ impl<'a> Url<'a> {
 				loc:  LocBuf::<std::path::PathBuf>::saturated(path.into_os()?, self.kind()),
 				auth: auth.clone(),
 			},
+			Self::Hub { auth, .. } => UrlBuf::Hub {
+				auth: auth.clone().with_parent_depth(path.components().auth_depth()),
+				loc:  LocBuf::<PathBuf>::saturated(path.into_os()?, self.kind()),
+			},
 			Self::Scope { auth, .. } => UrlBuf::Scope {
 				loc:  LocBuf::<typed_path::UnixPathBuf>::saturated(path.into_unix()?, self.kind()),
 				auth: auth.clone(),
@@ -367,10 +430,12 @@ impl<'a> Url<'a> {
 		Ok(url.into())
 	}
 
-	#[inline]
 	pub fn try_starts_with(self, base: impl AsUrl) -> Result<bool, StartsWithError> {
 		let base = base.as_url();
-		Ok(self.loc().try_starts_with(base.loc())? && self.auth().covariant(base.auth()))
+		Ok(
+			self.loc().try_starts_with(base.loc())?
+				&& self.auth_at(base).is_some_and(|a| a == base.auth()),
+		)
 	}
 
 	pub fn try_strip_prefix(self, base: impl AsUrl) -> Result<PathDyn<'a>, StripPrefixError> {
@@ -379,7 +444,7 @@ impl<'a> Url<'a> {
 
 		let base = base.as_url();
 		let prefix = self.loc().try_strip_prefix(base.loc())?;
-		if self.auth().covariant(base.auth()) {
+		if self.auth_at(base).is_some_and(|a| a == base.auth()) {
 			return Ok(prefix);
 		}
 
@@ -420,22 +485,24 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn uri(self) -> PathDyn<'a> {
 		match self {
-			Self::Regular(loc) => loc.uri().as_path(),
-			Self::Search { loc, .. } => loc.uri().as_path(),
-			Self::Mount { loc, .. } => loc.uri().as_path(),
-			Self::Scope { loc, .. } => loc.uri().as_path(),
-			Self::Sftp { loc, .. } => loc.uri().as_path(),
+			Self::Regular(loc) => loc.uri().dyn_path(),
+			Self::Search { loc, .. } => loc.uri().dyn_path(),
+			Self::Mount { loc, .. } => loc.uri().dyn_path(),
+			Self::Hub { loc, .. } => loc.uri().dyn_path(),
+			Self::Scope { loc, .. } => loc.uri().dyn_path(),
+			Self::Sftp { loc, .. } => loc.uri().dyn_path(),
 		}
 	}
 
 	#[inline]
 	pub fn urn(self) -> PathDyn<'a> {
 		match self {
-			Self::Regular(loc) => loc.urn().as_path(),
-			Self::Search { loc, .. } => loc.urn().as_path(),
-			Self::Mount { loc, .. } => loc.urn().as_path(),
-			Self::Scope { loc, .. } => loc.urn().as_path(),
-			Self::Sftp { loc, .. } => loc.urn().as_path(),
+			Self::Regular(loc) => loc.urn().dyn_path(),
+			Self::Search { loc, .. } => loc.urn().dyn_path(),
+			Self::Mount { loc, .. } => loc.urn().dyn_path(),
+			Self::Hub { loc, .. } => loc.urn().dyn_path(),
+			Self::Scope { loc, .. } => loc.urn().dyn_path(),
+			Self::Sftp { loc, .. } => loc.urn().dyn_path(),
 		}
 	}
 }

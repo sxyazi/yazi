@@ -15,6 +15,7 @@ impl From<AuthKind> for PathKind {
 			AuthKind::Regular => Self::Os,
 			AuthKind::Search => Self::Os,
 			AuthKind::Mount => Self::Os,
+			AuthKind::Hub => Self::Os,
 			AuthKind::Scope => Self::Unix,
 			AuthKind::Sftp => Self::Unix,
 		}

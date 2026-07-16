@@ -55,7 +55,7 @@ where
 
 	match (from.kind().is_local(), to.kind().is_local()) {
 		(true, true) => Local::new(from).await?.copy(to.loc(), attrs).await,
-		(false, false) if from.auth().covariant(to.auth()) => {
+		(false, false) if from.auth().same_service(to.auth()) => {
 			Engines::new(from).await?.copy(to.loc(), attrs).await
 		}
 		(true, false) | (false, true) | (false, false) => super::copy_impl(from, to, attrs).await,
@@ -75,7 +75,7 @@ where
 	let (from, to) = (from.as_url(), to.as_url());
 	let attrs = attrs.into();
 
-	if from.auth().covariant(to.auth()) {
+	if from.auth().same_service(to.auth()) {
 		let engine = Engines::new(from).await?;
 		if engine.capabilities().await?.copy_progressive {
 			return engine.copy_progressive(to.loc(), attrs);
@@ -119,7 +119,7 @@ where
 	V: AsUrl,
 {
 	let (original, link) = (original.as_url(), link.as_url());
-	if original.auth().covariant(link.auth()) {
+	if original.auth().same_service(link.auth()) {
 		Engines::new(original).await?.hard_link(link.loc()).await
 	} else {
 		Err(io::Error::from(io::ErrorKind::CrossesDevices))
@@ -208,7 +208,7 @@ where
 	V: AsUrl,
 {
 	let (from, to) = (from.as_url(), to.as_url());
-	if from.auth().covariant(to.auth()) {
+	if from.auth().same_service(to.auth()) {
 		Engines::new(from).await?.rename(to.loc()).await
 	} else {
 		Err(io::Error::from(io::ErrorKind::CrossesDevices))
@@ -268,7 +268,9 @@ where
 	let url = url.into();
 	match url.as_url() {
 		Url::Regular(_) | Url::Search { .. } => yazi_fs::engine::local::try_absolute(url),
-		Url::Mount { .. } | Url::Scope { .. } | Url::Sftp { .. } => super::try_absolute_impl(url),
+		Url::Mount { .. } | Url::Hub { .. } | Url::Scope { .. } | Url::Sftp { .. } => {
+			super::try_absolute_impl(url)
+		}
 	}
 }
 

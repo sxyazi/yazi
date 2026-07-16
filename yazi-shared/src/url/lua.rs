@@ -121,6 +121,9 @@ impl UserData for UrlBuf {
 		methods.add_method_once("into_search", |_, me, domain: LuaString| {
 			me.into_search(domain.to_str()?).into_lua_err()
 		});
+		methods.add_method_once("into_domain", |_, me, domain: LuaString| {
+			Ok(me.into_domain(domain.to_str()?.to_owned()))
+		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(*me == *other));
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {

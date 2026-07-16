@@ -4,7 +4,7 @@ use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
 use yazi_fs::{Entries, FilesOp, FolderStage, cha::Cha, file::File};
 use yazi_macro::err;
-use yazi_shared::{id::Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
+use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_widgets::{Scrollable, Step};
 
 use crate::MgrProxy;
@@ -104,24 +104,26 @@ impl Folder {
 		b
 	}
 
-	pub fn hover(&mut self, urn: PathDyn) -> bool {
-		if self.hovered().map(|h| h.urn()) == Some(urn) {
+	pub fn hover(&mut self, key: PathDyn) -> bool {
+		if key.is_empty() {
+			return self.arrow(0);
+		} else if self.hovered().map(|h| h.entry_key()) == Some(key) {
 			return self.arrow(0);
 		}
 
-		let new = self.entries.position(urn).unwrap_or(self.cursor) as isize;
+		let new = self.entries.position(key).unwrap_or(self.cursor) as isize;
 		let b = self.arrow(new - self.cursor as isize);
 
 		self.retrace();
 		b
 	}
 
-	pub fn repos(&mut self, urn: Option<PathDyn>) -> bool {
-		if let Some(u) = urn {
-			self.hover(u)
-		} else if let Some(u) = self.trace.take() {
-			let b = self.hover(u.as_path());
-			self.trace = Some(u);
+	pub fn repos(&mut self, key: Option<PathDyn>) -> bool {
+		if let Some(k) = key {
+			self.hover(k)
+		} else if let Some(k) = self.trace.take() {
+			let b = self.hover(k.dyn_path());
+			self.trace = Some(k);
 			b
 		} else {
 			self.arrow(0)
@@ -129,7 +131,7 @@ impl Folder {
 	}
 
 	pub fn retrace(&mut self) {
-		self.trace = self.hovered().map(|h| h.urn().into()).or(self.trace.take());
+		self.trace = self.hovered().map(|h| h.entry_key().into()).or(self.trace.take());
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
