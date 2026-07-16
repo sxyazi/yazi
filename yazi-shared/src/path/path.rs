@@ -4,7 +4,7 @@ use anyhow::Result;
 use hashbrown::Equivalent;
 
 use super::{RsplitOnceError, StartsWithError};
-use crate::{BytesExt, Utf8BytePredictor, path::{AsPath, Components, Display, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand, StrandError}};
+use crate::{BytesExt, Utf8BytePredictor, path::{Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand, StrandError}};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PathDyn<'p> {
@@ -21,11 +21,11 @@ impl<'a> From<&'a typed_path::UnixPath> for PathDyn<'a> {
 }
 
 impl<'a> From<&'a PathBufDyn> for PathDyn<'a> {
-	fn from(value: &'a PathBufDyn) -> Self { value.as_path() }
+	fn from(value: &'a PathBufDyn) -> Self { value.dyn_path() }
 }
 
 impl PartialEq<PathBufDyn> for PathDyn<'_> {
-	fn eq(&self, other: &PathBufDyn) -> bool { *self == other.as_path() }
+	fn eq(&self, other: &PathBufDyn) -> bool { *self == other.dyn_path() }
 }
 
 impl PartialEq<PathDyn<'_>> for &std::path::Path {
@@ -34,6 +34,12 @@ impl PartialEq<PathDyn<'_>> for &std::path::Path {
 
 impl PartialEq<&std::path::Path> for PathDyn<'_> {
 	fn eq(&self, other: &&std::path::Path) -> bool { matches!(*self, PathDyn::Os(p) if p == *other) }
+}
+
+impl PartialEq<&typed_path::UnixPath> for PathDyn<'_> {
+	fn eq(&self, other: &&typed_path::UnixPath) -> bool {
+		matches!(*self, PathDyn::Unix(p) if p == *other)
+	}
 }
 
 impl PartialEq<&str> for PathDyn<'_> {
@@ -46,7 +52,7 @@ impl PartialEq<&str> for PathDyn<'_> {
 }
 
 impl Equivalent<PathBufDyn> for PathDyn<'_> {
-	fn equivalent(&self, key: &PathBufDyn) -> bool { *self == key.as_path() }
+	fn equivalent(&self, key: &PathBufDyn) -> bool { *self == key.dyn_path() }
 }
 
 impl<'p> PathDyn<'p> {
@@ -139,8 +145,8 @@ impl<'p> PathDyn<'p> {
 
 	pub fn parent(self) -> Option<Self> {
 		Some(match self {
-			Self::Os(p) => Self::Os(p.parent().filter(|p| !p.as_os_str().is_empty())?),
-			Self::Unix(p) => Self::Unix(p.parent().filter(|p| !p.as_bytes().is_empty())?),
+			Self::Os(p) => Self::Os(p.parent()?),
+			Self::Unix(p) => Self::Unix(p.parent()?),
 		})
 	}
 
@@ -294,5 +300,36 @@ impl<'p> PathDyn<'p> {
 			PathKind::Os => Self::Os(s.as_ref()),
 			PathKind::Unix => Self::Unix(s.as_ref()),
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use std::path::Path;
+
+	use typed_path::UnixPath;
+
+	use super::*;
+
+	#[test]
+	fn test_parent() {
+		let path = Path::new("foo").dyn_path();
+		assert_eq!(path.parent(), Some(Path::new("").dyn_path()));
+		assert_eq!(path.parent().unwrap().parent(), None);
+
+		let path = UnixPath::new("foo").dyn_path();
+		assert_eq!(path.parent(), Some(UnixPath::new("").dyn_path()));
+		assert_eq!(path.parent().unwrap().parent(), None);
+	}
+
+	#[cfg(windows)]
+	#[test]
+	fn test_windows_parent() {
+		let path = Path::new("foo").dyn_path();
+		assert_eq!(path.parent(), Some(Path::new("").dyn_path()));
+
+		let path = Path::new("C:foo").dyn_path();
+		assert_eq!(path.parent(), Some(Path::new("C:").dyn_path()));
+		assert_eq!(path.parent().unwrap().parent(), None);
 	}
 }

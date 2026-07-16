@@ -35,9 +35,10 @@ impl Size {
 			}
 
 			let parent = buf[0].0.parent().unwrap();
+			// FIXME: use PathBufDyn instead of UrlBuf in SizeIn
 			FilesOp::Size(
 				parent.into(),
-				HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.urn().into(), s))),
+				HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.entry_key().into(), s))),
 			)
 			.emit();
 		});

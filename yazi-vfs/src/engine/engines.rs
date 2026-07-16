@@ -2,7 +2,7 @@ use std::io;
 
 use tokio::sync::mpsc;
 use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}};
-use yazi_shared::{path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 #[derive(Clone)]
 pub(super) enum Engines<'a> {
@@ -52,7 +52,7 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
 		match self {
 			Self::Local(p) => p.copy(to, attrs).await,
@@ -63,7 +63,7 @@ impl<'a> Engine for Engines<'a> {
 
 	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
 	where
-		P: AsPath,
+		P: DynPath,
 		A: Into<Attrs>,
 	{
 		match self {
@@ -107,7 +107,7 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
 		match self {
 			Self::Local(p) => p.hard_link(to).await,
@@ -129,7 +129,7 @@ impl<'a> Engine for Engines<'a> {
 
 		Ok(match url.kind() {
 			K::Regular | K::Search => Self::Me::Local(yazi_fs::engine::local::Local::new(url).await?),
-			K::Mount | K::Scope => Self::Me::Lua(super::lua::Lua::new(url).await?),
+			K::Mount | K::Hub | K::Scope => Self::Me::Lua(super::lua::Lua::new(url).await?),
 			K::Sftp => Self::Me::Sftp(super::sftp::Sftp::new(url).await?),
 		})
 	}
@@ -184,7 +184,7 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
 		match self {
 			Self::Local(p) => p.rename(to).await,

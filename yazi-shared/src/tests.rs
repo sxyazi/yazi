@@ -10,8 +10,9 @@ pub fn init_tests() {
 
 inventory::submit! {
 	AuthInventory {
-		get: |scheme, domain| match (scheme.as_str(), domain) {
+		get: |scheme, domain| match (scheme.as_str(), domain.as_ref()) {
 			("test-mount", "7z") => Some(Auth::new(AuthKind::Mount, scheme.clone(), "7z")),
+			("test-hub", _) => Some(Auth::new(AuthKind::Hub, scheme.clone(), domain.clone())),
 			("test-scope", "aws") => Some(Auth::new(AuthKind::Scope, scheme.clone(), "aws")),
 			("sftp", "vps") => Some(Auth::new(AuthKind::Sftp, scheme.clone(), "vps")),
 			_ => None,

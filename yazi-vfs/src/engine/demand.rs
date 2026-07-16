@@ -40,7 +40,7 @@ impl FileBuilder for Demand {
 			AuthKind::Regular | AuthKind::Search => {
 				self.0.build::<yazi_fs::engine::local::Demand>().open(url).await?.into()
 			}
-			AuthKind::Mount | AuthKind::Scope => {
+			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope => {
 				self.0.build::<super::lua::Demand>().open(url).await?.into()
 			}
 			AuthKind::Sftp => self.0.build::<super::sftp::Demand>().open(url).await?.into(),

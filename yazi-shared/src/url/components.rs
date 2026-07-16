@@ -1,11 +1,12 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not};
 
-use crate::{auth::Auth, loc::Loc, path, spec::{Encode as EncodeSpec, Spec}, strand::{StrandBuf, StrandCow}, url::{Component, Encode as EncodeUrl, Url}};
+use crate::{auth::Auth, loc::Loc, path, spec::{EncodeSpec, Spec}, strand::{StrandBuf, StrandCow}, url::{Component, Encode as EncodeUrl, Url}};
 
 #[derive(Clone)]
 pub struct Components<'a> {
 	inner:          path::Components<'a>,
 	url:            Url<'a>,
+	auth_yields:    usize,
 	back_yields:    usize,
 	scheme_yielded: bool,
 }
@@ -15,6 +16,7 @@ impl<'a> From<Url<'a>> for Components<'a> {
 		Self {
 			inner:          value.loc().components(),
 			url:            value,
+			auth_yields:    0,
 			back_yields:    0,
 			scheme_yielded: false,
 		}
@@ -83,6 +85,10 @@ impl<'a> Components<'a> {
 			Url::Mount { auth, .. } => {
 				Url::Mount { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), auth }
 			}
+			Url::Hub { auth, .. } => Url::Hub {
+				loc:  Loc::with(path.as_os().unwrap(), uri, urn).unwrap(),
+				auth: auth.parent_at(self.auth_yields),
+			},
 			Url::Scope { auth, .. } => {
 				Url::Scope { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), auth }
 			}
@@ -116,6 +122,7 @@ impl<'a> Iterator for Components<'a> {
 impl<'a> DoubleEndedIterator for Components<'a> {
 	fn next_back(&mut self) -> Option<Self::Item> {
 		if let Some(c) = self.inner.next_back() {
+			self.auth_yields += c.has_auth() as usize;
 			self.back_yields += 1;
 			Some(c.into())
 		} else if !self.scheme_yielded {

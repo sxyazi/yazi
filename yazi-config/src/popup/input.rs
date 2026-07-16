@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use yazi_binding::position::{Offset, Origin, Position};
 use yazi_codegen::{DeserializeOver, DeserializeOver2};
-use yazi_shared::{spec::Encode as EncodeSpec, url::Url};
+use yazi_shared::{spec::EncodeSpec, url::Url};
 use yazi_widgets::input::InputOpt;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver2)]

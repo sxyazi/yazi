@@ -67,7 +67,7 @@ impl Yanked {
 	}
 
 	pub fn apply_op(&mut self, op: &FilesOp) {
-		let (removal, addition) = op.diff_recoverable(|u| self.contains(u));
+		let (removal, addition) = op.diff_recoverable(self.urls());
 		if !removal.is_empty() {
 			let old = self.files.len();
 			self.files.retain(|f| !removal.iter().any(|u| f.url.covariant(u)));

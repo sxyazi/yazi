@@ -81,8 +81,8 @@ impl Cd {
 							return MgrProxy::cd(&url, CdSource::Cd);
 						}
 
-						if let Some(p) = url.parent() {
-							FilesOp::Upserting(p.into(), [(url.urn().into(), file)].into()).emit();
+						if let Some((p, k)) = url.pair2() {
+							FilesOp::Upserting(p.into(), [(k.into(), file)].into()).emit();
 						}
 						MgrProxy::reveal(url);
 					}

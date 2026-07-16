@@ -54,7 +54,11 @@ impl Tasks {
 			targets
 				.iter()
 				.filter(|f| {
-					f.is_dir() && !targets.sizes.contains_key(&f.urn()) && !loading.contains(&f.url)
+					let key = f.entry_key();
+					f.is_dir()
+						&& !key.is_empty()
+						&& !targets.sizes.contains_key(&key)
+						&& !loading.contains(&f.url)
 				})
 				.map(|f| &f.url)
 				.collect()

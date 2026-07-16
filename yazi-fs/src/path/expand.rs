@@ -40,6 +40,10 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
 			auth: auth.clone(),
 		},
+		Url::Hub { auth, .. } => UrlBuf::Hub {
+			auth: auth.clone().with_parent_depth(path.components().auth_depth()),
+			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+		},
 		Url::Scope { auth, .. } => UrlBuf::Scope {
 			loc:  LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
 			auth: auth.clone(),
@@ -112,6 +116,7 @@ mod tests {
 			("test-mount://7z:2:1//tmp/test.zip/$BAR_BAZ", "test-mount://7z:3:2//tmp/test.zip/bar/baz"),
 			("test-mount://7z:2:2//tmp/$BAR_BAZ/test.zip", "test-mount://7z:3:3//tmp/bar/baz/test.zip"),
 			("test-mount://7z:2:2//$BAR_BAZ/tmp/test.zip", "test-mount://7z:2:2//bar/baz/tmp/test.zip"),
+			("test-hub://a1/@root/$BAR_BAZ", "test-hub://a1:2:2/@,root/bar/baz"),
 			// -1 component
 			("test-mount://7z//tmp/test.zip/${BAR/BAZ}", "test-mount://7z//tmp/test.zip/bar_baz"),
 			("test-mount://7z:1//tmp/test.zip/${BAR/BAZ}", "test-mount://7z:1//tmp/test.zip/${BAR/BAZ}"),
@@ -134,6 +139,7 @@ mod tests {
 			),
 			("test-mount://7z:3:3//tmp/test.zip/${BAR/BAZ}", "test-mount://7z:2:2//tmp/test.zip/bar_baz"),
 			("test-mount://7z:3:3//tmp/${BAR/BAZ}/test.zip", "test-mount://7z:2:2//tmp/bar_baz/test.zip"),
+			("test-hub://a1:2:2/@b1,root/${BAR/BAZ}", "test-hub://a1/@root/bar_baz"),
 			// Zeros all components
 			("test-mount://7z//${EM/PT/Y}", "test-mount://7z//"),
 			("test-mount://7z:1//${EM/PT/Y}", "test-mount://7z:1//${EM/PT/Y}"),

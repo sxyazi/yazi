@@ -39,16 +39,16 @@ impl Remote {
 			let mut ups = Vec::with_capacity(urls.len());
 
 			for (u, upload) in urls {
-				let Some((parent, urn)) = u.pair() else { continue };
+				let Some((parent, key)) = u.pair2() else { continue };
 				let Ok(mut file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
 					continue;
 				};
 
 				let is_file = file.is_file();
 				file.cha.ctime = Some(SystemTime::now());
 
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
 				if upload && is_file {
 					ups.push(u);
 				}

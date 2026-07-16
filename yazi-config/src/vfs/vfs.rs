@@ -21,7 +21,7 @@ impl Vfs {
 	where
 		P: TryFrom<&'static Service, Error = &'static str>,
 	{
-		let Some(value) = VFS.authorities.get(&auth.scheme, &auth.domain) else {
+		let Some(value) = VFS.authorities.service(&auth.scheme, &auth.domain) else {
 			return Err(io::Error::other(format!("No such VFS service: {auth}")));
 		};
 
@@ -47,8 +47,6 @@ impl DeserializeOverWith for Vfs {
 // --- Inject
 inventory::submit! {
 	AuthInventory {
-		get: |scheme, domain| {
-			VFS.authorities.get(scheme, domain).map(|service| service.auth().clone())
-		},
+		get: |scheme, domain| VFS.authorities.auth(scheme, domain),
 	}
 }

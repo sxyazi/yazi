@@ -64,10 +64,10 @@ impl Create {
 		if dir {
 			engine::create_dir_all(&new).await?;
 		} else if let Ok(real) = engine::casefold(&new).await
-			&& let Some((parent, urn)) = real.pair()
+			&& let Some((parent, key)) = real.pair2()
 		{
 			ok_or_not_found!(engine::remove_file(&new).await);
-			FilesOp::Deleting(parent.into(), [urn.into()].into()).emit();
+			FilesOp::Deleting(parent.into(), [key.into()].into()).emit();
 			engine::create(&new).await?;
 		} else if let Some(parent) = new.parent() {
 			engine::create_dir_all(parent).await.ok();
@@ -78,10 +78,10 @@ impl Create {
 		}
 
 		if let Ok(real) = engine::casefold(&new).await
-			&& let Some((parent, urn)) = real.pair()
+			&& let Some((parent, key)) = real.pair2()
 		{
 			let file = File::new(&real).await?;
-			FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()).emit();
+			FilesOp::Upserting(parent.into(), [(key.into(), file)].into()).emit();
 			MgrProxy::reveal(&real);
 		}
 

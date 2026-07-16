@@ -22,6 +22,7 @@ impl From<AuthKind> for StrandKind {
 			AuthKind::Regular => Self::Os,
 			AuthKind::Search => Self::Os,
 			AuthKind::Mount => Self::Os,
+			AuthKind::Hub => Self::Os,
 			AuthKind::Scope => Self::Bytes,
 			AuthKind::Sftp => Self::Bytes,
 		}

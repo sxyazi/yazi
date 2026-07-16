@@ -1,15 +1,27 @@
+use std::sync::Arc;
+
 use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, de::{MapAccess, Visitor}};
-use yazi_shared::auth::Scheme;
+use yazi_shared::auth::{Auth, Domain, Scheme};
 use yazi_shim::toml::DeserializeOverWith;
 
-use super::{DomainSeed, Domains, Service};
+use super::{DomainSeed, Domains};
+use crate::vfs::Service;
 
 pub struct Authorities(HashMap<Scheme, Domains>);
 
 impl Authorities {
-	pub fn get(&self, scheme: &Scheme, domain: &str) -> Option<&Service> {
+	pub fn service(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<&Service> {
 		self.0.get(scheme)?.get(domain)
+	}
+
+	pub fn auth(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Auth>> {
+		let service = self.service(scheme, domain)?;
+		if service.auth().domain.is_catchall() {
+			Some(Auth::new(service.kind(), scheme.clone(), domain.clone()))
+		} else {
+			Some(service.auth().clone())
+		}
 	}
 }
 
@@ -41,7 +53,7 @@ impl<'de> Deserialize<'de> for Authorities {
 impl DeserializeOverWith for Authorities {
 	fn deserialize_over_with<'de, D: Deserializer<'de>>(mut self, de: D) -> Result<Self, D::Error> {
 		for (scheme, domains) in Self::deserialize(de)?.0 {
-			self.0.entry(scheme).or_default().extend(domains.0);
+			self.0.entry(scheme).or_default().extend(domains);
 		}
 		Ok(self)
 	}

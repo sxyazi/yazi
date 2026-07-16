@@ -59,7 +59,7 @@ impl Watched {
 			AuthKind::Mount => UrlBuf::Mount { loc: path.into_os().ok()?.into(), auth },
 			AuthKind::Scope => UrlBuf::Scope { loc: path.into_unix().ok()?.into(), auth },
 			AuthKind::Sftp => UrlBuf::Sftp { loc: path.into_unix().ok()?.into(), auth },
-			AuthKind::Regular | AuthKind::Search => return None,
+			AuthKind::Regular | AuthKind::Search | AuthKind::Hub => return None,
 		};
 		if self.contains_url(&url) { Some(url) } else { None }
 	}

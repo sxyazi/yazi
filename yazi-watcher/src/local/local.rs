@@ -97,20 +97,20 @@ impl Local {
 			let mut ops = Vec::with_capacity(urls.len());
 
 			for u in urls {
-				let Some((parent, urn)) = u.pair() else { continue };
+				let Some((parent, key)) = u.pair2() else { continue };
 				let Ok(file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
 					continue;
 				};
 
 				if let Some(p) = file.url.as_local()
 					&& !engine::local::match_name_case(p).await
 				{
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
 			}
 
 			FilesOp::mutate(ops);

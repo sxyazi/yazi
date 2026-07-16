@@ -21,7 +21,7 @@ impl Reporter {
 		for url in urls.into_iter().map(Into::into) {
 			match url.as_url().kind() {
 				AuthKind::Regular | AuthKind::Search => self.report_local(url),
-				AuthKind::Mount => {} // TODO: mounted VFS cache invalidation
+				AuthKind::Mount | AuthKind::Hub => {} // TODO: mounted VFS cache invalidation
 				AuthKind::Scope | AuthKind::Sftp => self.report_remote(url),
 			}
 		}

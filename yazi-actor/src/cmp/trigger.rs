@@ -6,7 +6,7 @@ use yazi_fs::{engine::{DirReader, FileHolder}, path::clean_url};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::TriggerForm;
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{AsPath, PathBufDyn, PathLike}, spec::Spec, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{DynPath, PathBufDyn, PathLike}, spec::Spec, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::engine;
 
 use crate::{Actor, Ctx};
@@ -78,7 +78,7 @@ impl Trigger {
 		}
 
 		// Child
-		let child = path.rsplit_pred(AnyAsciiChar::SEP).map_or(path.as_path(), |(_, c)| c).to_owned();
+		let child = path.rsplit_pred(AnyAsciiChar::SEP).map_or(path.dyn_path(), |(_, c)| c).to_owned();
 
 		// Parent
 		let url = UrlCow::try_from((spec.clone().zeroed(), path)).ok()?;

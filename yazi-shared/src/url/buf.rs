@@ -5,13 +5,14 @@ use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
 use yazi_codegen::FromLuaOwned;
 use yazi_macro::impl_data_any;
 
-use crate::{auth::Auth, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
+use crate::{auth::{Auth, Domain}, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
 
 #[derive(Clone, Eq, FromLuaOwned)]
 pub enum UrlBuf {
 	Regular(LocBuf),
 	Search { loc: LocBuf, auth: Arc<Auth> },
 	Mount { loc: LocBuf, auth: Arc<Auth> },
+	Hub { loc: LocBuf, auth: Arc<Auth> },
 	Scope { loc: LocBuf<typed_path::UnixPathBuf>, auth: Arc<Auth> },
 	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, auth: Arc<Auth> },
 }
@@ -33,6 +34,7 @@ impl From<Url<'_>> for UrlBuf {
 			Url::Regular(loc) => Self::Regular(loc.into()),
 			Url::Search { loc, auth } => Self::Search { loc: loc.into(), auth: auth.clone() },
 			Url::Mount { loc, auth } => Self::Mount { loc: loc.into(), auth: auth.clone() },
+			Url::Hub { loc, auth } => Self::Hub { loc: loc.into(), auth: auth.clone() },
 			Url::Scope { loc, auth } => Self::Scope { loc: loc.into(), auth: auth.clone() },
 			Url::Sftp { loc, auth } => Self::Sftp { loc: loc.into(), auth: auth.clone() },
 		}
@@ -140,6 +142,7 @@ impl UrlBuf {
 			Self::Regular(loc) => loc.into_inner().into(),
 			Self::Search { loc, .. } => loc.into_inner().into(),
 			Self::Mount { loc, .. } => loc.into_inner().into(),
+			Self::Hub { loc, .. } => loc.into_inner().into(),
 			Self::Scope { loc, .. } => loc.into_inner().into(),
 			Self::Sftp { loc, .. } => loc.into_inner().into(),
 		}
@@ -156,6 +159,7 @@ impl UrlBuf {
 			Self::Regular(loc) => loc.try_set_name(name.as_os()?)?,
 			Self::Search { loc, .. } => loc.try_set_name(name.as_os()?)?,
 			Self::Mount { loc, .. } => loc.try_set_name(name.as_os()?)?,
+			Self::Hub { loc, .. } => loc.try_set_name(name.as_os()?)?,
 			Self::Scope { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
 			Self::Sftp { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
 		})
@@ -166,6 +170,7 @@ impl UrlBuf {
 			Self::Regular(loc) => Self::Regular(loc.rebase(base)),
 			Self::Search { loc, auth } => Self::Search { loc: loc.rebase(base), auth: auth.clone() },
 			Self::Mount { loc, auth } => Self::Mount { loc: loc.rebase(base), auth: auth.clone() },
+			Self::Hub { .. } => todo!(),
 			Self::Scope { .. } => todo!(),
 			Self::Sftp { .. } => todo!(),
 		}
@@ -187,6 +192,18 @@ impl UrlBuf {
 			loc:  LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
 			auth: Auth::search(query.as_ref()),
 		})
+	}
+
+	pub fn into_domain<'a>(mut self, domain: impl Into<Domain<'a>>) -> Self {
+		match &mut self {
+			Self::Regular(_) => {}
+			Self::Search { auth, .. }
+			| Self::Mount { auth, .. }
+			| Self::Hub { auth, .. }
+			| Self::Scope { auth, .. }
+			| Self::Sftp { auth, .. } => Arc::make_mut(auth).domain = domain.into().into_owned(),
+		}
+		self
 	}
 }
 
@@ -265,10 +282,14 @@ impl<'de> IntoDeserializer<'de, de::value::Error> for &'de UrlBuf {
 // --- Tests
 #[cfg(test)]
 mod tests {
+	use std::fmt::Debug;
+
 	use anyhow::Result;
 
 	use super::*;
-	use crate::url::UrlLike;
+	use crate::{path::PathKind, url::UrlLike};
+
+	fn debug(value: impl Debug) -> String { format!("{value:?}").replace(r"\", "/") }
 
 	#[test]
 	fn test_join() -> anyhow::Result<()> {
@@ -293,13 +314,7 @@ mod tests {
 
 		for (base, path, expected) in cases {
 			let base: UrlBuf = base.parse()?;
-			#[cfg(unix)]
-			assert_eq!(format!("{:?}", base.try_join(path)?), expected);
-			#[cfg(windows)]
-			assert_eq!(
-				format!("{:?}", base.try_join(path)?).replace(r"\", "/"),
-				expected.replace(r"\", "/")
-			);
+			assert_eq!(debug(base.try_join(path)?), expected);
 		}
 
 		Ok(())
@@ -312,6 +327,8 @@ mod tests {
 			// Regular
 			("/a", Some("/")),
 			("/", None),
+			("a", Some("")),
+			("", None),
 			// Search
 			("search://kw:2:2//a/b/c", Some("search://kw:1:1//a/b")),
 			("search://kw:1:1//a/b", Some("search://kw//a")),
@@ -329,13 +346,16 @@ mod tests {
 			("sftp://vps//", None),
 			// Relative
 			("search://kw:2:2/a/b", Some("search://kw:1:1/a")),
-			("search://kw:1:1/a", None),
+			("search://kw:1:1/a", Some("search://kw/")),
 			("search://kw/", None),
+			("test-mount://7z:1:1/a", Some("test-mount://7z/")),
+			("test-scope://aws/a", Some("test-scope://aws/")),
+			("sftp://vps/a", Some("sftp://vps/")),
 		];
 
 		for (path, expected) in cases {
 			let path: UrlBuf = path.parse()?;
-			assert_eq!(path.parent().map(|u| format!("{u:?}")).as_deref(), expected);
+			assert_eq!(path.parent().map(debug).as_deref(), expected);
 		}
 
 		Ok(())
@@ -344,29 +364,166 @@ mod tests {
 	#[test]
 	fn test_into_search() -> Result<()> {
 		crate::init_tests();
-		const S: char = std::path::MAIN_SEPARATOR;
 
 		let u: UrlBuf = "/root".parse()?;
-		assert_eq!(format!("{u:?}"), "/root");
+		assert_eq!(debug(&u), "/root");
 
 		let u = u.into_search("kw")?;
-		assert_eq!(format!("{u:?}"), "search://kw//root");
-		assert_eq!(format!("{:?}", u.parent().unwrap()), "/");
+		assert_eq!(debug(&u), "search://kw//root");
+		assert_eq!(debug(u.parent().unwrap()), "/");
 
 		let u = u.try_join("examples")?;
-		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
+		assert_eq!(debug(&u), "search://kw:1:1//root/examples");
 
 		let u = u.try_join("README.md")?;
-		assert_eq!(format!("{u:?}"), format!("search://kw:2:2//root{S}examples{S}README.md"));
+		assert_eq!(debug(&u), "search://kw:2:2//root/examples/README.md");
 
 		let u = u.parent().unwrap();
-		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
+		assert_eq!(debug(u), "search://kw:1:1//root/examples");
 
 		let u = u.parent().unwrap();
-		assert_eq!(format!("{u:?}"), "search://kw//root");
+		assert_eq!(debug(u), "search://kw//root");
 
 		let u = u.parent().unwrap();
-		assert_eq!(format!("{u:?}"), "/");
+		assert_eq!(debug(u), "/");
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_hub_parse() -> Result<()> {
+		crate::init_tests();
+
+		let root: UrlBuf = "test-hub://root/@/".parse()?;
+		assert_eq!(debug(&root), "test-hub://root/@/");
+		assert_eq!(root.loc().kind(), PathKind::Os);
+
+		let encoded: UrlBuf = "test-hub://%252C/@/".parse()?;
+		assert_eq!(debug(encoded), "test-hub://%252C/@/");
+		let encoded: UrlBuf = "test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar".parse()?;
+		assert_eq!(debug(encoded), "test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar");
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_hub_domain() -> Result<()> {
+		crate::init_tests();
+
+		let root: UrlBuf = "test-hub://root/@/".parse()?;
+		let foo = root.try_join("foo")?.into_domain("a1");
+		assert_eq!(debug(&foo), "test-hub://a1/@root/foo");
+
+		let bar = foo.try_join("bar")?.into_domain("b1");
+		assert_eq!(bar.entry_key(), "b1");
+		assert_eq!(debug(&bar), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(debug(bar.parent().unwrap()), "test-hub://a1/@root/foo");
+		assert_eq!(debug(bar.parent().unwrap().parent().unwrap()), "test-hub://root/@/");
+
+		let relative = UrlCow::try_from("test-hub://a1/@/@abc")?;
+		assert_eq!(debug(relative.as_url()), "test-hub://a1/@/@abc");
+		assert_eq!(debug(relative.parent().unwrap().as_url()), "test-hub:///@/");
+		assert_eq!(relative.entry_key(), "a1");
+		assert!(!relative.is_owned());
+		assert!(relative.parent().unwrap().entry_key().is_empty());
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_hub_join() -> Result<()> {
+		crate::init_tests();
+
+		let root: UrlBuf = "test-hub://root/@/".parse()?;
+		let bar: UrlBuf = "test-hub://b1/@a1,root/foo/bar".parse()?;
+
+		assert_eq!(debug(bar.try_join(".")?), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(debug(bar.try_join("..")?), "test-hub:///@b1,a1,root/foo/bar/..");
+
+		assert_eq!(debug(bar.try_join("/x/y")?), "test-hub:///@,//x/y");
+		assert_eq!(debug(root.try_join("../../..")?), "test-hub:///@,,root/../../..");
+
+		let absolute = root.try_join("/foo")?;
+		assert_eq!(debug(&absolute), "test-hub:///@//foo");
+		let absolute = absolute.into_domain("a1");
+		assert_eq!(debug(&absolute), "test-hub://a1/@//foo");
+		assert_eq!(debug(absolute.parent().unwrap().try_join("..")?), "test-hub:///@//..");
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_hub_ports() -> Result<()> {
+		crate::init_tests();
+
+		let ports: UrlBuf = "test-hub://b1:2:1/@a1,root/foo/bar".parse()?;
+		assert_eq!(debug(ports.base()), "test-hub://root/@/");
+		assert_eq!(debug(ports.trail()), "test-hub://a1/@root/foo");
+
+		let ports: UrlBuf = "test-hub://b1:3:1/@a1,root//foo/bar".parse()?;
+		assert_eq!(debug(ports.base()), "test-hub://root/@/");
+		assert_eq!(debug(ports.trail()), "test-hub://a1/@root//foo");
+
+		let zeroed: UrlBuf = "test-hub://b1:0:0/@a1,root/foo/bar".parse()?;
+		assert_eq!(debug(zeroed.base()), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(debug(zeroed.trail()), "test-hub://b1/@a1,root/foo/bar");
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_hub_invalid() {
+		crate::init_tests();
+
+		assert!("test-hub://a1/foo".parse::<UrlBuf>().is_err());
+		assert!("test-hub://b1/@a1/foo/bar".parse::<UrlBuf>().is_err());
+	}
+
+	#[test]
+	fn test_hub_replace() -> Result<()> {
+		crate::init_tests();
+
+		let url: UrlBuf = "test-hub://b1/@a1,root/foo/bar".parse()?;
+		assert_eq!(
+			debug(url.try_replace(2, Path::new("baz/qux"))?.as_url()),
+			"test-hub://b1:2:2/@,a1,root/foo/baz/qux"
+		);
+		assert_eq!(debug(url.try_replace(1, Path::new("qux"))?.as_url()), "test-hub://b1/@root/qux");
+
+		Ok(())
+	}
+
+	#[cfg(windows)]
+	#[test]
+	fn test_hub_windows() -> Result<()> {
+		crate::init_tests();
+
+		let root: UrlBuf = "test-hub://root/@/".parse()?;
+		let c = root.try_join(r"C:\")?.into_domain("c-root");
+		assert_eq!(c.entry_key(), "c-root");
+		assert_eq!(c.auth().parent_depth(), 0);
+
+		let drive = c.try_join(r"Users\file.txt")?.into_domain("file");
+		assert_eq!(drive.loc(), Path::new(r"C:\Users\file.txt"));
+		assert_eq!(drive.auth().parent_depth(), 2);
+
+		let parent = drive.parent().unwrap();
+		assert_eq!(parent.loc(), Path::new(r"C:\Users"));
+
+		let parent = parent.parent().unwrap();
+		assert_eq!(parent.loc(), Path::new(r"C:\"));
+		assert_eq!(parent.entry_key(), "c-root");
+		assert!(parent.parent().is_none());
+
+		let relative = root.try_join(r"C:foo")?;
+		assert!(!relative.is_absolute());
+		assert_eq!(relative.parent().unwrap().loc(), Path::new("C:"));
+		assert!(relative.parent().unwrap().parent().is_none());
+
+		let unc = root.try_join(r"\\server\share\dir\file")?;
+		assert!(unc.is_absolute());
+		assert_eq!(unc.loc(), Path::new(r"\\server\share\dir\file"));
+		assert_eq!(unc.auth().parent_depth(), 2);
 
 		Ok(())
 	}

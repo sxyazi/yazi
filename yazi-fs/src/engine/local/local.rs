@@ -1,7 +1,7 @@
 use std::{fs::FileTimes, io, path::Path, sync::Arc};
 
 use tokio::sync::mpsc;
-use yazi_shared::{auth::AuthKind, path::{AsPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 use crate::{cha::{Cha, ChaMode}, engine::{Attrs, Capabilities, Engine}};
 
@@ -45,19 +45,19 @@ impl<'a> Engine for Local<'a> {
 	#[inline]
 	async fn copy<P>(&self, to: P, attrs: Attrs) -> io::Result<u64>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
-		let to = to.as_path().to_os_owned()?;
+		let to = to.dyn_path().to_os_owned()?;
 		let from = self.path.to_owned();
 		super::copy_impl(from, to, attrs).await
 	}
 
 	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
 	where
-		P: AsPath,
+		P: DynPath,
 		A: Into<Attrs>,
 	{
-		let to = to.as_path().to_os_owned()?;
+		let to = to.dyn_path().to_os_owned()?;
 		let from = self.path.to_owned();
 		Ok(super::copy_progressive_impl(from, to, attrs.into()))
 	}
@@ -71,9 +71,9 @@ impl<'a> Engine for Local<'a> {
 	#[inline]
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
-		let to = to.as_path().as_os()?;
+		let to = to.dyn_path().as_os()?;
 
 		tokio::fs::hard_link(self.path, to).await
 	}
@@ -87,7 +87,7 @@ impl<'a> Engine for Local<'a> {
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
 		match url {
 			Url::Regular(loc) | Url::Search { loc, .. } => Ok(Self::Me { url, path: loc.as_inner() }),
-			Url::Mount { .. } | Url::Scope { .. } | Url::Sftp { .. } => {
+			Url::Mount { .. } | Url::Hub { .. } | Url::Scope { .. } | Url::Sftp { .. } => {
 				Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url:?}")))
 			}
 		}
@@ -101,7 +101,7 @@ impl<'a> Engine for Local<'a> {
 				reader: tokio::fs::read_dir(self.path).await?,
 				dir:    Arc::new(self.url.to_owned()),
 			},
-			AuthKind::Mount | AuthKind::Scope | AuthKind::Sftp => Err(io::Error::new(
+			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope | AuthKind::Sftp => Err(io::Error::new(
 				io::ErrorKind::InvalidInput,
 				format!("Not a local URL: {:?}", self.url),
 			))?,
@@ -125,9 +125,9 @@ impl<'a> Engine for Local<'a> {
 	#[inline]
 	async fn rename<P>(&self, to: P) -> io::Result<()>
 	where
-		P: AsPath,
+		P: DynPath,
 	{
-		let to = to.as_path().as_os()?;
+		let to = to.dyn_path().as_os()?;
 
 		tokio::fs::rename(self.path, to).await
 	}

@@ -1,6 +1,6 @@
 use std::{ffi::{OsStr, OsString}, fmt::Debug, hash::Hash};
 
-use crate::{path::{AsPath, AsPathView}, strand::AsStrandView};
+use crate::{path::{DynPath, PathView}, strand::AsStrandView};
 
 // --- LocAble
 pub trait LocAble<'p>
@@ -27,14 +27,10 @@ impl<'p> LocAble<'p> for &'p typed_path::UnixPath {
 // --- LocBufAble
 pub trait LocBufAble
 where
-	Self: 'static + AsPath + Default,
+	Self: 'static + DynPath + Default,
 {
 	type Strand<'a>: StrandAble<'a>;
-	type Borrowed<'a>: LocAble<'a>
-		+ LocAbleImpl<'a>
-		+ AsPathView<'a, Self::Borrowed<'a>>
-		+ Debug
-		+ Hash;
+	type Borrowed<'a>: LocAble<'a> + LocAbleImpl<'a> + PathView<'a, Self::Borrowed<'a>> + Debug + Hash;
 }
 
 impl LocBufAble for std::path::PathBuf {

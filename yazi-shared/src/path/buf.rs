@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::wtf8::FromWtf8Vec;
 
-use crate::{path::{AsPath, Component, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand};
+use crate::{path::{Component, DynPath, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand};
 
 // --- PathBufDyn
 #[derive(Clone, Debug, Eq, FromLuaOwned)]
@@ -48,24 +48,24 @@ impl TryFrom<PathBufDyn> for typed_path::UnixPathBuf {
 
 // --- Hash
 impl Hash for PathBufDyn {
-	fn hash<H: Hasher>(&self, state: &mut H) { self.as_path().hash(state) }
+	fn hash<H: Hasher>(&self, state: &mut H) { self.dyn_path().hash(state) }
 }
 
 // --- PartialEq
 impl PartialEq for PathBufDyn {
-	fn eq(&self, other: &Self) -> bool { self.as_path() == other.as_path() }
+	fn eq(&self, other: &Self) -> bool { self.dyn_path() == other.dyn_path() }
 }
 
 impl PartialEq<PathDyn<'_>> for PathBufDyn {
-	fn eq(&self, other: &PathDyn<'_>) -> bool { self.as_path() == *other }
+	fn eq(&self, other: &PathDyn<'_>) -> bool { self.dyn_path() == *other }
 }
 
 impl PartialEq<PathDyn<'_>> for &PathBufDyn {
-	fn eq(&self, other: &PathDyn<'_>) -> bool { self.as_path() == *other }
+	fn eq(&self, other: &PathDyn<'_>) -> bool { self.dyn_path() == *other }
 }
 
 impl Equivalent<PathDyn<'_>> for PathBufDyn {
-	fn equivalent(&self, key: &PathDyn<'_>) -> bool { self.as_path() == *key }
+	fn equivalent(&self, key: &PathDyn<'_>) -> bool { self.dyn_path() == *key }
 }
 
 impl PathBufDyn {
@@ -126,7 +126,7 @@ impl PathBufDyn {
 	pub fn try_extend<T>(&mut self, paths: T) -> Result<(), PathDynError>
 	where
 		T: IntoIterator,
-		T::Item: AsPath,
+		T::Item: DynPath,
 	{
 		for p in paths {
 			self.try_push(p)?;
@@ -136,9 +136,9 @@ impl PathBufDyn {
 
 	pub fn try_push<T>(&mut self, path: T) -> Result<(), PathDynError>
 	where
-		T: AsPath,
+		T: DynPath,
 	{
-		let path = path.as_path();
+		let path = path.dyn_path();
 		Ok(match self {
 			Self::Os(p) => p.push(path.as_os()?),
 			Self::Unix(p) => p.push(path.encoded_bytes()),
@@ -199,7 +199,7 @@ impl Serialize for PathBufDyn {
 			path: &'a [u8],
 		}
 
-		let path = self.as_path();
+		let path = self.dyn_path();
 		Shadow { kind: path.kind(), path: path.encoded_bytes() }.serialize(serializer)
 	}
 }

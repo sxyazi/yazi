@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{AsPath, AsPathView, PathDyn, SetNameError}, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{DynPath, PathDyn, PathView, SetNameError}, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct LocBuf<P = std::path::PathBuf> {
@@ -25,18 +25,18 @@ impl AsRef<std::path::Path> for LocBuf<std::path::PathBuf> {
 	fn as_ref(&self) -> &std::path::Path { self.inner.as_ref() }
 }
 
-impl<T> AsPath for LocBuf<T>
+impl<T> DynPath for LocBuf<T>
 where
-	T: LocBufAble + AsPath,
+	T: LocBufAble + DynPath,
 {
-	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
+	fn dyn_path(&self) -> PathDyn<'_> { self.inner.dyn_path() }
 }
 
-impl<T> AsPath for &LocBuf<T>
+impl<T> DynPath for &LocBuf<T>
 where
-	T: LocBufAble + AsPath,
+	T: LocBufAble + DynPath,
 {
-	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
+	fn dyn_path(&self) -> PathDyn<'_> { self.inner.dyn_path() }
 }
 
 impl<P> Ord for LocBuf<P>
@@ -59,7 +59,7 @@ where
 impl<P> Hash for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
 }
@@ -67,7 +67,7 @@ where
 impl<P> Debug for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl + Debug,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		f.debug_struct("LocBuf")
@@ -81,7 +81,7 @@ where
 impl<P> From<P> for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn from(path: P) -> Self {
 		let Loc { inner, uri, urn, _phantom } = Loc::bare(&path);
@@ -100,7 +100,7 @@ impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<std::path::PathBuf> {
 impl<P> LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	pub fn new<'a, S>(path: P, base: S, trail: S) -> Self
 	where
@@ -157,7 +157,7 @@ where
 	#[inline]
 	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed<'a>> {
 		Loc {
-			inner:    self.inner.as_path_view(),
+			inner:    self.inner.path_view(),
 			uri:      self.uri,
 			urn:      self.urn,
 			_phantom: PhantomData,
@@ -223,7 +223,7 @@ where
 impl<P> LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	#[inline]
 	pub fn uri(&self) -> P::Borrowed<'_> { self.as_loc().uri() }

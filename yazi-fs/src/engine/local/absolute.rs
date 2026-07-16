@@ -51,6 +51,6 @@ fn try_absolute_impl<'a>(url: UrlCow<'a>) -> Option<UrlCow<'a>> {
 	Some(match url.as_url() {
 		Url::Regular(_) => UrlBuf::Regular(loc).into(),
 		Url::Search { auth, .. } => UrlBuf::Search { loc, auth: auth.clone() }.into(),
-		Url::Mount { .. } | Url::Scope { .. } | Url::Sftp { .. } => None?,
+		Url::Mount { .. } | Url::Hub { .. } | Url::Scope { .. } | Url::Sftp { .. } => None?,
 	})
 }

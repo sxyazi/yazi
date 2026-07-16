@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::path::{AsPath, PathBufDyn, PathDyn, PathDynError, PathKind};
+use crate::path::{DynPath, PathBufDyn, PathDyn, PathDynError, PathKind};
 
 #[derive(Debug)]
 pub enum PathCow<'a> {
@@ -23,7 +23,7 @@ impl<'a> From<std::path::PathBuf> for PathCow<'a> {
 }
 
 impl<'a> From<&'a PathCow<'_>> for PathCow<'a> {
-	fn from(value: &'a PathCow<'_>) -> Self { Self::Borrowed(value.as_path()) }
+	fn from(value: &'a PathCow<'_>) -> Self { Self::Borrowed(value.dyn_path()) }
 }
 
 impl From<PathCow<'_>> for PathBufDyn {
@@ -31,14 +31,14 @@ impl From<PathCow<'_>> for PathBufDyn {
 }
 
 impl PartialEq for PathCow<'_> {
-	fn eq(&self, other: &Self) -> bool { self.as_path() == other.as_path() }
+	fn eq(&self, other: &Self) -> bool { self.dyn_path() == other.dyn_path() }
 }
 
 impl PartialEq<&str> for PathCow<'_> {
 	fn eq(&self, other: &&str) -> bool {
 		match self {
-			Self::Borrowed(s) => s.as_path() == *other,
-			Self::Owned(s) => s.as_path() == *other,
+			Self::Borrowed(s) => s.dyn_path() == *other,
+			Self::Owned(s) => s.dyn_path() == *other,
 		}
 	}
 }
