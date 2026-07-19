@@ -25,13 +25,11 @@ function M:preload(job)
 		return true
 	end
 
-	local cmd = M.with_limit()
-	cmd:arg { "-define", "filename:literal=true" }
-	local path = tostring(job.file.path)
+	local cmd = M.with_limit():arg({ "-define", "filename:literal=true" })
 	if job.args.flatten then
-		cmd:arg { path, "-flatten" }
+		cmd:arg { tostring(job.file.path), "-flatten" }
 	else
-		cmd:arg { "-define", "image:frames=0", path }
+		cmd:arg { "-define", "image:frames=0", tostring(job.file.path) }
 	end
 	cmd:arg { "-auto-orient", "-strip" }
 
