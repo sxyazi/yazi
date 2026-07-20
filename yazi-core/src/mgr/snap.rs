@@ -1,5 +1,3 @@
-use std::iter;
-
 use yazi_fs::Splatable;
 use yazi_shared::url::{AsUrl, Url, UrlBuf};
 
@@ -29,14 +27,13 @@ impl Splatable for MgrSnap {
 
 		// Fall back to the hovered item when nothing is explicitly selected, the
 		// same convention `Tab::selected_or_hovered_urls()` used before #4108.
-		let urls: Box<dyn Iterator<Item = &UrlBuf>> =
-			match tab.checked_sub(1).and_then(|tab| self.tabs.get(tab)) {
-				Some(s) if !s.selected.is_empty() => Box::new(s.selected.iter()),
-				Some(s) => Box::new(s.hovered.iter()),
-				None => Box::new(iter::empty()),
-			};
+		let urls: &[UrlBuf] = match tab.checked_sub(1).and_then(|tab| self.tabs.get(tab)) {
+			Some(s) if !s.selected.is_empty() => &s.selected,
+			Some(s) => s.hovered.as_slice(),
+			None => &[],
+		};
 
-		urls.skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX }).map(AsUrl::as_url)
+		urls.iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX }).map(AsUrl::as_url)
 	}
 
 	fn hovered(&self, tab: usize) -> Option<Url<'_>> {
