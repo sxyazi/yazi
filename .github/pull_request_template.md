@@ -20,3 +20,5 @@ If it has already been detailed in the associated issue, please skip this sectio
 
 - [ ] I have read [CONTRIBUTING.md](https://github.com/sxyazi/yazi/blob/main/CONTRIBUTING.md)
 - [ ] I confirm this PR follows the [AI Policy](https://github.com/sxyazi/yazi/blob/main/CONTRIBUTING.md#ai-policy)
+
+<!-- If an AI agent opened this PR, verify only one PR was created and that the disclosure above is in the final body. -->
