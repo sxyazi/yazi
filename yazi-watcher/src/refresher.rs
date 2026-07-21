@@ -1,6 +1,6 @@
 use std::{io, ops::Deref, time::{Duration, Instant}};
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, hash_map::RawEntryMut};
 use indexmap::IndexSet;
 use tokio::sync::mpsc;
 use yazi_fs::{Entries, FilesOp, file::{File, FileCov}};
@@ -55,9 +55,17 @@ impl Refresher {
 				}
 			}
 			Op::Refresh(files) => {
-				for file in files {
-					let entry =
-						entries.get_or_insert_with(file.0, |file| Entry { file, ..Default::default() });
+				for file in files.into_iter().map(|file| file.0) {
+					let entry = match entries.raw_entry_mut().from_key(&file.url) {
+						RawEntryMut::Occupied(mut oe) => {
+							oe.get_mut().file = file;
+							oe.into_mut()
+						}
+						RawEntryMut::Vacant(ve) => {
+							ve.insert(file.url.to_owned(), Entry { file, ..Default::default() }).1
+						}
+					};
+
 					(entry.dirty, entry.report) = (true, true);
 					self.spawn(entry);
 				}
@@ -98,6 +106,7 @@ impl Refresher {
 				}
 
 				entry.busy = None;
+				self.spawn(entry); // A new request may have arrived while this entry was busy.
 			}
 		}
 	}
