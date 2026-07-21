@@ -30,7 +30,7 @@ impl Default for Cwd {
 }
 
 impl Cwd {
-	pub fn path(&self) -> PathBuf { self.0.load().as_url().unified_path().into_owned() }
+	pub fn path(&self) -> PathBuf { self.0.load().as_url().working_path().into_owned() }
 
 	pub fn set(&self, url: &UrlBuf, callback: fn()) -> bool {
 		if !url.is_absolute() {
@@ -48,8 +48,8 @@ impl Cwd {
 	pub fn ensure(url: Url) -> Cow<Path> {
 		use std::{io::ErrorKind::{AlreadyExists, NotADirectory, NotFound}, path::Component as C};
 
-		let Some(cache) = url.cache() else {
-			return url.unified_path();
+		let Some(cache) = url.cache_bucket() else {
+			return url.working_path();
 		};
 
 		if !matches!(std::fs::create_dir_all(&cache), Err(e) if e.kind() == NotADirectory || e.kind() == AlreadyExists)

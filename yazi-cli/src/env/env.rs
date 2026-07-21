@@ -5,6 +5,7 @@ use yazi_config::{THEME, YAZI};
 use yazi_emulator::Mux;
 use yazi_fs::Xdg;
 use yazi_shared::timestamp_us;
+use yazi_shim::OptionExt;
 use yazi_term::TERM;
 
 use crate::env::Env;
@@ -156,7 +157,8 @@ impl Env {
 				Regex::new(r"\d+\.\d+(\.\d+-\d+|\.\d+|\b)")
 					.unwrap()
 					.find(&line)
-					.map(|m| m.as_str().to_owned())
+					.map(|m| m.as_str())
+					.owned()
 					.unwrap_or(line)
 			}
 			Ok(out) => format!("{:?}, {:?}", out.status, String::from_utf8_lossy(&out.stderr)),

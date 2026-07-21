@@ -4,15 +4,15 @@ use hashbrown::{HashMap, HashSet};
 use yazi_macro::{impl_data_any, relay};
 use yazi_shared::{id::{Id, Ids}, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike, UrlMapExt}};
 
-use crate::{cha::Cha, file::File};
+use crate::file::File;
 
 pub static FILES_TICKET: Ids = Ids::new();
 
 #[derive(Clone, Debug)]
 pub enum FilesOp {
-	Full(UrlBuf, Vec<File>, Cha),
+	Full(File, Vec<File>),
 	Part(UrlBuf, Vec<File>, Id),
-	Done(UrlBuf, Cha, Id),
+	Done(File, Id),
 	Size(UrlBuf, HashMap<PathBufDyn, u64>),
 	IOErr(UrlBuf, yazi_shim::fs::Error),
 
@@ -27,9 +27,9 @@ impl_data_any!(FilesOp);
 impl FilesOp {
 	pub fn cwd(&self) -> &UrlBuf {
 		match self {
-			Self::Full(u, ..) => u,
+			Self::Full(f, ..) => &f.url,
 			Self::Part(u, ..) => u,
-			Self::Done(u, ..) => u,
+			Self::Done(f, ..) => &f.url,
 			Self::Size(u, _) => u,
 			Self::IOErr(u, _) => u,
 
@@ -42,7 +42,7 @@ impl FilesOp {
 
 	pub fn files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
 		match self {
-			Self::Full(_, files, _) | Self::Part(_, files, _) | Self::Creating(_, files) => {
+			Self::Full(_, files) | Self::Part(_, files, _) | Self::Creating(_, files) => {
 				Box::new(files.iter().filter(|f| !f.entry_key().is_empty()))
 			}
 			Self::Done(..) => Box::new(iter::empty()),
@@ -141,9 +141,9 @@ impl FilesOp {
 
 		let w = UrlBuf::from(wd);
 		match self {
-			Self::Full(_, files, cha) => Self::Full(w, files!(files), *cha),
+			Self::Full(file, files) => Self::Full(file.chdir(wd), files!(files)),
 			Self::Part(_, files, ticket) => Self::Part(w, files!(files), *ticket),
-			Self::Done(_, cha, ticket) => Self::Done(w, *cha, *ticket),
+			Self::Done(file, ticket) => Self::Done(file.chdir(wd), *ticket),
 			Self::Size(_, map) => Self::Size(w, map.iter().map(|(urn, &s)| (urn.clone(), s)).collect()),
 			Self::IOErr(_, err) => Self::IOErr(w, err.clone()),
 

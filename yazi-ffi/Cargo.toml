@@ -24,3 +24,6 @@ libc = { workspace = true }
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
 objc2               = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features = [ "Win32_System_Com" ] }

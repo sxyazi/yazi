@@ -21,6 +21,7 @@ yazi-emulator = { path = "../yazi-emulator", version = "26.5.6" }
 yazi-fs       = { path = "../yazi-fs", version = "26.5.6" }
 yazi-macro    = { path = "../yazi-macro", version = "26.5.6" }
 yazi-shared   = { path = "../yazi-shared", version = "26.5.6" }
+yazi-shim     = { path = "../yazi-shim", version = "26.5.6" }
 yazi-term     = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty      = { path = "../yazi-tty", version = "26.5.6" }
 yazi-version  = { path = "../yazi-version", version = "26.5.6" }
@@ -44,7 +45,7 @@ anyhow                = { workspace = true }
 clap                  = { workspace = true }
 clap_complete         = "4.6.7"
 clap_complete_fig     = "4.5.2"
-clap_complete_nushell = "4.6.0"
+clap_complete_nushell = "4.6.1"
 serde                 = { workspace = true }
 serde_json            = { workspace = true }
 

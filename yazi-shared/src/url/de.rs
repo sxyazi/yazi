@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserializer, de::{self, IntoDeserializer, MapAccess}};
 
-use crate::{auth::Domain, data::BytesDeserializer, pool::{InternStr, Symbol}, url::UrlCow};
+use crate::{auth::{AuthDeserializer, Domain}, data::BytesDeserializer, pool::{InternStr, Symbol}, url::UrlCow};
 
 pub struct UrlDeserializer<'a>(pub(super) UrlCow<'a>);
 
@@ -36,6 +36,7 @@ struct MapDeserializer<'a> {
 	domain: Option<Domain<'static>>,
 	uri:    Option<usize>,
 	urn:    Option<usize>,
+	parent: Option<AuthDeserializer>,
 	path:   Option<Cow<'a, [u8]>>,
 }
 
@@ -50,6 +51,7 @@ impl<'a> MapDeserializer<'a> {
 			domain: Some(spec.domain.clone()),
 			uri:    Some(uri),
 			urn:    Some(urn),
+			parent: spec.auth.parent.clone().map(AuthDeserializer),
 			path:   Some(path.into_encoded_bytes()),
 		}
 	}
@@ -72,6 +74,8 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 			Some("uri")
 		} else if self.urn.is_some() {
 			Some("urn")
+		} else if self.parent.is_some() {
+			Some("parent")
 		} else if self.path.is_some() {
 			Some("path")
 		} else {
@@ -100,6 +104,9 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 		if let Some(urn) = self.urn.take() {
 			return seed.deserialize(urn.into_deserializer());
 		}
+		if let Some(parent) = self.parent.take() {
+			return seed.deserialize(parent);
+		}
 		if let Some(path) = self.path.take() {
 			return seed.deserialize(BytesDeserializer(path));
 		}
@@ -114,6 +121,7 @@ impl<'de, 'a: 'de> MapAccess<'de> for MapDeserializer<'a> {
 				+ self.domain.is_some() as usize
 				+ self.uri.is_some() as usize
 				+ self.urn.is_some() as usize
+				+ self.parent.is_some() as usize
 				+ self.path.is_some() as usize,
 		)
 	}

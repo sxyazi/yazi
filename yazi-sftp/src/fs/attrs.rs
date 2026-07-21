@@ -1,5 +1,6 @@
-use std::{collections::HashMap, fmt};
+use std::fmt;
 
+use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeStruct};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]

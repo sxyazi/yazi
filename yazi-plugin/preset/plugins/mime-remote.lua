@@ -2,16 +2,16 @@ local M = {}
 
 local function stale_cache(file)
 	local url = file.url
-	local lock = url.spec.cache:join(string.format("%%lock/%s", url:hash(true)))
+	local stamp = url.spec.stamp:join(url:hash(true))
 
-	local fd = fs.access():read(true):open(Url(lock))
+	local fd = fs.access():read(true):open(Url(stamp))
 	if not fd then
 		return true
 	end
 
-	local hash = fd:read(32)
+	local sig = fd:read(26)
 	ya.drop(fd)
-	return hash ~= file.cha:hash(true)
+	return sig ~= file.cha:hash(true)
 end
 
 function M:fetch(job)

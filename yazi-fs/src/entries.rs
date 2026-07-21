@@ -292,25 +292,20 @@ impl Entries {
 
 	// --- Show hidden
 	pub fn set_show_hidden(&mut self, state: bool) {
-		if self.show_hidden == state {
+		if mem::replace(&mut self.show_hidden, state) == state {
 			return;
 		}
 
-		self.show_hidden = state;
-		if self.show_hidden && self.hidden.is_empty() {
-			return;
-		} else if !self.show_hidden && self.items.is_empty() {
-			return;
-		}
-
+		let len = self.items.len();
 		let take =
 			if self.show_hidden { mem::take(&mut self.hidden) } else { mem::take(&mut self.items) };
-		let (hidden, items) = self.split_files(take);
-
-		self.hidden.extend(hidden);
-		if !items.is_empty() {
-			self.revision += 1;
-			self.items.extend(items);
+		if take.is_empty() {
+			return;
 		}
+
+		let (hidden, items) = self.split_files(take);
+		self.hidden.extend(hidden);
+		self.items.extend(items);
+		self.revision += (self.items.len() != len) as u64;
 	}
 }

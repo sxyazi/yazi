@@ -1,6 +1,6 @@
-yazi_macro::mod_pub!(local remote);
+yazi_macro::mod_pub!(local r#virtual);
 
-yazi_macro::mod_flat!(backend proxy reporter watched watchee watcher);
+yazi_macro::mod_flat!(backend proxy refresher reporter watched watchee watcher);
 
 pub static WATCHED: yazi_shim::cell::RoCell<parking_lot::RwLock<Watched>> =
 	yazi_shim::cell::RoCell::new();

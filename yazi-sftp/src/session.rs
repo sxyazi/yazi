@@ -1,5 +1,6 @@
-use std::{any::TypeId, collections::HashMap, io::{self, ErrorKind}, sync::Arc, time::Duration};
+use std::{any::TypeId, io::{self, ErrorKind}, sync::Arc, time::Duration};
 
+use hashbrown::HashMap;
 use parking_lot::Mutex;
 use russh::{ChannelStream, client::Msg};
 use serde::Serialize;

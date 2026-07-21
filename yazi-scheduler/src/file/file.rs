@@ -6,7 +6,7 @@ use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to};
 use yazi_shared::{path::PathCow, url::{AsUrl, UrlCow, UrlLike}};
-use yazi_vfs::{VfsCha, engine::{self, DirEntry}, maybe_exists, unique_file};
+use yazi_vfs::{Stamp, VfsCha, engine::{self, DirEntry}, maybe_exists, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink}, ok_or_not_found};
@@ -342,7 +342,7 @@ impl File {
 	) -> Result<(), FileOutDownloadDo> {
 		let cha = task.cha.unwrap();
 
-		let cache = ctx!(task, task.target.cache(), "Cannot determine cache path")?;
+		let cache = ctx!(task, task.target.cache_entry(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
 		let mut rx = ctx!(task, engine::copy_progressive(&task.target, &cache_tmp, cha).await)?;
@@ -350,12 +350,8 @@ impl File {
 			match rx.recv().await.unwrap_or(Ok(0)) {
 				Ok(0) => {
 					Local::regular(&cache).remove_dir_all().await.ok();
+					ctx!(task, Stamp::write(cha, task.target.as_url()).await)?;
 					ctx!(task, engine::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
-
-					let lock = ctx!(task, task.target.cache_lock(), "Cannot determine cache lock")?;
-					let hash = format!("{:x}", cha.hash_u128());
-					ctx!(task, Local::regular(&lock).write(hash).await, "Cannot lock cache")?;
-
 					break;
 				}
 				Ok(n) => self.ops.out(task.id, FileOutDownloadDo::Adv(n)),
@@ -410,13 +406,9 @@ impl File {
 	pub(crate) async fn upload_do(&self, task: FileInUpload) -> Result<(), FileOutUploadDo> {
 		let cha = task.cha.unwrap();
 		let cache = ctx!(task, task.cache.as_ref(), "Cannot determine cache path")?;
-		let lock = ctx!(task, task.target.cache_lock(), "Cannot determine cache lock")?;
 
-		let hash = ctx!(task, Local::regular(&lock).read_to_string().await, "Cannot read cache lock")?;
-		let hash = ctx!(task, u128::from_str_radix(&hash, 16), "Cannot parse hash from lock")?;
-		if hash != cha.hash_u128() {
-			Err(anyhow!("Failed to work on: {task:?}: remote file has changed since last download"))?;
-		}
+		let stamp = ctx!(task, Stamp::read(&task.target).await)?;
+		ctx!(task, stamp.validate(cha, task.target.as_url()))?;
 
 		let tmp =
 			ctx!(task, Transaction::tmp(&task.target).await, "Cannot determine temporary upload path")?;
@@ -436,7 +428,7 @@ impl File {
 				Ok(0) => {
 					let cha =
 						ctx!(task, Self::cha(&task.target, true, None).await, "Cannot stat original file")?;
-					if hash != cha.hash_u128() {
+					if stamp.sig() != cha.hash_u128_str(&mut [0; 26]) {
 						Err(anyhow!("Failed to work on: {task:?}: remote file has changed during upload"))?;
 					}
 
@@ -444,8 +436,7 @@ impl File {
 
 					let cha =
 						ctx!(task, Self::cha(&task.target, true, None).await, "Cannot stat uploaded file")?;
-					let hash = format!("{:x}", cha.hash_u128());
-					ctx!(task, Local::regular(&lock).write(hash).await, "Cannot lock cache")?;
+					ctx!(task, Stamp::write(cha, task.target.as_url()).await)?;
 
 					break;
 				}

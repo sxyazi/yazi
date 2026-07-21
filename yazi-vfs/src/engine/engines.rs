@@ -1,7 +1,7 @@
 use std::io;
 
 use tokio::sync::mpsc;
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::File};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 #[derive(Clone)]
@@ -74,10 +74,11 @@ impl<'a> Engine for Engines<'a> {
 	}
 
 	async fn create(&self) -> io::Result<Self::File> {
+		let url = self.url();
 		Ok(match self {
-			Self::Local(p) => p.create().await?.into(),
+			Self::Local(p) => (p.create().await?, url.to_owned()).into(),
 			Self::Lua(p) => p.create().await?.into(),
-			Self::Sftp(p) => p.create().await?.into(),
+			Self::Sftp(p) => (p.create().await?, url.to_owned()).into(),
 		})
 	}
 
@@ -98,11 +99,20 @@ impl<'a> Engine for Engines<'a> {
 	}
 
 	async fn create_new(&self) -> io::Result<Self::File> {
+		let url = self.url();
 		Ok(match self {
-			Self::Local(p) => p.create_new().await?.into(),
+			Self::Local(p) => (p.create_new().await?, url.to_owned()).into(),
 			Self::Lua(p) => p.create_new().await?.into(),
-			Self::Sftp(p) => p.create_new().await?.into(),
+			Self::Sftp(p) => (p.create_new().await?, url.to_owned()).into(),
 		})
+	}
+
+	async fn file(&self) -> io::Result<File> {
+		match self {
+			Self::Local(p) => p.file().await,
+			Self::Lua(p) => p.file().await,
+			Self::Sftp(p) => p.file().await,
+		}
 	}
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
@@ -135,10 +145,11 @@ impl<'a> Engine for Engines<'a> {
 	}
 
 	async fn open(&self) -> io::Result<Self::File> {
+		let url = self.url();
 		Ok(match self {
-			Self::Local(p) => p.open().await?.into(),
+			Self::Local(p) => (p.open().await?, url.to_owned()).into(),
 			Self::Lua(p) => p.open().await?.into(),
-			Self::Sftp(p) => p.open().await?.into(),
+			Self::Sftp(p) => (p.open().await?, url.to_owned()).into(),
 		})
 	}
 
@@ -155,6 +166,14 @@ impl<'a> Engine for Engines<'a> {
 			Self::Local(p) => p.read_link().await,
 			Self::Lua(p) => p.read_link().await,
 			Self::Sftp(p) => p.read_link().await,
+		}
+	}
+
+	async fn revalidate(&self, file: File) -> io::Result<Option<File>> {
+		match self {
+			Self::Local(p) => p.revalidate(file).await,
+			Self::Lua(p) => p.revalidate(file).await,
+			Self::Sftp(p) => p.revalidate(file).await,
 		}
 	}
 

@@ -7,7 +7,7 @@ use tokio::io::AsyncWriteExt;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_dds::Pubsub;
-use yazi_fs::{FilesOp, Splatter, engine::{Engine, FileBuilder, local::{Demand, Local}}, file::File, max_common_root, path::skip_url};
+use yazi_fs::{FilesOp, Splatter, engine::{Engine, FileBuilder, local::Local}, max_common_root, path::skip_url};
 use yazi_macro::{err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
@@ -15,7 +15,7 @@ use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::{TTY, sequence::EraseScreen};
-use yazi_vfs::{VfsFile, engine, maybe_exists};
+use yazi_vfs::{engine::{self, Demand}, maybe_exists};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -46,13 +46,8 @@ impl Actor for BulkRename {
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk-rename");
 
-			Demand::default()
-				.write(true)
-				.create_new(true)
-				.open(&tmp)
-				.await?
-				.write_all(old.join(Strand::Utf8("\n")).encoded_bytes())
-				.await?;
+			let mut rw = Demand::default().write(true).create_new(true).open(&tmp).await?;
+			rw.write_all(old.join(Strand::Utf8("\n")).encoded_bytes()).await?;
 
 			defer! {
 				let tmp = tmp.clone();
@@ -65,7 +60,7 @@ impl Actor for BulkRename {
 			batcher.prime(&tmp);
 			TasksProxy::process_exec(ShellOpt {
 				cwd,
-				cmd: Splatter::new(&[tmp.as_url()]).splat(&opener.run),
+				cmd: Splatter::new(&[rw.into_file().await?]).splat(&opener.run),
 				block: opener.block,
 				orphan: opener.orphan,
 			})
@@ -131,7 +126,7 @@ impl BulkRename {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else if let Err(e) = engine::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
-			} else if let Ok(f) = File::new(new).await {
+			} else if let Ok(f) = engine::file(new).await {
 				succeeded.insert(old, f);
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));

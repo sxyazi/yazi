@@ -131,13 +131,13 @@ impl Traverse for FileInUpload {
 			self.cha = Some(super::File::cha(self.from(), self.follow(), None).await?)
 		}
 		if self.cache.is_none() {
-			self.cache = self.target.cache();
+			self.cache = self.target.cache_entry();
 		}
 		Ok(self.cha.unwrap())
 	}
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
-		Self { id: self.id, cha: Some(cha), cache: from.cache(), target: from }
+		Self { id: self.id, cha: Some(cha), cache: from.cache_entry(), target: from }
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }

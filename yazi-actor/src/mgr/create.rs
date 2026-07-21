@@ -80,7 +80,7 @@ impl Create {
 		if let Ok(real) = engine::casefold(&new).await
 			&& let Some((parent, key)) = real.pair2()
 		{
-			let file = File::new(&real).await?;
+			let file = engine::file(&real).await?;
 			FilesOp::Upserting(parent.into(), [(key.into(), file)].into()).emit();
 			MgrProxy::reveal(&real);
 		}

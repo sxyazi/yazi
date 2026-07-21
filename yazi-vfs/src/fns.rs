@@ -1,6 +1,7 @@
 use std::io::{self};
 
 use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
+use yazi_shim::OptionExt;
 
 use crate::engine;
 
@@ -23,7 +24,7 @@ pub async fn unique_file(u: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 }
 
 async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
-	let Some(stem) = url.stem().map(|s| s.to_owned()) else {
+	let Some(stem) = url.stem().owned() else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 

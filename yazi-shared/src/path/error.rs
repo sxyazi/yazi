@@ -53,6 +53,10 @@ impl From<PathDynError> for std::io::Error {
 	fn from(err: PathDynError) -> Self { Self::other(err) }
 }
 
+impl From<PathDynError> for mlua::Error {
+	fn from(err: PathDynError) -> Self { Self::external(err) }
+}
+
 // --- SetNameError
 #[derive(Debug, Error)]
 #[error("calling set_name on paths with different encodings")]

@@ -1,7 +1,7 @@
 use std::io;
 
 use tokio::sync::mpsc;
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, local::Local}};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, local::Local}, file::File};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use super::{Engines, ReadDir, RwFile};
@@ -113,6 +113,13 @@ where
 	Engines::new(url.as_url()).await?.create_new().await
 }
 
+pub async fn file<U>(url: U) -> io::Result<File>
+where
+	U: AsUrl,
+{
+	Engines::new(url.as_url()).await?.file().await
+}
+
 pub async fn hard_link<U, V>(original: U, link: V) -> io::Result<()>
 where
 	U: AsUrl,
@@ -172,6 +179,10 @@ where
 	U: AsUrl,
 {
 	Engines::new(url.as_url()).await?.read_link().await
+}
+
+pub async fn revalidate(file: &File) -> io::Result<Option<File>> {
+	Engines::new(file.as_url()).await?.revalidate(file.clone()).await
 }
 
 pub async fn remove_dir<U>(url: U) -> io::Result<()>

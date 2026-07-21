@@ -2,7 +2,7 @@ use std::{ops::Deref, sync::Arc, time::Duration};
 
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
-use yazi_fs::FsHash64;
+use yazi_fs::{FsHash64, file::FileSig};
 use yazi_shared::{CompletionToken, Throttle, id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
@@ -204,7 +204,7 @@ impl Scheduler {
 	}
 
 	pub fn preload_paged(&self, preloader: PreloaderArc, target: &yazi_fs::file::File) {
-		let hook = HookInPreload::new(preloader.idx, target.hash_u64());
+		let hook = HookInPreload::new(preloader.idx, FileSig(target).hash_u64());
 		let mut r#in = PreloadIn { id: Id::ZERO, preloader, target: target.clone() };
 
 		self.add_hooked(&mut r#in, hook, |_| ());

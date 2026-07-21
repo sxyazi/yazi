@@ -5,7 +5,7 @@ use yazi_binding::{Composer, ComposerGet, ComposerSet, Error};
 use yazi_config::Pattern;
 use yazi_fs::{engine::{Attrs, DirReader, FileHolder}, file::File, mounts::PARTITIONS};
 use yazi_shared::url::{UrlBuf, UrlCow, UrlLike, UrlRef};
-use yazi_vfs::{VfsFile, engine};
+use yazi_vfs::engine;
 
 use crate::fs::SizeCalculator;
 
@@ -15,6 +15,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"access" => access(lua)?,
 			b"calc_size" => calc_size(lua)?,
 			b"cha" => cha(lua)?,
+			b"clean_url" => clean_url(lua)?,
 			b"copy" => copy(lua)?,
 			b"create" => create(lua)?,
 			b"cwd" => cwd(lua)?,
@@ -25,6 +26,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"read_dir" => read_dir(lua)?,
 			b"remove" => remove(lua)?,
 			b"rename" => rename(lua)?,
+			b"trash" => return yazi_fs::trash::Trash.into_lua(lua),
 			b"unique" => unique(lua)?,
 			b"write" => write(lua)?,
 			_ => return Ok(Value::Nil),
@@ -46,7 +48,7 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 		let it = if let Some(path) = url.as_local() {
 			yazi_fs::engine::local::SizeCalculator::new(path).await.map(SizeCalculator::Local)
 		} else {
-			yazi_vfs::engine::SizeCalculator::new(&*url).await.map(SizeCalculator::Remote)
+			yazi_vfs::engine::SizeCalculator::new(&*url).await.map(SizeCalculator::Virtual)
 		};
 
 		match it {
@@ -57,18 +59,19 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn cha(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (url, follow): (UrlRef, Option<bool>)| async move {
-		let cha = if follow.unwrap_or(false) {
-			engine::metadata(&*url).await
-		} else {
-			engine::symlink_metadata(&*url).await
-		};
+	lua.create_async_function(|lua, (url, follow): (UrlRef, bool)| async move {
+		let cha =
+			if follow { engine::metadata(&*url).await } else { engine::symlink_metadata(&*url).await };
 
 		match cha {
 			Ok(c) => c.into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
+}
+
+fn clean_url(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|_, url: UrlRef| Ok(yazi_fs::path::clean_url(&*url)))
 }
 
 fn copy(lua: &Lua) -> mlua::Result<Function> {
@@ -124,7 +127,7 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 
 fn file(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		match File::new(&*url).await {
+		match engine::file(&*url).await {
 			Ok(file) => file.into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
@@ -185,8 +188,8 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 			let file = if !resolve {
 				File::from_dummy(url, next.file_type().await.ok())
-			} else if let Ok(cha) = next.metadata().await {
-				File::from_follow(url, cha).await
+			} else if let Ok(file) = next.file().await {
+				file
 			} else {
 				File::from_dummy(url, next.file_type().await.ok())
 			};
