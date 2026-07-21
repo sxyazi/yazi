@@ -37,13 +37,13 @@ impl Actor for Peek {
 			succ!();
 		}
 
+		let preview = &mut cx.tab_mut().preview;
 		if let Some(skip) = form.skip {
-			let preview = &mut cx.tab_mut().preview;
-			if form.upper_bound {
-				preview.skip = preview.skip.min(skip);
-			} else {
-				preview.skip = skip;
-			}
+			preview.skip = skip;
+		}
+
+		if let Some(index) = form.search_idx {
+			preview.search_idx = Some(index);
 		}
 
 		if hovered.is_dir() {

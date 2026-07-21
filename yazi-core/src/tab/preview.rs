@@ -12,10 +12,11 @@ use yazi_vfs::{VfsEntries, VfsFilesOp};
 
 use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Preview {
-	pub lock: Option<PreviewLock>,
-	pub skip: usize,
+	pub lock:       Option<PreviewLock>,
+	pub skip:       usize,
+	pub search_idx: Option<usize>,
 
 	handle:          Option<JoinHandle<()>>,
 	pub folder_lock: Option<UrlBuf>,
@@ -35,7 +36,8 @@ impl Preview {
 		};
 
 		self.abort();
-		let job = PeekJob { previewer, file, mime, skip: self.skip };
+
+		let job = PeekJob { previewer, file, mime, skip: self.skip, search_idx: self.search_idx };
 
 		self.handle = Some(tokio::spawn(async move {
 			let mut rx = RUNNER.peek(&job).await;
@@ -83,6 +85,7 @@ impl Preview {
 	}
 
 	pub fn reset(&mut self) {
+		self.search_idx = None;
 		self.abort();
 		ADAPTOR.image_hide().ok();
 		render!(self.lock.take().is_some())
@@ -101,7 +104,8 @@ impl Preview {
 	}
 
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
-		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
+		self.same_file(file, mime)
+			&& matches!(&self.lock, Some(l) if l.skip == self.skip && l.search_idx == self.search_idx)
 	}
 
 	pub fn same_folder(&self, url: &UrlBuf) -> bool { self.folder_lock.as_ref() == Some(url) }

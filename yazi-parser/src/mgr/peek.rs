@@ -7,6 +7,7 @@ pub struct PeekForm {
 	pub force:       bool,
 	pub only_if:     Option<UrlBuf>,
 	pub upper_bound: bool,
+	pub search_idx:  Option<usize>,
 }
 
 impl From<ActionCow> for PeekForm {
@@ -16,6 +17,7 @@ impl From<ActionCow> for PeekForm {
 			force:       a.bool("force"),
 			only_if:     a.take("only-if").ok(),
 			upper_bound: a.bool("upper-bound"),
+			search_idx:  a.take("search-idx").ok(),
 		}
 	}
 }

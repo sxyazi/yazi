@@ -6,10 +6,11 @@ use yazi_shared::{data::Sendable, pool::Symbol};
 
 #[derive(Clone, Debug)]
 pub struct PeekJob {
-	pub previewer: PreviewerArc,
-	pub file:      File,
-	pub mime:      Symbol<str>,
-	pub skip:      usize,
+	pub previewer:  PreviewerArc,
+	pub file:       File,
+	pub mime:       Symbol<str>,
+	pub skip:       usize,
+	pub search_idx: Option<usize>,
 }
 
 impl IntoLua for PeekJob {
@@ -21,6 +22,7 @@ impl IntoLua for PeekJob {
 				("file", self.file.into_lua(lua)?),
 				("mime", self.mime.into_lua(lua)?),
 				("skip", self.skip.into_lua(lua)?),
+				("search_idx", self.search_idx.into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}
