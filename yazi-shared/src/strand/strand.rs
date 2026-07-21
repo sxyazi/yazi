@@ -93,6 +93,9 @@ impl<'a> Strand<'a> {
 	}
 
 	#[inline]
+	pub fn to_os_string(self) -> Result<OsString, StrandError> { self.as_os().map(|s| s.to_owned()) }
+
+	#[inline]
 	pub fn as_os_path(self) -> Result<&'a std::path::Path, StrandError> {
 		self.as_os().map(std::path::Path::new)
 	}
