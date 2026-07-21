@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shim::mlua::UserDataFieldsExt;
+use yazi_shim::{OptionExt, mlua::UserDataFieldsExt};
 
 use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
 
@@ -74,7 +74,7 @@ impl UserData for PathBufDyn {
 		fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		fields.add_cached_field("parent", |_, me| Ok(me.parent().map(|p| p.to_owned())));
+		fields.add_cached_field("parent", |_, me| Ok(me.parent().owned()));
 		fields.add_cached_field("stem", |lua, me| {
 			me.stem().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
@@ -92,6 +92,7 @@ impl UserData for PathBufDyn {
 		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: LuaString| {
 			lua.create_external_string([lhs.encoded_bytes(), &rhs.as_bytes()].concat())
 		});
+		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: PathRef| Ok(*me == *other));
 		methods
 			.add_meta_method(MetaMethod::ToString, |lua, me, ()| lua.create_string(me.encoded_bytes()));

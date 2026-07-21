@@ -4,16 +4,16 @@ use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
-use yazi_fs::{FilesOp, Splatter, engine::{Engine, local::Local}, file::File};
+use yazi_fs::{FilesOp, Splatter, engine::{Engine, local::Local}};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
-use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlLike}};
+use yazi_shared::{data::Data, strand::Strand, url::{UrlBuf, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::{TTY, sequence::EraseScreen};
-use yazi_vfs::{VfsFile, engine};
+use yazi_vfs::engine;
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -31,7 +31,7 @@ impl Actor for BulkCreate {
 		let cwd = cx.cwd().clone();
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk-create");
-			engine::create_new(&tmp).await?;
+			let file = engine::create_new(&tmp).await?.file().await?;
 
 			defer! {
 				let tmp = tmp.clone();
@@ -42,7 +42,7 @@ impl Actor for BulkCreate {
 
 			TasksProxy::process_exec(ShellOpt {
 				cwd:    cwd.clone(),
-				cmd:    Splatter::new(&[tmp.as_url()]).splat(&opener.run),
+				cmd:    Splatter::new(&[file]).splat(&opener.run),
 				block:  opener.block,
 				orphan: opener.orphan,
 			})
@@ -86,7 +86,7 @@ impl BulkCreate {
 
 			if let Err(e) = result {
 				failed.push((entry, e.into()));
-			} else if let Ok(f) = File::new(dist).await {
+			} else if let Ok(f) = engine::file(dist).await {
 				succeeded.push(f);
 			} else {
 				failed.push((entry, anyhow!("Failed to retrieve file info")));

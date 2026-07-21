@@ -23,6 +23,7 @@ yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
 anyhow           = { workspace = true }
 arc-swap         = { workspace = true }
 bitflags         = { workspace = true }
+data-encoding    = { workspace = true }
 dirs             = { workspace = true }
 either           = { workspace = true }
 foldhash         = { workspace = true }
@@ -31,11 +32,11 @@ inventory        = { workspace = true }
 libc             = { workspace = true }
 mlua             = { workspace = true }
 parking_lot      = { workspace = true }
-percent-encoding = { workspace = true }
 rand             = { workspace = true }
 regex            = { workspace = true }
 scopeguard       = { workspace = true }
 serde            = { workspace = true }
+serde_with       = { workspace = true }
 strum            = { workspace = true }
 tokio            = { workspace = true }
 tracing          = { workspace = true }
@@ -45,10 +46,12 @@ typed-path       = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
+windows     = { version = "0.62.2", features = [ "Win32_Foundation", "Win32_Storage_EnhancedStorage", "Win32_System_Com_StructuredStorage", "Win32_System_SystemServices", "Win32_UI_Shell_PropertiesSystem" ] }
 windows-sys = { version = "0.61.2", features = [ "Win32_Storage_FileSystem" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
+ds_parser           = "0.2.1"
 objc2               = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]

@@ -4,12 +4,12 @@ use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
 use hashbrown::HashSet;
 use yazi_core::mgr::OpenOpt;
-use yazi_fs::{FsSpec, engine::{Engine, local::Local}, file::File};
+use yazi_fs::{FsSpec, engine::{Engine, local::Local}};
 use yazi_macro::succ;
 use yazi_parser::mgr::DownloadForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
-use yazi_vfs::VfsFile;
+use yazi_vfs::engine;
 
 use crate::{Actor, Ctx};
 
@@ -42,7 +42,7 @@ impl Actor for Download {
 					continue;
 				}
 
-				let Ok(f) = File::new(&url).await else { continue };
+				let Ok(f) = engine::file(&url).await else { continue };
 				urls.push(url);
 				files.push(f);
 

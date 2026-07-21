@@ -1,6 +1,6 @@
 extern crate self as yazi_fs;
 
-yazi_macro::mod_pub!(cha file mounts path engine);
+yazi_macro::mod_pub!(cha file mounts path engine trash);
 
 yazi_macro::mod_flat!(cwd spec entries filter fns hash op sorter sorting splatter stage url xdg);
 

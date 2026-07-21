@@ -38,12 +38,14 @@ impl FileBuilder for Demand {
 		let url = url.as_url();
 		Ok(match url.kind() {
 			AuthKind::Regular | AuthKind::Search => {
-				self.0.build::<yazi_fs::engine::local::Demand>().open(url).await?.into()
+				(self.0.build::<yazi_fs::engine::local::Demand>().open(url).await?, url.to_owned()).into()
 			}
 			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope => {
 				self.0.build::<super::lua::Demand>().open(url).await?.into()
 			}
-			AuthKind::Sftp => self.0.build::<super::sftp::Demand>().open(url).await?.into(),
+			AuthKind::Sftp => {
+				(self.0.build::<super::sftp::Demand>().open(url).await?, url.to_owned()).into()
+			}
 		})
 	}
 

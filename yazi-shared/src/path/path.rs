@@ -2,6 +2,7 @@ use std::{borrow::Cow, ffi::OsStr};
 
 use anyhow::Result;
 use hashbrown::Equivalent;
+use yazi_shim::OptionExt;
 
 use super::{RsplitOnceError, StartsWithError};
 use crate::{BytesExt, Utf8BytePredictor, path::{Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand, StrandError}};
@@ -53,6 +54,10 @@ impl PartialEq<&str> for PathDyn<'_> {
 
 impl Equivalent<PathBufDyn> for PathDyn<'_> {
 	fn equivalent(&self, key: &PathBufDyn) -> bool { *self == key.dyn_path() }
+}
+
+impl<'p> OptionExt<PathBufDyn> for Option<PathDyn<'p>> {
+	fn owned(self) -> Option<PathBufDyn> { self.map(PathDyn::to_owned) }
 }
 
 impl<'p> PathDyn<'p> {

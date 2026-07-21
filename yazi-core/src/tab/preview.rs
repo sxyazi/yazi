@@ -1,14 +1,10 @@
-use std::time::Duration;
-
-use tokio::{pin, task::JoinHandle};
-use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
+use tokio::task::JoinHandle;
 use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
-use yazi_fs::{Entries, FilesOp, cha::Cha, file::File};
+use yazi_fs::file::File;
 use yazi_macro::render;
 use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
 use yazi_shared::{pool::Symbol, url::UrlBuf};
-use yazi_vfs::{VfsEntries, VfsFilesOp};
 
 use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
 
@@ -17,9 +13,7 @@ pub struct Preview {
 	pub lock: Option<PreviewLock>,
 	pub skip: usize,
 
-	handle:          Option<JoinHandle<()>>,
-	pub folder_lock: Option<UrlBuf>,
-	folder_loader:   Option<JoinHandle<()>>,
+	handle: Option<JoinHandle<()>>,
 }
 
 impl Preview {
@@ -44,36 +38,6 @@ impl Preview {
 				Err(PeekError::ShouldSync) => AppProxy::plugin_peek(job),
 				Err(e) => MgrProxy::update_peeked_error(job, e.to_string()),
 			}
-		}));
-	}
-
-	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, mime: Symbol<str>, force: bool) {
-		if self.folder_lock.as_ref() == Some(&file.url) {
-			return self.go(file, mime, force);
-		}
-
-		let wd = file.url_owned();
-		self.go(file, mime, force);
-
-		self.folder_lock = Some(wd.clone());
-		self.folder_loader.take().map(|h| h.abort());
-		self.folder_loader = Some(tokio::spawn(async move {
-			let Some(new) = Entries::assert_stale(&wd, dir.unwrap_or_default()).await else { return };
-
-			let rx = match Entries::from_dir(&wd).await {
-				Ok(rx) => rx,
-				Err(e) => return FilesOp::issue_error(&wd, e).await,
-			};
-
-			let stream =
-				UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));
-			pin!(stream);
-
-			let ticket = FilesOp::prepare(&wd);
-			while let Some(chunk) = stream.next().await {
-				FilesOp::Part(wd.clone(), chunk, ticket).emit();
-			}
-			FilesOp::Done(wd, new, ticket).emit();
 		}));
 	}
 
@@ -103,6 +67,4 @@ impl Preview {
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
 		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
 	}
-
-	pub fn same_folder(&self, url: &UrlBuf) -> bool { self.folder_lock.as_ref() == Some(url) }
 }

@@ -1,6 +1,3 @@
-use std::borrow::Cow;
-
-use percent_encoding::percent_decode;
 use tokio::sync::mpsc;
 use yazi_shared::{auth::AuthKind, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -8,8 +5,8 @@ use crate::{WATCHED, local::LINKED};
 
 #[derive(Clone)]
 pub(crate) struct Reporter {
-	pub(super) local_tx:  mpsc::UnboundedSender<UrlBuf>,
-	pub(super) remote_tx: mpsc::UnboundedSender<(UrlBuf, bool)>,
+	pub(super) local_tx:   mpsc::UnboundedSender<UrlBuf>,
+	pub(super) virtual_tx: mpsc::UnboundedSender<(UrlBuf, bool)>,
 }
 
 impl Reporter {
@@ -21,8 +18,9 @@ impl Reporter {
 		for url in urls.into_iter().map(Into::into) {
 			match url.as_url().kind() {
 				AuthKind::Regular | AuthKind::Search => self.report_local(url),
-				AuthKind::Mount | AuthKind::Hub => {} // TODO: mounted VFS cache invalidation
-				AuthKind::Scope | AuthKind::Sftp => self.report_remote(url),
+				AuthKind::Mount | AuthKind::Hub | AuthKind::Scope | AuthKind::Sftp => {
+					self.report_virtual(url)
+				}
 			}
 		}
 	}
@@ -48,20 +46,20 @@ impl Reporter {
 			// Virtual caches
 			let Some(dir) = watched.find_by_cache(parent.loc()) else { continue };
 			let Some(name) = url.name() else { continue };
-			if let Ok(u) = dir.try_join(Cow::from(percent_decode(name.encoded_bytes()))) {
-				self.remote_tx.send((u, true)).ok();
+			if let Ok(u) = dir.try_join(name) {
+				self.virtual_tx.send((u, true)).ok();
 			}
-			self.remote_tx.send((dir, false)).ok();
+			self.virtual_tx.send((dir, false)).ok();
 		}
 	}
 
-	fn report_remote(&self, url: UrlCow) {
+	fn report_virtual(&self, url: UrlCow) {
 		let Some(parent) = url.parent() else { return };
 		if !WATCHED.read().contains_url(parent) {
 			return;
 		}
 
-		self.remote_tx.send((parent.to_owned(), false)).ok();
-		self.remote_tx.send((url.into_owned(), false)).ok();
+		self.virtual_tx.send((parent.to_owned(), false)).ok();
+		self.virtual_tx.send((url.into_owned(), false)).ok();
 	}
 }

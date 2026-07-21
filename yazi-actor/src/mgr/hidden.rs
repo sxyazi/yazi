@@ -4,6 +4,7 @@ use yazi_fs::FolderStage;
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::{mgr::HiddenForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
+use yazi_shim::OptionExt;
 
 use crate::{Actor, Ctx};
 
@@ -18,7 +19,7 @@ impl Actor for Hidden {
 		let state = form.state.bool(cx.tab().pref.show_hidden);
 		cx.tab_mut().pref.show_hidden = state;
 
-		let hovered = cx.hovered().map(|f| f.entry_key().to_owned());
+		let hovered = cx.hovered().map(|f| f.entry_key()).owned();
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();
@@ -30,9 +31,7 @@ impl Actor for Hidden {
 		};
 
 		// Apply to CWD and parent
-		if let (a, Some(b)) = (apply(cx.current_mut()), cx.parent_mut().map(apply))
-			&& (a | b)
-		{
+		if apply(cx.current_mut()) | cx.parent_mut().is_some_and(apply) {
 			act!(mgr:hover, cx)?;
 			act!(mgr:update_paged, cx)?;
 		}

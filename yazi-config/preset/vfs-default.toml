@@ -1,0 +1,3 @@
+[trash."*"]
+kind = "hub"
+run  = "trash"

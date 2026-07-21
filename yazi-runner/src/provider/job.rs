@@ -3,7 +3,7 @@ use std::io;
 use mlua::{IntoLua, Lua, Value};
 use strum::AsRefStr;
 use yazi_binding::MpscTx;
-use yazi_fs::engine::{Attrs, Demand};
+use yazi_fs::{engine::{Attrs, Demand}, file::File};
 use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 
 #[derive(AsRefStr)]
@@ -28,6 +28,12 @@ pub enum ProviderJob {
 	ReadDir {
 		url: UrlBuf,
 	},
+	Revalidate {
+		file: File,
+	},
+	File {
+		url: UrlBuf,
+	},
 	Open {
 		url:    UrlBuf,
 		attrs:  Attrs,
@@ -44,6 +50,9 @@ pub enum ProviderJob {
 		url: UrlBuf,
 	},
 	RemoveDir {
+		url: UrlBuf,
+	},
+	RemoveDirAll {
 		url: UrlBuf,
 	},
 	RemoveFile {
@@ -99,6 +108,7 @@ impl IntoLua for ProviderJob {
 
 		match self {
 			Self::Capabilities => {}
+			Self::Revalidate { file } => t.raw_set("file", file)?,
 
 			Self::Absolute { url }
 			| Self::Canonicalize { url }
@@ -106,9 +116,11 @@ impl IntoLua for ProviderJob {
 			| Self::SymlinkMetadata { url }
 			| Self::Metadata { url }
 			| Self::ReadDir { url }
+			| Self::File { url }
 			| Self::CreateDir { url }
 			| Self::ReadLink { url }
 			| Self::RemoveDir { url }
+			| Self::RemoveDirAll { url }
 			| Self::RemoveFile { url }
 			| Self::Trash { url } => t.raw_set("url", url)?,
 

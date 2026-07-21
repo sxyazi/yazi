@@ -15,7 +15,11 @@ impl TryFrom<Table> for File {
 	type Error = mlua::Error;
 
 	fn try_from(value: Table) -> Result<Self, Self::Error> {
-		Ok(Self { url: value.raw_get("url")?, cha: value.raw_get("cha")?, ..Default::default() })
+		Ok(Self {
+			url:   value.raw_get("url")?,
+			cha:   value.raw_get("cha")?,
+			extra: value.try_into()?,
+		})
 	}
 }
 

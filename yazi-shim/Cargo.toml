@@ -36,3 +36,6 @@ unicode-width    = { workspace = true }
 
 [dependencies.unicode-segmentation]
 version = "1.13.3"
+
+[target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
+trash = "5.2.6"

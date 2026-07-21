@@ -15,9 +15,11 @@ impl Actor for Watch {
 	const NAME: &str = "watch";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		let it = iter::once(cx.core.mgr.tabs.active().cwd())
-			.chain(cx.core.mgr.tabs.parent().map(|p| &p.url))
-			.chain(cx.core.mgr.tabs.hovered().filter(|h| h.is_dir()).map(|h| &h.url));
+		let tab = cx.core.mgr.tabs.active();
+
+		let it = iter::once(&tab.current.file)
+			.chain(tab.hovered_folder().map(|h| &h.file).or(tab.hovered().filter(|f| f.is_dir())))
+			.chain(tab.parent.as_ref().map(|p| &p.file));
 
 		cx.core.mgr.watcher.watch(it);
 		succ!();

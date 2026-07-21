@@ -31,10 +31,9 @@ impl FilesOp {
 
 	pub(super) fn done(_: &Lua, t: Table) -> mlua::Result<Self> {
 		let id = t.raw_get("id")?;
-		let cha = t.raw_get("cha")?;
-		let url = t.raw_get("url")?;
+		let file = t.raw_get("file")?;
 
-		Ok(Self(yazi_fs::FilesOp::Done(url, cha, id)))
+		Ok(Self(yazi_fs::FilesOp::Done(file, id)))
 	}
 
 	pub(super) fn size(_: &Lua, t: Table) -> mlua::Result<Self> {

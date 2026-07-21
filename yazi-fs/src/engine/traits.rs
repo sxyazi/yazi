@@ -4,7 +4,7 @@ use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
-use crate::{cha::{Cha, ChaType}, engine::{Attrs, Capabilities}};
+use crate::{cha::{Cha, ChaType}, engine::{Attrs, Capabilities}, file::{File, FileExtra}};
 
 pub trait Engine: Sized {
 	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
@@ -78,6 +78,24 @@ pub trait Engine: Sized {
 
 	fn demand(&self) -> Self::Demand { Self::Demand::default() }
 
+	fn file(&self) -> impl Future<Output = io::Result<File>> {
+		async move {
+			let cha = self.symlink_metadata().await?;
+
+			let (mut followed, mut link_to) = (None, None);
+			if cha.is_link() {
+				followed = self.metadata().await.ok();
+				link_to = self.read_link().await.ok();
+			}
+
+			Ok(File {
+				url:   self.url().to_owned(),
+				cha:   cha.follow(followed),
+				extra: FileExtra::new(link_to, None),
+			})
+		}
+	}
+
 	fn hard_link<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
 	where
 		P: DynPath;
@@ -93,6 +111,13 @@ pub trait Engine: Sized {
 	fn read_dir(self) -> impl Future<Output = io::Result<Self::ReadDir>>;
 
 	fn read_link(&self) -> impl Future<Output = io::Result<PathBufDyn>>;
+
+	fn revalidate(&self, file: File) -> impl Future<Output = io::Result<Option<File>>> {
+		async move {
+			let new = self.file().await?;
+			if new.cha.hits(file.cha) { Ok(None) } else { Ok(Some(new)) }
+		}
+	}
 
 	fn remove_dir(&self) -> impl Future<Output = io::Result<()>>;
 
@@ -204,6 +229,9 @@ pub trait DirReader {
 
 // --- FileHolder
 pub trait FileHolder {
+	#[must_use]
+	fn file(&self) -> impl Future<Output = io::Result<File>>;
+
 	#[must_use]
 	fn file_type(&self) -> impl Future<Output = io::Result<ChaType>>;
 

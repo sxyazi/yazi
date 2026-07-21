@@ -84,7 +84,7 @@ impl Rename {
 		let new = engine::casefold(&new).await?;
 		let Some((new_p, new_k)) = new.pair2() else { return Ok(()) };
 
-		let file = File::new(&new).await?;
+		let file = engine::file(&new).await?;
 		if new_p == old_p {
 			FilesOp::Upserting(old_p.into(), [(old_k.into(), file)].into()).emit();
 		} else {

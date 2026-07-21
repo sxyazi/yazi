@@ -3,7 +3,7 @@ use std::ops::Deref;
 use hashbrown::HashSet;
 use indexmap::{IndexSet, set::MutableValues};
 use yazi_dds::Pubsub;
-use yazi_fs::{FilesOp, file::FileCov};
+use yazi_fs::{FilesOp, file::{File, FileCov}};
 use yazi_macro::err;
 use yazi_shared::url::{Url, UrlBuf, UrlCov, UrlLike};
 
@@ -26,6 +26,8 @@ impl Yanked {
 	pub fn new(cut: bool, files: IndexSet<FileCov>) -> Self {
 		Self { cut, files, ..Default::default() }
 	}
+
+	pub fn files(&self) -> impl Iterator<Item = &File> { self.files.iter().map(|f| &f.0) }
 
 	pub fn urls(&self) -> impl Iterator<Item = &UrlBuf> { self.files.iter().map(|f| &f.url) }
 

@@ -3,12 +3,11 @@ use futures::StreamExt;
 use hashbrown::HashSet;
 use yazi_boot::ARGS;
 use yazi_core::mgr::OpenDoOpt;
-use yazi_fs::file::File;
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::OpenForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::data::Data;
-use yazi_vfs::VfsFile;
+use yazi_vfs::engine;
 
 use crate::{Actor, Ctx, mgr::Quit};
 
@@ -59,7 +58,7 @@ impl Actor for Open {
 
 			let it = futures::stream::iter(opt.targets)
 				.enumerate()
-				.map(|(i, url)| async move { File::new(url).await.ok().map(|file| (i, file)) })
+				.map(|(i, url)| async move { engine::file(url).await.ok().map(|file| (i, file)) })
 				.buffered(3)
 				.filter_map(|item| async move { item });
 

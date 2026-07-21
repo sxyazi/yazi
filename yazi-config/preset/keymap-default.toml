@@ -128,8 +128,9 @@ keymap = [
 
 	# Goto
 	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },
-	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go ~/.config" },
-	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go ~/Downloads" },
+	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go to ~/.config" },
+	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go to ~/Downloads" },
+	{ on = [ "g", "t" ],       run = "plugin trash",     desc = "Go to trash bin" },
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
 	{ on = [ "g", "f" ],       run = "follow",           desc = "Follow hovered symlink" },
 

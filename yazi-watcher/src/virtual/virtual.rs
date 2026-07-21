@@ -1,19 +1,19 @@
-use std::time::{Duration, SystemTime};
+use std::{io, time::{Duration, SystemTime}};
 
 use hashbrown::HashMap;
 use notify::Result;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::{FilesOp, file::File};
+use yazi_fs::FilesOp;
 use yazi_shared::url::{UrlBuf, UrlLike};
-use yazi_vfs::VfsFile;
+use yazi_vfs::engine;
 
-use crate::{MgrProxy, Reporter, WATCHER, Watchee};
+use crate::{MgrProxy, WATCHER, Watchee};
 
-pub(crate) struct Remote;
+pub(crate) struct Virtual;
 
-impl Remote {
-	pub(crate) fn serve(rx: UnboundedReceiver<(UrlBuf, bool)>, _reporter: Reporter) -> Self {
+impl Virtual {
+	pub(crate) fn serve(rx: UnboundedReceiver<(UrlBuf, bool)>) -> Self {
 		tokio::spawn(Self::changed(rx));
 
 		Self
@@ -38,20 +38,29 @@ impl Remote {
 			let mut ops = Vec::with_capacity(urls.len());
 			let mut ups = Vec::with_capacity(urls.len());
 
-			for (u, upload) in urls {
-				let Some((parent, key)) = u.pair2() else { continue };
-				let Ok(mut file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
-					continue;
+			for (url, upload) in urls {
+				let Some((parent, key)) = url.pair2() else { continue };
+
+				let mut file = match engine::file(&url).await {
+					Ok(file) => file,
+					Err(e) if e.kind() == io::ErrorKind::NotFound => {
+						ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
+						continue;
+					}
+					Err(e) => {
+						tracing::debug!("Failed to update {url:?}: {e:?}");
+						continue;
+					}
 				};
 
-				let is_file = file.is_file();
-				file.cha.ctime = Some(SystemTime::now());
+				if upload && file.is_file() {
+					file.cha.ctime = Some(SystemTime::now());
+					ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
+					ups.push(url);
+					continue;
+				}
 
 				ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
-				if upload && is_file {
-					ups.push(u);
-				}
 			}
 
 			FilesOp::mutate(ops);

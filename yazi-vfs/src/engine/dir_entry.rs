@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{cha::{Cha, ChaType}, engine::FileHolder};
+use yazi_fs::{cha::{Cha, ChaType}, engine::FileHolder, file::File};
 use yazi_shared::{path::PathBufDyn, strand::StrandCow, url::UrlBuf};
 
 pub enum DirEntry {
@@ -10,6 +10,14 @@ pub enum DirEntry {
 }
 
 impl FileHolder for DirEntry {
+	async fn file(&self) -> io::Result<File> {
+		match self {
+			Self::Local(entry) => entry.file().await,
+			Self::Lua(entry) => entry.file().await,
+			Self::Sftp(entry) => entry.file().await,
+		}
+	}
+
 	async fn file_type(&self) -> io::Result<ChaType> {
 		match self {
 			Self::Local(entry) => entry.file_type().await,

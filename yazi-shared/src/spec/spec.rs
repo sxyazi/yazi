@@ -65,9 +65,9 @@ impl Spec {
 		*skip += len + slash as usize;
 
 		let (uri, urn) = Self::decode_ports(&bytes[..len], &mut len)?;
-		let domain = percent_decode(&bytes[..len]).decode_utf8()?.into();
+		let domain: Cow<[u8]> = percent_decode(&bytes[..len]).into();
 
-		Ok((domain, uri, urn))
+		Ok((domain.into(), uri, urn))
 	}
 
 	fn decode_ports(bytes: &[u8], skip: &mut usize) -> Result<(Option<usize>, Option<usize>)> {
@@ -117,7 +117,7 @@ impl Spec {
 			parent = Some(Arc::new(Auth {
 				kind: auth.kind,
 				scheme: auth.scheme.clone(),
-				domain: Domain::from(percent_decode(domain).decode_utf8()?).into_owned(),
+				domain: Domain::from(Cow::from(percent_decode(domain))).into_owned(),
 				parent,
 			}));
 		}

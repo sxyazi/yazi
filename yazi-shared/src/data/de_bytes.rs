@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserializer, de::{self, value::SeqDeserializer}};
 
-pub(crate) struct BytesDeserializer<'a>(pub(crate) Cow<'a, [u8]>);
+pub struct BytesDeserializer<'a>(pub(crate) Cow<'a, [u8]>);
 
 impl<'de, 'a: 'de> Deserializer<'de> for BytesDeserializer<'a> {
 	type Error = de::value::Error;

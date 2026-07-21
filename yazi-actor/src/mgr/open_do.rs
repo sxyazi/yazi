@@ -42,10 +42,10 @@ impl Actor for OpenDo {
 		}
 
 		let pick = PickProxy::show(YAZI.pick.open(openers.iter().map(|o| o.desc()).collect()));
-		let urls: Vec<_> = targets.into_iter().map(|(file, _)| file.url).collect();
+		let files: Vec<_> = targets.into_iter().map(|(file, _)| file).collect();
 		tokio::spawn(async move {
 			if let Some(choice) = pick.await {
-				Self::open_with(&openers[choice], &opt.cwd, &urls);
+				Self::open_with(&openers[choice], &opt.cwd, &files);
 			}
 		});
 		succ!();
@@ -59,20 +59,20 @@ impl OpenDo {
 			if let Some(open) = YAZI.open.matches(&file, mime)
 				&& let Some(opener) = YAZI.opener.first(&open)
 			{
-				openers.entry(opener).or_default().push(file.url);
+				openers.entry(opener).or_default().push(file);
 			}
 		}
-		for (opener, urls) in openers {
-			Self::open_with(&opener, &cwd, &urls);
+		for (opener, files) in openers {
+			Self::open_with(&opener, &cwd, &files);
 		}
 	}
 
-	fn open_with(opener: &OpenerRule, cwd: &UrlBuf, urls: &[UrlBuf]) {
-		let size = if opener.spread { urls.len().max(1) } else { 1 };
-		for urls in urls.chunks(size) {
+	fn open_with(opener: &OpenerRule, cwd: &UrlBuf, files: &[File]) {
+		let size = if opener.spread { files.len().max(1) } else { 1 };
+		for files in files.chunks(size) {
 			TasksProxy::process_open(ShellOpt {
 				cwd:    cwd.clone(),
-				cmd:    Splatter::new(urls).splat(&opener.run),
+				cmd:    Splatter::new(files).splat(&opener.run),
 				block:  opener.block,
 				orphan: opener.orphan,
 			});

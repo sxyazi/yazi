@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::cha::{Cha, ChaKind};
+use yazi_fs::cha::Cha;
 use yazi_shared::url::AsUrl;
 
 use crate::engine;
@@ -20,18 +20,12 @@ impl VfsCha for Cha {
 		Ok(Self::from_follow(url, engine::symlink_metadata(url).await?).await)
 	}
 
-	async fn from_follow<U>(url: U, mut cha: Self) -> Self
+	async fn from_follow<U>(url: U, cha: Self) -> Self
 	where
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM);
-
-		if cha.is_link() {
-			retain |= ChaKind::FOLLOW;
-			cha = engine::metadata(url).await.unwrap_or(cha);
-		}
-
-		cha.attach(retain)
+		let followed = if cha.is_link() { engine::metadata(url).await.ok() } else { None };
+		cha.follow(followed)
 	}
 }
