@@ -33,7 +33,11 @@ impl Splatable for MgrSnap {
 			None => &[],
 		};
 
-		urls.iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX }).map(AsUrl::as_url)
+		urls
+			.iter()
+			.skip(idx.unwrap_or(0))
+			.take(if idx.is_some() { 1 } else { usize::MAX })
+			.map(AsUrl::as_url)
 	}
 
 	fn hovered(&self, tab: usize) -> Option<Url<'_>> {
