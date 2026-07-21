@@ -194,7 +194,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn entry_key(self) -> PathDyn<'a> {
 		match self {
-			Self::Hub { auth, .. } => PathDyn::Unix(typed_path::UnixPath::new(auth.domain.as_bytes())),
+			Self::Hub { auth, .. } => PathDyn::Unix(typed_path::UnixPath::new(&auth.domain)),
 			_ => self.urn(),
 		}
 	}

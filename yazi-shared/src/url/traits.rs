@@ -104,7 +104,7 @@ pub trait UrlMapExt<V> {
 	fn get_or_insert_with<U, F>(&mut self, url: U, default: F) -> &mut V
 	where
 		U: AsUrl,
-		F: FnOnce(Url<'_>) -> V;
+		F: FnOnce(U) -> V;
 }
 
 impl<V, S> UrlMapExt<V> for HashMap<UrlBuf, V, S>
@@ -122,12 +122,12 @@ where
 	fn get_or_insert_with<U, F>(&mut self, url: U, default: F) -> &mut V
 	where
 		U: AsUrl,
-		F: FnOnce(Url<'_>) -> V,
+		F: FnOnce(U) -> V,
 	{
-		let url = url.as_url();
-		match self.entry_ref(&url) {
-			EntryRef::Occupied(oe) => oe.into_mut(),
-			EntryRef::Vacant(ve) => ve.insert_with_key(url.into(), default(url)),
+		let key = url.as_url();
+		match self.raw_entry_mut().from_key(&key) {
+			hashbrown::hash_map::RawEntryMut::Occupied(oe) => oe.into_mut(),
+			hashbrown::hash_map::RawEntryMut::Vacant(ve) => ve.insert(key.into(), default(url)).1,
 		}
 	}
 }
@@ -147,10 +147,13 @@ where
 	fn get_or_insert_with<U, F>(&mut self, url: U, default: F) -> &mut V
 	where
 		U: AsUrl,
-		F: FnOnce(Url<'_>) -> V,
+		F: FnOnce(U) -> V,
 	{
-		let url = url.as_url();
-		self.raw_entry_mut_v1().from_key(&url).or_insert_with(|| (url.into(), default(url))).1
+		let key = url.as_url();
+		match self.raw_entry_mut_v1().from_key(&key) {
+			indexmap::map::raw_entry_v1::RawEntryMut::Occupied(oe) => oe.into_mut(),
+			indexmap::map::raw_entry_v1::RawEntryMut::Vacant(ve) => ve.insert(key.into(), default(url)).1,
+		}
 	}
 }
 

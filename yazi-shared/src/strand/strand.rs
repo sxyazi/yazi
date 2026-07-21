@@ -1,7 +1,7 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::Display};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, fmt::Display};
 
 use anyhow::Result;
-use yazi_shim::wtf8::FromWtf8;
+use yazi_shim::{OptionExt, wtf8::FromWtf8};
 
 use crate::{BytesExt, strand::{AsStrand, StrandBuf, StrandError, StrandKind}};
 
@@ -79,6 +79,10 @@ impl PartialEq<&[u8]> for Strand<'_> {
 	}
 }
 
+impl<'p> OptionExt<StrandBuf> for Option<Strand<'p>> {
+	fn owned(self) -> Option<StrandBuf> { self.map(Strand::to_owned) }
+}
+
 impl<'a> Strand<'a> {
 	pub fn as_os(self) -> Result<&'a OsStr, StrandError> {
 		match self {
@@ -87,6 +91,9 @@ impl<'a> Strand<'a> {
 			Self::Bytes(b) => OsStr::from_wtf8(b).map_err(|_| StrandError::AsOs),
 		}
 	}
+
+	#[inline]
+	pub fn to_os_string(self) -> Result<OsString, StrandError> { self.as_os().map(|s| s.to_owned()) }
 
 	#[inline]
 	pub fn as_os_path(self) -> Result<&'a std::path::Path, StrandError> {

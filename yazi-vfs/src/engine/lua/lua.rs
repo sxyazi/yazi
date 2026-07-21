@@ -4,7 +4,7 @@ use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_binding::MpscTx;
 use yazi_config::vfs::{ServiceLua, Vfs};
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::Files};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::{File, Files}};
 use yazi_runner::{RUNNER, provider::{ProvideResult, ProviderJob}};
 use yazi_shared::{event::Cmd, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
@@ -86,6 +86,12 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProviderJob::CreateDir { url }).await?.ok()?)
 	}
 
+	async fn file(&self) -> io::Result<File> {
+		let url = self.url.to_owned();
+
+		Ok(self.call(ProviderJob::File { url }).await?.0?)
+	}
+
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
 	where
 		P: DynPath,
@@ -125,6 +131,10 @@ impl<'a> Engine for Lua<'a> {
 		let url = self.url.to_owned();
 
 		Ok(self.call(ProviderJob::ReadLink { url }).await?.0?)
+	}
+
+	async fn revalidate(&self, file: File) -> io::Result<Option<File>> {
+		Ok(self.call(ProviderJob::Revalidate { file }).await?.0?)
 	}
 
 	async fn remove_dir(&self) -> io::Result<()> {

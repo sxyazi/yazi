@@ -1,7 +1,5 @@
 use std::{fmt, hash::{Hash, Hasher}, sync::Arc};
 
-use anyhow::{Result, anyhow};
-use percent_encoding::percent_decode_str;
 use serde::Deserialize;
 use yazi_shim::cell::RoCell;
 
@@ -144,12 +142,5 @@ impl Auth {
 	pub fn same_service(&self, other: &Self) -> bool {
 		self.covariant(other)
 			|| self.kind == AuthKind::Hub && other.kind == AuthKind::Hub && self.scheme == other.scheme
-	}
-
-	pub fn parse_cache(cache: &str) -> Result<Arc<Self>> {
-		let (kind, rest) = cache.split_once('_').ok_or_else(|| anyhow!("invalid cache: {cache}"))?;
-		let (scheme, domain) = rest.split_once('_').ok_or_else(|| anyhow!("invalid cache: {cache}"))?;
-
-		Ok(Self::new(kind.parse()?, scheme.parse()?, percent_decode_str(domain).decode_utf8()?))
 	}
 }

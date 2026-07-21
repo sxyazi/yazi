@@ -4,6 +4,7 @@ use yazi_fs::{FilesSorter, FolderStage};
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::{mgr::SortForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
+use yazi_shim::OptionExt;
 
 use crate::{Actor, Ctx};
 
@@ -24,7 +25,7 @@ impl Actor for Sort {
 		pref.sort_fallback = form.fallback.unwrap_or(pref.sort_fallback);
 
 		let sorter = FilesSorter::from(&*pref);
-		let hovered = cx.hovered().map(|f| f.entry_key().to_owned());
+		let hovered = cx.hovered().map(|f| f.entry_key()).owned();
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();
@@ -36,9 +37,7 @@ impl Actor for Sort {
 		};
 
 		// Apply to CWD and parent
-		if let (a, Some(b)) = (apply(cx.current_mut()), cx.parent_mut().map(apply))
-			&& (a | b)
-		{
+		if apply(cx.current_mut()) | cx.parent_mut().is_some_and(apply) {
 			act!(mgr:hover, cx)?;
 			act!(mgr:update_paged, cx)?;
 			cx.tasks.prework_sorted(&cx.mgr.tabs[cx.tab].current.entries);

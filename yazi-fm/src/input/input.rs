@@ -32,9 +32,9 @@ impl<'a> Input<'a> {
 
 		THEME.icon.matches(
 			&File {
-				url:     Path::new(path).into(),
-				cha:     Cha { kind: ChaKind::empty(), mode: mode.try_into().ok()?, ..Default::default() },
-				link_to: None,
+				url:   Path::new(path).into(),
+				cha:   Cha { kind: ChaKind::empty(), mode: mode.try_into().ok()?, ..Default::default() },
+				extra: Default::default(),
 			},
 			is_hovered,
 		)

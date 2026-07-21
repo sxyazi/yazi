@@ -1,9 +1,10 @@
 use std::{io, sync::Arc};
 
-use yazi_fs::engine::{DirReader, FileHolder};
+use yazi_fs::{engine::{DirReader, FileHolder}, file::File};
 use yazi_shared::{path::PathBufDyn, strand::StrandCow, url::{UrlBuf, UrlLike}};
 
 use super::{Cha, ChaMode};
+use crate::VfsFile;
 
 pub struct ReadDir {
 	pub(super) dir:    Arc<UrlBuf>,
@@ -25,6 +26,11 @@ pub struct DirEntry {
 }
 
 impl FileHolder for DirEntry {
+	async fn file(&self) -> io::Result<File> {
+		let cha = self.metadata().await?;
+		Ok(File::from_follow(self.url(), cha).await)
+	}
+
 	async fn file_type(&self) -> io::Result<yazi_fs::cha::ChaType> {
 		Ok(ChaMode::try_from(self.entry.attrs())?.0.into())
 	}

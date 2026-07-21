@@ -21,6 +21,8 @@ pub struct DirEntry {
 }
 
 impl FileHolder for DirEntry {
+	async fn file(&self) -> io::Result<yazi_fs::file::File> { Ok(self.file.clone()) }
+
 	async fn file_type(&self) -> io::Result<ChaType> { Ok(**self.file.cha) }
 
 	async fn metadata(&self) -> io::Result<Cha> { Ok(self.file.cha) }

@@ -2,11 +2,11 @@
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
 #[cfg(windows)]
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
-use std::{cell::Cell, ffi::{OsStr, OsString}, iter::{self, Peekable}, mem};
+use std::{cell::Cell, ffi::{OsStr, OsString}, iter::{self, Peekable}, mem, path::Path};
 
-use yazi_shared::url::{AsUrl, Url};
+use yazi_shared::url::UrlLike;
 
-use crate::FsUrl;
+use crate::file::File;
 
 #[cfg(unix)]
 type Iter<'a> = Peekable<std::iter::Copied<std::slice::Iter<'a, u8>>>;
@@ -27,11 +27,11 @@ pub struct Splatter<T> {
 pub trait Splatable {
 	fn tab(&self) -> usize;
 
-	fn selected(&self, tab: usize, idx: Option<usize>) -> impl Iterator<Item = Url<'_>>;
+	fn selected(&self, tab: usize, idx: Option<usize>) -> impl Iterator<Item = &File>;
 
-	fn hovered(&self, tab: usize) -> Option<Url<'_>>;
+	fn hovered(&self, tab: usize) -> Option<&File>;
 
-	fn yanked(&self, idx: Option<usize>) -> impl Iterator<Item = Url<'_>>;
+	fn yanked(&self, idx: Option<usize>) -> impl Iterator<Item = &File>;
 }
 
 #[cfg(unix)]
@@ -91,15 +91,15 @@ where
 		let idx = self.consume_digit(it);
 
 		let mut first = true;
-		for url in self.src.selected(self.tab, idx) {
+		for file in self.src.selected(self.tab, idx) {
 			if !mem::replace(&mut first, false) {
 				buf.push(b' ' as _);
 			}
 
 			if c == Some('S') {
-				cue(buf, url.os_str());
+				cue(buf, file.url.os_str());
 			} else {
-				cue(buf, url.unified_path_str());
+				cue(buf, &*file.content_path());
 			}
 		}
 		if first && idx.is_some() {
@@ -110,10 +110,10 @@ where
 	fn visit_hovered(&mut self, it: &mut Iter, buf: &mut Buf) {
 		match it.next().and_then(b2c) {
 			Some('h') => {
-				cue(buf, self.src.hovered(self.tab).map(|u| u.unified_path_str()).unwrap_or_default());
+				cue(buf, &*self.src.hovered(self.tab).map(|f| f.content_path()).unwrap_or_default());
 			}
 			Some('H') => {
-				cue(buf, self.src.hovered(self.tab).map(|u| u.os_str()).unwrap_or_default());
+				cue(buf, self.src.hovered(self.tab).map(|f| f.url.os_str()).unwrap_or_default());
 			}
 			_ => unreachable!(),
 		}
@@ -124,15 +124,15 @@ where
 		let idx = self.consume_digit(it);
 
 		let mut first = true;
-		for url in self.src.selected(self.tab, idx) {
+		for file in self.src.selected(self.tab, idx) {
 			if !mem::replace(&mut first, false) {
 				buf.push(b' ' as _);
 			}
 
 			if c == Some('D') {
-				cue(buf, url.parent().map(|p| p.os_str()).unwrap_or_default());
+				cue(buf, file.url.parent().map(|p| p.os_str()).unwrap_or_default());
 			} else {
-				cue(buf, url.parent().map(|p| p.unified_path_str()).unwrap_or_default());
+				cue(buf, file.content_path().parent().unwrap_or(Path::new("")));
 			}
 		}
 		if first && idx.is_some() {
@@ -157,15 +157,15 @@ where
 		let idx = self.consume_digit(it);
 
 		let mut first = true;
-		for url in self.src.yanked(idx) {
+		for file in self.src.yanked(idx) {
 			if !mem::replace(&mut first, false) {
 				buf.push(b' ' as _);
 			}
 
 			if c == Some('Y') {
-				cue(buf, url.os_str());
+				cue(buf, file.url.os_str());
 			} else {
-				cue(buf, url.unified_path_str());
+				cue(buf, &*file.content_path());
 			}
 		}
 		if first && idx.is_some() {
@@ -204,16 +204,16 @@ impl<T> Splatter<T> {
 		impl Splatable for &Source {
 			fn tab(&self) -> usize { 0 }
 
-			fn selected(&self, _tab: usize, idx: Option<usize>) -> impl Iterator<Item = Url<'_>> {
+			fn selected(&self, _tab: usize, idx: Option<usize>) -> impl Iterator<Item = &File> {
 				if idx.is_none() {
 					self.0.set(true);
 				}
 				iter::empty()
 			}
 
-			fn hovered(&self, _tab: usize) -> Option<Url<'_>> { None }
+			fn hovered(&self, _tab: usize) -> Option<&File> { None }
 
-			fn yanked(&self, _idx: Option<usize>) -> impl Iterator<Item = Url<'_>> { iter::empty() }
+			fn yanked(&self, _idx: Option<usize>) -> impl Iterator<Item = &File> { iter::empty() }
 		}
 
 		let src = Source(Cell::new(false));
@@ -222,67 +222,63 @@ impl<T> Splatter<T> {
 	}
 }
 
-impl<'a, I, T> Splatable for &'a I
+impl<I> Splatable for &I
 where
 	I: ?Sized,
-	&'a I: IntoIterator<Item = &'a T>,
-	T: AsUrl + 'a,
+	for<'a> &'a I: IntoIterator<Item = &'a File>,
 {
 	fn tab(&self) -> usize { 1 }
 
-	fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = Url<'_>> {
+	fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = &File> {
 		idx = idx.and_then(|i| i.checked_sub(1));
-		(*self)
-			.into_iter()
-			.filter(move |_| tab == 1)
-			.map(|u| u.as_url())
-			.skip(idx.unwrap_or(0))
-			.take(if idx.is_some() { 1 } else { usize::MAX })
+		(*self).into_iter().filter(move |_| tab == 1).skip(idx.unwrap_or(0)).take(if idx.is_some() {
+			1
+		} else {
+			usize::MAX
+		})
 	}
 
-	fn hovered(&self, _tab: usize) -> Option<Url<'_>> { None }
+	fn hovered(&self, _tab: usize) -> Option<&File> { None }
 
-	fn yanked(&self, _idx: Option<usize>) -> impl Iterator<Item = Url<'_>> { iter::empty() }
+	fn yanked(&self, _idx: Option<usize>) -> impl Iterator<Item = &File> { iter::empty() }
 }
 
 #[cfg(test)]
 mod tests {
+	use std::sync::LazyLock;
+
 	use super::*;
 
 	struct Source(usize);
 
+	static SELECTED: LazyLock<[Vec<File>; 2]> =
+		LazyLock::new(|| [vec![file("t1/s1"), file("t1/s2")], vec![file("t 2/s 1"), file("t 2/s 2")]]);
+	static HOVERED: LazyLock<[File; 2]> = LazyLock::new(|| [file("hovered"), file("hover ed")]);
+	static YANKED: LazyLock<[File; 3]> = LazyLock::new(|| [file("y1"), file("y 2"), file("y3")]);
+
+	fn file(path: &'static str) -> File { File::from_dummy(Path::new(path), None) }
+
 	impl Splatable for Source {
 		fn tab(&self) -> usize { self.0 }
 
-		fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = Url<'_>> {
-			let urls = if tab == 1 {
-				vec![Url::regular("t1/s1"), Url::regular("t1/s2")]
-			} else if tab == 2 {
-				vec![Url::regular("t 2/s 1"), Url::regular("t 2/s 2")]
-			} else {
-				vec![]
-			};
-
+		fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = &File> {
 			idx = idx.and_then(|i| i.checked_sub(1));
-			urls.into_iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX })
-		}
-
-		fn hovered(&self, tab: usize) -> Option<Url<'_>> {
-			if tab == 1 {
-				Some(Url::regular("hovered"))
-			} else if tab == 2 {
-				Some(Url::regular("hover ed"))
-			} else {
-				None
-			}
-		}
-
-		fn yanked(&self, mut idx: Option<usize>) -> impl Iterator<Item = Url<'_>> {
-			idx = idx.and_then(|i| i.checked_sub(1));
-			[Url::regular("y1"), Url::regular("y 2"), Url::regular("y3")]
+			tab
+				.checked_sub(1)
+				.and_then(|tab| SELECTED.get(tab))
 				.into_iter()
+				.flatten()
 				.skip(idx.unwrap_or(0))
 				.take(if idx.is_some() { 1 } else { usize::MAX })
+		}
+
+		fn hovered(&self, tab: usize) -> Option<&File> {
+			tab.checked_sub(1).and_then(|tab| HOVERED.get(tab))
+		}
+
+		fn yanked(&self, mut idx: Option<usize>) -> impl Iterator<Item = &File> {
+			idx = idx.and_then(|i| i.checked_sub(1));
+			YANKED.iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX })
 		}
 	}
 
@@ -331,5 +327,20 @@ mod tests {
 			let s = Splatter::new(src).splat(OsStr::new(cmd));
 			assert_eq!(s, OsStr::new(expected), "{cmd}");
 		}
+	}
+
+	#[test]
+	#[cfg(unix)]
+	fn test_content_path() {
+		use crate::file::FileExtra;
+
+		let file = File {
+			url:   Path::new("/logical/file").into(),
+			cha:   Default::default(),
+			extra: FileExtra::new(None, Some("/real/file".into())),
+		};
+
+		let s = Splatter::new(&[file]).splat(OsStr::new("%s %S %d %D"));
+		assert_eq!(s, OsStr::new("/real/file /logical/file /real /logical"));
 	}
 }

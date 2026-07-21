@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
-use yazi_shared::{auth::{Auth, AuthKind, EncodeAuth}, path::PathBufDyn, spec::SpecInventory};
+use yazi_shared::{auth::{Auth, AuthKind}, path::PathBufDyn, spec::SpecInventory};
 use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 
-use crate::Xdg;
+use crate::{FsHash128, Xdg};
 
 pub trait FsSpec {
 	fn cache(&self) -> Option<PathBuf>;
@@ -18,7 +18,7 @@ impl FsSpec for Auth {
 					"{}_{}_{}",
 					self.kind.into_str(),
 					self.scheme,
-					EncodeAuth::domain(&self.domain)
+					self.domain.hash_base32(&mut [0; 26])
 				)))
 			}
 		}

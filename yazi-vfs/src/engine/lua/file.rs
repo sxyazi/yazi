@@ -51,6 +51,16 @@ impl File {
 		Ok(RUNNER.provide(self.run, ProviderJob::Metadata { url }).await.0?)
 	}
 
+	pub(crate) async fn file(&self) -> io::Result<yazi_fs::file::File> {
+		let url = self.url.clone();
+		Ok(RUNNER.provide(self.run, ProviderJob::File { url }).await.0?)
+	}
+
+	pub(crate) async fn into_file(self) -> io::Result<yazi_fs::file::File> {
+		let url = self.url;
+		Ok(RUNNER.provide(self.run, ProviderJob::File { url }).await.0?)
+	}
+
 	fn write_impl(
 		self: Pin<&mut Self>,
 		cx: &mut Context<'_>,

@@ -21,18 +21,14 @@ impl Actor for Peek {
 		}
 
 		let mime = cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default();
-		let folder = cx.tab().hovered_folder().map(|f| (f.offset, f.cha));
+		let folder = cx.tab().hovered_folder().map(|f| (f.offset, f.file.clone()));
 
 		if !cx.tab().preview.same_url(&hovered.url) {
-			cx.tab_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
+			cx.tab_mut().preview.skip = folder.as_ref().map(|f| f.0).unwrap_or_default();
 		}
 		if !cx.tab().preview.same_file(&hovered, &mime) {
 			cx.tab_mut().preview.reset();
 		}
-		if !cx.tab().preview.same_folder(&hovered.url) {
-			cx.tab_mut().preview.folder_lock = None;
-		}
-
 		if matches!(form.only_if, Some(u) if u != hovered.url) {
 			succ!();
 		}
@@ -46,11 +42,13 @@ impl Actor for Peek {
 			}
 		}
 
-		if hovered.is_dir() {
-			cx.tab_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), mime, form.force);
-		} else {
-			cx.tab_mut().preview.go(hovered, mime, form.force);
+		if let Some((_, file)) = folder {
+			cx.core.mgr.watcher.refresher.refresh([file]);
+		} else if hovered.is_dir() {
+			cx.core.mgr.watcher.refresher.load(&hovered);
 		}
+
+		cx.tab_mut().preview.go(hovered, mime, form.force);
 		succ!();
 	}
 }

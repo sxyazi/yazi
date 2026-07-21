@@ -317,7 +317,7 @@ function M.treelize(items, tops, parents)
 	end
 
 	local buf, it = {}, f.path.parent
-	while it and it ~= tops[#tops] do
+	while it and #it ~= 0 and it ~= tops[#tops] do
 		buf[#buf + 1], it = it, it.parent
 	end
 	for i = #buf, 1, -1 do

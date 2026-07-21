@@ -1,7 +1,7 @@
 name: Validate PR
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, edited, reopened, synchronize]
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 20
 

@@ -131,6 +131,16 @@ impl Cha {
 		self.kind |= kind;
 		self
 	}
+
+	#[inline]
+	pub fn follow(self, followed: Option<Self>) -> Self {
+		if !self.is_link() {
+			return self;
+		}
+
+		let retain = self.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM) | ChaKind::FOLLOW;
+		followed.unwrap_or(self).attach(retain)
+	}
 }
 
 impl Cha {

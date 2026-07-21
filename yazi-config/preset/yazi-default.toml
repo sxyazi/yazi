@@ -63,9 +63,16 @@ download = [
 	{ run = "ya emit download --open %S", desc = "Download and open" },
 	{ run = "ya emit download %S",        desc = "Download" },
 ]
+trash = [
+	{ run = "ya pub trash-restore --list %S", desc = "Restore selected files" },
+	{ run = "ya pub trash-empty --list %S",   desc = "Empty trash bin" },
+]
 
 [open]
 rules = [
+	# Trash
+	{ url = "trash://*", use = [ "open", "trash" ] },
+	{ url = "trash://*/", use = [ "edit", "trash" ] },
 	# Folder
 	{ url = "*/", use = [ "edit", "open", "reveal" ] },
 	# Text
@@ -102,6 +109,7 @@ fetchers = [
 	# MIME-type
 	{ url = "*/",         run = "mime.dir",    prio = "high", group = "mime" },
 	{ url = "local://*",  run = "mime.local",  prio = "high", group = "mime" },
+	{ url = "trash://*",  run = "mime.local",  prio = "high", group = "mime" },
 	{ url = "remote://*", run = "mime.remote", prio = "high", group = "mime" },
 ]
 spotters = [

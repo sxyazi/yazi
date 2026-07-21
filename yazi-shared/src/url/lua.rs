@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, spec::Spec, strand::{StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
@@ -18,7 +18,7 @@ impl UrlBuf {
 						if let Ok(url) = ud.borrow::<Self>() {
 							url.clone()
 						} else if let Ok(path) = ud.borrow::<PathBufDyn>() {
-							path.as_os().into_lua_err()?.into()
+							path.as_os()?.into()
 						} else {
 							Err(EXPECTED.into_lua_err())?
 						}
@@ -121,8 +121,8 @@ impl UserData for UrlBuf {
 		methods.add_method_once("into_search", |_, me, domain: LuaString| {
 			me.into_search(domain.to_str()?).into_lua_err()
 		});
-		methods.add_method_once("into_domain", |_, me, domain: LuaString| {
-			Ok(me.into_domain(domain.to_str()?.to_owned()))
+		methods.add_method_once("into_domain", |_, me, domain: BorrowedBytes| {
+			Ok(me.into_domain(domain.to_vec()))
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(*me == *other));
