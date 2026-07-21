@@ -112,22 +112,10 @@ pub trait Engine: Sized {
 
 	fn read_link(&self) -> impl Future<Output = io::Result<PathBufDyn>>;
 
-	fn revalidate(&self, mut file: File) -> impl Future<Output = io::Result<Option<File>>> {
+	fn revalidate(&self, file: File) -> impl Future<Output = io::Result<Option<File>>> {
 		async move {
-			let cha = if !file.is_link() {
-				self.symlink_metadata().await?
-			} else if let Ok(new) = self.metadata().await {
-				file.cha.follow(Some(new))
-			} else {
-				self.symlink_metadata().await?
-			};
-
-			if cha.hits(file.cha) {
-				Ok(None)
-			} else {
-				file.cha = cha;
-				Ok(Some(file))
-			}
+			let new = self.file().await?;
+			if new.cha.hits(file.cha) { Ok(None) } else { Ok(Some(new)) }
 		}
 	}
 
