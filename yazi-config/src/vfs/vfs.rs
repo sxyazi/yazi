@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, path::PathBuf};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Deserializer};
@@ -31,10 +31,11 @@ impl Vfs {
 		}
 	}
 
-	pub(crate) fn read() -> Result<String> {
+	pub(crate) fn read() -> Result<(PathBuf, String)> {
 		let p = Xdg::config_dir().join("vfs.toml");
-		ok_or_not_found(std::fs::read_to_string(&p))
-			.with_context(|| format!("Failed to read config {p:?}"))
+		let s = ok_or_not_found(std::fs::read_to_string(&p))
+			.with_context(|| format!("Failed to read config {p:?}"))?;
+		Ok((p, s))
 	}
 }
 

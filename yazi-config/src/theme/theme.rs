@@ -40,10 +40,11 @@ pub struct Theme {
 }
 
 impl Theme {
-	pub(crate) fn read() -> Result<String> {
+	pub(crate) fn read() -> Result<(PathBuf, String)> {
 		let p = Xdg::config_dir().join("theme.toml");
-		ok_or_not_found(std::fs::read_to_string(&p))
-			.with_context(|| format!("Failed to read theme {p:?}"))
+		let s = ok_or_not_found(std::fs::read_to_string(&p))
+			.with_context(|| format!("Failed to read theme {p:?}"))?;
+		Ok((p, s))
 	}
 
 	// FIXME: remove
