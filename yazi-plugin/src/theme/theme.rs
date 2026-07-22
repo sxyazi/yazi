@@ -60,6 +60,8 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 			b"find_keyword" => Style::from(&m.find_keyword).into_lua(lua),
 			b"find_position" => Style::from(&m.find_position).into_lua(lua),
 
+			b"filter_keyword" => Style::from(&m.filter_keyword).into_lua(lua),
+
 			b"symlink_target" => Style::from(&m.symlink_target).into_lua(lua),
 
 			b"marker_copied" => Style::from(&m.marker_copied).into_lua(lua),
