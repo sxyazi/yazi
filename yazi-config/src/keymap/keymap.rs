@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
@@ -49,9 +49,10 @@ impl Keymap {
 }
 
 impl Keymap {
-	pub(crate) fn read() -> Result<String> {
+	pub(crate) fn read() -> Result<(PathBuf, String)> {
 		let p = Xdg::config_dir().join("keymap.toml");
-		ok_or_not_found(std::fs::read_to_string(&p))
-			.with_context(|| format!("Failed to read keymap {p:?}"))
+		let s = ok_or_not_found(std::fs::read_to_string(&p))
+			.with_context(|| format!("Failed to read keymap {p:?}"))?;
+		Ok((p, s))
 	}
 }

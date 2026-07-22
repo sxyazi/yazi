@@ -4,6 +4,7 @@ yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority
 
 use std::io::{Read, Write};
 
+use anyhow::Context;
 use yazi_macro::writef;
 use yazi_shim::{cell::{RoCell, SyncCell}, toml::{DeserializeOver, DeserializeOverWith}};
 use yazi_tty::{TTY, sequence::SetSgr};
@@ -28,9 +29,14 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut vfs = Preset::vfs()?;
 
 	if merge {
-		yazi = yazi.deserialize_over(&yazi::Yazi::read()?)?;
-		keymap = keymap.deserialize_over(&keymap::Keymap::read()?)?;
-		vfs = vfs.deserialize_over(&vfs::Vfs::read()?)?;
+		let (p, s) = yazi::Yazi::read()?;
+		yazi = yazi.deserialize_over(&s).with_context(|| format!("TOML parse error in {p:?}"))?;
+
+		let (p, s) = keymap::Keymap::read()?;
+		keymap = keymap.deserialize_over(&s).with_context(|| format!("TOML parse error in {p:?}"))?;
+
+		let (p, s) = vfs::Vfs::read()?;
+		vfs = vfs.deserialize_over(&s).with_context(|| format!("TOML parse error in {p:?}"))?;
 	}
 
 	YAZI.init(yazi);
@@ -56,16 +62,22 @@ pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<theme::Theme> {
 	let mut preset = Preset::theme(light)?;
 
 	if merge {
-		let theme_str = theme::Theme::read()?;
-		let theme = toml::de::DeTable::parse(&theme_str)?;
+		let (theme_p, theme_str) = theme::Theme::read()?;
+		let theme = toml::de::DeTable::parse(&theme_str)
+			.with_context(|| format!("TOML parse error in {theme_p:?}"))?;
 
-		let flavor_str = theme::Flavor::from_theme(&theme, &theme_str)?.read(light)?;
+		let (flavor_p, flavor_str) = theme::Flavor::from_theme(&theme, &theme_str)
+			.with_context(|| format!("TOML parse error in {theme_p:?}"))?
+			.read(light)?;
 
-		preset = preset.deserialize_over(&flavor_str)?;
+		preset = preset.deserialize_over(&flavor_str).with_context(|| {
+			format!("TOML parse error in {:?}", flavor_p.unwrap_or_else(|| theme_p.clone()))
+		})?;
 		preset = error_with_input(
 			preset.deserialize_over_with(toml::de::Deserializer::from(theme)),
 			&theme_str,
-		)?;
+		)
+		.with_context(|| format!("TOML parse error in {theme_p:?}"))?;
 	}
 
 	preset.reshape(light)
