@@ -71,6 +71,7 @@ function M:setup()
 
 			local ok, err = fs.trash.restore(nodes)
 			if ok then
+				ya.emit("escape", { select = true })
 				ya.emit("refresh", {})
 			else
 				notify("restore", err)
