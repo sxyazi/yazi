@@ -17,7 +17,7 @@ impl SizeCalculator {
 		let p = path.to_owned();
 		tokio::task::spawn_blocking(move || {
 			let cha = Cha::new(p.file_name().unwrap_or_default(), std::fs::symlink_metadata(&p)?);
-			if !cha.is_dir() {
+			if !cha.is_dir() || cha.is_indirect() {
 				return Ok(Self::Idle((VecDeque::new(), Some(cha.len)), cha));
 			}
 
@@ -101,11 +101,27 @@ impl SizeCalculator {
 
 			let Ok(ent) = next else { continue };
 			let Ok(ft) = ent.file_type() else { continue };
-			if ft.is_dir() {
-				buf.push_back(Either::Left(ent.path()));
-			} else if let Ok(meta) = ent.metadata() {
-				size += meta.len();
+
+			// If the entry is not a directory
+			if !ft.is_dir() {
+				size += ent.metadata().map_or(0, |meta| meta.len());
+				continue;
 			}
+
+			// The entry is a directory, but it may be a reparse point
+			#[cfg(windows)]
+			{
+				let Ok(cha) = ent.metadata().map(|meta| Cha::new(ent.file_name(), meta)) else {
+					continue;
+				};
+				if !cha.is_dir() || cha.is_indirect() {
+					size += cha.len;
+					continue;
+				}
+			}
+
+			// Now, we can safely assume the entry is a regular directory
+			buf.push_back(Either::Left(ent.path()));
 		}
 		Some(size)
 	}

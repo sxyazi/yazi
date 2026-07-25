@@ -7,15 +7,40 @@ local function top(url)
 	return url.name and url or nil
 end
 
-local function node(url)
+local function entry(url)
 	local top = top(url)
 	if not top then
-		return
+		return -- We are at the root, no entry to return
 	end
-	return {
-		key = url.spec.domain,
+	return fs.trash.entry {
 		top = top.spec.domain,
 		rel = url:strip_prefix(top) or Path.os(""),
+	}
+end
+
+local function file(url, ent)
+	return File {
+		url = url,
+		cha = ent.cha,
+		link_to = ent.link_to,
+		backing = ent.backing,
+	}
+end
+
+local function files(parent, ents)
+	for i, ent in ipairs(ents) do
+		local url = parent:join(Path.os(ent.name)):into_domain(ent.key)
+		ents[i] = file(url, ent)
+	end
+	return ents
+end
+
+local function notify(action, err)
+	ya.notify {
+		title = "Trash",
+		content = string.format("Failed to %s: %s", action, err),
+		level = "error",
+		timeout = 10,
 	}
 end
 
@@ -36,49 +61,82 @@ local function absolute(url)
 	return fs.clean_url(url:join(root:join(url.path)))
 end
 
-local function file(url, entry)
-	entry.url = url
-	return File(entry)
-end
-
-local function files(parent, entries)
-	for i, entry in ipairs(entries) do
-		local url = parent:join(Path.os(entry.name)):into_domain(entry.key)
-		entries[i] = file(url, entry)
+local restore_recursively
+local function restore(ent)
+	local id = { top = ent.top, rel = ent.rel }
+	local ok, err = fs.trash.restore { ent }
+	if ok then
+		return true, 0
+	elseif err.kind ~= "AlreadyExists" then
+		return false, 1, err
 	end
-	return entries
+	return restore_recursively(id, err)
 end
 
-local function notify(action, err)
-	ya.notify {
-		title = "Trash",
-		content = string.format("Failed to %s: %s", action, err),
-		level = "error",
-		timeout = 10,
-	}
+restore_recursively = function(id, collision)
+	local ent, err = fs.trash.entry(id)
+	if not ent then
+		return false, 1, err
+	elseif not ent.cha.is_dir or ent.cha.is_indirect then
+		return false, 1, collision
+	end
+
+	local target = ent.original and fs.cha(Url(ent.original), false)
+	if not target or not target.is_dir or target.is_indirect then
+		return false, 1, collision
+	end
+
+	local ents, err = fs.trash.list(fs.trash.entry(ent))
+	if not ents then
+		return false, 1, err
+	end
+
+	local failed, changed, first = 0, false, nil
+	for _, child in ipairs(ents) do
+		local a, b, c = restore(child)
+		changed, failed, first = changed or a, failed + b, first or c
+	end
+
+	if failed ~= 0 then
+		return changed, failed, first
+	end
+
+	local ok, err = fs.trash.remove("dir", ent)
+	return changed or ok, ok and 0 or 1, err
 end
 
 function M:setup()
 	ps.sub_remote("trash-restore", function(args)
 		ya.async(function()
-			local nodes, files = {}, {}
+			local ents, selected, err = {}, {}, nil
 			for i, arg in ipairs(args) do
 				local url = Url(arg)
-				nodes[i] = node(url)
-				if not nodes[i] then
-					return notify("restore", "Cannot restore the trash root")
+				ents[i], err = entry(url)
+				if not ents[i] then
+					return notify("restore", err)
 				end
-
-				files[i] = fs.file(url)
+				selected[i] = file(url, ents[i])
 			end
 
-			local ok, err = fs.trash.restore(nodes)
-			if ok then
-				files.state = "off"
-				ya.emit("toggle_all", files)
+			local changed, failed, first, restored = false, 0, nil, {}
+			for i, ent in ipairs(ents) do
+				local a, b, c = restore(ent)
+				changed, failed, first = changed or a, failed + b, first or c
+				if a and b == 0 then
+					restored[#restored + 1] = selected[i]
+				end
+			end
+
+			if #restored ~= 0 then
+				restored.state = "off"
+				ya.emit("toggle_all", restored)
+			end
+
+			if changed then
 				ya.emit("refresh", {})
-			else
-				notify("restore", err)
+			end
+			if failed ~= 0 then
+				notify("restore", string.format("%d item(s) could not be restored: %s", failed, first))
 			end
 		end)
 	end)
@@ -120,36 +178,46 @@ function M:provide(job)
 	elseif op == "Casefold" then
 		return job.url
 	elseif op == "Metadata" or op == "SymlinkMetadata" then
-		local n = node(job.url)
-		if n then
-			return fs.trash.metadata(n, op == "Metadata")
+		local ent, err = entry(job.url)
+		if ent then
+			return fs.trash.metadata(ent, op == "Metadata")
+		elseif err then
+			return nil, err
 		else
 			return Cha { mode = tonumber("40700", 8) }
 		end
 	elseif op == "ReadDir" then
-		local entries, err = fs.trash.list(node(job.url))
-		if entries then
-			return files(job.url, entries)
+		local ent, err = entry(job.url)
+		if err then
+			return nil, err
+		end
+		local ents, err = fs.trash.list(ent)
+		if ents then
+			return files(job.url, ents)
 		else
 			return nil, err
 		end
 	elseif op == "Revalidate" then
-		return fs.trash.revalidate(node(job.file.url), job.file)
-	elseif op == "File" then
-		local n = node(job.url)
-		if not n then
-			return nil, Error.custom("Cannot construct a file for the trash root")
+		local ent, err = entry(job.file.url)
+		if err then
+			return nil, err
+		else
+			return fs.trash.revalidate(ent, job.file)
 		end
-		local entry, err = fs.trash.entry(n)
-		if entry then
-			return file(job.url, entry)
+	elseif op == "File" then
+		local ent, err = entry(job.url)
+		if ent then
+			return file(job.url, ent)
 		else
 			return nil, err
 		end
-	elseif op == "RemoveFile" then
-		return fs.trash.remove("file", node(job.url))
-	elseif op == "RemoveDir" then
-		return fs.trash.remove("dir", node(job.url))
+	elseif op == "RemoveFile" or op == "RemoveDir" then
+		local ent, err = entry(job.url)
+		if ent then
+			return fs.trash.remove(op == "RemoveDir" and "dir" or "file", ent)
+		else
+			return false, err
+		end
 	end
 
 	return false, Error.custom("Unsupported trash operation: " .. op)

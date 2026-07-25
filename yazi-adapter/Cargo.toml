@@ -28,7 +28,7 @@ anyhow       = { workspace = true }
 base64       = { workspace = true }
 image        = { workspace = true }
 inventory    = { workspace = true }
-moxcms       = "0.8.1"
+moxcms       = "0.9.0"
 palette      = { version = "0.7.6", default-features = false }
 quantette    = { version = "0.6.0", default-features = false }
 ratatui-core = { workspace = true }

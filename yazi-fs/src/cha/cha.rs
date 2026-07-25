@@ -54,7 +54,7 @@ impl Cha {
 	where
 		T: AsStrand,
 	{
-		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta))
+		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta) | ChaKind::reparse(&meta))
 	}
 
 	pub fn from_dummy<U>(_url: U, r#type: Option<ChaType>) -> Self
@@ -138,8 +138,8 @@ impl Cha {
 			return self;
 		}
 
-		let retain = self.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM) | ChaKind::FOLLOW;
-		followed.unwrap_or(self).attach(retain)
+		let retain = self.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::REPARSE);
+		followed.unwrap_or(self).attach(retain | ChaKind::FOLLOW)
 	}
 }
 
@@ -164,6 +164,12 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_dummy(self) -> bool { self.kind.contains(ChaKind::DUMMY) }
+
+	#[inline]
+	pub const fn is_reparse(self) -> bool { self.kind.contains(ChaKind::REPARSE) }
+
+	#[inline]
+	pub fn is_indirect(self) -> bool { self.is_link() || self.is_reparse() }
 
 	pub fn atime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(atime) = self.atime {

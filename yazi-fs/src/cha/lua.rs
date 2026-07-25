@@ -48,6 +48,7 @@ impl UserData for Cha {
 		fields.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
 		fields.add_field_method_get("is_orphan", |_, me| Ok(me.is_orphan()));
 		fields.add_field_method_get("is_dummy", |_, me| Ok(me.is_dummy()));
+		fields.add_field_method_get("is_indirect", |_, me| Ok(me.is_indirect()));
 		fields.add_field_method_get("is_block", |_, me| Ok(me.is_block()));
 		fields.add_field_method_get("is_char", |_, me| Ok(me.is_char()));
 		fields.add_field_method_get("is_fifo", |_, me| Ok(me.is_fifo()));

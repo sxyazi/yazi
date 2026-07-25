@@ -1,4 +1,4 @@
-use std::{fmt, hash::{Hash, Hasher}, sync::Arc};
+use std::{fmt, sync::Arc};
 
 use serde::Deserialize;
 use yazi_shim::cell::RoCell;
@@ -7,29 +7,13 @@ use crate::{auth::{AuthInventory, AuthKind, Domain, EncodeAuth, Scheme}, path::{
 
 pub(super) static DEFAULT_ARC: RoCell<Arc<Auth>> = RoCell::new();
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq)]
 pub struct Auth {
 	pub kind:   AuthKind,
 	pub scheme: Scheme,
 	pub domain: Domain<'static>,
 	#[serde(default)]
 	pub parent: Option<Arc<Auth>>,
-}
-
-impl PartialEq for Auth {
-	fn eq(&self, other: &Self) -> bool {
-		self.kind == other.kind && self.scheme == other.scheme && self.domain == other.domain
-	}
-}
-
-impl Eq for Auth {}
-
-impl Hash for Auth {
-	fn hash<H: Hasher>(&self, state: &mut H) {
-		self.kind.hash(state);
-		self.scheme.hash(state);
-		self.domain.hash(state);
-	}
 }
 
 impl Default for Auth {
