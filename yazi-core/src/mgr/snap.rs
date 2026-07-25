@@ -23,13 +23,13 @@ impl Splatable for MgrSnap {
 
 	fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = &File> {
 		idx = idx.and_then(|i| i.checked_sub(1));
-		tab
-			.checked_sub(1)
-			.and_then(|tab| self.tabs.get(tab))
-			.map_or_else(|| &[][..], |s| &s.selected)
-			.iter()
-			.skip(idx.unwrap_or(0))
-			.take(if idx.is_some() { 1 } else { usize::MAX })
+
+		let files = match tab.checked_sub(1).and_then(|tab| self.tabs.get(tab)) {
+			Some(s) if !s.selected.is_empty() => &s.selected,
+			Some(s) => s.hovered.as_slice(),
+			None => &[],
+		};
+		files.iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX })
 	}
 
 	fn hovered(&self, tab: usize) -> Option<&File> {
