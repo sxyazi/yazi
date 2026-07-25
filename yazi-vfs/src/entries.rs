@@ -20,13 +20,13 @@ impl VfsEntries for Entries {
 		let (tx, rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
-			while let Ok(Some(ent)) = it.next().await {
+			while let Ok(Some(dent)) = it.next().await {
 				select! {
 					_ = tx.closed() => break,
-					result = ent.file() => {
+					result = dent.file() => {
 						_ = tx.send(match result {
 							Ok(file) => file,
-							Err(_) => File::from_dummy(ent.url(), ent.file_type().await.ok()),
+							Err(_) => File::from_dummy(dent.url(), dent.file_type().await.ok()),
 						});
 					}
 				}
@@ -38,18 +38,18 @@ impl VfsEntries for Entries {
 	async fn from_dir_bulk(dir: &UrlBuf) -> std::io::Result<Vec<File>> {
 		let mut it = engine::read_dir(dir).await?;
 		let mut entries = Vec::new();
-		while let Ok(Some(entry)) = it.next().await {
-			entries.push(entry);
+		while let Ok(Some(dent)) = it.next().await {
+			entries.push(dent);
 		}
 
 		let (first, rest) = entries.split_at(entries.len() / 3);
 		let (second, third) = rest.split_at(entries.len() / 3);
 		async fn go(entries: &[DirEntry]) -> Vec<File> {
 			let mut files = Vec::with_capacity(entries.len());
-			for ent in entries {
-				files.push(match ent.file().await {
+			for dent in entries {
+				files.push(match dent.file().await {
 					Ok(file) => file,
-					Err(_) => File::from_dummy(ent.url(), ent.file_type().await.ok()),
+					Err(_) => File::from_dummy(dent.url(), dent.file_type().await.ok()),
 				});
 			}
 			files

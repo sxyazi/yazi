@@ -127,14 +127,14 @@ pub trait Engine: Sized {
 			P: Engine,
 		{
 			let mut it = ok_or_not_found!(P::new(url).await?.read_dir().await, return Ok(()));
-			while let Some(child) = it.next().await? {
-				let cha = ok_or_not_found!(child.metadata().await, continue);
+			while let Some(dent) = it.next().await? {
+				let cha = ok_or_not_found!(dent.metadata().await, continue);
 				let result = if cha.is_dir() && !cha.is_indirect() {
-					Box::pin(remove_dir_all_impl::<P>(child.url().as_url())).await
+					Box::pin(remove_dir_all_impl::<P>(dent.url().as_url())).await
 				} else if cha.is_dir() {
-					P::new(child.url().as_url()).await?.remove_dir().await
+					P::new(dent.url().as_url()).await?.remove_dir().await
 				} else {
-					P::new(child.url().as_url()).await?.remove_file().await
+					P::new(dent.url().as_url()).await?.remove_file().await
 				};
 
 				() = ok_or_not_found!(result);
@@ -177,9 +177,9 @@ pub trait Engine: Sized {
 				let Ok(mut it) = engine.read_dir().await else { continue };
 				stack.push((dir, true));
 
-				while let Ok(Some(ent)) = it.next().await {
-					if ent.metadata().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
-						stack.push((ent.url(), false));
+				while let Ok(Some(dent)) = it.next().await {
+					if dent.metadata().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
+						stack.push((dent.url(), false));
 					}
 				}
 			}

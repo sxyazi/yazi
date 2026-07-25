@@ -467,12 +467,12 @@ impl File {
 		Ok(self.ops.out(task.id, FileOutUploadDo::Succ))
 	}
 
-	pub(super) async fn cha<U>(url: U, follow: bool, entry: Option<DirEntry>) -> io::Result<Cha>
+	pub(super) async fn cha<U>(url: U, follow: bool, dent: Option<DirEntry>) -> io::Result<Cha>
 	where
 		U: AsUrl,
 	{
-		let cha = if let Some(entry) = entry {
-			entry.metadata().await?
+		let cha = if let Some(dent) = dent {
+			dent.metadata().await?
 		} else {
 			engine::symlink_metadata(url.as_url()).await?
 		};

@@ -93,9 +93,9 @@ fn clear_no_reparse(path: &Path) -> io::Result<()> {
 	}
 
 	if let Ok(entries) = std::fs::read_dir(path) {
-		for entry in entries.flatten() {
-			if entry.file_type().is_ok_and(|t| t.is_dir()) {
-				clear_no_reparse(&entry.path()).ok();
+		for dent in entries.flatten() {
+			if dent.file_type().is_ok_and(|t| t.is_dir()) {
+				clear_no_reparse(&dent.path()).ok();
 			}
 		}
 	}

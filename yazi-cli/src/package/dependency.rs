@@ -71,8 +71,8 @@ impl Dependency {
 
 		let mut files: Vec<String> =
 			["LICENSE", "README.md", "main.lua"].into_iter().map(Into::into).collect();
-		while let Some(entry) = it.next_entry().await? {
-			if let Ok(name) = entry.file_name().into_string()
+		while let Some(dent) = it.next_entry().await? {
+			if let Ok(name) = dent.file_name().into_string()
 				&& let Some(stripped) = name.strip_suffix(".lua")
 				&& stripped != "main"
 				&& stripped.as_bytes().kebab_cased()

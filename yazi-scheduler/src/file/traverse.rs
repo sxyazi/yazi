@@ -192,10 +192,10 @@ where
 
 		() = err!(on_dir(dest.as_url()).await, "Cannot process directory {dest:?}");
 
-		while let Ok(Some(entry)) = it.next().await {
-			let from = entry.url();
+		while let Ok(Some(dent)) = it.next().await {
+			let from = dent.url();
 			let cha = err!(
-				super::File::cha(&from, task.follow(), Some(entry)).await,
+				super::File::cha(&from, task.follow(), Some(dent)).await,
 				"Cannot get metadata for {from:?}"
 			);
 

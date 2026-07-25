@@ -29,9 +29,9 @@ pub(crate) struct Cha(pub(crate) yazi_fs::cha::Cha);
 impl TryFrom<&yazi_sftp::fs::DirEntry> for Cha {
 	type Error = io::Error;
 
-	fn try_from(ent: &yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
-		let mut cha = Self::try_from((ent.name(), ent.attrs()))?;
-		cha.0.nlink = ent.nlink().unwrap_or_default();
+	fn try_from(dent: &yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
+		let mut cha = Self::try_from((dent.name(), dent.attrs()))?;
+		cha.0.nlink = dent.nlink().unwrap_or_default();
 		Ok(cha)
 	}
 }

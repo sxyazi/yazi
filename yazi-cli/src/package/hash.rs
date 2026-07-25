@@ -21,11 +21,11 @@ impl Dependency {
 		let mut assets = vec![];
 		match tokio::fs::read_dir(dir.join("assets")).await {
 			Ok(mut it) => {
-				while let Some(entry) = it.next_entry().await? {
-					let Ok(name) = entry.file_name().into_string() else {
-						bail!("asset path is not valid UTF-8: {}", entry.path().display());
+				while let Some(dent) = it.next_entry().await? {
+					let Ok(name) = dent.file_name().into_string() else {
+						bail!("asset path is not valid UTF-8: {}", dent.path().display());
 					};
-					assets.push((name, Local::regular(&entry.path()).read().await?));
+					assets.push((name, Local::regular(&dent.path()).read().await?));
 				}
 			}
 			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}

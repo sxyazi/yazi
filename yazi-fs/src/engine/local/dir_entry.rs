@@ -6,7 +6,7 @@ use crate::{cha::{Cha, ChaType}, engine::FileHolder, file::{File, FileExtra}};
 
 pub enum DirEntry {
 	Regular(tokio::fs::DirEntry),
-	Others { entry: tokio::fs::DirEntry, dir: Arc<UrlBuf> },
+	Others { dent: tokio::fs::DirEntry, dir: Arc<UrlBuf> },
 }
 
 impl FileHolder for DirEntry {
@@ -27,13 +27,13 @@ impl FileHolder for DirEntry {
 
 	async fn file_type(&self) -> io::Result<ChaType> {
 		match self {
-			Self::Regular(entry) | Self::Others { entry, .. } => entry.file_type().await.map(Into::into),
+			Self::Regular(dent) | Self::Others { dent, .. } => dent.file_type().await.map(Into::into),
 		}
 	}
 
 	async fn metadata(&self) -> io::Result<Cha> {
 		let meta = match self {
-			Self::Regular(entry) | Self::Others { entry, .. } => entry.metadata().await?,
+			Self::Regular(dent) | Self::Others { dent, .. } => dent.metadata().await?,
 		};
 
 		Ok(Cha::new(self.name(), meta)) // TODO: use `file_name_os_str` when stabilized
@@ -41,21 +41,21 @@ impl FileHolder for DirEntry {
 
 	fn name(&self) -> StrandCow<'_> {
 		match self {
-			Self::Regular(entry) | Self::Others { entry, .. } => entry.file_name().into(),
+			Self::Regular(dent) | Self::Others { dent, .. } => dent.file_name().into(),
 		}
 	}
 
 	fn path(&self) -> PathBufDyn {
 		match self {
-			Self::Regular(entry) | Self::Others { entry, .. } => entry.path().into(),
+			Self::Regular(dent) | Self::Others { dent, .. } => dent.path().into(),
 		}
 	}
 
 	fn url(&self) -> UrlBuf {
 		match self {
-			Self::Regular(entry) => entry.path().into(),
-			Self::Others { entry, dir } => {
-				dir.try_join(entry.file_name()).expect("entry name is a valid component of the local URL")
+			Self::Regular(dent) => dent.path().into(),
+			Self::Others { dent, dir } => {
+				dir.try_join(dent.file_name()).expect("entry name is a valid component of the local URL")
 			}
 		}
 	}

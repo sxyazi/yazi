@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_core::tab::Folder;
+use yazi_core::{Reconciler, tab::Folder};
 use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateFilesForm;
@@ -16,11 +16,12 @@ impl Actor for UpdateFiles {
 	const NAME: &str = "update_files";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		let tab = cx.tab;
 		let revision = cx.current().entries.revision;
 		let linked: Vec<_> = LINKED.read().from_dir(form.op.cwd()).map(|u| form.op.chdir(u)).collect();
 
 		for op in [form.op].into_iter().chain(linked) {
-			cx.mgr.yanked.apply_op(&op);
+			Reconciler::new(&mut cx.mgr, tab).apply(&op);
 			Self::update_tab(cx, op).ok();
 		}
 
@@ -41,7 +42,6 @@ impl Actor for UpdateFiles {
 impl UpdateFiles {
 	fn update_tab(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let url = op.cwd();
-		cx.tab_mut().selected.apply_op(&op);
 
 		if url == cx.cwd() {
 			Self::update_current(cx, op)

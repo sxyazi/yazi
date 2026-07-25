@@ -72,13 +72,13 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 
 	// Fallback: scan the directory for matching inodes
 	let mut names = vec![];
-	for entry in std::fs::read_dir(parent)? {
-		let entry = entry?;
-		let n = entry.file_name(); // TODO: use `file_name_ref()` when stabilized
+	for dent in std::fs::read_dir(parent)? {
+		let dent = dent?;
+		let n = dent.file_name(); // TODO: use `file_name_ref()` when stabilized
 
 		if n == name {
 			return Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())));
-		} else if let m = entry.metadata()?
+		} else if let m = dent.metadata()?
 			&& m.ino() == meta.ino()
 			&& m.dev() == meta.dev()
 		{
@@ -129,13 +129,13 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 
 	// Fallback: scan the directory for matching inodes
 	let (meta, mut names) = (std::fs::symlink_metadata(path)?, vec![]);
-	for entry in std::fs::read_dir(parent)? {
-		let entry = entry?;
-		let n = entry.file_name(); // TODO: use `file_name_ref()` when stabilized
+	for dent in std::fs::read_dir(parent)? {
+		let dent = dent?;
+		let n = dent.file_name(); // TODO: use `file_name_ref()` when stabilized
 
 		if n == name {
 			return Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())));
-		} else if let m = entry.metadata()?
+		} else if let m = dent.metadata()?
 			&& m.ino() == meta.ino()
 			&& m.dev() == meta.dev()
 		{

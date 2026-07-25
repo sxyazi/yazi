@@ -29,12 +29,12 @@ impl Trash {
 			Err(e) => return Err(e),
 		};
 
-		it.map(|dirent| {
-			let dirent = dirent?;
+		it.map(|dent| {
+			let dent = dent?;
 			if let Some(entry) = entry {
-				entry.child(dirent.file_name())
+				entry.child(dent.file_name())
 			} else {
-				let path = dirent.path();
+				let path = dent.path();
 				let original = store
 					.get(path.file_name().unwrap_or_default())
 					.and_then(|ds| ds.join(Path::new("")).ok());
@@ -113,12 +113,12 @@ impl Trash {
 
 	pub(crate) fn empty(&self) -> io::Result<()> {
 		let root = self.root()?;
-		for dirent in ok_or_not_found!(fs::read_dir(root), return Ok(())) {
-			let dirent = dirent?;
-			if dirent.file_type()?.is_dir() {
-				fs::remove_dir_all(dirent.path())?;
+		for dent in ok_or_not_found!(fs::read_dir(root), return Ok(())) {
+			let dent = dent?;
+			if dent.file_type()?.is_dir() {
+				fs::remove_dir_all(dent.path())?;
 			} else {
-				fs::remove_file(dirent.path())?;
+				fs::remove_file(dent.path())?;
 			}
 		}
 		Ok(())

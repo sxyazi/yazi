@@ -48,8 +48,8 @@ impl Dependency {
 		match tokio::fs::read_dir(&from).await {
 			Ok(mut it) => {
 				Local::regular(&to).create_dir_all().await?;
-				while let Some(entry) = it.next_entry().await? {
-					let (src, dist) = (entry.path(), to.join(entry.file_name()));
+				while let Some(dent) = it.next_entry().await? {
+					let (src, dist) = (dent.path(), to.join(dent.file_name()));
 					copy_and_seal(&src, &dist).await.with_context(|| {
 						format!("failed to copy `{}` to `{}`", src.display(), dist.display())
 					})?;

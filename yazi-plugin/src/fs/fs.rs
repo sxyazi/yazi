@@ -180,18 +180,18 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		let mut files = vec![];
-		while let Ok(Some(next)) = it.next().await {
-			let url = next.url();
+		while let Ok(Some(dent)) = it.next().await {
+			let url = dent.url();
 			if pat.as_ref().is_some_and(|p| !p.match_url(&url, p.is_dir)) {
 				continue;
 			}
 
 			let file = if !resolve {
-				File::from_dummy(url, next.file_type().await.ok())
-			} else if let Ok(file) = next.file().await {
+				File::from_dummy(url, dent.file_type().await.ok())
+			} else if let Ok(file) = dent.file().await {
 				file
 			} else {
-				File::from_dummy(url, next.file_type().await.ok())
+				File::from_dummy(url, dent.file_type().await.ok())
 			};
 
 			files.push(file);

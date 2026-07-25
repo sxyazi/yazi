@@ -45,9 +45,9 @@ impl Actor for Trigger {
 				cache.push(CmpItem { name: Default::default(), is_dir: true });
 			}
 
-			while let Ok(Some(ent)) = dir.next().await {
-				if let Ok(ft) = ent.file_type().await {
-					cache.push(CmpItem { name: ent.name().into_owned(), is_dir: ft.is_dir() });
+			while let Ok(Some(dent)) = dir.next().await {
+				if let Ok(ft) = dent.file_type().await {
+					cache.push(CmpItem { name: dent.name().into_owned(), is_dir: ft.is_dir() });
 				}
 			}
 

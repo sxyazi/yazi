@@ -99,19 +99,19 @@ impl SizeCalculator {
 				pop_and_continue!();
 			};
 
-			let Ok(ent) = next else { continue };
-			let Ok(ft) = ent.file_type() else { continue };
+			let Ok(dent) = next else { continue };
+			let Ok(ft) = dent.file_type() else { continue };
 
 			// If the entry is not a directory
 			if !ft.is_dir() {
-				size += ent.metadata().map_or(0, |meta| meta.len());
+				size += dent.metadata().map_or(0, |meta| meta.len());
 				continue;
 			}
 
 			// The entry is a directory, but it may be a reparse point
 			#[cfg(windows)]
 			{
-				let Ok(cha) = ent.metadata().map(|meta| Cha::new(ent.file_name(), meta)) else {
+				let Ok(cha) = dent.metadata().map(|meta| Cha::new(dent.file_name(), meta)) else {
 					continue;
 				};
 				if !cha.is_dir() || cha.is_indirect() {
@@ -121,7 +121,7 @@ impl SizeCalculator {
 			}
 
 			// Now, we can safely assume the entry is a regular directory
-			buf.push_back(Either::Left(ent.path()));
+			buf.push_back(Either::Left(dent.path()));
 		}
 		Some(size)
 	}

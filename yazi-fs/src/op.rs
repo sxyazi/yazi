@@ -153,28 +153,4 @@ impl FilesOp {
 			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
 		}
 	}
-
-	pub fn diff_recoverable<'a, I>(&self, urls: I) -> (Vec<UrlBuf>, Vec<File>)
-	where
-		I: IntoIterator<Item = &'a UrlBuf>,
-	{
-		let cwd = self.cwd();
-		let it = urls
-			.into_iter()
-			.filter(|u| u.parent().is_some_and(|p| p == *cwd))
-			.filter(|u| !u.entry_key().is_empty());
-
-		match self {
-			Self::Deleting(_, keys) => {
-				(it.filter(|u| keys.contains(&u.entry_key())).cloned().collect(), vec![])
-			}
-			Self::Updating(_, files) | Self::Upserting(_, files) => it
-				.filter_map(|u| files.get(&u.entry_key()).map(|f| (u, f)))
-				.filter(|(_, f)| !f.entry_key().is_empty())
-				.filter(|&(u, f)| u != f.url)
-				.map(|(u, f)| (u.clone(), f.clone()))
-				.unzip(),
-			_ => (vec![], vec![]),
-		}
-	}
 }

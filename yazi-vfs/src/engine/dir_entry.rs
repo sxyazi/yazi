@@ -12,49 +12,49 @@ pub enum DirEntry {
 impl FileHolder for DirEntry {
 	async fn file(&self) -> io::Result<File> {
 		match self {
-			Self::Local(entry) => entry.file().await,
-			Self::Lua(entry) => entry.file().await,
-			Self::Sftp(entry) => entry.file().await,
+			Self::Local(dent) => dent.file().await,
+			Self::Lua(dent) => dent.file().await,
+			Self::Sftp(dent) => dent.file().await,
 		}
 	}
 
 	async fn file_type(&self) -> io::Result<ChaType> {
 		match self {
-			Self::Local(entry) => entry.file_type().await,
-			Self::Lua(entry) => entry.file_type().await,
-			Self::Sftp(entry) => entry.file_type().await,
+			Self::Local(dent) => dent.file_type().await,
+			Self::Lua(dent) => dent.file_type().await,
+			Self::Sftp(dent) => dent.file_type().await,
 		}
 	}
 
 	async fn metadata(&self) -> io::Result<Cha> {
 		match self {
-			Self::Local(entry) => entry.metadata().await,
-			Self::Lua(entry) => entry.metadata().await,
-			Self::Sftp(entry) => entry.metadata().await,
+			Self::Local(dent) => dent.metadata().await,
+			Self::Lua(dent) => dent.metadata().await,
+			Self::Sftp(dent) => dent.metadata().await,
 		}
 	}
 
 	fn name(&self) -> StrandCow<'_> {
 		match self {
-			Self::Local(entry) => entry.name(),
-			Self::Lua(entry) => entry.name(),
-			Self::Sftp(entry) => entry.name(),
+			Self::Local(dent) => dent.name(),
+			Self::Lua(dent) => dent.name(),
+			Self::Sftp(dent) => dent.name(),
 		}
 	}
 
 	fn path(&self) -> PathBufDyn {
 		match self {
-			Self::Local(entry) => entry.path(),
-			Self::Lua(entry) => entry.path(),
-			Self::Sftp(entry) => entry.path(),
+			Self::Local(dent) => dent.path(),
+			Self::Lua(dent) => dent.path(),
+			Self::Sftp(dent) => dent.path(),
 		}
 	}
 
 	fn url(&self) -> UrlBuf {
 		match self {
-			Self::Local(entry) => entry.url(),
-			Self::Lua(entry) => entry.url(),
-			Self::Sftp(entry) => entry.url(),
+			Self::Local(dent) => dent.url(),
+			Self::Lua(dent) => dent.url(),
+			Self::Sftp(dent) => dent.url(),
 		}
 	}
 }

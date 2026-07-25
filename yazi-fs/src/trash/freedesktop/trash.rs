@@ -23,9 +23,9 @@ impl Trash {
 		}
 
 		fs::read_dir(&entry.backing)?
-			.map(|dirent| {
-				let dirent = dirent?;
-				entry.child(dirent.file_name())
+			.map(|dent| {
+				let dent = dent?;
+				entry.child(dent.file_name())
 			})
 			.collect()
 	}
@@ -137,9 +137,9 @@ impl Trash {
 	fn tops(&self) -> io::Result<Vec<TrashEntry>> {
 		let mut tops = Vec::new();
 		for root in os_limited::trash_folders().map_err(io::Error::other)? {
-			for entry in ok_or_not_found!(fs::read_dir(root.join("info")), continue) {
-				let entry = entry?;
-				let info = entry.path();
+			for dent in ok_or_not_found!(fs::read_dir(root.join("info")), continue) {
+				let dent = dent?;
+				let info = dent.path();
 				if let Ok(parsed) = TrashInfo::parse(&info) {
 					tops.push(TrashEntry::top(info, parsed.backing, Some(parsed.original))?);
 				}
