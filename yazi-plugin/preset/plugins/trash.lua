@@ -61,17 +61,21 @@ end
 function M:setup()
 	ps.sub_remote("trash-restore", function(args)
 		ya.async(function()
-			local nodes = {}
+			local nodes, files = {}, {}
 			for i, arg in ipairs(args) do
-				nodes[i] = node(Url(arg))
+				local url = Url(arg)
+				nodes[i] = node(url)
 				if not nodes[i] then
 					return notify("restore", "Cannot restore the trash root")
 				end
+
+				files[i] = fs.file(url)
 			end
 
 			local ok, err = fs.trash.restore(nodes)
 			if ok then
-				ya.emit("escape", { select = true })
+				files.state = "off"
+				ya.emit("toggle_all", files)
 				ya.emit("refresh", {})
 			else
 				notify("restore", err)
