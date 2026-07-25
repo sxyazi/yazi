@@ -73,13 +73,13 @@ impl SizeCalculator {
 				};
 			}
 
-			let Ok(Some(ent)) = front.as_mut().right()?.next().await else {
+			let Ok(Some(dent)) = front.as_mut().right()?.next().await else {
 				pop_and_continue!();
 			};
 
-			let Ok(cha) = ent.metadata().await else { continue };
+			let Ok(cha) = dent.metadata().await else { continue };
 			if cha.is_dir() && !cha.is_indirect() {
-				buf.push_back(Either::Left(ent.url()));
+				buf.push_back(Either::Left(dent.url()));
 			} else {
 				size += cha.len;
 			}

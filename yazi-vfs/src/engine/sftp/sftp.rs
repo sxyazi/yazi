@@ -62,12 +62,12 @@ impl<'a> Engine for Sftp<'a> {
 
 		let mut it = Self::new(parent).await?.read_dir().await?;
 		let mut similar = None;
-		while let Some(entry) = it.next().await? {
-			let s = entry.name();
+		while let Some(dent) = it.next().await? {
+			let s = dent.name();
 			if !name.eq_ignore_ascii_case(&s) {
 				continue;
 			} else if s == name {
-				return Ok(entry.url());
+				return Ok(dent.url());
 			} else if similar.is_none() {
 				similar = Some(s.into_owned());
 			} else {

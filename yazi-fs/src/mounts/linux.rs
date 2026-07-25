@@ -148,9 +148,9 @@ impl Partitions {
 			return map;
 		};
 
-		for entry in it.flatten() {
-			let Ok(meta) = std::fs::metadata(entry.path()) else { continue };
-			let name = entry.file_name();
+		for dent in it.flatten() {
+			let Ok(meta) = std::fs::metadata(dent.path()) else { continue };
+			let name = dent.file_name();
 			map.insert(
 				(meta.dev(), meta.ino()),
 				match replace_vec_cow(name.as_bytes(), br"\x20", b" ") {

@@ -8,7 +8,7 @@ use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 
 #[derive(AsRefStr)]
 #[strum(serialize_all = "PascalCase")]
-pub enum ProviderJob {
+pub enum ProvideJob {
 	Capabilities,
 	Absolute {
 		url: UrlBuf,
@@ -101,7 +101,7 @@ pub enum ProviderJob {
 	},
 }
 
-impl IntoLua for ProviderJob {
+impl IntoLua for ProvideJob {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let t = lua.create_table()?;
 		t.raw_set("op", self.as_ref())?;

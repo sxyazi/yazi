@@ -3,7 +3,7 @@ use std::ops::Deref;
 use hashbrown::HashSet;
 use indexmap::{IndexSet, set::MutableValues};
 use yazi_dds::Pubsub;
-use yazi_fs::{FilesOp, file::{File, FileCov}};
+use yazi_fs::file::{File, FileCov};
 use yazi_macro::err;
 use yazi_shared::url::{Url, UrlBuf, UrlCov, UrlLike};
 
@@ -68,20 +68,12 @@ impl Yanked {
 		})
 	}
 
-	pub fn apply_op(&mut self, op: &FilesOp) {
-		let (removal, addition) = op.diff_recoverable(self.urls());
-		if !removal.is_empty() {
-			let old = self.files.len();
-			self.files.retain(|f| !removal.iter().any(|u| f.url.covariant(u)));
-			self.revision += (old != self.files.len()) as u64;
-		}
-		if !addition.is_empty() {
-			let old = self.files.len();
-			self.files.extend(addition.into_iter().map(FileCov));
-			self.revision += (old != self.files.len()) as u64;
-		}
-		for f in op.files() {
-			self.files.get_full_mut2(&UrlCov::new(&f.url)).map(|(_, v)| *v = f.into());
+	pub(crate) fn upsert(&mut self, file: &File) {
+		if let Some((_, value)) = self.files.get_full_mut2(&UrlCov::new(&file.url)) {
+			*value = file.into();
+		} else {
+			self.files.insert(file.into());
+			self.revision += 1;
 		}
 	}
 

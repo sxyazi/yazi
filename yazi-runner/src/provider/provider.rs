@@ -2,10 +2,10 @@ use mlua::{ExternalError, FromLua, FromLuaMulti, IntoLua, ObjectLike, Value};
 use tokio::runtime::Handle;
 use yazi_shared::{data::Sendable, event::Cmd};
 
-use crate::{Runner, loader::LOADER, provider::{ProvideResult, ProviderJob}};
+use crate::{Runner, loader::LOADER, provider::{ProvideJob, ProvideResult}};
 
 impl Runner {
-	pub async fn provide<T>(&'static self, run: &'static Cmd, job: ProviderJob) -> ProvideResult<T>
+	pub async fn provide<T>(&'static self, run: &'static Cmd, job: ProvideJob) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
@@ -15,7 +15,7 @@ impl Runner {
 		}
 	}
 
-	async fn provide_do<T>(&'static self, run: &'static Cmd, job: ProviderJob) -> ProvideResult<T>
+	async fn provide_do<T>(&'static self, run: &'static Cmd, job: ProvideJob) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
@@ -24,7 +24,7 @@ impl Runner {
 
 			Handle::current().block_on(async {
 				let Value::Table(job) = job.into_lua(&lua)? else {
-					return Err("ProviderJob should be a table".into_lua_err());
+					return Err("ProvideJob should be a table".into_lua_err());
 				};
 				job.raw_set("args", Sendable::args_to_table_ref(&lua, &run.args)?)?;
 

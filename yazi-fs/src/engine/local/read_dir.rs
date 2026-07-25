@@ -16,7 +16,7 @@ impl DirReader for ReadDir {
 		Ok(match self {
 			Self::Regular(reader) => reader.next_entry().await?.map(Self::Entry::Regular),
 			Self::Others { reader, dir } => {
-				reader.next_entry().await?.map(|entry| Self::Entry::Others { entry, dir: dir.clone() })
+				reader.next_entry().await?.map(|dent| Self::Entry::Others { dent, dir: dir.clone() })
 			}
 		})
 	}

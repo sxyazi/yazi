@@ -3,7 +3,7 @@ use std::{io::{self, SeekFrom}, pin::Pin, task::{Context, Poll, ready}};
 use mlua::BString;
 use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf};
 use yazi_fs::{cha::Cha, engine::Demand};
-use yazi_runner::{RUNNER, provider::ProviderJob};
+use yazi_runner::{RUNNER, provider::ProvideJob};
 use yazi_shared::{event::Cmd, url::UrlBuf};
 
 type Fut<T> = Pin<Box<dyn Future<Output = io::Result<T>> + Send + Sync + 'static>>;
@@ -38,27 +38,27 @@ impl File {
 
 	pub async fn set_len(&self, size: u64) -> io::Result<()> {
 		let url = self.url.clone();
-		Ok(RUNNER.provide(self.run, ProviderJob::SetLen { url, size }).await.ok()?)
+		Ok(RUNNER.provide(self.run, ProvideJob::SetLen { url, size }).await.ok()?)
 	}
 
 	pub async fn set_attrs(&self, attrs: yazi_fs::engine::Attrs) -> io::Result<()> {
 		let url = self.url.clone();
-		Ok(RUNNER.provide(self.run, ProviderJob::SetAttrs { url, attrs }).await.ok()?)
+		Ok(RUNNER.provide(self.run, ProvideJob::SetAttrs { url, attrs }).await.ok()?)
 	}
 
 	pub(crate) async fn metadata(&self) -> io::Result<Cha> {
 		let url = self.url.clone();
-		Ok(RUNNER.provide(self.run, ProviderJob::Metadata { url }).await.0?)
+		Ok(RUNNER.provide(self.run, ProvideJob::Metadata { url }).await.0?)
 	}
 
 	pub(crate) async fn file(&self) -> io::Result<yazi_fs::file::File> {
 		let url = self.url.clone();
-		Ok(RUNNER.provide(self.run, ProviderJob::File { url }).await.0?)
+		Ok(RUNNER.provide(self.run, ProvideJob::File { url }).await.0?)
 	}
 
 	pub(crate) async fn into_file(self) -> io::Result<yazi_fs::file::File> {
 		let url = self.url;
-		Ok(RUNNER.provide(self.run, ProviderJob::File { url }).await.0?)
+		Ok(RUNNER.provide(self.run, ProvideJob::File { url }).await.0?)
 	}
 
 	fn write_impl(
@@ -78,7 +78,7 @@ impl File {
 
 		if me.pending_write.is_none() {
 			let (run, len) = (me.run, bytes.len());
-			let job = ProviderJob::Write { url: me.url.clone(), offset: me.pos, bytes };
+			let job = ProvideJob::Write { url: me.url.clone(), offset: me.pos, bytes };
 			me.pending_write = Some(Box::pin(async move {
 				RUNNER.provide(run, job).await.ok()?;
 				Ok(len)
@@ -110,7 +110,7 @@ impl AsyncRead for File {
 		if me.pending_read.is_none() {
 			let run = me.run;
 			let job =
-				ProviderJob::Read { url: me.url.clone(), offset: me.pos, len: buf.remaining() };
+				ProvideJob::Read { url: me.url.clone(), offset: me.pos, len: buf.remaining() };
 			me.pending_read = Some(Box::pin(async move { Ok(RUNNER.provide(run, job).await.0?) }));
 		}
 
@@ -141,7 +141,7 @@ impl AsyncSeek for File {
 				.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "seek overflow"))?,
 			SeekFrom::End(n) => {
 				let run = me.run;
-				let job = ProviderJob::Metadata { url: me.url.clone() };
+				let job = ProvideJob::Metadata { url: me.url.clone() };
 				SeekState::Blocking(
 					n,
 					Box::pin(async move { Ok(RUNNER.provide::<Cha>(run, job).await.0?.len) }),
