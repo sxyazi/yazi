@@ -7,14 +7,14 @@ use crate::local::Local;
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub enum Watchee<'a> {
 	Local(UrlCow<'a>, bool),
-	Remote(UrlCow<'a>),
+	Virtual(UrlCow<'a>),
 }
 
 impl AsUrl for Watchee<'_> {
 	fn as_url(&self) -> Url<'_> {
 		match self {
 			Self::Local(url, _) => url.as_url(),
-			Self::Remote(url) => url.as_url(),
+			Self::Virtual(url) => url.as_url(),
 		}
 	}
 }
@@ -23,14 +23,14 @@ impl<'a> Watchee<'a> {
 	pub(super) fn as_local(&self) -> Option<(&Path, bool)> {
 		Some(match self {
 			Self::Local(url, alt) => (url.as_local()?, *alt),
-			Self::Remote(_) => None?,
+			Self::Virtual(_) => None?,
 		})
 	}
 
 	pub(super) fn as_local_mut(&mut self) -> Option<(&Path, &mut bool)> {
 		Some(match self {
 			Self::Local(url, alt) => (url.as_local()?, alt),
-			Self::Remote(_) => None?,
+			Self::Virtual(_) => None?,
 		})
 	}
 
@@ -43,14 +43,14 @@ impl<'a> Watchee<'a> {
 			let b = Local::soundless(path).await;
 			Self::Local(url, b)
 		} else {
-			Self::Remote(url)
+			Self::Virtual(url)
 		}
 	}
 
 	pub(super) fn to_static(&self) -> Watchee<'static> {
 		match self {
 			Self::Local(url, alt) => Watchee::Local(url.to_owned().into(), *alt),
-			Self::Remote(url) => Watchee::Remote(url.to_owned().into()),
+			Self::Virtual(url) => Watchee::Virtual(url.to_owned().into()),
 		}
 	}
 }

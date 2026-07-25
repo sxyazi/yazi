@@ -4,11 +4,8 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMetho
 use parking_lot::Mutex;
 use ratatui_core::widgets::Widget;
 use yazi_binding::{elements::{Area, Spatial}, impl_area_method};
-use yazi_dds::Pubsub;
-use yazi_macro::err;
-use yazi_shim::strum::IntoStr;
 
-use crate::input::{Input, InputOpt, InputStyles};
+use crate::input::{Input, InputEvent, InputOpt, InputStyles};
 
 #[derive(Clone, Debug, Default)]
 pub struct InputArc {
@@ -25,13 +22,12 @@ impl Deref for InputArc {
 }
 
 impl InputArc {
-	pub fn compose(lua: &Lua, styles: InputStyles) -> mlua::Result<Value> {
+	pub fn compose(lua: &Lua, styles: InputStyles, cb: fn(InputEvent)) -> mlua::Result<Value> {
 		let new = lua.create_function(move |_, (_, mut opt): (Table, InputOpt)| {
 			opt.styles.normal = opt.styles.normal.or(styles.normal);
 			opt.styles.selected = opt.styles.selected.or(styles.selected);
 			opt.styles.blink = opt.styles.blink.or(styles.blink);
-			opt = opt.with_cb(|e| err!(Pubsub::pub_after_input((&e).into_str(), e.value())));
-			Ok(Self::from(Input::new(opt)?))
+			Ok(Self::from(Input::new(opt.with_cb(cb))?))
 		})?;
 
 		let input = lua.create_table()?;

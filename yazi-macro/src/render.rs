@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! render {
 	() => {
-		yazi_shared::event::NEED_RENDER.store(1, std::sync::atomic::Ordering::Relaxed);
+		yazi_shared::event::NEED_RENDER.store(1, std::sync::atomic::Ordering::Relaxed)
 	};
 	($cond:expr) => {
 		if $cond {

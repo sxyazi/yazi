@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsString};
 
-use yazi_shared::{CompletionToken, id::Id, url::{UrlBuf, UrlCow}};
+use yazi_shared::{CompletionToken, id::Id, url::UrlBuf};
 
 use super::ShellOpt;
 use crate::{TaskIn, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
@@ -46,10 +46,9 @@ impl TaskIn for ProcessIn {
 // --- Block
 #[derive(Debug)]
 pub(crate) struct ProcessInBlock {
-	pub(crate) id:   Id,
-	pub(crate) cwd:  UrlBuf,
-	pub(crate) cmd:  OsString,
-	pub(crate) args: Vec<UrlCow<'static>>,
+	pub(crate) id:  Id,
+	pub(crate) cwd: UrlBuf,
+	pub(crate) cmd: OsString,
 }
 
 impl TaskIn for ProcessInBlock {
@@ -67,17 +66,16 @@ impl TaskIn for ProcessInBlock {
 
 impl From<ProcessInBlock> for ShellOpt {
 	fn from(r#in: ProcessInBlock) -> Self {
-		Self { cwd: r#in.cwd, cmd: r#in.cmd, args: r#in.args, piped: false, orphan: false }
+		Self { cwd: r#in.cwd, cmd: r#in.cmd, block: true, orphan: false }
 	}
 }
 
 // --- Orphan
 #[derive(Debug)]
 pub(crate) struct ProcessInOrphan {
-	pub(crate) id:   Id,
-	pub(crate) cwd:  UrlBuf,
-	pub(crate) cmd:  OsString,
-	pub(crate) args: Vec<UrlCow<'static>>,
+	pub(crate) id:  Id,
+	pub(crate) cwd: UrlBuf,
+	pub(crate) cmd: OsString,
 }
 
 impl TaskIn for ProcessInOrphan {
@@ -95,7 +93,7 @@ impl TaskIn for ProcessInOrphan {
 
 impl From<ProcessInOrphan> for ShellOpt {
 	fn from(r#in: ProcessInOrphan) -> Self {
-		Self { cwd: r#in.cwd, cmd: r#in.cmd, args: r#in.args, piped: false, orphan: true }
+		Self { cwd: r#in.cwd, cmd: r#in.cmd, block: false, orphan: true }
 	}
 }
 
@@ -105,7 +103,6 @@ pub(crate) struct ProcessInBg {
 	pub(crate) id:   Id,
 	pub(crate) cwd:  UrlBuf,
 	pub(crate) cmd:  OsString,
-	pub(crate) args: Vec<UrlCow<'static>>,
 	pub(crate) done: CompletionToken,
 }
 
@@ -124,6 +121,6 @@ impl TaskIn for ProcessInBg {
 
 impl From<ProcessInBg> for ShellOpt {
 	fn from(r#in: ProcessInBg) -> Self {
-		Self { cwd: r#in.cwd, cmd: r#in.cmd, args: r#in.args, piped: true, orphan: false }
+		Self { cwd: r#in.cwd, cmd: r#in.cmd, block: false, orphan: false }
 	}
 }

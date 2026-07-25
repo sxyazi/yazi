@@ -1,6 +1,6 @@
 use std::{any::TypeId, ffi::OsStr, io, process::Stdio};
 
-use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use yazi_shim::wtf8::FromWtf8;
 
@@ -152,7 +152,7 @@ impl UserData for Command {
 					me.inner.arg(OsStr::from_wtf8(&s.as_bytes())?);
 				}
 				Value::Table(t) => {
-					for s in t.sequence_values::<mlua::String>() {
+					for s in t.sequence_values::<LuaString>() {
 						me.inner.arg(OsStr::from_wtf8(&s?.as_bytes())?);
 					}
 				}
@@ -160,19 +160,16 @@ impl UserData for Command {
 			}
 			ud.into_lua(lua)
 		});
-		methods.add_function("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
+		methods.add_function("cwd", |_, (ud, dir): (AnyUserData, LuaString)| {
 			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?.as_ref());
 			Ok(ud)
 		});
-		methods.add_function(
-			"env",
-			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
-				ud.borrow_mut::<Self>()?
-					.inner
-					.env(OsStr::from_wtf8(&key.as_bytes())?, OsStr::from_wtf8(&value.as_bytes())?);
-				Ok(ud)
-			},
-		);
+		methods.add_function("env", |_, (ud, key, value): (AnyUserData, LuaString, LuaString)| {
+			ud.borrow_mut::<Self>()?
+				.inner
+				.env(OsStr::from_wtf8(&key.as_bytes())?, OsStr::from_wtf8(&value.as_bytes())?);
+			Ok(ud)
+		});
 		methods.add_function("stdin", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stdin(make_stdio(stdio)?);
 			Ok(ud)

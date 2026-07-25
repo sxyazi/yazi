@@ -1,10 +1,9 @@
 use std::{env, io, path::{Path, PathBuf}, str::FromStr};
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash3_128;
 use yazi_fs::Xdg;
-use yazi_macro::ok_or_not_found;
 use yazi_shared::BytesExt;
 
 #[derive(Clone, Default)]
@@ -65,8 +64,11 @@ impl Dependency {
 		Ok(())
 	}
 
-	pub(super) async fn plugin_files(dir: &Path) -> io::Result<Vec<String>> {
-		let mut it = ok_or_not_found!(tokio::fs::read_dir(dir).await, return Ok(vec![]));
+	pub(super) async fn plugin_files(dir: &Path) -> Result<Vec<String>> {
+		let mut it = tokio::fs::read_dir(dir)
+			.await
+			.with_context(|| format!("failed to read plugin directory `{}`", dir.display()))?;
+
 		let mut files: Vec<String> =
 			["LICENSE", "README.md", "main.lua"].into_iter().map(Into::into).collect();
 		while let Some(entry) = it.next_entry().await? {

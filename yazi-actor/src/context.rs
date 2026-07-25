@@ -109,6 +109,9 @@ impl<'a> Ctx<'a> {
 	pub fn hovered(&self) -> Option<&File> { self.tab().hovered() }
 
 	#[inline]
+	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.tab().hovered_url() }
+
+	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> { self.tab().hovered_folder() }
 
 	#[inline]

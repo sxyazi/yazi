@@ -4,7 +4,7 @@ use anyhow::Result;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
-use yazi_fs::{Xdg, provider::{FileBuilder, Provider, local::{Gate, Local}}};
+use yazi_fs::{Xdg, engine::{Engine, FileBuilder, local::{Demand, Local}}};
 use yazi_shared::timestamp_us;
 use yazi_shim::cell::RoCell;
 
@@ -63,7 +63,12 @@ impl State {
 		Local::regular(&state_dir).create_dir_all().await?;
 
 		let mut buf = BufWriter::new(
-			Gate::default().write(true).create(true).truncate(true).open(state_dir.join(".dds")).await?,
+			Demand::default()
+				.write(true)
+				.create(true)
+				.truncate(true)
+				.open(state_dir.join(".dds"))
+				.await?,
 		);
 
 		let mut state = inner.into_iter().collect::<Vec<_>>();

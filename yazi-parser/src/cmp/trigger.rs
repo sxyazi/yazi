@@ -8,6 +8,10 @@ pub struct TriggerForm {
 	pub ticket: Option<Id>,
 }
 
+impl From<String> for TriggerForm {
+	fn from(word: String) -> Self { Self { word: word.into(), ticket: None } }
+}
+
 impl From<ActionCow> for TriggerForm {
 	fn from(mut a: ActionCow) -> Self {
 		Self { word: a.take_first().unwrap_or_default(), ticket: a.get("ticket").ok() }

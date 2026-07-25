@@ -1,7 +1,10 @@
 use mlua::{IntoLua, Lua, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::{Align, Bar, Border, Color, Constraint, Edge, Fill, Gauge, Layout, Line, List, Pad, Rect, Row, Span, Table, Text, Wrap}, position::Position, style::Style};
 use yazi_config::THEME;
-use yazi_widgets::{clear::Clear, input::InputArc};
+use yazi_dds::Pubsub;
+use yazi_macro::err;
+use yazi_shim::strum::IntoStr;
+use yazi_widgets::{clear::Clear, input::{InputArc, InputEvent}};
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
@@ -16,7 +19,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"Edge" => Edge::compose(lua)?,
 			b"Fill" => Fill::compose(lua)?,
 			b"Gauge" => Gauge::compose(lua)?,
-			b"Input" => InputArc::compose(lua, (&THEME.input).into())?,
+			b"Input" => InputArc::compose(lua, (&THEME.input).into(), publish_input)?,
 			b"Layout" => Layout::compose(lua)?,
 			b"Line" => Line::compose(lua)?,
 			b"List" => List::compose(lua)?,
@@ -47,4 +50,8 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
 	Composer::new(get, set)
+}
+
+fn publish_input(event: InputEvent) {
+	err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
 }

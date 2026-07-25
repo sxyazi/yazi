@@ -1,16 +1,27 @@
-use mlua::{ExternalError, FromLua, IntoLua, IntoLuaMulti, UserData, UserDataMethods, Value};
+use mlua::{FromLua, IntoLua, IntoLuaMulti, UserData, UserDataMethods, Value};
 use yazi_codegen::FromLuaOwned;
 
 use crate::Error;
 
 #[derive(FromLuaOwned)]
-pub struct MpscTx<T: FromLua + 'static>(pub tokio::sync::mpsc::Sender<T>);
+pub struct MpscTx<T: FromLua + 'static, U: 'static = T> {
+	tx: tokio::sync::mpsc::Sender<U>,
+	f:  fn(T) -> U,
+}
 pub struct MpscRx<T: IntoLua + 'static>(pub tokio::sync::mpsc::Receiver<T>);
 
-impl<T: FromLua> UserData for MpscTx<T> {
+impl<T: FromLua> MpscTx<T> {
+	pub fn new(tx: tokio::sync::mpsc::Sender<T>) -> Self { Self { tx, f: |v| v } }
+}
+
+impl<T: FromLua, U> MpscTx<T, U> {
+	pub fn map(tx: tokio::sync::mpsc::Sender<U>, f: fn(T) -> U) -> Self { Self { tx, f } }
+}
+
+impl<T: FromLua, U: 'static> UserData for MpscTx<T, U> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method("send", |lua, me, value: Value| async move {
-			match me.0.send(T::from_lua(value, &lua)?).await {
+			match me.tx.send((me.f)(T::from_lua(value, &lua)?)).await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::custom(e.to_string())).into_lua_multi(&lua),
 			}
@@ -54,16 +65,13 @@ impl<T: IntoLua + 'static> UserData for MpscUnboundedRx<T> {
 }
 
 #[derive(FromLuaOwned)]
-pub struct OneshotTx<T: FromLua + 'static>(pub Option<tokio::sync::oneshot::Sender<T>>);
-pub struct OneshotRx<T: IntoLua + 'static>(pub Option<tokio::sync::oneshot::Receiver<T>>);
+pub struct OneshotTx<T: FromLua + 'static>(pub tokio::sync::oneshot::Sender<T>);
+pub struct OneshotRx<T: IntoLua + 'static>(pub tokio::sync::oneshot::Receiver<T>);
 
 impl<T: FromLua> UserData for OneshotTx<T> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_method_mut("send", |lua, me, value: Value| {
-			let Some(tx) = me.0.take() else {
-				return Err("Oneshot sender already used".into_lua_err());
-			};
-			match tx.send(T::from_lua(value, lua)?) {
+		methods.add_method_once("send", |lua, me, value: Value| {
+			match me.0.send(T::from_lua(value, lua)?) {
 				Ok(()) => true.into_lua_multi(lua),
 				Err(_) => (false, Error::custom("Oneshot receiver closed")).into_lua_multi(lua),
 			}
@@ -73,11 +81,8 @@ impl<T: FromLua> UserData for OneshotTx<T> {
 
 impl<T: IntoLua + 'static> UserData for OneshotRx<T> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
-			let Some(rx) = me.0.take() else {
-				return Err("Oneshot receiver already used".into_lua_err());
-			};
-			match rx.await {
+		methods.add_async_method_once("recv", |lua, me, ()| async move {
+			match me.0.await {
 				Ok(value) => value.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::custom(e.to_string())).into_lua_multi(&lua),
 			}

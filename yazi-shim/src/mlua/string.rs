@@ -1,12 +1,12 @@
 use std::{fmt, ops::Deref};
 
-use mlua::{FromLua, IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaString, Value};
 
 #[derive(Clone)]
-pub struct ByteString(mlua::String);
+pub struct ByteString(LuaString);
 
 impl Deref for ByteString {
-	type Target = mlua::String;
+	type Target = LuaString;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -17,7 +17,7 @@ impl fmt::Display for ByteString {
 
 impl FromLua for ByteString {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(Self(mlua::String::from_lua(value, lua)?))
+		Ok(Self(LuaString::from_lua(value, lua)?))
 	}
 }
 

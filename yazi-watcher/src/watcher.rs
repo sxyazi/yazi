@@ -1,45 +1,50 @@
 use futures::{StreamExt, stream};
-use hashbrown::HashSet;
+use indexmap::IndexSet;
 use tracing::error;
-use yazi_fs::FsUrl;
+use yazi_fs::{FsUrl, file::File};
 use yazi_shared::{LastValue, url::{UrlBuf, UrlCow, UrlLike}};
 
-use crate::{Reporter, WATCHED, Watchee, backend::Backend};
+use crate::{Refresher, Reporter, WATCHED, Watchee, backend::Backend};
 
 pub struct Watcher {
-	last:     LastValue<HashSet<UrlBuf>>,
-	reporter: Reporter,
+	last:          LastValue<IndexSet<UrlBuf>>,
+	reporter:      Reporter,
+	pub refresher: Refresher,
 }
 
 impl Watcher {
 	pub fn serve() -> Self {
 		let last = LastValue::default();
+		let refresher = Refresher::serve();
 
 		let backend = Backend::serve();
 		let reporter = backend.reporter.clone();
 
-		tokio::spawn(Self::watched(last.clone(), backend));
-		Self { last, reporter }
+		tokio::spawn(Self::run(last.clone(), backend));
+		Self { last, reporter, refresher }
 	}
 
-	pub fn watch<'a, I>(&mut self, urls: I)
+	pub fn watch<I>(&mut self, files: I)
 	where
 		I: IntoIterator,
-		I::Item: Into<UrlCow<'a>>,
+		I::Item: Into<File>,
 	{
-		let it = urls.into_iter();
-		let mut urls = HashSet::with_capacity(it.size_hint().0);
+		let it = files.into_iter();
+		let mut urls = IndexSet::with_capacity(it.size_hint().0);
+		let mut files = IndexSet::with_capacity(it.size_hint().0);
 
-		for url in it.map(Into::into) {
-			if !url.is_absolute() {
+		for file in it.map(Into::into) {
+			if !file.url.is_absolute() {
 				continue;
-			} else if let Some(cache) = url.cache() {
+			} else if let Some(cache) = file.url.cache_bucket() {
 				urls.insert(cache.into());
 			}
-			urls.insert(url.into_owned());
+			urls.insert(file.url.clone());
+			files.insert(file.into());
 		}
 
 		self.last.set(urls);
+		self.refresher.sync(files);
 	}
 
 	pub fn report<'a, I>(&self, urls: I)
@@ -50,7 +55,7 @@ impl Watcher {
 		self.reporter.report(urls);
 	}
 
-	async fn watched(last: LastValue<HashSet<UrlBuf>>, mut backend: Backend) {
+	async fn run(last: LastValue<IndexSet<UrlBuf>>, mut backend: Backend) {
 		loop {
 			let (to_unwatch, to_watch) = Self::diff(last.get().await).await;
 
@@ -61,8 +66,8 @@ impl Watcher {
 		}
 	}
 
-	async fn diff(urls: HashSet<UrlBuf>) -> (Vec<Watchee<'static>>, HashSet<Watchee<'static>>) {
-		let mut new: HashSet<_> = stream::iter(urls).then(Watchee::new).collect().await;
+	async fn diff(urls: IndexSet<UrlBuf>) -> (Vec<Watchee<'static>>, IndexSet<Watchee<'static>>) {
+		let mut new: IndexSet<_> = stream::iter(urls).then(Watchee::new).collect().await;
 		let old = WATCHED.read();
 
 		let to_unwatch = old.difference(&new).map(Watchee::to_static).collect();
@@ -74,7 +79,7 @@ impl Watcher {
 	async fn sync(
 		mut backend: Backend,
 		to_unwatch: Vec<Watchee<'static>>,
-		to_watch: HashSet<Watchee<'static>>,
+		to_watch: IndexSet<Watchee<'static>>,
 	) -> Backend {
 		tokio::task::spawn_blocking(move || {
 			for watchee in to_unwatch {
@@ -85,7 +90,7 @@ impl Watcher {
 			}
 			for mut watchee in to_watch {
 				match backend.watch(&mut watchee) {
-					Ok(()) => _ = WATCHED.write().insert(watchee),
+					Ok(()) => WATCHED.write().insert(watchee),
 					Err(e) if matches!(e.kind, notify::ErrorKind::PathNotFound) => {}
 					Err(e) => error!("Watch failed: {e:?}"),
 				}

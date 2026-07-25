@@ -209,20 +209,18 @@ macro_rules! impl_file_fields {
 
 		$fields.add_cached_field("cha", |_, me| Ok(me.cha));
 		$fields.add_cached_field("url", |_, me| Ok(me.url_owned()));
-		$fields.add_cached_field("link_to", |_, me| Ok(me.link_to.clone()));
+		$fields.add_cached_field("link_to", |_, me| Ok(me.extra.link_to().cloned()));
 
 		$fields.add_cached_field("name", |lua, me| {
 			me.name().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
 		$fields.add_cached_field("path", |_, me| {
-			use yazi_fs::FsUrl;
-			use yazi_shared::{path::PathBufDyn, url::AsUrl};
-			Ok(PathBufDyn::from(me.url.as_url().unified_path()))
+			use yazi_shared::path::PathBufDyn;
+			Ok(PathBufDyn::from(me.content_path()))
 		});
 		$fields.add_cached_field("cache", |_, me| {
-			use yazi_fs::FsUrl;
 			use yazi_shared::path::PathBufDyn;
-			Ok(me.url.cache().map(PathBufDyn::from))
+			Ok(me.cache().map(PathBufDyn::from))
 		});
 	};
 }
@@ -231,8 +229,8 @@ macro_rules! impl_file_fields {
 macro_rules! impl_file_methods {
 	($methods:ident) => {
 		$methods.add_method("hash", |_, me, ()| {
-			use yazi_fs::FsHash64;
-			Ok(me.hash_u64())
+			use yazi_fs::{FsHash64, file::FileSig};
+			Ok(FileSig(me).hash_u64())
 		});
 	};
 }

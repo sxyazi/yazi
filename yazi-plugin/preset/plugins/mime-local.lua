@@ -6,11 +6,7 @@ local M = {}
 function M:fetch(job)
 	local urls, paths = {}, {}
 	for i, file in ipairs(job.files) do
-		if file.cache then
-			urls[i], paths[i] = tostring(file.url), tostring(file.cache)
-		else
-			paths[i] = tostring(file.path)
-		end
+		urls[i], paths[i] = file.url, tostring(file.path)
 	end
 
 	local child, err = M.spawn_file1(paths)
@@ -42,7 +38,7 @@ function M:fetch(job)
 
 		match, ignore = M.match_mimetype(line)
 		if match then
-			updates[urls[i] or paths[i]], state[i], i = match, true, i + 1
+			updates[urls[i]], state[i], i = match, true, i + 1
 			flush(false)
 		elseif not ignore then
 			state[i], i = false, i + 1
@@ -103,7 +99,7 @@ function M.placeholder(err, urls, paths)
 
 	local updates = {}
 	for i = 1, #paths do
-		updates[urls[i] or paths[i]] = "null/file1-not-found"
+		updates[urls[i]] = "null/file1-not-found"
 	end
 
 	ya.emit("update_mimes", { updates = updates })

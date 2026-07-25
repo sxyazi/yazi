@@ -1,6 +1,6 @@
 use mlua::{FromLua, IntoLua, Lua, UserData, Value};
 
-#[derive(Clone, Copy, Default, FromLua)]
+#[derive(Clone, Copy, Default, FromLua, UserData)]
 pub struct Constraint(pub(super) ratatui_core::layout::Constraint);
 
 impl Constraint {
@@ -23,5 +23,3 @@ impl Constraint {
 impl From<Constraint> for ratatui_core::layout::Constraint {
 	fn from(value: Constraint) -> Self { value.0 }
 }
-
-impl UserData for Constraint {}

@@ -1,6 +1,6 @@
 use std::{str::FromStr, time::Duration};
 
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{elements::{Line, Text}, runtime};
 use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
@@ -99,7 +99,7 @@ impl Utils {
 			}
 			Value::Table(t) => {
 				let mut v = Vec::with_capacity(10);
-				for s in t.sequence_values::<mlua::String>() {
+				for s in t.sequence_values::<LuaString>() {
 					v.push(Key::from_str(&s?.to_str()?).into_lua_err()?);
 				}
 				v

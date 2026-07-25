@@ -10,7 +10,17 @@ pub enum Components<'a> {
 	Unix(typed_path::UnixComponents<'a>),
 }
 
+impl<'a> From<&'a std::path::Path> for Components<'a> {
+	fn from(value: &'a std::path::Path) -> Self { Self::Os(value.components()) }
+}
+
+impl<'a> From<&'a typed_path::UnixPath> for Components<'a> {
+	fn from(value: &'a typed_path::UnixPath) -> Self { Self::Unix(value.components()) }
+}
+
 impl<'a> Components<'a> {
+	pub fn auth_depth(self) -> usize { self.filter(Component::has_auth).count() }
+
 	pub fn path(&self) -> PathDyn<'a> {
 		match self {
 			Self::Os(c) => PathDyn::Os(c.as_path()),

@@ -12,7 +12,7 @@ function M:entry()
 	ya.emit("escape", { visual = true })
 
 	local cwd, selected = state()
-	if cwd.scheme.is_virtual then
+	if cwd.spec.is_virtual then
 		return ya.notify { title = "Fzf", content = "Not supported under virtual filesystems", timeout = 5, level = "warn" }
 	end
 

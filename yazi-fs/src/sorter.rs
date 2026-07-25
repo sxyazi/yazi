@@ -67,8 +67,8 @@ impl FilesSorter {
 			}),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				promote!(a, b);
-				let aa = if a.is_dir() { sizes.get(&a.urn()).copied() } else { None };
-				let bb = if b.is_dir() { sizes.get(&b.urn()).copied() } else { None };
+				let aa = if a.is_dir() { sizes.get(&a.entry_key()).copied() } else { None };
+				let bb = if b.is_dir() { sizes.get(&b.entry_key()).copied() } else { None };
 				self.fallback(a, b, self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len)))
 			}),
 			SortBy::Random => {

@@ -1,9 +1,8 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Error, elements::{Area, HighlightPosition}};
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
-use yazi_fs::FsUrl;
+use yazi_fs::file::FileRef;
 use yazi_runner::previewer::PeekError;
-use yazi_shared::url::AsUrl;
 use yazi_widgets::Renderable;
 
 use super::Utils;
@@ -17,9 +16,9 @@ impl Utils {
 			let area: Area = t.raw_get("area")?;
 			let position: Option<HighlightPosition> = t.raw_get("position").ok();
 
-			let mut lock = PreviewLock::try_from(t)?;
-			let path = lock.url.as_url().unified_path();
+			let path = t.raw_get::<FileRef>("file")?.borrow(|f| Ok(f.content_path().into_owned()))?;
 
+			let mut lock = PreviewLock::try_from(t)?;
 			let inner = match Highlighter::oneshot(path, lock.skip, area.size(), position).await {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceeded(max)) => return (e, max).into_lua_multi(&lua),

@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::{FsUrl, file::File};
 use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
-use yazi_vfs::VfsFile;
+use yazi_vfs::engine;
 
 pub struct FdOpt {
 	pub cwd:     UrlBuf,
@@ -27,7 +27,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 			let Ok(url) = opt.cwd.try_join(line) else {
 				continue;
 			};
-			if let Ok(file) = File::new(url).await {
+			if let Ok(file) = engine::file(url).await {
 				tx.send(file).ok();
 			}
 		}
@@ -39,7 +39,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 fn spawn(program: &str, opt: &FdOpt) -> std::io::Result<Child> {
 	Command::new(program)
 		.arg("--base-directory")
-		.arg(&*opt.cwd.as_url().unified_path())
+		.arg(&*opt.cwd.as_url().working_path())
 		.arg("--regex")
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(&opt.args)

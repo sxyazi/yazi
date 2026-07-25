@@ -3,11 +3,11 @@ use yazi_shared::path::PathBufDyn;
 
 #[derive(Debug, Default)]
 pub struct HoverForm {
-	pub urn: Option<PathBufDyn>,
+	pub key: Option<PathBufDyn>,
 }
 
 impl From<Option<PathBufDyn>> for HoverForm {
-	fn from(urn: Option<PathBufDyn>) -> Self { Self { urn } }
+	fn from(key: Option<PathBufDyn>) -> Self { Self { key } }
 }
 
 impl FromLua for HoverForm {

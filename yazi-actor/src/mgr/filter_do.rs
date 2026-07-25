@@ -16,10 +16,10 @@ impl Actor for FilterDo {
 	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };
 
-		let hovered = cx.hovered().map(|f| f.urn().into());
+		let hovered = cx.hovered().map(|f| f.entry_key().into());
 		cx.current_mut().entries.set_filter(filter);
 
-		if cx.hovered().map(|f| f.urn()) != hovered.as_ref().map(Into::into) {
+		if cx.hovered().map(|f| f.entry_key()) != hovered.as_ref().map(Into::into) {
 			act!(mgr:hover, cx, hovered)?;
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;

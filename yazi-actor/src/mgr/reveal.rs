@@ -14,7 +14,7 @@ impl Actor for Reveal {
 	const NAME: &str = "reveal";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let Some((parent, child)) = form.target.pair() else { succ!() };
+		let Some((parent, child)) = form.target.pair2() else { succ!() };
 
 		// Cd to the parent directory
 		act!(mgr:cd, cx, (parent, form.source))?;
@@ -25,7 +25,7 @@ impl Actor for Reveal {
 
 		// If the child is not hovered, which means it doesn't exist,
 		// create a dummy file
-		if !form.no_dummy && tab.hovered().is_none_or(|f| child != f.urn()) {
+		if !form.no_dummy && tab.hovered().is_none_or(|f| f.entry_key() != child) {
 			let op = FilesOp::Creating(parent.into(), vec![File::from_dummy(&form.target, None)]);
 			tab.current.update_pub(tab.id, op);
 		}

@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
-use yazi_fs::FsHash64;
+use yazi_fs::{FsHash64, file::FileSig};
 use yazi_runner::RUNNER;
 
 use crate::{HIGH, LOW, TaskOp, TaskOps, fetch::{FetchIn, FetchOutFetch}};
@@ -32,7 +32,7 @@ impl Fetch {
 	pub(crate) async fn fetch(&self, task: FetchIn) -> Result<(), FetchOutFetch> {
 		let (id, fetcher) = (task.id, task.fetcher.clone());
 
-		let hashes: Vec<_> = task.targets.iter().map(|f| f.hash_u64()).collect();
+		let hashes: Vec<_> = task.targets.iter().map(|f| FileSig(f).hash_u64()).collect();
 		let (state, err) = RUNNER.fetch(task.into()).await?;
 
 		let mut loaded = self.loaded.lock();

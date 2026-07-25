@@ -1,5 +1,7 @@
 use std::str::{self, FromStr};
 
+use compact_str::CompactString;
+
 use super::parser::Parser;
 use crate::{ParseError, Result, bail, event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, Modifiers, MouseEvent, MouseEventKind}};
 
@@ -84,8 +86,10 @@ impl Parser {
 
 		let (mut code, state_from_keycode) = KeyCode::from_codepoint(parse_next(&mut codepoints)?)?;
 		let (mut modifiers, kind, state_from_modifiers) = parse_mks(&mut it).unwrap_or_default();
+		let text = parse_text(it.next().unwrap_or_default())?;
 
 		if let KeyCode::Modifier(c) = code
+			&& kind != KeyEventKind::Release
 			&& let Some(m) = c.to_modifier()
 		{
 			modifiers |= m;
@@ -97,9 +101,10 @@ impl Parser {
 		// which contains the shifted character according to the keyboard layout.
 		if modifiers.contains(Modifiers::SHIFT)
 			&& let Ok(Some(shifted)) = parse_next(&mut codepoints).map(char::from_u32)
+			&& code != KeyCode::Char(shifted)
 		{
 			code = KeyCode::Char(shifted);
-			modifiers.remove(Modifiers::SHIFT);
+			modifiers.set(Modifiers::SHIFT, code.implies_shift());
 		}
 
 		Ok(Event::Key(KeyEvent {
@@ -107,6 +112,7 @@ impl Parser {
 			modifiers,
 			kind,
 			state: state_from_keycode | state_from_modifiers,
+			text,
 		}))
 	}
 
@@ -123,7 +129,7 @@ impl Parser {
 
 		let (modifiers, kind, _) = parse_mks(&mut it).unwrap_or_default();
 		let code = KeyCode::from_xterm_modifier(seq[seq.len() - 1])?;
-		Ok(Event::Key(KeyEvent { code, modifiers, kind, state: KeyEventState::empty() }))
+		Ok(Event::Key(KeyEvent { code, modifiers, kind, ..Default::default() }))
 	}
 
 	/// Parses legacy `CSI modifier final` - no semicolon, modifier digit
@@ -138,10 +144,9 @@ impl Parser {
 		}
 
 		Ok(Event::Key(KeyEvent {
-			code:      KeyCode::from_xterm_modifier(seq[seq.len() - 1])?,
+			code: KeyCode::from_xterm_modifier(seq[seq.len() - 1])?,
 			modifiers: Modifiers::from_vt_mask(modifier - b'0'),
-			kind:      KeyEventKind::Press,
-			state:     KeyEventState::empty(),
+			..Default::default()
 		}))
 	}
 
@@ -173,7 +178,7 @@ impl Parser {
 			_ => bail!(),
 		};
 
-		let event = Event::Key(KeyEvent { code, modifiers, kind, state });
+		let event = Event::Key(KeyEvent { code, modifiers, kind, state, ..Default::default() });
 
 		Ok(event)
 	}
@@ -276,4 +281,14 @@ where
 		KeyEventKind::from_vt_code(code),
 		KeyEventState::from_vt_mask(mask),
 	))
+}
+
+fn parse_text(s: &str) -> Result<CompactString> {
+	if s.is_empty() {
+		return Ok(CompactString::default());
+	}
+
+	s.split(':')
+		.map(|codepoint| char::from_u32(codepoint.parse()?).ok_or(ParseError::Invalid))
+		.collect()
 }

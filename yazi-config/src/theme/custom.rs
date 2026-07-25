@@ -4,7 +4,7 @@ use arc_swap::ArcSwap;
 use hashbrown::{HashMap, hash_map};
 use serde::{Deserialize, Deserializer, de::{MapAccess, Visitor}};
 use yazi_codegen::{DeserializeOver, Overlay};
-use yazi_shared::{KebabCasedString, SnakeCasedString};
+use yazi_shared::{KebabCasedKey, SnakeCasedString};
 use yazi_shim::{arc_swap::IntoPointee, toml::DeserializeOverWith};
 
 use crate::theme::CustomSection;
@@ -39,7 +39,7 @@ impl<'de> Deserialize<'de> for Custom {
 
 			fn visit_map<M: MapAccess<'de>>(self, mut map: M) -> Result<Self::Value, M::Error> {
 				let mut sections = HashMap::with_capacity(map.size_hint().unwrap_or(0));
-				while let Some(key) = map.next_key::<KebabCasedString>()? {
+				while let Some(key) = map.next_key::<KebabCasedKey>()? {
 					let section = map.next_value::<CustomSection>()?;
 					if !section.load().is_empty() {
 						sections.insert(key.into_snake_cased(), section);
@@ -64,7 +64,7 @@ impl DeserializeOverWith for Custom {
 
 			fn visit_map<M: MapAccess<'de>>(self, mut map: M) -> Result<Custom, M::Error> {
 				let mut sections = self.0.unwrap_unchecked();
-				while let Some(key) = map.next_key::<KebabCasedString>()? {
+				while let Some(key) = map.next_key::<KebabCasedKey>()? {
 					let (key, new) = (key.into_snake_cased(), map.next_value::<CustomSection>()?);
 					match sections.entry(key) {
 						hash_map::Entry::Occupied(mut oe) => {

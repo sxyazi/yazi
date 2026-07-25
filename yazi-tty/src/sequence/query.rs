@@ -51,13 +51,6 @@ impl Display for RequestCursorBlink {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?12$p") }
 }
 
-/// Request keyboard enhancement flags (CSI u query)
-pub struct RequestKeyboardFlags;
-
-impl Display for RequestKeyboardFlags {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?u") }
-}
-
 /// Device Status Report (DSR)
 pub struct RequestDeviceStatus;
 

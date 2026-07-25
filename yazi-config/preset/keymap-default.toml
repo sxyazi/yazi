@@ -128,8 +128,9 @@ keymap = [
 
 	# Goto
 	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },
-	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go ~/.config" },
-	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go ~/Downloads" },
+	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go to ~/.config" },
+	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go to ~/Downloads" },
+	{ on = [ "g", "t" ],       run = "plugin trash",     desc = "Go to trash bin" },
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
 	{ on = [ "g", "f" ],       run = "follow",           desc = "Follow hovered symlink" },
 
@@ -309,6 +310,14 @@ keymap = [
 	{ on = "u",     run = [ "undo", "casefy lower" ], desc = "Undo, or lowercase if in visual mode" },
 	{ on = "U",     run = "casefy upper",             desc = "Uppercase" },
 	{ on = "<C-r>", run = "redo",                     desc = "Redo the last operation" },
+
+	# History
+	{ on = "k",      run = "recall -1", desc = "Recall previous input" },
+	{ on = "j",      run = "recall 1",  desc = "Recall next input" },
+	{ on = "<Up>",   run = "recall -1", desc = "Recall previous input" },
+	{ on = "<Down>", run = "recall 1",  desc = "Recall next input" },
+	{ on = "<C-p>",  run = "recall -1", desc = "Recall previous input" },
+	{ on = "<C-n>",  run = "recall 1",  desc = "Recall next input" },
 
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },

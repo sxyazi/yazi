@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{AsChunk, ChunkMode};
+use mlua::chunk::{AsChunk, ChunkMode};
 use yazi_shared::natsort;
 
 pub struct Chunk {

@@ -3,7 +3,7 @@ use serde::Deserialize;
 use yazi_boot::BOOT;
 use yazi_fs::path::{clean_url, expand_url};
 use yazi_shared::{event::ActionCow, url::UrlBuf};
-use yazi_vfs::provider;
+use yazi_vfs::engine;
 
 #[derive(Debug, Deserialize)]
 pub struct TabCreateForm {
@@ -30,7 +30,7 @@ impl TryFrom<ActionCow> for TabCreateForm {
 				target = expand_url(target).into_owned();
 			}
 
-			if let Some(u) = provider::try_absolute(&target)
+			if let Some(u) = engine::try_absolute(&target)
 				&& u.is_owned()
 			{
 				target = u.into_owned();

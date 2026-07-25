@@ -36,7 +36,7 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 			.components()
 			.zip(parent.components())
 			.take_while(|(a, b)| match (a, b) {
-				(Component::Scheme(a), Component::Scheme(b)) => a.covariant(*b),
+				(Component::Auth(a), Component::Auth(b)) => a.covariant(b),
 				(a, b) => a == b,
 			})
 			.count()
@@ -53,6 +53,8 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 #[cfg(unix)]
 #[test]
 fn test_max_common_root() {
+	yazi_shared::init_tests();
+
 	fn assert(input: &[&str], expected: &str) {
 		use std::{ffi::OsStr, str::FromStr};
 		let urls: Vec<_> =
@@ -68,6 +70,8 @@ fn test_max_common_root() {
 	assert_eq!(max_common_root(&[]), 0);
 	assert(&[""], "");
 	assert(&["a"], "");
+	assert(&["search://kw:1:1/a", "search://kw:1:1/b"], "search://kw/");
+	assert(&["test-hub://a1/@root/a", "test-hub://b1/@root/b"], "test-hub://root/@/");
 
 	assert(&["/a"], "/");
 	assert(&["/a/b"], "/a");

@@ -15,8 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Added
 
 - Drag and drop ([#4005])
+- Trash bin ([#4144])
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
+- Input history ([#4104])
+- Experimental `%y`, `%Y`, `%t`, `%T`, `%yN`, `%YN`, `%tN`, `%TN` shell formatting parameters ([#4108])
+- Custom VFS provider ([#4118])
 - Make visual mode support wraparound scrolling ([#4101])
 - H/M/L Vim-like motion for moving cursor relative to viewport ([#3970])
 - Context-aware icons for inputs ([#4080])
@@ -28,7 +32,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Changed
 
+- Rename SFTP sections in `vfs.toml` from `[services.domain]` to `[sftp.domain]` ([#4120]).
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
+- Remove `Url.is_archive` - `archive://` is no longer built in and can now be registered by plugins ([#4118])
 - Make `mgr::Yanked`, `tab::Selected`, and the `@yank` DDS event return `File` instead of `Url` from `__pairs()` ([#4096])
 - Remove `help:filter` action since the filter input is now always available ([#4074])
 - `[help]` of `theme.toml`: supersede `on` with `chord`, supersede `run` and `desc` with `action`, remove `footer` ([#4074])
@@ -38,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
 - Deprecate `tab::Mode.is_visual` in favor of the new `tab::Mode.is_normal` ([#4101])
+- Deprecate `Url.is_regular`, `Url.is_search`, and `Url.domain` in favor of `Url.spec.is_regular`, `Url.spec.is_search`, and `Url.spec.domain`, respectively ([#4118])
 
 ### Fixed
 
@@ -1771,3 +1778,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4080]: https://github.com/sxyazi/yazi/pull/4080
 [#4096]: https://github.com/sxyazi/yazi/pull/4096
 [#4101]: https://github.com/sxyazi/yazi/pull/4101
+[#4104]: https://github.com/sxyazi/yazi/pull/4104
+[#4108]: https://github.com/sxyazi/yazi/pull/4108
+[#4118]: https://github.com/sxyazi/yazi/pull/4118
+[#4120]: https://github.com/sxyazi/yazi/pull/4120
+[#4144]: https://github.com/sxyazi/yazi/pull/4144

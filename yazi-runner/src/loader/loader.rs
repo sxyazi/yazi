@@ -2,9 +2,9 @@ use std::{borrow::Cow, ops::Deref};
 
 use anyhow::{Context, Result, bail, ensure};
 use hashbrown::HashMap;
-use mlua::{ChunkMode, ExternalError, Lua, Table};
+use mlua::{ExternalError, Lua, Table, chunk::ChunkMode};
 use parking_lot::RwLock;
-use yazi_fs::{Xdg, provider::local::Local};
+use yazi_fs::{Xdg, engine::local::Local};
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::{BytesExt, LOG_LEVEL};
 use yazi_shim::cell::RoCell;
@@ -51,6 +51,7 @@ impl Default for Loader {
 			("pdf".to_owned(), preset!("plugins/pdf").into()),
 			("session".to_owned(), preset!("plugins/session").into()),
 			("svg".to_owned(), preset!("plugins/svg").into()),
+			("trash".to_owned(), preset!("plugins/trash").into()),
 			("vfs".to_owned(), preset!("plugins/vfs").into()),
 			("video".to_owned(), preset!("plugins/video").into()),
 			("zoxide".to_owned(), preset!("plugins/zoxide").into()),

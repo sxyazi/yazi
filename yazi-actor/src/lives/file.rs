@@ -4,7 +4,7 @@ use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
 use yazi_binding::{Range, style::Style};
 use yazi_config::THEME;
 use yazi_fs::file::FileInventory;
-use yazi_shared::{path::AsPath, url::UrlLike};
+use yazi_shared::{path::DynPath, url::UrlLike};
 
 use super::{FILE_CACHE, Lives};
 use crate::lives::{CoreRef, PtrCell};
@@ -73,7 +73,11 @@ impl UserData for File {
 			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
 		methods.add_method("size", |_, me, ()| {
-			Ok(if me.is_dir() { me.folder.entries.sizes.get(&me.urn()).copied() } else { Some(me.len) })
+			Ok(if me.is_dir() {
+				me.folder.entries.sizes.get(&me.entry_key()).copied()
+			} else {
+				Some(me.len)
+			})
 		});
 		methods.add_method("mime", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;
@@ -86,7 +90,7 @@ impl UserData for File {
 
 			let mut comp = me.url.try_strip_prefix(me.url.trail()).unwrap_or(me.url.loc()).components();
 			comp.next_back();
-			Some(lua.create_string(comp.as_path().encoded_bytes())).transpose()
+			Some(lua.create_string(comp.dyn_path().encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;
@@ -122,7 +126,7 @@ impl UserData for File {
 				return Ok(None);
 			};
 
-			let Some(idx) = finder.matched_idx(&me.folder, me.urn()) else {
+			let Some(idx) = finder.matched_idx(&me.folder, me.entry_key()) else {
 				return Ok(None);
 			};
 

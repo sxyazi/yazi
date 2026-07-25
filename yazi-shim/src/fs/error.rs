@@ -31,6 +31,16 @@ impl From<io::ErrorKind> for Error {
 	fn from(kind: io::ErrorKind) -> Self { Self::Kind(kind) }
 }
 
+impl From<Error> for io::Error {
+	fn from(value: Error) -> Self {
+		match value {
+			Error::Kind(kind) => Self::from(kind),
+			Error::Raw(code) => Self::from_raw_os_error(code),
+			Error::Custom { kind, message, .. } => Self::new(kind, message.to_string()),
+		}
+	}
+}
+
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {

@@ -18,7 +18,7 @@ impl Actor for Copy {
 
 		let mut s = Vec::<u8>::new();
 		let mut it = if form.hovered {
-			Box::new(cx.hovered().map(|h| &h.url).into_iter())
+			Box::new(cx.hovered_url().into_iter())
 		} else {
 			cx.tab().selected_or_hovered_urls()
 		}

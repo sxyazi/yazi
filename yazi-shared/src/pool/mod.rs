@@ -4,7 +4,7 @@ static SYMBOLS: yazi_shim::cell::RoCell<
 	parking_lot::Mutex<hashbrown::HashMap<SymbolPtr, u64, foldhash::fast::FixedState>>,
 > = yazi_shim::cell::RoCell::new();
 
-pub(super) fn init() { SYMBOLS.with(<_>::default); }
+pub(super) fn init() { SYMBOLS.with(Default::default); }
 
 #[inline]
 pub(super) fn compute_hash<T: std::hash::Hash>(value: T) -> u64 {

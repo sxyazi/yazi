@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, UserData)]
 pub struct Color(pub ratatui_core::style::Color);
 
 impl Color {
@@ -32,5 +32,3 @@ impl FromLua for Color {
 		}))
 	}
 }
-
-impl UserData for Color {}

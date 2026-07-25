@@ -18,6 +18,9 @@ impl<'a> Component<'a> {
 			_ => None,
 		}
 	}
+
+	#[inline]
+	pub fn has_auth(&self) -> bool { matches!(self, Self::ParentDir | Self::Normal(_)) }
 }
 
 impl<'a> From<std::path::Component<'a>> for Component<'a> {

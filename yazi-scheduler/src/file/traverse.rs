@@ -1,8 +1,8 @@
 use std::{collections::VecDeque, fmt::Debug};
 
-use yazi_fs::{FsUrl, cha::Cha, path::skip_url, provider::{DirReader, FileHolder}};
+use yazi_fs::{FsUrl, cha::Cha, engine::{DirReader, FileHolder}, path::skip_url};
 use yazi_shared::{strand::StrandLike, url::{AsUrl, Url, UrlBuf, UrlLike}};
-use yazi_vfs::provider::{self};
+use yazi_vfs::engine::{self};
 
 use crate::{ctx, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInUpload}};
 
@@ -131,13 +131,13 @@ impl Traverse for FileInUpload {
 			self.cha = Some(super::File::cha(self.from(), self.follow(), None).await?)
 		}
 		if self.cache.is_none() {
-			self.cache = self.target.cache();
+			self.cache = self.target.cache_entry();
 		}
 		Ok(self.cha.unwrap())
 	}
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
-		Self { id: self.id, cha: Some(cha), cache: from.cache(), target: from }
+		Self { id: self.id, cha: Some(cha), cache: from.cache_entry(), target: from }
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }
@@ -159,7 +159,8 @@ where
 	E: Fn(String),
 {
 	let cha = ctx!(task, task.init().await)?;
-	if !cha.is_dir() {
+	let follow_symlink = cha.is_link() && task.follow();
+	if !cha.is_dir() || (!follow_symlink && cha.is_indirect()) {
 		return on_file(task, cha).await;
 	}
 
@@ -180,7 +181,7 @@ where
 	}
 
 	while let Some(src) = dirs.pop_front() {
-		let mut it = err!(provider::read_dir(&src).await, "Cannot read directory {src:?}");
+		let mut it = err!(engine::read_dir(&src).await, "Cannot read directory {src:?}");
 
 		let dest = if let Some(root) = root {
 			let s = skip_url(&src, skip);
@@ -198,7 +199,8 @@ where
 				"Cannot get metadata for {from:?}"
 			);
 
-			if cha.is_dir() {
+			let follow_symlink = cha.is_link() && task.follow();
+			if cha.is_dir() && (follow_symlink || !cha.is_indirect()) {
 				dirs.push_back(from);
 				continue;
 			}

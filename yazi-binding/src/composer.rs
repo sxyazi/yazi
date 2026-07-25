@@ -1,5 +1,5 @@
 use hashbrown::HashMap;
-use mlua::{Lua, MetaMethod, UserData, UserDataMethods, Value};
+use mlua::{Lua, LuaString, MetaMethod, UserData, UserDataMethods, Value};
 
 pub type ComposerGet = fn(&Lua, &[u8]) -> mlua::Result<Value>;
 pub type ComposerSet = fn(&Lua, &[u8], Value) -> mlua::Result<Value>;
@@ -24,7 +24,7 @@ where
 	S: Fn(&Lua, &[u8], Value) -> mlua::Result<Value> + 'static,
 {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: mlua::String| {
+		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: LuaString| {
 			let key = key.as_bytes();
 			if let Some(v) = me.cache.get(key.as_ref()) {
 				return Ok(v.clone());
@@ -38,7 +38,7 @@ where
 
 		methods.add_meta_method_mut(
 			MetaMethod::NewIndex,
-			|lua, me, (key, value): (mlua::String, Value)| {
+			|lua, me, (key, value): (LuaString, Value)| {
 				let key = key.as_bytes();
 				let value = (me.set)(lua, key.as_ref(), value)?;
 

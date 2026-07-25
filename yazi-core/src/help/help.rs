@@ -25,7 +25,7 @@ pub struct Help {
 }
 
 impl Help {
-	pub fn r#type(&mut self, key: KeyEvent) -> Result<bool> {
+	pub fn r#type(&mut self, key: &KeyEvent) -> Result<bool> {
 		if !self.input.r#type(key)? {
 			return Ok(false);
 		}

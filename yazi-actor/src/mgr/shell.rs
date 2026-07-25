@@ -2,10 +2,12 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use yazi_config::YAZI;
+use yazi_core::mgr::MgrSnap;
+use yazi_fs::Splatter;
 use yazi_macro::{act, input, succ};
 use yazi_parser::mgr::ShellForm;
 use yazi_proxy::TasksProxy;
-use yazi_scheduler::process::ProcessOpt;
+use yazi_scheduler::process::ShellOpt;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
 
@@ -22,7 +24,7 @@ impl Actor for Shell {
 		act!(mgr:escape_visual, cx)?;
 
 		let cwd = form.cwd.take().unwrap_or_else(|| cx.cwd().clone());
-		let selected: Vec<_> = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
+		let snap = MgrSnap::from(&cx.mgr);
 
 		let input = if form.interactive {
 			Some(input!(
@@ -44,13 +46,11 @@ impl Actor for Shell {
 				return;
 			}
 
-			TasksProxy::open_shell_compat(ProcessOpt {
+			TasksProxy::process_open(ShellOpt {
 				cwd,
-				cmd: form.run.to_string().into(),
-				args: selected,
+				cmd: Splatter::new(snap).splat(&*form.run),
 				block: form.block,
 				orphan: form.orphan,
-				spread: true,
 			});
 		});
 

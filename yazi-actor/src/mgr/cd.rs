@@ -6,12 +6,12 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::YAZI;
 use yazi_core::mgr::CdSource;
 use yazi_dds::Pubsub;
-use yazi_fs::{FilesOp, file::File, path::{clean_url, expand_url}};
+use yazi_fs::{FilesOp, path::{clean_url, expand_url}};
 use yazi_macro::{act, err, input, render, succ};
 use yazi_parser::mgr::CdForm;
 use yazi_proxy::{CmpProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data, url::{AsUrl, UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, provider};
+use yazi_vfs::engine;
 use yazi_widgets::input::InputEvent;
 
 use crate::{Actor, Ctx};
@@ -73,16 +73,16 @@ impl Cd {
 				match result {
 					InputEvent::Submit(s) => {
 						let Ok(url) = UrlBuf::try_from(s).map(expand_url) else { return };
-						let Ok(url) = provider::absolute(&url).await else { return };
+						let Ok(url) = engine::absolute(&url).await else { return };
 						let url = clean_url(url);
 
-						let Ok(file) = File::new(&url).await else { return };
+						let Ok(file) = engine::file(&url).await else { return };
 						if file.is_dir() {
 							return MgrProxy::cd(&url, CdSource::Cd);
 						}
 
-						if let Some(p) = url.parent() {
-							FilesOp::Upserting(p.into(), [(url.urn().into(), file)].into()).emit();
+						if let Some((p, k)) = url.pair2() {
+							FilesOp::Upserting(p.into(), [(k.into(), file)].into()).emit();
 						}
 						MgrProxy::reveal(url);
 					}

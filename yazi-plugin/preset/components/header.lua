@@ -37,8 +37,8 @@ function Header:flags()
 	local finder = self._tab.finder
 
 	local t = {}
-	if cwd.is_search then
-		t[#t + 1] = string.format("search: %s", cwd.domain)
+	if cwd.spec.is_search then
+		t[#t + 1] = string.format("search: %s", cwd.spec.domain)
 	end
 	if filter then
 		t[#t + 1] = string.format("filter: %s", filter)

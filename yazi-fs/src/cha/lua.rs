@@ -48,6 +48,7 @@ impl UserData for Cha {
 		fields.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
 		fields.add_field_method_get("is_orphan", |_, me| Ok(me.is_orphan()));
 		fields.add_field_method_get("is_dummy", |_, me| Ok(me.is_dummy()));
+		fields.add_field_method_get("is_indirect", |_, me| Ok(me.is_indirect()));
 		fields.add_field_method_get("is_block", |_, me| Ok(me.is_block()));
 		fields.add_field_method_get("is_char", |_, me| Ok(me.is_char()));
 		fields.add_field_method_get("is_fifo", |_, me| Ok(me.is_fifo()));
@@ -67,17 +68,17 @@ impl UserData for Cha {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_method("hash", |_, me, long: Option<bool>| {
-			Ok(if long.unwrap_or(false) {
-				format!("{:x}", me.hash_u128())
+		methods.add_method("hash", |lua, me, long: bool| {
+			Ok(if long {
+				lua.create_string(me.hash_u128_str(&mut [0; 26]))
 			} else {
 				Err("Short hash not supported".into_lua_err())?
 			})
 		});
-		methods.add_method("perm", |lua, _me, ()| {
+		methods.add_method("perm", |_lua, _me, ()| {
 			Ok(
 				#[cfg(unix)]
-				lua.create_string(_me.mode.permissions(_me.is_dummy())),
+				_lua.create_string(_me.mode.permissions(_me.is_dummy())),
 				#[cfg(windows)]
 				Ok::<_, mlua::Error>(mlua::Value::Nil),
 			)

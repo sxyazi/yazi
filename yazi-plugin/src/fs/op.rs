@@ -3,7 +3,7 @@ use yazi_codegen::FromLuaOwned;
 use yazi_macro::impl_data_any;
 use yazi_shared::url::UrlBuf;
 
-#[derive(Clone, FromLuaOwned)]
+#[derive(Clone, FromLuaOwned, UserData)]
 pub(super) struct FilesOp(yazi_fs::FilesOp);
 
 impl_data_any!(FilesOp => yazi_fs::FilesOp; from_into_lua = inherit);
@@ -31,10 +31,9 @@ impl FilesOp {
 
 	pub(super) fn done(_: &Lua, t: Table) -> mlua::Result<Self> {
 		let id = t.raw_get("id")?;
-		let cha = t.raw_get("cha")?;
-		let url = t.raw_get("url")?;
+		let file = t.raw_get("file")?;
 
-		Ok(Self(yazi_fs::FilesOp::Done(url, cha, id)))
+		Ok(Self(yazi_fs::FilesOp::Done(file, id)))
 	}
 
 	pub(super) fn size(_: &Lua, t: Table) -> mlua::Result<Self> {
@@ -44,5 +43,3 @@ impl FilesOp {
 		Ok(Self(yazi_fs::FilesOp::Size(url, sizes.pairs().collect::<mlua::Result<_>>()?)))
 	}
 }
-
-impl UserData for FilesOp {}

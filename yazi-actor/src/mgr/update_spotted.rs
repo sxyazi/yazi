@@ -14,7 +14,7 @@ impl Actor for UpdateSpotted {
 
 	fn act(cx: &mut Ctx, mut form: Self::Form) -> Result<Data> {
 		let tab = cx.tab_mut();
-		let Some(hovered) = tab.hovered().map(|h| &h.url) else {
+		let Some(hovered) = tab.hovered_url() else {
 			succ!(tab.spot.reset());
 		};
 

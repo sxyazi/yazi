@@ -3,7 +3,7 @@ local M = {}
 function M:peek(job)
 	local start, url = os.clock(), ya.file_cache(job)
 	if not url or not fs.cha(url) then
-		url = job.file.url
+		url = Url(job.file.path)
 	end
 
 	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
@@ -20,7 +20,7 @@ function M:preload(job)
 		return true
 	end
 
-	return ya.image_precache(job.file.url, cache)
+	return ya.image_precache(Url(job.file.path), cache)
 end
 
 function M:spot(job)
@@ -41,7 +41,7 @@ function M:spot(job)
 end
 
 function M:spot_base(job)
-	local info = ya.image_info(job.file.url)
+	local info = ya.image_info(Url(job.file.path))
 	if not info then
 		return {}
 	end

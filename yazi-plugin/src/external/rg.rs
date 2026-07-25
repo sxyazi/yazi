@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::{FsUrl, file::File};
 use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
-use yazi_vfs::VfsFile;
+use yazi_vfs::engine;
 
 pub struct RgOpt {
 	pub cwd:     UrlBuf,
@@ -19,7 +19,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject.clone())
-		.current_dir(&*opt.cwd.as_url().unified_path())
+		.current_dir(opt.cwd.as_url().working_path())
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())
@@ -42,7 +42,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 					continue;
 				};
 
-				if let Ok(file) = File::new(url).await {
+				if let Ok(file) = engine::file(url).await {
 					tx.send(file).ok();
 				}
 				current_file = file_path.clone();
@@ -55,7 +55,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		if current_occurrences.len() > 0 {
 			match build_file_url(opt.cwd, opt.subject, &current_file, &current_occurrences) {
 				Some(url) => {
-					if let Ok(file) = File::new(url).await {
+					if let Ok(file) = engine::file(url).await {
 						tx.send(file).ok();
 					}
 				}

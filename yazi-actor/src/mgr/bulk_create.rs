@@ -4,16 +4,16 @@ use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
-use yazi_fs::{FilesOp, Splatter, file::File, provider::{Provider, local::Local}};
+use yazi_fs::{FilesOp, Splatter, engine::{Engine, local::Local}};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
-use yazi_scheduler::{AppProxy, NotifyProxy};
-use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
+use yazi_shared::{data::Data, strand::Strand, url::{UrlBuf, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::{TTY, sequence::EraseScreen};
-use yazi_vfs::{VfsFile, provider};
+use yazi_vfs::engine;
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -31,7 +31,7 @@ impl Actor for BulkCreate {
 		let cwd = cx.cwd().clone();
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk-create");
-			provider::create_new(&tmp).await?;
+			let file = engine::create_new(&tmp).await?.file().await?;
 
 			defer! {
 				let tmp = tmp.clone();
@@ -40,13 +40,12 @@ impl Actor for BulkCreate {
 				});
 			}
 
-			TasksProxy::process_exec(
-				cwd.clone(),
-				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
-				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
-				opener.block,
-				opener.orphan,
-			)
+			TasksProxy::process_exec(ShellOpt {
+				cwd:    cwd.clone(),
+				cmd:    Splatter::new(&[file]).splat(&opener.run),
+				block:  opener.block,
+				orphan: opener.orphan,
+			})
 			.await;
 
 			let _permit = Permit::new(YIELD_TO_SUBPROCESS.acquire().await.unwrap(), AppProxy::resume());
@@ -77,17 +76,17 @@ impl BulkCreate {
 			};
 
 			let result: io::Result<()> = if entry.is_dir {
-				provider::create_dir_all(&dist).await
+				engine::create_dir_all(&dist).await
 			} else if let Some(parent) = dist.parent() {
-				provider::create_dir_all(parent).await.ok();
-				provider::create_new(&dist).await.map(|_| ())
+				engine::create_dir_all(parent).await.ok();
+				engine::create_new(&dist).await.map(|_| ())
 			} else {
 				Err(io::Error::other("No parent directory"))
 			};
 
 			if let Err(e) = result {
 				failed.push((entry, e.into()));
-			} else if let Ok(f) = File::new(dist).await {
+			} else if let Ok(f) = engine::file(dist).await {
 				succeeded.push(f);
 			} else {
 				failed.push((entry, anyhow!("Failed to retrieve file info")));

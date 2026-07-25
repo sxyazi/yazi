@@ -1,13 +1,13 @@
 use mlua::Table;
-use yazi_fs::file::FileRef;
+use yazi_fs::{cha::Cha, file::FileRef};
 use yazi_macro::impl_data_any;
-use yazi_shared::id::Id;
+use yazi_shared::{id::Id, url::UrlBuf};
 use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug)]
 pub struct SpotLock {
-	pub url:  yazi_shared::url::UrlBuf,
-	pub cha:  yazi_fs::cha::Cha,
+	pub url:  UrlBuf,
+	pub cha:  Cha,
 	pub mime: String,
 
 	pub id:   Id,

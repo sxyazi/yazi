@@ -46,6 +46,6 @@ impl Drop for Permit {
 
 impl UserData for Permit {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_mut("drop", |_, mut me, ()| async move { Ok(me.dropping().await) });
+		methods.add_async_method_once("drop", |_, mut me, ()| async move { Ok(me.dropping().await) });
 	}
 }

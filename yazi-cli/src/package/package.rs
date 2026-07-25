@@ -2,7 +2,7 @@ use std::{path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use yazi_fs::{Xdg, provider::{Provider, local::Local}};
+use yazi_fs::{Xdg, engine::{Engine, local::Local}};
 use yazi_macro::{ok_or_not_found, outln};
 
 use super::Dependency;

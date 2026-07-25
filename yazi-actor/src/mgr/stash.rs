@@ -13,7 +13,7 @@ impl Actor for Stash {
 	const NAME: &str = "stash";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		if form.target.is_absolute() && form.target.is_internal() {
+		if form.target.is_absolute() && !form.target.is_search() {
 			cx.tab_mut().backstack.push(form.target.as_url());
 		}
 

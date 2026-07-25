@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{AsPath, AsPathView, PathDyn, SetNameError}, scheme::SchemeKind, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{DynPath, PathDyn, PathView, SetNameError}, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct LocBuf<P = std::path::PathBuf> {
@@ -25,18 +25,18 @@ impl AsRef<std::path::Path> for LocBuf<std::path::PathBuf> {
 	fn as_ref(&self) -> &std::path::Path { self.inner.as_ref() }
 }
 
-impl<T> AsPath for LocBuf<T>
+impl<T> DynPath for LocBuf<T>
 where
-	T: LocBufAble + AsPath,
+	T: LocBufAble + DynPath,
 {
-	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
+	fn dyn_path(&self) -> PathDyn<'_> { self.inner.dyn_path() }
 }
 
-impl<T> AsPath for &LocBuf<T>
+impl<T> DynPath for &LocBuf<T>
 where
-	T: LocBufAble + AsPath,
+	T: LocBufAble + DynPath,
 {
-	fn as_path(&self) -> PathDyn<'_> { self.inner.as_path() }
+	fn dyn_path(&self) -> PathDyn<'_> { self.inner.dyn_path() }
 }
 
 impl<P> Ord for LocBuf<P>
@@ -59,7 +59,7 @@ where
 impl<P> Hash for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
 }
@@ -67,7 +67,7 @@ where
 impl<P> Debug for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl + Debug,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		f.debug_struct("LocBuf")
@@ -81,7 +81,7 @@ where
 impl<P> From<P> for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn from(path: P) -> Self {
 		let Loc { inner, uri, urn, _phantom } = Loc::bare(&path);
@@ -100,7 +100,7 @@ impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<std::path::PathBuf> {
 impl<P> LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	pub fn new<'a, S>(path: P, base: S, trail: S) -> Self
 	where
@@ -146,7 +146,7 @@ where
 		Self { inner: loc.inner, uri, urn }
 	}
 
-	pub fn saturated(path: P, kind: SchemeKind) -> Self {
+	pub fn saturated(path: P, kind: AuthKind) -> Self {
 		let loc = Self::from(path);
 		let Loc { inner, uri, urn, _phantom } = Loc::saturated(&loc.inner, kind);
 
@@ -157,7 +157,7 @@ where
 	#[inline]
 	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed<'a>> {
 		Loc {
-			inner:    self.inner.as_path_view(),
+			inner:    self.inner.path_view(),
 			uri:      self.uri,
 			urn:      self.urn,
 			_phantom: PhantomData,
@@ -223,7 +223,7 @@ where
 impl<P> LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
+	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	#[inline]
 	pub fn uri(&self) -> P::Borrowed<'_> { self.as_loc().uri() }
@@ -332,18 +332,18 @@ mod tests {
 			// Regular
 			("/", "a", "/a"),
 			("/a/b", "c", "/a/c"),
-			// Archive
-			("archive:////", "a.zip", "archive:////a.zip"),
-			("archive:////a.zip/b", "c", "archive:////a.zip/c"),
-			("archive://:2//a.zip/b", "c", "archive://:2//a.zip/c"),
-			("archive://:2:1//a.zip/b", "c", "archive://:2:1//a.zip/c"),
+			// Mount
+			("test-mount://7z//", "a.zip", "test-mount://7z//a.zip"),
+			("test-mount://7z//a.zip/b", "c", "test-mount://7z//a.zip/c"),
+			("test-mount://7z:2//a.zip/b", "c", "test-mount://7z:2//a.zip/c"),
+			("test-mount://7z:2:1//a.zip/b", "c", "test-mount://7z:2:1//a.zip/c"),
 			// Empty
 			("/a", "", "/"),
-			("archive:////a.zip", "", "archive:////"),
-			("archive:////a.zip/b", "", "archive:////a.zip"),
-			("archive://:1:1//a.zip", "", "archive:////"),
-			("archive://:2//a.zip/b", "", "archive://:1//a.zip"),
-			("archive://:2:2//a.zip/b", "", "archive://:1:1//a.zip"),
+			("test-mount://7z//a.zip", "", "test-mount://7z//"),
+			("test-mount://7z//a.zip/b", "", "test-mount://7z//a.zip"),
+			("test-mount://7z:1:1//a.zip", "", "test-mount://7z//"),
+			("test-mount://7z:2//a.zip/b", "", "test-mount://7z:1//a.zip"),
+			("test-mount://7z:2:2//a.zip/b", "", "test-mount://7z:1:1//a.zip"),
 		];
 
 		for (input, name, expected) in cases {

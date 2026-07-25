@@ -1,7 +1,7 @@
 use std::{borrow::Cow, iter};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, ObjectLike, Table, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, ObjectLike, Table, Value};
 use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use yazi_binding::{Permit, PermitRef, elements::{Line, Rect, Span, Wrap}, runtime};
@@ -12,7 +12,7 @@ use yazi_shim::ratatui::LineIter;
 use yazi_term::YIELD_TO_SUBPROCESS;
 
 pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|_, s: mlua::String| {
+	let f = lua.create_function(|_, s: LuaString| {
 		let layout = LAYOUT.get();
 		Ok(match &*s.as_bytes() {
 			b"current" => Rect(layout.current),
@@ -46,7 +46,7 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 }
 
 pub(super) fn lines(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|lua, (s, opts): (mlua::String, Table)| {
+	let f = lua.create_function(|lua, (s, opts): (LuaString, Table)| {
 		let b = s.as_bytes();
 		let s = &*String::from_utf8_lossy(&b);
 
@@ -74,7 +74,7 @@ pub(super) fn lines(lua: &Lua) -> mlua::Result<Value> {
 }
 
 pub(super) fn printable(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|lua, s: mlua::String| {
+	let f = lua.create_function(|lua, s: LuaString| {
 		Ok(match replace_to_printable(&s.as_bytes(), false, 1, true) {
 			Cow::Borrowed(_) => s,
 			Cow::Owned(new) => lua.create_external_string(new)?,
@@ -86,7 +86,7 @@ pub(super) fn printable(lua: &Lua) -> mlua::Result<Value> {
 
 pub(super) fn redraw(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_function(|lua, c: Table| {
-		let id: mlua::String = c.get("_id")?;
+		let id: LuaString = c.get("_id")?;
 
 		let mut layout = LAYOUT.get();
 		match &*id.as_bytes() {
@@ -135,7 +135,7 @@ pub(super) fn truncate(lua: &Lua) -> mlua::Result<Value> {
 		(idx, last, adv > max)
 	}
 
-	let f = lua.create_function(|lua, (s, t): (mlua::String, Table)| {
+	let f = lua.create_function(|lua, (s, t): (LuaString, Table)| {
 		let b = s.as_bytes();
 		if b.is_empty() {
 			return Ok(s);

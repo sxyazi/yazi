@@ -1,11 +1,11 @@
 use notify::Result;
 use tokio::sync::mpsc;
 
-use crate::{Reporter, WATCHED, Watchee, local::{self, LINKED, Linked}, remote};
+use crate::{Reporter, WATCHED, Watchee, local::{self, LINKED, Linked}, r#virtual};
 
 pub(crate) struct Backend {
 	local:               local::Local,
-	remote:              remote::Remote,
+	r#virtual:           r#virtual::Virtual,
 	pub(super) reporter: Reporter,
 }
 
@@ -19,12 +19,12 @@ impl Backend {
 		});
 
 		let (local_tx, local_rx) = mpsc::unbounded_channel();
-		let (remote_tx, remote_rx) = mpsc::unbounded_channel();
-		let reporter = Reporter { local_tx, remote_tx };
+		let (virtual_tx, virtual_rx) = mpsc::unbounded_channel();
+		let reporter = Reporter { local_tx, virtual_tx };
 
 		Self {
 			local: local::Local::serve(local_rx, reporter.clone()),
-			remote: remote::Remote::serve(remote_rx, reporter.clone()),
+			r#virtual: r#virtual::Virtual::serve(virtual_rx),
 			reporter,
 		}
 	}
@@ -32,14 +32,14 @@ impl Backend {
 	pub(super) fn watch(&mut self, watchee: &mut Watchee) -> Result<()> {
 		match watchee {
 			Watchee::Local(..) => self.local.watch(watchee),
-			Watchee::Remote(_) => self.remote.watch(watchee),
+			Watchee::Virtual(_) => self.r#virtual.watch(watchee),
 		}
 	}
 
 	pub(super) fn unwatch(&mut self, watchee: &Watchee) -> Result<()> {
 		match watchee {
 			Watchee::Local(..) => self.local.unwatch(watchee),
-			Watchee::Remote(_) => self.remote.unwatch(watchee),
+			Watchee::Virtual(_) => self.r#virtual.unwatch(watchee),
 		}
 	}
 

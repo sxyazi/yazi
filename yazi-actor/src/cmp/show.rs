@@ -4,7 +4,7 @@ use anyhow::Result;
 use yazi_core::cmp::CmpItem;
 use yazi_macro::{render, succ};
 use yazi_parser::cmp::ShowForm;
-use yazi_shared::{data::Data, path::{AsPath, PathDyn}, strand::StrandLike};
+use yazi_shared::{data::Data, path::{DynPath, PathDyn}, strand::StrandLike};
 
 use crate::{Actor, Ctx};
 
@@ -30,7 +30,7 @@ impl Actor for Show {
 			succ!();
 		};
 
-		cmp.matches = Self::match_candidates(opt.word.as_path(), cache);
+		cmp.matches = Self::match_candidates(opt.word.dyn_path(), cache);
 		if cmp.matches.is_empty() {
 			succ!(render!(mem::replace(&mut cmp.visible, false)));
 		}

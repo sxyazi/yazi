@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{Function, Lua};
+use mlua::{Function, Lua, LuaString};
 use twox_hash::XxHash3_128;
 use yazi_shim::RFC_3986;
 use yazi_widgets::CLIPBOARD;
@@ -9,13 +9,13 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn hash(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(move |_, s: mlua::String| async move {
+		lua.create_async_function(move |_, s: LuaString| async move {
 			Ok(format!("{:x}", XxHash3_128::oneshot(&s.as_bytes())))
 		})
 	}
 
 	pub(super) fn quote(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (s, unix): (mlua::String, Option<bool>)| {
+		lua.create_function(|lua, (s, unix): (LuaString, Option<bool>)| {
 			let b = s.as_bytes();
 			let s = match unix {
 				Some(true) => yazi_shared::shell::unix::escape_os_bytes(&b),
@@ -38,7 +38,7 @@ impl Utils {
 	}
 
 	pub(super) fn percent_decode(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, s: mlua::String| {
+		lua.create_function(|lua, s: LuaString| {
 			let b = s.as_bytes();
 			match percent_encoding::percent_decode(&b).into() {
 				Cow::Borrowed(_) => Ok(s),
@@ -48,7 +48,7 @@ impl Utils {
 	}
 
 	pub(super) fn percent_encode(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, s: mlua::String| {
+		lua.create_function(|lua, s: LuaString| {
 			let b = s.as_bytes();
 			match percent_encoding::percent_encode(&b, RFC_3986).into() {
 				Cow::Borrowed(_) => Ok(s),

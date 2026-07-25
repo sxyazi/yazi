@@ -1,13 +1,13 @@
 #[macro_export]
 macro_rules! emit {
 	(Call($action:expr)) => {
-		yazi_shared::event::Event::Call(yazi_shared::event::ActionCow::from($action)).emit();
+		yazi_shared::event::Event::Call(yazi_shared::event::ActionCow::from($action)).emit()
 	};
 	(Seq($actions:expr)) => {
-		yazi_shared::event::Event::Seq($actions).emit();
+		yazi_shared::event::Event::Seq($actions).emit()
 	};
 	($event:ident) => {
-		yazi_shared::event::Event::$event.emit();
+		yazi_shared::event::Event::$event.emit()
 	};
 }
 

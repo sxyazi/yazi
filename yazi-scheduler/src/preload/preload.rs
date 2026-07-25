@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
-use yazi_fs::FsHash64;
+use yazi_fs::{FsHash64, file::FileSig};
 use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
 use yazi_shared::id::Id;
 
@@ -35,7 +35,7 @@ impl Preload {
 	}
 
 	pub(crate) async fn preload(&self, task: PreloadIn) -> Result<(), PreloadOut> {
-		let hash = task.target.hash_u64();
+		let hash = FileSig(&task.target).hash_u64();
 
 		let mut rx =
 			RUNNER.preload(PreloadJob { preloader: task.preloader.clone(), file: task.target }).await;

@@ -59,7 +59,7 @@ libc              = { workspace = true }
 signal-hook-tokio = { version = "0.4.0", features = [ "futures-v0_3" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
-tikv-jemallocator = "0.6.1"
+tikv-jemallocator = "0.7.0"
 
 [[bin]]
 name = "yazi"

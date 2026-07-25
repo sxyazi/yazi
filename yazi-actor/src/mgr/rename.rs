@@ -6,7 +6,7 @@ use yazi_macro::{act, err, input, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{data::Data, id::Id, url::{UrlBuf, UrlLike}};
-use yazi_vfs::{VfsFile, provider};
+use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 use yazi_widgets::input::InputEvent;
 
@@ -66,30 +66,30 @@ impl Actor for Rename {
 
 impl Rename {
 	async fn r#do(tab: Id, old: UrlBuf, new: UrlBuf) -> Result<()> {
-		let Some((old_p, old_n)) = old.pair() else { return Ok(()) };
-		let Some(_) = new.pair() else { return Ok(()) };
+		let Some((old_p, old_k)) = old.pair2() else { return Ok(()) };
+		let Some(_) = new.pair2() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
-		let overwritten = provider::casefold(&new).await;
-		provider::rename(&old, &new).await?;
+		let overwritten = engine::casefold(&new).await;
+		engine::rename(&old, &new).await?;
 
 		if let Ok(u) = overwritten
 			&& u != new
-			&& let Some((parent, urn)) = u.pair()
+			&& let Some((parent, key)) = u.pair2()
 		{
-			ok_or_not_found!(provider::rename(&u, &new).await);
-			FilesOp::Deleting(parent.to_owned(), [urn.into()].into()).emit();
+			ok_or_not_found!(engine::rename(&u, &new).await);
+			FilesOp::Deleting(parent.to_owned(), [key.into()].into()).emit();
 		}
 
-		let new = provider::casefold(&new).await?;
-		let Some((new_p, new_n)) = new.pair() else { return Ok(()) };
+		let new = engine::casefold(&new).await?;
+		let Some((new_p, new_k)) = new.pair2() else { return Ok(()) };
 
-		let file = File::new(&new).await?;
+		let file = engine::file(&new).await?;
 		if new_p == old_p {
-			FilesOp::Upserting(old_p.into(), [(old_n.into(), file)].into()).emit();
+			FilesOp::Upserting(old_p.into(), [(old_k.into(), file)].into()).emit();
 		} else {
-			FilesOp::Deleting(old_p.into(), [old_n.into()].into()).emit();
-			FilesOp::Upserting(new_p.into(), [(new_n.into(), file)].into()).emit();
+			FilesOp::Deleting(old_p.into(), [old_k.into()].into()).emit();
+			FilesOp::Upserting(new_p.into(), [(new_k.into(), file)].into()).emit();
 		}
 
 		MgrProxy::reveal(&new);
@@ -103,7 +103,7 @@ impl Rename {
 		};
 
 		Ok(
-			provider::must_identical(old, new).await
+			engine::must_identical(old, new).await
 				|| ConfirmProxy::show(ConfirmCfg::overwrite(&file)).await,
 		)
 	}

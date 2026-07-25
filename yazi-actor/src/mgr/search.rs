@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::YAZI;
 use yazi_core::mgr::{CdSource, SearchVia};
-use yazi_fs::{FilesOp, cha::Cha};
+use yazi_fs::{FilesOp, cha::ChaType, file::File};
 use yazi_macro::{act, input, succ};
 use yazi_parser::{VoidForm, mgr::SearchForm};
 use yazi_plugin::external;
@@ -89,7 +89,7 @@ impl Actor for SearchDo {
 			while let Some(chunk) = rx.next().await {
 				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
-			FilesOp::Done(cwd, Cha::default(), ticket).emit();
+			FilesOp::Done(File::from_dummy(cwd, Some(ChaType::Dir)), ticket).emit();
 
 			Ok(())
 		}));

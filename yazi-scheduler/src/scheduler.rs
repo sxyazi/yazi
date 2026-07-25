@@ -2,10 +2,10 @@ use std::{ops::Deref, sync::Arc, time::Duration};
 
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
-use yazi_fs::FsHash64;
+use yazi_fs::{FsHash64, file::FileSig};
 use yazi_shared::{CompletionToken, Throttle, id::Id, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOpt}, size::SizeIn};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
 pub struct Scheduler {
 	pub worker:   Worker,
@@ -78,7 +78,7 @@ impl Scheduler {
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let follow = follow || !from.scheme().covariant(to.scheme());
+		let follow = follow || !from.auth().same_service(to.auth());
 		let mut r#in = FileInCopy { id: Id::ZERO, from, to, force, cha: None, follow, retry: 0 };
 
 		self.add(&mut r#in, |_| ());
@@ -109,7 +109,7 @@ impl Scheduler {
 		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, force, cha: None, follow };
 		self.add(&mut r#in, |_| ());
 
-		if !r#in.from.scheme().covariant(r#in.to.scheme()) {
+		if !r#in.from.auth().same_service(r#in.to.auth()) {
 			return self
 				.ops
 				.out(r#in.id, FileOutHardlink::Fail("Cannot hardlink cross filesystem".to_owned()));
@@ -204,7 +204,7 @@ impl Scheduler {
 	}
 
 	pub fn preload_paged(&self, preloader: PreloaderArc, target: &yazi_fs::file::File) {
-		let hook = HookInPreload::new(preloader.idx, target.hash_u64());
+		let hook = HookInPreload::new(preloader.idx, FileSig(target).hash_u64());
 		let mut r#in = PreloadIn { id: Id::ZERO, preloader, target: target.clone() };
 
 		self.add_hooked(&mut r#in, hook, |_| ());
@@ -227,20 +227,14 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(&self, opt: ProcessOpt) -> CompletionToken {
+	pub fn process_open(&self, opt: ShellOpt) -> CompletionToken {
 		let mut r#in: ProcessIn = if opt.block {
-			ProcessInBlock { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }.into()
+			ProcessInBlock { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		} else if opt.orphan {
-			ProcessInOrphan { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }.into()
+			ProcessInOrphan { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		} else {
-			ProcessInBg {
-				id:   Id::ZERO,
-				cwd:  opt.cwd,
-				cmd:  opt.cmd,
-				args: opt.args,
-				done: CompletionToken::default(),
-			}
-			.into()
+			ProcessInBg { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, done: CompletionToken::default() }
+				.into()
 		};
 
 		let done = match &mut r#in {

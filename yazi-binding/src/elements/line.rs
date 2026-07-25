@@ -1,7 +1,7 @@
 use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
@@ -31,7 +31,7 @@ impl Line {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, line): (Table, Self)| Ok(line))?;
 
-		let parse = lua.create_function(|_, code: mlua::String| {
+		let parse = lua.create_function(|_, code: LuaString| {
 			let code = code.as_bytes();
 			let Some(line) = code.split_inclusive(|&b| b == b'\n').next() else {
 				return Ok(Self::default());

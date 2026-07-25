@@ -1,11 +1,11 @@
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_scheduler::process::ProcessOpt;
+use yazi_scheduler::process::ShellOpt;
 use yazi_shared::event::{ActionCow, Replier};
 
 #[derive(Clone, Debug)]
 pub struct ProcessOpenForm {
-	pub opt:     ProcessOpt,
+	pub opt:     ShellOpt,
 	pub replier: Option<Replier>,
 }
 

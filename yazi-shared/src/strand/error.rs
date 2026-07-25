@@ -12,3 +12,7 @@ pub enum StrandError {
 impl From<StrandError> for std::io::Error {
 	fn from(err: StrandError) -> Self { Self::other(err) }
 }
+
+impl From<StrandError> for mlua::Error {
+	fn from(err: StrandError) -> Self { Self::external(err) }
+}

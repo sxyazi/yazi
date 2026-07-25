@@ -1,7 +1,7 @@
 use std::{ops::DerefMut, process::ExitStatus, time::Duration};
 
 use futures::future::try_join3;
-use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Table, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, IntoLua, IntoLuaMulti, LuaString, Table, UserData, UserDataMethods, Value};
 use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
 
 use super::Status;
@@ -133,7 +133,7 @@ impl UserData for Child {
 			}
 		});
 
-		methods.add_async_method_mut("write_all", |lua, mut me, src: mlua::String| async move {
+		methods.add_async_method_mut("write_all", |lua, mut me, src: LuaString| async move {
 			let Some(stdin) = &mut me.stdin else {
 				return Err("stdin is not piped".into_lua_err());
 			};
@@ -158,8 +158,8 @@ impl UserData for Child {
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
-		methods.add_async_function("wait_with_output", |lua, ud: AnyUserData| async move {
-			match ud.take::<Self>()?.wait_with_output().await {
+		methods.add_async_method_once("wait_with_output", |lua, me, ()| async move {
+			match me.wait_with_output().await {
 				Ok(output) => Output::new(output).into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}

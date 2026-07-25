@@ -1,17 +1,16 @@
-use std::mem;
+use std::{mem, ops::Deref};
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{Entries, FilesOp, FolderStage, cha::Cha, file::File};
+use yazi_fs::{Entries, FilesOp, FolderStage, cha::ChaType, file::File};
 use yazi_macro::err;
-use yazi_shared::{id::Id, path::{AsPath, PathBufDyn, PathDyn}, url::UrlBuf};
+use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_widgets::{Scrollable, Step};
 
 use crate::MgrProxy;
 
 pub struct Folder {
-	pub url:     UrlBuf,
-	pub cha:     Cha,
+	pub file:    File,
 	pub entries: Entries,
 	pub stage:   FolderStage,
 
@@ -22,11 +21,16 @@ pub struct Folder {
 	pub trace: Option<PathBufDyn>,
 }
 
+impl Deref for Folder {
+	type Target = File;
+
+	fn deref(&self) -> &Self::Target { &self.file }
+}
+
 impl Default for Folder {
 	fn default() -> Self {
 		Self {
-			url:     Default::default(),
-			cha:     Default::default(),
+			file:    Default::default(),
 			entries: Entries::new(YAZI.mgr.show_hidden.get()),
 			stage:   Default::default(),
 			offset:  Default::default(),
@@ -38,34 +42,36 @@ impl Default for Folder {
 }
 
 impl<T: Into<UrlBuf>> From<T> for Folder {
-	fn from(value: T) -> Self { Self { url: value.into(), ..Default::default() } }
+	fn from(value: T) -> Self {
+		Self { file: File::from_dummy(value, Some(ChaType::Dir)), ..Default::default() }
+	}
 }
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let (stage, revision) = (self.stage.clone(), self.entries.revision);
 		match op {
-			FilesOp::Full(_, _, cha) => {
-				(self.cha, self.stage) = (cha, FolderStage::Loaded);
+			FilesOp::Full(ref file, _) => {
+				(self.file, self.stage) = (file.clone(), FolderStage::Loaded);
 			}
 			FilesOp::Part(_, ref files, _) if files.is_empty() => {
-				(self.cha, self.stage) = (Cha::default(), FolderStage::Loading);
+				self.stage = FolderStage::Loading;
 			}
 			FilesOp::Part(_, _, ticket) if ticket == self.entries.ticket() => {
 				self.stage = FolderStage::Loading;
 			}
-			FilesOp::Done(_, cha, ticket) if ticket == self.entries.ticket() => {
-				(self.cha, self.stage) = (cha, FolderStage::Loaded);
+			FilesOp::Done(ref file, ticket) if ticket == self.entries.ticket() => {
+				(self.file, self.stage) = (file.clone(), FolderStage::Loaded);
 			}
 			FilesOp::IOErr(_, ref err) => {
-				(self.cha, self.stage) = (Cha::default(), FolderStage::Failed(err.clone()));
+				self.stage = FolderStage::Failed(err.clone());
 			}
 			_ => {}
 		}
 
 		let mut deleted = vec![];
 		match op {
-			FilesOp::Full(_, files, _) => self.entries.update_full(files),
+			FilesOp::Full(_, files) => self.entries.update_full(files),
 			FilesOp::Part(_, files, ticket) => self.entries.update_part(files, ticket),
 			FilesOp::Done(..) => {}
 			FilesOp::Size(_, sizes) => self.entries.update_size(sizes),
@@ -104,24 +110,26 @@ impl Folder {
 		b
 	}
 
-	pub fn hover(&mut self, urn: PathDyn) -> bool {
-		if self.hovered().map(|h| h.urn()) == Some(urn) {
+	pub fn hover(&mut self, key: PathDyn) -> bool {
+		if key.is_empty() {
+			return self.arrow(0);
+		} else if self.hovered().map(|h| h.entry_key()) == Some(key) {
 			return self.arrow(0);
 		}
 
-		let new = self.entries.position(urn).unwrap_or(self.cursor) as isize;
+		let new = self.entries.position(key).unwrap_or(self.cursor) as isize;
 		let b = self.arrow(new - self.cursor as isize);
 
 		self.retrace();
 		b
 	}
 
-	pub fn repos(&mut self, urn: Option<PathDyn>) -> bool {
-		if let Some(u) = urn {
-			self.hover(u)
-		} else if let Some(u) = self.trace.take() {
-			let b = self.hover(u.as_path());
-			self.trace = Some(u);
+	pub fn repos(&mut self, key: Option<PathDyn>) -> bool {
+		if let Some(k) = key {
+			self.hover(k)
+		} else if let Some(k) = self.trace.take() {
+			let b = self.hover(k.dyn_path());
+			self.trace = Some(k);
 			b
 		} else {
 			self.arrow(0)
@@ -129,7 +137,7 @@ impl Folder {
 	}
 
 	pub fn retrace(&mut self) {
-		self.trace = self.hovered().map(|h| h.urn().into()).or(self.trace.take());
+		self.trace = self.hovered().map(|h| h.entry_key().into()).or(self.trace.take());
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
@@ -168,6 +176,9 @@ impl Folder {
 
 	#[inline]
 	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.entries.get_mut(self.cursor) }
+
+	#[inline]
+	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.hovered().map(|f| &f.url) }
 
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.entries.len();

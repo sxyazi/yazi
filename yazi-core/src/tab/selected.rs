@@ -133,7 +133,7 @@ impl Selected {
 	}
 
 	pub fn apply_op(&mut self, op: &FilesOp) {
-		let (removal, addition) = op.diff_recoverable(|u| self.contains(u));
+		let (removal, addition) = op.diff_recoverable(self.urls());
 		if !removal.is_empty() {
 			self.remove_many(&removal);
 		}
@@ -188,6 +188,12 @@ mod tests {
 		assert!(!s.remove(Path::new("/a/c")));
 		assert!(s.remove(Path::new("/a/b")));
 		assert!(!s.remove(Path::new("/a/b")));
+		assert!(s.inner.is_empty());
+		assert!(s.parents.is_empty());
+
+		// Relative path with an empty parent (root)
+		assert!(s.add(f("a")));
+		assert!(s.remove(Path::new("a")));
 		assert!(s.inner.is_empty());
 		assert!(s.parents.is_empty());
 	}

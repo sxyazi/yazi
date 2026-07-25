@@ -2,7 +2,7 @@ use futures::executor::block_on;
 use hashbrown::HashSet;
 use yazi_fs::{CWD, path::clean_url};
 use yazi_shared::{strand::StrandBuf, url::{UrlBuf, UrlLike}};
-use yazi_vfs::provider;
+use yazi_vfs::engine;
 
 #[derive(Debug, Default)]
 pub struct Boot {
@@ -22,7 +22,7 @@ impl Boot {
 		async fn go(entry: &UrlBuf) -> (UrlBuf, StrandBuf) {
 			let mut entry = clean_url(entry);
 
-			if let Ok(u) = provider::absolute(&entry).await
+			if let Ok(u) = engine::absolute(&entry).await
 				&& u.is_owned()
 			{
 				entry = u.into_owned();
@@ -32,7 +32,7 @@ impl Boot {
 				return (entry, Default::default());
 			};
 
-			if provider::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
+			if engine::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
 				(parent.into(), child.into())
 			} else {
 				(entry, Default::default())

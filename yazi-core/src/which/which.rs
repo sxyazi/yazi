@@ -17,6 +17,10 @@ pub struct Which {
 
 impl Which {
 	pub fn r#type(&mut self, key: Key) -> bool {
+		if key.code.is_modifier() {
+			return false;
+		}
+
 		self.cands.retain(|c| c.on.len() > self.times && c.on[self.times] == key);
 		self.times += 1;
 

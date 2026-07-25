@@ -1,8 +1,7 @@
 use std::str::SplitWhitespace;
 
-use base64::Engine;
+use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD_INDIFFERENT};
 use strum::{FromRepr, IntoStaticStr};
-use yazi_shim::BASE64_SANE;
 
 use crate::parser::StateOsc72;
 
@@ -195,7 +194,7 @@ impl DndEvent {
 			}),
 			b'r' => Self::DropArrive(DndDropArrive {
 				idx:  s.x?.try_into().ok()?,
-				data: BASE64_SANE.decode(&s.payload).ok()?,
+				data: STANDARD_NO_PAD_INDIFFERENT.decode(&s.payload).ok()?,
 			}),
 			b'R' => {
 				let (name, desc) = parse_error(s.payload)?;

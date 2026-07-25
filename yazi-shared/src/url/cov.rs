@@ -34,7 +34,7 @@ impl Hash for UrlCov<'_> {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.0.loc().hash(state);
 		if self.0.kind().is_virtual() {
-			self.0.scheme().hash(state);
+			self.0.auth().hash(state);
 		}
 	}
 }

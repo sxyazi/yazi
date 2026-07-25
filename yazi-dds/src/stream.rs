@@ -1,7 +1,7 @@
 use std::{io, path::PathBuf};
 
 use tokio::{io::{AsyncBufReadExt, BufReader, Lines, ReadHalf, WriteHalf}, sync::OnceCell};
-use yazi_fs::{Xdg, create_owned_dir, provider::{Provider, local::Local}};
+use yazi_fs::{Xdg, create_owned_dir, engine::{Engine, local::Local}};
 
 pub struct Stream;
 
