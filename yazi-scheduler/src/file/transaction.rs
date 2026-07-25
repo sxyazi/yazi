@@ -34,7 +34,7 @@ impl Transaction {
 		let url = url.as_url();
 
 		let cha = ok_or_not_found!(engine::symlink_metadata(url).await, return Ok(()));
-		if cha.is_link() {
+		if cha.is_indirect() {
 			engine::rename(Self::tmp(url).await?, url).await?;
 		} else if !cha.contains(ChaMode::U_WRITE) {
 			engine::set_attrs(url, Attrs::mode(cha.mode | ChaMode::U_WRITE)).await?;

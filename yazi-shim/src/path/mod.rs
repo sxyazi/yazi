@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(separator);
+yazi_macro::mod_flat!(separator traits);

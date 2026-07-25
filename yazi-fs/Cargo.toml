@@ -12,6 +12,9 @@ rust-version.workspace = true
 [lints]
 workspace = true
 
+[build-dependencies]
+cfg_aliases = "0.2.2"
+
 [dependencies]
 yazi-binding = { path = "../yazi-binding", version = "26.5.6" }
 yazi-ffi     = { path = "../yazi-ffi", version = "26.5.6" }
@@ -45,8 +48,11 @@ typed-path       = { workspace = true }
 [target."cfg(unix)".dependencies]
 uzers = { workspace = true }
 
+[target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
+percent-encoding = { workspace = true }
+
 [target.'cfg(windows)'.dependencies]
-windows     = { version = "0.62.2", features = [ "Win32_Foundation", "Win32_Storage_EnhancedStorage", "Win32_System_Com_StructuredStorage", "Win32_System_SystemServices", "Win32_UI_Shell_PropertiesSystem" ] }
+windows     = { version = "0.62.2", features = [ "Win32_Foundation", "Win32_Storage_EnhancedStorage", "Win32_System_Com_StructuredStorage", "Win32_System_SystemServices", "Win32_System_Variant", "Win32_UI_Shell_PropertiesSystem" ] }
 windows-sys = { version = "0.61.2", features = [ "Win32_Storage_FileSystem" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]

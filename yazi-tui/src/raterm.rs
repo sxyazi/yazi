@@ -48,7 +48,8 @@ impl Raterm {
 			If(TMUX.get(), EnterAlternateScreen),
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
-				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES,
+				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
+				| PushKeyboardFlags::REPORT_ASSOCIATED_TEXT,
 			EnableDrag(""),
 			EnableDrop(&["text/uri-list"]),
 			If(opt.mouse, EnableMouseCapture),

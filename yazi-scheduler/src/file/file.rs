@@ -43,7 +43,7 @@ impl File {
 				_ => Ok(()),
 			},
 			async |task, cha| {
-				Ok(if cha.is_orphan() || (cha.is_link() && !task.follow) {
+				Ok(if cha.is_orphan() || (cha.is_indirect() && !task.follow) {
 					self.ops.out(id, FileOutCopy::New(0));
 					self.requeue(task.into_link(), NORMAL);
 				} else {
@@ -115,7 +115,7 @@ impl File {
 				_ => Ok(()),
 			},
 			|task, cha| {
-				let nofollow = cha.is_orphan() || (cha.is_link() && !task.follow);
+				let nofollow = cha.is_orphan() || (cha.is_indirect() && !task.follow);
 				self.ops.out(id, FileOutCut::New(if nofollow { 0 } else { cha.len }));
 
 				if nofollow {
@@ -196,6 +196,7 @@ impl File {
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
+		let mut cha = task.cha;
 		let mut src: PathCow = if task.resolve {
 			ok_or_not_found!(
 				task,
@@ -216,17 +217,29 @@ impl File {
 		ctx!(
 			task,
 			engine::symlink(&task.to, src, async || {
-				Ok(match task.cha {
+				Ok(match cha {
 					Some(cha) => cha.is_dir(),
-					None => Self::cha(&task.from, task.resolve, None).await?.is_dir(),
+					None => {
+						cha = Some(Self::cha(&task.from, task.resolve, None).await?);
+						cha.unwrap().is_dir()
+					}
 				})
 			})
 			.await
 		)?;
 
 		if task.delete {
-			engine::remove_file(&task.from).await.ok();
+			let cha = match cha {
+				Some(cha) => cha,
+				None => ctx!(task, Self::cha(&task.from, task.resolve, None).await)?,
+			};
+			if cha.is_dir() && cha.is_indirect() {
+				engine::remove_dir(&task.from).await.ok();
+			} else {
+				engine::remove_file(&task.from).await.ok();
+			}
 		}
+
 		Ok(self.ops.out(task.id, FileOutLink::Succ))
 	}
 
@@ -291,13 +304,20 @@ impl File {
 	}
 
 	pub(crate) async fn delete_do(&self, task: FileInDelete) -> Result<(), FileOutDeleteDo> {
-		match engine::remove_file(&task.target).await {
+		let cha = task.cha.unwrap();
+		let result = if cha.is_dir() && cha.is_indirect() {
+			engine::remove_dir(&task.target).await
+		} else {
+			engine::remove_file(&task.target).await
+		};
+
+		match result {
 			Ok(()) => {}
 			Err(e) if e.kind() == NotFound => {}
 			Err(_) if !maybe_exists(&task.target).await => {}
 			Err(e) => ctx!(task, Err(e))?,
 		}
-		Ok(self.ops.out(task.id, FileOutDeleteDo::Succ(task.cha.unwrap().len)))
+		Ok(self.ops.out(task.id, FileOutDeleteDo::Succ(cha.len)))
 	}
 
 	pub(crate) async fn trash(&self, task: FileInTrash) -> Result<(), FileOutTrash> {

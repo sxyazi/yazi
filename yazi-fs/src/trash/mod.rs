@@ -1,4 +1,7 @@
-yazi_macro::mod_flat!(entry lua node nodes);
+yazi_macro::mod_flat!(entries entry lua trash_id);
+
+#[cfg(trash_unix)]
+yazi_macro::mod_flat!(common);
 
 #[cfg(target_os = "macos")]
 yazi_macro::mod_flat!(macos);
@@ -6,11 +9,11 @@ yazi_macro::mod_flat!(macos);
 #[cfg(windows)]
 yazi_macro::mod_flat!(windows);
 
-#[cfg(all(unix, not(target_os = "macos"), not(target_os = "android"), not(target_os = "ios")))]
+#[cfg(trash_freedesktop)]
 yazi_macro::mod_flat!(freedesktop);
 
-#[cfg(any(target_os = "android", target_os = "ios"))]
+#[cfg(trash_unsupported)]
 yazi_macro::mod_flat!(unsupported);
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(not(trash_unsupported))]
 yazi_macro::mod_flat!(traits);
