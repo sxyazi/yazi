@@ -1,14 +1,11 @@
+use std::fs;
+
 use crate::cha::{Cha, ChaKind, ChaMode};
 
 pub(super) trait TrashCha: Sized {
 	fn from_mold(is_dir: bool) -> Self;
 
-	#[cfg(all(unix, not(target_os = "android"), not(target_os = "ios")))]
-	fn from_trash(
-		path: &std::path::Path,
-		name: &std::ffi::OsStr,
-		follow: bool,
-	) -> std::io::Result<Self>;
+	fn from_trash(path: &std::path::Path, name: &std::ffi::OsStr) -> std::io::Result<(Self, Self)>;
 }
 
 impl TrashCha for Cha {
@@ -20,17 +17,13 @@ impl TrashCha for Cha {
 		cha
 	}
 
-	#[cfg(all(unix, not(target_os = "android"), not(target_os = "ios")))]
-	fn from_trash(
-		path: &std::path::Path,
-		name: &std::ffi::OsStr,
-		follow: bool,
-	) -> std::io::Result<Self> {
-		let cha = Cha::new(name, std::fs::symlink_metadata(path)?);
-		Ok(if cha.is_link() && follow {
-			cha.follow(std::fs::metadata(path).ok().map(|meta| Cha::new(name, meta)))
+	fn from_trash(path: &std::path::Path, name: &std::ffi::OsStr) -> std::io::Result<(Self, Self)> {
+		let lcha = Cha::new(name, fs::symlink_metadata(path)?);
+		let cha = if lcha.is_link() {
+			lcha.follow(fs::metadata(path).ok().map(|meta| Cha::new(name, meta)))
 		} else {
-			cha
-		})
+			lcha
+		};
+		Ok((lcha, cha))
 	}
 }

@@ -159,7 +159,8 @@ where
 	E: Fn(String),
 {
 	let cha = ctx!(task, task.init().await)?;
-	if !cha.is_dir() {
+	let follow_symlink = cha.is_link() && task.follow();
+	if !cha.is_dir() || (!follow_symlink && cha.is_indirect()) {
 		return on_file(task, cha).await;
 	}
 
@@ -198,7 +199,8 @@ where
 				"Cannot get metadata for {from:?}"
 			);
 
-			if cha.is_dir() {
+			let follow_symlink = cha.is_link() && task.follow();
+			if cha.is_dir() && (follow_symlink || !cha.is_indirect()) {
 				dirs.push_back(from);
 				continue;
 			}

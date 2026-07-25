@@ -120,6 +120,12 @@ impl<'a> Engine for Local<'a> {
 	async fn remove_dir_all(&self) -> io::Result<()> { tokio::fs::remove_dir_all(self.path).await }
 
 	#[inline]
+	async fn remove_dir_clean(&self) -> io::Result<()> {
+		let path = self.path.to_owned();
+		tokio::task::spawn_blocking(move || super::remove_dir_clean_impl(&path)).await?
+	}
+
+	#[inline]
 	async fn remove_file(&self) -> io::Result<()> { tokio::fs::remove_file(self.path).await }
 
 	#[inline]

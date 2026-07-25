@@ -1,7 +1,6 @@
 use std::{fmt::{self, Display}, str};
 
-use base64::Engine;
-use yazi_shim::BASE64_SANE;
+use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD_INDIFFERENT};
 
 use super::traits::Mimelist;
 
@@ -92,7 +91,7 @@ pub struct PresentDrag<'a>(pub u8, pub &'a [u8]);
 
 impl Display for PresentDrag<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let b64 = BASE64_SANE.encode(self.1).into_bytes();
+		let b64 = STANDARD_NO_PAD_INDIFFERENT.encode(self.1).into_bytes();
 		let chunks = b64.len().div_ceil(4096);
 
 		for (i, chunk) in b64.chunks(4096).enumerate() {
@@ -120,7 +119,7 @@ pub struct PresentDragIcon<'a> {
 
 impl Display for PresentDragIcon<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let b64 = BASE64_SANE.encode(self.data).into_bytes();
+		let b64 = STANDARD_NO_PAD_INDIFFERENT.encode(self.data).into_bytes();
 		let chunks = b64.len().div_ceil(4096);
 
 		for (i, chunk) in b64.chunks(4096).enumerate() {

@@ -22,6 +22,10 @@ impl From<std::path::PathBuf> for PathBufDyn {
 	fn from(value: std::path::PathBuf) -> Self { Self::Os(value) }
 }
 
+impl From<&std::path::PathBuf> for PathBufDyn {
+	fn from(value: &std::path::PathBuf) -> Self { Self::Os(value.clone()) }
+}
+
 impl From<typed_path::UnixPathBuf> for PathBufDyn {
 	fn from(value: typed_path::UnixPathBuf) -> Self { Self::Unix(value) }
 }

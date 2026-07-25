@@ -193,6 +193,14 @@ impl<'a> Engine for Engines<'a> {
 		}
 	}
 
+	async fn remove_dir_clean(&self) -> io::Result<()> {
+		match self {
+			Self::Local(p) => p.remove_dir_clean().await,
+			Self::Lua(p) => p.remove_dir_clean().await,
+			Self::Sftp(p) => p.remove_dir_clean().await,
+		}
+	}
+
 	async fn remove_file(&self) -> io::Result<()> {
 		match self {
 			Self::Local(p) => p.remove_file().await,

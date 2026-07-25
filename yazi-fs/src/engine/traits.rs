@@ -128,9 +128,11 @@ pub trait Engine: Sized {
 		{
 			let mut it = ok_or_not_found!(P::new(url).await?.read_dir().await, return Ok(()));
 			while let Some(child) = it.next().await? {
-				let ft = ok_or_not_found!(child.file_type().await, continue);
-				let result = if ft.is_dir() {
+				let cha = ok_or_not_found!(child.metadata().await, continue);
+				let result = if cha.is_dir() && !cha.is_indirect() {
 					Box::pin(remove_dir_all_impl::<P>(child.url().as_url())).await
+				} else if cha.is_dir() {
+					P::new(child.url().as_url()).await?.remove_dir().await
 				} else {
 					P::new(child.url().as_url()).await?.remove_file().await
 				};
@@ -143,10 +145,12 @@ pub trait Engine: Sized {
 
 		async move {
 			let cha = ok_or_not_found!(self.symlink_metadata().await, return Ok(()));
-			if cha.is_link() {
-				self.remove_file().await
-			} else {
+			if !cha.is_indirect() {
 				remove_dir_all_impl::<Self>(self.url()).await
+			} else if cha.is_dir() {
+				self.remove_dir().await
+			} else {
+				self.remove_file().await
 			}
 		}
 	}
@@ -159,18 +163,23 @@ pub trait Engine: Sized {
 			let mut result = Ok(());
 
 			while let Some((dir, visited)) = stack.pop() {
-				let Ok(engine) = Self::new(dir.as_url()).await else {
-					continue;
-				};
+				let Ok(engine) = Self::new(dir.as_url()).await else { continue };
 
 				if visited {
 					result = engine.remove_dir().await;
-				} else if let Ok(mut it) = engine.read_dir().await {
-					stack.push((dir, true));
-					while let Ok(Some(ent)) = it.next().await {
-						if ent.file_type().await.is_ok_and(|t| t.is_dir()) {
-							stack.push((ent.url(), false));
-						}
+					continue;
+				}
+
+				if !engine.symlink_metadata().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
+					continue;
+				}
+
+				let Ok(mut it) = engine.read_dir().await else { continue };
+				stack.push((dir, true));
+
+				while let Ok(Some(ent)) = it.next().await {
+					if ent.metadata().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
+						stack.push((ent.url(), false));
 					}
 				}
 			}
