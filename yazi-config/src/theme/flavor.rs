@@ -27,14 +27,12 @@ impl Flavor {
 		}
 	}
 
-	pub(crate) fn read(&self, light: bool) -> Result<(Option<PathBuf>, String)> {
+	pub(crate) fn read(&self, light: bool) -> Result<String> {
 		Ok(match if light { self.light.load() } else { self.dark.load() }.as_str() {
-			"" => (None, String::new()),
+			"" => String::new(),
 			name => {
 				let p = Xdg::config_dir().join(format!("flavors/{name}.yazi/flavor.toml"));
-				let s =
-					std::fs::read_to_string(&p).with_context(|| format!("Failed to read flavor {p:?}"))?;
-				(Some(p), s)
+				std::fs::read_to_string(&p).with_context(|| format!("Failed to read flavor {p:?}"))?
 			}
 		})
 	}

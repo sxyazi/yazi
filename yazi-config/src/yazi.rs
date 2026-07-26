@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver, DeserializeOver1};
@@ -22,10 +20,9 @@ pub struct Yazi {
 }
 
 impl Yazi {
-	pub(super) fn read() -> Result<(PathBuf, String)> {
+	pub(super) fn read() -> Result<String> {
 		let p = Xdg::config_dir().join("yazi.toml");
-		let s = ok_or_not_found(std::fs::read_to_string(&p))
-			.with_context(|| format!("Failed to read config {p:?}"))?;
-		Ok((p, s))
+		ok_or_not_found(std::fs::read_to_string(&p))
+			.with_context(|| format!("Failed to read config {p:?}"))
 	}
 }
