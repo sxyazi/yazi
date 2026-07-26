@@ -22,11 +22,17 @@ impl Transliterator for &[u8] {
 		out.reserve_exact(self.len() | 15);
 		out.push_str(unsafe { str::from_utf8_unchecked(ascii) });
 
-		for c in String::from_utf8_lossy(rest).chars() {
-			if let Some(s) = super::lookup(c) {
-				out.push_str(s);
-			} else {
-				out.push(c);
+		for chunk in rest.utf8_chunks() {
+			for c in chunk.valid().chars() {
+				if let Some(s) = super::lookup(c) {
+					out.push_str(s);
+				} else {
+					out.push(c);
+				}
+			}
+
+			if !chunk.invalid().is_empty() {
+				out.push('\u{FFFD}');
 			}
 		}
 		Cow::Owned(out)

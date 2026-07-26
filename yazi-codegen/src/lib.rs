@@ -45,7 +45,7 @@ pub fn deserialize_over1(input: TokenStream) -> TokenStream {
 	let flatten_arm = match flatten_fields.into_iter().next() {
 		Some(f) => {
 			let ident = f.ident.unwrap();
-			quote! { _ => self.0.#ident = self.0.#ident.deserialize_over_with(single_map_entry(key, &mut map))? }
+			quote! { _ => self.0.#ident = self.0.#ident.deserialize_over_with(single_map_entry(&*key, &mut map))? }
 		}
 		None => quote! { _ => _ = map.next_value::<IgnoredAny>()? },
 	};
@@ -104,7 +104,7 @@ pub fn deserialize_over2(input: TokenStream) -> TokenStream {
 		}
 
 		if has_serde_attr(&field.attrs, "flatten") {
-			flatten_arm = quote! { _ => self.0.#field_ident = self.0.#field_ident.deserialize_over_with(single_map_entry(key, &mut map))? };
+			flatten_arm = quote! { _ => self.0.#field_ident = self.0.#field_ident.deserialize_over_with(single_map_entry(&*key, &mut map))? };
 			continue;
 		}
 

@@ -21,10 +21,10 @@ impl Actor for TabClose {
 		let tabs = cx.tabs_mut();
 		tabs.remove(form.idx).shutdown();
 
-		if form.idx > tabs.cursor {
-			tabs.set_idx(tabs.cursor);
+		if form.idx < tabs.cursor {
+			tabs.set_idx(tabs.cursor - 1);
 		} else {
-			tabs.set_idx(usize::min(tabs.cursor + 1, tabs.len() - 1));
+			tabs.set_idx(tabs.cursor.min(tabs.len() - 1));
 		}
 
 		let cx = &mut Ctx::renew(cx);

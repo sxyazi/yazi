@@ -35,6 +35,10 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 		yazi = parse("yazi.toml", yazi.deserialize_over(&yazi::Yazi::read()?))?;
 		keymap = parse("keymap.toml", keymap.deserialize_over(&keymap::Keymap::read()?))?;
 		vfs = parse("vfs.toml", vfs.deserialize_over(&vfs::Vfs::read()?))?;
+	} else {
+		yazi = yazi.deserialize_over("")?;
+		keymap = keymap.deserialize_over("")?;
+		vfs = vfs.deserialize_over("")?;
 	}
 
 	YAZI.init(yazi);
@@ -73,6 +77,8 @@ pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<Theme> {
 				&theme_str,
 			),
 		)?;
+	} else {
+		preset = preset.deserialize_over("")?;
 	}
 
 	preset.reshape(light)

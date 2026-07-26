@@ -4,26 +4,26 @@ use arc_swap::ArcSwap;
 use hashbrown::{HashMap, hash_map};
 use serde::{Deserialize, Deserializer, de::{MapAccess, Visitor}};
 use yazi_codegen::{DeserializeOver, Overlay};
-use yazi_shared::{KebabCasedKey, SnakeCasedString};
+use yazi_shared::{KebabCasedKey, SnakeCasedKey};
 use yazi_shim::{arc_swap::IntoPointee, toml::DeserializeOverWith};
 
 use crate::theme::CustomSection;
 
 #[derive(Debug, Default, DeserializeOver, Overlay)]
-pub struct Custom(ArcSwap<HashMap<SnakeCasedString, CustomSection>>);
+pub struct Custom(ArcSwap<HashMap<SnakeCasedKey, CustomSection>>);
 
 impl Deref for Custom {
-	type Target = ArcSwap<HashMap<SnakeCasedString, CustomSection>>;
+	type Target = ArcSwap<HashMap<SnakeCasedKey, CustomSection>>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl From<HashMap<SnakeCasedString, CustomSection>> for Custom {
-	fn from(value: HashMap<SnakeCasedString, CustomSection>) -> Self { Self(value.into_pointee()) }
+impl From<HashMap<SnakeCasedKey, CustomSection>> for Custom {
+	fn from(value: HashMap<SnakeCasedKey, CustomSection>) -> Self { Self(value.into_pointee()) }
 }
 
 impl Custom {
-	pub(super) fn unwrap_unchecked(self) -> HashMap<SnakeCasedString, CustomSection> {
+	pub(super) fn unwrap_unchecked(self) -> HashMap<SnakeCasedKey, CustomSection> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique custom arc")
 	}
 }
@@ -33,7 +33,7 @@ impl<'de> Deserialize<'de> for Custom {
 		struct V;
 
 		impl<'de> Visitor<'de> for V {
-			type Value = HashMap<SnakeCasedString, CustomSection>;
+			type Value = HashMap<SnakeCasedKey, CustomSection>;
 
 			fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("a map") }
 

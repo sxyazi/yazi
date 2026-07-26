@@ -3,14 +3,14 @@ use std::{fmt, str::FromStr};
 use anyhow::{Result, bail};
 use serde_with::DeserializeFromStr;
 
-use crate::{BytesExt, pool::{InternStr, Symbol}};
+use crate::KebabCasedKey;
 
 #[derive(Clone, Debug, DeserializeFromStr, Eq, Hash, PartialEq)]
 pub enum Scheme {
 	Regular,
 	Search,
 	Sftp,
-	Custom(Symbol<str>),
+	Custom(KebabCasedKey),
 }
 
 impl AsRef<str> for Scheme {
@@ -45,8 +45,8 @@ impl FromStr for Scheme {
 			"regular" => Self::Regular,
 			"search" => Self::Search,
 			"sftp" => Self::Sftp,
-			_ if !s.is_empty() && s.as_bytes().kebab_cased() => Self::Custom(s.intern()),
-			_ => bail!("scheme must be kebab-case and non-empty, got: {s}"),
+			_ if let Some(s) = KebabCasedKey::new(s) => Self::Custom(s),
+			_ => bail!("scheme must be 1-20 characters in kebab-case, got: {s}"),
 		})
 	}
 }
