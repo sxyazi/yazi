@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Improved
 
 - Eliminate hacks in image and UI conflict resolution ([#4022])
+- Enable SSO (small string optimization) for custom schemes and custom styles ([#4164])
 
 ## [v26.5.6]
 

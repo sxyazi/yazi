@@ -5041,7 +5041,6 @@ dependencies = [
  "strum",
  "syntect",
  "tokio",
- "tokio-stream",
  "tokio-util",
  "tracing",
  "unicode-width",
@@ -5058,7 +5057,6 @@ dependencies = [
  "yazi-shim",
  "yazi-term",
  "yazi-tty",
- "yazi-vfs",
  "yazi-watcher",
  "yazi-widgets",
 ]
@@ -5413,7 +5411,6 @@ dependencies = [
  "serde",
  "thiserror 2.0.19",
  "toml",
- "trash",
  "twox-hash",
  "unicode-segmentation",
  "unicode-width",
@@ -5488,7 +5485,6 @@ dependencies = [
 name = "yazi-vfs"
 version = "26.5.6"
 dependencies = [
- "anyhow",
  "chrono",
  "deadpool",
  "either",
