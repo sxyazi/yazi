@@ -5,13 +5,16 @@ yazi_macro::mod_flat!(icon inject layout mixing pattern platform preset priority
 use std::io::{Read, Write};
 
 use anyhow::Context;
+use yazi_fs::Xdg;
 use yazi_macro::writef;
 use yazi_shim::{cell::{RoCell, SyncCell}, toml::{DeserializeOver, DeserializeOverWith}};
 use yazi_tty::{TTY, sequence::SetSgr};
 
+use crate::theme::{Flavor, Theme};
+
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
-pub static THEME: RoCell<theme::Theme> = RoCell::new();
+pub static THEME: RoCell<Theme> = RoCell::new();
 pub static VFS: RoCell<vfs::Vfs> = RoCell::new();
 pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
 
@@ -29,14 +32,9 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut vfs = Preset::vfs()?;
 
 	if merge {
-		let (p, s) = yazi::Yazi::read()?;
-		yazi = yazi.deserialize_over(&s).with_context(|| format!("TOML parse error in {p:?}"))?;
-
-		let (p, s) = keymap::Keymap::read()?;
-		keymap = keymap.deserialize_over(&s).with_context(|| format!("TOML parse error in {p:?}"))?;
-
-		let (p, s) = vfs::Vfs::read()?;
-		vfs = vfs.deserialize_over(&s).with_context(|| format!("TOML parse error in {p:?}"))?;
+		yazi = parse("yazi.toml", yazi.deserialize_over(&yazi::Yazi::read()?))?;
+		keymap = parse("keymap.toml", keymap.deserialize_over(&keymap::Keymap::read()?))?;
+		vfs = parse("vfs.toml", vfs.deserialize_over(&vfs::Vfs::read()?))?;
 	}
 
 	YAZI.init(yazi);
@@ -58,29 +56,33 @@ fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
 	Ok(())
 }
 
-pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<theme::Theme> {
+pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<Theme> {
 	let mut preset = Preset::theme(light)?;
 
 	if merge {
-		let (theme_p, theme_str) = theme::Theme::read()?;
-		let theme = toml::de::DeTable::parse(&theme_str)
-			.with_context(|| format!("TOML parse error in {theme_p:?}"))?;
+		let theme_str = Theme::read()?;
+		let theme = parse("theme.toml", toml::de::DeTable::parse(&theme_str))?;
 
-		let (flavor_p, flavor_str) = theme::Flavor::from_theme(&theme, &theme_str)
-			.with_context(|| format!("TOML parse error in {theme_p:?}"))?
-			.read(light)?;
+		let flavor_str = parse("theme.toml", Flavor::from_theme(&theme, &theme_str))?.read(light)?;
 
-		preset = preset.deserialize_over(&flavor_str).with_context(|| {
-			format!("TOML parse error in {:?}", flavor_p.unwrap_or_else(|| theme_p.clone()))
-		})?;
-		preset = error_with_input(
-			preset.deserialize_over_with(toml::de::Deserializer::from(theme)),
-			&theme_str,
-		)
-		.with_context(|| format!("TOML parse error in {theme_p:?}"))?;
+		preset = preset.deserialize_over(&flavor_str)?;
+		preset = parse(
+			"theme.toml",
+			error_with_input(
+				preset.deserialize_over_with(toml::de::Deserializer::from(theme)),
+				&theme_str,
+			),
+		)?;
 	}
 
 	preset.reshape(light)
+}
+
+fn parse<T, E>(name: &str, result: Result<T, E>) -> anyhow::Result<T>
+where
+	E: std::error::Error + Send + Sync + 'static,
+{
+	result.with_context(|| format!("Failed to parse config {:?}", Xdg::config_dir().join(name)))
 }
 
 fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
