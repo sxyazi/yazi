@@ -754,9 +754,9 @@ const TABLE_2: [&str; 2] = [
 #[inline(always)]
 pub(super) fn lookup(c: char) -> Option<&'static str> {
 	match c as u16 {
-		192..=687 => unsafe { Some(TABLE_0.get_unchecked((c as u16 - 192) as usize)) },
-		7684..=7929 => unsafe { Some(TABLE_1.get_unchecked((c as u16 - 7684) as usize)) },
-		64257..=64258 => unsafe { Some(TABLE_2.get_unchecked((c as u16 - 64257) as usize)) },
+		192..=687 => Some(unsafe { TABLE_0.get_unchecked((c as u16 - 192) as usize) }),
+		7684..=7929 => Some(unsafe { TABLE_1.get_unchecked((c as u16 - 7684) as usize) }),
+		64257..=64258 => Some(unsafe { TABLE_2.get_unchecked((c as u16 - 64257) as usize) }),
 		_ => None,
 	}
 }

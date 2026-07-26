@@ -29,7 +29,6 @@ yazi-shared    = { path = "../yazi-shared", version = "26.5.6" }
 yazi-shim      = { path = "../yazi-shim", version = "26.5.6" }
 yazi-term      = { path = "../yazi-term", version = "26.5.6" }
 yazi-tty       = { path = "../yazi-tty", version = "26.5.6" }
-yazi-vfs       = { path = "../yazi-vfs", version = "26.5.6" }
 yazi-watcher   = { path = "../yazi-watcher", version = "26.5.6" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.5.6" }
 
@@ -47,7 +46,6 @@ serde_with      = { workspace = true }
 strum           = { workspace = true }
 syntect         = { workspace = true }
 tokio           = { workspace = true }
-tokio-stream    = { workspace = true }
 tokio-util      = { workspace = true }
 tracing         = { workspace = true }
 unicode-width   = { workspace = true }

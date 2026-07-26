@@ -2,14 +2,14 @@ use std::{ops::Deref, sync::Arc};
 
 use hashbrown::HashMap;
 use mlua::{LuaString, MetaMethod, UserData, UserDataMethods};
-use yazi_shared::SnakeCasedString;
+use yazi_shared::SnakeCasedKey;
 
 use crate::theme::{CustomField, CustomSection};
 
-pub struct CustomSectionArc(Arc<HashMap<SnakeCasedString, CustomField>>);
+pub struct CustomSectionArc(Arc<HashMap<SnakeCasedKey, CustomField>>);
 
 impl Deref for CustomSectionArc {
-	type Target = Arc<HashMap<SnakeCasedString, CustomField>>;
+	type Target = Arc<HashMap<SnakeCasedKey, CustomField>>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
