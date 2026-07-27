@@ -28,12 +28,12 @@ impl Boot {
 				entry = u.into_owned();
 			}
 
-			let Some((parent, child)) = entry.pair() else {
+			let Some((trail, child)) = entry.pair() else {
 				return (entry, Default::default());
 			};
 
 			if engine::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
-				(parent.into(), child.into())
+				(trail.into(), child.into())
 			} else {
 				(entry, Default::default())
 			}

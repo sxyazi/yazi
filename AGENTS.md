@@ -12,6 +12,7 @@
 
 - Follow nearby code and use idiomatic Rust and Lua. Rust uses `snake_case` for modules, functions, and fields and `PascalCase` for types, traits, and variants. Lua uses PascalCase component tables, `local M` plugin modules, `snake_case` methods/locals, and `_name` private fields.
 - Preserve established terms and type families: `Url`/`UrlBuf`/`UrlCow`, `PathDyn`/`PathBufDyn`/`PathCow`, `*Ref`, `*Arc`, `*Opt`, `*State`, `*Job`, `*Prog`, `File`, `Folder`, `Tab`, `Mgr`, and `Task`. Use `Url` for logical locations and `Path` for filesystem paths.
+- `key()` identifies a file-list entry; `urn()` is the raw URL path tail. Use `key()` for list state and `urn()` for filesystem-path semantics; do not substitute them mechanically.
 - Reuse established plugin and event names (`fetch`, `preload`, `peek`, `seek`, `spot`, `entry`, `setup`, `yank`, `hover`, and `select`) across Rust, Lua, and configuration.
 - Use Rust prefixes (`as_`, `to_`, `into_`, `try_`, `is_`, `has_`) according to their usual semantics; prefer descriptive names.
 - Name variables, modules, methods, and other symbols simply, elegantly, and expressively. Be creative while keeping names clear, consistent with established terminology, and idiomatic.

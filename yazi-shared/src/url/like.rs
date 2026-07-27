@@ -22,8 +22,6 @@ where
 
 	fn ext(&self) -> Option<Strand<'_>> { self.as_url().ext() }
 
-	fn entry_key(&self) -> PathDyn<'_> { self.as_url().entry_key() }
-
 	fn has_base(&self) -> bool { self.as_url().has_base() }
 
 	fn has_root(&self) -> bool { self.as_url().has_root() }
@@ -36,6 +34,8 @@ where
 
 	fn is_search(&self) -> bool { self.as_url().is_search() }
 
+	fn key(&self) -> PathDyn<'_> { self.as_url().key() }
+
 	fn kind(&self) -> AuthKind { self.as_url().kind() }
 
 	fn loc(&self) -> PathDyn<'_> { self.as_url().loc() }
@@ -45,8 +45,6 @@ where
 	fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
 	fn pair(&self) -> Option<(Url<'_>, PathDyn<'_>)> { self.as_url().pair() }
-
-	fn pair2(&self) -> Option<(Url<'_>, PathDyn<'_>)> { self.as_url().pair2() }
 
 	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 

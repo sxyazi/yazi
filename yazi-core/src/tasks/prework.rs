@@ -54,7 +54,7 @@ impl Tasks {
 			targets
 				.iter()
 				.filter(|f| {
-					let key = f.entry_key();
+					let key = f.key();
 					f.is_dir()
 						&& !key.is_empty()
 						&& !targets.sizes.contains_key(&key)

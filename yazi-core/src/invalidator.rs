@@ -12,8 +12,8 @@ impl<'a> Invalidator<'a> {
 
 	pub fn apply(&mut self, op: &FilesOp) {
 		match op {
-			FilesOp::Deleting(parent, keys) => {
-				for url in keys.iter().filter_map(|key| parent.try_join(key).ok()) {
+			FilesOp::Deleting(trail, keys) => {
+				for url in keys.iter().filter_map(|key| trail.try_join(key).ok()) {
 					self.invalidate(&url);
 				}
 			}

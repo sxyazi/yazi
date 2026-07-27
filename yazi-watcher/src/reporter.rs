@@ -26,25 +26,25 @@ impl Reporter {
 	}
 
 	fn report_local(&self, url: UrlCow) {
-		let Some((parent, urn)) = url.pair() else { return };
+		let Some((trail, _)) = url.pair() else { return };
 
 		// FIXME: LINKED should return Url instead of Path
 		let linked = LINKED.read();
-		let linked = linked.from_dir(parent).map(Url::regular);
+		let linked = linked.from_dir(trail).map(Url::regular);
 
 		let watched = WATCHED.read();
-		for parent in [parent].into_iter().chain(linked) {
-			if watched.contains_url(parent) {
+		for trail in [trail].into_iter().chain(linked) {
+			if watched.contains_url(trail) {
 				self.local_tx.send(url.to_owned()).ok();
-				self.local_tx.send(parent.to_owned()).ok();
+				self.local_tx.send(trail.to_owned()).ok();
 			}
 
-			if urn.ext().is_some_and(|e| e == "%tmp") {
+			if url.urn().ext().is_some_and(|e| e == "%tmp") {
 				continue;
 			}
 
 			// Virtual caches
-			let Some(dir) = watched.find_by_cache(parent.loc()) else { continue };
+			let Some(dir) = watched.find_by_cache(trail.loc()) else { continue };
 			let Some(key) = url.name() else { continue };
 			self.virtual_tx.send(VirtualReport::Cache(dir, key.to_owned())).ok();
 		}

@@ -97,12 +97,12 @@ impl Local {
 
 			for url in urls {
 				let Some(path) = url.as_local() else { continue };
-				let Some((parent, key)) = url.pair2() else { continue };
+				let Some((trail, key)) = url.pair() else { continue };
 
 				let file = match engine::local::Local::regular(path).file().await {
 					Ok(file) => file,
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
-						ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
+						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
 						continue;
 					}
 					Err(e) => {
@@ -112,11 +112,11 @@ impl Local {
 				};
 
 				if !engine::local::match_name_case(path).await {
-					ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
+					ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
+				ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
 			}
 
 			FilesOp::mutate(ops);

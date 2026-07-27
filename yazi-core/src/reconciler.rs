@@ -35,7 +35,7 @@ impl<'a> Reconciler<'a> {
 			.urls()
 			.chain(self.yanked.urls())
 			.filter(|u| is_child(u, cwd))
-			.map(|url| (url.entry_key(), None))
+			.map(|url| (url.key(), None))
 			.collect();
 
 		if tracked.is_empty() {
@@ -43,7 +43,7 @@ impl<'a> Reconciler<'a> {
 		}
 
 		for file in files {
-			tracked.get_mut(&file.entry_key()).map(|f| *f = Some(file));
+			tracked.get_mut(&file.key()).map(|f| *f = Some(file));
 		}
 
 		let selected = Patch::from_scan(self.selected.urls(), cwd, &tracked, authoritative);
@@ -87,7 +87,7 @@ impl<'a> Patch<'a> {
 	) -> Self {
 		let mut me = Self::default();
 		for url in urls.filter(|u| is_child(u, cwd)) {
-			match tracked.get(&url.entry_key()).copied().flatten() {
+			match tracked.get(&url.key()).copied().flatten() {
 				Some(file) if file.url == *url => me.files.push(file),
 				Some(file) if authoritative => {
 					me.removal.push(url.clone());
@@ -108,7 +108,7 @@ impl<'a> Patch<'a> {
 		Self {
 			removal: urls
 				.filter(|u| is_child(u, cwd))
-				.filter(|u| keys.contains(&u.entry_key()))
+				.filter(|u| keys.contains(&u.key()))
 				.cloned()
 				.collect(),
 			files:   vec![],
@@ -122,7 +122,7 @@ impl<'a> Patch<'a> {
 	) -> Self {
 		let mut me = Self::default();
 		for url in urls.filter(|u| is_child(u, cwd)) {
-			let Some(file) = files.get(&url.entry_key()).filter(|f| !f.entry_key().is_empty()) else {
+			let Some(file) = files.get(&url.key()).filter(|f| !f.key().is_empty()) else {
 				continue;
 			};
 
@@ -151,5 +151,5 @@ impl<'a> Patch<'a> {
 
 #[inline]
 fn is_child(url: &UrlBuf, cwd: &UrlBuf) -> bool {
-	url.parent().is_some_and(|p| p == *cwd) && !url.entry_key().is_empty()
+	url.pair().is_some_and(|(trail, _)| trail == *cwd)
 }

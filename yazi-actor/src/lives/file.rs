@@ -73,11 +73,7 @@ impl UserData for File {
 			Ok(yazi_config::THEME.icon.matches(me, me.is_hovered()))
 		});
 		methods.add_method("size", |_, me, ()| {
-			Ok(if me.is_dir() {
-				me.folder.entries.sizes.get(&me.entry_key()).copied()
-			} else {
-				Some(me.len)
-			})
+			Ok(if me.is_dir() { me.folder.entries.sizes.get(&me.key()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;
@@ -126,7 +122,7 @@ impl UserData for File {
 				return Ok(None);
 			};
 
-			let Some(idx) = finder.matched_idx(&me.folder, me.entry_key()) else {
+			let Some(idx) = finder.matched_idx(&me.folder, me.key()) else {
 				return Ok(None);
 			};
 

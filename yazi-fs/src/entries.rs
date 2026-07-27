@@ -97,10 +97,9 @@ impl Entries {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashMap<_, _> =
-					$src.into_iter().map(|f| (f.entry_key().to_owned(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.key().to_owned(), f)).collect();
 				for f in &$dist {
-					if todo.remove(&f.entry_key()).is_some() && todo.is_empty() {
+					if todo.remove(&f.key()).is_some() && todo.is_empty() {
 						break;
 					}
 				}
@@ -127,7 +126,7 @@ impl Entries {
 		if !keys.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = keys.remove(&f.entry_key());
+				let b = keys.remove(&f.key());
 				if b {
 					deleted.push(i)
 				}
@@ -137,7 +136,7 @@ impl Entries {
 		}
 
 		if !keys.is_empty() {
-			self.hidden.retain(|f| !keys.remove(&f.entry_key()));
+			self.hidden.retain(|f| !keys.remove(&f.key()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
@@ -148,7 +147,7 @@ impl Entries {
 		&mut self,
 		mut files: HashMap<PathBufDyn, File>,
 	) -> (HashMap<PathBufDyn, File>, HashMap<PathBufDyn, File>) {
-		files.retain(|k, f| !k.is_empty() && !f.entry_key().is_empty());
+		files.retain(|k, f| !k.is_empty() && !f.key().is_empty());
 		if files.is_empty() {
 			return Default::default();
 		}
@@ -157,9 +156,9 @@ impl Entries {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let mut b = true;
 				for i in 0..$dist.len() {
-					if let Some(f) = $src.remove(&$dist[i].entry_key()) {
+					if let Some(f) = $src.remove(&$dist[i].key()) {
 						b = b && $dist[i].cha.hits(f.cha);
-						b = b && $dist[i].entry_key() == f.entry_key();
+						b = b && $dist[i].key() == f.key();
 
 						$dist[i] = f;
 						if $src.is_empty() {
@@ -191,17 +190,13 @@ impl Entries {
 	}
 
 	pub fn update_upserting(&mut self, mut files: HashMap<PathBufDyn, File>) {
-		files.retain(|k, f| !k.is_empty() && !f.entry_key().is_empty());
+		files.retain(|k, f| !k.is_empty() && !f.key().is_empty());
 		if files.is_empty() {
 			return;
 		}
 
 		self.update_deleting(
-			files
-				.iter()
-				.filter(|&(k, f)| k != f.entry_key())
-				.map(|(_, f)| f.entry_key().into())
-				.collect(),
+			files.iter().filter(|&(k, f)| k != f.key()).map(|(_, f)| f.key().into()).collect(),
 		);
 
 		let (hidden, items) = self.update_updating(files);
@@ -229,7 +224,7 @@ impl Entries {
 	}
 
 	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Vec<File>, Vec<File>) {
-		let files = files.into_iter().filter(|f| !f.entry_key().is_empty());
+		let files = files.into_iter().filter(|f| !f.key().is_empty());
 		if let Some(filter) = &self.filter {
 			files.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
 		} else if self.show_hidden {
@@ -244,7 +239,7 @@ impl Entries {
 	// --- Items
 	#[inline]
 	pub fn position(&self, key: PathDyn) -> Option<usize> {
-		if key.is_empty() { None } else { self.iter().position(|f| f.entry_key() == key) }
+		if key.is_empty() { None } else { self.iter().position(|f| f.key() == key) }
 	}
 
 	// --- Ticket

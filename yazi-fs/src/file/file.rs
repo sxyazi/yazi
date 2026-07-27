@@ -81,7 +81,7 @@ impl File {
 	pub fn urn(&self) -> PathDyn<'_> { self.url.urn() }
 
 	#[inline]
-	pub fn entry_key(&self) -> PathDyn<'_> { self.url.entry_key() }
+	pub fn key(&self) -> PathDyn<'_> { self.url.key() }
 
 	#[inline]
 	pub fn name(&self) -> Option<Strand<'_>> { self.url.name() }

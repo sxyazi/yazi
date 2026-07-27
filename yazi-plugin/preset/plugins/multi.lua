@@ -61,14 +61,14 @@ function M:spot_base(_, selected)
 end
 
 function M:update_sizes()
-	local parents = {}
+	local trails = {}
 	for url, size in pairs(self.sizes) do
-		local p = url.parent
-		parents[p] = parents[p] or {}
-		parents[p][url.urn] = size
+		local t = url.trail
+		trails[t] = trails[t] or {}
+		trails[t][url.key] = size
 	end
-	for parent, sizes in pairs(parents) do
-		ya.emit("update_files", { op = fs.op("size", { url = parent, sizes = sizes }) })
+	for trail, sizes in pairs(trails) do
+		ya.emit("update_files", { op = fs.op("size", { url = trail, sizes = sizes }) })
 	end
 end
 

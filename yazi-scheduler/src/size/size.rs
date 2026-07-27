@@ -34,11 +34,11 @@ impl Size {
 				}
 			}
 
-			let parent = buf[0].0.parent().unwrap();
+			let Some((trail, _)) = buf[0].0.pair() else { return };
 			// FIXME: use PathBufDyn instead of UrlBuf in SizeIn
 			FilesOp::Size(
-				parent.into(),
-				HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.entry_key().into(), s))),
+				trail.into(),
+				HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.key().into(), s))),
 			)
 			.emit();
 		});

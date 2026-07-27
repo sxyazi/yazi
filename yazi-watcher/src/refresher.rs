@@ -89,8 +89,8 @@ impl Refresher {
 					}
 					Ok(None) => {}
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
-						if let Some((p, n)) = prev.url.pair2() {
-							FilesOp::Deleting(p.into(), [n.into()].into()).emit();
+						if let Some((t, n)) = prev.url.pair() {
+							FilesOp::Deleting(t.into(), [n.into()].into()).emit();
 						}
 					}
 					Err(e) if prev.report => {

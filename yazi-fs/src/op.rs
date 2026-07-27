@@ -43,7 +43,7 @@ impl FilesOp {
 	pub fn files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
 		match self {
 			Self::Full(_, files) | Self::Part(_, files, _) | Self::Creating(_, files) => {
-				Box::new(files.iter().filter(|f| !f.entry_key().is_empty()))
+				Box::new(files.iter().filter(|f| !f.key().is_empty()))
 			}
 			Self::Done(..) => Box::new(iter::empty()),
 			Self::Size(..) => Box::new(iter::empty()),
@@ -51,7 +51,7 @@ impl FilesOp {
 
 			Self::Deleting(..) => Box::new(iter::empty()),
 			Self::Updating(_, map) | Self::Upserting(_, map) => {
-				Box::new(map.values().filter(|f| !f.entry_key().is_empty()))
+				Box::new(map.values().filter(|f| !f.key().is_empty()))
 			}
 		}
 	}
@@ -67,65 +67,65 @@ impl FilesOp {
 	}
 
 	pub fn create(files: Vec<File>) {
-		let mut parents: HashMap<UrlBuf, Vec<_>> = Default::default();
+		let mut trails: HashMap<UrlBuf, Vec<_>> = Default::default();
 		for file in files {
-			if let Some((p, _)) = file.url.pair2() {
-				parents.get_or_insert_default(p).push(file);
+			if let Some((t, _)) = file.url.pair() {
+				trails.get_or_insert_default(t).push(file);
 			}
 		}
-		for (p, files) in parents {
-			Self::Creating(p, files).emit();
+		for (t, files) in trails {
+			Self::Creating(t, files).emit();
 		}
 	}
 
 	pub fn rename(map: HashMap<UrlBuf, File>) {
-		let mut parents: HashMap<UrlBuf, (HashSet<_>, HashMap<_, _>)> = Default::default();
+		let mut trails: HashMap<UrlBuf, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
-			let Some((o_p, o_k)) = o.pair2() else { continue };
-			let Some((n_p, n_k)) = n.url.pair2() else { continue };
-			if o_p == n_p {
-				parents.get_or_insert_default(o_p).1.insert(o_k.into(), n);
+			let Some((o_t, o_k)) = o.pair() else { continue };
+			let Some((n_t, n_k)) = n.url.pair() else { continue };
+			if o_t == n_t {
+				trails.get_or_insert_default(o_t).1.insert(o_k.into(), n);
 			} else {
-				parents.get_or_insert_default(o_p).0.insert(o_k.into());
-				parents.get_or_insert_default(n_p).1.insert(n_k.into(), n);
+				trails.get_or_insert_default(o_t).0.insert(o_k.into());
+				trails.get_or_insert_default(n_t).1.insert(n_k.into(), n);
 			}
 		}
-		for (p, (o, n)) in parents {
+		for (t, (o, n)) in trails {
 			match (o.is_empty(), n.is_empty()) {
 				(true, true) => {}
-				(true, false) => Self::Upserting(p, n).emit(),
-				(false, true) => Self::Deleting(p, o).emit(),
+				(true, false) => Self::Upserting(t, n).emit(),
+				(false, true) => Self::Deleting(t, o).emit(),
 				(false, false) => {
-					Self::Deleting(p.clone(), o).emit();
-					Self::Upserting(p, n).emit();
+					Self::Deleting(t.clone(), o).emit();
+					Self::Upserting(t, n).emit();
 				}
 			}
 		}
 	}
 
 	pub fn mutate(ops: Vec<Self>) {
-		let mut parents: HashMap<_, (HashMap<_, _>, HashSet<_>)> = Default::default();
+		let mut trails: HashMap<_, (HashMap<_, _>, HashSet<_>)> = Default::default();
 		for op in ops {
 			match op {
-				Self::Upserting(p, map) => parents
-					.entry(p)
+				Self::Upserting(t, map) => trails
+					.entry(t)
 					.or_default()
 					.0
-					.extend(map.into_iter().filter(|(k, f)| !k.is_empty() && !f.entry_key().is_empty())),
-				Self::Deleting(p, keys) => {
-					parents.entry(p).or_default().1.extend(keys.into_iter().filter(|k| !k.is_empty()))
+					.extend(map.into_iter().filter(|(k, f)| !k.is_empty() && !f.key().is_empty())),
+				Self::Deleting(t, keys) => {
+					trails.entry(t).or_default().1.extend(keys.into_iter().filter(|k| !k.is_empty()))
 				}
 				_ => unreachable!(),
 			}
 		}
-		for (p, (u, d)) in parents {
+		for (t, (u, d)) in trails {
 			match (u.is_empty(), d.is_empty()) {
 				(true, true) => {}
-				(true, false) => Self::Deleting(p, d).emit(),
-				(false, true) => Self::Upserting(p, u).emit(),
+				(true, false) => Self::Deleting(t, d).emit(),
+				(false, true) => Self::Upserting(t, u).emit(),
 				(false, false) => {
-					Self::Deleting(p.clone(), d).emit();
-					Self::Upserting(p, u).emit();
+					Self::Deleting(t.clone(), d).emit();
+					Self::Upserting(t, u).emit();
 				}
 			}
 		}
@@ -136,7 +136,7 @@ impl FilesOp {
 			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect() }};
 		}
 		macro_rules! map {
-			($map:expr) => {{ $map.iter().map(|(urn, file)| (urn.clone(), file.chdir(wd))).collect() }};
+			($map:expr) => {{ $map.iter().map(|(key, file)| (key.clone(), file.chdir(wd))).collect() }};
 		}
 
 		let w = UrlBuf::from(wd);
@@ -144,7 +144,7 @@ impl FilesOp {
 			Self::Full(file, files) => Self::Full(file.chdir(wd), files!(files)),
 			Self::Part(_, files, ticket) => Self::Part(w, files!(files), *ticket),
 			Self::Done(file, ticket) => Self::Done(file.chdir(wd), *ticket),
-			Self::Size(_, map) => Self::Size(w, map.iter().map(|(urn, &s)| (urn.clone(), s)).collect()),
+			Self::Size(_, map) => Self::Size(w, map.iter().map(|(key, &s)| (key.clone(), s)).collect()),
 			Self::IOErr(_, err) => Self::IOErr(w, err.clone()),
 
 			Self::Creating(_, files) => Self::Creating(w, files!(files)),
