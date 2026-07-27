@@ -34,7 +34,9 @@ impl TrashId {
 	pub(super) fn rel(&self) -> &Path { &self.rel }
 
 	#[cfg(target_os = "macos")]
-	pub(super) fn path(&self) -> PathBuf { self.top.join(&self.rel) }
+	pub(super) fn path(&self) -> PathBuf {
+		if self.has_rel() { self.top.join(&self.rel) } else { self.top.clone() }
+	}
 
 	pub(super) fn child(&self, name: &OsStr) -> io::Result<Self> {
 		let rel = self.rel.join(name);

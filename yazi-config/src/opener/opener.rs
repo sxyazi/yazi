@@ -6,7 +6,7 @@ use mlua::{ExternalError, FromLua, IntoLua, IntoLuaMulti, LuaString, MetaMethod,
 use serde::{Deserialize, Deserializer};
 use yazi_shim::{arc_swap::IntoPointee, toml::{DeserializeOverHook, DeserializeOverWith}};
 
-use crate::{open::{OpenRule, OpenRuleArc}, opener::{OpenerRuleArc, OpenerRuleMatcher, OpenerRulesArc, OpenerRulesMatcher}};
+use crate::{open::OpenRule, opener::{OpenerRuleArc, OpenerRuleMatcher, OpenerRulesArc, OpenerRulesMatcher}};
 
 #[derive(Debug, Deserialize)]
 pub struct Opener(ArcSwap<HashMap<String, OpenerRulesArc>>);
@@ -18,10 +18,15 @@ impl Deref for Opener {
 }
 
 impl Opener {
-	pub fn all(&self, open: OpenRuleArc) -> impl Iterator<Item = OpenerRuleArc> + use<> {
+	pub fn all<I>(&self, names: I) -> impl Iterator<Item = OpenerRuleArc> + use<I>
+	where
+		I: IntoIterator,
+		I::Item: AsRef<str>,
+	{
 		let inner = self.0.load_full();
-		(0..open.r#use.len())
-			.filter_map(move |i| inner.get(&open.r#use[i]).cloned())
+		names
+			.into_iter()
+			.filter_map(move |name| inner.get(name.as_ref()).cloned())
 			.flat_map(|rules| OpenerRuleMatcher::from(&rules))
 	}
 

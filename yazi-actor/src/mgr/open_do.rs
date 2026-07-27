@@ -35,8 +35,7 @@ impl Actor for OpenDo {
 			succ!(Self::match_and_open(opt.cwd, targets));
 		}
 
-		let openers: IndexSet<_> =
-			YAZI.open.match_common(&targets).flat_map(|r| YAZI.opener.all(r)).collect();
+		let openers: IndexSet<_> = YAZI.opener.all(YAZI.open.match_common(&targets)).collect();
 		if openers.is_empty() {
 			succ!();
 		}
