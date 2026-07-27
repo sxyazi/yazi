@@ -97,8 +97,10 @@ keymap = [
 	{ on = [ "m", "n" ], run = "linemode none",        desc = "Linemode: none" },
 
 	# Copy
-	{ on = [ "c", "c" ], run = "copy path",             desc = "Copy file URL" },
-	{ on = [ "c", "d" ], run = "copy dirname",          desc = "Copy directory URL" },
+	{ on = [ "c", "c" ], run = "copy path",             desc = "Copy file path" },
+	{ on = [ "c", "C" ], run = "copy url",              desc = "Copy file URL" },
+	{ on = [ "c", "d" ], run = "copy dirpath",          desc = "Copy directory path" },
+	{ on = [ "c", "D" ], run = "copy dirurl",           desc = "Copy directory URL" },
 	{ on = [ "c", "f" ], run = "copy filename",         desc = "Copy filename" },
 	{ on = [ "c", "n" ], run = "copy name_without_ext", desc = "Copy filename without extension" },
 

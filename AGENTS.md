@@ -16,6 +16,8 @@
 - Use Rust prefixes (`as_`, `to_`, `into_`, `try_`, `is_`, `has_`) according to their usual semantics; prefer descriptive names.
 - Name variables, modules, methods, and other symbols simply, elegantly, and expressively. Be creative while keeping names clear, consistent with established terminology, and idiomatic.
 - When passing arguments, use the parameter's conversion traits directly (such as `Into<_>` or `AsRef<_>`); avoid eager conversions like `.to_string()`, `.to_owned()`, and `.as_ref()` unless ownership, type inference, or semantics require them.
+- Prefer methods provided by `UrlLike`, `PathLike`, or `StrandLike` directly on the original value (for example, `buf.parent()` over `buf.as_url().parent()`), rather than converting it first with `as_url()`, `dyn_path()`, or `to_strand()`.
+- Prefer `&*value` for dereferencing over `AsRef` when both are suitable.
 - Prefer general-purpose traits and conversion APIs already provided by the codebase or its dependencies over manual construction or adapter closures; for example, use `into_lua()` where applicable.
 
 ## Code Changes
@@ -26,7 +28,8 @@
 - Put reusable code in the lowest suitable shared layer; avoid unnecessary dependencies and allocations. Prefer borrowed values and existing wrappers.
 - Use stable Rust APIs; nightly is formatting-only. Use only `pub`, `pub(super)`, and `pub(crate)`—never `pub(in ...)`.
 - Keep async I/O non-blocking, preserve platform/fork behavior, and follow existing error boundaries with `?`.
-- For renames or refactors, update all related variables, functions, parameters, modules, methods, types, derived types, exports, tests, configuration keys, documentation, and Lua bindings.
+- For renames or refactors, update all related variables, functions, parameters, modules, methods, types, derived types, exports, tests, configuration keys, documentation, Lua bindings, and, when a type and file share a name, the file as well.
+- When adding a changelog entry, leave the PR number blank for a human to fill in.
 - Do not add or modify tests unless requested.
 
 ## Validation

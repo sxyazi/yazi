@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Deprecated
 
+- Deprecate `copy dirname` in favor of `copy dirpath`
 - Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
 - Deprecate `tab::Mode.is_visual` in favor of the new `tab::Mode.is_normal` ([#4101])
 - Deprecate `Url.is_regular`, `Url.is_search`, and `Url.domain` in favor of `Url.spec.is_regular`, `Url.spec.is_search`, and `Url.spec.domain`, respectively ([#4118])
