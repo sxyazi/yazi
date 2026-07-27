@@ -250,7 +250,7 @@ end
 ---@return table items
 ---@return Error? err
 function M.parse_7z_slt(child, skip, limit)
-	local items, tops, parents, err = { M.make_item() }, {}, {}, nil
+	local items, err = { M.make_item() }, nil
 	local key, value, empty, stderr = "", "", Path.os(""), {}
 	repeat
 		local next, event = child:read_line()
@@ -266,8 +266,8 @@ function M.parse_7z_slt(child, skip, limit)
 
 		if next == "\n" or next == "\r\n" then
 			if items[#items].path ~= empty then
-				M.treelize(items, tops, parents)
-				M.pop_dup_dir(items, parents, false)
+				items[#items].is_dir = items[#items].folder == "+"
+					or items[#items].attr:sub(1, 1) == "D"
 				items[#items + 1] = M.make_item()
 			end
 			goto continue
@@ -292,13 +292,11 @@ function M.parse_7z_slt(child, skip, limit)
 	if items[#items].path == empty then
 		items[#items] = nil
 	else
-		M.treelize(items, tops, parents)
+		items[#items].is_dir = items[#items].folder == "+"
+			or items[#items].attr:sub(1, 1) == "D"
 	end
 
-	M.pop_dup_dir(items, parents, #items <= skip + limit)
-	if #items > skip + limit then
-		items[#items] = nil
-	end
+	items = M.treelize(items)
 
 	if #stderr ~= 0 then
 		err = Err("7-zip errored out while listing items, stderr: %s", table.concat(stderr, "\n"))
@@ -308,51 +306,58 @@ end
 
 ---Convert a flat list of items into a tree structure
 ---@param items table
----@param tops Path[]
----@param parents table<string, boolean>
-function M.treelize(items, tops, parents)
-	local f = table.remove(items)
-	while #tops > 0 and not f.path:starts_with(tops[#tops]) do
-		tops[#tops] = nil
+---@return table tree
+function M.treelize(items)
+	if #items == 0 then
+		return items
 	end
 
-	local buf, it = {}, f.path.parent
-	while it and #it ~= 0 and it ~= tops[#tops] do
-		buf[#buf + 1], it = it, it.parent
-	end
-	for i = #buf, 1, -1 do
-		items[#items + 1] = M.make_item { path = buf[i], depth = #tops, is_dir = true }
-		tops[#tops + 1] = buf[i]
-		M.pop_dup_dir(items, parents, false)
+	local root = { children = {} }
+
+	for _, item in ipairs(items) do
+		local chain = {}
+		local p = item.path
+		while p and #p ~= 0 do
+			chain[#chain + 1] = p
+			p = p.parent
+		end
+
+		local node = root
+		for i = #chain, 1, -1 do
+			local key = tostring(chain[i])
+			-- synthesize intermediate directories if missing
+			if not node.children[key] then
+				node.children[key] = { path = chain[i], children = {} }
+			end
+			node = node.children[key]
+		end
+		node.item = item
 	end
 
-	f.depth = #tops
-	f.is_dir = f.folder == "+" or f.attr:sub(1, 1) == "D"
+    -- DFS preorder traversal
+	local result = {}
+	local function dfs(node, depth)
+		local sorted = {}
+		for _, child in pairs(node.children) do
+			sorted[#sorted + 1] = child
+		end
+		table.sort(sorted, function(a, b)
+			return tostring(a.path) < tostring(b.path)
+		end)
+		for _, child in ipairs(sorted) do
+			local has_children = next(child.children) ~= nil
+			local item = child.item or M.make_item { path = child.path }
+			item.depth = depth
+			item.is_dir = item.is_dir or has_children
+			result[#result + 1] = item
 
-	if not f.is_dir then
-		items[#items + 1] = f
-	elseif f.path ~= tops[#tops] then
-		items[#items + 1], tops[#tops + 1] = f, f.path
+			if has_children then
+				dfs(child, depth + 1)
+			end
+		end
 	end
+	dfs(root, 0)
+
+	return result
 end
-
----@param items table
----@param parents table<string, boolean>
----@param eof boolean
-function M.pop_dup_dir(items, parents, eof)
-	local n, i = #items, eof and #items or #items - 1
-	if not items[i] or not items[i].is_dir then
-		return
-	end
-
-	local p = tostring(items[i].path)
-	if not parents[p] then
-		parents[p] = true
-	elseif eof then
-		items[n] = nil
-	elseif not items[n].path:starts_with(items[i].path) then
-		items[i], items[n] = items[n], nil
-	end
-end
-
 return M
