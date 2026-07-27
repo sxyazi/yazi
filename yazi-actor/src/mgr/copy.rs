@@ -15,31 +15,41 @@ impl Actor for Copy {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
+		if form.r#type == "dirname" {
+			yazi_proxy::deprecate!("`copy dirname` is deprecated, use `copy dirpath` instead");
+		}
 
 		let mut s = Vec::<u8>::new();
 		let mut it = if form.hovered {
-			Box::new(cx.hovered_url().into_iter())
+			Box::new(cx.hovered().into_iter())
 		} else {
-			cx.tab().selected_or_hovered_urls()
+			cx.tab().selected_or_hovered_files()
 		}
 		.peekable();
 
-		while let Some(u) = it.next() {
+		while let Some(f) = it.next() {
 			match form.r#type.as_ref() {
-				// TODO: rename to "url"
 				"path" => {
-					s.extend_from_slice(&form.separator.transform(&u.to_strand()));
+					s.extend_from_slice(&form.separator.transform(&f.content_path()));
 				}
-				"dirname" => {
-					if let Some(p) = u.parent() {
+				"url" => {
+					s.extend_from_slice(&form.separator.transform(&f.url.to_strand()));
+				}
+				"dirpath" | "dirname" => {
+					if let Some(p) = f.content_path().parent() {
+						s.extend_from_slice(&form.separator.transform(&p));
+					}
+				}
+				"dirurl" => {
+					if let Some(p) = f.url.parent() {
 						s.extend_from_slice(&form.separator.transform(&p.to_strand()));
 					}
 				}
 				"filename" => {
-					s.extend_from_slice(&form.separator.transform(&u.name().unwrap_or_default()));
+					s.extend_from_slice(&form.separator.transform(&f.name().unwrap_or_default()));
 				}
 				"name_without_ext" => {
-					s.extend_from_slice(&form.separator.transform(&u.stem().unwrap_or_default()));
+					s.extend_from_slice(&form.separator.transform(&f.stem().unwrap_or_default()));
 				}
 				_ => bail!("Unknown copy type: {}", form.r#type),
 			};
@@ -49,7 +59,9 @@ impl Actor for Copy {
 		}
 
 		// Copy the CWD path regardless even if the directory is empty
-		if s.is_empty() && form.r#type == "dirname" {
+		if s.is_empty() && matches!(&*form.r#type, "dirpath" | "dirname") {
+			s.extend_from_slice(&form.separator.transform(&cx.current().content_path()));
+		} else if s.is_empty() && form.r#type == "dirurl" {
 			s.extend_from_slice(&form.separator.transform(&cx.cwd().to_strand()));
 		}
 

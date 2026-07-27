@@ -67,6 +67,10 @@ impl AsStrand for Cow<'_, OsStr> {
 	fn as_strand(&self) -> Strand<'_> { Strand::Os(self) }
 }
 
+impl AsStrand for Cow<'_, std::path::Path> {
+	fn as_strand(&self) -> Strand<'_> { Strand::Os(self.as_os_str()) }
+}
+
 impl AsStrand for PathDyn<'_> {
 	fn as_strand(&self) -> Strand<'_> {
 		match self {

@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Deprecated
 
+- Deprecate `copy dirname` in favor of `copy dirpath` ([#4169])
 - Deprecate `backward --far` and `forward --far` in favor of `backward wide` and `forward wide`, respectively ([#4012])
 - Deprecate `tab::Mode.is_visual` in favor of the new `tab::Mode.is_normal` ([#4101])
 - Deprecate `Url.is_regular`, `Url.is_search`, and `Url.domain` in favor of `Url.spec.is_regular`, `Url.spec.is_search`, and `Url.spec.domain`, respectively ([#4118])
@@ -1784,3 +1785,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4118]: https://github.com/sxyazi/yazi/pull/4118
 [#4120]: https://github.com/sxyazi/yazi/pull/4120
 [#4144]: https://github.com/sxyazi/yazi/pull/4144
+[#4169]: https://github.com/sxyazi/yazi/pull/4169
