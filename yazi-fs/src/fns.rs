@@ -102,9 +102,9 @@ pub fn create_owned_dir_blocking(p: &Path) -> io::Result<()> {
 			return Err(io::Error::last_os_error());
 		}
 
-		// Reject directories not owned by the current user.
+		// Reject directories not owned by the current user, unless running as root.
 		let uid = USERS_CACHE.get_current_uid();
-		if stat.st_uid != uid {
+		if uid != 0 && stat.st_uid != uid {
 			return Err(io::Error::new(
 				io::ErrorKind::PermissionDenied,
 				format!("directory {:?} is owned by uid {} but current uid is {}", p, stat.st_uid, uid),
