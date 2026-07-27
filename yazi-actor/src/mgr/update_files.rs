@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_core::{Reconciler, tab::Folder};
+use yazi_core::{Invalidator, Reconciler, tab::Folder};
 use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateFilesForm;
@@ -21,6 +21,7 @@ impl Actor for UpdateFiles {
 		let linked: Vec<_> = LINKED.read().from_dir(form.op.cwd()).map(|u| form.op.chdir(u)).collect();
 
 		for op in [form.op].into_iter().chain(linked) {
+			Invalidator::new(&mut cx.mgr).apply(&op);
 			Reconciler::new(&mut cx.mgr, tab).apply(&op);
 			Self::update_tab(cx, op).ok();
 		}

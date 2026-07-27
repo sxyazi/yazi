@@ -1,7 +1,7 @@
 use std::{io, ops::Deref, time::{Duration, Instant}};
 
 use hashbrown::{HashMap, hash_map::RawEntryMut};
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use tokio::sync::mpsc;
 use yazi_fs::{Entries, FilesOp, file::{File, FileCov}};
 use yazi_shared::url::{UrlBuf, UrlCov, UrlLike, UrlMapExt};
@@ -14,8 +14,7 @@ pub struct Refresher {
 
 enum Op {
 	Sync(IndexSet<FileCov>),
-	Refresh(IndexSet<FileCov>),
-	Load(File),
+	Refresh(IndexMap<FileCov, bool>),
 	Touch(IndexSet<UrlBuf>),
 	Done(Entry, io::Result<Option<Vec<File>>>),
 }
@@ -54,8 +53,8 @@ impl Refresher {
 					entries.get_or_insert_with(file.0, |file| Entry { file, ..Default::default() });
 				}
 			}
-			Op::Refresh(files) => {
-				for file in files.into_iter().map(|file| file.0) {
+			Op::Refresh(requests) => {
+				for (FileCov(file), force) in requests {
 					let entry = match entries.raw_entry_mut().from_key(&file.url) {
 						RawEntryMut::Occupied(mut oe) => {
 							oe.get_mut().file = file;
@@ -66,14 +65,9 @@ impl Refresher {
 						}
 					};
 
-					(entry.dirty, entry.report) = (true, true);
+					(entry.dirty, entry.report, entry.force) = (true, true, entry.force || force);
 					self.spawn(entry);
 				}
-			}
-			Op::Load(file) => {
-				let entry = entries.get_or_insert_with(file, |file| Entry { file, ..Default::default() });
-				(entry.dirty, entry.report, entry.force) = (true, true, true);
-				self.spawn(entry);
 			}
 			Op::Touch(urls) => {
 				for url in urls {
@@ -137,16 +131,20 @@ impl Refresher {
 impl Refresher {
 	pub(super) fn sync(&self, files: IndexSet<FileCov>) { self.tx.send(Op::Sync(files)).ok(); }
 
-	pub fn refresh<I>(&self, files: I)
+	pub fn refresh<I>(&self, requests: I)
 	where
 		I: IntoIterator,
-		I::Item: Into<File>,
+		I::Item: Into<RefreshRequest>,
 	{
-		let entries = files.into_iter().map(|file| FileCov(file.into())).collect();
-		self.tx.send(Op::Refresh(entries)).ok();
+		let mut files = IndexMap::new();
+		for request in requests.into_iter().map(Into::into) {
+			files
+				.entry(FileCov(request.file))
+				.and_modify(|force| *force |= request.force)
+				.or_insert(request.force);
+		}
+		self.tx.send(Op::Refresh(files)).ok();
 	}
-
-	pub fn load(&self, file: impl Into<File>) { self.tx.send(Op::Load(file.into())).ok(); }
 
 	pub fn touch<I>(&self, urls: I)
 	where
@@ -154,6 +152,16 @@ impl Refresher {
 	{
 		self.tx.send(Op::Touch(urls.into_iter().collect())).ok();
 	}
+}
+
+// --- RefreshRequest
+pub struct RefreshRequest {
+	pub file:  File,
+	pub force: bool,
+}
+
+impl RefreshRequest {
+	pub fn force(file: impl Into<File>) -> Self { Self { file: file.into(), force: true } }
 }
 
 // --- Entry

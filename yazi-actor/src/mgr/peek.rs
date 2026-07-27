@@ -1,7 +1,8 @@
 use anyhow::Result;
-use yazi_macro::succ;
+use yazi_macro::{succ, tab};
 use yazi_parser::mgr::PeekForm;
 use yazi_shared::data::Data;
+use yazi_watcher::RefreshRequest;
 
 use crate::{Actor, Ctx};
 
@@ -21,10 +22,9 @@ impl Actor for Peek {
 		}
 
 		let mime = cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default();
-		let folder = cx.tab().hovered_folder().map(|f| (f.offset, f.file.clone()));
 
 		if !cx.tab().preview.same_url(&hovered.url) {
-			cx.tab_mut().preview.skip = folder.as_ref().map(|f| f.0).unwrap_or_default();
+			cx.tab_mut().preview.skip = cx.hovered_folder().map(|f| f.offset).unwrap_or_default();
 		}
 		if !cx.tab().preview.same_file(&hovered, &mime) {
 			cx.tab_mut().preview.reset();
@@ -42,10 +42,10 @@ impl Actor for Peek {
 			}
 		}
 
-		if let Some((_, file)) = folder {
-			cx.core.mgr.watcher.refresher.refresh([file]);
+		if let Some(folder) = tab!(cx).hovered_folder_mut() {
+			cx.core.mgr.watcher.refresher.refresh([folder.take_request()]);
 		} else if hovered.is_dir() {
-			cx.core.mgr.watcher.refresher.load(&hovered);
+			cx.core.mgr.watcher.refresher.refresh([RefreshRequest::force(&hovered)]);
 		}
 
 		cx.tab_mut().preview.go(hovered, mime, form.force);

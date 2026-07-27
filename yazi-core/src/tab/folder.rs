@@ -5,6 +5,7 @@ use yazi_dds::Pubsub;
 use yazi_fs::{Entries, FilesOp, FolderStage, cha::ChaType, file::File};
 use yazi_macro::err;
 use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
+use yazi_watcher::RefreshRequest;
 use yazi_widgets::{Scrollable, Step};
 
 use crate::MgrProxy;
@@ -19,6 +20,8 @@ pub struct Folder {
 
 	pub page:  usize,
 	pub trace: Option<PathBufDyn>,
+
+	stale: bool,
 }
 
 impl Deref for Folder {
@@ -37,6 +40,7 @@ impl Default for Folder {
 			cursor:  Default::default(),
 			page:    Default::default(),
 			trace:   Default::default(),
+			stale:   Default::default(),
 		}
 	}
 }
@@ -138,6 +142,14 @@ impl Folder {
 
 	pub fn retrace(&mut self) {
 		self.trace = self.hovered().map(|h| h.entry_key().into()).or(self.trace.take());
+	}
+
+	#[inline]
+	pub fn invalidate(&mut self) { self.stale = true; }
+
+	#[inline]
+	pub fn take_request(&mut self) -> RefreshRequest {
+		RefreshRequest { file: self.file.clone(), force: mem::take(&mut self.stale) }
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
