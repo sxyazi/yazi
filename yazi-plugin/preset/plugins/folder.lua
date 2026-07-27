@@ -66,7 +66,7 @@ function M:spot(job)
 		)
 	end
 	if self.size then
-		ya.emit("update_files", { op = fs.op("size", { url = url.parent, sizes = { [url.urn] = self.size } }) })
+		ya.emit("update_files", { op = fs.op("size", { url = url.trail, sizes = { [url.key] = self.size } }) })
 	end
 end
 

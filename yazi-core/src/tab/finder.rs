@@ -62,7 +62,7 @@ impl Finder {
 				continue;
 			}
 
-			self.matched.insert(file.entry_key().into(), i);
+			self.matched.insert(file.key().into(), i);
 			if self.matched.len() > 99 {
 				break;
 			}
@@ -76,11 +76,11 @@ impl Finder {
 }
 
 impl Finder {
-	pub fn matched_idx<T>(&self, folder: &Folder, urn: T) -> Option<u8>
+	pub fn matched_idx<T>(&self, folder: &Folder, key: T) -> Option<u8>
 	where
 		T: DynPath,
 	{
-		if self.lock == *folder { self.matched.get(&urn.dyn_path()).copied() } else { None }
+		if self.lock == *folder { self.matched.get(&key.dyn_path()).copied() } else { None }
 	}
 }
 

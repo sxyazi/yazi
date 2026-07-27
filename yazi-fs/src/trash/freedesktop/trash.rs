@@ -44,8 +44,12 @@ impl Trash {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"));
 		}
 
-		let backing = info.backing.join(id.rel());
-		TrashEntry::new(id.clone(), backing, Some(info.original.join(id.rel())))
+		let (backing, original) = if id.has_rel() {
+			(info.backing.join(id.rel()), info.original.join(id.rel()))
+		} else {
+			(info.backing, info.original)
+		};
+		TrashEntry::new(id.clone(), backing, Some(original))
 	}
 
 	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Cha> {

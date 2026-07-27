@@ -415,7 +415,7 @@ mod tests {
 		assert_eq!(debug(&foo), "test-hub://a1/@root/foo");
 
 		let bar = foo.try_join("bar")?.into_domain("b1");
-		assert_eq!(bar.entry_key(), "b1");
+		assert_eq!(bar.key(), "b1");
 		assert_eq!(debug(&bar), "test-hub://b1/@a1,root/foo/bar");
 		assert_eq!(debug(bar.parent().unwrap()), "test-hub://a1/@root/foo");
 		assert_eq!(debug(bar.parent().unwrap().parent().unwrap()), "test-hub://root/@/");
@@ -423,9 +423,9 @@ mod tests {
 		let relative = UrlCow::try_from("test-hub://a1/@/@abc")?;
 		assert_eq!(debug(relative.as_url()), "test-hub://a1/@/@abc");
 		assert_eq!(debug(relative.parent().unwrap().as_url()), "test-hub:///@/");
-		assert_eq!(relative.entry_key(), "a1");
+		assert_eq!(relative.key(), "a1");
 		assert!(!relative.is_owned());
-		assert!(relative.parent().unwrap().entry_key().is_empty());
+		assert!(relative.parent().unwrap().key().is_empty());
 
 		Ok(())
 	}
@@ -500,7 +500,7 @@ mod tests {
 
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
 		let c = root.try_join(r"C:\")?.into_domain("c-root");
-		assert_eq!(c.entry_key(), "c-root");
+		assert_eq!(c.key(), "c-root");
 		assert_eq!(c.auth().parent_depth(), 0);
 
 		let drive = c.try_join(r"Users\file.txt")?.into_domain("file");
@@ -512,7 +512,7 @@ mod tests {
 
 		let parent = parent.parent().unwrap();
 		assert_eq!(parent.loc(), Path::new(r"C:\"));
-		assert_eq!(parent.entry_key(), "c-root");
+		assert_eq!(parent.key(), "c-root");
 		assert!(parent.parent().is_none());
 
 		let relative = root.try_join(r"C:foo")?;

@@ -54,12 +54,12 @@ impl Virtual {
 			let mut ups = Vec::with_capacity(urls.len());
 
 			for (url, upload) in urls {
-				let Some((parent, key)) = url.pair2() else { continue };
+				let Some((trail, key)) = url.pair() else { continue };
 
 				let mut file = match engine::file(&url).await {
 					Ok(file) => file,
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
-						ops.push(FilesOp::Deleting(parent.into(), [key.into()].into()));
+						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
 						continue;
 					}
 					Err(e) => {
@@ -70,12 +70,12 @@ impl Virtual {
 
 				if upload && file.is_file() {
 					file.cha.ctime = Some(SystemTime::now());
-					ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
+					ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
 					ups.push(url);
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent.into(), [(key.into(), file)].into()));
+				ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
 			}
 
 			FilesOp::mutate(ops);

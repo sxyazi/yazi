@@ -139,6 +139,7 @@ where
 		let mut loc = Self::bare(path);
 		loc.uri = loc.inner.strip_prefix(base).expect("Loc must start with the given base").len();
 		loc.urn = loc.inner.strip_prefix(trail).expect("Loc must start with the given trail").len();
+		debug_assert!(!loc.urn().has_root(), "Loc URN cannot include a root directory");
 		loc
 	}
 
@@ -231,6 +232,10 @@ where
 				loc.uri = loc.strip_prefix(it).unwrap().len();
 				break;
 			}
+		}
+
+		if loc.urn().has_root() {
+			bail!("URN cannot include a root directory");
 		}
 		Ok(loc)
 	}

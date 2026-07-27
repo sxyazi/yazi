@@ -154,6 +154,14 @@ impl<'a> Url<'a> {
 	pub fn is_search(self) -> bool { matches!(self, Self::Search { .. }) }
 
 	#[inline]
+	pub fn key(self) -> PathDyn<'a> {
+		match self {
+			Self::Hub { auth, .. } => PathDyn::Unix(typed_path::UnixPath::new(&auth.domain)),
+			_ => self.urn(),
+		}
+	}
+
+	#[inline]
 	pub fn kind(self) -> AuthKind { self.auth().kind }
 
 	#[inline]
@@ -184,19 +192,9 @@ impl<'a> Url<'a> {
 	pub fn os_str(self) -> Cow<'a, OsStr> { self.components().os_str() }
 
 	#[inline]
-	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> { Some((self.parent()?, self.urn())) }
-
-	#[inline]
-	pub fn pair2(self) -> Option<(Self, PathDyn<'a>)> {
-		Some((self.parent()?, Some(self.entry_key()).filter(|k| !k.is_empty())?))
-	}
-
-	#[inline]
-	pub fn entry_key(self) -> PathDyn<'a> {
-		match self {
-			Self::Hub { auth, .. } => PathDyn::Unix(typed_path::UnixPath::new(&auth.domain)),
-			_ => self.urn(),
-		}
+	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> {
+		let key = self.key();
+		(!key.is_empty() && !key.has_root()).then_some((self.trail(), key))
 	}
 
 	pub fn parent(self) -> Option<Self> {

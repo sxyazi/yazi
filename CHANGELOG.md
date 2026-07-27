@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
+- Refresh file list after deleting a file from search view ([#4174])
 - Normalize `\\?\`-prefixed Verbatim paths when creating relative symlinks on Windows ([#4067])
 - Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
 - Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
@@ -1786,3 +1787,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4120]: https://github.com/sxyazi/yazi/pull/4120
 [#4144]: https://github.com/sxyazi/yazi/pull/4144
 [#4169]: https://github.com/sxyazi/yazi/pull/4169
+[#4174]: https://github.com/sxyazi/yazi/pull/4174

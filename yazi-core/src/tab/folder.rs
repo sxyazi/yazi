@@ -117,7 +117,7 @@ impl Folder {
 	pub fn hover(&mut self, key: PathDyn) -> bool {
 		if key.is_empty() {
 			return self.arrow(0);
-		} else if self.hovered().map(|h| h.entry_key()) == Some(key) {
+		} else if self.hovered().map(|h| h.key()) == Some(key) {
 			return self.arrow(0);
 		}
 
@@ -141,7 +141,7 @@ impl Folder {
 	}
 
 	pub fn retrace(&mut self) {
-		self.trace = self.hovered().map(|h| h.entry_key().into()).or(self.trace.take());
+		self.trace = self.hovered().map(|h| h.key().into()).or(self.trace.take());
 	}
 
 	#[inline]

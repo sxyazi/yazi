@@ -45,12 +45,14 @@ impl Trash {
 
 	pub(crate) fn entry(&self, id: &TrashId) -> io::Result<TrashEntry> {
 		let top = ShellItem::top(id.top())?;
-		let original = top.original()?.join(id.rel());
+		let original = top.original()?;
 		if !id.has_rel() {
 			return top.entry(id.clone(), Some(original));
 		}
 
+		let original = original.join(id.rel());
 		let backing: PathBuf = top.display_name(SIGDN_FILESYSPATH)?.into();
+
 		let cha = Cha::new(backing.file_name().unwrap_or_default(), fs::symlink_metadata(&backing)?);
 		if cha.is_dir() && !cha.is_indirect() {
 			ShellItem::new(backing.join(id.rel()))?.entry(id.clone(), Some(original))

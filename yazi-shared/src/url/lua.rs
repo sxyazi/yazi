@@ -100,11 +100,12 @@ impl UserData for UrlBuf {
 		fields.add_cached_field("ext", |lua, me| {
 			me.ext().map(|s| lua.create_string(s.encoded_bytes())).transpose()
 		});
-		fields.add_cached_field("urn", |_, me| Ok(me.urn().to_owned()));
+		fields.add_cached_field("key", |_, me| Ok(me.key().to_owned()));
 		fields.add_cached_field("base", |_, me| {
 			Ok(Some(me.base()).filter(|u| !u.loc().is_empty()).map(Self::from))
 		});
 		fields.add_cached_field("parent", |_, me| Ok(me.parent().map(Self::from)));
+		fields.add_cached_field("trail", |_, me| Ok(Self::from(me.trail())));
 
 		fields.add_cached_field("spec", |_, me| Ok(me.spec()));
 

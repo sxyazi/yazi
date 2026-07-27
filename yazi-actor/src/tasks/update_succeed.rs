@@ -19,8 +19,8 @@ impl Actor for UpdateSucceed {
 
 		if form.track
 			&& form.id == cx.tasks.scheduler.behavior.first_id()
-			&& let Some((parent, key)) = form.urls[0].pair2()
-			&& parent == *cx.cwd()
+			&& let Some((trail, key)) = form.urls[0].pair()
+			&& trail == *cx.cwd()
 		{
 			cx.current_mut().trace = Some(key.into());
 			act!(mgr:hover, cx)?;
