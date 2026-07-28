@@ -4,6 +4,8 @@ use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
 use yazi_shared::{event::Action, strand::AsStrand};
 
+use super::Normalizer;
+
 pub struct Filter {
 	raw:   String,
 	regex: Regex,
@@ -11,13 +13,14 @@ pub struct Filter {
 
 impl Filter {
 	pub fn new(s: &str, case: FilterCase) -> Result<Self> {
+		let pat = Normalizer::normalize(s)?;
 		let regex = match case {
 			FilterCase::Smart => {
-				let uppercase = s.chars().any(|c| c.is_uppercase());
-				RegexBuilder::new(s).case_insensitive(!uppercase).build()?
+				let uppercase = pat.chars().any(|c| c.is_uppercase());
+				RegexBuilder::new(&pat).case_insensitive(!uppercase).build()?
 			}
-			FilterCase::Sensitive => Regex::new(s)?,
-			FilterCase::Insensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
+			FilterCase::Sensitive => Regex::new(&pat)?,
+			FilterCase::Insensitive => RegexBuilder::new(&pat).case_insensitive(true).build()?,
 		};
 		Ok(Self { raw: s.to_owned(), regex })
 	}
@@ -44,6 +47,7 @@ impl Display for Filter {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.write_str(&self.raw) }
 }
 
+// --- FilterCase
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum FilterCase {
 	Smart,

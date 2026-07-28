@@ -26,6 +26,11 @@ fn try_absolute_impl<'a>(url: UrlCow<'a>) -> Option<UrlCow<'a>> {
 			if url.has_trail() { 0 } else { 2 },
 		)
 		.expect("Loc from drive letter")
+	} else if path == "~"
+		&& let Some(home) = dirs::home_dir()
+		&& home.is_absolute()
+	{
+		LocBuf::from(home)
 	} else if let Ok(rest) = path.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
 		&& home.is_absolute()
