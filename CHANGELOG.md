@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Dynamic keymap Lua API ([#4031])
 - New `ui.Input` element ([#4040])
 - Image preview with Überzug++ on Niri ([#3990])
+- Unicode normalization for user regex patterns in `find`, `filter`, and `search` actions
 - New gait for input `backward` and `forward` actions ([#4012])
 
 ### Changed
