@@ -89,18 +89,7 @@ impl Scheduler {
 		}
 	}
 
-	pub fn file_link(&self, from: UrlBuf, to: UrlBuf, relative: bool, force: bool) {
-		let mut r#in = FileInLink {
-			id: Id::ZERO,
-			from,
-			to,
-			force,
-			cha: None,
-			resolve: false,
-			relative,
-			delete: false,
-		};
-
+	pub fn file_link(&self, mut r#in: FileInLink) {
 		self.add(&mut r#in, |_| ());
 		self.file.submit(r#in, LOW);
 	}

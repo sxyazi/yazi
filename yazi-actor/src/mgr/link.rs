@@ -17,7 +17,7 @@ impl Actor for Link {
 		let tab = &mgr.tabs[cx.tab];
 
 		if !mgr.yanked.cut {
-			cx.core.tasks.file_link(&mgr.yanked, tab.cwd(), form.relative, form.force);
+			cx.core.tasks.file_link(&mgr.yanked, tab.cwd(), form.relative, form.force, form.follow);
 		}
 
 		succ!();
