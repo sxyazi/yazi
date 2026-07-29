@@ -16,6 +16,9 @@ impl Git {
 	}
 
 	pub(super) async fn checkout(path: &Path, rev: &str) -> Result<()> {
+		if rev.starts_with('-') {
+			bail!("Invalid revision `{rev}`: must not start with '-'");
+		}
 		Self::exec(|c| c.args(["checkout", rev, "--force"]).current_dir(path)).await
 	}
 
