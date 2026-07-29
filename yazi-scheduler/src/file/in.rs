@@ -162,11 +162,11 @@ impl FileInCopy {
 			id:       self.id,
 			from:     self.from,
 			to:       self.to,
-			force:    true,
-			cha:      self.cha,
-			resolve:  true,
 			relative: false,
+			force:    true,
+			follow:   true,
 			delete:   false,
+			cha:      self.cha,
 		}
 	}
 }
@@ -222,11 +222,11 @@ impl FileInCut {
 			id:       self.id,
 			from:     mem::take(&mut self.from),
 			to:       mem::take(&mut self.to),
-			force:    true,
-			cha:      self.cha,
-			resolve:  true,
 			relative: false,
+			force:    true,
+			follow:   true,
 			delete:   true,
+			cha:      self.cha,
 		}
 	}
 
@@ -248,15 +248,21 @@ impl FromLua for FileInCut {
 
 // --- Link
 #[derive(Clone, Debug)]
-pub(crate) struct FileInLink {
+pub struct FileInLink {
 	pub(crate) id:       Id,
 	pub(crate) from:     UrlBuf,
 	pub(crate) to:       UrlBuf,
-	pub(crate) force:    bool,
-	pub(crate) cha:      Option<Cha>,
-	pub(crate) resolve:  bool,
 	pub(crate) relative: bool,
+	pub(crate) force:    bool,
+	pub(crate) follow:   bool,
 	pub(crate) delete:   bool,
+	pub(crate) cha:      Option<Cha>,
+}
+
+impl FileInLink {
+	pub fn new(from: UrlBuf, to: UrlBuf, relative: bool, force: bool, follow: bool) -> Self {
+		Self { id: Id::ZERO, from, to, relative, force, follow, delete: false, cha: None }
+	}
 }
 
 impl TaskIn for FileInLink {

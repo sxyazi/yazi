@@ -527,4 +527,19 @@ mod tests {
 
 		Ok(())
 	}
+
+	#[test]
+	fn test_regular_root_key() -> Result<()> {
+		crate::init_tests();
+
+		let root: UrlBuf = "/".parse()?;
+		assert!(root.key().is_empty());
+		assert!(root.pair().is_none());
+
+		let child: UrlBuf = "/foo".parse()?;
+		assert_eq!(child.key(), "foo");
+		assert!(!child.key().has_root());
+
+		Ok(())
+	}
 }

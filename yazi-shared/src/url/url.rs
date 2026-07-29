@@ -194,7 +194,7 @@ impl<'a> Url<'a> {
 	#[inline]
 	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> {
 		let key = self.key();
-		(!key.is_empty() && !key.has_root()).then_some((self.trail(), key))
+		(!key.is_empty()).then_some((self.trail(), key))
 	}
 
 	pub fn parent(self) -> Option<Self> {

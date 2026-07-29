@@ -8,6 +8,8 @@ pub struct LinkForm {
 	pub relative: bool,
 	#[serde(default)]
 	pub force:    bool,
+	#[serde(default)]
+	pub follow:   bool,
 }
 
 impl TryFrom<ActionCow> for LinkForm {

@@ -5,7 +5,7 @@ use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to};
-use yazi_shared::{path::PathCow, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{Stamp, VfsCha, engine::{self, DirEntry}, maybe_exists, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
@@ -197,16 +197,19 @@ impl File {
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
 		let mut cha = task.cha;
-		let mut src: PathCow = if task.resolve {
-			ok_or_not_found!(
-				task,
-				engine::read_link(&task.from).await,
-				return Ok(self.ops.out(task.id, FileOutLink::Succ))
-			)
-			.into()
-		} else {
-			task.from.loc().into()
-		};
+		if cha.is_none() && (task.follow || task.delete) {
+			cha = Some(ctx!(task, Self::cha(&task.from, task.follow, None).await)?);
+		}
+
+		let mut src: PathCow = task.from.loc().into();
+		if task.follow && cha.unwrap().is_link() {
+			match engine::read_link(&task.from).await {
+				Ok(p) if p.is_absolute() => src = p.into(),
+				Ok(p) => src = ctx!(task, task.from.loc().parent().unwrap().try_join(p))?.into(),
+				Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+				Err(e) => ctx!(task, Err(e))?,
+			}
+		}
 
 		if task.relative {
 			let canon = ctx!(task, engine::canonicalize(task.to.parent().unwrap()).await)?;
@@ -220,7 +223,7 @@ impl File {
 				Ok(match cha {
 					Some(cha) => cha.is_dir(),
 					None => {
-						cha = Some(Self::cha(&task.from, task.resolve, None).await?);
+						cha = Some(Self::cha(&task.from, task.follow, None).await?);
 						cha.unwrap().is_dir()
 					}
 				})
@@ -229,10 +232,7 @@ impl File {
 		)?;
 
 		if task.delete {
-			let cha = match cha {
-				Some(cha) => cha,
-				None => ctx!(task, Self::cha(&task.from, task.resolve, None).await)?,
-			};
+			let cha = cha.unwrap();
 			if cha.is_dir() && cha.is_indirect() {
 				engine::remove_dir(&task.from).await.ok();
 			} else {

@@ -37,13 +37,13 @@ impl Actor for Cd {
 		// Take parent to history
 		let tab = cx.tab_mut();
 		if let Some(t) = tab.parent.take() {
-			tab.history.insert(t.url.clone(), t);
+			tab.history.insert(t);
 		}
 
 		// Current
 		let rep = tab.history.remove_or(&form.target);
 		let rep = mem::replace(&mut tab.current, rep);
-		tab.history.insert(rep.url.clone(), rep);
+		tab.history.insert(rep);
 
 		// Parent
 		if let Some(parent) = form.target.parent() {
