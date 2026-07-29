@@ -37,26 +37,34 @@ impl Widget for Which<'_> {
 			return;
 		}
 
-		let chunks = {
-			use Constraint::*;
-			layout::Layout::horizontal(match cols {
-				1 => &[Ratio(1, 1)][..],
-				2 => &[Ratio(1, 2), Ratio(1, 2)],
-				_ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
-			})
-			.split(area)
-		};
+        use ratatui_core::layout::Margin;
+        use ratatui_widgets::borders::BorderType;
 
 		yazi_widgets::clear::Clear::default().render(area, buf);
-		Block::new().style(THEME.which.mask.get()).render(area, buf);
+		Block::bordered()
+            .border_type(BorderType::Rounded)
+            .border_style(THEME.which.border.get())
+            .style(THEME.which.mask.get())
+            .render(area, buf);
 
-		for y in 0..area.height {
+        let inner = area.inner(Margin::new(1, 1));
+        let chunks = {
+            use Constraint::*;
+            layout::Layout::horizontal(match cols {
+                1 => &[Ratio(1, 1)][..],
+                2 => &[Ratio(1, 2), Ratio(1, 2)],
+                _ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
+            })
+            .split(inner)
+        };
+
+		for y in 0..inner.height {
 			for (x, chunk) in chunks.iter().enumerate() {
 				let Some(cand) = which.cands.get(y as usize * cols + x) else {
 					break;
 				};
 
-				Cand::new(cand, which.times).render(Rect { y: chunk.y + y + 1, height: 1, ..*chunk }, buf);
+				Cand::new(cand, which.times).render(Rect { y: chunk.y + y, height: 1, ..*chunk }, buf);
 			}
 		}
 	}
