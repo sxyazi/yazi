@@ -169,12 +169,12 @@ pub struct StatusSep {
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Which {
 	#[serde(deserialize_with = "deserialize_which_cols")]
-	pub cols: SyncCell<u8>,
-    pub border: SyncCell<StyleFlat>,
-	pub mask: SyncCell<StyleFlat>,
-	pub cand: SyncCell<StyleFlat>,
-	pub rest: SyncCell<StyleFlat>,
-	pub desc: SyncCell<StyleFlat>,
+	pub cols:   SyncCell<u8>,
+	pub border: SyncCell<StyleFlat>,
+	pub mask:   SyncCell<StyleFlat>,
+	pub cand:   SyncCell<StyleFlat>,
+	pub rest:   SyncCell<StyleFlat>,
+	pub desc:   SyncCell<StyleFlat>,
 
 	pub separator:       ArcSwap<String>,
 	pub separator_style: SyncCell<StyleFlat>,

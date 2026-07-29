@@ -37,26 +37,25 @@ impl Widget for Which<'_> {
 			return;
 		}
 
-        use ratatui_core::layout::Margin;
-        use ratatui_widgets::borders::BorderType;
-
+		use ratatui_core::layout::Margin;
+		use ratatui_widgets::borders::BorderType;
 		yazi_widgets::clear::Clear::default().render(area, buf);
 		Block::bordered()
-            .border_type(BorderType::Rounded)
-            .border_style(THEME.which.border.get())
-            .style(THEME.which.mask.get())
-            .render(area, buf);
+			.border_type(BorderType::Rounded)
+			.border_style(THEME.which.border.get())
+			.style(THEME.which.mask.get())
+			.render(area, buf);
 
-        let inner = area.inner(Margin::new(1, 1));
-        let chunks = {
-            use Constraint::*;
-            layout::Layout::horizontal(match cols {
-                1 => &[Ratio(1, 1)][..],
-                2 => &[Ratio(1, 2), Ratio(1, 2)],
-                _ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
-            })
-            .split(inner)
-        };
+		let inner = area.inner(Margin::new(1, 1));
+		let chunks = {
+			use Constraint::*;
+			layout::Layout::horizontal(match cols {
+				1 => &[Ratio(1, 1)][..],
+				2 => &[Ratio(1, 2), Ratio(1, 2)],
+				_ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
+			})
+			.split(inner)
+		};
 
 		for y in 0..inner.height {
 			for (x, chunk) in chunks.iter().enumerate() {
