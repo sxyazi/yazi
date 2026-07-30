@@ -30,7 +30,7 @@ end
 local function files(parent, ents)
 	for i, ent in ipairs(ents) do
 		local url = parent:join(Path.os(ent.name)):into_domain(ent.key)
-		ents[i] = file(url, ent)
+		ents[i] = { cha = ent.lcha, file = file(url, ent) }
 	end
 	return ents
 end

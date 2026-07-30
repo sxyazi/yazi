@@ -101,6 +101,7 @@ impl UserData for TrashEntry {
 		fields.add_cached_field("rel", |_, me| Ok(PathBufDyn::from(me.rel())));
 		fields.add_cached_field("name", |lua, me| lua.create_string(me.name().as_encoded_bytes()));
 		fields.add_cached_field("cha", |_, me| Ok(me.cha));
+		fields.add_cached_field("lcha", |_, me| Ok(me.lcha));
 		fields.add_cached_field("original", |_, me| Ok(me.original.clone().map(PathBufDyn::Os)));
 		fields.add_cached_field("link_to", |_, me| Ok(me.link_to.clone().map(PathBufDyn::Os)));
 		fields.add_cached_field("backing", |_, me| Ok(PathBufDyn::Os(me.backing.clone())));

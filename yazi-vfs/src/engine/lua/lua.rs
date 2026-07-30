@@ -4,11 +4,11 @@ use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_binding::MpscTx;
 use yazi_config::vfs::{ServiceLua, Vfs};
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::{File, Files}};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::File};
 use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideResult}};
 use yazi_shared::{event::Cmd, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
-use crate::engine::lua::ReadDir;
+use crate::engine::lua::{DirEntry, ReadDir};
 
 #[derive(Clone)]
 pub struct Lua<'a> {
@@ -122,9 +122,9 @@ impl<'a> Engine for Lua<'a> {
 
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
 		let url = self.url.to_owned();
-		let files: Files = self.call(ProvideJob::ReadDir { url }).await?.0?;
+		let entries: Vec<DirEntry> = self.call(ProvideJob::ReadDir { url }).await?.0?;
 
-		Ok(ReadDir { files: files.0.into_iter() })
+		Ok(ReadDir { entries: entries.into_iter() })
 	}
 
 	async fn read_link(&self) -> io::Result<PathBufDyn> {
