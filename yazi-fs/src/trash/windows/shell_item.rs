@@ -24,7 +24,7 @@ impl ShellItem {
 			.children()?
 			.into_iter()
 			.find(|item| item.display_name(SIGDN_DESKTOPABSOLUTEPARSING).is_ok_and(|s| s == name))
-			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "item is not in the recycle bin"))
+			.ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "item is not in the recycle bin"))
 	}
 
 	pub(super) fn children(&self) -> io::Result<Vec<Self>> {
