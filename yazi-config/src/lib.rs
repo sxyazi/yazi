@@ -23,6 +23,8 @@ pub fn init() -> anyhow::Result<()> {
 		wait_for_key(e)?;
 		try_init(false)?;
 	}
+
+	THEME.init(Preset::theme(false)?.reshape(false)?);
 	Ok(())
 }
 
@@ -47,39 +49,18 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	Ok(())
 }
 
-pub fn init_flavor(light: bool) -> anyhow::Result<()> {
-	if let Err(e) = try_init_flavor(light, true) {
-		wait_for_key(e)?;
-		try_init_flavor(light, false)?;
-	}
-	Ok(())
-}
-
-fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
-	THEME.init(build_flavor(light, merge)?);
-	Ok(())
-}
-
-pub fn build_flavor(light: bool, merge: bool) -> anyhow::Result<Theme> {
+pub fn build_flavor(light: bool) -> anyhow::Result<Theme> {
 	let mut preset = Preset::theme(light)?;
+	let theme_str = Theme::read()?;
+	let theme = parse("theme.toml", toml::de::DeTable::parse(&theme_str))?;
 
-	if merge {
-		let theme_str = Theme::read()?;
-		let theme = parse("theme.toml", toml::de::DeTable::parse(&theme_str))?;
+	let flavor_str = parse("theme.toml", Flavor::from_theme(&theme, &theme_str))?.read(light)?;
 
-		let flavor_str = parse("theme.toml", Flavor::from_theme(&theme, &theme_str))?.read(light)?;
-
-		preset = preset.deserialize_over(&flavor_str)?;
-		preset = parse(
-			"theme.toml",
-			error_with_input(
-				preset.deserialize_over_with(toml::de::Deserializer::from(theme)),
-				&theme_str,
-			),
-		)?;
-	} else {
-		preset = preset.deserialize_over("")?;
-	}
+	preset = preset.deserialize_over(&flavor_str)?;
+	preset = parse(
+		"theme.toml",
+		error_with_input(preset.deserialize_over_with(toml::de::Deserializer::from(theme)), &theme_str),
+	)?;
 
 	preset.reshape(light)
 }

@@ -30,4 +30,12 @@ impl Waker {
 			Ok(())
 		}
 	}
+
+	pub(crate) fn drain(&self) -> io::Result<()> {
+		if unsafe { Threading::ResetEvent(self.handle.as_raw_handle()) } == 0 {
+			Err(io::Error::last_os_error())
+		} else {
+			Ok(())
+		}
+	}
 }

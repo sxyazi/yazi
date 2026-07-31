@@ -121,8 +121,7 @@ async fn run() -> anyhow::Result<()> {
 			yazi_tty::init();
 			yazi_term::init()?;
 			yazi_config::init()?;
-			yazi_adapter::init()?;
-			outln!("{}", env::Env::print()?)?;
+			outln!("{}", env::Env::print().await?)?;
 		}
 	}
 

@@ -2,13 +2,14 @@ use std::{io, ops::Deref};
 
 use anyhow::Result;
 use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{CompletedFrame, Frame, Terminal}};
+use tokio::task::JoinHandle;
 use yazi_config::YAZI;
-use yazi_emulator::{Emulator, Mux, TMUX};
+use yazi_emulator::{EMULATOR, Probe};
 use yazi_macro::writef;
 use yazi_proxy::AppProxy;
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
-use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RestoreCursorStyle, SetTitle, ShowCursor}};
+use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
 
 use crate::{RatermBackend, RatermOption, RatermState};
 
@@ -16,7 +17,9 @@ pub static STATE: SyncCell<RatermState> = SyncCell::new(RatermState::default());
 
 pub struct Raterm {
 	inner:       Terminal<RatermBackend<TtyWriter<'static>>>,
-	stream:      EventStream,
+	_stream:     EventStream,
+	pub probe:   Probe,
+	forwarder:   JoinHandle<()>,
 	last_area:   Rect,
 	last_buffer: Buffer,
 }
@@ -28,24 +31,24 @@ impl Deref for Raterm {
 }
 
 impl Drop for Raterm {
-	fn drop(&mut self) { Self::stop(); }
+	fn drop(&mut self) {
+		self.forwarder.abort();
+		Self::stop();
+	}
 }
 
 impl Raterm {
 	pub fn start() -> Result<Self> {
 		TERM.setup()?;
 		TERM.enter_raw_mode()?;
-		static FIRST: SyncCell<bool> = SyncCell::new(false);
-		if FIRST.replace(true) && yazi_emulator::TMUX.get() {
-			yazi_emulator::Mux::tmux_passthrough();
-		}
 
 		let opt = RatermOption::default();
+		STATE.set(RatermState::new(&opt));
+
+		let mut stream = EventStream::from(&*TERM);
 		writef!(
 			TTY.writer(),
-			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{}",
-			If(!TMUX.get(), EnterAlternateScreen),
-			If(TMUX.get(), EnterAlternateScreen),
+			"{EnterAlternateScreen}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{}",
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
 				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -55,32 +58,30 @@ impl Raterm {
 			If(opt.mouse, EnableMouseCapture),
 		)?;
 
-		let resp = Emulator::read_until_da1();
-		Mux::tmux_drain()?;
+		let mut inner = Terminal::new(RatermBackend::new(TTY.writer()))?;
+		inner.hide_cursor()?;
+		inner.clear()?;
+		inner.flush()?;
 
-		STATE.set(RatermState::new(&resp, &opt));
-		let mut term = Self {
-			inner:       Terminal::new(RatermBackend::new(TTY.writer()))?,
-			stream:      EventStream::from(&*TERM),
-			last_area:   Default::default(),
+		Ok(Self {
+			inner,
+			forwarder: Self::spawn(&mut stream),
+			_stream: stream,
+			probe: Probe::start()?,
+			last_area: Default::default(),
 			last_buffer: Default::default(),
-		};
-
-		term.inner.hide_cursor()?;
-		term.inner.clear()?;
-		term.inner.flush()?;
-		term.spawn();
-		Ok(term)
+		})
 	}
 
 	pub fn stop() {
+		let emu = EMULATOR.load();
 		let state = STATE.get();
 
 		_ = writef!(
 			TTY.writer(),
 			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
-			RestoreCursorStyle { shape: state.cursor_shape, blink: state.cursor_blink },
+			RestoreCursorStyle { blink: emu.cursor_blink, shape: emu.cursor_shape },
 			If(state.title, SetTitle("")),
 		);
 
@@ -88,9 +89,8 @@ impl Raterm {
 		TERM.restorer.restore(&TTY);
 	}
 
-	fn spawn(&mut self) {
-		let mut rx = self.stream.take().unwrap();
-
+	fn spawn(stream: &mut EventStream) -> JoinHandle<()> {
+		let mut rx = stream.take().unwrap();
 		tokio::spawn(async move {
 			loop {
 				match rx.recv().await {
@@ -108,7 +108,7 @@ impl Raterm {
 					None => break,
 				}
 			}
-		});
+		})
 	}
 
 	pub fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {

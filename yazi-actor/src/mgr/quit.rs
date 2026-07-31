@@ -18,7 +18,7 @@ impl Actor for Quit {
 
 	const NAME: &str = "quit";
 
-	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, Self::Form { opt, .. }: Self::Form) -> Result<Data> {
 		let ongoing = cx.tasks.scheduler.ongoing.clone();
 		let (left, left_titles) = {
 			let ongoing = ongoing.lock();

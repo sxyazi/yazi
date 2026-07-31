@@ -129,7 +129,7 @@ where
 	if original.auth().same_service(link.auth()) {
 		Engines::new(original).await?.hard_link(link.loc()).await
 	} else {
-		Err(io::Error::from(io::ErrorKind::CrossesDevices))
+		Err(io::ErrorKind::CrossesDevices.into())
 	}
 }
 
@@ -222,7 +222,7 @@ where
 	if from.auth().same_service(to.auth()) {
 		Engines::new(from).await?.rename(to.loc()).await
 	} else {
-		Err(io::Error::from(io::ErrorKind::CrossesDevices))
+		Err(io::ErrorKind::CrossesDevices.into())
 	}
 }
 

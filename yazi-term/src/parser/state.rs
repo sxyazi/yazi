@@ -1,4 +1,4 @@
-use std::num::NonZeroU8;
+use std::{num::NonZeroU8, time::Duration};
 
 #[derive(Debug, Default, PartialEq)]
 pub(crate) enum State {
@@ -25,12 +25,42 @@ pub(crate) enum State {
 	Dcs,
 	/// Inside DCS, just saw `\x1B` (potential start of ST).
 	DcsSt,
+	/// Inside an APC sequence (`\x1B_` … ST).
+	Apc,
+	/// Inside APC, just saw `\x1B` (potential start of ST).
+	ApcSt,
 	/// Mid-UTF-8 character in ground: `n` continuation bytes still needed.
 	Utf8(NonZeroU8),
 	/// `\x1B` + mid-UTF-8 character: `n` continuation bytes still needed.
 	AltUtf8(NonZeroU8),
 }
 
+impl State {
+	pub(super) const fn limit(&self) -> usize {
+		match self {
+			Self::Csi => 4096,
+			Self::BracketedPaste => 16 << 20,
+			Self::Osc
+			| Self::Osc72(_)
+			| Self::OscSt
+			| Self::Dcs
+			| Self::DcsSt
+			| Self::Apc
+			| Self::ApcSt => 1 << 20,
+			_ => usize::MAX,
+		}
+	}
+
+	pub(super) const fn timeout(&self) -> Option<Duration> {
+		match self {
+			Self::Ground | Self::BracketedPaste => None,
+			Self::Esc => Some(Duration::from_millis(10)),
+			_ => Some(Duration::from_secs(1)),
+		}
+	}
+}
+
+// --- StateOsc72
 #[derive(Debug, Default, PartialEq)]
 pub(crate) struct StateOsc72 {
 	pub(crate) r#type:   Option<u8>,

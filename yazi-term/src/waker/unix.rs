@@ -1,4 +1,4 @@
-use std::{io::{self, Write}, ops::Deref, os::unix::net::UnixStream};
+use std::{io::{self, Read, Write}, ops::Deref, os::unix::net::UnixStream};
 
 #[derive(Debug)]
 pub(crate) struct Waker {
@@ -22,4 +22,16 @@ impl Waker {
 	}
 
 	pub fn wake(&self) -> io::Result<()> { Write::write_all(&mut &self.writer, &[0]) }
+
+	pub(crate) fn drain(&self) -> io::Result<()> {
+		loop {
+			match Read::read(&mut &self.reader, &mut [0; 1024]) {
+				Ok(0) => return Ok(()),
+				Ok(_) => {}
+				Err(e) if e.kind() == io::ErrorKind::WouldBlock => return Ok(()),
+				Err(e) if e.kind() == io::ErrorKind::Interrupted => {}
+				Err(e) => return Err(e),
+			}
+		}
+	}
 }

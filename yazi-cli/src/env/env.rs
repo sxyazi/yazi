@@ -1,8 +1,10 @@
 use std::{env, ffi::OsStr, fmt::Write, path::Path, process::Command};
 
+use anyhow::Result;
 use regex::Regex;
-use yazi_config::{THEME, YAZI};
-use yazi_emulator::Mux;
+use yazi_adapter::drivers::Drivers;
+use yazi_config::{YAZI, build_flavor};
+use yazi_emulator::{Brand, Emulator, Mux};
 use yazi_fs::Xdg;
 use yazi_shared::timestamp_us;
 use yazi_shim::OptionExt;
@@ -11,8 +13,11 @@ use yazi_term::TERM;
 use crate::env::Env;
 
 impl Env {
-	pub(crate) fn print() -> Result<String, std::fmt::Error> {
+	pub(crate) async fn print() -> Result<String> {
 		let mut s = String::new();
+		let emulator = Emulator::probe().await?;
+		let theme = build_flavor(emulator.light)?;
+
 		writeln!(s, "Yazi\n{}", Self::yazi_version())?;
 		writeln!(s, "    Backtrace: {:?}", env::var_os("RUST_BACKTRACE"))?;
 
@@ -25,18 +30,18 @@ impl Env {
 		writeln!(s, "    Theme            : {}", Self::config_state("theme.toml"))?;
 		writeln!(s, "    VFS              : {}", Self::config_state("vfs.toml"))?;
 		writeln!(s, "    Package          : {}", Self::config_state("package.toml"))?;
-		writeln!(s, "    Dark/light flavor: {:?} / {:?}", THEME.flavor.dark, THEME.flavor.light)?;
+		writeln!(s, "    Dark/light flavor: {:?} / {:?}", theme.flavor.dark, theme.flavor.light)?;
 
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    TERM                : {:?}", env::var_os("TERM"))?;
 		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
 		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
-		writeln!(s, "    Brand.from_env      : {:?}", yazi_emulator::Brand::from_env())?;
-		writeln!(s, "    Emulator.detect     : {:?}", *yazi_emulator::EMULATOR)?;
+		writeln!(s, "    Brand.from_env      : {:?}", Brand::from_env())?;
+		writeln!(s, "    Emulator.detect     : {emulator:?}")?;
 
 		writeln!(s, "\nAdapter")?;
-		writeln!(s, "    Adapter.matches    : {:?}", *yazi_adapter::ADAPTOR)?;
-		writeln!(s, "    Dimension.available: {:?}", TERM.dimension())?;
+		writeln!(s, "    Drivers.matches: {:?}", Drivers::matches(&emulator))?;
+		writeln!(s, "    TERM.dimension : {:?}", TERM.dimension())?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;
@@ -52,7 +57,7 @@ impl Env {
 		writeln!(s, "    shared.in_ssh_connection: {}", yazi_shared::in_ssh_connection())?;
 
 		writeln!(s, "\nWSL")?;
-		writeln!(s, "    WSL: {:?}", yazi_adapter::WSL)?;
+		writeln!(s, "    WSL: {:?}", yazi_shared::in_wsl())?;
 
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
@@ -83,7 +88,6 @@ impl Env {
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;
-		writeln!(s, "    TMUX               : {}", yazi_emulator::TMUX)?;
 		writeln!(s, "    tmux version       : {}", Self::dep_version("tmux", "-V"))?;
 		writeln!(s, "    tmux build flags   : enable-sixel={}", Mux::tmux_sixel_flag())?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;

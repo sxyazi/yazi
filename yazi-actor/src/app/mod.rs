@@ -6,10 +6,12 @@ yazi_macro::mod_flat!(
 	focus
 	lua
 	mouse
+	passthrough
 	plugin
 	plugin_do
 	quit
 	reflow
+	report
 	resize
 	resume
 	stop

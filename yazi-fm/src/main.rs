@@ -28,7 +28,9 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_term::init()?;
 
-	yazi_adapter::init()?;
+	yazi_emulator::init();
+
+	yazi_adapter::init();
 
 	yazi_dds::init();
 

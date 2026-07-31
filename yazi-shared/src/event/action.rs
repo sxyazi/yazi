@@ -107,8 +107,8 @@ impl Action {
 		self
 	}
 
-	pub fn with_replier(mut self, tx: Replier) -> Self {
-		self.args.insert("replier".into(), Data::Any(Box::new(tx)));
+	pub fn with_replier(mut self, tx: impl Into<Replier>) -> Self {
+		self.args.insert("replier".into(), Data::Any(Box::new(tx.into())));
 		self
 	}
 
@@ -226,7 +226,11 @@ impl Action {
 		(0..self.len()).filter_map(|i| self.args.remove(&DataKey::from(i))?.into_any())
 	}
 
-	pub fn take_replier(&mut self) -> Option<Replier> { self.take_any("replier") }
+	pub fn take_replier(&mut self) -> Option<Replier> {
+		let replier: Replier = self.take_any("replier")?;
+		replier.claim();
+		Some(replier)
+	}
 }
 
 impl Display for Action {

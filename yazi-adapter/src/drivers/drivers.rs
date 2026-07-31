@@ -1,12 +1,12 @@
 use std::{env, ops::{Deref, DerefMut}};
 
 use tracing::warn;
-use yazi_emulator::{Emulator, TMUX};
+use yazi_emulator::{Brand, Emulator};
 use yazi_shared::env_exists;
 
 use crate::drivers::{Driver as D, Ueberzug};
 
-pub(crate) struct Drivers(Vec<D>);
+pub struct Drivers(Vec<D>);
 
 impl Deref for Drivers {
 	type Target = Vec<D>;
@@ -19,7 +19,17 @@ impl DerefMut for Drivers {
 }
 
 impl From<&yazi_emulator::Emulator> for Drivers {
-	fn from(value: &yazi_emulator::Emulator) -> Self { value.kind.either_into() }
+	fn from(value: &yazi_emulator::Emulator) -> Self {
+		match value.brand {
+			Brand::Unknown => Self(match (value.kgp, value.sixel) {
+				(true, true) => vec![D::Sixel, D::KgpOld],
+				(true, false) => vec![D::KgpOld],
+				(false, true) => vec![D::Sixel],
+				(false, false) => vec![],
+			}),
+			brand => brand.into(),
+		}
+	}
 }
 
 impl From<yazi_emulator::Brand> for Drivers {
@@ -27,6 +37,7 @@ impl From<yazi_emulator::Brand> for Drivers {
 		use yazi_emulator::Brand as B;
 
 		Self(match value {
+			B::Unknown => vec![],
 			B::Kitty => vec![D::Kgp],
 			B::Konsole => vec![D::KgpOld],
 			B::Iterm2 => vec![D::Iip, D::Sixel],
@@ -50,27 +61,16 @@ impl From<yazi_emulator::Brand> for Drivers {
 	}
 }
 
-impl From<yazi_emulator::Unknown> for Drivers {
-	fn from(value: yazi_emulator::Unknown) -> Self {
-		Self(match (value.kgp, value.sixel) {
-			(true, true) => vec![D::Sixel, D::KgpOld],
-			(true, false) => vec![D::KgpOld],
-			(false, true) => vec![D::Sixel],
-			(false, false) => vec![],
-		})
-	}
-}
-
 impl Drivers {
 	pub fn matches(emulator: &Emulator) -> D {
-		let mut adapters: Self = emulator.into();
+		let mut drivers: Self = emulator.into();
 		if env_exists("ZELLIJ_SESSION_NAME") {
-			adapters.retain(|p| *p == D::Sixel);
-		} else if TMUX.get() {
-			adapters.retain(|p| *p != D::KgpOld);
+			drivers.retain(|p| *p == D::Sixel);
+		} else if emulator.tmux {
+			drivers.retain(|p| *p != D::KgpOld);
 		}
-		if let Some(p) = adapters.first() {
-			return *p;
+		if let Some(d) = drivers.first() {
+			return *d;
 		}
 
 		let supported_compositor = Ueberzug::supported_compositor();
@@ -78,7 +78,7 @@ impl Drivers {
 			"x11" => return D::X11,
 			"wayland" if supported_compositor => return D::Wayland,
 			"wayland" if !supported_compositor => return D::Chafa,
-			_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
+			_ => warn!("[Drivers] Could not identify XDG_SESSION_TYPE"),
 		}
 		if env_exists("WAYLAND_DISPLAY") {
 			return if supported_compositor { D::Wayland } else { D::Chafa };
@@ -88,7 +88,7 @@ impl Drivers {
 			_ => {}
 		}
 
-		warn!("[Adapter] Falling back to chafa");
+		warn!("[Drivers] Falling back to chafa");
 		D::Chafa
 	}
 }

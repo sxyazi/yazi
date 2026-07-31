@@ -1,10 +1,12 @@
+use std::env;
+
 use tracing::debug;
 use yazi_shared::env_exists;
 
-use crate::Mux;
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum Brand {
+	#[default]
+	Unknown,
 	Kitty,
 	Konsole,
 	Iterm2,
@@ -45,7 +47,6 @@ impl Brand {
 	}
 
 	pub fn from_env() -> Option<Self> {
-		let (term, program) = Self::env();
 		let vars = [
 			("KITTY_WINDOW_ID", Self::Kitty),
 			("KONSOLE_VERSION", Self::Konsole),
@@ -58,7 +59,7 @@ impl Brand {
 			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
 		];
 
-		match term.as_str() {
+		match &*env::var("TERM").unwrap_or_default() {
 			"xterm-kitty" => return Some(Self::Kitty),
 			"foot" => return Some(Self::Foot),
 			"foot-extra" => return Some(Self::Foot),
@@ -67,7 +68,8 @@ impl Brand {
 			"rxvt-unicode-256color" => return Some(Self::Urxvt),
 			_ => {}
 		}
-		match program.as_str() {
+
+		match &*env::var("TERM_PROGRAM").unwrap_or_default() {
 			"iTerm.app" => return Some(Self::Iterm2),
 			"WezTerm" => return Some(Self::WezTerm),
 			"ghostty" => return Some(Self::Ghostty),
@@ -81,19 +83,12 @@ impl Brand {
 			"Apple_Terminal" => return Some(Self::Apple),
 			_ => {}
 		}
+
 		if let Some((var, brand)) = vars.into_iter().find(|&(s, _)| env_exists(s)) {
 			debug!("Detected special environment variable: {var}");
 			return Some(brand);
 		}
 
 		None
-	}
-
-	fn env() -> (String, String) {
-		let (term, program) = Mux::term_program();
-		(
-			term.unwrap_or(std::env::var("TERM").unwrap_or_default()),
-			program.unwrap_or(std::env::var("TERM_PROGRAM").unwrap_or_default()),
-		)
 	}
 }
