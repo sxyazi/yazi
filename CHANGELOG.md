@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Improved
 
 - Eliminate hacks in image and UI conflict resolution ([#4022])
+- Make terminal capability probing async ([#4194])
 - Enable SSO (small string optimization) for custom schemes and custom styles ([#4164])
 
 ## [v26.5.6]
@@ -1792,3 +1793,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4174]: https://github.com/sxyazi/yazi/pull/4174
 [#4177]: https://github.com/sxyazi/yazi/pull/4177
 [#4184]: https://github.com/sxyazi/yazi/pull/4184
+[#4194]: https://github.com/sxyazi/yazi/pull/4194

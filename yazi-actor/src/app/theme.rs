@@ -4,6 +4,7 @@ use yazi_config::{THEME, build_flavor};
 use yazi_emulator::EMULATOR;
 use yazi_macro::{render, succ};
 use yazi_parser::VoidForm;
+use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 use yazi_shim::serde::Overlay;
 
@@ -17,8 +18,10 @@ impl Actor for Theme {
 	const NAME: &str = "theme";
 
 	fn act(_cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		let light = EMULATOR.load().light;
-		THEME.overlay(build_flavor(light, true)?);
+		match build_flavor(EMULATOR.load().light) {
+			Ok(theme) => THEME.overlay(theme),
+			Err(e) => succ!(NotifyProxy::push_error("Theme load failed", format!("{e:#}"))),
+		};
 
 		yazi_plugin::theme::reset()?;
 		succ!(render!());

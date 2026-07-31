@@ -53,7 +53,7 @@ impl State {
 
 	pub(super) const fn timeout(&self) -> Option<Duration> {
 		match self {
-			Self::Ground => None,
+			Self::Ground | Self::BracketedPaste => None,
 			Self::Esc => Some(Duration::from_millis(10)),
 			_ => Some(Duration::from_secs(1)),
 		}

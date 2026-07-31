@@ -3,7 +3,7 @@ use std::{env, ffi::OsStr, fmt::Write, path::Path, process::Command};
 use anyhow::Result;
 use regex::Regex;
 use yazi_adapter::drivers::Drivers;
-use yazi_config::{THEME, YAZI};
+use yazi_config::{YAZI, build_flavor};
 use yazi_emulator::{Brand, Emulator, Mux};
 use yazi_fs::Xdg;
 use yazi_shared::timestamp_us;
@@ -16,6 +16,7 @@ impl Env {
 	pub(crate) async fn print() -> Result<String> {
 		let mut s = String::new();
 		let emulator = Emulator::probe().await?;
+		let theme = build_flavor(emulator.light)?;
 
 		writeln!(s, "Yazi\n{}", Self::yazi_version())?;
 		writeln!(s, "    Backtrace: {:?}", env::var_os("RUST_BACKTRACE"))?;
@@ -29,7 +30,7 @@ impl Env {
 		writeln!(s, "    Theme            : {}", Self::config_state("theme.toml"))?;
 		writeln!(s, "    VFS              : {}", Self::config_state("vfs.toml"))?;
 		writeln!(s, "    Package          : {}", Self::config_state("package.toml"))?;
-		writeln!(s, "    Dark/light flavor: {:?} / {:?}", THEME.flavor.dark, THEME.flavor.light)?;
+		writeln!(s, "    Dark/light flavor: {:?} / {:?}", theme.flavor.dark, theme.flavor.light)?;
 
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    TERM                : {:?}", env::var_os("TERM"))?;
