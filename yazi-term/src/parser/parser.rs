@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, mem, num::NonZeroU8, str};
+use std::{collections::VecDeque, mem, num::NonZeroU8, str, time::{Duration, Instant}};
 
 use yazi_shim::utf8_char_width;
 
@@ -10,14 +10,18 @@ pub struct Parser {
 	pub(super) state:  State,
 	pub(super) seq:    Vec<u8>,
 	pub(crate) events: VecDeque<Event>,
+	discard:           bool,
+	touched:           Instant,
 }
 
 impl Default for Parser {
 	fn default() -> Self {
 		Self {
-			state:  State::Ground,
-			seq:    Vec::with_capacity(64),
-			events: VecDeque::with_capacity(32),
+			state:   State::Ground,
+			seq:     Vec::with_capacity(64),
+			events:  VecDeque::with_capacity(32),
+			discard: false,
+			touched: Instant::now(),
 		}
 	}
 }
@@ -29,7 +33,14 @@ impl Parser {
 		}
 	}
 
-	fn step(&mut self, b: u8) {
+	pub fn step(&mut self, b: u8) {
+		// If the sequence is too long, mark it for discard.
+		if self.seq.len() >= self.state.limit() {
+			self.seq.clear();
+			self.discard = true;
+		}
+
+		self.touched = Instant::now();
 		match &self.state {
 			State::Ground => self.on_ground(b),
 			State::Esc => self.on_esc(b),
@@ -40,30 +51,34 @@ impl Parser {
 			State::Osc | State::OscSt => self.on_osc(b),
 			State::Osc72(_) => self.on_osc72(b),
 			State::Dcs | State::DcsSt => self.on_dcs(b),
+			State::Apc | State::ApcSt => self.on_apc(b),
 			State::Utf8(n) => self.on_utf8(b, *n),
 			State::AltUtf8(n) => self.on_alt_utf8(b, *n),
 		}
 	}
 
-	/// Resolve any pending ambiguous state.
-	///
-	/// Call this when no more input bytes are immediately available. If the
-	/// parser is waiting in the [`State::Esc`] state (a lone `\x1B` has
-	/// been seen but no follow-up bytes arrived), this emits a bare
-	/// [`KeyCode::Escape`] event and resets to [`State::Ground`].
-	pub fn flush(&mut self) {
-		match &self.state {
-			State::Esc => self.emit_key(KeyCode::Escape),
-			State::Osc72(s) if s.has_more => return,
-			_ => {}
-		}
-
-		self.reset();
-	}
-
 	fn reset(&mut self) {
 		self.state = State::Ground;
 		self.seq.clear();
+		self.discard = false;
+	}
+
+	pub(crate) fn drain(&mut self) {
+		self.reset();
+		self.events.clear();
+	}
+
+	pub(crate) fn leftover(&self) -> Option<Duration> {
+		self.state.timeout().map(|d| d.saturating_sub(self.touched.elapsed()))
+	}
+
+	pub(crate) fn expire(&mut self) {
+		if self.leftover().is_none_or(|d| !d.is_zero()) {
+			return;
+		} else if matches!(&self.state, State::Esc) {
+			self.emit_key(KeyCode::Escape);
+		}
+		self.reset();
 	}
 
 	pub(crate) fn emit(&mut self, event: impl Into<Event>) { self.events.push_back(event.into()); }
@@ -97,6 +112,7 @@ impl Parser {
 			b'[' => self.state = State::Csi,
 			b']' => self.state = State::Osc,
 			b'P' => self.state = State::Dcs,
+			b'_' => self.state = State::Apc,
 			b'O' => self.state = State::EscO,
 			// ESC ESC: emit Escape for the first byte, the second is consumed.
 			b'\x1B' => {
@@ -128,10 +144,7 @@ impl Parser {
 			b'F' => Event::Key(KeyCode::End.into()),
 			b'H' => Event::Key(KeyCode::Home.into()),
 			v @ b'P'..=b'S' => Event::Key(KeyCode::Fn(1 + v - b'P').into()),
-			_ => {
-				self.reset();
-				return;
-			}
+			_ => return self.reset(),
 		};
 		self.emit(event);
 		self.reset();
@@ -149,6 +162,11 @@ impl Parser {
 		// technically in the final-byte range but must not trigger early dispatch.
 		if b == b'[' && self.seq.len() == 3 {
 			return;
+		}
+
+		// If the sequence is marked for discard, reset and ignore it.
+		if self.discard {
+			return self.reset();
 		}
 
 		// `\x1B[M` (no params) = X10 normal-mouse encoding; 3 raw bytes follow.
@@ -186,26 +204,30 @@ impl Parser {
 	fn on_bracketed_paste(&mut self, b: u8) {
 		self.seq.push(b);
 
-		if self.seq.ends_with(b"\x1b[201~") {
-			// seq = b"\x1B[200~" + paste_content + b"\x1B[201~"
-			let paste = String::from_utf8_lossy(&self.seq[6..self.seq.len() - 6]).into_owned();
-			self.emit(Event::Paste(paste));
-			self.reset();
+		if !self.seq.ends_with(b"\x1b[201~") {
+			return;
+		} else if self.discard {
+			return self.reset();
 		}
+
+		// seq = b"\x1B[200~" + paste_content + b"\x1B[201~"
+		let paste = String::from_utf8_lossy(&self.seq[6..self.seq.len() - 6]).into_owned();
+		self.emit(Event::Paste(paste));
+		self.reset();
 	}
 
 	fn on_osc(&mut self, b: u8) {
 		self.seq.push(b);
 
 		match (&self.state, b) {
-			(State::Osc, b'\x07') => self.reset(), // BEL — OSC complete (discard)
+			(State::Osc, b'\x07') => self.finish_report(Self::parse_osc_report),
 			(State::Osc, _) if self.seq.starts_with(b"\x1b]72;") => {
 				self.state = State::Osc72(Default::default());
 			}
 			(State::Osc, b'\x1B') => self.state = State::OscSt,
-			(State::Osc, _) => {}                         // keep accumulating
-			(State::OscSt, b'\\') => self.reset(),        // ST (`\x1B\\`) — OSC complete (discard)
-			(State::OscSt, b'\x1B') => {}                 // another ESC — stay in OscSt
+			(State::Osc, _) => {} // keep accumulating
+			(State::OscSt, b'\\') => self.finish_report(Self::parse_osc_report),
+			(State::OscSt, b'\x1B') => {} // another ESC — stay in OscSt
 			(State::OscSt, _) => self.state = State::Osc, // not ST — resume OSC
 			_ => unreachable!(),
 		}
@@ -216,6 +238,8 @@ impl Parser {
 
 		if !self.seq.ends_with(b"\x1b\\") {
 			return;
+		} else if self.discard {
+			return self.reset();
 		} else if self.parse_osc72().is_err() {
 			return self.reset();
 		}
@@ -241,9 +265,22 @@ impl Parser {
 		match (&self.state, b) {
 			(State::Dcs, b'\x1B') => self.state = State::DcsSt,
 			(State::Dcs, _) => {}
-			(State::DcsSt, b'\\') => self.reset(), // ST — DCS complete (discard)
-			(State::DcsSt, b'\x1B') => {}          // another ESC — stay in DcsSt
+			(State::DcsSt, b'\\') => self.finish_report(Self::parse_dcs_report),
+			(State::DcsSt, b'\x1B') => {} // another ESC — stay in DcsSt
 			(State::DcsSt, _) => self.state = State::Dcs, // not ST — resume DCS
+			_ => unreachable!(),
+		}
+	}
+
+	fn on_apc(&mut self, b: u8) {
+		self.seq.push(b);
+
+		match (&self.state, b) {
+			(State::Apc, b'\x1B') => self.state = State::ApcSt,
+			(State::Apc, _) => {}
+			(State::ApcSt, b'\\') => self.finish_report(Self::parse_apc_report),
+			(State::ApcSt, b'\x1B') => {}
+			(State::ApcSt, _) => self.state = State::Apc,
 			_ => unreachable!(),
 		}
 	}
@@ -285,6 +322,15 @@ impl Parser {
 			&& let Some(c) = s.chars().next()
 		{
 			self.emit_key(KeyEvent::new(KeyCode::Char(c), Modifiers::ALT | Modifiers::for_char(c)));
+		}
+		self.reset();
+	}
+
+	fn finish_report(&mut self, parse: fn(&Self) -> crate::Result<Event>) {
+		if !self.discard
+			&& let Ok(event) = parse(self)
+		{
+			self.emit(event);
 		}
 		self.reset();
 	}

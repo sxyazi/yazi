@@ -73,7 +73,7 @@ impl FileBuilder for Demand {
 			&& status.is_failure()
 			&& conn.lstat(engine.path).await.is_ok()
 		{
-			return Err(io::Error::from(io::ErrorKind::AlreadyExists));
+			return Err(io::ErrorKind::AlreadyExists.into());
 		}
 
 		Ok(result?)

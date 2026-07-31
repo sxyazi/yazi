@@ -17,9 +17,10 @@ impl Actor for Theme {
 	const NAME: &str = "theme";
 
 	fn act(_cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		THEME.overlay(build_flavor(EMULATOR.light, true)?);
-		yazi_plugin::theme::reset()?;
+		let light = EMULATOR.load().light;
+		THEME.overlay(build_flavor(light, true)?);
 
+		yazi_plugin::theme::reset()?;
 		succ!(render!());
 	}
 }

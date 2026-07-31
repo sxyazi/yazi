@@ -44,7 +44,8 @@ impl Parser {
 			b'Q' => Event::Key(KeyCode::Fn(2).into()),
 			b'S' => Event::Key(KeyCode::Fn(4).into()),
 			b'?' => match last {
-				b'u' | b'c' | b'n' | b'y' => return Err(ParseError::Ignored),
+				b'c' | b'y' => return self.parse_csi_report(),
+				b'u' | b'n' => return Err(ParseError::Ignored),
 				_ => bail!(),
 			},
 			b'>' => match seq[seq.len() - 2..] {
@@ -54,8 +55,9 @@ impl Parser {
 			b'0'..=b'9' if !(64..=126).contains(&last) => return Err(ParseError::Incomplete),
 			b'0'..=b'9' => match last {
 				b'M' => return self.parse_csi_rxvt_mouse(),
-				b'~' => return self.parse_csi_special_key(),
 				b'u' => return self.parse_csi_u_key(),
+				b'~' => return self.parse_csi_special_key(),
+				b'n' | b't' => return self.parse_csi_report(),
 				b'R' => return Err(ParseError::Ignored),
 				_ if self.seq.contains(&b';') => return self.parse_csi_modifier_key(),
 				_ => return self.parse_csi_modifier_legacy_key(),

@@ -50,6 +50,7 @@ impl<'a> Executor<'a> {
 		on!(update_progress);
 		on!(lua);
 		on!(deprecate);
+		on!(passthrough);
 		on!(theme);
 		on!(stop);
 		on!(quit);

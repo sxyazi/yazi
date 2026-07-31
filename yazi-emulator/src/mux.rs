@@ -1,74 +1,38 @@
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}, process::Stdio};
 
-use anyhow::Result;
+use tokio::{process::Command, time::{Duration, timeout}};
 use tracing::error;
-use yazi_macro::{time, writef};
-use yazi_shim::cell::SyncCell;
-use yazi_tty::{TTY, sequence::RequestDeviceStatus};
 
-use crate::Emulator;
+use crate::EMULATOR;
 
-pub static TMUX: SyncCell<bool> = SyncCell::new(false);
-pub static ESCAPE: SyncCell<&'static str> = SyncCell::new("\x1b");
-pub static START: SyncCell<&'static str> = SyncCell::new("\x1b");
-pub static CLOSE: SyncCell<&'static str> = SyncCell::new("");
+pub const ESCAPE: MuxSequence = MuxSequence("\x1b", "\x1b\x1b");
+pub const START: MuxSequence = MuxSequence("\x1b", "\x1bPtmux;\x1b\x1b");
+pub const CLOSE: MuxSequence = MuxSequence("", "\x1b\\");
 
 pub struct Mux;
 
 impl Mux {
-	pub fn wrap<T: Display>(s: T) -> impl Display {
-		struct Wrapper<T>(T);
+	pub async fn tmux_passthrough() {
+		let output = Command::new("tmux")
+			.args(["set", "-p", "allow-passthrough", "on"])
+			.kill_on_drop(true)
+			.stdin(Stdio::null())
+			.stdout(Stdio::null())
+			.stderr(Stdio::piped())
+			.output();
 
-		impl<T: Display> Display for Wrapper<T> {
-			fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-				if !TMUX.get() {
-					return self.0.fmt(f);
-				}
-
-				write!(
-					f,
-					"{START}{}{CLOSE}",
-					self.0.to_string().trim_start_matches('\x1b').replace('\x1b', ESCAPE.get())
-				)
-			}
-		}
-
-		Wrapper(s)
-	}
-
-	pub fn tmux_passthrough() {
-		let output = time!(
-			"Running `tmux set -p allow-passthrough on`",
-			std::process::Command::new("tmux")
-				.args(["set", "-p", "allow-passthrough", "on"])
-				.stdin(std::process::Stdio::null())
-				.stdout(std::process::Stdio::null())
-				.stderr(std::process::Stdio::piped())
-				.spawn()
-				.and_then(|c| c.wait_with_output())
-		);
-
-		match output {
-			Ok(o) if o.status.success() => {}
-			Ok(o) => {
+		match timeout(Duration::from_secs(5), output).await {
+			Ok(Ok(o)) if o.status.success() => {}
+			Ok(Ok(o)) => {
 				error!(
 					"Running `tmux set -p allow-passthrough on` failed: {:?}, {}",
 					o.status,
 					String::from_utf8_lossy(&o.stderr)
 				);
 			}
-			Err(e) => {
-				error!("Failed to spawn `tmux set -p allow-passthrough on`: {e}");
-			}
+			Ok(Err(e)) => error!("Failed to spawn `tmux set -p allow-passthrough on`: {e}"),
+			Err(_) => error!("Running `tmux set -p allow-passthrough on` timed out"),
 		}
-	}
-
-	pub fn tmux_drain() -> Result<()> {
-		if TMUX.get() {
-			writef!(TTY.writer(), "{}", Self::wrap(RequestDeviceStatus))?;
-			_ = Emulator::read_until_dsr();
-		}
-		Ok(())
 	}
 
 	pub fn tmux_sixel_flag() -> &'static str {
@@ -85,32 +49,13 @@ impl Mux {
 			_ => "Unknown",
 		}
 	}
+}
 
-	pub(super) fn term_program() -> (Option<String>, Option<String>) {
-		let (mut term, mut program) = (None, None);
-		if !TMUX.get() {
-			return (term, program);
-		}
+// --- MuxSequence
+pub struct MuxSequence(&'static str, &'static str);
 
-		let Ok(output) = time!(
-			"Running `tmux show-environment`",
-			std::process::Command::new("tmux").arg("show-environment").output()
-		) else {
-			return (term, program);
-		};
-
-		for line in String::from_utf8_lossy(&output.stdout).lines() {
-			if let Some((k, v)) = line.trim().split_once('=') {
-				match k {
-					"TERM" => term = Some(v.to_owned()),
-					"TERM_PROGRAM" => program = Some(v.to_owned()),
-					_ => continue,
-				}
-			}
-			if term.is_some() && program.is_some() {
-				break;
-			}
-		}
-		(term, program)
+impl Display for MuxSequence {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str(if EMULATOR.load().tmux { self.1 } else { self.0 })
 	}
 }

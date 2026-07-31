@@ -17,11 +17,13 @@ pub enum Spark<'a> {
 	AppMouse(crate::app::MouseForm),
 	AppPlugin(crate::app::PluginForm),
 	AppPluginDo(crate::app::PluginForm),
+	AppPassthrough(crate::app::PassthroughForm),
 	AppQuit(crate::app::QuitForm),
+	AppReport(yazi_term::event::Report),
 	AppReflow(crate::app::ReflowForm),
 	AppResize(crate::app::ReflowForm),
 	AppResume(crate::app::ReflowForm),
-	AppStop(crate::VoidForm),
+	AppStop(crate::app::StopForm),
 	AppTheme(crate::VoidForm),
 	AppTitle(crate::app::TitleForm),
 	AppUpdateProgress(crate::app::UpdateProgressForm),
@@ -212,7 +214,9 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::AppMouse(b) => b.into_lua(lua),
 			Self::AppPlugin(b) => b.into_lua(lua),
 			Self::AppPluginDo(b) => b.into_lua(lua),
+			Self::AppPassthrough(b) => b.into_lua(lua),
 			Self::AppQuit(b) => b.into_lua(lua),
+			Self::AppReport(b) => b.into_lua(lua),
 			Self::AppReflow(b) => b.into_lua(lua),
 			Self::AppResize(b) => b.into_lua(lua),
 			Self::AppResume(b) => b.into_lua(lua),
@@ -362,7 +366,6 @@ try_from_spark!(
 	crate::VoidForm,
 	app:bootstrap,
 	app:focus,
-	app:stop,
 	app:theme,
 	mgr:back,
 	mgr:bulk_rename,
@@ -391,8 +394,11 @@ try_from_spark!(crate::app::DndForm, app:dnd);
 try_from_spark!(crate::app::LuaForm, app:lua);
 try_from_spark!(crate::app::MouseForm, app:mouse);
 try_from_spark!(crate::app::PluginForm, app:plugin, app:plugin_do);
+try_from_spark!(crate::app::PassthroughForm, app:passthrough);
 try_from_spark!(crate::app::QuitForm, app:quit, mgr:quit);
+try_from_spark!(yazi_term::event::Report, app:report);
 try_from_spark!(crate::app::ReflowForm, app:reflow, app:resize, app:resume);
+try_from_spark!(crate::app::StopForm, app:stop);
 try_from_spark!(crate::app::TitleForm, app:title);
 try_from_spark!(crate::app::UpdateProgressForm, app:update_progress);
 try_from_spark!(crate::cmp::CloseForm, cmp:close);

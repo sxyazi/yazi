@@ -29,6 +29,7 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::FocusOut) => Ok(()),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
 			Event::Term(TermEvent::Dnd(dnd)) => self.dispatch_dnd(dnd),
+			Event::Term(TermEvent::Report(report)) => self.dispatch_report(report),
 		};
 
 		if let Err(e) = &result {
@@ -44,7 +45,7 @@ impl<'a> Dispatcher<'a> {
 			warn!("Call dispatch error: {e:?}");
 		}
 		if let Some(tx) = tx {
-			tx.send(result).ok();
+			tx.reply_if_unclaimed(result);
 		}
 	}
 
@@ -100,5 +101,10 @@ impl<'a> Dispatcher<'a> {
 	fn dispatch_dnd(&mut self, dnd: DndEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:dnd, cx, dnd).map(|_| ())
+	}
+
+	fn dispatch_report(&mut self, report: yazi_term::event::Report) -> Result<()> {
+		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		act!(app:report, cx, report).map(|_| ())
 	}
 }

@@ -23,6 +23,8 @@ pub fn init() -> anyhow::Result<()> {
 		wait_for_key(e)?;
 		try_init(false)?;
 	}
+
+	THEME.init(Preset::theme(false)?.reshape(false)?);
 	Ok(())
 }
 
@@ -44,19 +46,6 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	YAZI.init(yazi);
 	KEYMAP.init(keymap);
 	VFS.init(vfs);
-	Ok(())
-}
-
-pub fn init_flavor(light: bool) -> anyhow::Result<()> {
-	if let Err(e) = try_init_flavor(light, true) {
-		wait_for_key(e)?;
-		try_init_flavor(light, false)?;
-	}
-	Ok(())
-}
-
-fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
-	THEME.init(build_flavor(light, merge)?);
 	Ok(())
 }
 

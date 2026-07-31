@@ -6,7 +6,19 @@ use tokio::sync::mpsc;
 use crate::{event::Event, source::EventSource, terminal::Terminal};
 
 pub struct EventStream {
-	rx: Option<mpsc::UnboundedReceiver<io::Result<Event>>>,
+	rx:     Option<mpsc::UnboundedReceiver<io::Result<Event>>>,
+	source: Arc<EventSource<'static>>,
+	worker: Option<thread::JoinHandle<()>>,
+}
+
+impl Drop for EventStream {
+	fn drop(&mut self) {
+		self.source.wake().ok();
+		if let Some(worker) = self.worker.take() {
+			worker.join().ok();
+		}
+		self.source.drain().ok();
+	}
 }
 
 impl From<&'static Terminal<'_>> for EventStream {
@@ -18,11 +30,12 @@ impl EventStream {
 	where
 		F: Fn(&Event) -> bool + Send + 'static,
 	{
+		let source_ = source.clone();
 		let (tx, rx) = mpsc::unbounded_channel();
 
-		thread::spawn(move || {
+		let worker = thread::spawn(move || {
 			loop {
-				match source.try_poll(None, |_| true) {
+				match source_.try_poll(None, |_| true) {
 					Ok(event) => {
 						if !(filter)(&event) {
 							continue;
@@ -43,7 +56,7 @@ impl EventStream {
 			}
 		});
 
-		Self { rx: Some(rx) }
+		Self { rx: Some(rx), source, worker: Some(worker) }
 	}
 
 	pub fn take(&mut self) -> Option<mpsc::UnboundedReceiver<io::Result<Event>>> { self.rx.take() }

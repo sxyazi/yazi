@@ -5,14 +5,14 @@ use rustix::{event::Timespec, termios};
 use signal_hook::consts::SIGWINCH;
 use yazi_tty::{TtyReader, TtyWriter};
 
-use crate::{Timeout, event::Event, parser::Parser, waker::Waker};
+use crate::{Timeout, event::Event, parser::Parser, source::min_timeout, waker::Waker};
 
 #[derive(Debug)]
 pub struct EventSource<'a> {
 	pub(super) parser: Mutex<Parser>,
 	reader:            TtyReader<'a>,
 	writer:            TtyWriter<'a>,
-	waker:             Waker,
+	pub(super) waker:  Waker,
 
 	sigwinch_id:   signal_hook::SigId,
 	sigwinch_read: UnixStream,
@@ -39,17 +39,16 @@ impl<'a> EventSource<'a> {
 		})
 	}
 
-	pub fn wake(&self) -> io::Result<()> { self.waker.wake() }
-
 	pub(crate) fn try_fill(&self, timeout: Timeout) -> io::Result<()> {
 		let mut reader = self.reader.lock();
+		let timeout = min_timeout(timeout.leftover(), self.parser.lock().leftover());
 		let [read_ready, sigwinch_ready, wakeup_ready] =
-			poll([reader.as_fd(), self.sigwinch_read.as_fd(), self.waker.as_fd()], timeout.leftover())?;
+			poll([reader.as_fd(), self.sigwinch_read.as_fd(), self.waker.as_fd()], timeout)?;
 
 		// Stop waiting for events.
 		if wakeup_ready {
-			while read_complete(&*self.waker, &mut [0u8; 1024])? != 0 {}
-			return Err(io::Error::from(io::ErrorKind::ConnectionAborted));
+			self.waker.drain()?;
+			return Err(io::ErrorKind::ConnectionAborted.into());
 		}
 
 		// More input is ready.
@@ -58,15 +57,11 @@ impl<'a> EventSource<'a> {
 
 			let len = read_complete(&mut *reader, &mut buf)?;
 			if len == 0 {
-				return Err(io::Error::from(io::ErrorKind::UnexpectedEof));
+				return Err(io::ErrorKind::UnexpectedEof.into());
 			}
 
 			let mut parser = self.parser.lock();
 			parser.parse(&buf[..len]);
-
-			if len < buf.len() {
-				parser.flush();
-			}
 			return Ok(());
 		}
 
@@ -76,6 +71,7 @@ impl<'a> EventSource<'a> {
 			self.parser.lock().emit(Event::Resize(termios::tcgetwinsize(self.writer)?.into()));
 		}
 
+		self.parser.lock().expire();
 		Ok(())
 	}
 }

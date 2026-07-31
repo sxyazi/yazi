@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(deprecate dnd lua mouse plugin quit reflow title update_progress);
+yazi_macro::mod_flat!(deprecate dnd lua mouse passthrough plugin quit reflow stop title update_progress);

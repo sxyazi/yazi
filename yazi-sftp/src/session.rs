@@ -37,11 +37,7 @@ impl Session {
 		}
 
 		async fn write(writer: &mut WriteHalf<ChannelStream<Msg>>, buf: Vec<u8>) -> io::Result<()> {
-			if buf.is_empty() {
-				Err(io::Error::from(ErrorKind::BrokenPipe))
-			} else {
-				writer.write_all(&buf).await
-			}
+			if buf.is_empty() { Err(ErrorKind::BrokenPipe.into()) } else { writer.write_all(&buf).await }
 		}
 
 		let me_ = me.clone();

@@ -50,10 +50,3 @@ pub struct RequestCursorBlink;
 impl Display for RequestCursorBlink {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?12$p") }
 }
-
-/// Device Status Report (DSR)
-pub struct RequestDeviceStatus;
-
-impl Display for RequestDeviceStatus {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[5n") }
-}

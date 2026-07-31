@@ -4864,6 +4864,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
+ "yazi-adapter",
  "yazi-binding",
  "yazi-boot",
  "yazi-config",
@@ -4909,6 +4910,7 @@ dependencies = [
  "yazi-macro",
  "yazi-shared",
  "yazi-shim",
+ "yazi-term",
  "yazi-tty",
  "yazi-widgets",
 ]
@@ -5101,9 +5103,7 @@ name = "yazi-emulator"
 version = "26.5.6"
 dependencies = [
  "anyhow",
- "either",
- "ratatui-core",
- "scopeguard",
+ "arc-swap",
  "tokio",
  "tracing",
  "yazi-macro",
@@ -5151,6 +5151,7 @@ dependencies = [
  "yazi-config",
  "yazi-core",
  "yazi-dds",
+ "yazi-emulator",
  "yazi-fs",
  "yazi-macro",
  "yazi-parser",

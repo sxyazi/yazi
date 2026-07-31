@@ -71,14 +71,11 @@ impl<'a> Engine for Sftp<'a> {
 			} else if similar.is_none() {
 				similar = Some(s.into_owned());
 			} else {
-				return Err(io::Error::from(io::ErrorKind::NotFound));
+				return Err(io::ErrorKind::NotFound.into());
 			}
 		}
 
-		similar
-			.map(|n| parent.try_join(n))
-			.transpose()?
-			.ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))
+		similar.map(|n| parent.try_join(n)).transpose()?.ok_or(io::ErrorKind::NotFound.into())
 	}
 
 	async fn copy<P>(&self, to: P, attrs: yazi_fs::engine::Attrs) -> io::Result<u64>
@@ -130,7 +127,7 @@ impl<'a> Engine for Sftp<'a> {
 			&& status.is_failure()
 			&& op.lstat(self.path).await.is_ok()
 		{
-			return Err(io::Error::from(io::ErrorKind::AlreadyExists));
+			return Err(io::ErrorKind::AlreadyExists.into());
 		}
 
 		Ok(result?)

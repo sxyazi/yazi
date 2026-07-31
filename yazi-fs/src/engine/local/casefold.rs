@@ -96,7 +96,7 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 		// Case-insensitive match
 		Ok(parent.join(&names[i]))
 	} else {
-		Err(io::Error::from(io::ErrorKind::NotFound))
+		Err(io::ErrorKind::NotFound.into())
 	}
 }
 
@@ -153,7 +153,7 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 		// Case-insensitive match
 		Ok(parent.join(&names[i]))
 	} else {
-		Err(io::Error::from(io::ErrorKind::NotFound))
+		Err(io::ErrorKind::NotFound.into())
 	}
 }
 

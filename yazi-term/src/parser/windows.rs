@@ -11,7 +11,7 @@ impl Parser {
 					let ch = unsafe { event.uChar.AsciiChar } as u8;
 
 					if event.bKeyDown != 0 && ch != 0 {
-						self.parse(&[ch]);
+						self.step(ch);
 					}
 				}
 				Console::WINDOW_BUFFER_SIZE_EVENT => {
@@ -30,7 +30,5 @@ impl Parser {
 				_ => {}
 			}
 		}
-
-		self.flush();
 	}
 }
