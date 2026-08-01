@@ -62,11 +62,13 @@ impl From<yazi_emulator::Brand> for Drivers {
 }
 
 impl Drivers {
-	pub fn matches(emulator: &Emulator) -> D {
-		let mut drivers: Self = emulator.into();
+	pub fn matches(emu: &Emulator) -> D {
+		let mut drivers: Self = emu.into();
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			drivers.retain(|p| *p == D::Sixel);
-		} else if emulator.tmux {
+		} else if emu.sixel && emu.mux.is_some_and(|mux| mux.sixel) {
+			return D::Sixel;
+		} else if emu.mux.is_some() {
 			drivers.retain(|p| *p != D::KgpOld);
 		}
 		if let Some(d) = drivers.first() {

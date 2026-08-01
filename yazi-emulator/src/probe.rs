@@ -26,16 +26,17 @@ impl Probe {
 
 	pub fn restart(&mut self) -> Result<()> {
 		self.id = IDS.next();
-		self.emulator = Emulator { tmux: true, ..Default::default() };
+		self.emulator =
+			Emulator { mux: Some(Mux { sixel: self.emulator.sixel }), ..Default::default() };
 		self.request()
 	}
 
 	pub fn needs_passthrough(&self) -> bool {
-		self.emulator.brand == Brand::Tmux && !self.emulator.tmux
+		self.emulator.brand == Brand::Tmux && self.emulator.mux.is_none()
 	}
 
 	fn request(&self) -> Result<()> {
-		let w = |t: &'static dyn Display| TmuxPassthrough(t, self.emulator.tmux);
+		let w = |t: &'static dyn Display| TmuxPassthrough(t, self.emulator.mux.is_some());
 
 		writef!(
 			TTY.writer(),
@@ -79,7 +80,7 @@ impl Emulator {
 					return Ok(probe.emulator);
 				}
 
-				Mux::tmux_passthrough().await;
+				Mux::tmux_setup().await;
 				if let Err(e) = probe.restart() {
 					error!("Failed to request terminal capabilities through tmux: {e}");
 					return Ok(probe.emulator);

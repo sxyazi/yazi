@@ -37,7 +37,7 @@ impl Env {
 		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
 		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
 		writeln!(s, "    Brand.from_env      : {:?}", Brand::from_env())?;
-		writeln!(s, "    Emulator.detect     : {emulator:?}")?;
+		writeln!(s, "    Emulator.probe      : {emulator:?}")?;
 
 		writeln!(s, "\nAdapter")?;
 		writeln!(s, "    Drivers.matches: {:?}", Drivers::matches(&emulator))?;

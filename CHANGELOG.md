@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Refresh file list after deleting a file from search view ([#4174])
+- Work around image previews broken by a `tmux` 3.7b redraw bug ([#4195])
 - Normalize `\\?\`-prefixed Verbatim paths when creating relative symlinks on Windows ([#4067])
 - Keep package hashes indifferent to line endings when `ya pkg` pulls packages ([#4064])
 - Use WebP as `magick` preset preloader cache format to keep image transparency ([#4065])
@@ -1794,3 +1795,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4177]: https://github.com/sxyazi/yazi/pull/4177
 [#4184]: https://github.com/sxyazi/yazi/pull/4184
 [#4194]: https://github.com/sxyazi/yazi/pull/4194
+[#4195]: https://github.com/sxyazi/yazi/pull/4195

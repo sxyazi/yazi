@@ -9,12 +9,25 @@ pub const ESCAPE: MuxSequence = MuxSequence("\x1b", "\x1b\x1b");
 pub const START: MuxSequence = MuxSequence("\x1b", "\x1bPtmux;\x1b\x1b");
 pub const CLOSE: MuxSequence = MuxSequence("", "\x1b\\");
 
-pub struct Mux;
+#[derive(Clone, Copy, Debug)]
+pub struct Mux {
+	pub sixel: bool,
+}
 
 impl Mux {
-	pub async fn tmux_passthrough() {
+	pub async fn tmux_setup() {
 		let output = Command::new("tmux")
-			.args(["set", "-p", "allow-passthrough", "on"])
+			.args([
+				"set",
+				"-p",
+				"allow-passthrough",
+				"on",
+				";",
+				"set",
+				"-s",
+				"input-buffer-size",
+				"104857600",
+			])
 			.kill_on_drop(true)
 			.stdin(Stdio::null())
 			.stdout(Stdio::null())
@@ -25,13 +38,17 @@ impl Mux {
 			Ok(Ok(o)) if o.status.success() => {}
 			Ok(Ok(o)) => {
 				error!(
-					"Running `tmux set -p allow-passthrough on` failed: {:?}, {}",
+					"Failed to configure tmux passthrough and input buffer: status {:?}, stderr: {}",
 					o.status,
 					String::from_utf8_lossy(&o.stderr)
 				);
 			}
-			Ok(Err(e)) => error!("Failed to spawn `tmux set -p allow-passthrough on`: {e}"),
-			Err(_) => error!("Running `tmux set -p allow-passthrough on` timed out"),
+			Ok(Err(e)) => {
+				error!("Failed to start tmux while configuring passthrough and input buffer: {e}")
+			}
+			Err(_) => {
+				error!("Timed out after 5 seconds while configuring tmux passthrough and input buffer")
+			}
 		}
 	}
 
@@ -56,6 +73,7 @@ pub struct MuxSequence(&'static str, &'static str);
 
 impl Display for MuxSequence {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(if EMULATOR.load().tmux { self.1 } else { self.0 })
+		let emu = EMULATOR.load();
+		f.write_str(if emu.mux.is_none_or(|mux| mux.sixel && emu.sixel) { self.0 } else { self.1 })
 	}
 }
