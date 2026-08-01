@@ -19,11 +19,17 @@ impl Actor for Report {
 
 	fn act(cx: &mut Ctx, report: Self::Form) -> Result<Data> {
 		let Some(term) = cx.term.as_mut() else { succ!() };
+		let old_light = term.probe.emulator.light();
 
 		term.probe.emulator.apply(&report);
 		EMULATOR.store(Arc::new(term.probe.emulator.clone()));
 
-		if !matches!(report, TermReport::Da1(_)) {
+		if report.is_color_scheme()
+			&& old_light.zip(term.probe.emulator.light()).is_some_and(|(a, b)| a != b)
+			&& !term.probe.needs_passthrough()
+		{
+			return act!(app:theme, cx);
+		} else if !report.is_da_1() {
 			succ!();
 		} else if !term.probe.needs_passthrough() {
 			ADAPTOR.resolve(&term.probe.emulator);

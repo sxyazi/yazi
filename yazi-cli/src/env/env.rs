@@ -16,7 +16,7 @@ impl Env {
 	pub(crate) async fn print() -> Result<String> {
 		let mut s = String::new();
 		let emulator = Emulator::probe().await?;
-		let theme = build_flavor(emulator.light)?;
+		let theme = build_flavor(emulator.light().unwrap_or_default())?;
 
 		writeln!(s, "Yazi\n{}", Self::yazi_version())?;
 		writeln!(s, "    Backtrace: {:?}", env::var_os("RUST_BACKTRACE"))?;

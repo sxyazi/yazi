@@ -59,6 +59,7 @@ impl App {
 	fn bootstrap(&mut self) -> Result<Data> {
 		let cx = &mut Ctx::active(&mut self.core, &mut self.term);
 		act!(app:bootstrap, cx)?;
+		act!(app:reflow, cx, crate::Root::reflow as fn(_) -> _)?;
 		succ!(render!())
 	}
 

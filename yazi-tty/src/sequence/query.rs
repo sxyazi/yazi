@@ -14,6 +14,13 @@ impl Display for RequestCellPixelSize {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[16t") }
 }
 
+/// Request the current color scheme
+pub struct RequestColorScheme;
+
+impl Display for RequestColorScheme {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?996n") }
+}
+
 /// Request background color via OSC 11
 pub struct RequestBgColor;
 
@@ -29,9 +36,9 @@ impl Display for RequestDA1 {
 }
 
 /// Query Kitty graphics protocol capabilities
-pub struct KittyGraphicsQuery;
+pub struct RequestKittyGraphics;
 
-impl Display for KittyGraphicsQuery {
+impl Display for RequestKittyGraphics {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\")
 	}

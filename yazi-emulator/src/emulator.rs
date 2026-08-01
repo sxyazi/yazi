@@ -2,7 +2,6 @@ use std::io::{BufWriter, Write};
 
 use anyhow::Result;
 use arc_swap::ArcSwap;
-use tracing::debug;
 use yazi_macro::writef;
 use yazi_shim::cell::RoCell;
 use yazi_term::{TERM, event::Report};
@@ -18,7 +17,8 @@ pub struct Emulator {
 	pub version:      String,
 	pub kgp:          bool,
 	pub sixel:        bool,
-	pub light:        bool,
+	pub background:   Option<[u16; 3]>,
+	pub color_scheme: Option<bool>,
 	pub csi_16t:      (u16, u16),
 	pub force_16t:    bool,
 	pub cursor_blink: bool,
@@ -46,15 +46,22 @@ impl Emulator {
 				self.csi_16t = (*width, *height);
 				self.force_16t = Self::force_16t(self.csi_16t);
 			}
-			Report::BackgroundColor([r, g, b]) => {
-				let luma = *r as f32 * 0.2627 / 65535.0
-					+ *g as f32 * 0.6780 / 65535.0
-					+ *b as f32 * 0.0593 / 65535.0;
-				debug!("Detected background color: {r:04x}/{g:04x}/{b:04x} (luma = {luma:.2})");
-				self.light = luma > 0.6;
-			}
+			Report::BackgroundColor(rgb) => self.background = Some(*rgb),
+			Report::ColorScheme(light) => self.color_scheme = Some(*light),
 			Report::KittyGraphics { id: 31, ok } => self.kgp = *ok,
 			_ => {}
+		}
+	}
+
+	pub const fn light(&self) -> Option<bool> {
+		if let Some(light) = self.color_scheme {
+			Some(light)
+		} else if let Some([r, g, b]) = self.background {
+			let luma =
+				r as f32 * 0.2627 / 65535.0 + g as f32 * 0.6780 / 65535.0 + b as f32 * 0.0593 / 65535.0;
+			Some(luma > 0.6)
+		} else {
+			None
 		}
 	}
 

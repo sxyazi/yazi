@@ -31,7 +31,7 @@
 - Keep async I/O non-blocking, preserve platform/fork behavior, and follow existing error boundaries with `?`.
 - For renames or refactors, update all related variables, functions, parameters, modules, methods, types, derived types, exports, tests, configuration keys, documentation, Lua bindings, and, when a type and file share a name, the file as well.
 - When adding a changelog entry, leave the PR number blank for a human to fill in.
-- Do not add or modify tests unless requested.
+- Do not add tests or change test behavior unless requested.
 
 ## Validation
 

@@ -19,6 +19,15 @@ impl Parser {
 					.collect::<Result<_, _>>()?,
 			),
 
+			// `CSI 6 ; Ph ; Pw t` (`\x1b[6;...;...t`) - XTWINOPS character-cell size report.
+			(Some(b'6'), Some(b't')) => {
+				let (h, w) = str::from_utf8(&seq[3..seq.len() - 1])?
+					.strip_prefix(';')
+					.and_then(|s| s.split_once(';'))
+					.ok_or(ParseError::Invalid)?;
+				Report::CellPixelSize { width: w.parse()?, height: h.parse()? }
+			}
+
 			// `CSI ? 12 ; Ps $ y` (`\x1b[?12;...$y`) - DECRPM response for DEC mode 12.
 			(Some(b'?'), Some(b'y')) => {
 				let status: u8 = str::from_utf8(&seq[3..seq.len() - 1])?
@@ -34,14 +43,12 @@ impl Parser {
 				})
 			}
 
-			// `CSI 6 ; Ph ; Pw t` (`\x1b[6;...;...t`) - XTWINOPS character-cell size report.
-			(Some(b'6'), Some(b't')) => {
-				let (h, w) = str::from_utf8(&seq[3..seq.len() - 1])?
-					.strip_prefix(';')
-					.and_then(|s| s.split_once(';'))
-					.ok_or(ParseError::Invalid)?;
-				Report::CellPixelSize { width: w.parse()?, height: h.parse()? }
-			}
+			// `CSI ? 997 ; Ps n` (`\x1b[?997;...n`) - current color scheme report.
+			(Some(b'?'), Some(b'n')) => Report::ColorScheme(match &seq[3..seq.len() - 1] {
+				b"997;1" => false,
+				b"997;2" => true,
+				_ => bail!(),
+			}),
 
 			_ => bail!(),
 		}))
