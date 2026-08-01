@@ -59,3 +59,17 @@ impl Display for DisableMouseCapture {
 		f.write_str("\x1b[?1006l\x1b[?1015l\x1b[?1002l\x1b[?1000l")
 	}
 }
+
+/// Enable color scheme update notifications
+pub struct EnableColorSchemeUpdates;
+
+impl Display for EnableColorSchemeUpdates {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?2031h") }
+}
+
+/// Disable color scheme update notifications
+pub struct DisableColorSchemeUpdates;
+
+impl Display for DisableColorSchemeUpdates {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?2031l") }
+}

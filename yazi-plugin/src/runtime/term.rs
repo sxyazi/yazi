@@ -5,7 +5,7 @@ use yazi_emulator::{Dimension, EMULATOR};
 pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"light" => EMULATOR.load().light.into_lua(lua),
+			b"light" => light(lua)?.into_lua(lua),
 			b"cell_size" => cell_size(lua)?.into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
@@ -14,6 +14,10 @@ pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
 	Composer::new(get, set)
+}
+
+fn light(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, ()| EMULATOR.load().light().into_lua(lua))
 }
 
 fn cell_size(lua: &Lua) -> mlua::Result<Function> {

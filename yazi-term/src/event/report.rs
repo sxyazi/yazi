@@ -1,7 +1,8 @@
 use compact_str::CompactString;
 use mlua::{ExternalError, IntoLua, Lua, Value};
+use strum::EnumIs;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, EnumIs, Eq, PartialEq)]
 pub enum Report {
 	CursorBlink(bool),
 	CursorShape(u8),
@@ -9,6 +10,7 @@ pub enum Report {
 	XtVersion(CompactString),
 	CellPixelSize { width: u16, height: u16 },
 	BackgroundColor([u16; 3]),
+	ColorScheme(bool),
 	KittyGraphics { id: u32, ok: bool },
 }
 

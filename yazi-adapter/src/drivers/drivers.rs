@@ -18,8 +18,8 @@ impl DerefMut for Drivers {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
-impl From<&yazi_emulator::Emulator> for Drivers {
-	fn from(value: &yazi_emulator::Emulator) -> Self {
+impl From<&Emulator> for Drivers {
+	fn from(value: &Emulator) -> Self {
 		match value.brand {
 			Brand::Unknown => Self(match (value.kgp, value.sixel) {
 				(true, true) => vec![D::Sixel, D::KgpOld],
@@ -32,9 +32,9 @@ impl From<&yazi_emulator::Emulator> for Drivers {
 	}
 }
 
-impl From<yazi_emulator::Brand> for Drivers {
-	fn from(value: yazi_emulator::Brand) -> Self {
-		use yazi_emulator::Brand as B;
+impl From<Brand> for Drivers {
+	fn from(value: Brand) -> Self {
+		use Brand as B;
 
 		Self(match value {
 			B::Unknown => vec![],

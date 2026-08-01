@@ -32,7 +32,7 @@ impl Actor for Spot {
 			cx.tab_mut().spot.skip = 0;
 		}
 
-		cx.tab_mut().spot.go(hovered, mime);
+		cx.tab_mut().spot.go(hovered, mime, form.force);
 		succ!();
 	}
 }

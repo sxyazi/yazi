@@ -1,6 +1,7 @@
-use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::OnceLock};
+use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::{Arc, OnceLock}};
 
 use anyhow::{Result, anyhow, bail};
+use parking_lot::Mutex;
 use ratatui_core::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use yazi_config::{THEME, YAZI};
@@ -18,9 +19,8 @@ pub struct Highlighter {
 	size:   Size,
 	ticket: Id,
 
-	theme:    &'static Theme,
+	theme:    Arc<Theme>,
 	syntaxes: &'static SyntaxSet,
-	inner:    Option<HighlightLines<'static>>,
 	syntax:   Option<&'static SyntaxReference>,
 }
 
@@ -37,10 +37,11 @@ impl Highlighter {
 	where
 		P: Into<PathBuf>,
 	{
-		static CACHE: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
+		static SYNTAXES: OnceLock<SyntaxSet> = OnceLock::new();
 
 		let path = path.into();
-		let (theme, syntaxes) = CACHE.get_or_init(Self::load);
+		let syntaxes =
+			SYNTAXES.get_or_init(|| dumps::from_uncompressed_data(yazi_prebuilt::syntaxes()).unwrap());
 
 		Ok(Self {
 			reader: BufReader::new(std::fs::File::open(&path)?),
@@ -50,9 +51,8 @@ impl Highlighter {
 			size,
 			ticket: INCR.current(),
 
-			theme,
+			theme: Self::load_theme(),
 			syntaxes,
-			inner: None,
 			syntax: None,
 		})
 	}
@@ -62,6 +62,7 @@ impl Highlighter {
 	fn highlight(mut self) -> Result<Text<'static>, PeekError> {
 		self.load_syntax()?;
 		let mut plain = self.syntax.is_none();
+		let mut h = self.syntax.map(|syntax| HighlightLines::new(syntax, &self.theme));
 
 		let mut i = 0;
 		let mut buf = vec![];
@@ -80,7 +81,7 @@ impl Highlighter {
 			self.ensure_not_cancelled()?;
 			if plain && !self.process_plain(&buf, &mut i, &mut lines)? {
 				break;
-			} else if !plain && !self.process_hyper(&buf, &mut i, &mut lines)? {
+			} else if !plain && !self.process_hyper(&buf, &mut i, &mut lines, h.as_mut())? {
 				break;
 			}
 			buf.clear();
@@ -93,7 +94,7 @@ impl Highlighter {
 		Ok(Text::from(lines))
 	}
 
-	fn process_plain(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
+	fn process_plain(&self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
 		let b = replace_to_printable(buf, true, YAZI.preview.tab_size, false);
 		let s = String::from_utf8_lossy(&b);
 
@@ -114,10 +115,14 @@ impl Highlighter {
 		Ok(true)
 	}
 
-	fn process_hyper(&mut self, buf: &[u8], i: &mut usize, lines: &mut Vec<Line>) -> Result<bool> {
-		let Some(syntax) = self.syntax else { bail!("No syntax") };
-		let h = self.inner.get_or_insert_with(|| HighlightLines::new(syntax, self.theme));
-
+	fn process_hyper(
+		&self,
+		buf: &[u8],
+		i: &mut usize,
+		lines: &mut Vec<Line>,
+		h: Option<&mut HighlightLines<'_>>,
+	) -> Result<bool> {
+		let Some(h) = h else { bail!("No syntax") };
 		let s = String::from_utf8_lossy(buf);
 		let line = [Self::to_line_widget(h.highlight_line(&s, self.syntaxes)?)];
 
@@ -143,15 +148,23 @@ impl Highlighter {
 		if self.ticket != INCR.current() { Err(anyhow!("Highlighting cancelled"))? } else { Ok(()) }
 	}
 
-	fn load() -> (Theme, SyntaxSet) {
-		let theme = std::fs::File::open(&**THEME.mgr.syntect_theme.load())
-			.map_err(LoadingError::Io)
-			.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
-			.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuilt::ansi_theme())));
+	fn load_theme() -> Arc<Theme> {
+		static CACHE: Mutex<Option<(Arc<PathBuf>, Arc<Theme>)>> = Mutex::new(None);
 
-		let syntaxes = dumps::from_uncompressed_data(yazi_prebuilt::syntaxes());
+		let path = &*THEME.mgr.syntect_theme.load();
+		let load = || {
+			let theme = std::fs::File::open(path.as_path())
+				.map_err(LoadingError::Io)
+				.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
+				.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuilt::ansi_theme())))
+				.unwrap();
+			(path.clone(), Arc::new(theme))
+		};
 
-		(theme.unwrap(), syntaxes.unwrap())
+		match &mut *CACHE.lock() {
+			Some((p, theme)) if p == path => theme.clone(),
+			slot => slot.insert(load()).1.clone(),
+		}
 	}
 
 	fn load_syntax(&mut self) -> Result<()> {

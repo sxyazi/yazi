@@ -16,10 +16,10 @@ pub struct Spot {
 }
 
 impl Spot {
-	pub fn go(&mut self, file: File, mime: Symbol<str>) {
+	pub fn go(&mut self, file: File, mime: Symbol<str>, force: bool) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
-		} else if self.same_lock(&file, &mime) {
+		} else if !force && self.same_lock(&file, &mime) {
 			return;
 		}
 
