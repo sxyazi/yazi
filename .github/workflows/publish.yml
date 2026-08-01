@@ -8,6 +8,17 @@ permissions:
   contents: read
 
 jobs:
+  apt:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish APT stable
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BUILDS_TOKEN }}
+          repository: yazi-rs/builds
+          event-type: publish-apt
+
   winget:
     runs-on: ubuntu-latest
     steps:
