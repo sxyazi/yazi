@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
 - Input history ([#4104])
+- Automatic switching between dark and light theme ([#4196])
 - Experimental `%y`, `%Y`, `%t`, `%T`, `%yN`, `%YN`, `%tN`, `%TN` shell formatting parameters ([#4108])
 - Custom VFS provider ([#4118])
 - Make visual mode support wraparound scrolling ([#4101])
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rename SFTP sections in `vfs.toml` from `[services.domain]` to `[sftp.domain]` ([#4120]).
 - Rename `<BackTab>` to `<S-Tab>` ([#3989])
+- Make `rt.term.light` a function that returns the latest color scheme on each call ([#4196])
 - Remove `Url.is_archive` - `archive://` is no longer built in and can now be registered by plugins ([#4118])
 - Make `mgr::Yanked`, `tab::Selected`, and the `@yank` DDS event return `File` instead of `Url` from `__pairs()` ([#4096])
 - Remove `help:filter` action since the filter input is now always available ([#4074])
@@ -1796,3 +1798,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4184]: https://github.com/sxyazi/yazi/pull/4184
 [#4194]: https://github.com/sxyazi/yazi/pull/4194
 [#4195]: https://github.com/sxyazi/yazi/pull/4195
+[#4196]: https://github.com/sxyazi/yazi/pull/4196

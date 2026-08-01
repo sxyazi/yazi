@@ -4,7 +4,7 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct SpotOpt {
-	pub skip: Option<usize>,
+	pub skip:  Option<usize>,
 	#[serde(default)]
 	pub force: bool,
 }
