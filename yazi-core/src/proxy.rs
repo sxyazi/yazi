@@ -48,9 +48,10 @@ impl MgrProxy {
 			cha:  job.file.cha,
 			mime: job.mime,
 
-			skip: job.skip,
-			area: area.into(),
-			data: vec![
+			skip:       job.skip,
+			search_idx: job.search_idx,
+			area:       area.into(),
+			data:       vec![
 				Renderable::Clear(Default::default()).with_area(area),
 				Renderable::from(Error::custom(error)).with_area(area),
 			],

@@ -1,5 +1,5 @@
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
-use yazi_binding::{Error, elements::Area};
+use yazi_binding::{Error, elements::{Area, HighlightPosition}};
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::file::FileRef;
 use yazi_runner::previewer::PeekError;
@@ -14,10 +14,12 @@ impl Utils {
 	pub(super) fn preview_code(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
 			let area: Area = t.raw_get("area")?;
+			let position: Option<HighlightPosition> = t.raw_get("position").ok();
+
 			let path = t.raw_get::<FileRef>("file")?.borrow(|f| Ok(f.content_path().into_owned()))?;
 
 			let mut lock = PreviewLock::try_from(t)?;
-			let inner = match Highlighter::oneshot(path, lock.skip, area.size()).await {
+			let inner = match Highlighter::oneshot(path, lock.skip, area.size(), position).await {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceeded(max)) => return (e, max).into_lua_multi(&lua),
 				Err(e) => {
@@ -31,6 +33,9 @@ impl Utils {
 			().into_lua_multi(&lua)
 		})
 	}
+
+	// Note: You need to implement or update Highlighter::oneshot_with_highlight to
+	// accept line/column and highlight accordingly.
 
 	pub(super) fn preview_widget(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|_, (t, value): (Table, Value)| async move {
