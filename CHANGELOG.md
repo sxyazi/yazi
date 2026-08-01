@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
 - Input history ([#4104])
-- Automatic switching between dark and light theme ([#4196])
+- Automatic dark/light theme switching ([#4196])
 - Experimental `%y`, `%Y`, `%t`, `%T`, `%yN`, `%YN`, `%tN`, `%TN` shell formatting parameters ([#4108])
 - Custom VFS provider ([#4118])
 - Make visual mode support wraparound scrolling ([#4101])
@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Context-aware icons for inputs ([#4080])
 - Show file icons in trash/delete/overwrite confirmations ([#4096])
 - Dynamic keymap Lua API ([#4031])
+- Official APT repository for Debian and Ubuntu ([#4198])
 - New `--follow` option for the `link` action ([#4184])
 - New `ui.Input` element ([#4040])
 - Image preview with Überzug++ on Niri ([#3990])
@@ -1799,3 +1800,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4194]: https://github.com/sxyazi/yazi/pull/4194
 [#4195]: https://github.com/sxyazi/yazi/pull/4195
 [#4196]: https://github.com/sxyazi/yazi/pull/4196
+[#4198]: https://github.com/sxyazi/yazi/pull/4198
