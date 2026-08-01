@@ -25,8 +25,8 @@
 
 - Search and reuse first. For new features, extend existing infrastructure or data structures with general, reusable capabilities when that keeps the final code concise.
 - For refactors, inspect the whole target module and its callers first. Look for duplicated work, redundant I/O, underpowered return values, one-use wrappers, and reusable cross-platform abstractions; implement high-confidence, behavior-preserving simplifications while preserving error, fallback, and platform semantics.
-- Keep diffs minimal and avoid unrelated refactors. Prefer clear code over custom patterns or comments; comment only behavior the code cannot explain.
-- Keep responsibility boundaries clear and cohesive. Put reusable code in the lowest suitable shared layer; avoid unnecessary dependencies and allocations. Prefer borrowed values and existing wrappers.
+- Keep diffs minimal and avoid unrelated refactors. Prefer clear, flat control flow and positive predicates; use standard combinators, early returns, ordered branches, and match guards to express cases directly and avoid nested conditionals or compound negation. Comment only behavior the code cannot explain.
+- Keep responsibility boundaries clear and cohesive. Prefer pure functions and explicit invariants; favor convention over configuration when invariants can eliminate state or coordination. Put reusable code in the lowest suitable shared layer; avoid unnecessary dependencies and allocations. Prefer borrowed values and existing wrappers.
 - Use stable Rust APIs; nightly is formatting-only. Use only `pub`, `pub(super)`, and `pub(crate)`—never `pub(in ...)`.
 - Keep async I/O non-blocking, preserve platform/fork behavior, and follow existing error boundaries with `?`.
 - For renames or refactors, update all related variables, functions, parameters, modules, methods, types, derived types, exports, tests, configuration keys, documentation, Lua bindings, and, when a type and file share a name, the file as well.

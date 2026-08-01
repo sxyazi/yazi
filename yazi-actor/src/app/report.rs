@@ -32,7 +32,7 @@ impl Actor for Report {
 
 		let id = term.probe.id;
 		tokio::spawn(async move {
-			Mux::tmux_passthrough().await;
+			Mux::tmux_setup().await;
 			AppProxy::passthrough(id);
 		});
 

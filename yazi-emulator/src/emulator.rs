@@ -8,7 +8,7 @@ use yazi_shim::cell::RoCell;
 use yazi_term::{TERM, event::Report};
 use yazi_tty::{Handle, TTY, sequence::{HideCursor, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
 
-use crate::Brand;
+use crate::{Brand, Mux};
 
 pub static EMULATOR: RoCell<ArcSwap<Emulator>> = RoCell::new();
 
@@ -23,7 +23,7 @@ pub struct Emulator {
 	pub force_16t:    bool,
 	pub cursor_blink: bool,
 	pub cursor_shape: Option<u8>,
-	pub tmux:         bool,
+	pub mux:          Option<Mux>,
 }
 
 impl Emulator {
@@ -65,7 +65,7 @@ impl Emulator {
 		use std::{thread, time::Duration};
 
 		let mut w = TTY.lockout();
-		let tmux = EMULATOR.load().tmux;
+		let tmux = EMULATOR.load().mux.is_some();
 
 		// I really don't want to add this,
 		// But tmux and ConPTY sometimes cause the cursor position to get out of sync.
