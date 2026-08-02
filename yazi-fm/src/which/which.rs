@@ -1,5 +1,5 @@
-use ratatui_core::{buffer::Buffer, layout, layout::{Constraint, Rect}, widgets::Widget};
-use ratatui_widgets::block::Block;
+use ratatui_core::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::Widget};
+use ratatui_widgets::{block::Block, borders::BorderType};
 use yazi_config::THEME;
 use yazi_core::Core;
 
@@ -37,19 +37,18 @@ impl Widget for Which<'_> {
 			return;
 		}
 
-		use ratatui_core::layout::Margin;
-		use ratatui_widgets::borders::BorderType;
-		yazi_widgets::clear::Clear::default().render(area, buf);
-		Block::bordered()
+		let block = Block::bordered()
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.which.border.get())
-			.style(THEME.which.mask.get())
-			.render(area, buf);
+			.style(THEME.which.mask.get());
+		let inner = block.inner(area);
 
-		let inner = area.inner(Margin::new(1, 1));
+		yazi_widgets::clear::Clear::default().render(area, buf);
+		block.render(area, buf);
+
 		let chunks = {
 			use Constraint::*;
-			layout::Layout::horizontal(match cols {
+			Layout::horizontal(match cols {
 				1 => &[Ratio(1, 1)][..],
 				2 => &[Ratio(1, 2), Ratio(1, 2)],
 				_ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
