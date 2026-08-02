@@ -50,7 +50,7 @@ impl DeserializeOverHook for Preview {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		create_owned_dir_blocking(&self.cache_dir)
 			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
-			.map_err(serde::de::Error::custom)?;
+			.map_err(|err| serde::de::Error::custom(format!("{err:#}")))?;
 
 		Ok(self)
 	}
