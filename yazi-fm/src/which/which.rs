@@ -2,6 +2,7 @@ use ratatui_core::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::
 use ratatui_widgets::{block::Block, borders::BorderType};
 use yazi_config::THEME;
 use yazi_core::Core;
+use yazi_widgets::clear::Clear;
 
 use super::Cand;
 
@@ -37,15 +38,14 @@ impl Widget for Which<'_> {
 			return;
 		}
 
+		Clear::default().render(area, buf);
 		let block = Block::bordered()
+			.style(THEME.which.mask.get())
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.which.border.get())
-			.style(THEME.which.mask.get());
+			.border_style(THEME.which.border.get());
+		block.as_ref().render(area, buf);
+
 		let inner = block.inner(area);
-
-		yazi_widgets::clear::Clear::default().render(area, buf);
-		block.render(area, buf);
-
 		let chunks = {
 			use Constraint::*;
 			Layout::horizontal(match cols {

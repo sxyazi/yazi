@@ -168,9 +168,9 @@ pub struct StatusSep {
 // --- Which
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Which {
+	pub border: SyncCell<StyleFlat>,
 	#[serde(deserialize_with = "deserialize_which_cols")]
 	pub cols:   SyncCell<u8>,
-	pub border: SyncCell<StyleFlat>,
 	pub mask:   SyncCell<StyleFlat>,
 	pub cand:   SyncCell<StyleFlat>,
 	pub rest:   SyncCell<StyleFlat>,
