@@ -57,9 +57,12 @@ impl Actor for Copy {
 					// linux works with just LF
 					s.extend_from_slice(b"file://");
 					s.extend_from_slice(
-						percent_encoding::percent_encode(&form.separator.transform(&f.url.to_strand()), RFC_3986)
-							.to_string()
-							.as_bytes(),
+						percent_encoding::percent_encode(
+							&form.separator.transform(&f.url.to_strand()),
+							RFC_3986,
+						)
+						.to_string()
+						.as_bytes(),
 					);
 				}
 				_ => bail!("Unknown copy type: {}", form.r#type),
