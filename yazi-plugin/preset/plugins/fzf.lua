@@ -77,7 +77,7 @@ function M.split_urls(cwd, output)
 	local t = {}
 	for line in output:gmatch("[^\r\n]+") do
 		local u = Url(line)
-		t[#t + 1] = u.is_absolute and u or cwd:join(u)
+		t[#t + 1] = u.is_absolute and u or cwd:resolve(u)
 	end
 	return t
 end

@@ -29,7 +29,7 @@ end
 
 local function files(parent, ents)
 	for i, ent in ipairs(ents) do
-		local url = parent:join(Path.os(ent.name)):into_domain(ent.key)
+		local url = parent:join(ent.name):into_domain(ent.key)
 		ents[i] = { cha = ent.lcha, file = file(url, ent) }
 	end
 	return ents
@@ -159,6 +159,31 @@ function M:entry()
 	else
 		notify("open", err)
 	end
+end
+
+function M:spot(job)
+	local ent, err = entry(job.file.url)
+	if not ent then
+		return ya.err(tostring(err))
+	end
+
+	local rows = {
+		ui.Row({ "Trash" }):style(ui.Style():fg("green")),
+		ui.Row { "  Original:", ui.Text(ent.original and tostring(ent.original) or "-"):wrap(ui.Wrap.YES) },
+		ui.Row { "  Backing:", ui.Text(tostring(ent.backing)):wrap(ui.Wrap.YES) },
+		ui.Row {},
+	}
+
+	ya.spot_table(
+		job,
+		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
+			:area(ui.Pos { "center", w = 60, h = 20 })
+			:row(1)
+			:col(1)
+			:col_style(th.spot.tbl_col)
+			:cell_style(th.spot.tbl_cell)
+			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
+	)
 end
 
 function M:provide(job)

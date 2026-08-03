@@ -3,7 +3,7 @@ use std::{any::TypeId, mem};
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
-use yazi_shim::SStr;
+use yazi_shim::{SStr, ratatui::TextIter};
 
 use super::{Area, Line, Span, Wrap};
 use crate::{Error, elements::{Align, Spatial}};
@@ -36,6 +36,23 @@ impl Text {
 	pub fn wrap(mut self, wrap: impl Into<Wrap>) -> Self {
 		self.wrap = wrap.into();
 		self
+	}
+
+	pub(crate) fn line_count(&self, width: u16) -> usize {
+		let Some(wrap) = self.wrap.0 else {
+			return self.inner.height();
+		};
+
+		let mut lines = TextIter::new(&self.inner, wrap, width);
+		let mut count = 0;
+		while lines.next().is_some() {
+			count += 1;
+		}
+		count
+	}
+
+	pub(crate) fn needs_upgrade(&self) -> bool {
+		self.wrap.is_some() || self.scroll != Default::default()
 	}
 }
 
@@ -99,10 +116,10 @@ impl Widget for Text {
 	where
 		Self: Sized,
 	{
-		if self.wrap.is_none() && self.scroll == Default::default() {
-			self.inner.render(rect, buf);
-		} else {
+		if self.needs_upgrade() {
 			ratatui_widgets::paragraph::Paragraph::from(self).render(rect, buf);
+		} else {
+			self.inner.render(rect, buf);
 		}
 	}
 }
@@ -112,10 +129,10 @@ impl Widget for &Text {
 	where
 		Self: Sized,
 	{
-		if self.wrap.is_none() && self.scroll == Default::default() {
-			(&self.inner).render(rect, buf);
-		} else {
+		if self.needs_upgrade() {
 			ratatui_widgets::paragraph::Paragraph::from(self.clone()).render(rect, buf);
+		} else {
+			(&self.inner).render(rect, buf);
 		}
 	}
 }

@@ -9,6 +9,10 @@ pub enum EndsWithError {
 	FromStrand(#[from] StrandError),
 }
 
+impl From<EndsWithError> for mlua::Error {
+	fn from(err: EndsWithError) -> Self { Self::external(err) }
+}
+
 // --- JoinError
 #[derive(Debug, Error)]
 #[error("calling join on paths with different encodings")]
@@ -27,6 +31,10 @@ impl From<StartsWithError> for JoinError {
 
 impl From<JoinError> for std::io::Error {
 	fn from(err: JoinError) -> Self { Self::other(err) }
+}
+
+impl From<JoinError> for mlua::Error {
+	fn from(err: JoinError) -> Self { Self::external(err) }
 }
 
 // --- PathDynError
@@ -96,6 +104,10 @@ pub enum StartsWithError {
 	FromStrand(#[from] StrandError),
 }
 
+impl From<StartsWithError> for mlua::Error {
+	fn from(err: StartsWithError) -> Self { Self::external(err) }
+}
+
 // --- StripPrefixError
 #[derive(Debug, Error)]
 pub enum StripPrefixError {
@@ -121,6 +133,10 @@ impl From<std::path::StripPrefixError> for StripPrefixError {
 
 impl From<typed_path::StripPrefixError> for StripPrefixError {
 	fn from(_: typed_path::StripPrefixError) -> Self { Self::NotPrefix }
+}
+
+impl From<StripPrefixError> for mlua::Error {
+	fn from(err: StripPrefixError) -> Self { Self::external(err) }
 }
 
 // --- StripSuffixError

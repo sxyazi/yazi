@@ -115,6 +115,9 @@ fetchers = [
 spotters = [
 	# Multi-file
 	{ mime = "multi/*", run = "multi" },
+	# Trash
+	{ url = "trash://*",  run = "trash" },
+	{ url = "trash://*/", run = "trash" },
 	# Folder
 	{ url = "*/", run = "folder" },
 	# Code
