@@ -21,10 +21,10 @@ pub struct Emulator {
 	pub color_scheme: Option<bool>,
 	pub csi_16t:      (u16, u16),
 	pub force_16t:    bool,
+	pub osc_5522:     bool,
 	pub cursor_blink: bool,
 	pub cursor_shape: Option<u8>,
 	pub mux:          Option<Mux>,
-	pub osc_5522:     bool,
 }
 
 impl Emulator {
@@ -50,7 +50,7 @@ impl Emulator {
 			Report::BackgroundColor(rgb) => self.background = Some(*rgb),
 			Report::ColorScheme(light) => self.color_scheme = Some(*light),
 			Report::KittyGraphics { id: 31, ok } => self.kgp = *ok,
-			Report::Osc5522(supported) => self.osc_5522 = *supported,
+			Report::Clipboard(supported) => self.osc_5522 = *supported,
 			_ => {}
 		}
 	}

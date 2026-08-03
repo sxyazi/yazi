@@ -6,13 +6,16 @@ use crate::{ParseError, Result, bail, event::{Event, Report}, parser::Parser};
 
 impl Parser {
 	pub(super) fn parse_csi_report(&self) -> Result<Event> {
-		let seq = &self.seq;
-		debug_assert!(seq.starts_with(b"\x1b["));
+		debug_assert!(self.seq.starts_with(b"\x1b["));
 
-		Ok(Event::Report(match (seq.get(2), seq.last()) {
+		let first = self.seq.get(2).copied().ok_or(ParseError::Invalid)?;
+		let mid = self.seq.get(3..self.seq.len() - 1).ok_or(ParseError::Invalid)?;
+		let last = self.seq.last().copied().ok_or(ParseError::Invalid)?;
+
+		Ok(Event::Report(match (first, last) {
 			// `CSI ? Ps ; ... c` (`\x1b[?...c`) - DA1 (Primary Device Attributes) response.
-			(Some(b'?'), Some(b'c')) => Report::Da1(
-				str::from_utf8(&seq[3..seq.len() - 1])?
+			(b'?', b'c') => Report::Da1(
+				str::from_utf8(mid)?
 					.split(';')
 					.filter(|s| !s.is_empty())
 					.map(str::parse)
@@ -20,8 +23,8 @@ impl Parser {
 			),
 
 			// `CSI 6 ; Ph ; Pw t` (`\x1b[6;...;...t`) - XTWINOPS character-cell size report.
-			(Some(b'6'), Some(b't')) => {
-				let (h, w) = str::from_utf8(&seq[3..seq.len() - 1])?
+			(b'6', b't') => {
+				let (h, w) = str::from_utf8(mid)?
 					.strip_prefix(';')
 					.and_then(|s| s.split_once(';'))
 					.ok_or(ParseError::Invalid)?;
@@ -29,25 +32,29 @@ impl Parser {
 			}
 
 			// `CSI ? 12 ; Ps $ y` (`\x1b[?12;...$y`) - DECRPM response for DEC mode 12.
-			(Some(b'?'), Some(b'y')) => {
-				let status = str::from_utf8(&seq[3..seq.len() - 1])?;
-				if let Some(status) = status.strip_prefix("12;") {
-					let status: u8 = status.strip_suffix('$').ok_or(ParseError::Invalid)?.parse()?;
-					Report::CursorBlink(match status {
-						1 | 3 => true,
-						2 | 4 => false,
-						_ => bail!(),
-					})
-				} else if let Some(status) = status.strip_prefix("5522;") {
-					let status: u8 = status.strip_suffix('$').ok_or(ParseError::Invalid)?.parse()?;
-					Report::Osc5522(matches!(status, 1..=3))
-				} else {
-					bail!()
-				}
+			(b'?', b'y')
+				if let Some(s) = mid.strip_prefix(b"12;")
+					&& let Some(s) = s.strip_suffix(b"$") =>
+			{
+				let status: u8 = str::from_utf8(s)?.parse()?;
+				Report::CursorBlink(match status {
+					1 | 3 => true,
+					2 | 4 => false,
+					_ => bail!(),
+				})
+			}
+
+			// `CSI ? 5522 ; Ps $ y` (`\x1b[?5522;...$y`) - DECRPM response for clipboard support.
+			(b'?', b'y')
+				if let Some(s) = mid.strip_prefix(b"5522;")
+					&& let Some(s) = s.strip_suffix(b"$") =>
+			{
+				let status: u8 = str::from_utf8(s)?.parse()?;
+				Report::Clipboard(matches!(status, 1..=3))
 			}
 
 			// `CSI ? 997 ; Ps n` (`\x1b[?997;...n`) - current color scheme report.
-			(Some(b'?'), Some(b'n')) => Report::ColorScheme(match &seq[3..seq.len() - 1] {
+			(b'?', b'n') => Report::ColorScheme(match mid {
 				b"997;1" => false,
 				b"997;2" => true,
 				_ => bail!(),
