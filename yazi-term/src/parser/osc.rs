@@ -1,5 +1,4 @@
-use base64::Engine;
-use yazi_shim::BASE64_PAD;
+use base64::{Engine, engine::general_purpose::STANDARD_PAD_INDIFFERENT};
 
 use crate::{ParseError, Result, parser::{Osc5522Status, Parser, State}};
 
@@ -74,7 +73,7 @@ impl Parser {
 				("type", v) => state.read = v == "read",
 				("loc", v) => state.primary = v == "primary",
 				("mime", v) => {
-					let bytes = BASE64_PAD.decode(v.as_bytes()).or(Err(ParseError::Invalid))?;
+					let bytes = STANDARD_PAD_INDIFFERENT.decode(v.as_bytes()).or(Err(ParseError::Invalid))?;
 					if state.mime.len() == 0 {
 						state.mime.push(bytes);
 					} else if state.mime[state.idx] != bytes {
@@ -82,13 +81,13 @@ impl Parser {
 						state.idx += 1;
 					}
 				}
-				("pw", v) => state.pw = BASE64_PAD.decode(v.as_bytes()).unwrap_or_default(),
+				("pw", v) => state.pw = STANDARD_PAD_INDIFFERENT.decode(v.as_bytes()).unwrap_or_default(),
 				_ => {}
 			}
 		}
 
 		// decode now since each payload may have its own padding
-		let payload = BASE64_PAD.decode(&payload).or(Err(ParseError::Invalid))?;
+		let payload = STANDARD_PAD_INDIFFERENT.decode(&payload).or(Err(ParseError::Invalid))?;
 
 		if state.idx >= state.payload.len() {
 			state.payload.push(payload.to_vec());

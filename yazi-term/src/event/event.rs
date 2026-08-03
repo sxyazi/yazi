@@ -9,6 +9,6 @@ pub enum Event {
 	FocusOut,
 	Paste(String),
 	Dnd(DndEvent),
-	Report(Report),
 	Clipboard(ClipboardEvent),
+	Report(Report),
 }

@@ -5417,7 +5417,6 @@ version = "26.5.6"
 dependencies = [
  "anyhow",
  "arc-swap",
- "base64 0.23.0",
  "hashbrown 0.17.1",
  "mlua",
  "percent-encoding",

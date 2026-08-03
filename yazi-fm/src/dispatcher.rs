@@ -29,8 +29,8 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::FocusOut) => Ok(()),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
 			Event::Term(TermEvent::Dnd(dnd)) => self.dispatch_dnd(dnd),
-			Event::Term(TermEvent::Report(report)) => self.dispatch_report(report),
 			Event::Term(TermEvent::Clipboard(clip)) => self.dispatch_clipboard(clip),
+			Event::Term(TermEvent::Report(report)) => self.dispatch_report(report),
 		};
 
 		if let Err(e) = &result {
