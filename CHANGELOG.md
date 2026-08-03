@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Added
 
 - Drag and drop ([#4005])
-- Trash bin ([#4144])
+- Trash bin ([#4144], [#4204])
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
 - Input history ([#4104])
@@ -1803,3 +1803,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4195]: https://github.com/sxyazi/yazi/pull/4195
 [#4196]: https://github.com/sxyazi/yazi/pull/4196
 [#4198]: https://github.com/sxyazi/yazi/pull/4198
+[#4204]: https://github.com/sxyazi/yazi/pull/4204
