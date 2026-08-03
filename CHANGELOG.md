@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Official APT repository for Debian and Ubuntu ([#4198])
 - New `--follow` option for the `link` action ([#4184])
 - New `ui.Input` element ([#4040])
+- New `theme` DDS event for plugins to watch theme reloads
 - Image preview with Überzug++ on Niri ([#3990])
 - Unicode normalization for user regex patterns in `find`, `filter`, and `search` actions ([#4177])
 - New gait for input `backward` and `forward` actions ([#4012])

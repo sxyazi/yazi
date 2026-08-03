@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use yazi_shared::id::Id;
 
-use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTrash, EmberYank};
+use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
 use crate::Payload;
 
 #[derive(Clone, Debug)]
@@ -24,6 +24,7 @@ pub enum Ember<'a> {
 	Download(EmberDownload<'a>),
 	Input(EmberInput<'a>),
 	Mount(EmberMount),
+	Theme(EmberTheme),
 	Custom(EmberCustom),
 }
 
@@ -47,6 +48,7 @@ impl Ember<'static> {
 			"download" => Self::Download(serde_json::from_str(body)?),
 			"input" => Self::Input(serde_json::from_str(body)?),
 			"mount" => Self::Mount(serde_json::from_str(body)?),
+			"theme" => Self::Theme(serde_json::from_str(body)?),
 			_ => EmberCustom::from_str(kind, body)?,
 		})
 	}
@@ -76,6 +78,7 @@ impl Ember<'static> {
 				| "download"
 				| "input"
 				| "mount"
+				| "theme"
 		) || kind.starts_with("key-")
 			|| kind.starts_with("ind-")
 			|| kind.starts_with("emit-")
@@ -116,6 +119,7 @@ impl<'a> Ember<'a> {
 			Self::Download(_) => "download",
 			Self::Input(_) => "input",
 			Self::Mount(_) => "mount",
+			Self::Theme(_) => "theme",
 			Self::Custom(b) => b.kind.as_str(),
 		}
 	}
@@ -145,6 +149,7 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Download(b) => b.into_lua(lua),
 			Self::Input(b) => b.into_lua(lua),
 			Self::Mount(b) => b.into_lua(lua),
+			Self::Theme(b) => b.into_lua(lua),
 			Self::Custom(b) => b.into_lua(lua),
 		}
 	}
