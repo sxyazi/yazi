@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 use base64::{Engine, engine::general_purpose::{self, STANDARD_PAD_INDIFFERENT}};
 
-/// Set clipboard content via OSC 52
+/// Set clipboard contents via OSC 52.
 pub struct SetClipboard {
 	content: String,
 }
@@ -19,29 +19,29 @@ impl Display for SetClipboard {
 	}
 }
 
-/// Query OSC 5522 via DECRQM
-pub struct QueryOSC5522;
+/// Probe terminal clipboard support.
+pub struct ProbeClipboard;
 
-impl Display for QueryOSC5522 {
+impl Display for ProbeClipboard {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "\x1b[?5522$p") }
 }
 
-/// Enable receiving unsolicited paste events via OSC 5522: `CSI ? 5522 h`
-pub struct EnablePasteEvents;
+/// Enable clipboard support: `CSI ? 5522 h`.
+pub struct EnableClipboard;
 
-impl Display for EnablePasteEvents {
+impl Display for EnableClipboard {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "\x1b[?5522h") }
 }
 
-/// Disable receiving unsolicited paste events via OSC 5522: `CSI ? 5522 l`
-pub struct DisablePasteEvents;
+/// Disable clipboard support: `CSI ? 5522 l`.
+pub struct DisableClipboard;
 
-impl Display for DisablePasteEvents {
+impl Display for DisableClipboard {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "\x1b[?5522l") }
 }
 
-/// Read data from clipboard:
-/// `OSC 5522 ; type=read : <metadata> ; <base64 MIME list> ST`
+/// Request clipboard data for the given MIME types.
+/// `OSC 5522 ; type=read[:metadata] ; <base64 MIME list> ST`
 pub struct ReadClipboard<'a> {
 	pub mime:    &'a [u8],
 	pub pw:      &'a [u8],
@@ -65,7 +65,7 @@ impl Display for ReadClipboard<'_> {
 	}
 }
 
-/// Read available MIME types from clipboard:
+/// Request the MIME types available in the clipboard.
 /// `OSC 5522 ; type=read ; <base64 [.]> ST`
 pub struct ReadClipboardMimes;
 
@@ -75,7 +75,7 @@ impl Display for ReadClipboardMimes {
 	}
 }
 
-/// Write data to clipboard:
+/// Write clipboard data.
 /// `OSC 5522 ; type=write ST`
 /// `OSC 5522 ; type=wdata : mime=<base64 MIME type> ; <base64 data chunk> ST`
 /// `OSC 5522 ; type=wdata ST`
@@ -104,6 +104,7 @@ impl Display for WriteClipboard<'_> {
 	}
 }
 
+/// A MIME payload written by [`WriteClipboard`].
 pub struct WriteClipboardData<'a> {
 	pub mime:    &'a [u8],
 	pub payload: &'a [u8],

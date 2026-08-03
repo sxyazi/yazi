@@ -6,7 +6,7 @@ use tracing::error;
 use yazi_macro::writef;
 use yazi_shared::id::{Id, Ids};
 use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
-use yazi_tty::{TTY, sequence::{If, QueryOSC5522, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
+use yazi_tty::{TTY, sequence::{If, ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
 
 use crate::{Brand, Emulator, Mux};
 
@@ -40,7 +40,7 @@ impl Probe {
 
 		writef!(
 			TTY.writer(),
-			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{QueryOSC5522}{}{RestoreCursorPos}",
+			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{ProbeClipboard}{}{RestoreCursorPos}",
 			w(&RequestXtVersion),
 			If(self.emulator.brand == Brand::Unknown, w(&RequestKittyGraphics)),
 			w(&RequestDA1),
