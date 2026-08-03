@@ -1,5 +1,5 @@
 use tracing::debug;
-use yazi_scheduler::file::{FileInCopy, FileInCut};
+use yazi_scheduler::file::{FileInCopy, FileInCut, FileInLink};
 use yazi_shared::url::{UrlBuf, UrlLike};
 
 use super::Tasks;

@@ -12,6 +12,7 @@ pub enum Report {
 	BackgroundColor([u16; 3]),
 	ColorScheme(bool),
 	KittyGraphics { id: u32, ok: bool },
+	Osc5522(bool),
 }
 
 impl IntoLua for Report {

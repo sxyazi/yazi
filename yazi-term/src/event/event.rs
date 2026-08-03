@@ -1,4 +1,4 @@
-use crate::{Dimension, event::{ClipboardEvent, DndEvent, KeyEvent, MouseEvent}};
+use crate::{Dimension, event::{ClipboardEvent, DndEvent, KeyEvent, MouseEvent, Report}};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Event {
@@ -9,5 +9,6 @@ pub enum Event {
 	FocusOut,
 	Paste(String),
 	Dnd(DndEvent),
+	Report(Report),
 	Clipboard(ClipboardEvent),
 }

@@ -44,6 +44,7 @@ impl State {
 			Self::BracketedPaste => 16 << 20,
 			Self::Osc
 			| Self::Osc72(_)
+			| Self::Osc5522(_)
 			| Self::OscSt
 			| Self::Dcs
 			| Self::DcsSt

@@ -57,7 +57,7 @@ impl Actor for Copy {
 					// linux works with just LF
 					s.extend_from_slice(b"file://");
 					s.extend_from_slice(
-						percent_encoding::percent_encode(&form.separator.transform(&u.to_strand()), RFC_3986)
+						percent_encoding::percent_encode(&form.separator.transform(&f.url.to_strand()), RFC_3986)
 							.to_string()
 							.as_bytes(),
 					);
@@ -76,7 +76,7 @@ impl Actor for Copy {
 			s.extend_from_slice(&form.separator.transform(&cx.cwd().to_strand()));
 		}
 
-		if yazi_emulator::EMULATOR.osc_5522 {
+		if yazi_emulator::EMULATOR.load().osc_5522 {
 			let mut data = Vec::<ClipboardData>::new();
 			match form.r#type.as_ref() {
 				"uri_list" => {

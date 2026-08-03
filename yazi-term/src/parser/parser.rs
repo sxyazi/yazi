@@ -58,23 +58,6 @@ impl Parser {
 		}
 	}
 
-	/// Resolve any pending ambiguous state.
-	///
-	/// Call this when no more input bytes are immediately available. If the
-	/// parser is waiting in the [`State::Esc`] state (a lone `\x1B` has
-	/// been seen but no follow-up bytes arrived), this emits a bare
-	/// [`KeyCode::Escape`] event and resets to [`State::Ground`].
-	pub fn flush(&mut self) {
-		match &self.state {
-			State::Esc => self.emit_key(KeyCode::Escape),
-			State::Osc72(s) if s.has_more => return,
-			State::Osc5522(s) if s.has_more => return,
-			_ => {}
-		}
-
-		self.reset();
-	}
-
 	fn reset(&mut self) {
 		self.state = State::Ground;
 		self.seq.clear();
@@ -285,6 +268,8 @@ impl Parser {
 
 		if !self.seq.ends_with(b"\x1b\\") {
 			return;
+		} else if self.discard {
+			return self.reset();
 		} else if self.parse_osc5522().is_err() {
 			return self.reset();
 		}

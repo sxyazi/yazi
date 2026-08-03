@@ -30,17 +30,20 @@ impl Parser {
 
 			// `CSI ? 12 ; Ps $ y` (`\x1b[?12;...$y`) - DECRPM response for DEC mode 12.
 			(Some(b'?'), Some(b'y')) => {
-				let status: u8 = str::from_utf8(&seq[3..seq.len() - 1])?
-					.strip_prefix("12;")
-					.and_then(|s| s.strip_suffix('$'))
-					.ok_or(ParseError::Invalid)?
-					.parse()?;
-
-				Report::CursorBlink(match status {
-					1 | 3 => true,
-					2 | 4 => false,
-					_ => bail!(),
-				})
+				let status = str::from_utf8(&seq[3..seq.len() - 1])?;
+				if let Some(status) = status.strip_prefix("12;") {
+					let status: u8 = status.strip_suffix('$').ok_or(ParseError::Invalid)?.parse()?;
+					Report::CursorBlink(match status {
+						1 | 3 => true,
+						2 | 4 => false,
+						_ => bail!(),
+					})
+				} else if let Some(status) = status.strip_prefix("5522;") {
+					let status: u8 = status.strip_suffix('$').ok_or(ParseError::Invalid)?.parse()?;
+					Report::Osc5522(matches!(status, 1..=3))
+				} else {
+					bail!()
+				}
 			}
 
 			// `CSI ? 997 ; Ps n` (`\x1b[?997;...n`) - current color scheme report.

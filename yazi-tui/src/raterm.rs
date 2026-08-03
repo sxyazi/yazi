@@ -9,7 +9,7 @@ use yazi_macro::writef;
 use yazi_proxy::AppProxy;
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
-use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, DisablePasteEvents, EnableBracketedPaste, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnablePasteEvents, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RequestCursorBlink, RequestCursorStyle, RequestDA1, RestoreCursorStyle, SetTitle, ShowCursor}};
+use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableColorSchemeUpdates, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, DisablePasteEvents, EnableBracketedPaste, EnableColorSchemeUpdates, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnablePasteEvents, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
 
 use crate::{RatermBackend, RatermOption, RatermState};
 
@@ -48,9 +48,7 @@ impl Raterm {
 		let mut stream = EventStream::from(&*TERM);
 		writef!(
 			TTY.writer(),
-			"{}{RequestCursorStyle}{RequestCursorBlink}{RequestDA1}{}{EnableBracketedPaste}{EnableFocusChange}{}{}{}{}{EnablePasteEvents}",
-			If(!TMUX.get(), EnterAlternateScreen),
-			If(TMUX.get(), EnterAlternateScreen),
+			"{EnterAlternateScreen}{EnableBracketedPaste}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}{}{}{EnablePasteEvents}",
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
 				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -81,7 +79,7 @@ impl Raterm {
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{PopKeyboardFlags}{DisableDrop}{DisablePasteEvents}{DisableDrag}{}{}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
+			"{}{PopKeyboardFlags}{DisableDrop}{DisablePasteEvents}{DisableDrag}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
 			RestoreCursorStyle { blink: emu.cursor_blink, shape: emu.cursor_shape },
 			If(state.title, SetTitle("")),
