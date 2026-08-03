@@ -1,6 +1,6 @@
 use std::{borrow::Cow, mem, path::PathBuf};
 
-use mlua::{ExternalError, FromLua, Lua, Value};
+use mlua::{FromLua, Lua, Table, Value};
 use tokio::sync::mpsc;
 use yazi_fs::cha::Cha;
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
@@ -157,9 +157,9 @@ impl TaskIn for FileInCopy {
 }
 
 impl FileInCopy {
-	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
+	pub fn new(from: UrlBuf, to: UrlBuf, force: bool, follow: bool) -> Self {
 		Self {
-			follow: !from.auth().covariant(to.auth()),
+			follow: follow || !from.auth().covariant(to.auth()),
 			id: Id::ZERO,
 			from,
 			to,
@@ -184,12 +184,9 @@ impl FileInCopy {
 }
 
 impl FromLua for FileInCopy {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		let Value::Table(t) = value else {
-			return Err("constructing FileInCopy from non-table value".into_lua_err());
-		};
-
-		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?))
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		let t = Table::from_lua(value, lua)?;
+		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?, t.raw_get("follow")?))
 	}
 }
 // --- Cut
@@ -258,11 +255,8 @@ impl FileInCut {
 }
 
 impl FromLua for FileInCut {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		let Value::Table(t) = value else {
-			return Err("constructing FileInCut from non-table value".into_lua_err());
-		};
-
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		let t = Table::from_lua(value, lua)?;
 		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?))
 	}
 }

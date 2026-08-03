@@ -22,7 +22,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
+	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {
@@ -33,7 +33,7 @@ impl Tasks {
 			if force && u == to {
 				debug!("file_copy: same file, skip {to:?}");
 			} else {
-				self.scheduler.file_copy(FileInCopy::new(u.clone(), to, force));
+				self.scheduler.file_copy(FileInCopy::new(u.clone(), to, force, follow));
 			}
 		}
 	}
