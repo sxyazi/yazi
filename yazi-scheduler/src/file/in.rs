@@ -159,8 +159,8 @@ impl TaskIn for FileInCopy {
 impl FileInCopy {
 	pub fn new(from: UrlBuf, to: UrlBuf, force: bool, follow: bool) -> Self {
 		Self {
-			follow: follow || !from.auth().covariant(to.auth()),
 			id: Id::ZERO,
+			follow: follow || !from.auth().same_service(to.auth()),
 			from,
 			to,
 			force,
