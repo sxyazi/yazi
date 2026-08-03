@@ -19,36 +19,27 @@ impl PathBufDyn {
 	}
 
 	fn ends_with(&self, child: Value) -> mlua::Result<bool> {
-		match child {
-			Value::String(s) => {
-				self.try_ends_with(StrandCow::with(self.kind(), &*s.as_bytes())?).into_lua_err()
-			}
-			Value::UserData(ud) => self.try_ends_with(&*ud.borrow::<Self>()?).into_lua_err(),
+		Ok(match child {
+			Value::String(s) => self.try_ends_with(StrandCow::with(self.kind(), &*s.as_bytes())?)?,
+			Value::UserData(ud) => self.try_ends_with(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Path".into_lua_err())?,
-		}
+		})
 	}
 
 	fn join(&self, other: Value) -> mlua::Result<Self> {
 		Ok(match other {
-			Value::String(s) => {
-				self.try_join(StrandCow::with(self.kind(), &*s.as_bytes())?).into_lua_err()?
-			}
-			Value::UserData(ref ud) => {
-				let path = ud.borrow::<Self>()?;
-				self.try_join(&*path).into_lua_err()?
-			}
+			Value::String(s) => self.try_join(StrandCow::with(self.kind(), &*s.as_bytes())?)?,
+			Value::UserData(ref ud) => self.try_join(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Path".into_lua_err())?,
 		})
 	}
 
 	fn starts_with(&self, base: Value) -> mlua::Result<bool> {
-		match base {
-			Value::String(s) => {
-				self.try_starts_with(StrandCow::with(self.kind(), &*s.as_bytes())?).into_lua_err()
-			}
-			Value::UserData(ud) => self.try_starts_with(&*ud.borrow::<Self>()?).into_lua_err(),
+		Ok(match base {
+			Value::String(s) => self.try_starts_with(StrandCow::with(self.kind(), &*s.as_bytes())?)?,
+			Value::UserData(ud) => self.try_starts_with(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Path".into_lua_err())?,
-		}
+		})
 	}
 
 	fn strip_prefix(&self, base: Value) -> mlua::Result<Option<Self>> {
@@ -61,7 +52,7 @@ impl PathBufDyn {
 		Ok(match strip {
 			Ok(p) => Some(p.to_owned()),
 			Err(StripPrefixError::Exotic | StripPrefixError::NotPrefix) => None,
-			Err(e @ StripPrefixError::WrongEncoding) => Err(e.into_lua_err())?,
+			Err(e @ StripPrefixError::WrongEncoding) => Err(e)?,
 		})
 	}
 }

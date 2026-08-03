@@ -1,4 +1,5 @@
 use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use ratatui_core::{buffer::Buffer, layout::Rect};
 
 use super::Cell;
 
@@ -23,6 +24,32 @@ impl Row {
 		row.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		row.into_lua(lua)
+	}
+
+	pub(super) fn height_with_margin(&self) -> u16 {
+		self.height.saturating_add(self.top_margin).saturating_add(self.bottom_margin)
+	}
+
+	pub(super) fn measure(&mut self, columns: &[Rect]) {
+		let height = self
+			.cells
+			.iter()
+			.zip(columns)
+			.map(|(cell, column)| cell.height(column.width))
+			.max()
+			.unwrap_or_default();
+		self.height = self.height.max(height).max(1);
+	}
+
+	pub(super) fn render_overlays(&self, mut area: Rect, buf: &mut Buffer, columns: &[Rect]) {
+		area.y = area.y.saturating_add(self.top_margin);
+		area.height = area.height.saturating_sub(self.top_margin).min(self.height);
+		for (cell, column) in self.cells.iter().zip(columns) {
+			cell.render_overlay(
+				Rect::new(area.x.saturating_add(column.x), area.y, column.width, area.height),
+				buf,
+			);
+		}
 	}
 }
 

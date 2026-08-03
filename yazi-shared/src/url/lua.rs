@@ -1,11 +1,9 @@
-use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, spec::Spec, strand::{StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, strand::{StrandCow, StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 
 pub type UrlRef = UserDataRef<UrlBuf>;
-
-const EXPECTED: &str = "expected a string, Url, or Path";
 
 impl UrlBuf {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
@@ -20,57 +18,56 @@ impl UrlBuf {
 						} else if let Ok(path) = ud.borrow::<PathBufDyn>() {
 							path.as_os()?.into()
 						} else {
-							Err(EXPECTED.into_lua_err())?
+							Err("expected a string, Path, or Url".into_lua_err())?
 						}
 					}
-					_ => Err(EXPECTED.into_lua_err())?,
+					_ => Err("expected a string, Path, or Url".into_lua_err())?,
 				})
 			})?,
 		)
 	}
 
 	fn ends_with(&self, child: Value) -> mlua::Result<bool> {
-		match child {
-			Value::String(s) => self.try_ends_with(UrlCow::try_from(&*s.as_bytes())?).into_lua_err(),
-			Value::UserData(ud) => self.try_ends_with(&*ud.borrow::<Self>()?).into_lua_err(),
+		Ok(match child {
+			Value::String(s) => self.try_ends_with(UrlCow::try_from(&*s.as_bytes())?)?,
+			Value::UserData(ud) => self.try_ends_with(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Url".into_lua_err())?,
-		}
+		})
 	}
 
 	fn join(&self, lua: &Lua, other: Value) -> mlua::Result<Value> {
 		match other {
 			Value::String(s) => {
-				let b = s.as_bytes();
-				let (spec, path) = Spec::parse(&b)?;
-				if spec.covariant(self.auth()) {
-					self.try_join(path).into_lua_err()?.into_lua(lua)
+				let bytes = s.as_bytes();
+				self.try_join(StrandCow::with(self.loc().kind(), &*bytes)?)?.into_lua(lua)
+			}
+			Value::UserData(ud) if let Ok(path) = ud.borrow::<PathBufDyn>() => {
+				self.try_join(&*path)?.into_lua(lua)
+			}
+			Value::UserData(ref ud) if ud.is::<Self>() => self.resolve(lua, other),
+			_ => Err("expected a string or Path".into_lua_err()),
+		}
+	}
+
+	fn resolve(&self, lua: &Lua, other: Value) -> mlua::Result<Value> {
+		match other {
+			Value::UserData(ref ud) if let Ok(url) = ud.borrow::<Self>() => {
+				if self.auth().covariant(url.auth()) {
+					self.try_join(url.loc())?.into_lua(lua)
 				} else {
-					UrlCow::try_from((spec, path))?.into_owned().into_lua(lua)
+					Ok(other)
 				}
 			}
-			Value::UserData(ref ud) => {
-				if let Ok(url) = ud.borrow::<Self>() {
-					if url.auth().covariant(self.auth()) {
-						self.try_join(url.loc()).into_lua_err()?.into_lua(lua)
-					} else {
-						Ok(other)
-					}
-				} else if let Ok(path) = ud.borrow::<PathBufDyn>() {
-					self.try_join(&*path).into_lua_err()?.into_lua(lua)
-				} else {
-					Err(EXPECTED.into_lua_err())?
-				}
-			}
-			_ => Err(EXPECTED.into_lua_err())?,
+			_ => Err("expected a Url".into_lua_err()),
 		}
 	}
 
 	fn starts_with(&self, base: Value) -> mlua::Result<bool> {
-		match base {
-			Value::String(s) => self.try_starts_with(UrlCow::try_from(&*s.as_bytes())?).into_lua_err(),
-			Value::UserData(ud) => self.try_starts_with(&*ud.borrow::<Self>()?).into_lua_err(),
+		Ok(match base {
+			Value::String(s) => self.try_starts_with(UrlCow::try_from(&*s.as_bytes())?)?,
+			Value::UserData(ud) => self.try_starts_with(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Url".into_lua_err())?,
-		}
+		})
 	}
 
 	fn strip_prefix(&self, base: Value) -> mlua::Result<Option<PathBufDyn>> {
@@ -83,7 +80,7 @@ impl UrlBuf {
 		Ok(match strip {
 			Ok(p) => Some(p.to_owned()),
 			Err(StripPrefixError::Exotic | StripPrefixError::NotPrefix) => None,
-			Err(e @ StripPrefixError::WrongEncoding) => Err(e.into_lua_err())?,
+			Err(e @ StripPrefixError::WrongEncoding) => Err(e)?,
 		})
 	}
 }
@@ -116,11 +113,12 @@ impl UserData for UrlBuf {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("ends_with", |_, me, child: Value| me.ends_with(child));
 		methods.add_method("join", |lua, me, other: Value| me.join(lua, other));
+		methods.add_method("resolve", |lua, me, other: Value| me.resolve(lua, other));
 		methods.add_method("starts_with", |_, me, base: Value| me.starts_with(base));
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
 		methods.add_method_once("into_search", |_, me, domain: LuaString| {
-			me.into_search(domain.to_str()?).into_lua_err()
+			Ok(me.into_search(domain.to_str()?)?)
 		});
 		methods.add_method_once("into_domain", |_, me, domain: BorrowedBytes| {
 			Ok(me.into_domain(domain.to_vec()))

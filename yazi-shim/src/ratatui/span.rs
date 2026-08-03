@@ -59,11 +59,13 @@ where
 
 				loop {
 					let symbol = graphemes.next()?;
-					if symbol != "\t" {
-						return Some(StyledGrapheme::new(symbol, *style));
-					} else if let Some(n) = tab_size.checked_sub(1) {
+					if symbol == "\t"
+						&& let Some(n) = tab_size.checked_sub(1)
+					{
 						*pending_tabs = n;
 						return Some(StyledGrapheme::new(" ", *style));
+					} else if !symbol.contains(char::is_control) {
+						return Some(StyledGrapheme::new(symbol, *style));
 					}
 				}
 			}
@@ -76,12 +78,14 @@ where
 				if let Some(span) = current
 					&& let Some(symbol) = span.graphemes.next()
 				{
-					if symbol != "\t" {
-						return Some(StyledGrapheme::new(symbol, span.style));
-					} else if let Some(n) = tab_size.checked_sub(1) {
+					if symbol == "\t"
+						&& let Some(n) = tab_size.checked_sub(1)
+					{
 						*pending_tabs = n;
 						*pending_style = span.style;
 						return Some(StyledGrapheme::new(" ", span.style));
+					} else if !symbol.contains(char::is_control) {
+						return Some(StyledGrapheme::new(symbol, span.style));
 					}
 					continue;
 				}

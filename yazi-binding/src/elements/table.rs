@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
-use ratatui_core::widgets::{StatefulWidget, Widget};
+use ratatui_core::{buffer::Buffer, layout::{Layout, Rect}, widgets::{StatefulWidget, Widget}};
 
 use super::{Area, Row};
 use crate::{elements::{Constraint, Spatial}, style::Style};
@@ -44,7 +46,11 @@ impl Table {
 	pub fn selected_cell(&self) -> Option<&ratatui_core::text::Text<'_>> {
 		let row = &self.rows[self.selected()?];
 		let col = self.state.selected_column()?;
-		if row.cells.is_empty() { None } else { Some(&row.cells[col.min(row.cells.len() - 1)].text) }
+		if row.cells.is_empty() {
+			None
+		} else {
+			Some(&row.cells[col.min(row.cells.len() - 1)].text.inner)
+		}
 	}
 
 	pub fn len(&self) -> usize { self.rows.len() }
@@ -57,6 +63,41 @@ impl Table {
 
 	pub fn selected(&self) -> Option<usize> {
 		if self.rows.is_empty() { None } else { Some(self.state.selected()?.min(self.rows.len() - 1)) }
+	}
+
+	fn render_overlays(
+		area: Rect,
+		buf: &mut Buffer,
+		rows: &[Row],
+		columns: &[Rect],
+		row_offset: usize,
+	) {
+		let mut y_offset = 0;
+		for row in rows.iter().skip(row_offset) {
+			if y_offset >= area.height {
+				break;
+			}
+
+			row.render_overlays(Rect { y: area.y.saturating_add(y_offset), ..area }, buf, columns);
+			y_offset = y_offset.saturating_add(row.height_with_margin());
+		}
+	}
+
+	fn column_widths(&self, width: u16) -> Rc<[Rect]> {
+		let count =
+			self.rows.iter().map(|row| row.cells.len()).max().unwrap_or_default().max(self.widths.len());
+
+		if self.widths.is_empty() {
+			Layout::horizontal(vec![
+				ratatui_core::layout::Constraint::Length(width / count.max(1) as u16);
+				count
+			])
+		} else {
+			Layout::horizontal(&self.widths)
+		}
+		.flex(self.flex)
+		.spacing(self.column_spacing)
+		.split(Rect::new(0, 0, width, 1))
 	}
 }
 
@@ -73,11 +114,16 @@ impl Spatial for Table {
 }
 
 impl Widget for Table {
-	fn render(mut self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
+	fn render(mut self, rect: ratatui_core::layout::Rect, buf: &mut Buffer)
 	where
 		Self: Sized,
 	{
-		let mut table = ratatui_widgets::table::Table::new(self.rows, self.widths)
+		let columns = self.column_widths(rect.width);
+		for row in &mut self.rows {
+			row.measure(&columns);
+		}
+
+		let mut table = ratatui_widgets::table::Table::new(self.rows.clone(), self.widths)
 			.column_spacing(self.column_spacing)
 			.style(self.style)
 			.row_highlight_style(self.row_highlight_style)
@@ -97,12 +143,14 @@ impl Widget for Table {
 			table = table.block(block);
 		}
 
-		StatefulWidget::render(table, rect, buf, &mut self.state);
+		let mut state = self.state;
+		StatefulWidget::render(table, rect, buf, &mut state);
+		Self::render_overlays(rect, buf, &self.rows, &columns, state.offset());
 	}
 }
 
 impl Widget for &Table {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut Buffer)
 	where
 		Self: Sized,
 	{
