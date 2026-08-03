@@ -40,10 +40,9 @@ impl Probe {
 
 		writef!(
 			TTY.writer(),
-			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{}{}{RestoreCursorPos}",
+			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{QueryOSC5522}{}{RestoreCursorPos}",
 			w(&RequestXtVersion),
 			If(self.emulator.brand == Brand::Unknown, w(&RequestKittyGraphics)),
-			w(&QueryOSC5522),
 			w(&RequestDA1),
 		)?;
 

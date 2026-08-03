@@ -48,7 +48,7 @@ impl Raterm {
 		let mut stream = EventStream::from(&*TERM);
 		writef!(
 			TTY.writer(),
-			"{EnterAlternateScreen}{EnableBracketedPaste}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}{}{}{EnablePasteEvents}",
+			"{EnterAlternateScreen}{EnableBracketedPaste}{EnablePasteEvents}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}{}{}",
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
 				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -79,7 +79,7 @@ impl Raterm {
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{PopKeyboardFlags}{DisableDrop}{DisablePasteEvents}{DisableDrag}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
+			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisablePasteEvents}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
 			RestoreCursorStyle { blink: emu.cursor_blink, shape: emu.cursor_shape },
 			If(state.title, SetTitle("")),
