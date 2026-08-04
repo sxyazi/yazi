@@ -24,10 +24,7 @@ impl Actor for Clipboard {
 		let result = Lives::scope(cx.core, move |_| {
 			runtime_scope!(LUA, "root", {
 				let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
-
-				root.call_method::<()>("clipboard", form.event)?;
-
-				Ok(())
+				root.call_method::<()>("clipboard", form.event)
 			})
 		});
 
