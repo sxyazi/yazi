@@ -44,6 +44,15 @@ impl Display for SetTitle<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "\x1b]2;{}\x1b\\", self.0) }
 }
 
+/// Set current working directory via OSC 7
+pub struct SetWorkingDir<'a>(pub &'a std::path::Path);
+
+impl Display for SetWorkingDir<'_> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "\x1b]7;file://localhost{}\x07", self.0.display())
+	}
+}
+
 /// Set cursor style
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum SetCursorStyle {
