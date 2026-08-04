@@ -58,8 +58,8 @@ impl Tty {
 			b"ReadClipboard" => {
 				write!(w, "{}", ReadClipboard {
 					mimes:   &t.raw_get::<BorrowedBytes>("mimes")?,
-					pw:      &t.raw_get::<BorrowedBytes>("pw")?,
-					name:    &t.raw_get::<BorrowedBytes>("name")?,
+					pw:      &t.raw_get::<LuaString>("pw")?.to_str()?,
+					name:    &t.raw_get::<LuaString>("name")?.to_str()?,
 					primary: t.raw_get("primary")?,
 				})
 			}
