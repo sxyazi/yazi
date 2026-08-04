@@ -43,7 +43,7 @@ impl Display for DisableClipboard {
 /// Request clipboard data for the given MIME types.
 /// `OSC 5522 ; type=read[:metadata] ; <base64 MIME list> ST`
 pub struct ReadClipboard<'a> {
-	pub mime:    &'a [u8],
+	pub mimes:   &'a [u8],
 	pub pw:      &'a [u8],
 	pub name:    &'a [u8],
 	pub primary: bool,
@@ -51,7 +51,7 @@ pub struct ReadClipboard<'a> {
 
 impl Display for ReadClipboard<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let b64_mime = STANDARD_PAD_INDIFFERENT.encode(self.mime);
+		let b64_mime = STANDARD_PAD_INDIFFERENT.encode(self.mimes);
 		let mut metadata = String::new();
 		if self.pw.len() > 0 {
 			let b64_pw = STANDARD_PAD_INDIFFERENT.encode(self.pw);

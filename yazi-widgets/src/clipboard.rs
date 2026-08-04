@@ -117,20 +117,6 @@ impl Clipboard {
 		writef!(TTY.writer(), "{}", ReadClipboardMimes {}).ok();
 	}
 
-	/// OSC 5522 Clipboard read
-	pub async fn read(&self, mime: impl AsRef<[u8]>, pw: impl AsRef<[u8]>) {
-		use yazi_macro::writef;
-		use yazi_tty::{TTY, sequence::ReadClipboard};
-
-		writef!(TTY.writer(), "{}", ReadClipboard {
-			mime:    mime.as_ref(),
-			pw:      pw.as_ref(),
-			name:    b"yazi",
-			primary: false,
-		})
-		.ok();
-	}
-
 	/// OSC 5522 Clipboard write
 	pub async fn write(&self, data: impl AsRef<[ClipboardData]>) {
 		use yazi_macro::writef;

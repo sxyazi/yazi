@@ -4,7 +4,7 @@ use crate::{event::mime::MimeList, parser::{Osc5522Status, StateOsc5522}};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ClipboardEvent {
-	ReadMimetypes(ClipboardPaste),
+	ReadMimes(ClipboardPaste),
 	ReadData(ClipboardRead),
 	ReadError(ClipboardError),
 	WriteSuccess,
@@ -39,7 +39,7 @@ pub struct ClipboardError {
 impl ClipboardEvent {
 	pub fn r#type(&self) -> &'static str {
 		match self {
-			Self::ReadMimetypes(_) => "mimetypes",
+			Self::ReadMimes(_) => "mimes",
 			Self::ReadData(_) => "data",
 			Self::ReadError(_) => "error",
 			Self::WriteSuccess => "success",
@@ -49,7 +49,7 @@ impl ClipboardEvent {
 
 	pub fn mimes(&self) -> Option<&MimeList> {
 		match self {
-			Self::ReadMimetypes(e) => Some(&e.mimes),
+			Self::ReadMimes(e) => Some(&e.mimes),
 			Self::ReadData(e) => Some(&e.mimes),
 			_ => None,
 		}
@@ -57,14 +57,14 @@ impl ClipboardEvent {
 
 	pub fn primary(&self) -> Option<bool> {
 		match self {
-			Self::ReadMimetypes(e) => Some(e.primary),
+			Self::ReadMimes(e) => Some(e.primary),
 			_ => None,
 		}
 	}
 
 	pub fn pw(&self) -> Option<String> {
 		match self {
-			Self::ReadMimetypes(e) => Some(String::from_utf8_lossy(&e.pw).into_owned()),
+			Self::ReadMimes(e) => Some(String::from_utf8_lossy(&e.pw).into_owned()),
 			_ => None,
 		}
 	}
@@ -80,7 +80,7 @@ impl ClipboardEvent {
 
 	pub fn is_read(&self) -> bool {
 		match self {
-			Self::ReadMimetypes(_) | Self::ReadError(_) | Self::ReadData(_) => true,
+			Self::ReadMimes(_) | Self::ReadError(_) | Self::ReadData(_) => true,
 			_ => false,
 		}
 	}
@@ -90,7 +90,7 @@ impl ClipboardEvent {
 			StateOsc5522 { read: true, status: Some(Osc5522Status::DONE), idx: 0, mime, .. }
 				if mime.first()? == b"." =>
 			{
-				ClipboardEvent::ReadMimetypes(ClipboardPaste {
+				ClipboardEvent::ReadMimes(ClipboardPaste {
 					mimes:   MimeList::new(s.payload.first()?.to_owned())?,
 					primary: s.primary,
 					pw:      s.pw,

@@ -104,19 +104,19 @@ impl<'a> Dispatcher<'a> {
 		act!(app:dnd, cx, dnd).map(|_| ())
 	}
 
+	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
+		if self.app.core.input.focus()
+			&& let Some(text) = clip.text()
+		{
+			return self.dispatch_paste(text);
+		}
+
+		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		act!(app:clipboard, cx, clip).map(|_| ())
+	}
+
 	fn dispatch_report(&mut self, report: yazi_term::event::Report) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:report, cx, report).map(|_| ())
-	}
-
-	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
-		if self.app.core.input.focus() {
-			if let Some(text) = clip.text() {
-				self.dispatch_paste(text)?;
-				return Ok(());
-			}
-		}
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
-		act!(app:clipboard, cx, clip).map(|_| ())
 	}
 }

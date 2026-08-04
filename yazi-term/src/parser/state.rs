@@ -74,6 +74,7 @@ pub(crate) struct StateOsc72 {
 	pub(crate) has_more: bool,
 }
 
+// --- StateOsc5522
 #[derive(Debug, Default, PartialEq)]
 pub(crate) struct StateOsc5522 {
 	pub(crate) status:   Option<Osc5522Status>,

@@ -101,10 +101,10 @@ function Root:drop(event)
 end
 
 function Root:clipboard(event)
-	if event and event.type == "mimetypes" and event.pw then
+	if event and event.type == "mimes" and event.pw then
 		-- No harm in asking for unavailable types
-		local mimetypes = "text/plain text/uri-list"
-		rt.tty:queue("ReadClipboard", { mimes = mimetypes, pw = event.pw, name = "Paste Event", primary = event.primary })
+		local mimes = "text/plain text/uri-list"
+		rt.tty:queue("ReadClipboard", { mimes = mimes, pw = event.pw, name = "Paste Event", primary = event.primary })
 		rt.tty:flush()
 	elseif event and event.type == "data" then
 		if event.data["text/uri-list"] ~= nil then
