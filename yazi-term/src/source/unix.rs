@@ -143,6 +143,11 @@ fn poll(fds: [BorrowedFd<'_>; 3], timeout: Option<Duration>) -> io::Result<[bool
 		Ok(result)
 	}
 
+	#[cfg(target_os = "macos")]
+	// rustix rounds nanoseconds up to microseconds for select(), which can produce tv_usec =
+	// 1_000_000.
+	let timeout = timeout.map(|t| Duration::new(t.as_secs(), t.subsec_micros() * 1000));
+
 	let timespec = timeout.map(|t| t.try_into()).transpose().map_err(|_| {
 		io::Error::new(io::ErrorKind::InvalidInput, "timeout is too large for the platform")
 	})?;
