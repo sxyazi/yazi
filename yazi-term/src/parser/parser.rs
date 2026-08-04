@@ -266,7 +266,7 @@ impl Parser {
 	fn on_osc5522(&mut self, b: u8) {
 		self.seq.push(b);
 
-		if !self.seq.ends_with(b"\x1b\\") {
+		if !self.seq.ends_with(b"\x1b\\") && b != b'\x07' {
 			return;
 		} else if self.discard {
 			return self.reset();

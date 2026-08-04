@@ -109,14 +109,6 @@ impl Clipboard {
 			.ok();
 	}
 
-	/// OSC 5522 Query MIME types
-	pub async fn query_mime_types(&self) {
-		use yazi_macro::writef;
-		use yazi_tty::{TTY, sequence::ReadClipboardMimes};
-
-		writef!(TTY.writer(), "{}", ReadClipboardMimes {}).ok();
-	}
-
 	/// OSC 5522 Clipboard write
 	pub async fn write(&self, data: impl AsRef<[ClipboardData]>) {
 		use yazi_macro::writef;

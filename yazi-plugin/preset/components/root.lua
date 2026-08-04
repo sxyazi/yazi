@@ -3,6 +3,7 @@ Root = {
 	_dragging = nil,
 	_dropping = nil,
 	_reading = false,
+	_pastes = {},
 }
 
 function Root:new(area)
@@ -101,20 +102,45 @@ function Root:drop(event)
 	end
 end
 
+function Root:read_clipboard(paste)
+	Root._reading = true
+	rt.tty:queue("ReadClipboard", { mimes = paste.mime, pw = paste.pw, name = "Paste event", primary = paste.primary })
+	rt.tty:flush()
+end
+
+function Root:read_next_clipboard()
+	local paste = table.remove(Root._pastes, 1)
+	if paste then
+		Root:read_clipboard(paste)
+	end
+end
+
 function Root:clipboard(event)
 	if not event then
 		return
-	elseif event.type == "error" and not event.write then
-		Root._reading = false
-	elseif event.type ~= "read" then
-		return
-	elseif not Root._reading then
-		-- No harm in asking for unavailable types
-		local mimes = "text/plain text/uri-list"
-		Root._reading = true
-		rt.tty:queue("ReadClipboard", { mimes = mimes, pw = event.pw, name = "Paste Event", primary = event.primary })
-		rt.tty:flush()
-	elseif Root._reading then
+	elseif event.type == "read" then
+		local mimes = event.data["."]
+		if mimes then
+			local mime
+			for m in mimes:gmatch("%S+") do
+				if m == "text/plain" then
+					mime = m
+					break
+				elseif m == "text/uri-list" then
+					mime = m
+				end
+			end
+			if mime then
+				Root._pastes[#Root._pastes + 1] = { mime = mime, pw = event.pw, primary = event.primary }
+				if not Root._reading then
+					Root:read_next_clipboard()
+				end
+			end
+			return
+		elseif not Root._reading then
+			return
+		end
+
 		Root._reading = false
 		local text = event.data["text/plain"]
 		if tostring(cx.layer) == "input" and text ~= nil then
@@ -122,5 +148,11 @@ function Root:clipboard(event)
 		elseif event.data["text/uri-list"] ~= nil then
 			require("clipboard").copy_uri_list(event.data["text/uri-list"])
 		end
+	elseif event.type == "error" and not event.write then
+		Root._reading = false
+	else
+		return
 	end
+
+	Root:read_next_clipboard()
 end

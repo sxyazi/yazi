@@ -1,6 +1,6 @@
 use base64::{Engine, engine::general_purpose::STANDARD_PAD_INDIFFERENT};
 
-use crate::{ParseError, Result, parser::{Parser, State}};
+use crate::{ParseError, Result, bail, parser::{Parser, State, strip_osc_terminator}};
 
 impl Parser {
 	pub(super) fn parse_osc72(&mut self) -> Result<()> {
@@ -33,7 +33,7 @@ impl Parser {
 
 		// Limit payload size to 1MiB to prevent potential DoS
 		if state.payload.len() + payload.len() > 1 << 20 {
-			return Err(ParseError::Invalid);
+			bail!();
 		}
 
 		state.payload.extend(payload);
@@ -41,10 +41,10 @@ impl Parser {
 	}
 
 	pub(super) fn parse_osc5522(&mut self) -> Result<()> {
-		debug_assert!(self.seq.starts_with(b"\x1b]5522;"));
-		debug_assert!(self.seq.ends_with(b"\x1b\\"));
+		let seq = strip_osc_terminator(&self.seq)?;
+		debug_assert!(seq.starts_with(b"\x1b]5522;"));
 
-		let mut it = self.seq[7..self.seq.len() - 2].splitn(2, |&b| b == b';');
+		let mut it = seq[7..].splitn(2, |&b| b == b';');
 		let meta = str::from_utf8(it.next().ok_or(ParseError::Invalid)?)?;
 		let payload = it.next().unwrap_or(&[]);
 
@@ -71,21 +71,21 @@ impl Parser {
 			}
 		}
 
-		if state.status != "DATA" {
+		let len = state.len();
+		if len > 16 << 20 || state.mimes.len() > 1024 {
+			bail!();
+		} else if state.status != "DATA" {
 			return Ok(());
 		}
 
 		// Decode now since each payload may have its own padding.
 		let payload = STANDARD_PAD_INDIFFERENT.decode(&payload)?;
-		if state.payload.len() < state.mimes.len() {
+		if len.saturating_add(payload.len()) > 16 << 20 {
+			bail!();
+		} else if state.payload.len() < state.mimes.len() {
 			state.payload.push(payload);
 		} else {
 			state.payload.last_mut().ok_or(ParseError::Invalid)?.extend(payload);
-		}
-
-		// Limit payload size to 1MiB per mime type to prevent potential DoS
-		if state.payload.last().unwrap().len() > 1 << 20 {
-			return Err(ParseError::Invalid);
 		}
 
 		Ok(())

@@ -87,3 +87,11 @@ pub(crate) struct StateOsc5522 {
 	pub(crate) status:   CompactString,
 	pub(crate) has_more: bool,
 }
+
+impl StateOsc5522 {
+	pub(crate) fn len(&self) -> usize {
+		self.pw.len()
+			+ self.mimes.iter().map(String::len).sum::<usize>()
+			+ self.payload.iter().map(Vec::len).sum::<usize>()
+	}
+}

@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use mlua::{BorrowedBytes, ExternalError, IntoLuaMulti, Lua, MultiValue, Table, UserData, UserDataMethods};
+use mlua::{BorrowedBytes, ExternalError, IntoLuaMulti, Lua, LuaString, MultiValue, Table, UserData, UserDataMethods};
 use yazi_binding::Error;
 use yazi_shim::mlua::{ByteString, LuaTableExt};
 

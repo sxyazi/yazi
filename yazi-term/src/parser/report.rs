@@ -2,7 +2,7 @@ use std::str;
 
 use compact_str::CompactString;
 
-use crate::{ParseError, Result, bail, event::{Event, Report}, parser::Parser};
+use crate::{ParseError, Result, bail, event::{Event, Report}, parser::{Parser, strip_osc_terminator}};
 
 impl Parser {
 	pub(super) fn parse_csi_report(&self) -> Result<Event> {
@@ -85,11 +85,7 @@ impl Parser {
 	}
 
 	pub(super) fn parse_osc_report(&self) -> Result<Event> {
-		let seq = self
-			.seq
-			.strip_suffix(b"\x07")
-			.or_else(|| self.seq.strip_suffix(b"\x1b\\"))
-			.ok_or(ParseError::Invalid)?;
+		let seq = strip_osc_terminator(&self.seq)?;
 
 		// Dynamic background-color report:
 		//   `OSC 11 ; rgb:Pr/Pg/Pb ST|BEL` (`\x1b]11;rgb:...`)

@@ -44,14 +44,13 @@ impl Display for DisableClipboard {
 /// `OSC 5522 ; type=read[:metadata] ; <base64 MIME list> ST`
 pub struct ReadClipboard<'a> {
 	pub mimes:   &'a [u8],
-	pub pw:      &'a [u8],
-	pub name:    &'a [u8],
+	pub pw:      &'a str,
+	pub name:    &'a str,
 	pub primary: bool,
 }
 
 impl Display for ReadClipboard<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let b64_mime = STANDARD_PAD_INDIFFERENT.encode(self.mimes);
 		let mut metadata = String::new();
 		if self.pw.len() > 0 {
 			let b64_pw = STANDARD_PAD_INDIFFERENT.encode(self.pw);
@@ -61,17 +60,12 @@ impl Display for ReadClipboard<'_> {
 		if self.primary {
 			metadata.push_str(":loc=primary");
 		}
-		write!(f, "\x1b]5522;type=read{};{}\x1b\\", metadata, b64_mime)
-	}
-}
-
-/// Request the MIME types available in the clipboard.
-/// `OSC 5522 ; type=read ; <base64 [.]> ST`
-pub struct ReadClipboardMimes;
-
-impl Display for ReadClipboardMimes {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "\x1b]5522;type=read;{}\x1b\\", STANDARD_PAD_INDIFFERENT.encode(b"."))
+		write!(
+			f,
+			"\x1b]5522;type=read{};{}\x1b\\",
+			metadata,
+			STANDARD_PAD_INDIFFERENT.encode(self.mimes)
+		)
 	}
 }
 
@@ -90,7 +84,7 @@ impl Display for WriteClipboard<'_> {
 			let b64_mime = STANDARD_PAD_INDIFFERENT.encode(item.mime);
 			let data = item.payload;
 
-			for (_, chunk) in data.chunks(4096).enumerate() {
+			for chunk in data.chunks(4096).chain(data.is_empty().then_some(&[] as &[u8])) {
 				let b64_chunk = STANDARD_PAD_INDIFFERENT.encode(chunk);
 				write!(f, "\x1b]5522;type=wdata:mime={};{}\x1b\\", b64_mime, b64_chunk)?;
 			}
