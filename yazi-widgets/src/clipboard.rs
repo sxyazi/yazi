@@ -8,12 +8,6 @@ pub struct Clipboard {
 	content: Mutex<Vec<u8>>,
 }
 
-pub struct ClipboardData {
-	pub mime:    String,
-	pub payload: Vec<u8>,
-	pub aliases: Vec<String>,
-}
-
 impl Clipboard {
 	#[cfg(unix)]
 	pub async fn get(&self) -> Vec<u8> {
@@ -107,23 +101,5 @@ impl Clipboard {
 		tokio::task::spawn_blocking(move || set_clipboard_string(&String::from_utf8_lossy(&b)))
 			.await
 			.ok();
-	}
-
-	/// OSC 5522 Clipboard write
-	pub async fn write(&self, data: impl AsRef<[ClipboardData]>) {
-		use yazi_macro::writef;
-		use yazi_tty::{TTY, sequence::{WriteClipboard, WriteClipboardData}};
-
-		let items = data
-			.as_ref()
-			.iter()
-			.map(|d| WriteClipboardData {
-				mime:    &d.mime,
-				payload: d.payload.as_ref(),
-				aliases: d.aliases.iter(),
-			})
-			.collect::<Vec<_>>();
-
-		writef!(TTY.writer(), "{}", WriteClipboard { data: items }).ok();
 	}
 }
