@@ -107,7 +107,10 @@ function Root:clipboard(event)
 		rt.tty:queue("ReadClipboard", { mimes = mimes, pw = event.pw, name = "Paste Event", primary = event.primary })
 		rt.tty:flush()
 	elseif event and event.type == "data" then
-		if event.data["text/uri-list"] ~= nil then
+		local text = event.data["text/plain"]
+		if tostring(cx.layer) == "input" and text ~= nil then
+			ya.emit("input:feed", { text })
+		elseif event.data["text/uri-list"] ~= nil then
 			require("clipboard").copy_uri_list(event.data["text/uri-list"])
 		end
 	end

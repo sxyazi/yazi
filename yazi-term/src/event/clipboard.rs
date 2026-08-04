@@ -69,15 +69,6 @@ impl ClipboardEvent {
 		}
 	}
 
-	pub fn text(&self) -> Option<String> {
-		match self {
-			Self::ReadData(e) if let Some(t) = e.data.iter().find(|e| e.mime == b"text/plain") => {
-				Some(String::from_utf8_lossy(&t.data).into_owned())
-			}
-			_ => None,
-		}
-	}
-
 	pub fn is_read(&self) -> bool {
 		match self {
 			Self::ReadMimes(_) | Self::ReadError(_) | Self::ReadData(_) => true,
