@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_macro::{render, succ};
+use yazi_macro::{act, render, succ};
 use yazi_shared::{data::Data, replace_cow};
 
 use crate::input::{Input, InputMode, op::InputOp};
@@ -13,6 +13,21 @@ impl Input {
 			render!();
 		}
 		succ!();
+	}
+
+	pub fn insert_str(&mut self, s: &str) -> Result<Data> {
+		let s = replace_cow(replace_cow(s, "\r", " "), "\n", " ");
+
+		let snap = self.snap_mut();
+		if snap.cursor < 1 {
+			snap.value.insert_str(0, &s);
+		} else {
+			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), &s);
+		}
+
+		act!(r#move, self, s.chars().count() as isize)?;
+		self.flush_all();
+		succ!(render!());
 	}
 
 	pub fn replace_str(&mut self, s: &str) -> Result<Data> {

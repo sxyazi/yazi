@@ -3,7 +3,7 @@ use std::{collections::VecDeque, mem, num::NonZeroU8, str, time::{Duration, Inst
 use yazi_shim::utf8_char_width;
 
 use super::state::State;
-use crate::event::{DndEvent, Event, KeyCode, KeyEvent, Modifiers};
+use crate::event::{ClipboardEvent, DndEvent, Event, KeyCode, KeyEvent, Modifiers};
 
 #[derive(Debug)]
 pub struct Parser {
@@ -50,6 +50,7 @@ impl Parser {
 			State::BracketedPaste => self.on_bracketed_paste(b),
 			State::Osc | State::OscSt => self.on_osc(b),
 			State::Osc72(_) => self.on_osc72(b),
+			State::Osc5522(_) => self.on_osc5522(b),
 			State::Dcs | State::DcsSt => self.on_dcs(b),
 			State::Apc | State::ApcSt => self.on_apc(b),
 			State::Utf8(n) => self.on_utf8(b, *n),
@@ -224,6 +225,9 @@ impl Parser {
 			(State::Osc, _) if self.seq.starts_with(b"\x1b]72;") => {
 				self.state = State::Osc72(Default::default());
 			}
+			(State::Osc, _) if self.seq.starts_with(b"\x1b]5522;") => {
+				self.state = State::Osc5522(Default::default());
+			}
 			(State::Osc, b'\x1B') => self.state = State::OscSt,
 			(State::Osc, _) => {} // keep accumulating
 			(State::OscSt, b'\\') => self.finish_report(Self::parse_osc_report),
@@ -252,6 +256,32 @@ impl Parser {
 			State::Osc72(s) => {
 				if let Some(e) = DndEvent::from_state(s) {
 					self.emit(Event::Dnd(e));
+				}
+				self.reset();
+			}
+			_ => unreachable!(),
+		}
+	}
+
+	fn on_osc5522(&mut self, b: u8) {
+		self.seq.push(b);
+
+		if !self.seq.ends_with(b"\x1b\\") && b != b'\x07' {
+			return;
+		} else if self.discard {
+			return self.reset();
+		} else if self.parse_osc5522().is_err() {
+			return self.reset();
+		}
+
+		match mem::take(&mut self.state) {
+			State::Osc5522(s) if s.has_more => {
+				self.seq.clear();
+				self.state = State::Osc5522(s);
+			}
+			State::Osc5522(s) => {
+				if let Some(e) = ClipboardEvent::from_state(s) {
+					self.emit(Event::Clipboard(e));
 				}
 				self.reset();
 			}

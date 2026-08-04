@@ -58,7 +58,7 @@ impl Clipboard {
 		use yazi_tty::{TTY, sequence::SetClipboard};
 
 		s.as_ref().clone_into(&mut self.content.lock());
-		writef!(TTY.writer(), "{}", SetClipboard::new(s.as_ref())).ok();
+		writef!(TTY.writer(), "{}", SetClipboard(s.as_ref())).ok();
 
 		let all = [
 			("pbcopy", &[][..]),

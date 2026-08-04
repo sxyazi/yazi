@@ -2,7 +2,7 @@ use std::{fmt::{self, Display}, str};
 
 use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD_INDIFFERENT};
 
-use super::traits::Mimelist;
+use super::traits::{ListMimes, Mimelist};
 
 /// Enable drag support: `OSC 72 ; t=o:x=1 ; machine id ST`
 pub struct EnableDrag<'a>(pub &'a str);
@@ -18,7 +18,7 @@ pub struct EnableDrop<M>(pub M);
 
 impl<M: Mimelist> Display for EnableDrop<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "\x1b]72;t=a;{}\x1b\\", ListDndMimes(self.0.clone()))
+		write!(f, "\x1b]72;t=a;{}\x1b\\", ListMimes(self.0.clone()))
 	}
 }
 
@@ -46,9 +46,9 @@ pub enum AgreeDrag<M> {
 impl<M: Mimelist> Display for AgreeDrag<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::Copy(mimes) => write!(f, "\x1b]72;t=o:o=1;{}\x1b\\", ListDndMimes(mimes.clone())),
-			Self::Move(mimes) => write!(f, "\x1b]72;t=o:o=2;{}\x1b\\", ListDndMimes(mimes.clone())),
-			Self::Either(mimes) => write!(f, "\x1b]72;t=o:o=3;{}\x1b\\", ListDndMimes(mimes.clone())),
+			Self::Copy(mimes) => write!(f, "\x1b]72;t=o:o=1;{}\x1b\\", ListMimes(mimes.clone())),
+			Self::Move(mimes) => write!(f, "\x1b]72;t=o:o=2;{}\x1b\\", ListMimes(mimes.clone())),
+			Self::Either(mimes) => write!(f, "\x1b]72;t=o:o=3;{}\x1b\\", ListMimes(mimes.clone())),
 		}
 	}
 }
@@ -64,8 +64,8 @@ impl<M: Mimelist> Display for AgreeDrop<M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Reject => write!(f, "\x1b]72;t=m:o=0\x1b\\"),
-			Self::Copy(mimes) => write!(f, "\x1b]72;t=m:o=1;{}\x1b\\", ListDndMimes(mimes.clone())),
-			Self::Move(mimes) => write!(f, "\x1b]72;t=m:o=2;{}\x1b\\", ListDndMimes(mimes.clone())),
+			Self::Copy(mimes) => write!(f, "\x1b]72;t=m:o=1;{}\x1b\\", ListMimes(mimes.clone())),
+			Self::Move(mimes) => write!(f, "\x1b]72;t=m:o=2;{}\x1b\\", ListMimes(mimes.clone())),
 		}
 	}
 }
@@ -153,20 +153,5 @@ pub enum FinishDrop {
 impl Display for FinishDrop {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "\x1b]72;t=r:o={}\x1b\\", *self as u8)
-	}
-}
-
-/// Write MIME types separated by spaces.
-struct ListDndMimes<M>(pub M);
-
-impl<M: Mimelist> Display for ListDndMimes<M> {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		for (i, m) in self.0.clone().into_iter().enumerate() {
-			if i != 0 {
-				write!(f, " ")?;
-			}
-			write!(f, "{m}")?;
-		}
-		Ok(())
 	}
 }

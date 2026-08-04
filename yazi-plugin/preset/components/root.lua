@@ -99,3 +99,20 @@ function Root:drop(event)
 		return c and c.drop and c:drop(event)
 	end
 end
+
+function Root:clipboard(event)
+	if event.type ~= "read" then
+		return
+	elseif event.data["."] then
+		local mime = tostring(cx.layer) == "input" and "text/plain" or "text/uri-list"
+		return require("clipboard").read_unsolicited(mime, event)
+	end
+
+	local data = event.data
+	local text, uri = data["text/plain"], data["text/uri-list"]
+	if tostring(cx.layer) == "input" and text then
+		ya.emit("input:feed", { text })
+	elseif uri then
+		require("clipboard").copy_uri_list(uri)
+	end
+end

@@ -20,6 +20,7 @@ impl Input {
 		}
 
 		on!(r#move, "move");
+		on!(feed);
 		on!(backward);
 		on!(forward);
 

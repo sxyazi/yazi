@@ -1,4 +1,6 @@
-use crate::{ParseError, Result, parser::{Parser, State}};
+use base64::{Engine, engine::general_purpose::STANDARD_PAD_INDIFFERENT};
+
+use crate::{ParseError, Result, bail, parser::{Parser, State, strip_osc_terminator}};
 
 impl Parser {
 	pub(super) fn parse_osc72(&mut self) -> Result<()> {
@@ -31,10 +33,61 @@ impl Parser {
 
 		// Limit payload size to 1MiB to prevent potential DoS
 		if state.payload.len() + payload.len() > 1 << 20 {
-			return Err(ParseError::Invalid);
+			bail!();
 		}
 
 		state.payload.extend(payload);
+		Ok(())
+	}
+
+	pub(super) fn parse_osc5522(&mut self) -> Result<()> {
+		let seq = strip_osc_terminator(&self.seq)?;
+		debug_assert!(seq.starts_with(b"\x1b]5522;"));
+
+		let mut it = seq[7..].splitn(2, |&b| b == b';');
+		let meta = str::from_utf8(it.next().ok_or(ParseError::Invalid)?)?;
+		let payload = it.next().unwrap_or(&[]);
+
+		let State::Osc5522(state) = &mut self.state else { unreachable!() };
+		state.status.clear(); // reset status for this new sequence
+		state.has_more = false; // reset has_more for this new sequence
+
+		for part in meta.split(':') {
+			match part.split_once('=').ok_or(ParseError::Invalid)? {
+				("type", v) => state.write = v == "write",
+				("loc", v) => state.primary = v == "primary",
+				("mime", v) => {
+					let s = String::from_utf8(STANDARD_PAD_INDIFFERENT.decode(v)?)?;
+					if state.mimes.last() != Some(&s) {
+						state.mimes.push(s);
+					}
+				}
+				("pw", v) => state.pw = String::from_utf8(STANDARD_PAD_INDIFFERENT.decode(v)?)?,
+				("status", v) => {
+					state.status = v.into();
+					state.has_more = matches!(v, "OK" | "DATA");
+				}
+				_ => {}
+			}
+		}
+
+		let len = state.len();
+		if len > 16 << 20 || state.mimes.len() > 1024 {
+			bail!();
+		} else if state.status != "DATA" {
+			return Ok(());
+		}
+
+		// Decode now since each payload may have its own padding.
+		let payload = STANDARD_PAD_INDIFFERENT.decode(&payload)?;
+		if len.saturating_add(payload.len()) > 16 << 20 {
+			bail!();
+		} else if state.payload.len() < state.mimes.len() {
+			state.payload.push(payload);
+		} else {
+			state.payload.last_mut().ok_or(ParseError::Invalid)?.extend(payload);
+		}
+
 		Ok(())
 	}
 }

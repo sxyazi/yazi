@@ -38,25 +38,25 @@ debug = false
 ansi-to-tui           = "8.0.1"
 anyhow                = "1.0.104"
 arc-swap              = { version = "1.9.2", features = [ "serde" ] }
-base64                = "0.23.0"
+base64                = "0.23.1"
 bitflags              = { version = "2.13.1", features = [ "serde" ] }
 chrono                = "0.4.45"
 clap                  = { version = "4.6.5", features = [ "derive" ] }
 compact_str           = { version = "0.10.0", features = [ "serde" ] }
 core-foundation-sys   = "0.8.7"
-data-encoding         = "2.11.0"
+data-encoding         = "2.11.1"
 dirs                  = "6.0.0"
 dyn-clone             = "1.0.20"
 either                = { version = "1.17.0" }
 foldhash              = "0.2.0"
 futures               = "0.3.33"
-globset               = "0.4.19"
+globset               = "0.4.20"
 hashbrown             = { version = "0.17.1", features = [ "serde" ] }
 image                 = { version = "0.25.10", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
 indexmap              = { version = "2.14.0", features = [ "serde" ] }
 inventory             = "0.3.24"
 libc                  = "0.2.189"
-lru                   = "0.18.1"
+lru                   = "0.18.2"
 mlua                  = { version = "0.12.0", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2                 = "0.6.4"
 ordered-float         = { version = "5.3.0", features = [ "serde" ] }

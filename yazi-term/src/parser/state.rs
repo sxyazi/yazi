@@ -1,5 +1,7 @@
 use std::{num::NonZeroU8, time::Duration};
 
+use compact_str::CompactString;
+
 #[derive(Debug, Default, PartialEq)]
 pub(crate) enum State {
 	/// Normal ground state.
@@ -19,6 +21,8 @@ pub(crate) enum State {
 	Osc,
 	/// Inside an OSC 72 (DnD) sequence (`\x1B]72;` … ST).
 	Osc72(StateOsc72),
+	/// Inside an OSC 5522 (Clipboard) sequence (`\x1B]5522;` … ST).
+	Osc5522(StateOsc5522),
 	/// Inside OSC, just saw `\x1B` (potential start of ST = `\x1B\\`).
 	OscSt,
 	/// Inside a DCS sequence (`\x1BP` … ST).
@@ -42,6 +46,7 @@ impl State {
 			Self::BracketedPaste => 16 << 20,
 			Self::Osc
 			| Self::Osc72(_)
+			| Self::Osc5522(_)
 			| Self::OscSt
 			| Self::Dcs
 			| Self::DcsSt
@@ -69,4 +74,24 @@ pub(crate) struct StateOsc72 {
 	pub(crate) op:       Option<u8>,
 	pub(crate) payload:  Vec<u8>,
 	pub(crate) has_more: bool,
+}
+
+// --- StateOsc5522
+#[derive(Debug, Default, PartialEq)]
+pub(crate) struct StateOsc5522 {
+	pub(crate) write:    bool,
+	pub(crate) primary:  bool,
+	pub(crate) mimes:    Vec<String>,
+	pub(crate) payload:  Vec<Vec<u8>>,
+	pub(crate) pw:       String,
+	pub(crate) status:   CompactString,
+	pub(crate) has_more: bool,
+}
+
+impl StateOsc5522 {
+	pub(crate) fn len(&self) -> usize {
+		self.pw.len()
+			+ self.mimes.iter().map(String::len).sum::<usize>()
+			+ self.payload.iter().map(Vec::len).sum::<usize>()
+	}
 }

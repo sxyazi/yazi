@@ -5,8 +5,7 @@ use tracing::warn;
 use yazi_actor::Ctx;
 use yazi_macro::{act, emit};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
-use yazi_term::event::{DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
-use yazi_widgets::input::InputMode;
+use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 
 use crate::{Executor, Router, app::App};
 
@@ -29,6 +28,7 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::FocusOut) => Ok(()),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
 			Event::Term(TermEvent::Dnd(dnd)) => self.dispatch_dnd(dnd),
+			Event::Term(TermEvent::Clipboard(clip)) => self.dispatch_clipboard(clip),
 			Event::Term(TermEvent::Report(report)) => self.dispatch_report(report),
 		};
 
@@ -89,11 +89,7 @@ impl<'a> Dispatcher<'a> {
 
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {
 		if let Some(mut guard) = self.app.core.input.lock_mut() {
-			if guard.mode() == InputMode::Insert {
-				guard.type_str(&str)?;
-			} else if guard.mode() == InputMode::Replace {
-				guard.replace_str(&str)?;
-			}
+			guard.feed(str.into())?;
 		}
 		Ok(())
 	}
@@ -101,6 +97,11 @@ impl<'a> Dispatcher<'a> {
 	fn dispatch_dnd(&mut self, dnd: DndEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
 		act!(app:dnd, cx, dnd).map(|_| ())
+	}
+
+	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
+		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		act!(app:clipboard, cx, clip).map(|_| ())
 	}
 
 	fn dispatch_report(&mut self, report: yazi_term::event::Report) -> Result<()> {
