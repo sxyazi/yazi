@@ -73,18 +73,18 @@ pub struct WriteClipboard<'a, M> {
 
 impl<M: Mimelist> Display for WriteClipboard<'_, M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{WriteClipboardStart}")?;
+		write!(f, "{WriteClipboardHead}")?;
 		for data in &self.data {
 			write!(f, "{data}")?;
 		}
-		write!(f, "{WriteClipboardEnd}")
+		write!(f, "{WriteClipboardTail}")
 	}
 }
 
 /// Begin an OSC 5522 clipboard transmission: `OSC 5522 ; type=write ST`.
-pub struct WriteClipboardStart;
+pub struct WriteClipboardHead;
 
-impl Display for WriteClipboardStart {
+impl Display for WriteClipboardHead {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "\x1b]5522;type=write\x1b\\")
 	}
@@ -123,9 +123,9 @@ impl<M: Mimelist> Display for WriteClipboardData<'_, M> {
 }
 
 /// Finish an OSC 5522 clipboard transmission: `OSC 5522 ; type=wdata ST`.
-pub struct WriteClipboardEnd;
+pub struct WriteClipboardTail;
 
-impl Display for WriteClipboardEnd {
+impl Display for WriteClipboardTail {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "\x1b]5522;type=wdata\x1b\\")
 	}
