@@ -9,9 +9,9 @@ pub struct Clipboard {
 }
 
 pub struct ClipboardData {
-	pub mime:    Vec<u8>,
+	pub mime:    String,
 	pub payload: Vec<u8>,
-	pub alias:   Vec<u8>,
+	pub aliases: Vec<String>,
 }
 
 impl Clipboard {
@@ -64,7 +64,7 @@ impl Clipboard {
 		use yazi_tty::{TTY, sequence::SetClipboard};
 
 		s.as_ref().clone_into(&mut self.content.lock());
-		writef!(TTY.writer(), "{}", SetClipboard::new(s.as_ref())).ok();
+		writef!(TTY.writer(), "{}", SetClipboard(s.as_ref())).ok();
 
 		let all = [
 			("pbcopy", &[][..]),
@@ -118,9 +118,9 @@ impl Clipboard {
 			.as_ref()
 			.iter()
 			.map(|d| WriteClipboardData {
-				mime:    d.mime.as_ref(),
+				mime:    &d.mime,
 				payload: d.payload.as_ref(),
-				alias:   d.alias.as_ref(),
+				aliases: d.aliases.iter(),
 			})
 			.collect::<Vec<_>>();
 

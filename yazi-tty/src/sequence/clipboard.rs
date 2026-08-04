@@ -1,21 +1,15 @@
 use std::fmt::{self, Display};
 
-use base64::{Engine, engine::general_purpose::{self, STANDARD_PAD_INDIFFERENT}};
+use base64::{display::Base64Display, engine::general_purpose::{self, STANDARD_PAD_INDIFFERENT}};
+
+use super::traits::{ListMimes, Mimelist};
 
 /// Set clipboard contents via OSC 52.
-pub struct SetClipboard {
-	content: String,
-}
+pub struct SetClipboard<'a>(pub &'a [u8]);
 
-impl SetClipboard {
-	pub fn new(content: impl AsRef<[u8]>) -> Self {
-		Self { content: general_purpose::STANDARD.encode(content) }
-	}
-}
-
-impl Display for SetClipboard {
+impl Display for SetClipboard<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "\x1b]52;c;{}\x1b\\", self.content)
+		write!(f, "\x1b]52;c;{}\x1b\\", Base64Display::new(self.0, &general_purpose::STANDARD))
 	}
 }
 
@@ -42,65 +36,97 @@ impl Display for DisableClipboard {
 
 /// Request clipboard data for the given MIME types.
 /// `OSC 5522 ; type=read[:metadata] ; <base64 MIME list> ST`
-pub struct ReadClipboard<'a> {
-	pub mimes:   &'a [u8],
+pub struct ReadClipboard<'a, M> {
+	pub mimes:   M,
 	pub pw:      &'a str,
 	pub name:    &'a str,
 	pub primary: bool,
 }
 
-impl Display for ReadClipboard<'_> {
+impl<M: Mimelist> Display for ReadClipboard<'_, M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let mut metadata = String::new();
-		if self.pw.len() > 0 {
-			let b64_pw = STANDARD_PAD_INDIFFERENT.encode(self.pw);
-			let b64_name = STANDARD_PAD_INDIFFERENT.encode(self.name);
-			metadata.push_str(&format!(":pw={}:name={}", b64_pw, b64_name));
+		write!(f, "\x1b]5522;type=read")?;
+		if !self.pw.is_empty() {
+			write!(
+				f,
+				":pw={}:name={}",
+				Base64Display::new(self.pw.as_bytes(), &STANDARD_PAD_INDIFFERENT),
+				Base64Display::new(self.name.as_bytes(), &STANDARD_PAD_INDIFFERENT)
+			)?;
 		}
+
 		if self.primary {
-			metadata.push_str(":loc=primary");
+			write!(f, ":loc=primary")?;
 		}
-		write!(
-			f,
-			"\x1b]5522;type=read{};{}\x1b\\",
-			metadata,
-			STANDARD_PAD_INDIFFERENT.encode(self.mimes)
-		)
+
+		let mimes = ListMimes(self.mimes.clone())
+			.encode_base64(&STANDARD_PAD_INDIFFERENT)
+			.map_err(|_| fmt::Error)?;
+		write!(f, ";{mimes}\x1b\\")
 	}
 }
 
-/// Write clipboard data.
-/// `OSC 5522 ; type=write ST`
-/// `OSC 5522 ; type=wdata : mime=<base64 MIME type> ; <base64 data chunk> ST`
-/// `OSC 5522 ; type=wdata ST`
-pub struct WriteClipboard<'a> {
-	pub data: Vec<WriteClipboardData<'a>>,
+/// Write a complete OSC 5522 clipboard transmission.
+pub struct WriteClipboard<'a, M> {
+	pub data: Vec<WriteClipboardData<'a, M>>,
 }
 
-impl Display for WriteClipboard<'_> {
+impl<M: Mimelist> Display for WriteClipboard<'_, M> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "\x1b]5522;type=write\x1b\\")?;
-		for item in &self.data {
-			let b64_mime = STANDARD_PAD_INDIFFERENT.encode(item.mime);
-			let data = item.payload;
-
-			for chunk in data.chunks(4096).chain(data.is_empty().then_some(&[] as &[u8])) {
-				let b64_chunk = STANDARD_PAD_INDIFFERENT.encode(chunk);
-				write!(f, "\x1b]5522;type=wdata:mime={};{}\x1b\\", b64_mime, b64_chunk)?;
-			}
-
-			if item.alias.len() > 0 {
-				let b64_alias = STANDARD_PAD_INDIFFERENT.encode(item.alias);
-				write!(f, "\x1b]5522;type=walias:mime={};{}\x1b\\", b64_mime, b64_alias)?;
-			}
+		write!(f, "{WriteClipboardStart}")?;
+		for data in &self.data {
+			write!(f, "{data}")?;
 		}
+		write!(f, "{WriteClipboardEnd}")
+	}
+}
+
+/// Begin an OSC 5522 clipboard transmission: `OSC 5522 ; type=write ST`.
+pub struct WriteClipboardStart;
+
+impl Display for WriteClipboardStart {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "\x1b]5522;type=write\x1b\\")
+	}
+}
+
+/// Write one MIME payload and its aliases.
+///
+/// The payload is sent as one or more
+/// `OSC 5522 ; type=wdata:mime=<base64 MIME type> ; <base64 data chunk> ST`
+/// packets, followed by an optional `type=walias` packet.
+pub struct WriteClipboardData<'a, M> {
+	pub mime:    &'a str,
+	pub payload: &'a [u8],
+	pub aliases: M,
+}
+
+impl<M: Mimelist> Display for WriteClipboardData<'_, M> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let mime = Base64Display::new(self.mime.as_bytes(), &STANDARD_PAD_INDIFFERENT);
+		for chunk in self.payload.chunks(4096).chain(self.payload.is_empty().then_some(&[] as &[u8])) {
+			write!(
+				f,
+				"\x1b]5522;type=wdata:mime={mime};{}\x1b\\",
+				Base64Display::new(chunk, &STANDARD_PAD_INDIFFERENT)
+			)?;
+		}
+
+		let aliases = ListMimes(self.aliases.clone())
+			.encode_base64(&STANDARD_PAD_INDIFFERENT)
+			.map_err(|_| fmt::Error)?;
+		if !aliases.is_empty() {
+			write!(f, "\x1b]5522;type=walias:mime={mime};{}\x1b\\", aliases)?;
+		}
+		Ok(())
+	}
+}
+
+/// Finish an OSC 5522 clipboard transmission: `OSC 5522 ; type=wdata ST`.
+pub struct WriteClipboardEnd;
+
+impl Display for WriteClipboardEnd {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "\x1b]5522;type=wdata\x1b\\")
 	}
-}
-
-/// A MIME payload written by [`WriteClipboard`].
-pub struct WriteClipboardData<'a> {
-	pub mime:    &'a [u8],
-	pub payload: &'a [u8],
-	pub alias:   &'a [u8],
 }

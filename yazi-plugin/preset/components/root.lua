@@ -104,7 +104,10 @@ end
 
 function Root:read_clipboard(paste)
 	Root._reading = true
-	rt.tty:queue("ReadClipboard", { mimes = paste.mime, pw = paste.pw, name = "Paste event", primary = paste.primary })
+	rt.tty:queue(
+		"ReadClipboard",
+		{ mimes = { paste.mime }, pw = paste.pw, name = "Paste event", primary = paste.primary }
+	)
 	rt.tty:flush()
 end
 

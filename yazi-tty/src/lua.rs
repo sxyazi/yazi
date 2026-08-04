@@ -4,7 +4,7 @@ use mlua::{BorrowedBytes, ExternalError, IntoLuaMulti, Lua, LuaString, MultiValu
 use yazi_binding::Error;
 use yazi_shim::mlua::{ByteString, LuaTableExt};
 
-use crate::{Tty, sequence::{AgreeDrag, AgreeDrop, FinishDrop, PresentDrag, PresentDragIcon, ReadClipboard, StartDrag, StartDrop, WriteClipboard, WriteClipboardData}};
+use crate::{Tty, sequence::{AgreeDrag, AgreeDrop, FinishDrop, PresentDrag, PresentDragIcon, ReadClipboard, StartDrag, StartDrop, WriteClipboardData, WriteClipboardEnd, WriteClipboardStart}};
 
 impl Tty {
 	fn queue(&self, lua: &Lua, kind: &[u8], t: &Table) -> mlua::Result<MultiValue> {
@@ -57,27 +57,23 @@ impl Tty {
 			// Clipboard
 			b"ReadClipboard" => {
 				write!(w, "{}", ReadClipboard {
-					mimes:   &t.raw_get::<BorrowedBytes>("mimes")?,
+					mimes:   t.raw_get::<Table>("mimes")?.sequence_iter::<ByteString>(lua).flatten(),
 					pw:      &t.raw_get::<LuaString>("pw")?.to_str()?,
 					name:    &t.raw_get::<LuaString>("name")?.to_str()?,
 					primary: t.raw_get("primary")?,
 				})
 			}
 			b"WriteClipboard" => {
-				let mut data = Vec::new();
-				for v in &t.sequence_values::<Table>().collect::<Result<Vec<_>, mlua::Error>>()? {
-					data.push((
-						v.raw_get::<BorrowedBytes>("mime")?,
-						v.raw_get::<BorrowedBytes>("data")?,
-						v.raw_get::<BorrowedBytes>("alias")?,
-					));
+				write!(w, "{WriteClipboardStart}")?;
+				for v in t.sequence_values::<Table>() {
+					let v = v?;
+					write!(w, "{}", WriteClipboardData {
+						mime:    &v.raw_get::<LuaString>("mime")?.to_str()?,
+						payload: &v.raw_get::<BorrowedBytes>("data")?,
+						aliases: v.raw_get::<Table>("aliases")?.sequence_iter::<ByteString>(lua).flatten(),
+					})?;
 				}
-				write!(w, "{}", WriteClipboard {
-					data: data
-						.iter()
-						.map(|(m, p, a)| { WriteClipboardData { mime: &m, payload: &p, alias: &a } })
-						.collect(),
-				})
+				write!(w, "{WriteClipboardEnd}")
 			}
 
 			_ => return Err("invalid sequence kind".into_lua_err()),
