@@ -13,17 +13,6 @@ pub enum ClipboardEvent {
 	WriteError(CompactString),
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ClipboardData(HashMap<String, Vec<u8>>);
-
-impl IntoLua for ClipboardData {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua
-			.create_table_from(self.0.into_iter().map(|(mime, payload)| (mime, BString::new(payload))))?
-			.into_lua(lua)
-	}
-}
-
 impl ClipboardEvent {
 	pub fn r#type(&self) -> &'static str {
 		match self {
@@ -73,5 +62,17 @@ impl ClipboardEvent {
 			StateOsc5522 { write: true, status, .. } if !status.is_empty() => Self::WriteError(status),
 			_ => return None,
 		})
+	}
+}
+
+// --- ClipboardData
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct ClipboardData(HashMap<String, Vec<u8>>);
+
+impl IntoLua for ClipboardData {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua
+			.create_table_from(self.0.into_iter().map(|(mime, payload)| (mime, BString::new(payload))))?
+			.into_lua(lua)
 	}
 }
