@@ -32,7 +32,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `--follow` option for the `link` action ([#4184])
 - New `ui.Input` element ([#4040])
 - New `theme` DDS event for plugins to watch theme reloads ([#4203])
-- Copying and pasting files with the system clipboard ([#4035])
 - Image preview with Überzug++ on Niri ([#3990])
 - Unicode normalization for user regex patterns in `find`, `filter`, and `search` actions ([#4177])
 - New gait for input `backward` and `forward` actions ([#4012])
@@ -1782,7 +1781,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4012]: https://github.com/sxyazi/yazi/pull/4012
 [#4022]: https://github.com/sxyazi/yazi/pull/4022
 [#4031]: https://github.com/sxyazi/yazi/pull/4031
-[#4035]: https://github.com/sxyazi/yazi/pull/4035
 [#4040]: https://github.com/sxyazi/yazi/pull/4040
 [#4064]: https://github.com/sxyazi/yazi/pull/4064
 [#4065]: https://github.com/sxyazi/yazi/pull/4065
