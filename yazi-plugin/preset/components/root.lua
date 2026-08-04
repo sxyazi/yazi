@@ -2,6 +2,7 @@ Root = {
 	_id = "root",
 	_dragging = nil,
 	_dropping = nil,
+	_reading = false,
 }
 
 function Root:new(area)
@@ -101,12 +102,20 @@ function Root:drop(event)
 end
 
 function Root:clipboard(event)
-	if event and event.type == "mimes" and event.pw then
+	if not event then
+		return
+	elseif event.type == "error" and not event.write then
+		Root._reading = false
+	elseif event.type ~= "read" then
+		return
+	elseif not Root._reading then
 		-- No harm in asking for unavailable types
 		local mimes = "text/plain text/uri-list"
+		Root._reading = true
 		rt.tty:queue("ReadClipboard", { mimes = mimes, pw = event.pw, name = "Paste Event", primary = event.primary })
 		rt.tty:flush()
-	elseif event and event.type == "data" then
+	elseif Root._reading then
+		Root._reading = false
 		local text = event.data["text/plain"]
 		if tostring(cx.layer) == "input" and text ~= nil then
 			ya.emit("input:feed", { text })

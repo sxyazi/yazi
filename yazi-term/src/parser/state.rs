@@ -1,5 +1,7 @@
 use std::{num::NonZeroU8, time::Duration};
 
+use compact_str::CompactString;
+
 #[derive(Debug, Default, PartialEq)]
 pub(crate) enum State {
 	/// Normal ground state.
@@ -77,25 +79,11 @@ pub(crate) struct StateOsc72 {
 // --- StateOsc5522
 #[derive(Debug, Default, PartialEq)]
 pub(crate) struct StateOsc5522 {
-	pub(crate) status:   Option<Osc5522Status>,
-	pub(crate) read:     bool,
+	pub(crate) write:    bool,
 	pub(crate) primary:  bool,
-	pub(crate) mime:     Vec<Vec<u8>>,
+	pub(crate) mimes:    Vec<String>,
 	pub(crate) payload:  Vec<Vec<u8>>,
-	pub(crate) pw:       Vec<u8>,
-	pub(crate) idx:      usize,
+	pub(crate) pw:       String,
+	pub(crate) status:   CompactString,
 	pub(crate) has_more: bool,
-}
-
-#[derive(Debug, Default, PartialEq)]
-pub(crate) enum Osc5522Status {
-	#[default]
-	OK,
-	DATA,
-	DONE,
-	ENOSYS,
-	EPERM,
-	EBUSY,
-	EIO,
-	EINVAL,
 }

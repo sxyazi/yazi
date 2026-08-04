@@ -1,135 +1,77 @@
-use strum::{FromRepr, IntoStaticStr};
+use std::collections::HashMap;
 
-use crate::{event::mime::MimeList, parser::{Osc5522Status, StateOsc5522}};
+use compact_str::CompactString;
+use mlua::{BString, IntoLua, Lua, Value};
+
+use crate::parser::StateOsc5522;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ClipboardEvent {
-	ReadMimes(ClipboardPaste),
-	ReadData(ClipboardRead),
-	ReadError(ClipboardError),
+	Read { primary: bool, pw: String, data: ClipboardData },
+	ReadError(CompactString),
 	WriteSuccess,
-	WriteError(ClipboardError),
+	WriteError(CompactString),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClipboardPaste {
-	pub mimes:   MimeList,
-	pub primary: bool,
-	pub pw:      Vec<u8>,
-}
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct ClipboardData(HashMap<String, Vec<u8>>);
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClipboardData {
-	pub mime: Vec<u8>,
-	pub data: Vec<u8>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClipboardRead {
-	pub mimes:   MimeList,
-	pub primary: bool,
-	pub data:    Vec<ClipboardData>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClipboardError {
-	pub name: String,
+impl IntoLua for ClipboardData {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua
+			.create_table_from(self.0.into_iter().map(|(mime, payload)| (mime, BString::new(payload))))?
+			.into_lua(lua)
+	}
 }
 
 impl ClipboardEvent {
 	pub fn r#type(&self) -> &'static str {
 		match self {
-			Self::ReadMimes(_) => "mimes",
-			Self::ReadData(_) => "data",
-			Self::ReadError(_) => "error",
+			Self::Read { .. } => "read",
+			Self::ReadError(_) | Self::WriteError(_) => "error",
 			Self::WriteSuccess => "success",
-			Self::WriteError(_) => "error",
-		}
-	}
-
-	pub fn mimes(&self) -> Option<&MimeList> {
-		match self {
-			Self::ReadMimes(e) => Some(&e.mimes),
-			Self::ReadData(e) => Some(&e.mimes),
-			_ => None,
 		}
 	}
 
 	pub fn primary(&self) -> Option<bool> {
 		match self {
-			Self::ReadMimes(e) => Some(e.primary),
+			Self::Read { primary, .. } => Some(*primary),
 			_ => None,
 		}
 	}
 
-	pub fn pw(&self) -> Option<String> {
+	pub fn pw(&mut self) -> Option<&mut String> {
 		match self {
-			Self::ReadMimes(e) => Some(String::from_utf8_lossy(&e.pw).into_owned()),
+			Self::Read { pw, .. } => Some(pw),
 			_ => None,
 		}
 	}
 
-	pub fn is_read(&self) -> bool {
+	pub fn data(&mut self) -> Option<&mut ClipboardData> {
 		match self {
-			Self::ReadMimes(_) | Self::ReadError(_) | Self::ReadData(_) => true,
+			Self::Read { data, .. } => Some(data),
+			_ => None,
+		}
+	}
+
+	pub fn is_write(&self) -> bool {
+		match self {
+			Self::WriteSuccess | Self::WriteError(_) => true,
 			_ => false,
 		}
 	}
 
 	pub(crate) fn from_state(s: StateOsc5522) -> Option<Self> {
 		Some(match s {
-			StateOsc5522 { read: true, status: Some(Osc5522Status::DONE), idx: 0, mime, .. }
-				if mime.first()? == b"." =>
-			{
-				ClipboardEvent::ReadMimes(ClipboardPaste {
-					mimes:   MimeList::new(s.payload.first()?.to_owned())?,
-					primary: s.primary,
-					pw:      s.pw,
-				})
-			}
-			StateOsc5522 { read: true, status: Some(Osc5522Status::DONE), .. } => {
-				let mut mimes = Vec::new();
-				let mut data = Vec::new();
-				for (mime, payload) in s.mime.iter().zip(s.payload.iter()) {
-					data.push(ClipboardData { mime: mime.to_owned(), data: payload.to_owned() });
-					mimes.extend(mime);
-					mimes.push(b' ');
-				}
-				ClipboardEvent::ReadData(ClipboardRead {
-					mimes: MimeList::new(mimes)?,
-					primary: s.primary,
-					data,
-				})
-			}
-			StateOsc5522 { read: true, .. } => {
-				Self::ReadError(ClipboardError { name: parse_error(s.status)? })
-			}
-			StateOsc5522 { read: false, status: Some(Osc5522Status::DONE), .. } => {
-				ClipboardEvent::WriteSuccess
-			}
-			StateOsc5522 { read: false, .. } => {
-				Self::WriteError(ClipboardError { name: parse_error(s.status)? })
-			}
+			StateOsc5522 { write: false, status, .. } if status == "DONE" => Self::Read {
+				primary: s.primary,
+				pw:      s.pw,
+				data:    ClipboardData(s.mimes.into_iter().zip(s.payload).collect()),
+			},
+			StateOsc5522 { write: false, status, .. } if !status.is_empty() => Self::ReadError(status),
+			StateOsc5522 { write: true, status, .. } if status == "DONE" => Self::WriteSuccess,
+			StateOsc5522 { write: true, status, .. } if !status.is_empty() => Self::WriteError(status),
+			_ => return None,
 		})
-	}
-}
-
-// --- Operation
-#[derive(Clone, Copy, Debug, Eq, FromRepr, IntoStaticStr, PartialEq)]
-#[repr(u8)]
-pub enum ClipboardType {
-	Read  = 1,
-	Write = 2,
-}
-
-// --- Error payload parsing
-fn parse_error(status: Option<Osc5522Status>) -> Option<String> {
-	match status {
-		Some(Osc5522Status::ENOSYS) => Some("ENOSYS".to_string()),
-		Some(Osc5522Status::EPERM) => Some("EPERM".to_string()),
-		Some(Osc5522Status::EBUSY) => Some("EBUSY".to_string()),
-		Some(Osc5522Status::EIO) => Some("EIO".to_string()),
-		Some(Osc5522Status::EINVAL) => Some("EINVAL".to_string()),
-		_ => None,
 	}
 }

@@ -1,6 +1,6 @@
 use base64::{Engine, engine::general_purpose::STANDARD_PAD_INDIFFERENT};
 
-use crate::{ParseError, Result, parser::{Osc5522Status, Parser, State}};
+use crate::{ParseError, Result, parser::{Parser, State}};
 
 impl Parser {
 	pub(super) fn parse_osc72(&mut self) -> Result<()> {
@@ -49,55 +49,42 @@ impl Parser {
 		let payload = it.next().unwrap_or(&[]);
 
 		let State::Osc5522(state) = &mut self.state else { unreachable!() };
-		state.has_more = false;
+		state.status.clear(); // reset status for this new sequence
+		state.has_more = false; // reset has_more for this new sequence
 
 		for part in meta.split(':') {
 			match part.split_once('=').ok_or(ParseError::Invalid)? {
-				("status", v) => match v {
-					"OK" => {
-						state.status = Some(Osc5522Status::OK);
-						state.has_more = true;
-					}
-					"DATA" => {
-						state.status = Some(Osc5522Status::DATA);
-						state.has_more = true;
-					}
-					"DONE" => state.status = Some(Osc5522Status::DONE),
-					"ENOSYS" => state.status = Some(Osc5522Status::ENOSYS),
-					"EPERM" => state.status = Some(Osc5522Status::EPERM),
-					"EBUSY" => state.status = Some(Osc5522Status::EBUSY),
-					"EIO" => state.status = Some(Osc5522Status::EIO),
-					"EINVAL" => state.status = Some(Osc5522Status::EINVAL),
-					_ => return Err(ParseError::Invalid),
-				},
-				("type", v) => state.read = v == "read",
+				("type", v) => state.write = v == "write",
 				("loc", v) => state.primary = v == "primary",
 				("mime", v) => {
-					let bytes = STANDARD_PAD_INDIFFERENT.decode(v.as_bytes()).or(Err(ParseError::Invalid))?;
-					if state.mime.len() == 0 {
-						state.mime.push(bytes);
-					} else if state.mime[state.idx] != bytes {
-						state.mime.push(bytes);
-						state.idx += 1;
+					let s = String::from_utf8(STANDARD_PAD_INDIFFERENT.decode(v)?)?;
+					if state.mimes.last() != Some(&s) {
+						state.mimes.push(s);
 					}
 				}
-				("pw", v) => state.pw = STANDARD_PAD_INDIFFERENT.decode(v.as_bytes()).unwrap_or_default(),
+				("pw", v) => state.pw = String::from_utf8(STANDARD_PAD_INDIFFERENT.decode(v)?)?,
+				("status", v) => {
+					state.status = v.into();
+					state.has_more = matches!(v, "OK" | "DATA");
+				}
 				_ => {}
 			}
 		}
 
-		// decode now since each payload may have its own padding
-		let payload = STANDARD_PAD_INDIFFERENT.decode(&payload).or(Err(ParseError::Invalid))?;
+		if state.status != "DATA" {
+			return Ok(());
+		}
 
-		if state.idx >= state.payload.len() {
-			state.payload.push(payload.to_vec());
+		// Decode now since each payload may have its own padding.
+		let payload = STANDARD_PAD_INDIFFERENT.decode(&payload)?;
+		if state.payload.len() < state.mimes.len() {
+			state.payload.push(payload);
 		} else {
-			state.payload[state.idx].extend(payload);
+			state.payload.last_mut().ok_or(ParseError::Invalid)?.extend(payload);
 		}
 
 		// Limit payload size to 1MiB per mime type to prevent potential DoS
-		// TODO A larger size would be required for directly pasting images/large files
-		if state.payload[state.idx].len() > 1 << 20 {
+		if state.payload.last().unwrap().len() > 1 << 20 {
 			return Err(ParseError::Invalid);
 		}
 
