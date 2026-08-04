@@ -1,5 +1,15 @@
 local M = {}
 
+function M.read_unsolicited(mime, event)
+	rt.tty:queue("ReadClipboard", {
+		mimes = { mime },
+		pw = event.pw,
+		name = "Paste event",
+		primary = event.primary,
+	})
+	rt.tty:flush()
+end
+
 function M.copy_uri_list(list)
 	cx.tasks.behavior:reset()
 	for line in list:gmatch("[^\r\n]+") do
@@ -15,18 +25,6 @@ function M.copy_uri_list(list)
 
 		::continue::
 	end
-end
-
-function M.paste_image(mime, data)
-	local type = mime:match("image/([^;]+)")
-	local dir = cx.active.current.cwd
-	local url = Url(dir .. "/pasted_image." .. type)
-	ya.async(function()
-		local file = fs.unique("file", url)
-		if file then
-			fs.write(file, data)
-		end
-	end)
 end
 
 return M

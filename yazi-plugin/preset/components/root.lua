@@ -2,8 +2,6 @@ Root = {
 	_id = "root",
 	_dragging = nil,
 	_dropping = nil,
-	_reading = false,
-	_pastes = {},
 }
 
 function Root:new(area)
@@ -102,60 +100,19 @@ function Root:drop(event)
 	end
 end
 
-function Root:read_clipboard(paste)
-	Root._reading = true
-	rt.tty:queue(
-		"ReadClipboard",
-		{ mimes = { paste.mime }, pw = paste.pw, name = "Paste event", primary = paste.primary }
-	)
-	rt.tty:flush()
-end
-
-function Root:read_next_clipboard()
-	local paste = table.remove(Root._pastes, 1)
-	if paste then
-		Root:read_clipboard(paste)
-	end
-end
-
 function Root:clipboard(event)
-	if not event then
+	if event.type ~= "read" then
 		return
-	elseif event.type == "read" then
-		local mimes = event.data["."]
-		if mimes then
-			local mime
-			for m in mimes:gmatch("%S+") do
-				if m == "text/plain" then
-					mime = m
-					break
-				elseif m == "text/uri-list" then
-					mime = m
-				end
-			end
-			if mime then
-				Root._pastes[#Root._pastes + 1] = { mime = mime, pw = event.pw, primary = event.primary }
-				if not Root._reading then
-					Root:read_next_clipboard()
-				end
-			end
-			return
-		elseif not Root._reading then
-			return
-		end
-
-		Root._reading = false
-		local text = event.data["text/plain"]
-		if tostring(cx.layer) == "input" and text ~= nil then
-			ya.emit("input:feed", { text })
-		elseif event.data["text/uri-list"] ~= nil then
-			require("clipboard").copy_uri_list(event.data["text/uri-list"])
-		end
-	elseif event.type == "error" and not event.write then
-		Root._reading = false
-	else
-		return
+	elseif event.data["."] then
+		local mime = tostring(cx.layer) == "input" and "text/plain" or "text/uri-list"
+		return require("clipboard").read_unsolicited(mime, event)
 	end
 
-	Root:read_next_clipboard()
+	local data = event.data
+	local text, uri = data["text/plain"], data["text/uri-list"]
+	if tostring(cx.layer) == "input" and text then
+		ya.emit("input:feed", { text })
+	elseif uri then
+		require("clipboard").copy_uri_list(uri)
+	end
 end
