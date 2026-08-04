@@ -5,6 +5,17 @@ use yazi_shim::{mlua::{SER_OPT, UserDataFieldsExt}, strum::IntoStr};
 
 use crate::event::{ClipboardEvent, DndDropArrive, DndEvent, KeyEvent, MouseButton, MouseEvent, MouseEventKind};
 
+// --- ClipboardEvent
+impl UserData for ClipboardEvent {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_cached_field("type", |_, me| Ok(me.r#type()));
+		fields.add_field_method_get("write", |_, me| Ok(me.is_write()));
+		fields.add_field_method_get("primary", |_, me| Ok(me.primary()));
+		fields.add_cached_field_mut("data", |_, me| Ok(me.data().map(mem::take)));
+		fields.add_cached_field_mut("pw", |_, me| Ok(me.pw().map(mem::take)));
+	}
+}
+
 // --- DndEvent
 impl UserData for DndEvent {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -32,17 +43,6 @@ impl UserData for DndEvent {
 			}
 			_ => Ok(Value::Nil),
 		});
-	}
-}
-
-// --- ClipboardEvent
-impl UserData for ClipboardEvent {
-	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_cached_field("type", |_, me| Ok(me.r#type()));
-		fields.add_field_method_get("write", |_, me| Ok(me.is_write()));
-		fields.add_field_method_get("primary", |_, me| Ok(me.primary()));
-		fields.add_cached_field_mut("data", |_, me| Ok(me.data().map(mem::take)));
-		fields.add_cached_field_mut("pw", |_, me| Ok(me.pw().map(mem::take)));
 	}
 }
 
