@@ -37,7 +37,7 @@ impl Trash {
 			.children()?
 			.into_iter()
 			.map(|item| {
-				let name = item.display_name(SIGDN_PARENTRELATIVE)?;
+				let name = item.display_name(SIGDN_PARENTRELATIVEPARSING)?;
 				item.entry(entry.id.child(&name)?, Some(original.join(&name)))
 			})
 			.collect()
@@ -55,7 +55,7 @@ impl Trash {
 
 		let cha = Cha::new(backing.file_name().unwrap_or_default(), fs::symlink_metadata(&backing)?);
 		if cha.is_dir() && !cha.is_indirect() {
-			ShellItem::new(backing.join(id.rel()))?.entry(id.clone(), Some(original))
+			top.resolve(id.rel())?.entry(id.clone(), Some(original))
 		} else {
 			Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"))
 		}
@@ -87,7 +87,7 @@ impl Trash {
 		let item = self.resolve(entry)?;
 		if !entry.has_rel() {
 			item.delete()
-		} else if !item.children()?.is_empty() {
+		} else if !item.is_empty()? {
 			Err(io::Error::new(io::ErrorKind::DirectoryNotEmpty, "trash directory is not empty"))
 		} else {
 			item.delete()
@@ -100,13 +100,13 @@ impl Trash {
 				io::Error::new(io::ErrorKind::NotFound, "trash item has no put-back location")
 			})?;
 
-			self.restore_do(&self.resolve(&entry)?, &to)?;
+			self.restore_do(&self.resolve(&entry)?, to)?;
 		}
 		Ok(())
 	}
 
 	pub(crate) fn rename(&self, entry: &TrashEntry, path: &Path) -> io::Result<()> {
-		fs::rename(self.resolve(entry)?.display_name(SIGDN_FILESYSPATH)?, path)
+		fs::rename(&entry.backing, path)
 	}
 
 	fn restore_do(&self, item: &ShellItem, to: &Path) -> io::Result<()> {
@@ -127,7 +127,7 @@ impl Trash {
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid restore target"))?;
 		fs::create_dir_all(parent)?;
 
-		let parent = ShellItem::new(parent.as_os_str())?;
+		let parent = ShellItem::new(parent)?;
 		let name: Vec<u16> = to
 			.file_name()
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid restore target"))?
@@ -152,7 +152,8 @@ impl Trash {
 	}
 
 	fn resolve(&self, entry: &TrashEntry) -> io::Result<ShellItem> {
-		if entry.has_rel() { ShellItem::new(&entry.backing) } else { ShellItem::top(entry.top()) }
+		let top = ShellItem::top(entry.top())?;
+		if entry.has_rel() { top.resolve(entry.rel()) } else { Ok(top) }
 	}
 
 	fn tops(&self) -> io::Result<Vec<TrashEntry>> {
@@ -160,7 +161,7 @@ impl Trash {
 			.children()?
 			.into_iter()
 			.map(|item| {
-				let top = item.display_name(SIGDN_DESKTOPABSOLUTEPARSING)?;
+				let top = item.display_name(SIGDN_PARENTRELATIVEPARSING)?;
 				let original = item.original()?;
 				item.entry(TrashId::new(top, PathBuf::new())?, Some(original))
 			})

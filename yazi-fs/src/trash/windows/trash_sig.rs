@@ -45,7 +45,7 @@ impl TrashSig {
 		let mut names: Vec<_> = item
 			.children()?
 			.into_iter()
-			.map(|item| item.display_name(SIGDN_DESKTOPABSOLUTEPARSING))
+			.map(|item| item.display_name(SIGDN_PARENTRELATIVEPARSING))
 			.collect::<io::Result<_>>()?;
 		names.sort_unstable();
 		Ok(names)
