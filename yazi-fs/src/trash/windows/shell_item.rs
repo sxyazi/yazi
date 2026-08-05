@@ -19,12 +19,13 @@ impl ShellItem {
 			.map_err(error)
 	}
 
-	pub(super) fn top(name: &Path) -> io::Result<Self> {
-		Self::root()?
-			.children()?
-			.into_iter()
-			.find(|item| item.display_name(SIGDN_DESKTOPABSOLUTEPARSING).is_ok_and(|s| s == name))
-			.ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "item is not in the recycle bin"))
+	pub(super) fn top(name: &Path) -> io::Result<Self> { Self::root()?.resolve(name) }
+
+	pub(super) fn resolve(self, path: &Path) -> io::Result<Self> {
+		let name: Vec<u16> = path.as_os_str().encode_wide().chain([0]).collect();
+		unsafe { SHCreateItemFromRelativeName(&self.0, PCWSTR(name.as_ptr()), None) }
+			.map(Self)
+			.map_err(error)
 	}
 
 	pub(super) fn children(&self) -> io::Result<Vec<Self>> {
@@ -43,6 +44,17 @@ impl ShellItem {
 			}
 		}
 		Ok(result)
+	}
+
+	pub(super) fn is_empty(&self) -> io::Result<bool> {
+		let items: IEnumShellItems =
+			unsafe { self.0.BindToHandler(None, &BHID_EnumItems).map_err(error)? };
+
+		let mut fetched = 0;
+		let mut next = [None];
+		unsafe { items.Next(&mut next, Some(&mut fetched)) }.map_err(error)?;
+
+		Ok(fetched == 0)
 	}
 
 	pub(super) fn cha(&self) -> io::Result<Cha> {
