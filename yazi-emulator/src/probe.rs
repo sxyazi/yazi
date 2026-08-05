@@ -26,8 +26,9 @@ impl Probe {
 
 	pub fn restart(&mut self) -> Result<()> {
 		self.id = IDS.next();
+		let sixel = Mux::tmux_sixel_flag() == "Supported";
 		self.emulator =
-			Emulator { mux: Some(Mux { sixel: self.emulator.sixel }), ..Default::default() };
+			Emulator { mux: Some(Mux { sixel }), ..Default::default() };
 		self.request()
 	}
 
