@@ -1,7 +1,6 @@
 use mlua::{FromLua, IntoLua, IntoLuaMulti, UserData, UserDataMethods, Value};
 use yazi_codegen::FromLuaOwned;
-
-use crate::Error;
+use yazi_shim::fs::Error;
 
 #[derive(FromLuaOwned)]
 pub struct MpscTx<T: FromLua + 'static, U: 'static = T> {
@@ -23,7 +22,7 @@ impl<T: FromLua, U: 'static> UserData for MpscTx<T, U> {
 		methods.add_async_method("send", |lua, me, value: Value| async move {
 			match me.tx.send((me.f)(T::from_lua(value, &lua)?)).await {
 				Ok(()) => true.into_lua_multi(&lua),
-				Err(e) => (false, Error::custom(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (false, Error::other(e.to_string())).into_lua_multi(&lua),
 			}
 		});
 	}
@@ -48,7 +47,7 @@ impl<T: FromLua> UserData for MpscUnboundedTx<T> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("send", |lua, me, value: Value| match me.0.send(T::from_lua(value, lua)?) {
 			Ok(()) => true.into_lua_multi(lua),
-			Err(e) => (false, Error::custom(e.to_string())).into_lua_multi(lua),
+			Err(e) => (false, Error::other(e.to_string())).into_lua_multi(lua),
 		});
 	}
 }
@@ -73,7 +72,7 @@ impl<T: FromLua> UserData for OneshotTx<T> {
 		methods.add_method_once("send", |lua, me, value: Value| {
 			match me.0.send(T::from_lua(value, lua)?) {
 				Ok(()) => true.into_lua_multi(lua),
-				Err(_) => (false, Error::custom("Oneshot receiver closed")).into_lua_multi(lua),
+				Err(_) => (false, Error::other("Oneshot receiver closed")).into_lua_multi(lua),
 			}
 		});
 	}
@@ -84,7 +83,7 @@ impl<T: IntoLua + 'static> UserData for OneshotRx<T> {
 		methods.add_async_method_once("recv", |lua, me, ()| async move {
 			match me.0.await {
 				Ok(value) => value.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::custom(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
 			}
 		});
 	}

@@ -1,9 +1,9 @@
 use std::io;
 
 use mlua::{AnyUserData, IntoLuaMulti, UserData, UserDataMethods, Value};
-use yazi_binding::Error;
 use yazi_fs::engine::{Attrs, FileBuilder};
 use yazi_shared::{auth::AuthKind, url::{AsUrl, UrlRef}};
+use yazi_shim::fs::Error;
 
 #[derive(Clone, Copy, Default)]
 pub struct Demand(yazi_fs::engine::Demand);
@@ -82,7 +82,7 @@ impl UserData for Demand {
 		methods.add_async_method("open", |lua, me, url: UrlRef| async move {
 			match me.open(&*url).await {
 				Ok(fd) => fd.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_function("read", |_, (ud, read): (AnyUserData, bool)| {

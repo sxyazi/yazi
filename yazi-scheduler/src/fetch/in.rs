@@ -29,5 +29,5 @@ impl TaskIn for FetchIn {
 }
 
 impl From<FetchIn> for FetchJob {
-	fn from(value: FetchIn) -> Self { Self { fetcher: value.fetcher, files: value.targets } }
+	fn from(value: FetchIn) -> Self { Self { fetcher: value.fetcher, files: value.targets.into() } }
 }

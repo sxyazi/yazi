@@ -1,4 +1,4 @@
-function Err(s, ...) return Error.custom(string.format(s, ...)) end
+function Err(s, ...) return Error.other(string.format(s, ...)) end
 
 function ya.clamp(min, x, max)
 	if x < min then

@@ -27,7 +27,7 @@ pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
 
 pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 	let f = lua.create_async_function(|lua, ()| async move {
-		if runtime!(lua)?.blocking {
+		if runtime!(lua)?.is_blocking() {
 			return Err("Cannot call `ui.hide()` while main thread is blocked".into_lua_err());
 		}
 

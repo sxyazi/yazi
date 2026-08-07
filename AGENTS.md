@@ -16,7 +16,8 @@
 - Reuse established plugin and event names (`fetch`, `preload`, `peek`, `seek`, `spot`, `entry`, `setup`, `yank`, `hover`, and `select`) across Rust, Lua, and configuration.
 - Use Rust prefixes (`as_`, `to_`, `into_`, `try_`, `is_`, `has_`) according to their usual semantics; prefer descriptive names.
 - Name variables, modules, methods, and other symbols simply, elegantly, and expressively. Be creative while keeping names clear, consistent with established terminology, and idiomatic.
-- When passing arguments, use the parameter's conversion traits directly (such as `Into<_>` or `AsRef<_>`); avoid eager conversions like `.to_string()`, `.to_owned()`, and `.as_ref()` unless ownership, type inference, or semantics require them.
+- When passing arguments, use the parameter's conversion traits directly (such as `Into<_>` or `AsRef<_>`); avoid eager conversions like `.to_string()`, `.to_owned()`, and `.as_ref()` unless ownership, type inference, or semantics require them. At Lua boundaries, prefer `LuaString` to `String`, and use `BorrowedBytes` when string semantics are unnecessary.
+- Let Rust infer types whenever the context is sufficient; when an annotation is needed, put it on the binding (`let value: Type = ...`) instead of turbofishing the expression.
 - Prefer methods provided by `UrlLike`, `PathLike`, or `StrandLike` directly on the original value (for example, `buf.parent()` over `buf.as_url().parent()`), rather than converting it first with `as_url()`, `dyn_path()`, or `to_strand()`.
 - Prefer `&*value` for dereferencing over `AsRef` when both are suitable.
 - Prefer general-purpose traits and conversion APIs already provided by the codebase or its dependencies over manual construction or adapter closures; for example, use `into_lua()` where applicable.
@@ -27,9 +28,10 @@
 - For refactors, inspect the whole target module and its callers first. Look for duplicated work, redundant I/O, underpowered return values, one-use wrappers, and reusable cross-platform abstractions; implement high-confidence, behavior-preserving simplifications while preserving error, fallback, and platform semantics.
 - Keep diffs minimal and avoid unrelated refactors. Prefer clear, flat control flow and positive predicates; use standard combinators, early returns, ordered branches, and match guards to express cases directly and avoid nested conditionals or compound negation. Comment only behavior the code cannot explain.
 - Keep responsibility boundaries clear and cohesive. Prefer pure functions and explicit invariants; favor convention over configuration when invariants can eliminate state or coordination. Put reusable code in the lowest suitable shared layer; avoid unnecessary dependencies and allocations. Prefer borrowed values and existing wrappers.
+- Initialize crates explicitly from the application entrypoint in dependency order; a module must not initialize another module as a side effect.
 - Use stable Rust APIs; nightly is formatting-only. Use only `pub`, `pub(super)`, and `pub(crate)`—never `pub(in ...)`.
 - Keep async I/O non-blocking, preserve platform/fork behavior, and follow existing error boundaries with `?`.
-- For renames or refactors, update all related variables, functions, parameters, modules, methods, types, derived types, exports, tests, configuration keys, documentation, Lua bindings, and, when a type and file share a name, the file as well.
+- For renames or refactors, update all related variables, functions, parameters, modules, methods, types, derived types, exports, tests, configuration keys, documentation, Lua bindings, and, when a type and file share a name, the file as well; do not preserve renamed terms through aliases or re-exports.
 - When adding a changelog entry, leave the PR number blank for a human to fill in.
 - Do not add tests or change test behavior unless requested.
 

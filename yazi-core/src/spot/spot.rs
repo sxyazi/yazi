@@ -1,4 +1,4 @@
-use tokio_util::sync::CancellationToken;
+use yazi_binding::Scope;
 use yazi_config::YAZI;
 use yazi_fs::file::File;
 use yazi_macro::render;
@@ -12,7 +12,7 @@ pub struct Spot {
 	pub lock: Option<SpotLock>,
 	pub skip: usize,
 
-	pub(super) ct: Option<CancellationToken>,
+	pub(super) scope: Scope,
 }
 
 impl Spot {
@@ -28,12 +28,12 @@ impl Spot {
 		};
 
 		self.abort();
-		self.ct = Some(RUNNER.spot(spotter, file, mime, self.skip));
+		self.scope = RUNNER.spot(spotter, file, mime, self.skip);
 	}
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }
 
-	pub fn abort(&mut self) { self.ct.take().map(|ct| ct.cancel()); }
+	pub fn abort(&mut self) { self.scope.take().cancel(); }
 
 	pub fn reset(&mut self) {
 		self.abort();

@@ -6,8 +6,8 @@ use mlua::{ExternalError, Lua, Table, chunk::ChunkMode};
 use parking_lot::RwLock;
 use yazi_fs::{Xdg, engine::local::Local};
 use yazi_macro::plugin_preset as preset;
-use yazi_shared::{BytesExt, LOG_LEVEL};
-use yazi_shim::cell::RoCell;
+use yazi_shared::BytesExt;
+use yazi_shim::{cell::RoCell, log::LOG_LEVEL};
 
 use super::Chunk;
 
@@ -46,6 +46,7 @@ impl Default for Loader {
 			("mime.dir".to_owned(), preset!("plugins/mime-dir").into()),
 			("mime.local".to_owned(), preset!("plugins/mime-local").into()),
 			("mime.remote".to_owned(), preset!("plugins/mime-remote").into()),
+			("mime.trash".to_owned(), preset!("plugins/mime-trash").into()),
 			("multi".to_owned(), preset!("plugins/multi").into()),
 			("noop".to_owned(), preset!("plugins/noop").into()),
 			("null".to_owned(), preset!("plugins/null").into()),
@@ -85,13 +86,13 @@ impl Default for Loader {
 }
 
 impl Loader {
-	pub async fn ensure<F, T>(&self, id: &str, f: F) -> Result<T>
+	pub async fn ensure<F, T>(&self, name: &str, f: F) -> Result<T>
 	where
 		F: FnOnce(&Chunk) -> T,
 	{
-		let (id, plugin, entry) = Self::explode_id_parts(id)?;
-		if let Some(c) = self.cache.read().get(id) {
-			return Self::compatible_or_error(id, c).map(|_| f(c));
+		let (full, plugin, entry) = Self::explode_name_parts(name)?;
+		if let Some(c) = self.cache.read().get(full) {
+			return Self::compatible_or_error(full, c).map(|_| f(c));
 		}
 
 		let p = Xdg::config_dir().join(format!("plugins/{plugin}.yazi/{entry}.lua"));
@@ -101,43 +102,43 @@ impl Loader {
 			.with_context(|| format!("Failed to load plugin from {p:?}"))?
 			.into();
 
-		let result = Self::compatible_or_error(id, &chunk);
+		let result = Self::compatible_or_error(full, &chunk);
 		let inspect = f(&chunk);
 
-		self.cache.write().insert(id.to_owned(), chunk);
+		self.cache.write().insert(full.to_owned(), chunk);
 		result.map(|_| inspect)
 	}
 
-	pub async fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::explode_id_parts(id)?;
+	pub async fn load(&self, lua: &Lua, name: &str) -> mlua::Result<Table> {
+		let (name, ..) = Self::explode_name_parts(name)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get(id) {
+		if let Ok(t) = loaded.raw_get(name) {
 			return Ok(t);
 		}
 
-		let t = self.load_new(lua, id).await?;
-		t.raw_set("_id", lua.create_string(id)?)?;
+		let t = self.load_new(lua, name).await?;
+		t.raw_set("_id", lua.create_string(name)?)?;
 
-		loaded.raw_set(id, t.clone())?;
+		loaded.raw_set(name, t.clone())?;
 		Ok(t)
 	}
 
-	async fn load_new(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::explode_id_parts(id)?;
+	async fn load_new(&self, lua: &Lua, name: &str) -> mlua::Result<Table> {
+		let (name, ..) = Self::explode_name_parts(name)?;
 
 		let mut mode = ChunkMode::Text;
-		let f = match self.cache.read().get(id) {
+		let f = match self.cache.read().get(name) {
 			Some(c) => {
 				mode = c.mode;
-				lua.load(c).set_name(id).into_function()
+				lua.load(c).set_name(name).into_function()
 			}
-			None => Err(format!("Plugin `{id}` not found").into_lua_err()),
+			None => Err(format!("Plugin `{name}` not found").into_lua_err()),
 		}?;
 
 		if mode != ChunkMode::Binary {
 			let b = f.dump(LOG_LEVEL.get().is_none());
-			if let Some(c) = self.cache.write().get_mut(id) {
+			if let Some(c) = self.cache.write().get_mut(name) {
 				c.mode = ChunkMode::Binary;
 				c.bytes = Cow::Owned(b);
 			}
@@ -146,44 +147,45 @@ impl Loader {
 		f.call_async(()).await
 	}
 
-	pub fn load_chunk(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
-		let (id, ..) = Self::explode_id_parts(id)?;
+	pub fn load_chunk(&self, lua: &Lua, name: &str, chunk: &Chunk) -> mlua::Result<Table> {
+		let (name, ..) = Self::explode_name_parts(name)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get(id) {
+		if let Ok(t) = loaded.raw_get(name) {
 			return Ok(t);
 		}
 
-		let t: Table = lua.load(chunk).set_name(id).call(())?;
-		t.raw_set("_id", lua.create_string(id)?)?;
+		let t: Table = lua.load(chunk).set_name(name).call(())?;
+		t.raw_set("_id", lua.create_string(name)?)?;
 
-		loaded.raw_set(id, t.clone())?;
+		loaded.raw_set(name, t.clone())?;
 		Ok(t)
 	}
 
-	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let (id, ..) = Self::explode_id_parts(id)?;
-		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(id)
+	pub fn try_load(&self, lua: &Lua, name: &str) -> mlua::Result<Table> {
+		let (name, ..) = Self::explode_name_parts(name)?;
+		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(name)
 	}
 
-	pub fn compatible_or_error(id: &str, chunk: &Chunk) -> Result<()> {
+	pub fn compatible_or_error(name: &str, chunk: &Chunk) -> Result<()> {
 		if chunk.compatible() {
 			return Ok(());
 		}
 
 		bail!(
-			"Plugin `{id}` requires at least Yazi {}, but your current version is Yazi {}.",
+			"Plugin `{name}` requires at least Yazi {}, but your current version is Yazi {}.",
 			chunk.since,
 			yazi_version::version_long()
 		);
 	}
 
-	fn explode_id_parts(id: &str) -> anyhow::Result<(&str, &str, &str)> {
-		let id = id.strip_suffix(".main").unwrap_or(id);
-		let (plugin, entry) = if let Some((a, b)) = id.split_once(".") { (a, b) } else { (id, "main") };
+	fn explode_name_parts(name: &str) -> anyhow::Result<(&str, &str, &str)> {
+		let name = name.strip_suffix(".main").unwrap_or(name);
+		let (plugin, entry) =
+			if let Some((a, b)) = name.split_once(".") { (a, b) } else { (name, "main") };
 
 		ensure!(plugin.as_bytes().kebab_cased(), "Plugin name `{plugin}` must be in kebab-case");
 		ensure!(entry.as_bytes().kebab_cased(), "Entry name `{entry}` must be in kebab-case");
-		Ok((id, plugin, entry))
+		Ok((name, plugin, entry))
 	}
 }

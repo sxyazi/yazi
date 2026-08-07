@@ -3,10 +3,10 @@ use std::{any::TypeId, mem};
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
-use yazi_shim::{SStr, ratatui::TextIter};
+use yazi_shim::{fs::Error, ratatui::TextIter};
 
 use super::{Area, Line, Span, Wrap};
-use crate::{Error, elements::{Align, Spatial}};
+use crate::elements::{Align, Spatial};
 
 const EXPECTED: &str = "expected a string, Line, Span, or a table of them";
 
@@ -60,8 +60,8 @@ impl From<ratatui_core::text::Text<'static>> for Text {
 	fn from(inner: ratatui_core::text::Text<'static>) -> Self { Self { inner, ..Default::default() } }
 }
 
-impl From<SStr> for Text {
-	fn from(value: SStr) -> Self { Self { inner: value.into(), ..Default::default() } }
+impl From<String> for Text {
+	fn from(value: String) -> Self { Self { inner: value.into(), ..Default::default() } }
 }
 
 impl TryFrom<Table> for Text {
@@ -75,7 +75,7 @@ impl TryFrom<Table> for Text {
 				Value::UserData(ud) => match ud.type_id() {
 					Some(t) if t == TypeId::of::<Span>() => ud.take::<Span>()?.0.into(),
 					Some(t) if t == TypeId::of::<Line>() => ud.take::<Line>()?.inner,
-					Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.into_string().into(),
+					Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.to_string().into(),
 					_ => Err(EXPECTED.into_lua_err())?,
 				},
 				_ => Err(EXPECTED.into_lua_err())?,
@@ -145,7 +145,7 @@ impl TryFrom<&AnyUserData> for Text {
 			Some(t) if t == TypeId::of::<Self>() => return value.take(),
 			Some(t) if t == TypeId::of::<Line>() => value.take::<Line>()?.inner.into(),
 			Some(t) if t == TypeId::of::<Span>() => value.take::<Span>()?.0.into(),
-			Some(t) if t == TypeId::of::<Error>() => value.take::<Error>()?.into_string().into(),
+			Some(t) if t == TypeId::of::<Error>() => value.take::<Error>()?.to_string().into(),
 			_ => Err(EXPECTED.into_lua_err())?,
 		};
 

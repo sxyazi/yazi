@@ -30,7 +30,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	globals.raw_set("km", crate::keymap::compose())?;
 	globals.raw_set("th", crate::theme::compose())?;
 
-	yazi_binding::Error::install(lua)?;
+	yazi_shim::fs::Error::install(lua)?;
 	yazi_fs::cha::Cha::install(lua)?;
 	yazi_binding::process::install(lua)?;
 	yazi_fs::file::File::install(lua)?;

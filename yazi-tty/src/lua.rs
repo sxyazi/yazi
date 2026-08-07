@@ -1,8 +1,7 @@
 use std::io::Write;
 
 use mlua::{BorrowedBytes, ExternalError, IntoLuaMulti, Lua, LuaString, MultiValue, Table, UserData, UserDataMethods};
-use yazi_binding::Error;
-use yazi_shim::mlua::{ByteString, LuaTableExt};
+use yazi_shim::{fs::Error, mlua::{ByteString, LuaTableExt}};
 
 use crate::{Tty, sequence::{AgreeDrag, AgreeDrop, FinishDrop, PresentDrag, PresentDragIcon, ReadClipboard, StartDrag, StartDrop, WriteClipboardData, WriteClipboardHead, WriteClipboardTail}};
 
@@ -81,7 +80,7 @@ impl Tty {
 
 		match result {
 			Ok(()) => true.into_lua_multi(lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(lua),
 		}
 	}
 }
@@ -93,7 +92,7 @@ impl UserData for &'static Tty {
 
 		methods.add_method("flush", |lua, &me, ()| match me.writer().flush() {
 			Ok(()) => true.into_lua_multi(lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(lua),
 		});
 	}
 }

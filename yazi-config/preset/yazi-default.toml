@@ -70,9 +70,6 @@ trash = [
 
 [open]
 rules = [
-	# Trash
-	{ url = "trash://*", use = [ "open", "trash" ] },
-	{ url = "trash://*/", use = [ "edit", "trash" ] },
 	# Folder
 	{ url = "*/", use = [ "edit", "open", "reveal" ] },
 	# Text
@@ -89,6 +86,8 @@ rules = [
 	{ mime = "inode/empty", use = [ "edit", "reveal" ] },
 	# Virtual file system
 	{ mime = "vfs/{absent,stale}", use = "download" },
+	# Trash
+	{ mime = "trash/**", use = [ "open", "trash" ] },
 	# Fallback
 	{ url = "*", use = [ "open", "reveal" ] },
 ]
@@ -109,15 +108,14 @@ fetchers = [
 	# MIME-type
 	{ url = "*/",         run = "mime.dir",    prio = "high", group = "mime" },
 	{ url = "local://*",  run = "mime.local",  prio = "high", group = "mime" },
-	{ url = "trash://*",  run = "mime.local",  prio = "high", group = "mime" },
+	{ url = "trash://*",  run = "mime.trash",  prio = "high", group = "mime" },
 	{ url = "remote://*", run = "mime.remote", prio = "high", group = "mime" },
 ]
 spotters = [
 	# Multi-file
 	{ mime = "multi/*", run = "multi" },
 	# Trash
-	{ url = "trash://*",  run = "trash" },
-	{ url = "trash://*/", run = "trash" },
+	{ mime = "trash/**", run = "trash" },
 	# Folder
 	{ url = "*/", run = "folder" },
 	# Code
@@ -148,6 +146,8 @@ preloaders = [
 	# Font
 	{ mime = "font/*", run = "font" },
 	{ mime = "application/ms-opentype", run = "font" },
+	# Trash
+	{ mime = "trash/**", run = "trash" },
 ]
 previewers = [
 	{ url = "*/", run = "folder" },
@@ -179,6 +179,8 @@ previewers = [
 	{ mime = "inode/empty", run = "empty" },
 	# Virtual file system
 	{ mime = "vfs/*", run = "vfs" },
+	# Trash
+	{ mime = "trash/**", run = "trash" },
 	# Error
 	{ mime = "null/*", run = "null" },
 	# Fallback

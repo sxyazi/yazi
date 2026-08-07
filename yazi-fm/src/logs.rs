@@ -6,8 +6,7 @@ use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
 use yazi_macro::writef;
-use yazi_shared::LOG_LEVEL;
-use yazi_shim::cell::RoCell;
+use yazi_shim::{cell::RoCell, log::LOG_LEVEL};
 use yazi_tty::sequence::{SetFg, SetSgr};
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();

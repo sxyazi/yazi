@@ -163,8 +163,11 @@ module.exports = async ({ github, context, core }) => {
 			return
 		}
 
-		if (context.eventName === "issues") {
-			const issue = context.payload.issue
+		if (context.eventName === "issues" || context.eventName === "pull_request_target") {
+			const issue = context.payload.issue ?? {
+				...context.payload.pull_request,
+				pull_request: true,
+			}
 			const label = context.payload.label?.name
 			if (!issue) return
 

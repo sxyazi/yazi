@@ -9,6 +9,7 @@ yazi_macro::mod_flat!(dispatcher executor logs panic renderer root router signal
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 	Panic::install();
+	yazi_shim::init();
 	yazi_shared::init();
 
 	Logs::start()?;

@@ -2,9 +2,9 @@ use std::{io, pin::Pin};
 
 use mlua::{IntoLuaMulti, LuaString, UserData, UserDataMethods, Value};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncWrite, AsyncWriteExt};
-use yazi_binding::Error;
 use yazi_fs::{engine::Attrs, file::File};
 use yazi_shared::url::{UrlBuf, UrlLike};
+use yazi_shim::fs::Error;
 
 use crate::VfsFile;
 
@@ -203,7 +203,7 @@ impl UserData for RwFile {
 		methods.add_async_method_mut("flush", |lua, mut me, ()| async move {
 			match me.flush().await {
 				Ok(()) => true.into_lua_multi(&lua),
-				Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_method_mut("read", |lua, mut me, len: usize| async move {
@@ -213,13 +213,13 @@ impl UserData for RwFile {
 					buf.truncate(n);
 					lua.create_external_string(buf)?.into_lua_multi(&lua)
 				}
-				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_method_mut("write_all", |lua, mut me, src: LuaString| async move {
 			match me.write_all(&src.as_bytes()).await {
 				Ok(()) => true.into_lua_multi(&lua),
-				Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 	}

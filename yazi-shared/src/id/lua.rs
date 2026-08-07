@@ -1,6 +1,7 @@
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_shim::log::LOG_LEVEL;
 
-use crate::{LOG_LEVEL, id::Id};
+use crate::id::Id;
 
 impl FromLua for Id {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {

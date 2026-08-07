@@ -16,7 +16,7 @@ pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	yazi_shared::url::UrlBuf::install(lua)?;
 	yazi_shared::path::PathBufDyn::install(lua)?;
 
-	yazi_binding::Error::install(lua)?;
+	yazi_shim::fs::Error::install(lua)?;
 	yazi_binding::process::install(lua)?;
 	yazi_runner::loader::install(lua)?;
 

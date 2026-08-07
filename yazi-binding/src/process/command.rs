@@ -2,10 +2,10 @@ use std::{any::TypeId, ffi::OsStr, io, process::Stdio};
 
 use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use yazi_shim::wtf8::FromWtf8;
+use yazi_shim::{fs::Error, wtf8::FromWtf8};
 
 use super::{Child, output::Output};
-use crate::{Error, process::Status};
+use crate::process::Status;
 
 pub struct Command {
 	inner:  tokio::process::Command,
@@ -188,18 +188,18 @@ impl UserData for Command {
 		});
 		methods.add_method_mut("spawn", |lua, me, ()| match me.spawn() {
 			Ok(child) => child.into_lua_multi(lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(lua),
 		});
 		methods.add_async_method_mut("output", |lua, mut me, ()| async move {
 			match me.output().await {
 				Ok(output) => Output::new(output).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_method_mut("status", |lua, mut me, ()| async move {
 			match me.status().await {
 				Ok(status) => Status::new(status).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 	}

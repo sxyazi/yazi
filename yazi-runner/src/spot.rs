@@ -1,7 +1,7 @@
-use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmState};
+use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
-use tokio_util::sync::CancellationToken;
 use tracing::error;
+use yazi_binding::Scope;
 use yazi_config::plugin::SpotterArc;
 use yazi_fs::file::File;
 use yazi_shared::{data::Sendable, id::Ids, pool::Symbol};
@@ -17,19 +17,19 @@ impl Runner {
 		file: File,
 		mime: Symbol<str>,
 		skip: usize,
-	) -> CancellationToken {
-		let ct = CancellationToken::new();
-		let (ct1, ct2) = (ct.clone(), ct.clone());
+	) -> Scope {
+		let scope = Scope::new();
+		let (scope1, scope2) = (scope.clone(), scope.clone());
 
 		tokio::task::spawn_blocking(move || {
 			let future = async {
-				LOADER.ensure(&spotter.name, |_| ()).await.into_lua_err()?;
+				LOADER.ensure(&spotter.name, |_| ()).await?;
 
 				let lua = self.spawn(&spotter.name)?;
 				lua.set_hook(
 					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 					move |_, dbg| {
-						if ct1.is_cancelled() && dbg.source().what != "C" {
+						if scope1.is_cancelled() && dbg.source().what != "C" {
 							Err("Spot task cancelled".into_lua_err())
 						} else {
 							Ok(VmState::Continue)
@@ -46,12 +46,12 @@ impl Runner {
 					("skip", skip.into_lua(&lua)?),
 				])?;
 
-				if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
+				if scope2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
 			};
 
 			Handle::current().block_on(async {
 				select! {
-					_ = ct2.cancelled() => {},
+					_ = scope2.cancelled() => {},
 					Err(e) = future => if !e.to_string().contains("Spot task cancelled") {
 						error!("{e}");
 					},
@@ -60,6 +60,6 @@ impl Runner {
 			});
 		});
 
-		ct
+		scope
 	}
 }

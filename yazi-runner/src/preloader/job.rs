@@ -2,11 +2,12 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_binding::elements::Rect;
 use yazi_config::{LAYOUT, plugin::PreloaderArc};
 use yazi_fs::file::File;
-use yazi_shared::data::Sendable;
+use yazi_shared::{data::Sendable, pool::Symbol};
 
 pub struct PreloadJob {
 	pub preloader: PreloaderArc,
 	pub file:      File,
+	pub mime:      Symbol<str>,
 }
 
 impl IntoLua for PreloadJob {
@@ -16,6 +17,7 @@ impl IntoLua for PreloadJob {
 				("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
 				("args", Sendable::args_to_table_ref(lua, &self.preloader.args)?.into_lua(lua)?),
 				("file", self.file.into_lua(lua)?),
+				("mime", self.mime.into_lua(lua)?),
 				("skip", 0.into_lua(lua)?),
 			])?
 			.into_lua(lua)

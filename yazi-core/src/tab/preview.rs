@@ -1,12 +1,13 @@
 use tokio::task::JoinHandle;
 use yazi_adapter::ADAPTOR;
-use yazi_config::{LAYOUT, YAZI};
-use yazi_fs::file::File;
+use yazi_binding::Scope;
+use yazi_config::YAZI;
+use yazi_fs::{FsHash64, file::File};
 use yazi_macro::render;
 use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
-use yazi_shared::{pool::Symbol, url::UrlBuf};
+use yazi_shared::{id::Id, pool::Symbol, url::UrlBuf};
 
-use crate::{AppProxy, Highlighter, MgrProxy, tab::PreviewLock};
+use crate::{AppProxy, Highlighter, MgrProxy, tab::{PreviewLock, PreviewSig}};
 
 #[derive(Default)]
 pub struct Preview {
@@ -14,13 +15,17 @@ pub struct Preview {
 	pub skip: usize,
 
 	handle: Option<JoinHandle<()>>,
+	scope:  Scope,
 }
 
 impl Preview {
 	pub fn go(&mut self, file: File, mime: Symbol<str>, force: bool) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
-		} else if !force && self.same_lock(&file, &mime) {
+		}
+
+		let sig = PreviewSig::new(&file, &mime).hash_id();
+		if !force && self.same_lock(sig) {
 			return;
 		}
 
@@ -29,20 +34,24 @@ impl Preview {
 		};
 
 		self.abort();
-		let job = PeekJob { previewer, file, mime, skip: self.skip };
+		self.scope = Scope::new();
+
+		let job = PeekJob { previewer, file, mime, sig, skip: self.skip };
+		let scope = self.scope.clone();
 
 		self.handle = Some(tokio::spawn(async move {
 			let mut rx = RUNNER.peek(&job).await;
 			match rx.recv().await.unwrap_or(Err(PeekError::Cancelled)) {
 				Ok(()) | Err(PeekError::Cancelled) => {}
-				Err(PeekError::ShouldSync) => AppProxy::plugin_peek(job),
-				Err(e) => MgrProxy::update_peeked_error(job, e.to_string()),
+				Err(PeekError::ShouldSync) => AppProxy::plugin_peek(job, scope),
+				Err(e) => MgrProxy::update_peeked_error(job, e.to_string(), scope),
 			}
 		}));
 	}
 
 	pub fn abort(&mut self) {
 		self.handle.take().map(|ct| ct.abort());
+		self.scope.take().cancel();
 		Highlighter::abort();
 	}
 
@@ -61,10 +70,10 @@ impl Preview {
 
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {
 		self.same_url(&file.url)
-			&& matches!(&self.lock , Some(l) if l.cha.hits(file.cha) && l.mime == mime && *l.area == LAYOUT.get().preview)
+			&& matches!(&self.lock, Some(l) if l.sig == PreviewSig::new(file, mime).hash_id())
 	}
 
-	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
-		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
+	fn same_lock(&self, sig: Id) -> bool {
+		self.lock.as_ref().is_some_and(|l| l.sig == sig && l.skip == self.skip)
 	}
 }

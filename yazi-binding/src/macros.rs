@@ -16,11 +16,11 @@ macro_rules! runtime_mut {
 
 #[macro_export]
 macro_rules! runtime_scope {
-	($lua:ident, $id:expr, $block:expr) => {{
+	($lua:ident, $name:expr, $block:expr) => {{
 		let mut f = || {
-			let blocking = $crate::runtime_mut!($lua)?.critical_push($id, true);
+			$crate::runtime_mut!($lua)?.enter_inherited($name, true);
 			let result = (|| $block)();
-			$crate::runtime_mut!($lua)?.critical_pop(blocking)?;
+			$crate::runtime_mut!($lua)?.leave()?;
 			result
 		};
 		f()
@@ -32,12 +32,12 @@ macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
 		static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 		if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-			let id = match $crate::runtime!($lua)?.current()? {
+			let source = match $crate::runtime!($lua)?.name()? {
 				"init" => "`init.lua` config file",
 				s => &format!("`{s}.yazi` plugin"),
 			};
 			yazi_macro::emit!(Call(
-				yazi_macro::relay!(app:deprecate).with("content", format!($tt, id))
+				yazi_macro::relay!(app:deprecate).with("content", format!($tt, source))
 			));
 		}
 	}};

@@ -6,6 +6,7 @@ use crate::{auth::AuthKind, spec::{Spec, SpecInventory}};
 impl UserData for Spec {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_cached_field("kind", |_, me| Ok(me.kind.into_str()));
+		fields.add_cached_field("scheme", |lua, me| lua.create_string(&me.scheme));
 		fields.add_cached_field("domain", |lua, me| lua.create_string(&*me.domain));
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.kind == AuthKind::Regular));
 		fields.add_field_method_get("is_search", |_, me| Ok(me.kind == AuthKind::Search));

@@ -2,13 +2,14 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_binding::elements::Rect;
 use yazi_config::{LAYOUT, plugin::PreviewerArc};
 use yazi_fs::file::File;
-use yazi_shared::{data::Sendable, pool::Symbol};
+use yazi_shared::{data::Sendable, id::Id, pool::Symbol};
 
 #[derive(Clone, Debug)]
 pub struct PeekJob {
 	pub previewer: PreviewerArc,
 	pub file:      File,
 	pub mime:      Symbol<str>,
+	pub sig:       Id,
 	pub skip:      usize,
 }
 
@@ -20,6 +21,7 @@ impl IntoLua for PeekJob {
 				("args", Sendable::args_to_table_ref(lua, &self.previewer.args)?.into_lua(lua)?),
 				("file", self.file.into_lua(lua)?),
 				("mime", self.mime.into_lua(lua)?),
+				("sig", self.sig.into_lua(lua)?),
 				("skip", self.skip.into_lua(lua)?),
 			])?
 			.into_lua(lua)
@@ -30,6 +32,7 @@ impl IntoLua for PeekJob {
 #[derive(Clone, Debug)]
 pub struct SeekJob {
 	pub file:  File,
+	pub mime:  Symbol<str>,
 	pub units: i16,
 }
 
@@ -39,6 +42,7 @@ impl IntoLua for SeekJob {
 			.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
 				("file", self.file.into_lua(lua)?),
+				("mime", self.mime.into_lua(lua)?),
 				("units", self.units.into_lua(lua)?),
 			])?
 			.into_lua(lua)

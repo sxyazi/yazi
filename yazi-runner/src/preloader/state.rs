@@ -3,7 +3,7 @@ use mlua::{FromLuaMulti, Lua, MultiValue};
 #[derive(Default)]
 pub struct PreloadState {
 	pub complete: bool,
-	pub error:    Option<yazi_binding::Error>,
+	pub error:    Option<yazi_shim::fs::Error>,
 }
 
 impl FromLuaMulti for PreloadState {

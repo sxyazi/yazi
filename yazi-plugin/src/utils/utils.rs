@@ -53,7 +53,9 @@ pub fn compose(
 			b"co" => Utils::co(lua)?,
 			b"sync" => Utils::sync(lua)?,
 			b"async" => Utils::r#async(lua, isolate)?,
+			b"async_blocking" => Utils::async_blocking(lua)?,
 			b"chan" => Utils::chan(lua)?,
+			b"chunk" => Utils::chunk(lua)?,
 			b"join" => Utils::join(lua)?,
 			b"select" => Utils::select(lua)?,
 
@@ -71,6 +73,7 @@ pub fn compose(
 			// Time
 			b"time" => Utils::time(lua)?,
 			b"sleep" => Utils::sleep(lua)?,
+			b"throttle" => Utils::throttle(lua)?,
 
 			// User
 			#[cfg(unix)]

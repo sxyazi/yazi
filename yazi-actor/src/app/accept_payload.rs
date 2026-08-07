@@ -31,9 +31,9 @@ impl Actor for AcceptPayload {
 		let kind = kind.to_owned();
 		succ!(Lives::scope(cx.core, |_| {
 			let body = payload.body.into_lua(&LUA)?;
-			for (id, cb) in handlers {
-				if let Err(e) = runtime_scope!(LUA, &id, cb.call::<()>(body.clone())) {
-					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
+			for (name, cb) in handlers {
+				if let Err(e) = runtime_scope!(LUA, &name, cb.call::<()>(body.clone())) {
+					error!("Failed to run `{kind}` event handler in your `{name}` plugin: {e}");
 				}
 			}
 			Ok(())

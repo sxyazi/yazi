@@ -5,7 +5,7 @@ use crate::{Runner, entry::EntryJob, loader::LOADER};
 
 impl Runner {
 	pub async fn entry(&'static self, job: EntryJob) -> mlua::Result<()> {
-		LOADER.ensure(&job.plugin, |_| ()).await.into_lua_err()?;
+		LOADER.ensure(&job.plugin, |_| ()).await?;
 
 		tokio::task::spawn_blocking(move || {
 			let lua = self.spawn(&job.plugin)?;

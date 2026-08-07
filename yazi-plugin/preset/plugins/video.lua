@@ -103,7 +103,7 @@ end
 function M:spot_base(job)
 	local meta, err = self.list_meta(job.file.path, "format=duration:stream=codec_name,codec_type,width,height")
 	if not meta then
-		ya.err(tostring(err))
+		ya.err(err)
 		return {}
 	end
 

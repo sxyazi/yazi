@@ -11,7 +11,7 @@ impl Runner {
 	{
 		match LOADER.ensure(&run.name, |_| ()).await {
 			Ok(()) => self.provide_do(run, job).await,
-			Err(e) => yazi_binding::Error::custom(e.to_string()).into(),
+			Err(e) => yazi_shim::fs::Error::other(e.to_string()).into(),
 		}
 	}
 

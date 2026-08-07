@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_config::plugin::PreloaderArc;
-use yazi_shared::id::Id;
+use yazi_shared::{id::Id, pool::Symbol};
 
 use crate::{TaskIn, preload::PreloadProg};
 
@@ -9,7 +9,8 @@ use crate::{TaskIn, preload::PreloadProg};
 pub(crate) struct PreloadIn {
 	pub(crate) id:        Id,
 	pub(crate) preloader: PreloaderArc,
-	pub(crate) target:    yazi_fs::file::File,
+	pub(crate) file:      yazi_fs::file::File,
+	pub(crate) mime:      Symbol<str>,
 }
 
 impl TaskIn for PreloadIn {
