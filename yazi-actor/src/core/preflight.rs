@@ -18,14 +18,14 @@ impl Preflight {
 
 		Ok(Lives::scope(cx.core, |_| {
 			let mut body = opt.1.into_lua(&LUA)?;
-			for (id, cb) in handlers {
-				match runtime_scope!(LUA, &id, cb.call::<Value>(&body)) {
+			for (name, cb) in handlers {
+				match runtime_scope!(LUA, &name, cb.call::<Value>(&body)) {
 					Ok(Value::Nil) => {
-						Err(format!("`{kind}` event cancelled by `{id}` plugin on preflight").into_lua_err())?
+						Err(format!("`{kind}` event cancelled by `{name}` plugin on preflight").into_lua_err())?
 					}
 					Ok(v) => body = v,
 					Err(e) => Err(
-						format!("Failed to run `{kind}` event handler in `{id}` plugin: {e}").into_lua_err(),
+						format!("Failed to run `{kind}` event handler in `{name}` plugin: {e}").into_lua_err(),
 					)?,
 				};
 			}

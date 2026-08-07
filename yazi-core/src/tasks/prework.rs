@@ -1,5 +1,6 @@
 use yazi_config::{YAZI, plugin::MAX_FETCHERS};
 use yazi_fs::{Entries, FsHash64, SortBy, file::{File, FileSig}};
+use yazi_shared::pool::InternStr;
 
 use super::Tasks;
 use crate::mgr::Mimetype;
@@ -33,13 +34,14 @@ impl Tasks {
 		let mut loaded = self.scheduler.preload.loaded.lock();
 		for f in paged {
 			let hash = FileSig(f).hash_u64();
-			for p in YAZI.plugin.preloaders.matches(f, mimetype.get(&f.url).unwrap_or_default()) {
+			let mime = mimetype.get(&f.url).unwrap_or_default();
+			for p in YAZI.plugin.preloaders.matches(f, mime) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
 					Some(n) => *n |= 1 << p.idx,
 					None => _ = loaded.put(hash, 1 << p.idx),
 				}
-				self.scheduler.preload_paged(p, f);
+				self.scheduler.preload_paged(p, f, mime.intern());
 			}
 		}
 	}

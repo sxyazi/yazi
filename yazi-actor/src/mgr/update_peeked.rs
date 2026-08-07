@@ -17,7 +17,7 @@ impl Actor for UpdatePeeked {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		if form.lock.url == *hovered {
+		if form.lock.url == *hovered && !form.scope.is_cancelled() {
 			cx.tab_mut().preview.lock = Some(form.lock);
 			render!();
 		}

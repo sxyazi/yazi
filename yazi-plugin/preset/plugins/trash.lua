@@ -1,3 +1,5 @@
+--- @sync peek
+
 local M = {}
 
 local function top(url)
@@ -105,6 +107,16 @@ restore_recursively = function(id, collision)
 	return changed or ok, ok and 0 or 1, err
 end
 
+local function match(job, rules)
+	local mime = job.mime:match("^trash/(.+)")
+	if not mime then
+		return
+	end
+	for _, rule in pairs(rules:match { file = job.file, mime = mime }) do
+		return rule, mime
+	end
+end
+
 function M:setup()
 	ps.sub_remote("trash-restore", function(args)
 		ya.async(function()
@@ -161,10 +173,49 @@ function M:entry()
 	end
 end
 
+function M:peek(job)
+	local rule, mime = match(job, rt.plugin.previewers)
+	if not rule then
+		return
+	end
+
+	job.mime, job.args = mime, rule.args
+	ya.async(function()
+		local chunk, err = ya.chunk(rule.name)
+		if not chunk then
+			ya.err(err)
+		elseif chunk.sync_peek then
+			ya.emit("plugin", { rule.name, job, method = "peek", scope = rt.scope() })
+		else
+			ya.async_blocking(function(cx) require(cx.name):peek(cx.job) end, { name = rule.name, job = job }):wait()
+		end
+	end)
+end
+
+function M:seek(job)
+	local rule, mime = match(job, rt.plugin.previewers)
+	if not rule then
+		return
+	end
+
+	job.mime, job.args = mime, rule.args
+	ya.emit("plugin", { rule.name, job, method = "seek", scope = rt.scope() })
+end
+
+function M:preload(job)
+	local rule, mime = match(job, rt.plugin.preloaders)
+	if not rule then
+		return true
+	end
+
+	job.mime, job.args = mime, rule.args
+	return require(rule.name):preload(job)
+end
+
 function M:spot(job)
 	local ent, err = entry(job.file.url)
 	if not ent then
-		return ya.err(tostring(err))
+		return ya.err(err)
 	end
 
 	local rows = {
@@ -176,7 +227,7 @@ function M:spot(job)
 
 	ya.spot_table(
 		job,
-		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
+		ui.Table(ya.list_merge(rows, self:spot_base(job)))
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(1)
 			:col(1)
@@ -184,6 +235,46 @@ function M:spot(job)
 			:cell_style(th.spot.tbl_cell)
 			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
+end
+
+function M:spot_base(job)
+	local cha, pair = job.file.cha, { file = job.file, mime = job.mime }
+	local proxy = { file = job.file, mime = job.mime:match("^trash/(.+)") or job.mime }
+	local spotter, previewer, fetchers, preloaders = nil, nil, {}, {}
+
+	for _, v in pairs(rt.plugin.spotters:match(pair)) do
+		spotter = v
+		break
+	end
+
+	for _, v in pairs(rt.plugin.previewers:match(proxy)) do
+		previewer = v
+		break
+	end
+
+	for _, v in pairs(rt.plugin.fetchers:match(pair)) do
+		fetchers[#fetchers + 1] = v.name
+	end
+	fetchers = #fetchers ~= 0 and fetchers or { "-" }
+
+	for _, v in pairs(rt.plugin.preloaders:match(proxy)) do
+		preloaders[#preloaders + 1] = string.format("%s (via trash)", v.name)
+	end
+	preloaders = #preloaders ~= 0 and preloaders or { "-" }
+
+	return {
+		ui.Row({ "Base" }):style(ui.Style():fg("green")),
+		ui.Row { "  Created:", cha.btime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.btime)) or "-" },
+		ui.Row { "  Modified:", cha.mtime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.mtime)) or "-" },
+		ui.Row { "  Mimetype:", job.mime },
+		ui.Row {},
+
+		ui.Row({ "Plugins" }):style(ui.Style():fg("green")),
+		ui.Row { "  Spotter:", spotter and spotter.name or "-" },
+		ui.Row { "  Previewer:", previewer and string.format("%s (via trash)", previewer.name) or "-" },
+		ui.Row({ "  Fetchers:", fetchers }):height(#fetchers),
+		ui.Row({ "  Preloaders:", preloaders }):height(#preloaders),
+	}
 end
 
 function M:provide(job)
@@ -235,7 +326,7 @@ function M:provide(job)
 		end
 	end
 
-	return false, Error.custom("Unsupported trash operation: " .. op)
+	return false, Err("Unsupported trash operation: %s", op)
 end
 
 return M

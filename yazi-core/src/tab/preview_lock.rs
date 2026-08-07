@@ -1,15 +1,14 @@
-use mlua::{LuaString, Table};
+use mlua::Table;
 use yazi_binding::elements::Rect;
-use yazi_fs::{cha::Cha, file::FileRef};
+use yazi_fs::file::FileRef;
 use yazi_macro::impl_data_any;
-use yazi_shared::{pool::{InternStr, Symbol}, url::UrlBuf};
+use yazi_shared::{id::Id, url::UrlBuf};
 use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug, Default)]
 pub struct PreviewLock {
-	pub url:  UrlBuf,
-	pub cha:  Cha,
-	pub mime: Symbol<str>,
+	pub url: UrlBuf,
+	pub sig: Id,
 
 	pub skip: usize,
 	pub area: Rect,
@@ -25,9 +24,8 @@ impl TryFrom<Table> for PreviewLock {
 		let file: FileRef = t.raw_get("file")?;
 		file.borrow(|f| {
 			Ok(Self {
-				url:  f.url_owned(),
-				cha:  f.cha,
-				mime: t.raw_get::<LuaString>("mime")?.to_str()?.intern(),
+				url: f.url_owned(),
+				sig: t.raw_get("sig")?,
 
 				skip: t.raw_get("skip")?,
 				area: t.raw_get("area")?,

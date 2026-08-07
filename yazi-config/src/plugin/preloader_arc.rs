@@ -2,6 +2,7 @@ use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use mlua::{UserData, UserDataFields};
 use serde::Deserialize;
+use yazi_shared::data::Sendable;
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{Mixable, plugin::Preloader};
@@ -30,5 +31,6 @@ impl UserData for PreloaderArc {
 		fields.add_field_method_get("id", |_, me| Ok(me.id));
 
 		fields.add_cached_field("name", |lua, me| lua.create_string(&*me.name));
+		fields.add_cached_field("args", |lua, me| Sendable::args_to_table_ref(lua, &me.args));
 	}
 }

@@ -15,47 +15,35 @@ local function stale_cache(file)
 end
 
 function M:fetch(job)
-	local updates, unknown, state = {}, {}, {}
-	for i, file in ipairs(job.files) do
-		if file.cha.is_dummy then
-			-- Skip dummy files
-		elseif not file.cache then
-			unknown[#unknown + 1] = file
-		elseif not fs.cha(Url(file.cache)) then
-			updates[file.url], state[i] = "vfs/absent", true
-		elseif stale_cache(file) then
-			updates[file.url], state[i] = "vfs/stale", true
-		else
-			unknown[#unknown + 1] = file
+	return ya.co(function()
+		local unknown, updates = {}, {}
+		for _, file in ipairs(job.files) do
+			if file.cha.is_dummy then
+				coroutine.yield(file)
+			elseif not file.cache then
+				unknown[#unknown + 1] = file
+			elseif not fs.cha(Url(file.cache)) then
+				updates[file.url] = coroutine.yield(file, "vfs/absent") and "vfs/absent" or nil
+			elseif stale_cache(file) then
+				updates[file.url] = coroutine.yield(file, "vfs/stale") and "vfs/stale" or nil
+			else
+				unknown[#unknown + 1] = file
+			end
 		end
-	end
 
-	if next(updates) then
-		ya.emit("update_mimes", { updates = updates })
-	end
-
-	if #unknown == 0 then
-		return state
-	else
-		return self.fallback_local(job, unknown, state)
-	end
+		require("mime.dir").commit(updates)
+		if #unknown > 0 then
+			self.fallback_local(job, unknown)
+		end
+	end)
 end
 
-function M.fallback_local(job, unknown, state)
-	local indices = {}
-	for i, f in ipairs(job.files) do
-		indices[f:hash()] = i
+function M.fallback_local(job, unknown)
+	local next = require("mime.local"):fetch(ya.dict_merge(job, { files = unknown }))
+	local file, value = next()
+	while file do
+		file, value = next(coroutine.yield(file, value))
 	end
-
-	local result = require("mime.local"):fetch(ya.dict_merge(job, { files = unknown }))
-	for i, f in ipairs(unknown) do
-		if type(result) == "table" then
-			state[indices[f:hash()]] = result[i]
-		else
-			state[indices[f:hash()]] = result
-		end
-	end
-	return state
 end
 
 return M

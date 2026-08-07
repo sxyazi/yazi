@@ -1,10 +1,12 @@
 use std::{fmt, io, sync::Arc};
 
 use anyhow::Result;
+use mlua::{AnyUserData, ExternalError, Lua, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_codegen::FromLuaOwned;
 
-use crate::fs::{kind_from_str, kind_to_str};
+use crate::{fs::{kind_from_str, kind_to_str}, log::LOG_LEVEL};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, FromLuaOwned, PartialEq)]
 pub enum Error {
 	Kind(io::ErrorKind),
 	Raw(i32),
@@ -52,6 +54,32 @@ impl fmt::Display for Error {
 }
 
 impl Error {
+	pub fn install(lua: &Lua) -> mlua::Result<()> {
+		let new =
+			lua.create_function(|_, (_, ud): (Table, AnyUserData)| Ok(ud.borrow::<Self>()?.clone()))?;
+
+		let fs = lua.create_function(|_, value: Value| {
+			Ok(match value {
+				Value::Table(t) => Self::custom(
+					&t.raw_get::<LuaString>("kind")?.to_str()?,
+					t.raw_get("code")?,
+					&t.raw_get::<LuaString>("message")?.to_str()?,
+				)?,
+				_ => Err("expected a table".into_lua_err())?,
+			})
+		})?;
+		let other = lua.create_function(|_, msg: String| Ok(Self::other(msg)))?;
+
+		let error = lua.create_table_from([("fs", fs), ("other", other)])?;
+		error.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
+
+		lua.globals().raw_set("Error", error)
+	}
+
+	pub fn other(message: impl Into<Arc<str>>) -> Self {
+		Self::Custom { kind: io::ErrorKind::Other, code: None, message: message.into() }
+	}
+
 	pub fn custom(kind: &str, code: Option<i32>, message: &str) -> Result<Self> {
 		Ok(Self::Custom { kind: kind_from_str(kind)?, code, message: message.into() })
 	}
@@ -71,6 +99,38 @@ impl Error {
 			Self::Kind(_) => None,
 			Self::Raw(code) => Some(*code),
 			Self::Custom { code, .. } => *code,
+		}
+	}
+}
+
+impl UserData for Error {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("code", |_, me| Ok(me.raw_os_error()));
+		fields.add_field_method_get("kind", |_, me| Ok(Some(me.kind_str())));
+	}
+
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
+			lua.create_external_string(me.to_string())
+		});
+		methods.add_meta_function(MetaMethod::Concat, |lua, (lhs, rhs): (Value, Value)| {
+			match (lhs, rhs) {
+				(Value::String(l), Value::UserData(r)) => {
+					let r = r.borrow::<Self>()?;
+					lua.create_external_string([&l.as_bytes(), r.to_string().as_bytes()].concat())
+				}
+				(Value::UserData(l), Value::String(r)) => {
+					let l = l.borrow::<Self>()?;
+					lua.create_external_string([l.to_string().as_bytes(), &r.as_bytes()].concat())
+				}
+				_ => Err("only string can be concatenated with Error".into_lua_err()),
+			}
+		});
+
+		if !LOG_LEVEL.get().is_none() {
+			methods.add_meta_function(MetaMethod::ToDebugString, |_, ud: AnyUserData| {
+				Ok(format!("Error({:?}): {:?}", ud.to_pointer(), *ud.borrow::<Self>()?))
+			});
 		}
 	}
 }

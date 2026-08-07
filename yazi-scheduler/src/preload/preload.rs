@@ -35,10 +35,15 @@ impl Preload {
 	}
 
 	pub(crate) async fn preload(&self, task: PreloadIn) -> Result<(), PreloadOut> {
-		let hash = FileSig(&task.target).hash_u64();
+		let hash = FileSig(&task.file).hash_u64();
+		let mut rx = RUNNER
+			.preload(PreloadJob {
+				preloader: task.preloader.clone(),
+				file:      task.file,
+				mime:      task.mime,
+			})
+			.await;
 
-		let mut rx =
-			RUNNER.preload(PreloadJob { preloader: task.preloader.clone(), file: task.target }).await;
 		let state = match rx.recv().await.unwrap_or(Err(PreloadError::Cancelled)) {
 			Ok(state) => state,
 			Err(PreloadError::Cancelled) => Default::default(),

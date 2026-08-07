@@ -41,7 +41,7 @@ arc-swap              = { version = "1.9.2", features = [ "serde" ] }
 base64                = "0.23.1"
 bitflags              = { version = "2.13.1", features = [ "serde" ] }
 chrono                = "0.4.45"
-clap                  = { version = "4.6.5", features = [ "derive" ] }
+clap                  = { version = "4.6.6", features = [ "derive" ] }
 compact_str           = { version = "0.10.0", features = [ "serde" ] }
 core-foundation-sys   = "0.8.7"
 data-encoding         = "2.11.1"

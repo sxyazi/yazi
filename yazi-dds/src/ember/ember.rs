@@ -1,5 +1,5 @@
 use anyhow::{Result, bail};
-use mlua::{ExternalResult, IntoLua, Lua, Value};
+use mlua::{IntoLua, Lua, Value};
 use yazi_shared::id::Id;
 
 use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
@@ -54,7 +54,7 @@ impl Ember<'static> {
 	}
 
 	pub fn from_lua(lua: &Lua, kind: &str, value: Value) -> mlua::Result<Self> {
-		Self::validate(kind).into_lua_err()?;
+		Self::validate(kind)?;
 		EmberCustom::from_lua(lua, kind, value)
 	}
 

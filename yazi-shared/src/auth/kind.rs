@@ -28,8 +28,8 @@ impl AuthKind {
 	#[inline]
 	pub fn is_remote(self) -> bool {
 		match self {
-			Self::Regular | Self::Search | Self::Mount => false,
-			Self::Hub | Self::Scope | Self::Sftp => true,
+			Self::Regular | Self::Search | Self::Mount | Self::Hub | Self::Scope => false,
+			Self::Sftp => true,
 		}
 	}
 

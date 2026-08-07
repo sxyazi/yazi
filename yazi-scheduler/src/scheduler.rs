@@ -2,8 +2,8 @@ use std::{ops::Deref, sync::Arc, time::Duration};
 
 use tokio::task::JoinHandle;
 use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
-use yazi_fs::{FsHash64, file::FileSig};
-use yazi_shared::{CompletionToken, Throttle, id::Id, url::{UrlBuf, UrlLike}};
+use yazi_fs::{FsHash64, file::{File, FileSig}};
+use yazi_shared::{CompletionToken, Throttle, id::Id, pool::Symbol, url::{UrlBuf, UrlLike}};
 
 use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
@@ -165,11 +165,7 @@ impl Scheduler {
 		id
 	}
 
-	pub fn fetch_paged(
-		&self,
-		fetcher: FetcherArc,
-		targets: Vec<yazi_fs::file::File>,
-	) -> CompletionToken {
+	pub fn fetch_paged(&self, fetcher: FetcherArc, targets: Vec<File>) -> CompletionToken {
 		let mut r#in = FetchIn { id: Id::ZERO, fetcher, targets };
 
 		let done = self.add(&mut r#in, |t| t.done.clone());
@@ -178,7 +174,7 @@ impl Scheduler {
 		done
 	}
 
-	pub async fn fetch_mimetype(&self, targets: Vec<yazi_fs::file::File>) -> bool {
+	pub async fn fetch_mimetype(&self, targets: Vec<File>) -> bool {
 		let mut wg = vec![];
 		for (fetcher, targets) in YAZI.plugin.fetchers.mime(targets) {
 			wg.push(self.fetch_paged(fetcher, targets));
@@ -192,12 +188,12 @@ impl Scheduler {
 		true
 	}
 
-	pub fn preload_paged(&self, preloader: PreloaderArc, target: &yazi_fs::file::File) {
-		let hook = HookInPreload::new(preloader.idx, FileSig(target).hash_u64());
-		let mut r#in = PreloadIn { id: Id::ZERO, preloader, target: target.clone() };
+	pub fn preload_paged(&self, preloader: PreloaderArc, file: &File, mime: Symbol<str>) {
+		let hook = HookInPreload::new(preloader.idx, FileSig(file).hash_u64());
+		let mut r#in = PreloadIn { id: Id::ZERO, preloader, file: file.clone(), mime };
 
 		self.add_hooked(&mut r#in, hook, |_| ());
-		if let Some(prev) = self.preload.loading.lock().put(target.url.hash_u64(), r#in.id) {
+		if let Some(prev) = self.preload.loading.lock().put(file.url.hash_u64(), r#in.id) {
 			self.cancel(prev);
 		}
 

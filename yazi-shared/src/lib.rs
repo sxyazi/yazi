@@ -7,8 +7,6 @@ yazi_macro::mod_flat!(bytes chars completion_cell completion_token condition deb
 pub fn init() {
 	LOCAL_SET.with(tokio::task::LocalSet::new);
 
-	LOG_LEVEL.replace(<_>::from(std::env::var("YAZI_LOG").unwrap_or_default()));
-
 	#[cfg(unix)]
 	USERS_CACHE.with(<_>::default);
 

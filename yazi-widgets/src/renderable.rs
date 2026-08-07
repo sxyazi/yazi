@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Value};
 use ratatui_core::widgets::Widget;
-use yazi_binding::{Error, elements::{Area, Bar, Border, Fill, Gauge, Line, List, Spatial, Table, Text}, position::Position};
+use yazi_binding::{elements::{Area, Bar, Border, Fill, Gauge, Line, List, Spatial, Table, Text}, position::Position};
 
 use crate::{clear::Clear, input::InputArc};
 
@@ -55,11 +55,9 @@ impl TryFrom<&AnyUserData> for Renderable {
 	}
 }
 
-impl From<yazi_binding::Error> for Renderable {
-	fn from(error: Error) -> Self {
-		Self::Text(
-			Text::from(error.into_string()).wrap(ratatui_widgets::paragraph::Wrap { trim: false }),
-		)
+impl From<yazi_shim::fs::Error> for Renderable {
+	fn from(error: yazi_shim::fs::Error) -> Self {
+		Self::Text(Text::from(error.to_string()).wrap(ratatui_widgets::paragraph::Wrap { trim: false }))
 	}
 }
 

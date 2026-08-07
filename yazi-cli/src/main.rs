@@ -10,6 +10,7 @@ use yazi_shared::LOCAL_SET;
 
 #[tokio::main]
 async fn main() -> ExitCode {
+	yazi_shim::init();
 	yazi_shared::init();
 	yazi_fs::init();
 

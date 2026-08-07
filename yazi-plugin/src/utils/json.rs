@@ -1,6 +1,5 @@
 use mlua::{Function, IntoLuaMulti, Lua, LuaSerdeExt, LuaString, Value};
-use yazi_binding::Error;
-use yazi_shim::mlua::SER_OPT;
+use yazi_shim::{fs::Error, mlua::SER_OPT};
 
 use super::Utils;
 
@@ -9,7 +8,7 @@ impl Utils {
 		lua.create_async_function(|lua, value: Value| async move {
 			match serde_json::to_string(&value) {
 				Ok(s) => s.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Serde(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
 			}
 		})
 	}
@@ -18,7 +17,7 @@ impl Utils {
 		lua.create_async_function(|lua, s: LuaString| async move {
 			match serde_json::from_slice::<serde_json::Value>(&s.as_bytes()) {
 				Ok(v) => lua.to_value_with(&v, SER_OPT)?.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Serde(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
 			}
 		})
 	}

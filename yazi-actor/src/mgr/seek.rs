@@ -5,7 +5,7 @@ use yazi_core::app::PluginOpt;
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::SeekForm;
 use yazi_runner::previewer::SeekJob;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, pool::InternStr};
 
 use crate::{Actor, Ctx};
 
@@ -29,7 +29,7 @@ impl Actor for Seek {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		let job = SeekJob { file: hovered.clone(), units: form.units };
+		let job = SeekJob { file: hovered.clone(), mime: mime.intern(), units: form.units };
 		let opt = PluginOpt::new_callback(previewer.name.clone(), move |_, plugin| {
 			plugin.call_method("seek", job)
 		});

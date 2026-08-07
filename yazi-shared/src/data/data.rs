@@ -157,8 +157,11 @@ impl TryFrom<Data> for String {
 impl TryFrom<&Data> for HashMap<DataKey, Data> {
 	type Error = anyhow::Error;
 
-	fn try_from(_: &Data) -> Result<Self, Self::Error> {
-		bail!("cannot take ownership of dict from &Data");
+	fn try_from(value: &Data) -> Result<Self, Self::Error> {
+		match value {
+			Data::Dict(d) => Ok(d.clone()),
+			_ => bail!("not a dict"),
+		}
 	}
 }
 

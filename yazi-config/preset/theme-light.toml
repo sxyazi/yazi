@@ -240,13 +240,13 @@ hovered = { reversed = true, bold = true }
 [filetype]
 rules = [
 	# Image
-	{ mime = "image/*", fg = "yellow" },
+	{ mime = "**/image/*", fg = "yellow" },
 	# Media
-	{ mime = "{audio,video}/*", fg = "magenta" },
+	{ mime = "**/{audio,video}/*", fg = "magenta" },
 	# Archive
-	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "red" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "red" },
 	# Document
-	{ mime = "application/{pdf,doc,rtf}", fg = "cyan" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "cyan" },
 	# Virtual file system
 	{ mime = "vfs/{absent,stale}", fg = "darkgray" },
 	# Special file

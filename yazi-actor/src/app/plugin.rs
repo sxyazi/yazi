@@ -18,7 +18,7 @@ impl Actor for Plugin {
 
 	fn act(cx: &mut Ctx, Self::Form { mut opt }: Self::Form) -> Result<Data> {
 		let mut hits = false;
-		if let Some(chunk) = LOADER.read().get(&*opt.id) {
+		if let Some(chunk) = LOADER.read().get(&*opt.name) {
 			hits = true;
 			opt.mode = opt.mode.auto_then(chunk.sync_entry);
 		}
@@ -30,7 +30,7 @@ impl Actor for Plugin {
 		}
 
 		tokio::spawn(async move {
-			match LOADER.ensure(&opt.id, |_| ()).await {
+			match LOADER.ensure(&opt.name, |_| ()).await {
 				Ok(()) => AppProxy::plugin_do(opt),
 				Err(e) => NotifyProxy::push_error("Plugin load failed", e.to_string()),
 			}

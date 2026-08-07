@@ -1,10 +1,11 @@
 use std::str::FromStr;
 
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, LuaString, Table, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, Error};
+use yazi_binding::{Composer, ComposerGet, ComposerSet};
 use yazi_config::Pattern;
 use yazi_fs::{engine::{Attrs, DirReader, FileHolder}, file::File, mounts::PARTITIONS};
 use yazi_shared::url::{UrlBuf, UrlCow, UrlLike, UrlRef};
+use yazi_shim::fs::Error;
 use yazi_vfs::engine;
 
 use crate::fs::SizeCalculator;
@@ -53,7 +54,7 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 
 		match it {
 			Ok(it) => it.into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -65,7 +66,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 
 		match cha {
 			Ok(c) => c.into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -78,7 +79,7 @@ fn copy(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
 		match engine::copy(&*from, &*to, Attrs::default()).await {
 			Ok(len) => len.into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -93,7 +94,7 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 
 		match result {
 			Ok(()) => true.into_lua_multi(&lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -101,7 +102,7 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 fn cwd(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, ()| match std::env::current_dir() {
 		Ok(p) => UrlBuf::from(p).into_lua_multi(lua),
-		Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
+		Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(lua),
 	})
 }
 
@@ -129,7 +130,7 @@ fn file(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
 		match engine::file(&*url).await {
 			Ok(file) => file.into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -176,7 +177,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 		let mut it = match engine::read_dir(&*dir).await {
 			Ok(it) => it,
-			Err(e) => return (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => return (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		};
 
 		let mut files = vec![];
@@ -216,7 +217,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 
 		match result {
 			Ok(()) => true.into_lua_multi(&lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -225,7 +226,7 @@ fn rename(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
 		match engine::rename(&*from, &*to).await {
 			Ok(()) => true.into_lua_multi(&lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -240,7 +241,7 @@ fn unique(lua: &Lua) -> mlua::Result<Function> {
 
 		match result {
 			Ok(u) => u.into_lua_multi(&lua),
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -249,7 +250,7 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, LuaString)| async move {
 		match engine::write(&*url, data.as_bytes()).await {
 			Ok(()) => true.into_lua_multi(&lua),
-			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }

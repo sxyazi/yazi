@@ -17,6 +17,10 @@ impl AsRef<str> for Scheme {
 	fn as_ref(&self) -> &str { self.as_str() }
 }
 
+impl AsRef<[u8]> for Scheme {
+	fn as_ref(&self) -> &[u8] { self.as_str().as_bytes() }
+}
+
 impl PartialEq<str> for Scheme {
 	fn eq(&self, other: &str) -> bool { self.as_str() == other }
 }

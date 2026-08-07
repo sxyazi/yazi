@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(entry fetcher loader preloader previewer provider);
+yazi_macro::mod_pub!(entry evaluator fetcher loader preloader previewer provider);
 
 yazi_macro::mod_flat!(runner spot);
 

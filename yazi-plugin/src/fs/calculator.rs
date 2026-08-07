@@ -1,5 +1,5 @@
 use mlua::{IntoLuaMulti, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::Error;
+use yazi_shim::fs::Error;
 
 pub enum SizeCalculator {
 	Local(yazi_fs::engine::local::SizeCalculator),
@@ -25,7 +25,7 @@ impl UserData for SizeCalculator {
 
 			match next {
 				Ok(value) => value.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 	}

@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, BorrowedBytes, ExternalError, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
-use yazi_shim::mlua::UserDataFieldsExt;
+use yazi_shim::{log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
-use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, strand::{StrandCow, StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{StrandCow, StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 
 pub type UrlRef = UserDataRef<UrlBuf>;
 

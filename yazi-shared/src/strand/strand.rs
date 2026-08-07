@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, fmt::Display};
 
 use anyhow::Result;
-use yazi_shim::{OptionExt, wtf8::FromWtf8};
+use yazi_shim::{OptionExt, ResultExt, wtf8::FromWtf8};
 
 use crate::{BytesExt, strand::{AsStrand, StrandBuf, StrandError, StrandKind}};
 
@@ -103,7 +103,7 @@ impl<'a> Strand<'a> {
 	}
 
 	#[inline]
-	pub fn to_os_string(self) -> Result<OsString, StrandError> { self.as_os().map(|s| s.to_owned()) }
+	pub fn to_os_string(self) -> Result<OsString, StrandError> { self.as_os().owned() }
 
 	#[inline]
 	pub fn as_unix_path(self) -> &'a typed_path::UnixPath {

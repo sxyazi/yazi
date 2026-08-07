@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shim::{OptionExt, mlua::UserDataFieldsExt};
+use yazi_shim::{OptionExt, log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
-use crate::{LOG_LEVEL, path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
+use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
 
 pub type PathRef = UserDataRef<PathBufDyn>;
 

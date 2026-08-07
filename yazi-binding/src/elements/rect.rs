@@ -1,12 +1,15 @@
 use std::ops::Deref;
 
 use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_macro::impl_data_any;
 use yazi_shim::ratatui::Padable;
 
 use super::Pad;
 
 #[derive(Clone, Copy, Debug, Default, FromLua)]
 pub struct Rect(pub ratatui_core::layout::Rect);
+
+impl_data_any!(Rect, from_into_lua = inherit);
 
 impl Deref for Rect {
 	type Target = ratatui_core::layout::Rect;

@@ -1,6 +1,5 @@
 use mlua::{IntoLuaMulti, MetaMethod, UserData, UserDataMethods};
 use serde::{Deserialize, Serialize};
-use yazi_binding::Error;
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum FolderStage {
@@ -22,7 +21,7 @@ impl UserData for FolderStage {
 			match me {
 				Loading => false.into_lua_multi(lua),
 				Loaded => true.into_lua_multi(lua),
-				Failed(e) => (true, Error::Fs(e.clone())).into_lua_multi(lua),
+				Failed(e) => (true, e.clone()).into_lua_multi(lua),
 			}
 		});
 	}
