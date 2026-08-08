@@ -135,4 +135,9 @@ impl Raterm {
 	pub fn can_partial(&mut self) -> bool {
 		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().area()
 	}
+
+	pub fn clear(&mut self) -> io::Result<()> {
+		self.inner.clear()?;
+		self.inner.flush()
+	}
 }

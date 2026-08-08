@@ -32,6 +32,7 @@ impl Actor for Report {
 		} else if !report.is_da_1() {
 			succ!();
 		} else if !term.probe.needs_passthrough() {
+			term.clear().ok();
 			ADAPTOR.resolve(&term.probe.emulator);
 			return act!(app:theme, cx);
 		}
