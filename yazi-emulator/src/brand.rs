@@ -22,6 +22,7 @@ pub enum Brand {
 	Hyper,
 	Mintty,
 	Tmux,
+	Zellij,
 	VTerm,
 	Apple,
 	Urxvt,
@@ -40,6 +41,7 @@ impl Brand {
 			("Warp", Self::Warp),
 			("Rio ", Self::Rio),
 			("tmux ", Self::Tmux),
+			("Zellij", Self::Zellij),
 			("libvterm", Self::VTerm),
 			("Bobcat", Self::Bobcat),
 		];
