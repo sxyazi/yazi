@@ -151,6 +151,7 @@ impl Pubsub {
 	}
 }
 
+#[rustfmt::skip]
 impl Pubsub {
 	pub_after!(tab(idx: Id), (idx));
 
