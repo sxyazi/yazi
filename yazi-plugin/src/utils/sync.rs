@@ -67,7 +67,7 @@ impl Utils {
 			})
 		} else {
 			lua.create_function(|lua, (f, args): (Function, MultiValue)| {
-				let (name, scope) = runtime!(lua)?.name_scope()?;
+				let (name, scope) = runtime!(lua)?.name_child_scope()?;
 				let lua = lua.clone();
 
 				Ok(Handle::AsyncFn(LOCAL_SET.spawn_local(async move {
@@ -80,8 +80,8 @@ impl Utils {
 					runtime_mut!(lua)?.leave()?;
 					if let Err(ref e) = result {
 						match name.as_str() {
-							"init" => tracing::error!("Failed to execute async block in `init.lua`: {e}"),
-							s => tracing::error!("Failed to execute async block in `{s}` plugin: {e}"),
+							"init" => yazi_macro::error!("Failed to execute async block in `init.lua`: {e}"),
+							s => yazi_macro::error!("Failed to execute async block in `{s}` plugin: {e}"),
 						}
 					}
 
@@ -101,7 +101,7 @@ impl Utils {
 				return Err("`ya.async_blocking()` callback cannot capture local values".into_lua_err());
 			}
 
-			let (name, scope) = runtime!(lua)?.name_scope()?;
+			let (name, scope) = runtime!(lua)?.name_child_scope()?;
 			let bytes = f.dump(LOG_LEVEL.get().is_none());
 			let arg = Sendable::value_to_data(lua, arg)?;
 			Ok(RUNNER.evaluate(name, scope, bytes, arg))

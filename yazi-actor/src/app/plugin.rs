@@ -20,7 +20,7 @@ impl Actor for Plugin {
 		let mut hits = false;
 		if let Some(chunk) = LOADER.read().get(&*opt.name) {
 			hits = true;
-			opt.mode = opt.mode.auto_then(chunk.sync_entry);
+			opt.mode = opt.effective_mode(chunk);
 		}
 
 		if opt.mode == PluginMode::Async {

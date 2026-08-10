@@ -1,7 +1,7 @@
 use futures::{StreamExt, stream};
 use indexmap::IndexSet;
-use tracing::error;
 use yazi_fs::{FsUrl, file::File};
+use yazi_macro::error;
 use yazi_shared::{LastValue, url::{UrlBuf, UrlCow, UrlLike}};
 
 use crate::{Refresher, Reporter, WATCHED, Watchee, backend::Backend};

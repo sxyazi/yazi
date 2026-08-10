@@ -1,9 +1,8 @@
 use anyhow::Result;
 use mlua::{ObjectLike, Table};
-use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
-use yazi_macro::succ;
+use yazi_macro::{error, succ};
 use yazi_parser::app::ClipboardForm;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;

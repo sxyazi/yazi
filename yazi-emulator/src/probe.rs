@@ -2,8 +2,7 @@ use std::{fmt::Display, time::Duration};
 
 use anyhow::{Result, bail};
 use tokio::time;
-use tracing::error;
-use yazi_macro::writef;
+use yazi_macro::{error, writef};
 use yazi_shared::id::{Id, Ids};
 use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
 use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};

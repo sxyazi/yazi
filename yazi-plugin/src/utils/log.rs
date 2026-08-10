@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use mlua::{Function, Lua, MultiValue};
-use tracing::{debug, error};
+use yazi_macro::{debug, error};
 
 use super::Utils;
 

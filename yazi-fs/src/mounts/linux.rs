@@ -3,7 +3,7 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}, os::{fd::AsFd, unix::{ffi::{OsStr
 use anyhow::{Context, Result};
 use hashbrown::{HashMap, HashSet};
 use tokio::{io::{Interest, unix::AsyncFd}, time::sleep};
-use tracing::error;
+use yazi_macro::error;
 use yazi_shared::{natsort, replace_cow, replace_vec_cow};
 
 use super::{Locked, Partition, Partitions};

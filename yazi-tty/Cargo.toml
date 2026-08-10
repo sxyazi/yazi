@@ -22,7 +22,6 @@ bitflags     = { workspace = true }
 mlua         = { workspace = true }
 parking_lot  = { workspace = true }
 ratatui-core = { workspace = true }
-tracing      = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }

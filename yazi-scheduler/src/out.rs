@@ -1,12 +1,12 @@
-use crate::{Task, fetch::FetchOutFetch, file::{FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink}, impl_from_out, plugin::PluginOutEntry, preload::PreloadOut, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}, size::SizeOut};
+use crate::{Task, custom::CustomOut, fetch::FetchOutFetch, file::{FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}, impl_from_out, plugin::PluginOutEntry, preload::PreloadOut, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}, size::SizeOut};
 
 #[derive(Debug)]
 pub(super) enum TaskOut {
 	// File
 	FileCopy(FileOutCopy),
 	FileCopyDo(FileOutCopyDo),
-	FileCut(FileOutCut),
-	FileCutDo(FileOutCutDo),
+	FileMove(FileOutMove),
+	FileMoveDo(FileOutMoveDo),
 	FileLink(FileOutLink),
 	FileHardlink(FileOutHardlink),
 	FileHardlinkDo(FileOutHardlinkDo),
@@ -29,16 +29,18 @@ pub(super) enum TaskOut {
 	ProcessBlock(ProcessOutBlock),
 	ProcessOrphan(ProcessOutOrphan),
 	ProcessBg(ProcessOutBg),
+	// Custom
+	Custom(CustomOut),
 	// Hook
 	HookCopy(HookInOutCopy),
-	HookCut(HookInOutCut),
+	HookMove(HookInOutMove),
 	HookLink(HookInOutLink),
 	HookHardlink(HookInOutHardlink),
 }
 
 impl_from_out! {
 	// File
-	FileCopy(FileOutCopy), FileCopyDo(FileOutCopyDo), FileCut(FileOutCut), FileCutDo(FileOutCutDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
+	FileCopy(FileOutCopy), FileCopyDo(FileOutCopyDo), FileMove(FileOutMove), FileMoveDo(FileOutMoveDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
 	// Plugin
 	PluginEntry(PluginOutEntry),
 	// Fetch
@@ -49,8 +51,10 @@ impl_from_out! {
 	Size(SizeOut),
 	// Process
 	ProcessBlock(ProcessOutBlock), ProcessOrphan(ProcessOutOrphan), ProcessBg(ProcessOutBg),
+	// Custom
+	Custom(CustomOut),
 	// Hook
-	HookCopy(HookInOutCopy), HookCut(HookInOutCut), HookLink(HookInOutLink), HookHardlink(HookInOutHardlink),
+	HookCopy(HookInOutCopy), HookMove(HookInOutMove), HookLink(HookInOutLink), HookHardlink(HookInOutHardlink),
 }
 
 impl TaskOut {
@@ -59,8 +63,8 @@ impl TaskOut {
 			// File
 			Self::FileCopy(out) => out.reduce(task),
 			Self::FileCopyDo(out) => out.reduce(task),
-			Self::FileCut(out) => out.reduce(task),
-			Self::FileCutDo(out) => out.reduce(task),
+			Self::FileMove(out) => out.reduce(task),
+			Self::FileMoveDo(out) => out.reduce(task),
 			Self::FileLink(out) => out.reduce(task),
 			Self::FileHardlink(out) => out.reduce(task),
 			Self::FileHardlinkDo(out) => out.reduce(task),
@@ -81,9 +85,11 @@ impl TaskOut {
 			Self::ProcessBlock(out) => out.reduce(task),
 			Self::ProcessOrphan(out) => out.reduce(task),
 			Self::ProcessBg(out) => out.reduce(task),
+			// Custom
+			Self::Custom(out) => out.reduce(task),
 			// Hook
 			Self::HookCopy(out) => out.reduce(task),
-			Self::HookCut(out) => out.reduce(task),
+			Self::HookMove(out) => out.reduce(task),
 			Self::HookLink(out) => out.reduce(task),
 			Self::HookHardlink(out) => out.reduce(task),
 		}

@@ -206,6 +206,7 @@ impl DndEvent {
 
 // --- Operation
 #[derive(Clone, Copy, Debug, Eq, FromRepr, IntoStaticStr, PartialEq)]
+#[strum(serialize_all = "lowercase")]
 #[repr(u8)]
 pub enum DndOp {
 	Copy   = 1,

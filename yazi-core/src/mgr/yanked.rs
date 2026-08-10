@@ -4,7 +4,7 @@ use hashbrown::HashSet;
 use indexmap::{IndexSet, set::MutableValues};
 use yazi_dds::Pubsub;
 use yazi_fs::file::{File, FileCov};
-use yazi_macro::err;
+use yazi_macro::log_if_err;
 use yazi_shared::url::{Url, UrlBuf, UrlCov, UrlLike};
 
 #[derive(Debug, Default)]
@@ -83,7 +83,7 @@ impl Yanked {
 		}
 
 		self.version = self.revision;
-		err!(Pubsub::pub_after_yank(self.cut, &self.files));
+		log_if_err!(Pubsub::pub_after_yank(self.cut, &self.files));
 		true
 	}
 }

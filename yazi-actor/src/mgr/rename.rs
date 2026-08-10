@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{FilesOp, file::File};
-use yazi_macro::{act, err, input, ok_or_not_found, succ};
+use yazi_macro::{act, input, log_if_err, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{data::Data, id::Id, url::{UrlBuf, UrlLike}};
@@ -93,7 +93,7 @@ impl Rename {
 		}
 
 		MgrProxy::reveal(&new);
-		err!(Pubsub::pub_after_rename(tab, &old, &new));
+		log_if_err!(Pubsub::pub_after_rename(tab, &old, &new));
 		Ok(())
 	}
 

@@ -1,10 +1,9 @@
 use anyhow::Result;
 use mlua::IntoLua;
-use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
 use yazi_dds::{LOCAL, Payload, REMOTE};
-use yazi_macro::succ;
+use yazi_macro::{error, succ};
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
 

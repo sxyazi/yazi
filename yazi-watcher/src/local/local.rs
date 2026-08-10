@@ -4,8 +4,8 @@ use hashbrown::HashSet;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use tracing::error;
 use yazi_fs::{FilesOp, engine::{self, Engine}, mounts::PARTITIONS};
+use yazi_macro::error;
 use yazi_shared::url::{UrlBuf, UrlLike};
 
 use crate::{Reporter, WATCHER, Watchee};
@@ -45,11 +45,11 @@ impl Local {
 		if let Some(primary) = self.primary.as_mut().filter(|_| !*alt) {
 			match primary.watch(path, RecursiveMode::NonRecursive) {
 				Ok(()) => return Ok(()),
-				Err(e) => tracing::warn!("Failed to watch {path:?} with primary watcher: {e:?}"),
+				Err(e) => yazi_macro::warn!("Failed to watch {path:?} with primary watcher: {e:?}"),
 			}
 		}
 
-		tracing::debug!("Watching {path:?} with alternative watcher");
+		yazi_macro::debug!("Watching {path:?} with alternative watcher");
 		*alt = true;
 		self.alternative.watch(path, RecursiveMode::NonRecursive)
 	}
@@ -106,7 +106,7 @@ impl Local {
 						continue;
 					}
 					Err(e) => {
-						tracing::error!("Failed to update {url:?}: {e:?}");
+						yazi_macro::error!("Failed to update {url:?}: {e:?}");
 						continue;
 					}
 				};

@@ -1,7 +1,5 @@
 Current = {
 	_id = "current",
-	_dragging = false,
-	_dropping = false,
 }
 
 function Current:new(area, tab)
@@ -23,15 +21,8 @@ function Current:empty()
 
 	return {
 		ui.Text(s):area(self._area):align(ui.Align.CENTER):wrap(ui.Wrap.YES),
+		table.unpack(Dnd:new(self._area):redraw()),
 	}
-end
-
-function Current:dropping()
-	if Current._dropping then
-		return Tip:new(self._area, "Drop to move here…"):redraw()
-	else
-		return {}
-	end
 end
 
 function Current:reflow() return { self } end
@@ -54,7 +45,7 @@ function Current:redraw()
 	return {
 		ui.List(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Align.RIGHT),
-		table.unpack(self:dropping()),
+		table.unpack(Dnd:new(self._area):redraw()),
 	}
 end
 
@@ -74,30 +65,10 @@ function Current:scroll(event, step) ya.emit("arrow", { step }) end
 
 function Current:touch(event, step) end
 
-function Current:drag(event)
-	if event.type == "offer" then
-		Current._dragging = require("dnd").offer_uri_list()
-	elseif event.type == "end" or event.type == "error" then
-		Current._dragging = false
-	end
-end
+function Current:drag(event) return Dnd.drag(event) end
 
 function Current:drop(event)
-	if Current._dragging then
-		return
-	elseif event.type == "enter" then
-		rt.tty:queue("AgreeDrop", { type = "move", mimes = { "text/uri-list" } })
-	elseif event.type == "ready" then
-		rt.tty:queue("StartDrop", { idx = 1 })
-	elseif event.type == "arrive" then
-		rt.tty:queue("FinishDrop", { type = "move" })
-		require("dnd").cut_uri_list(event.data)
-	end
-	rt.tty:flush()
-
-	local d = event.type == "enter"
-	if Current._dropping ~= d then
-		Current._dropping = d
+	if Dnd.drop(event, self._area) then
 		ui.render()
 	end
 end

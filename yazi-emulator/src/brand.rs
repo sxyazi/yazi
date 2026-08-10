@@ -1,6 +1,6 @@
 use std::env;
 
-use tracing::debug;
+use yazi_macro::debug;
 use yazi_shared::env_exists;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

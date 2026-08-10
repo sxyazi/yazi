@@ -5,8 +5,8 @@ use core_foundation_sys::{array::CFArrayRef, base::{CFRelease, kCFAllocatorDefau
 use libc::{c_char, mach_port_t};
 use objc2::{msg_send, runtime::AnyObject};
 use scopeguard::defer;
-use tracing::error;
 use yazi_ffi::{CFDict, CFString, DADiskCopyDescription, DADiskCreateFromBSDName, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASessionCreate, DASessionScheduleWithRunLoop, IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};
+use yazi_macro::error;
 use yazi_shared::natsort;
 
 use super::{Locked, Partition, Partitions};

@@ -7,7 +7,7 @@ use crate::{Task, TaskIn, TaskProg};
 #[derive(Debug)]
 pub(crate) enum HookIn {
 	Copy(HookInOutCopy),
-	Cut(HookInOutCut),
+	Move(HookInOutMove),
 	Delete(HookInDelete),
 	Trash(HookInTrash),
 	Link(HookInOutLink),
@@ -19,7 +19,7 @@ pub(crate) enum HookIn {
 
 impl_from_in!(
 	Copy(HookInOutCopy),
-	Cut(HookInOutCut),
+	Move(HookInOutMove),
 	Delete(HookInDelete),
 	Trash(HookInTrash),
 	Link(HookInOutLink),
@@ -35,7 +35,7 @@ impl TaskIn for HookIn {
 	fn id(&self) -> Id {
 		match self {
 			Self::Copy(r#in) => r#in.id(),
-			Self::Cut(r#in) => r#in.id(),
+			Self::Move(r#in) => r#in.id(),
 			Self::Delete(r#in) => r#in.id(),
 			Self::Trash(r#in) => r#in.id(),
 			Self::Link(r#in) => r#in.id(),
@@ -49,7 +49,7 @@ impl TaskIn for HookIn {
 	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
 			Self::Copy(r#in) => r#in.id = id,
-			Self::Cut(r#in) => r#in.id = id,
+			Self::Move(r#in) => r#in.id = id,
 			Self::Delete(r#in) => r#in.id = id,
 			Self::Trash(r#in) => r#in.id = id,
 			Self::Link(r#in) => r#in.id = id,
@@ -64,7 +64,7 @@ impl TaskIn for HookIn {
 	fn title(&self) -> Cow<'_, str> {
 		match self {
 			Self::Copy(r#in) => r#in.title(),
-			Self::Cut(r#in) => r#in.title(),
+			Self::Move(r#in) => r#in.title(),
 			Self::Delete(r#in) => r#in.title(),
 			Self::Trash(r#in) => r#in.title(),
 			Self::Link(r#in) => r#in.title(),
@@ -114,15 +114,15 @@ impl HookInOutCopy {
 	}
 }
 
-// --- Cut
+// --- Move
 #[derive(Debug)]
-pub(crate) struct HookInOutCut {
+pub(crate) struct HookInOutMove {
 	pub(crate) id:   Id,
 	pub(crate) from: UrlBuf,
 	pub(crate) to:   UrlBuf,
 }
 
-impl TaskIn for HookInOutCut {
+impl TaskIn for HookInOutMove {
 	type Prog = ();
 
 	fn id(&self) -> Id { self.id }
@@ -133,11 +133,11 @@ impl TaskIn for HookInOutCut {
 	}
 
 	fn title(&self) -> Cow<'_, str> {
-		format!("Hook: cut {} to {}", self.from.display(), self.to.display()).into()
+		format!("Hook: move {} to {}", self.from.display(), self.to.display()).into()
 	}
 }
 
-impl HookInOutCut {
+impl HookInOutMove {
 	pub(crate) fn new<U>(from: U, to: U) -> Self
 	where
 		U: Into<UrlBuf>,
@@ -146,7 +146,7 @@ impl HookInOutCut {
 	}
 
 	pub(crate) fn reduce(self, task: &mut Task) {
-		if let TaskProg::FileCut(_) = &task.prog {
+		if let TaskProg::FileMove(_) = &task.prog {
 			task.with_hook(self);
 		}
 	}

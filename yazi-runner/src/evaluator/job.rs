@@ -45,7 +45,7 @@ impl EvaluateJob {
 		if let Err(e) = result
 			&& !scope.is_cancelled()
 		{
-			tracing::error!("Failed to execute async blocking task in `{name}` plugin: {e}");
+			yazi_macro::error!("Failed to execute async blocking task in `{name}` plugin: {e}");
 		}
 	}
 }

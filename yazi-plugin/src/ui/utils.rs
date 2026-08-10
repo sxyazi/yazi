@@ -2,10 +2,10 @@ use std::{borrow::Cow, iter};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, ObjectLike, Table, Value};
-use tracing::error;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use yazi_binding::{Permit, PermitRef, elements::{Line, Rect, Span, Wrap}, runtime};
 use yazi_config::LAYOUT;
+use yazi_macro::error;
 use yazi_scheduler::AppProxy;
 use yazi_shared::replace_to_printable;
 use yazi_shim::ratatui::LineIter;

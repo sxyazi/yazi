@@ -1,0 +1,2 @@
+[profile.release]
+trim-paths = "all"

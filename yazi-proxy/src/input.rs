@@ -1,6 +1,6 @@
 use tokio::sync::mpsc;
 use yazi_dds::Pubsub;
-use yazi_macro::{emit, err, relay};
+use yazi_macro::{emit, log_if_err, relay};
 use yazi_shim::strum::IntoStr;
 use yazi_widgets::input::{InputEvent, InputOpt};
 
@@ -10,7 +10,7 @@ impl InputProxy {
 	pub fn show(mut opt: InputOpt) -> mpsc::UnboundedReceiver<InputEvent> {
 		let (tx, rx) = mpsc::unbounded_channel();
 		opt = opt.with_cb(move |event| {
-			err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
+			log_if_err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
 			tx.send(event).ok();
 		});
 

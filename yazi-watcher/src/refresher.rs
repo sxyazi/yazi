@@ -96,7 +96,7 @@ impl Refresher {
 					Err(e) if prev.report => {
 						FilesOp::IOErr(prev.file.url, e.into()).emit();
 					}
-					Err(e) => tracing::debug!("Failed to refresh {:?}: {e:?}", prev.url),
+					Err(e) => yazi_macro::debug!("Failed to refresh {:?}: {e:?}", prev.url),
 				}
 
 				entry.busy = None;

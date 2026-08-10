@@ -1,9 +1,9 @@
 use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
-use tracing::error;
 use yazi_binding::Scope;
 use yazi_config::plugin::SpotterArc;
 use yazi_fs::file::File;
+use yazi_macro::error;
 use yazi_shared::{data::Sendable, id::Ids, pool::Symbol};
 
 use crate::{Runner, loader::LOADER};

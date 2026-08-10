@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_dds::Pubsub;
-use yazi_macro::{err, render, succ, tab};
+use yazi_macro::{log_if_err, render, succ, tab};
 use yazi_parser::mgr::HoverForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
@@ -36,7 +36,7 @@ impl Actor for Hover {
 
 		// Publish through DDS
 		let tab = tab!(cx);
-		err!(Pubsub::pub_after_hover(tab.id, tab.hovered_url()));
+		log_if_err!(Pubsub::pub_after_hover(tab.id, tab.hovered_url()));
 		succ!();
 	}
 }

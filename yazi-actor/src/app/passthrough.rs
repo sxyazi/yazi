@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use tracing::error;
 use yazi_emulator::EMULATOR;
-use yazi_macro::succ;
+use yazi_macro::{error, succ};
 use yazi_parser::app::PassthroughForm;
 use yazi_shared::data::Data;
 

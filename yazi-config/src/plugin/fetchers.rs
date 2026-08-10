@@ -3,8 +3,8 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 use arc_swap::ArcSwap;
 use mlua::{MetaMethod, UserData, UserDataMethods};
 use serde::Deserialize;
-use tracing::warn;
 use yazi_fs::file::File;
+use yazi_macro::warn;
 use yazi_shim::arc_swap::IntoPointee;
 
 use super::MAX_FETCHERS;

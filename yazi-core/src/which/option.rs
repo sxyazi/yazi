@@ -1,4 +1,4 @@
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
+use mlua::{FromLua, IntoLua, Lua, Table, Value};
 use tokio::sync::mpsc;
 use yazi_config::{KEYMAP, keymap::{ChordArc, Key}};
 use yazi_macro::impl_data_any;
@@ -51,10 +51,8 @@ impl WhichOpt {
 }
 
 impl FromLua for WhichOpt {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		let Value::Table(t) = value else {
-			return Err("expected a table".into_lua_err());
-		};
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		let t = Table::from_lua(value, lua)?;
 
 		Ok(Self {
 			tx:     t.raw_get::<yazi_binding::MpscUnboundedTx<_>>("tx").ok().map(|t| t.0),

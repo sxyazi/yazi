@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tokio::{pin, select, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_macro::err;
+use yazi_macro::log_if_err;
 use yazi_shared::url::UrlBuf;
 use yazi_shim::cell::RoCell;
 
@@ -88,11 +88,11 @@ impl Pump {
 
 			loop {
 				select! {
-					Some(items) = duplicate_rx.next() => err!(Pubsub::pub_after_duplicate(items)),
-					Some(items) = move_rx.next() => err!(Pubsub::pub_after_move(items)),
-					Some(urls) = trash_rx.next() => err!(Pubsub::pub_after_trash(urls)),
-					Some(urls) = delete_rx.next() => err!(Pubsub::pub_after_delete(urls)),
-					Some(urls) = download_rx.next() => err!(Pubsub::pub_after_download(urls)),
+					Some(items) = duplicate_rx.next() => log_if_err!(Pubsub::pub_after_duplicate(items)),
+					Some(items) = move_rx.next() => log_if_err!(Pubsub::pub_after_move(items)),
+					Some(urls) = trash_rx.next() => log_if_err!(Pubsub::pub_after_trash(urls)),
+					Some(urls) = delete_rx.next() => log_if_err!(Pubsub::pub_after_delete(urls)),
+					Some(urls) = download_rx.next() => log_if_err!(Pubsub::pub_after_download(urls)),
 					_ = shutdown_rx.recv() => {
 						shutdown_rx.close();
 						break;

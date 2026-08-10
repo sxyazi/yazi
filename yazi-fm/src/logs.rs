@@ -31,7 +31,7 @@ impl Logs {
 		let (non_blocking, guard) = tracing_appender::non_blocking(log_file);
 		tracing_subscriber::fmt()
 			.pretty()
-			.with_env_filter(EnvFilter::new(level))
+			.with_env_filter(EnvFilter::default().add_directive(level.as_ref().parse()?))
 			.with_writer(non_blocking)
 			.with_ansi(cfg!(debug_assertions))
 			.init();

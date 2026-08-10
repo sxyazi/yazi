@@ -1,18 +1,19 @@
 use std::{borrow::Cow, ffi::OsString};
 
-use yazi_shared::{CompletionToken, id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::UrlBuf};
 
 use super::ShellOpt;
-use crate::{TaskIn, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{TaskIn, custom::CustomIn, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 #[derive(Debug)]
 pub(crate) enum ProcessIn {
 	Block(ProcessInBlock),
 	Orphan(ProcessInOrphan),
 	Bg(ProcessInBg),
+	Custom(CustomIn),
 }
 
-impl_from_in!(Block(ProcessInBlock), Orphan(ProcessInOrphan), Bg(ProcessInBg));
+impl_from_in!(Block(ProcessInBlock), Orphan(ProcessInOrphan), Bg(ProcessInBg), Custom(CustomIn));
 
 impl TaskIn for ProcessIn {
 	type Prog = ();
@@ -22,6 +23,7 @@ impl TaskIn for ProcessIn {
 			Self::Block(r#in) => r#in.id,
 			Self::Orphan(r#in) => r#in.id,
 			Self::Bg(r#in) => r#in.id,
+			Self::Custom(r#in) => r#in.id(),
 		}
 	}
 
@@ -30,6 +32,7 @@ impl TaskIn for ProcessIn {
 			Self::Block(r#in) => _ = r#in.set_id(id),
 			Self::Orphan(r#in) => _ = r#in.set_id(id),
 			Self::Bg(r#in) => _ = r#in.set_id(id),
+			Self::Custom(r#in) => _ = r#in.set_id(id),
 		};
 		self
 	}
@@ -39,6 +42,7 @@ impl TaskIn for ProcessIn {
 			Self::Block(r#in) => r#in.title(),
 			Self::Orphan(r#in) => r#in.title(),
 			Self::Bg(r#in) => r#in.title(),
+			Self::Custom(r#in) => r#in.title(),
 		}
 	}
 }
@@ -100,10 +104,9 @@ impl From<ProcessInOrphan> for ShellOpt {
 // --- Bg
 #[derive(Debug)]
 pub(crate) struct ProcessInBg {
-	pub(crate) id:   Id,
-	pub(crate) cwd:  UrlBuf,
-	pub(crate) cmd:  OsString,
-	pub(crate) done: CompletionToken,
+	pub(crate) id:  Id,
+	pub(crate) cwd: UrlBuf,
+	pub(crate) cmd: OsString,
 }
 
 impl TaskIn for ProcessInBg {

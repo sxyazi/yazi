@@ -6,7 +6,7 @@ use yazi_dds::Pump;
 use yazi_fs::ok_or_not_found;
 use yazi_vfs::engine;
 
-use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutCut, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink, HookInPreload, HookInTrash, HookInUpload}, preload::{Preload, PreloadOut}};
+use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutMove, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove, HookInPreload, HookInTrash, HookInUpload}, preload::{Preload, PreloadOut}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
@@ -26,17 +26,6 @@ impl Hook {
 	}
 
 	// --- File
-	pub(crate) async fn cut(&self, task: HookInOutCut) {
-		if !self.ongoing.lock().intact(task.id) {
-			return self.ops.out(task.id, FileOutCut::Clean(Ok(())));
-		}
-
-		let result = ok_or_not_found(engine::remove_dir_clean(&task.from).await);
-		TasksProxy::update_succeed(task.id, [&task.to, &task.from], true);
-		Pump::push_move(task.from, task.to);
-
-		self.ops.out(task.id, FileOutCut::Clean(result));
-	}
 
 	pub(crate) async fn copy(&self, task: HookInOutCopy) {
 		if self.ongoing.lock().intact(task.id) {
@@ -45,6 +34,18 @@ impl Hook {
 		}
 
 		self.ops.out(task.id, FileOutCopy::Clean);
+	}
+
+	pub(crate) async fn r#move(&self, task: HookInOutMove) {
+		if !self.ongoing.lock().intact(task.id) {
+			return self.ops.out(task.id, FileOutMove::Clean(Ok(())));
+		}
+
+		let result = ok_or_not_found(engine::remove_dir_clean(&task.from).await);
+		TasksProxy::update_succeed(task.id, [&task.to, &task.from], true);
+		Pump::push_move(task.from, task.to);
+
+		self.ops.out(task.id, FileOutMove::Clean(result));
 	}
 
 	pub(crate) async fn delete(&self, task: HookInDelete) {

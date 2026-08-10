@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use mlua::{Function, Lua, LuaString};
+use base64::{Engine, engine::general_purpose::STANDARD_PAD_INDIFFERENT};
+use mlua::{BorrowedBytes, ExternalError, Function, IntoLuaMulti, Lua, LuaString, Value};
 use twox_hash::XxHash3_128;
 use yazi_shim::RFC_3986;
 use yazi_widgets::CLIPBOARD;
@@ -34,6 +35,13 @@ impl Utils {
 			} else {
 				Some(lua.create_external_string(CLIPBOARD.get().await)).transpose()
 			}
+		})
+	}
+
+	pub(super) fn base64_decode(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, s: BorrowedBytes| match STANDARD_PAD_INDIFFERENT.decode(&*s) {
+			Ok(b) => lua.create_external_string(b)?.into_lua_multi(lua),
+			Err(e) => (Value::Nil, e.into_lua_err()).into_lua_multi(lua),
 		})
 	}
 

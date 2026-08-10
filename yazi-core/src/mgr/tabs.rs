@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use yazi_dds::Pubsub;
 use yazi_fs::file::File;
-use yazi_macro::err;
+use yazi_macro::log_if_err;
 
 use crate::tab::{Folder, Tab};
 
@@ -23,7 +23,7 @@ impl Tabs {
 		}
 
 		self.cursor = idx;
-		err!(Pubsub::pub_after_tab(self.active().id));
+		log_if_err!(Pubsub::pub_after_tab(self.active().id));
 	}
 }
 

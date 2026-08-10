@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use tokio::{select, sync::mpsc, task::JoinHandle};
 use yazi_config::YAZI;
 
-use crate::{CleanupState, LOW, Ongoing, Progress, TaskIn, TaskOp, TaskOps, TaskOut, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
+use crate::{LOW, Ongoing, Progress, TaskIn, TaskOp, TaskOps, TaskOut, custom::Custom, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
 
 #[derive(Clone)]
 pub struct Worker {
@@ -14,6 +14,7 @@ pub struct Worker {
 	pub preload:        Arc<Preload>,
 	pub size:           Arc<Size>,
 	pub(super) process: Arc<Process>,
+	pub(super) custom:  Custom,
 	pub(super) hook:    Arc<Hook>,
 
 	pub ops:     TaskOps,
@@ -38,10 +39,11 @@ impl Worker {
 		let preload = Arc::new(Preload::new(&op_tx, preload_tx));
 		let size = Arc::new(Size::new(&op_tx, size_tx));
 		let process = Arc::new(Process::new(&op_tx, process_tx));
+		let custom = Custom::new();
 		let hook = Arc::new(Hook::new(&op_tx, &ongoing, &preload, hook_tx));
 
-		let me =
-			Self { file, plugin, fetch, preload, size, process, hook, ops: TaskOps(op_tx), ongoing };
+		let ops = TaskOps(op_tx);
+		let me = Self { file, plugin, fetch, preload, size, process, custom, hook, ops, ongoing };
 
 		let handles = []
 			.into_iter()
@@ -64,13 +66,14 @@ impl Worker {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
 					let id = r#in.id();
-					let Some(token) = me.ongoing.lock().get_token(id) else {
+					let Some(handle) = me.ongoing.lock().get_handle(id) else {
 						continue;
 					};
 
+					handle.start();
 					let result = select! {
 						r = me.file_do(r#in) => r,
-						false = token.future() => Ok(())
+						_ = handle.finished() => Ok(())
 					};
 
 					if let Err(out) = result {
@@ -85,8 +88,8 @@ impl Worker {
 		match r#in {
 			FileIn::Copy(r#in) => self.file.copy(r#in).await.map_err(Into::into),
 			FileIn::CopyDo(r#in) => self.file.copy_do(r#in).await.map_err(Into::into),
-			FileIn::Cut(r#in) => self.file.cut(r#in).await.map_err(Into::into),
-			FileIn::CutDo(r#in) => self.file.cut_do(r#in).await.map_err(Into::into),
+			FileIn::Move(r#in) => self.file.r#move(r#in).await.map_err(Into::into),
+			FileIn::MoveDo(r#in) => self.file.move_do(r#in).await.map_err(Into::into),
 			FileIn::Link(r#in) => self.file.link(r#in).await.map_err(Into::into),
 			FileIn::LinkDo(r#in) => self.file.link_do(r#in).await.map_err(Into::into),
 			FileIn::Hardlink(r#in) => self.file.hardlink(r#in).await.map_err(Into::into),
@@ -99,6 +102,7 @@ impl Worker {
 			FileIn::DownloadDo(r#in) => self.file.download_do(r#in).await.map_err(Into::into),
 			FileIn::Upload(r#in) => self.file.upload(r#in).await.map_err(Into::into),
 			FileIn::UploadDo(r#in) => self.file.upload_do(r#in).await.map_err(Into::into),
+			FileIn::Custom(r#in) => self.custom.r#do(r#in).await.map_err(Into::into),
 		}
 	}
 
@@ -108,13 +112,14 @@ impl Worker {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
 					let id = r#in.id();
-					let Some(token) = me.ongoing.lock().get_token(id) else {
+					let Some(handle) = me.ongoing.lock().get_handle(id) else {
 						continue;
 					};
 
+					handle.start();
 					let result = select! {
 						r = me.plugin_do(r#in) => r,
-						false = token.future() => Ok(())
+						_ = handle.finished() => Ok(())
 					};
 
 					if let Err(out) = result {
@@ -128,6 +133,7 @@ impl Worker {
 	async fn plugin_do(&self, r#in: PluginIn) -> Result<(), TaskOut> {
 		match r#in {
 			PluginIn::Entry(r#in) => self.plugin.entry(r#in).await.map_err(Into::into),
+			PluginIn::Custom(r#in) => self.custom.r#do(r#in).await.map_err(Into::into),
 		}
 	}
 
@@ -137,13 +143,14 @@ impl Worker {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
 					let id = r#in.id();
-					let Some(token) = me.ongoing.lock().get_token(id) else {
+					let Some(handle) = me.ongoing.lock().get_handle(id) else {
 						continue;
 					};
 
+					handle.start();
 					let result = select! {
 						r = me.fetch_do(r#in) => r,
-						false = token.future() => Ok(())
+						_ = handle.finished() => Ok(())
 					};
 
 					if let Err(out) = result {
@@ -155,7 +162,10 @@ impl Worker {
 	}
 
 	async fn fetch_do(&self, r#in: FetchIn) -> Result<(), TaskOut> {
-		self.fetch.fetch(r#in).await.map_err(Into::into)
+		match r#in {
+			FetchIn::Fetch(r#in) => self.fetch.fetch(r#in).await.map_err(Into::into),
+			FetchIn::Custom(r#in) => self.custom.r#do(r#in).await.map_err(Into::into),
+		}
 	}
 
 	fn preload(&self, rx: async_priority_channel::Receiver<PreloadIn, u8>) -> JoinHandle<()> {
@@ -163,14 +173,15 @@ impl Worker {
 		tokio::spawn(async move {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id;
-					let Some(token) = me.ongoing.lock().get_token(id) else {
+					let id = r#in.id();
+					let Some(handle) = me.ongoing.lock().get_handle(id) else {
 						continue;
 					};
 
+					handle.start();
 					let result = select! {
 						r = me.preload_do(r#in) => r,
-						false = token.future() => Ok(())
+						_ = handle.finished() => Ok(())
 					};
 
 					if let Err(out) = result {
@@ -182,7 +193,10 @@ impl Worker {
 	}
 
 	async fn preload_do(&self, r#in: PreloadIn) -> Result<(), TaskOut> {
-		self.preload.preload(r#in).await.map_err(Into::into)
+		match r#in {
+			PreloadIn::Preload(r#in) => self.preload.preload(r#in).await.map_err(Into::into),
+			PreloadIn::Custom(r#in) => self.custom.r#do(r#in).await.map_err(Into::into),
+		}
 	}
 
 	fn size(&self, rx: async_priority_channel::Receiver<SizeIn, u8>) -> JoinHandle<()> {
@@ -191,13 +205,14 @@ impl Worker {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
 					let id = r#in.id();
-					let Some(token) = me.ongoing.lock().get_token(id) else {
+					let Some(handle) = me.ongoing.lock().get_handle(id) else {
 						continue;
 					};
 
+					handle.start();
 					let result = select! {
 						r = me.size_do(r#in) => r,
-						false = token.future() => Ok(())
+						_ = handle.finished() => Ok(())
 					};
 
 					if let Err(out) = result {
@@ -218,13 +233,14 @@ impl Worker {
 			loop {
 				if let Ok((r#in, _)) = rx.recv().await {
 					let id = r#in.id();
-					let Some(token) = me.ongoing.lock().get_token(id) else {
+					let Some(handle) = me.ongoing.lock().get_handle(id) else {
 						continue;
 					};
 
+					handle.start();
 					let result = select! {
 						r = me.process_do(r#in) => r,
-						false = token.future() => Ok(())
+						_ = handle.finished() => Ok(())
 					};
 
 					if let Err(out) = result {
@@ -240,6 +256,7 @@ impl Worker {
 			ProcessIn::Block(r#in) => self.process.block(r#in).await.map_err(Into::into),
 			ProcessIn::Orphan(r#in) => self.process.orphan(r#in).await.map_err(Into::into),
 			ProcessIn::Bg(r#in) => self.process.bg(r#in).await.map_err(Into::into),
+			ProcessIn::Custom(r#in) => self.custom.r#do(r#in).await.map_err(Into::into),
 		}
 	}
 
@@ -261,7 +278,7 @@ impl Worker {
 	async fn hook_do(&self, r#in: HookIn) {
 		match r#in {
 			HookIn::Copy(r#in) => self.hook.copy(r#in).await,
-			HookIn::Cut(r#in) => self.hook.cut(r#in).await,
+			HookIn::Move(r#in) => self.hook.r#move(r#in).await,
 			HookIn::Delete(r#in) => self.hook.delete(r#in).await,
 			HookIn::Trash(r#in) => self.hook.trash(r#in).await,
 			HookIn::Link(r#in) => self.hook.link(r#in).await,
@@ -280,10 +297,15 @@ impl Worker {
 				let Some(task) = ongoing.get_mut(op.id) else { continue };
 
 				op.out.reduce(task);
-				if !task.prog.cooked() && task.done.completed() != Some(false) {
-					continue; // Not cooked yet, also not canceled
-				} else if task.prog.cleaned() == Some(CleanupState::Failed) {
-					continue; // Failed to clean up
+				if !task.prog.running() && !task.prog.success() {
+					task.fail();
+				}
+
+				let status = task.status();
+				if !task.prog.cooked() && !status.is_finished() {
+					continue; // Task is still in progress
+				} else if status.is_failed() {
+					continue; // Failed
 				} else if let Some(hook) = task.hook.take() {
 					me.hook.submit(hook, LOW);
 				} else {

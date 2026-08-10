@@ -1,5 +1,11 @@
 local M = {}
 
+function M.mime_ext(mime)
+	return ({ [""] = "txt", ["image/jpeg"] = "jpg", ["image/svg+xml"] = "svg", ["text/plain"] = "txt" })[mime]
+		or mime:match("/([%w]+)$")
+		or "bin"
+end
+
 function M.read_unsolicited(mime, event)
 	rt.tty:queue("ReadClipboard", {
 		mimes = { mime },

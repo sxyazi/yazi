@@ -1,9 +1,17 @@
-use std::{env, fs, io::Write, path::{Path, PathBuf}, process::{self, Command, Stdio}, time::{SystemTime, UNIX_EPOCH}};
+use std::{env, io::Write, path::{Path, PathBuf}, process::{self, Command, Stdio}, time::{SystemTime, UNIX_EPOCH}};
 
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, ensure};
 use yazi_tty::TTY;
 
+#[allow(dead_code)]
+#[path = "src/common.rs"]
+mod common;
+
 fn main() -> Result<()> {
+	if env::var_os("YAZI_BUILD_BOOTSTRAPPED").is_some_and(|value| value == "1") {
+		return Ok(());
+	}
+
 	yazi_tty::init();
 
 	let manifest = env::var_os("CARGO_MANIFEST_DIR")
@@ -16,21 +24,18 @@ fn main() -> Result<()> {
 	} else if manifest.contains("/git/checkouts/yazi-") {
 		None
 	} else {
-		println!("cargo::warning=Unexpected manifest dir: {manifest}");
+		println!("cargo::warning=yazi-build installer skipped for manifest dir: {manifest}");
 		return Ok(());
 	};
 
-	let os = env::var("CARGO_CFG_TARGET_OS").context("missing CARGO_CFG_TARGET_OS")?;
 	let tmp = temp_repo_dir()?;
+	let bin_dir = common::cargo_bin_dir()?;
 
 	TTY.writer().write_all(b"\nCloning Yazi repository...\n")?;
 	clone_repo(&tmp, rev).context("Failed to clone the Yazi repository")?;
 
-	TTY.writer().write_all(b"\nBuilding Yazi binaries...\n")?;
-	build_repo(&tmp, &os).context("Failed to build Yazi from the cloned repository")?;
-
-	TTY.writer().write_all(b"\nInstalling yazi and ya into cargo bin...\n")?;
-	install_bins(&tmp, &os).context("Failed to install `yazi` and `ya` into cargo bin")?;
+	TTY.writer().write_all(b"\nBuilding and installing Yazi binaries...\n")?;
+	install_repo(&tmp, &bin_dir).context("Failed to install Yazi from the cloned repository")?;
 
 	Ok(())
 }
@@ -55,68 +60,16 @@ fn clone_repo(tmp: &Path, rev: Option<&str>) -> Result<()> {
 	run_streamed(cmd.arg("https://github.com/sxyazi/yazi.git").arg(tmp))
 }
 
-fn build_repo(tmp: &Path, target_os: &str) -> Result<()> {
-	let cargo = env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
-
-	let mut cmd = Command::new(cargo);
-	cmd.current_dir(tmp).arg("build").env("CARGO_TARGET_DIR", "target").arg("--locked");
-
-	if target_os == "windows" {
-		cmd.args(["--profile", "release-windows"]);
-	} else {
-		cmd.arg("--release");
-	}
+fn install_repo(tmp: &Path, bin_dir: &Path) -> Result<()> {
+	let mut cmd = Command::new(common::cargo());
+	cmd
+		.current_dir(tmp)
+		.env("YAZI_BUILD_BOOTSTRAPPED", "1")
+		.env("CARGO_TARGET_DIR", "target")
+		.args(["run", "--locked", "--package", "yazi-build", "--", "install", "--bin-dir"])
+		.arg(bin_dir);
 
 	run_streamed(&mut cmd)
-}
-
-fn install_bins(tmp: &Path, target_os: &str) -> Result<()> {
-	let profile = if target_os == "windows" { "release-windows" } else { "release" };
-	let ext = if target_os == "windows" { ".exe" } else { "" };
-	let bin_dir = cargo_bin_dir()?;
-
-	fs::create_dir_all(&bin_dir)?;
-	install_bin(
-		&tmp.join("target").join(profile).join(format!("yazi{ext}")),
-		&bin_dir.join(format!("yazi{ext}")),
-	)?;
-	install_bin(
-		&tmp.join("target").join(profile).join(format!("ya{ext}")),
-		&bin_dir.join(format!("ya{ext}")),
-	)?;
-
-	Ok(())
-}
-
-fn install_bin(from: &Path, to: &Path) -> Result<()> {
-	ensure!(from.is_file(), "Built binary not found: {}", from.display());
-
-	if to.exists() {
-		fs::remove_file(to)
-			.with_context(|| format!("failed to remove existing binary: {}", to.display()))?;
-	}
-
-	fs::copy(from, to)
-		.with_context(|| format!("failed to copy {} to {}", from.display(), to.display()))?;
-	fs::set_permissions(to, fs::metadata(from)?.permissions())
-		.with_context(|| format!("failed to preserve permissions on {}", to.display()))?;
-	Ok(())
-}
-
-fn cargo_bin_dir() -> Result<PathBuf> {
-	if let Some(root) = env::var_os("CARGO_INSTALL_ROOT") {
-		return Ok(PathBuf::from(root).join("bin"));
-	}
-	if let Some(home) = env::var_os("CARGO_HOME") {
-		return Ok(PathBuf::from(home).join("bin"));
-	}
-	if let Some(home) = env::var_os("HOME") {
-		return Ok(PathBuf::from(home).join(".cargo/bin"));
-	}
-	if let Some(home) = env::var_os("USERPROFILE") {
-		return Ok(PathBuf::from(home).join(".cargo/bin"));
-	}
-	bail!("Failed to determine cargo bin directory")
 }
 
 fn run_streamed(cmd: &mut Command) -> Result<()> {

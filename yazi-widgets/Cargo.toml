@@ -37,7 +37,6 @@ serde           = { workspace = true }
 strum           = { workspace = true }
 tokio           = { workspace = true }
 tokio-stream    = { workspace = true }
-tracing         = { workspace = true }
 unicode-width   = { workspace = true }
 
 [target."cfg(windows)".dependencies]

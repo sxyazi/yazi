@@ -39,13 +39,13 @@ impl Progress for FileProgCopy {
 	fn cleaned(self) -> Option<CleanupState> { Some(self.cleaned) }
 
 	fn percent(self) -> Option<f32> {
-		Some(self.byte_percent(self.processed_bytes, self.total_bytes))
+		Some(self.work_percent(self.processed_bytes, self.total_bytes, self.total_files))
 	}
 }
 
-// --- Cut
+// --- Move
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
-pub struct FileProgCut {
+pub struct FileProgMove {
 	pub total_files:     u32,
 	pub success_files:   u32,
 	pub failed_files:    u32,
@@ -55,8 +55,8 @@ pub struct FileProgCut {
 	pub cleaned:         CleanupState,
 }
 
-impl From<FileProgCut> for TaskSummary {
-	fn from(value: FileProgCut) -> Self {
+impl From<FileProgMove> for TaskSummary {
+	fn from(value: FileProgMove) -> Self {
 		Self {
 			total:   value.total_files,
 			success: value.success_files,
@@ -66,7 +66,7 @@ impl From<FileProgCut> for TaskSummary {
 	}
 }
 
-impl Progress for FileProgCut {
+impl Progress for FileProgMove {
 	fn running(self) -> bool {
 		self.cooking_or_cleaning(
 			self.collected.is_none() || self.success_files + self.failed_files != self.total_files,
@@ -80,7 +80,7 @@ impl Progress for FileProgCut {
 	fn cleaned(self) -> Option<CleanupState> { Some(self.cleaned) }
 
 	fn percent(self) -> Option<f32> {
-		Some(self.byte_percent(self.processed_bytes, self.total_bytes))
+		Some(self.work_percent(self.processed_bytes, self.total_bytes, self.total_files))
 	}
 }
 
@@ -182,7 +182,7 @@ impl Progress for FileProgDelete {
 	fn cleaned(self) -> Option<CleanupState> { Some(self.cleaned) }
 
 	fn percent(self) -> Option<f32> {
-		Some(self.byte_percent(self.processed_bytes, self.total_bytes))
+		Some(self.work_percent(self.processed_bytes, self.total_bytes, self.total_files))
 	}
 }
 
@@ -251,7 +251,7 @@ impl Progress for FileProgDownload {
 	fn cleaned(self) -> Option<CleanupState> { Some(self.cleaned) }
 
 	fn percent(self) -> Option<f32> {
-		Some(self.byte_percent(self.processed_bytes, self.total_bytes))
+		Some(self.work_percent(self.processed_bytes, self.total_bytes, self.total_files))
 	}
 }
 
@@ -292,6 +292,6 @@ impl Progress for FileProgUpload {
 	fn cleaned(self) -> Option<CleanupState> { Some(self.cleaned) }
 
 	fn percent(self) -> Option<f32> {
-		Some(self.byte_percent(self.processed_bytes, self.total_bytes))
+		Some(self.work_percent(self.processed_bytes, self.total_bytes, self.total_files))
 	}
 }

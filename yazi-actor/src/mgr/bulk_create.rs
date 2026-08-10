@@ -94,7 +94,7 @@ impl BulkCreate {
 		}
 
 		if !succeeded.is_empty() {
-			// err!(Pubsub::pub_after_bulk_create(it));  // FIXME
+			// log_if_err!(Pubsub::pub_after_bulk_create(it));  // FIXME
 			FilesOp::create(succeeded);
 		}
 		drop(_permit);

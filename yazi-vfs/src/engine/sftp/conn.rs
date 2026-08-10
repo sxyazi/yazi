@@ -243,8 +243,8 @@ impl Conn {
 			};
 			match result {
 				Ok(result) if result.success() => return Ok(session),
-				Ok(result) => tracing::debug!("Identity agent authentication failed: {result:?}"),
-				Err(e) => tracing::error!("Identity agent authentication error: {e}"),
+				Ok(result) => yazi_macro::debug!("Identity agent authentication failed: {result:?}"),
+				Err(e) => yazi_macro::error!("Identity agent authentication error: {e}"),
 			}
 		}
 
