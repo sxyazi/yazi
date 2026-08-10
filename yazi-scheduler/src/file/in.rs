@@ -5,14 +5,14 @@ use tokio::sync::mpsc;
 use yazi_fs::cha::Cha;
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
-use crate::{TaskIn, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}};
+use crate::{TaskIn, custom::CustomIn, file::{FileProgCopy, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgMove, FileProgTrash, FileProgUpload}};
 
 #[derive(Debug)]
 pub(crate) enum FileIn {
 	Copy(FileInCopy),
 	CopyDo(FileInCopy),
-	Cut(FileInCut),
-	CutDo(FileInCut),
+	Move(FileInMove),
+	MoveDo(FileInMove),
 	Link(FileInLink),
 	LinkDo(FileInLink),
 	Hardlink(FileInHardlink),
@@ -25,6 +25,7 @@ pub(crate) enum FileIn {
 	DownloadDo(FileInDownload),
 	Upload(FileInUpload),
 	UploadDo(FileInUpload),
+	Custom(CustomIn),
 }
 
 impl TaskIn for FileIn {
@@ -34,8 +35,8 @@ impl TaskIn for FileIn {
 		match self {
 			Self::Copy(r#in) => r#in.id(),
 			Self::CopyDo(r#in) => r#in.id(),
-			Self::Cut(r#in) => r#in.id(),
-			Self::CutDo(r#in) => r#in.id(),
+			Self::Move(r#in) => r#in.id(),
+			Self::MoveDo(r#in) => r#in.id(),
 			Self::Link(r#in) => r#in.id(),
 			Self::LinkDo(r#in) => r#in.id(),
 			Self::Hardlink(r#in) => r#in.id(),
@@ -48,6 +49,7 @@ impl TaskIn for FileIn {
 			Self::DownloadDo(r#in) => r#in.id(),
 			Self::Upload(r#in) => r#in.id(),
 			Self::UploadDo(r#in) => r#in.id(),
+			Self::Custom(r#in) => r#in.id(),
 		}
 	}
 
@@ -55,8 +57,8 @@ impl TaskIn for FileIn {
 		match self {
 			Self::Copy(r#in) => _ = r#in.set_id(id),
 			Self::CopyDo(r#in) => _ = r#in.set_id(id),
-			Self::Cut(r#in) => _ = r#in.set_id(id),
-			Self::CutDo(r#in) => _ = r#in.set_id(id),
+			Self::Move(r#in) => _ = r#in.set_id(id),
+			Self::MoveDo(r#in) => _ = r#in.set_id(id),
 			Self::Link(r#in) => _ = r#in.set_id(id),
 			Self::LinkDo(r#in) => _ = r#in.set_id(id),
 			Self::Hardlink(r#in) => _ = r#in.set_id(id),
@@ -69,6 +71,7 @@ impl TaskIn for FileIn {
 			Self::DownloadDo(r#in) => _ = r#in.set_id(id),
 			Self::Upload(r#in) => _ = r#in.set_id(id),
 			Self::UploadDo(r#in) => _ = r#in.set_id(id),
+			Self::Custom(r#in) => _ = r#in.set_id(id),
 		}
 		self
 	}
@@ -77,8 +80,8 @@ impl TaskIn for FileIn {
 		match self {
 			Self::Copy(r#in) => r#in.title(),
 			Self::CopyDo(r#in) => r#in.title(),
-			Self::Cut(r#in) => r#in.title(),
-			Self::CutDo(r#in) => r#in.title(),
+			Self::Move(r#in) => r#in.title(),
+			Self::MoveDo(r#in) => r#in.title(),
 			Self::Link(r#in) => r#in.title(),
 			Self::LinkDo(r#in) => r#in.title(),
 			Self::Hardlink(r#in) => r#in.title(),
@@ -91,19 +94,21 @@ impl TaskIn for FileIn {
 			Self::DownloadDo(r#in) => r#in.title(),
 			Self::Upload(r#in) => r#in.title(),
 			Self::UploadDo(r#in) => r#in.title(),
+			Self::Custom(r#in) => r#in.title(),
 		}
 	}
 }
 
 impl_from_in! {
 	Copy(FileInCopy),
-	Cut(FileInCut),
+	Move(FileInMove),
 	Link(FileInLink),
 	Hardlink(FileInHardlink),
 	Delete(FileInDelete),
 	Trash(FileInTrash),
 	Download(FileInDownload),
 	Upload(FileInUpload),
+	Custom(CustomIn),
 }
 
 impl FileIn {
@@ -111,8 +116,8 @@ impl FileIn {
 		match self {
 			Self::Copy(r#in) => Self::CopyDo(r#in),
 			Self::CopyDo(_) => self,
-			Self::Cut(r#in) => Self::CutDo(r#in),
-			Self::CutDo(_) => self,
+			Self::Move(r#in) => Self::MoveDo(r#in),
+			Self::MoveDo(_) => self,
 			Self::Link(r#in) => Self::LinkDo(r#in),
 			Self::LinkDo(_) => self,
 			Self::Hardlink(r#in) => Self::HardlinkDo(r#in),
@@ -125,6 +130,7 @@ impl FileIn {
 			Self::DownloadDo(_) => self,
 			Self::Upload(r#in) => Self::UploadDo(r#in),
 			Self::UploadDo(_) => self,
+			Self::Custom(_) => self,
 		}
 	}
 }
@@ -189,9 +195,9 @@ impl FromLua for FileInCopy {
 		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?, t.raw_get("follow")?))
 	}
 }
-// --- Cut
+// --- Move
 #[derive(Clone, Debug)]
-pub struct FileInCut {
+pub struct FileInMove {
 	pub(crate) id:     Id,
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
@@ -202,8 +208,8 @@ pub struct FileInCut {
 	pub(crate) drop:   Option<mpsc::Sender<()>>,
 }
 
-impl TaskIn for FileInCut {
-	type Prog = FileProgCut;
+impl TaskIn for FileInMove {
+	type Prog = FileProgMove;
 
 	fn id(&self) -> Id { self.id }
 
@@ -213,15 +219,15 @@ impl TaskIn for FileInCut {
 	}
 
 	fn title(&self) -> Cow<'_, str> {
-		format!("Cut {} to {}", self.from.display(), self.to.display()).into()
+		format!("Move {} to {}", self.from.display(), self.to.display()).into()
 	}
 }
 
-impl Drop for FileInCut {
+impl Drop for FileInMove {
 	fn drop(&mut self) { _ = self.drop.take(); }
 }
 
-impl FileInCut {
+impl FileInMove {
 	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
 		Self {
 			follow: !from.auth().same_service(to.auth()),
@@ -254,7 +260,7 @@ impl FileInCut {
 	}
 }
 
-impl FromLua for FileInCut {
+impl FromLua for FileInMove {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		let t = Table::from_lua(value, lua)?;
 		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?))

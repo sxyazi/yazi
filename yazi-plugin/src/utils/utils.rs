@@ -67,6 +67,7 @@ pub fn compose(
 			b"hash" => Utils::hash(lua)?,
 			b"quote" => Utils::quote(lua)?,
 			b"clipboard" => Utils::clipboard(lua)?,
+			b"base64_decode" => Utils::base64_decode(lua)?,
 			b"percent_encode" => Utils::percent_encode(lua)?,
 			b"percent_decode" => Utils::percent_decode(lua)?,
 
@@ -86,6 +87,9 @@ pub fn compose(
 			b"group_name" => Utils::group_name(lua)?,
 			#[cfg(unix)]
 			b"host_name" => Utils::host_name(lua)?,
+
+			// HTTP
+			b"http" => return Utils::http(lua)?.into_lua(lua),
 
 			// Task
 			b"task" => Utils::task(lua)?,

@@ -35,7 +35,7 @@ impl Signals {
 	#[cfg(unix)]
 	async fn handle(n: libc::c_int) -> bool {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
-		use tracing::error;
+		use yazi_macro::error;
 		use yazi_term::YIELD_TO_SUBPROCESS;
 
 		match n {

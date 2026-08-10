@@ -1,5 +1,5 @@
 use mlua::Value;
-use tracing::error;
+use yazi_macro::error;
 
 use crate::Renderable;
 

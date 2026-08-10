@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use hashbrown::HashMap;
 use mlua::{AnyUserData, UserData};
 use scopeguard::defer;
-use tracing::error;
+use yazi_macro::error;
 use yazi_plugin::LUA;
 
 use super::{Core, PtrCell};

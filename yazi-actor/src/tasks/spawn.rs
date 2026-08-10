@@ -15,10 +15,12 @@ impl Actor for Spawn {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		succ!(match form.opt {
-			TaskOpt::Cut(r#in) => cx.tasks.scheduler.file_cut(r#in),
 			TaskOpt::Copy(r#in) => cx.tasks.scheduler.file_copy(r#in),
+			TaskOpt::Move(r#in) => cx.tasks.scheduler.file_move(r#in),
 
 			TaskOpt::Plugin(r#in) => cx.tasks.scheduler.plugin_entry(r#in),
+
+			TaskOpt::Custom(r#in) => cx.tasks.scheduler.custom(r#in),
 		})
 	}
 }

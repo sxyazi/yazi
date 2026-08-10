@@ -28,9 +28,9 @@ deadpool    = { version = "0.13.0", default-features = false, features = [ "mana
 either      = { workspace = true }
 futures     = { workspace = true }
 hashbrown   = { workspace = true }
+inventory   = { workspace = true }
 mlua        = { workspace = true }
 parking_lot = { workspace = true }
 russh       = { workspace = true }
 tokio       = { workspace = true }
-tracing     = { workspace = true }
 typed-path  = { workspace = true }

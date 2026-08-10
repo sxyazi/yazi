@@ -5,9 +5,10 @@ use dyn_clone::DynClone;
 use hashbrown::HashMap;
 use mlua::{Lua, Table};
 use serde::Deserialize;
-use strum::EnumString;
+use strum::{EnumString, IntoStaticStr};
 use yazi_binding::Scope;
 use yazi_macro::impl_data_any;
+use yazi_runner::loader::Chunk;
 use yazi_scheduler::plugin::PluginInEntry;
 use yazi_shared::{data::{Data, DataKey}, event::{ActionCow, Cmd}};
 use yazi_shim::SStr;
@@ -17,7 +18,7 @@ pub struct PluginOpt {
 	pub name:     SStr,
 	pub args:     HashMap<DataKey, Data>,
 	pub mode:     PluginMode,
-	pub method:   SStr,
+	pub method:   PluginMethod,
 	pub scope:    Scope,
 	pub callback: Option<Box<dyn PluginCallback>>,
 }
@@ -43,7 +44,7 @@ impl TryFrom<ActionCow> for PluginOpt {
 			name: Self::normalize_name(name),
 			args,
 			mode: a.str("mode").parse().unwrap_or_default(),
-			method: a.take("method").unwrap_or_default(),
+			method: a.str("method").parse().unwrap_or_default(),
 			scope: a.take_any("scope").unwrap_or_default(),
 			callback: a.take_any("callback"),
 		})
@@ -64,6 +65,14 @@ impl PluginOpt {
 			callback: Some(Box::new(f)),
 			..Default::default()
 		}
+	}
+
+	pub fn effective_mode(&self, chunk: &Chunk) -> PluginMode {
+		self.mode.auto_then(match self.method {
+			PluginMethod::Entry => chunk.sync_entry,
+			PluginMethod::Peek => chunk.sync_peek,
+			PluginMethod::Seek => true,
+		})
 	}
 
 	fn normalize_name(s: SStr) -> SStr {
@@ -95,6 +104,17 @@ impl PluginMode {
 		}
 		if sync { Self::Sync } else { Self::Async }
 	}
+}
+
+// --- Method
+#[derive(Clone, Copy, Debug, Default, Deserialize, EnumString, Eq, IntoStaticStr, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
+pub enum PluginMethod {
+	#[default]
+	Entry,
+	Peek,
+	Seek,
 }
 
 // --- Callback

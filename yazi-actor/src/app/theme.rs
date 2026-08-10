@@ -3,7 +3,7 @@ use yazi_actor::Ctx;
 use yazi_config::{THEME, build_flavor};
 use yazi_dds::Pubsub;
 use yazi_emulator::EMULATOR;
-use yazi_macro::{act, err, render, succ};
+use yazi_macro::{act, log_if_err, render, succ};
 use yazi_parser::VoidForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
@@ -25,7 +25,7 @@ impl Actor for Theme {
 		};
 
 		yazi_plugin::theme::reset()?;
-		err!(Pubsub::pub_after_theme());
+		log_if_err!(Pubsub::pub_after_theme());
 
 		act!(mgr:peek, cx, true)?;
 		if cx.tab().spot.visible() {

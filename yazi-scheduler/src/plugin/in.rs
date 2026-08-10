@@ -1,16 +1,17 @@
 use std::borrow::Cow;
 
 use hashbrown::HashMap;
-use mlua::{ExternalError, FromLua, Lua, Value};
+use mlua::{FromLua, Lua, Table, Value};
 use yazi_runner::entry::EntryJob;
 use yazi_shared::{data::{Data, DataKey, Sendable}, id::Id};
 use yazi_shim::SStr;
 
-use crate::{TaskIn, plugin::PluginProgEntry};
+use crate::{TaskIn, custom::CustomIn, plugin::PluginProgEntry};
 
 #[derive(Debug)]
 pub(crate) enum PluginIn {
 	Entry(PluginInEntry),
+	Custom(CustomIn),
 }
 
 impl TaskIn for PluginIn {
@@ -19,12 +20,14 @@ impl TaskIn for PluginIn {
 	fn id(&self) -> Id {
 		match self {
 			Self::Entry(r#in) => r#in.id(),
+			Self::Custom(r#in) => r#in.id(),
 		}
 	}
 
 	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
 			Self::Entry(r#in) => _ = r#in.set_id(id),
+			Self::Custom(r#in) => _ = r#in.set_id(id),
 		}
 		self
 	}
@@ -32,11 +35,12 @@ impl TaskIn for PluginIn {
 	fn title(&self) -> Cow<'_, str> {
 		match self {
 			Self::Entry(r#in) => r#in.title(),
+			Self::Custom(r#in) => r#in.title(),
 		}
 	}
 }
 
-impl_from_in!(Entry(PluginInEntry));
+impl_from_in!(Entry(PluginInEntry), Custom(CustomIn));
 
 // --- Entry
 #[derive(Clone, Debug, Default)]
@@ -80,9 +84,7 @@ impl From<PluginInEntry> for EntryJob {
 
 impl FromLua for PluginInEntry {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		let Value::Table(t) = value else {
-			return Err("constructing PluginInEntry from non-table value".into_lua_err());
-		};
+		let t = Table::from_lua(value, lua)?;
 
 		Ok(Self {
 			plugin: t.raw_get::<String>(1)?.into(),

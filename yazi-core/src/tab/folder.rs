@@ -3,7 +3,7 @@ use std::{mem, ops::Deref};
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
 use yazi_fs::{Entries, FilesOp, FolderStage, cha::ChaType, file::File};
-use yazi_macro::err;
+use yazi_macro::log_if_err;
 use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_watcher::RefreshRequest;
 use yazi_widgets::{Scrollable, Step};
@@ -96,7 +96,7 @@ impl Folder {
 
 	pub fn update_pub(&mut self, tab: Id, op: FilesOp) -> bool {
 		if self.update(op) {
-			err!(Pubsub::pub_after_load(tab, &self.url, &self.stage));
+			log_if_err!(Pubsub::pub_after_load(tab, &self.url, &self.stage));
 			return true;
 		}
 		false

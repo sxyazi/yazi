@@ -1,7 +1,7 @@
 use std::{env, ops::{Deref, DerefMut}};
 
-use tracing::warn;
 use yazi_emulator::{Brand, Emulator};
+use yazi_macro::warn;
 use yazi_shared::env_exists;
 
 use crate::drivers::{Driver as D, Ueberzug};

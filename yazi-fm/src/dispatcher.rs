@@ -1,9 +1,8 @@
 use std::sync::atomic::Ordering;
 
 use anyhow::Result;
-use tracing::warn;
 use yazi_actor::Ctx;
-use yazi_macro::{act, emit};
+use yazi_macro::{act, emit, warn};
 use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
 use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 

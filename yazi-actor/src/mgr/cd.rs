@@ -7,7 +7,7 @@ use yazi_config::YAZI;
 use yazi_core::mgr::CdSource;
 use yazi_dds::Pubsub;
 use yazi_fs::{FilesOp, path::{clean_url, expand_url}};
-use yazi_macro::{act, err, input, render, succ};
+use yazi_macro::{act, input, log_if_err, render, succ};
 use yazi_parser::mgr::CdForm;
 use yazi_proxy::{CmpProxy, MgrProxy};
 use yazi_shared::{Debounce, data::Data, url::{AsUrl, UrlBuf, UrlLike}};
@@ -50,7 +50,7 @@ impl Actor for Cd {
 			tab.parent = Some(tab.history.remove_or(parent));
 		}
 
-		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
+		log_if_err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
 		act!(mgr:displace, cx)?;
 		act!(mgr:hidden, cx).ok();
 		act!(mgr:sort, cx).ok();

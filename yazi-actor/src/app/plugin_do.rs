@@ -1,10 +1,9 @@
 use anyhow::Result;
 use mlua::ObjectLike;
 use scopeguard::defer;
-use tracing::{error, warn};
 use yazi_binding::runtime_mut;
-use yazi_core::app::PluginMode;
-use yazi_macro::succ;
+use yazi_core::app::{PluginMethod, PluginMode};
+use yazi_macro::{error, succ, warn};
 use yazi_parser::app::PluginForm;
 use yazi_plugin::LUA;
 use yazi_runner::{entry::EntryJob, loader::{LOADER, Loader}};
@@ -34,7 +33,7 @@ impl Actor for PluginDo {
 			succ!(NotifyProxy::push_error("Incompatible plugin", e.to_string()));
 		}
 
-		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
+		if opt.effective_mode(chunk) != PluginMode::Sync {
 			succ!(cx.core.tasks.scheduler.plugin_entry(opt.into()));
 		}
 
@@ -50,10 +49,10 @@ impl Actor for PluginDo {
 		let result = Lives::scope(cx.core, |_| {
 			if let Some(cb) = opt.callback {
 				cb(&LUA, plugin)
-			} else if !opt.method.is_empty() {
-				plugin.call_method(&opt.method, Sendable::args_to_table(&LUA, opt.args)?)
-			} else {
+			} else if opt.method == PluginMethod::Entry {
 				plugin.call_method("entry", EntryJob { args: opt.args, ..Default::default() })
+			} else {
+				plugin.call_method(opt.method.into(), Sendable::args_to_table(&LUA, opt.args)?)
 			}
 		});
 		if let Err(ref e) = result {

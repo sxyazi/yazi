@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{borrow::Cow, str::FromStr};
 
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, LuaString, Table, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet};
@@ -27,6 +27,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"read_dir" => read_dir(lua)?,
 			b"remove" => remove(lua)?,
 			b"rename" => rename(lua)?,
+			b"safename" => safename(lua)?,
 			b"trash" => return yazi_fs::trash::Trash.into_lua(lua),
 			b"unique" => unique(lua)?,
 			b"write" => write(lua)?,
@@ -227,6 +228,17 @@ fn rename(lua: &Lua) -> mlua::Result<Function> {
 		match engine::rename(&*from, &*to).await {
 			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
+fn safename(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, s: LuaString| {
+		let b = s.as_bytes();
+		match yazi_fs::path::safename(&b) {
+			Some(Cow::Borrowed(_)) => Ok(Some(s)),
+			Some(Cow::Owned(s)) => lua.create_external_string(s).map(Some),
+			None => Ok(None),
 		}
 	})
 }

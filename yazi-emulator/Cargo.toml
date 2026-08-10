@@ -23,4 +23,3 @@ yazi-tty    = { path = "../yazi-tty", version = "26.5.9" }
 anyhow   = { workspace = true }
 arc-swap = { workspace = true }
 tokio    = { workspace = true }
-tracing  = { workspace = true }

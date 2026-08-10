@@ -2,7 +2,7 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::{Align, Bar, Border, Color, Constraint, Edge, Fill, Gauge, Layout, Line, List, Pad, Rect, Row, Span, Table, Text, Wrap}, position::Position, style::Style};
 use yazi_config::THEME;
 use yazi_dds::Pubsub;
-use yazi_macro::err;
+use yazi_macro::log_if_err;
 use yazi_shim::strum::IntoStr;
 use yazi_widgets::{clear::Clear, input::{InputArc, InputEvent}};
 
@@ -53,5 +53,5 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 }
 
 fn publish_input(event: InputEvent) {
-	err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
+	log_if_err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
 }

@@ -1,3 +1,6 @@
+[alias]
+xtask = "run --locked --package yazi-build --"
+
 [env]
 MACOSX_DEPLOYMENT_TARGET  = "10.12"
 JEMALLOC_SYS_WITH_LG_PAGE = "16"

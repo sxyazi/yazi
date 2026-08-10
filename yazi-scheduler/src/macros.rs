@@ -52,7 +52,7 @@ macro_rules! dispatch_progress {
 		match $value {
 			// File
 			$crate::TaskProg::FileCopy(p) => $crate::Progress::$method(p),
-			$crate::TaskProg::FileCut(p) => $crate::Progress::$method(p),
+			$crate::TaskProg::FileMove(p) => $crate::Progress::$method(p),
 			$crate::TaskProg::FileLink(p) => $crate::Progress::$method(p),
 			$crate::TaskProg::FileHardlink(p) => $crate::Progress::$method(p),
 			$crate::TaskProg::FileDelete(p) => $crate::Progress::$method(p),
@@ -69,6 +69,8 @@ macro_rules! dispatch_progress {
 			$crate::TaskProg::ProcessBlock(p) => $crate::Progress::$method(p),
 			$crate::TaskProg::ProcessOrphan(p) => $crate::Progress::$method(p),
 			$crate::TaskProg::ProcessBg(p) => $crate::Progress::$method(p),
+			// Custom
+			$crate::TaskProg::Custom(p) => $crate::Progress::$method(p),
 		}
 	};
 }

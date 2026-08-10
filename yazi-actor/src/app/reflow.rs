@@ -1,10 +1,9 @@
 use anyhow::Result;
 use mlua::{LuaString, Value};
 use ratatui_core::layout::Position;
-use tracing::error;
 use yazi_actor::lives::Lives;
 use yazi_config::LAYOUT;
-use yazi_macro::{render, succ};
+use yazi_macro::{error, render, succ};
 use yazi_parser::app::ReflowForm;
 use yazi_shared::data::Data;
 

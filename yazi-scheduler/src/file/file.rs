@@ -2,14 +2,14 @@ use std::mem;
 
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
-use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to};
+use yazi_macro::warn;
 use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{Stamp, VfsCha, engine::{self, DirEntry}, maybe_exists, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInCut, FileInDownload, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutCut, FileOutCutDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutCut, HookInOutHardlink, HookInOutLink}, ok_or_not_found};
+use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}, ok_or_not_found};
 
 pub(crate) struct File {
 	ops: TaskOps,
@@ -89,7 +89,7 @@ impl File {
 		Ok(self.ops.out(task.id, FileOutCopyDo::Succ))
 	}
 
-	pub(crate) async fn cut(&self, mut task: FileInCut) -> Result<(), FileOutCut> {
+	pub(crate) async fn r#move(&self, mut task: FileInMove) -> Result<(), FileOutMove> {
 		let id = task.id;
 
 		if !task.force {
@@ -98,17 +98,17 @@ impl File {
 				.context("Cannot determine unique destination name")?;
 		}
 
-		self.ops.out(id, HookInOutCut::new(&task.from, &task.to));
+		self.ops.out(id, HookInOutMove::new(&task.from, &task.to));
 		TasksProxy::update_succeed(id, [&task.to], true);
 
 		if !task.follow && ok_or_not_found(engine::rename(&task.from, &task.to).await).is_ok() {
-			return Ok(self.ops.out(id, FileOutCut::Succ));
+			return Ok(self.ops.out(id, FileOutMove::Succ));
 		}
 
 		let (mut links, mut files) = (vec![], vec![]);
 		let reorder = task.follow && ctx!(task, engine::capabilities(&task.from).await)?.symlink;
 
-		super::traverse::<FileOutCut, _, _, _, _, _>(
+		super::traverse::<FileOutMove, _, _, _, _, _>(
 			task,
 			async |dir| match engine::create_dir(dir).await {
 				Err(e) if e.kind() != io::ErrorKind::AlreadyExists => Err(e)?,
@@ -116,7 +116,7 @@ impl File {
 			},
 			|task, cha| {
 				let nofollow = cha.is_orphan() || (cha.is_indirect() && !task.follow);
-				self.ops.out(id, FileOutCut::New(if nofollow { 0 } else { cha.len }));
+				self.ops.out(id, FileOutMove::New(if nofollow { 0 } else { cha.len }));
 
 				if nofollow {
 					self.requeue(task.into_link(), NORMAL);
@@ -131,7 +131,7 @@ impl File {
 				async { Ok(()) }
 			},
 			|err| {
-				self.ops.out(id, FileOutCut::Deform(err));
+				self.ops.out(id, FileOutMove::Deform(err));
 			},
 		)
 		.await?;
@@ -149,10 +149,10 @@ impl File {
 			self.requeue(task, LOW);
 		}
 
-		Ok(self.ops.out(id, FileOutCut::Succ))
+		Ok(self.ops.out(id, FileOutMove::Succ))
 	}
 
-	pub(crate) async fn cut_do(&self, mut task: FileInCut) -> Result<(), FileOutCutDo> {
+	pub(crate) async fn move_do(&self, mut task: FileInMove) -> Result<(), FileOutMoveDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut rx =
 			ctx!(task, engine::copy_progressive(&task.from, &task.to, task.cha.unwrap()).await)?;
@@ -163,9 +163,9 @@ impl File {
 					engine::remove_file(&task.from).await.ok();
 					break;
 				}
-				Ok(n) => self.ops.out(task.id, FileOutCutDo::Adv(n)),
+				Ok(n) => self.ops.out(task.id, FileOutMoveDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
-					warn!("Cut task partially done: {task:?}");
+					warn!("Move task partially done: {task:?}");
 					break;
 				}
 				// Operation not permitted (os error 1)
@@ -175,13 +175,13 @@ impl File {
 						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 				{
 					task.retry += 1;
-					self.ops.out(task.id, FileOutCutDo::Log(format!("Retrying due to error: {e}")));
+					self.ops.out(task.id, FileOutMoveDo::Log(format!("Retrying due to error: {e}")));
 					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
 		}
-		Ok(self.ops.out(task.id, FileOutCutDo::Succ))
+		Ok(self.ops.out(task.id, FileOutMoveDo::Succ))
 	}
 
 	pub(crate) async fn link(&self, mut task: FileInLink) -> Result<(), FileOutLink> {

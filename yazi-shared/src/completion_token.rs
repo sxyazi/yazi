@@ -13,8 +13,9 @@ impl_data_any!(CompletionToken);
 impl CompletionToken {
 	pub fn complete(&self, success: bool) {
 		let new = if success { 1 } else { 2 };
-		self.inner.0.compare_exchange(0, new, Ordering::Relaxed, Ordering::Relaxed).ok();
-		self.inner.1.notify_waiters();
+		if self.inner.0.compare_exchange(0, new, Ordering::Relaxed, Ordering::Relaxed).is_ok() {
+			self.inner.1.notify_waiters();
+		}
 	}
 
 	pub fn completed(&self) -> Option<bool> {

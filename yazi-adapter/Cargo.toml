@@ -34,4 +34,3 @@ quantette    = { version = "0.6.0", default-features = false }
 ratatui-core = { workspace = true }
 strum        = { workspace = true }
 tokio        = { workspace = true }
-tracing      = { workspace = true }

@@ -1,6 +1,6 @@
 use std::{io::{Error, Read, Write}, ptr, time::Duration};
 
-use tracing::error;
+use yazi_macro::error;
 
 #[derive(Debug)]
 pub struct Handle {

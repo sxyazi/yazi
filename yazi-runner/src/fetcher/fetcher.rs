@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use mlua::{ExternalError, ExternalResult, FromLua, Function, MultiValue, ObjectLike, Value};
 use tokio::runtime::Handle;
-use tracing::error;
 use yazi_fs::{FsHash64, file::{FileRef, FileSig}};
+use yazi_macro::error;
 use yazi_shim::fs::Error;
 
 use crate::{Runner, fetcher::FetchJob, loader::LOADER};

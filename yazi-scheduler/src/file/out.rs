@@ -81,9 +81,9 @@ impl FileOutCopyDo {
 	}
 }
 
-// --- Cut
+// --- Move
 #[derive(Debug)]
-pub(crate) enum FileOutCut {
+pub(crate) enum FileOutMove {
 	New(u64),
 	Deform(String),
 	Succ,
@@ -91,17 +91,17 @@ pub(crate) enum FileOutCut {
 	Clean(io::Result<()>),
 }
 
-impl From<anyhow::Error> for FileOutCut {
+impl From<anyhow::Error> for FileOutMove {
 	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
-impl From<std::io::Error> for FileOutCut {
+impl From<std::io::Error> for FileOutMove {
 	fn from(value: std::io::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
-impl FileOutCut {
+impl FileOutMove {
 	pub(crate) fn reduce(self, task: &mut Task) {
-		let TaskProg::FileCut(prog) = &mut task.prog else { return };
+		let TaskProg::FileMove(prog) = &mut task.prog else { return };
 		match self {
 			Self::New(bytes) => {
 				prog.total_files += 1;
@@ -124,28 +124,28 @@ impl FileOutCut {
 			}
 			Self::Clean(Err(reason)) => {
 				prog.cleaned = CleanupState::Failed;
-				task.log(format!("Failed cleaning up cut file: {reason:?}"));
+				task.log(format!("Failed cleaning up moved file: {reason:?}"));
 			}
 		}
 	}
 }
 
-// --- CutDo
+// --- MoveDo
 #[derive(Debug)]
-pub(crate) enum FileOutCutDo {
+pub(crate) enum FileOutMoveDo {
 	Adv(u64),
 	Log(String),
 	Succ,
 	Fail(String),
 }
 
-impl From<anyhow::Error> for FileOutCutDo {
+impl From<anyhow::Error> for FileOutMoveDo {
 	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
 }
 
-impl FileOutCutDo {
+impl FileOutMoveDo {
 	pub(crate) fn reduce(self, task: &mut Task) {
-		let TaskProg::FileCut(prog) = &mut task.prog else { return };
+		let TaskProg::FileMove(prog) = &mut task.prog else { return };
 		match self {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
@@ -202,7 +202,7 @@ impl FileOutLink {
 				}
 				Self::Clean => {}
 			}
-		} else if let TaskProg::FileCut(prog) = &mut task.prog {
+		} else if let TaskProg::FileMove(prog) = &mut task.prog {
 			match self {
 				Self::Succ => {
 					prog.success_files += 1;

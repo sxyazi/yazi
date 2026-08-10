@@ -1,0 +1,5 @@
+[profile.release]
+trim-paths = "all"
+
+[target.'cfg(all())']
+rustflags = [ "-Cpasses=mergefunc" ]

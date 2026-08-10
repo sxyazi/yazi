@@ -4,11 +4,11 @@ use anyhow::Result;
 use lru::LruCache;
 use parking_lot::Mutex;
 use tokio::sync::mpsc;
-use tracing::error;
 use yazi_config::Priority;
+use yazi_macro::error;
 use yazi_runner::RUNNER;
 
-use crate::{HIGH, LOW, TaskOp, TaskOps, fetch::{FetchIn, FetchOutFetch}};
+use crate::{HIGH, LOW, TaskOp, TaskOps, fetch::{FetchIn, FetchInFetch, FetchOutFetch}};
 
 pub struct Fetch {
 	ops:        TaskOps,
@@ -28,7 +28,7 @@ impl Fetch {
 		}
 	}
 
-	pub(crate) async fn fetch(&self, task: FetchIn) -> Result<(), FetchOutFetch> {
+	pub(crate) async fn fetch(&self, task: FetchInFetch) -> Result<(), FetchOutFetch> {
 		let (id, fetcher) = (task.id, task.fetcher.clone());
 
 		for status in RUNNER.fetch(task.into()).await? {
@@ -47,11 +47,15 @@ impl Fetch {
 }
 
 impl Fetch {
-	pub(crate) fn submit(&self, r#in: FetchIn) {
-		let priority = match r#in.fetcher.prio {
-			Priority::Low => LOW,
-			Priority::Normal => HIGH,
-			Priority::High => HIGH,
+	pub(crate) fn submit(&self, r#in: impl Into<FetchIn>) {
+		let r#in = r#in.into();
+		let priority = match &r#in {
+			FetchIn::Fetch(r#in) => match r#in.fetcher.prio {
+				Priority::Low => LOW,
+				Priority::Normal => HIGH,
+				Priority::High => HIGH,
+			},
+			FetchIn::Custom(_) => LOW,
 		};
 
 		_ = self.tx.try_send(r#in, priority);

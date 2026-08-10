@@ -1,28 +1,34 @@
-use tokio::sync::mpsc;
-use yazi_shared::{CompletionToken, id::Id};
+use std::ops::Deref;
 
-use crate::{TaskIn, TaskProg, hook::HookIn};
+use tokio::sync::mpsc;
+use yazi_shared::id::Id;
+
+use crate::{TaskHandle, TaskIn, TaskProg, hook::HookIn};
 
 #[derive(Debug)]
 pub struct Task {
-	pub id:          Id,
+	pub handle:      TaskHandle,
 	pub title:       String,
 	pub(crate) prog: TaskProg,
 	pub(crate) hook: Option<HookIn>,
-	pub done:        CompletionToken,
 
 	pub logs:   String,
 	pub logger: Option<mpsc::UnboundedSender<String>>,
 }
 
+impl Deref for Task {
+	type Target = TaskHandle;
+
+	fn deref(&self) -> &Self::Target { &self.handle }
+}
+
 impl Task {
 	pub(super) fn new(id: Id, title: String, prog: TaskProg) -> Self {
 		Self {
-			id,
+			handle: TaskHandle::new(id),
 			title,
 			prog,
 			hook: None,
-			done: Default::default(),
 
 			logs: Default::default(),
 			logger: Default::default(),

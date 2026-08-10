@@ -1,11 +1,11 @@
 use std::{ops::Deref, sync::Arc, time::Duration};
 
-use tokio::task::JoinHandle;
+use tokio::{select, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
 use yazi_fs::{FsHash64, file::{File, FileSig}};
-use yazi_shared::{CompletionToken, Throttle, id::Id, pool::Symbol, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Throttle, id::Id, pool::Symbol, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskIn, TaskProg, Worker, fetch::FetchIn, file::{FileInCopy, FileInCut, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInTrash, FileInUpload, FileOutCopy, FileOutCut, FileOutDownload, FileOutHardlink, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadIn, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
+use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskHandle, TaskIn, TaskProg, Worker, custom::{CustomIn, CustomOut, CustomPool}, fetch::FetchInFetch, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInMove, FileInTrash, FileInUpload, FileOutCopy, FileOutDownload, FileOutHardlink, FileOutMove, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadInPreload, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
 pub struct Scheduler {
 	pub worker:   Worker,
@@ -65,20 +65,20 @@ impl Scheduler {
 		}
 	}
 
-	pub fn file_cut(&self, mut r#in: FileInCut) -> Id {
-		let id = self.add(&mut r#in, |t| t.id);
+	pub fn file_move(&self, mut r#in: FileInMove) -> TaskHandle {
+		let handle = self.add(&mut r#in, |t| t.handle.clone());
 
 		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
-			self.ops.out(r#in.id, FileOutCut::Fail("Cannot cut directory into itself".to_owned()));
+			self.ops.out(r#in.id, FileOutMove::Fail("Cannot move directory into itself".to_owned()));
 		} else {
 			self.file.submit(r#in, LOW);
 		}
 
-		id
+		handle
 	}
 
-	pub fn file_copy(&self, mut r#in: FileInCopy) -> Id {
-		let id = self.add(&mut r#in, |t| t.id);
+	pub fn file_copy(&self, mut r#in: FileInCopy) -> TaskHandle {
+		let handle = self.add(&mut r#in, |t| t.handle.clone());
 
 		if r#in.to.try_starts_with(&r#in.from).unwrap_or(false) && !r#in.to.covariant(&r#in.from) {
 			self.ops.out(r#in.id, FileOutCopy::Fail("Cannot copy directory into itself".to_owned()));
@@ -86,7 +86,7 @@ impl Scheduler {
 			self.file.submit(r#in, LOW);
 		}
 
-		id
+		handle
 	}
 
 	pub fn file_link(&self, mut r#in: FileInLink) {
@@ -129,17 +129,17 @@ impl Scheduler {
 		self.file.submit(r#in, LOW);
 	}
 
-	pub fn file_download(&self, target: UrlBuf) -> CompletionToken {
+	pub fn file_download(&self, target: UrlBuf) -> TaskHandle {
 		let mut r#in = FileInDownload { id: Id::ZERO, target, cha: None, retry: 0 };
 		let hook = HookInDownload::new(&r#in.target);
-		let done = self.add_hooked(&mut r#in, hook, |t| t.done.clone());
+		let handle = self.add_hooked(&mut r#in, hook, |t| t.handle.clone());
 
 		if r#in.target.kind().is_remote() {
 			self.file.submit(r#in, LOW);
 		} else {
 			self.ops.out(r#in.id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		}
-		done
+		handle
 	}
 
 	pub fn file_upload(&self, target: UrlBuf) {
@@ -154,24 +154,24 @@ impl Scheduler {
 		}
 	}
 
-	pub fn plugin_entry(&self, mut r#in: PluginInEntry) -> Id {
+	pub fn plugin_entry(&self, mut r#in: PluginInEntry) -> TaskHandle {
 		if r#in.track {
 			self.behavior.reset();
 		}
 
-		let id = self.add(&mut r#in, |t| t.id);
+		let handle = self.add(&mut r#in, |t| t.handle.clone());
 		self.plugin.submit(r#in, NORMAL);
 
-		id
+		handle
 	}
 
-	pub fn fetch_paged(&self, fetcher: FetcherArc, targets: Vec<File>) -> CompletionToken {
-		let mut r#in = FetchIn { id: Id::ZERO, fetcher, targets };
+	pub fn fetch_paged(&self, fetcher: FetcherArc, targets: Vec<File>) -> TaskHandle {
+		let mut r#in = FetchInFetch { id: Id::ZERO, fetcher, targets };
 
-		let done = self.add(&mut r#in, |t| t.done.clone());
+		let handle = self.add(&mut r#in, |t| t.handle.clone());
 		self.fetch.submit(r#in);
 
-		done
+		handle
 	}
 
 	pub async fn fetch_mimetype(&self, targets: Vec<File>) -> bool {
@@ -182,7 +182,7 @@ impl Scheduler {
 
 		for done in wg {
 			if !done.future().await {
-				return false; // Canceled
+				return false; // Failed or canceled
 			}
 		}
 		true
@@ -190,7 +190,7 @@ impl Scheduler {
 
 	pub fn preload_paged(&self, preloader: PreloaderArc, file: &File, mime: Symbol<str>) {
 		let hook = HookInPreload::new(preloader.idx, FileSig(file).hash_u64());
-		let mut r#in = PreloadIn { id: Id::ZERO, preloader, file: file.clone(), mime };
+		let mut r#in = PreloadInPreload { id: Id::ZERO, preloader, file: file.clone(), mime };
 
 		self.add_hooked(&mut r#in, hook, |_| ());
 		if let Some(prev) = self.preload.loading.lock().put(file.url.hash_u64(), r#in.id) {
@@ -212,26 +212,63 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(&self, opt: ShellOpt) -> CompletionToken {
+	pub fn process_open(&self, opt: ShellOpt) -> TaskHandle {
 		let mut r#in: ProcessIn = if opt.block {
 			ProcessInBlock { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		} else if opt.orphan {
 			ProcessInOrphan { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		} else {
-			ProcessInBg { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd, done: CompletionToken::default() }
-				.into()
+			ProcessInBg { id: Id::ZERO, cwd: opt.cwd, cmd: opt.cmd }.into()
 		};
 
-		let done = match &mut r#in {
-			ProcessIn::Block(r#in) => self.add(r#in, |t| t.done.clone()),
-			ProcessIn::Orphan(r#in) => self.add(r#in, |t| t.done.clone()),
-			ProcessIn::Bg(r#in) => {
-				r#in.done = self.add(r#in, |t| t.done.clone());
-				r#in.done.clone()
-			}
+		let handle = match &mut r#in {
+			ProcessIn::Block(r#in) => self.add(r#in, |t| t.handle.clone()),
+			ProcessIn::Orphan(r#in) => self.add(r#in, |t| t.handle.clone()),
+			ProcessIn::Bg(r#in) => self.add(r#in, |t| t.handle.clone()),
+			ProcessIn::Custom(_) => unreachable!(),
 		};
 
 		self.process.submit(r#in, NORMAL);
-		done
+		handle
 	}
+
+	pub fn custom(&self, mut r#in: CustomIn) -> TaskHandle {
+		if r#in.track {
+			self.behavior.reset();
+		}
+
+		let progress = r#in.progress;
+		let handle = self.add(&mut r#in, |t| {
+			let TaskProg::Custom(prog) = &mut t.prog else { unreachable!() };
+			prog.progress = progress;
+			t.handle.clone()
+		});
+
+		let ongoing = self.ongoing.clone();
+		let scope = r#in.scope.clone();
+		let handle_ = handle.clone();
+		tokio::spawn(async move {
+			select! {
+				_ = scope.cancelled() => {
+					ongoing.lock().cancel(handle_.id);
+				}
+				status = handle_.finished() => if status.is_canceled() {
+					scope.cancel();
+				}
+			}
+		});
+
+		match r#in.pool {
+			CustomPool::File => self.file.submit(r#in, LOW),
+			CustomPool::Plugin => self.plugin.submit(r#in, LOW),
+			CustomPool::Fetch => self.fetch.submit(r#in),
+			CustomPool::Preload => self.preload.submit(r#in),
+			CustomPool::Process => self.process.submit(r#in, LOW),
+			CustomPool::None => handle.start(),
+		}
+
+		handle
+	}
+
+	pub fn custom_output(&self, id: Id, out: CustomOut) { self.ops.out(id, out); }
 }

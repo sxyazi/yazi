@@ -7,7 +7,7 @@ macro_rules! input {
 
 		let (tx, rx) = ::tokio::sync::mpsc::unbounded_channel();
 		let opt = $opt.with_cb(move |event| {
-			$crate::err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
+			$crate::log_if_err!(Pubsub::pub_after_input((&event).into_str(), event.value()));
 			tx.send(event).ok();
 		});
 

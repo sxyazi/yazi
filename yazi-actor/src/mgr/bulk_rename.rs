@@ -8,7 +8,7 @@ use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_dds::Pubsub;
 use yazi_fs::{FilesOp, Splatter, engine::{Engine, FileBuilder, local::Local}, max_common_root, path::skip_url};
-use yazi_macro::{err, succ, writef};
+use yazi_macro::{log_if_err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
@@ -135,7 +135,7 @@ impl BulkRename {
 
 		if !succeeded.is_empty() {
 			let it = succeeded.iter().map(|(o, n)| (o.as_url(), n.url.as_url()));
-			err!(Pubsub::pub_after_bulk_rename(it));
+			log_if_err!(Pubsub::pub_after_bulk_rename(it));
 			FilesOp::rename(succeeded);
 		}
 		drop(permit);

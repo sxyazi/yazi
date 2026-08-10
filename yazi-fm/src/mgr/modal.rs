@@ -1,6 +1,6 @@
 use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
-use tracing::error;
 use yazi_core::Core;
+use yazi_macro::error;
 
 use crate::Renderer;
 

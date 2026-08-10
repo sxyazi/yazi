@@ -1,23 +1,23 @@
-use tracing::debug;
-use yazi_scheduler::file::{FileInCopy, FileInCut, FileInLink};
+use yazi_macro::debug;
+use yazi_scheduler::file::{FileInCopy, FileInLink, FileInMove};
 use yazi_shared::url::{UrlBuf, UrlLike};
 
 use super::Tasks;
 use crate::mgr::Yanked;
 
 impl Tasks {
-	pub fn file_cut(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
+	pub fn file_move(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
-				debug!("file_cut: cannot join {u:?} with {dest:?}");
+				debug!("file_move: cannot join {u:?} with {dest:?}");
 				continue;
 			};
 			if force && u == to {
-				debug!("file_cut: same file, skip {to:?}");
+				debug!("file_move: same file, skip {to:?}");
 			} else {
-				self.scheduler.file_cut(FileInCut::new(u.clone(), to, force));
+				self.scheduler.file_move(FileInMove::new(u.clone(), to, force));
 			}
 		}
 	}

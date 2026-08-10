@@ -15,7 +15,7 @@ impl Backend {
 		yazi_fs::mounts::Partitions::monitor(&yazi_fs::mounts::PARTITIONS, || {
 			crate::MgrProxy::watch();
 			crate::MgrProxy::refresh();
-			yazi_macro::err!(yazi_dds::Pubsub::pub_after_mount())
+			yazi_macro::log_if_err!(yazi_dds::Pubsub::pub_after_mount())
 		});
 
 		let (local_tx, local_rx) = mpsc::unbounded_channel();

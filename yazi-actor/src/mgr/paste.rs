@@ -18,7 +18,7 @@ impl Actor for Paste {
 
 		let dest = tab.cwd();
 		if mgr.yanked.cut {
-			cx.core.tasks.file_cut(&mgr.yanked, dest, form.force);
+			cx.core.tasks.file_move(&mgr.yanked, dest, form.force);
 
 			mgr.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(mgr.yanked.urls()));
 			act!(mgr:unyank, cx)

@@ -14,7 +14,7 @@ impl UserData for TaskOpt {
 			Ok(ud)
 		});
 		methods.add_async_method_once("spawn", |_, me, ()| async move {
-			Ok(Task { id: TasksProxy::spawn(me.0).await? })
+			Ok(Task(TasksProxy::spawn(me.0).await?))
 		});
 	}
 }

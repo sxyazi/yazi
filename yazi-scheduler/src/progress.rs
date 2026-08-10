@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::{CleanupState, TaskSummary, dispatch_progress, fetch::FetchProg, file::{FileProgCopy, FileProgCut, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
+use crate::{CleanupState, TaskSummary, custom::CustomProg, dispatch_progress, fetch::FetchProg, file::{FileProgCopy, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgMove, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, preload::PreloadProg, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}, size::SizeProg};
 
 pub trait Progress: Copy {
 	// Whether the task is still cooking or cleaning.
@@ -37,17 +37,21 @@ pub trait Progress: Copy {
 		cooking || (self.cooked() && self.cleaned() == Some(CleanupState::Pending))
 	}
 
-	// Helper for byte-based progress calculations used by file transfer tasks.
-	fn byte_percent(self, processed_bytes: u64, total_bytes: u64) -> f32 {
+	// Helper for workload-based progress calculations.
+	fn work_percent(self, processed: u64, workload: u64, total: u32) -> f32 {
 		if self.success() {
-			100.0
-		} else if self.failed() {
-			0.0
-		} else if total_bytes != 0 {
-			99.99f32.min(processed_bytes as f32 / total_bytes as f32 * 100.0)
-		} else {
-			99.99
+			return 100.0;
 		}
+
+		let percent = if workload != 0 {
+			processed as f32 / workload as f32 * 100.0
+		} else if total != 0 {
+			100.0
+		} else {
+			0.0
+		};
+
+		if self.running() { 99.99f32.min(percent) } else { 100.0f32.min(percent) }
 	}
 }
 
@@ -57,7 +61,7 @@ pub trait Progress: Copy {
 pub enum TaskProg {
 	// File
 	FileCopy(FileProgCopy),
-	FileCut(FileProgCut),
+	FileMove(FileProgMove),
 	FileLink(FileProgLink),
 	FileHardlink(FileProgHardlink),
 	FileDelete(FileProgDelete),
@@ -76,11 +80,13 @@ pub enum TaskProg {
 	ProcessBlock(ProcessProgBlock),
 	ProcessOrphan(ProcessProgOrphan),
 	ProcessBg(ProcessProgBg),
+	// Custom
+	Custom(CustomProg),
 }
 
 impl_from_prog! {
 	// File
-	FileCopy(FileProgCopy), FileCut(FileProgCut), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash), FileDownload(FileProgDownload), FileUpload(FileProgUpload),
+	FileCopy(FileProgCopy), FileMove(FileProgMove), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash), FileDownload(FileProgDownload), FileUpload(FileProgUpload),
 	// Plugin
 	PluginEntry(PluginProgEntry),
 	// Fetch
@@ -91,6 +97,8 @@ impl_from_prog! {
 	Size(SizeProg),
 	// Process
 	ProcessBlock(ProcessProgBlock), ProcessOrphan(ProcessProgOrphan), ProcessBg(ProcessProgBg),
+	// Custom
+	Custom(CustomProg),
 }
 
 impl From<TaskProg> for TaskSummary {
@@ -98,7 +106,7 @@ impl From<TaskProg> for TaskSummary {
 		match value {
 			// File
 			TaskProg::FileCopy(p) => p.into(),
-			TaskProg::FileCut(p) => p.into(),
+			TaskProg::FileMove(p) => p.into(),
 			TaskProg::FileLink(p) => p.into(),
 			TaskProg::FileHardlink(p) => p.into(),
 			TaskProg::FileDelete(p) => p.into(),
@@ -115,6 +123,8 @@ impl From<TaskProg> for TaskSummary {
 			TaskProg::ProcessBlock(p) => p.into(),
 			TaskProg::ProcessOrphan(p) => p.into(),
 			TaskProg::ProcessBg(p) => p.into(),
+			// Custom
+			TaskProg::Custom(p) => p.into(),
 		}
 	}
 }
@@ -138,7 +148,7 @@ impl TaskProg {
 		match self {
 			// File
 			Self::FileCopy(_) => true,
-			Self::FileCut(_) => true,
+			Self::FileMove(_) => true,
 			Self::FileLink(_) => true,
 			Self::FileHardlink(_) => true,
 			Self::FileDelete(_) => true,
@@ -155,6 +165,8 @@ impl TaskProg {
 			Self::ProcessBlock(_) => true,
 			Self::ProcessOrphan(_) => true,
 			Self::ProcessBg(_) => true,
+			// Custom
+			Self::Custom(_) => true,
 		}
 	}
 }

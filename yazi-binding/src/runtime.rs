@@ -52,11 +52,11 @@ impl Runtime {
 		self.frames.last().map(|f| f.name.as_str()).context("No current runtime frame")
 	}
 
-	pub fn name_scope(&self) -> Result<(CompactString, Scope)> {
+	pub fn name_child_scope(&self) -> Result<(CompactString, Scope)> {
 		self
 			.frames
 			.last()
-			.map(|f| (f.name.clone(), f.scope.clone()))
+			.map(|f| (f.name.clone(), f.scope.child()))
 			.context("No current runtime frame")
 	}
 

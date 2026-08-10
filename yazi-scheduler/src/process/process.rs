@@ -57,22 +57,18 @@ impl Process {
 		let mut child =
 			super::shell(ShellOpt { cwd: task.cwd, cmd: task.cmd, block: false, orphan: false }).await?;
 
-		let done = task.done;
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
 		loop {
 			select! {
-				false = done.future() => {
-					child.start_kill().ok();
-					break;
-				}
 				Ok(Some(line)) = stdout.next_line() => {
 					self.ops.out(task.id, ProcessOutBg::Log(line));
 				}
 				Ok(Some(line)) = stderr.next_line() => {
 					self.ops.out(task.id, ProcessOutBg::Log(line));
 				}
-				Ok(status) = child.wait() => {
+				status = child.wait() => {
+					let status = status.map_err(anyhow::Error::from)?;
 					self.ops.out(task.id, ProcessOutBg::Log(match status.code() {
 						Some(code) => format!("Exited with status code: {code}"),
 						None => "Process terminated by signal".to_string(),

@@ -174,6 +174,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(output);
 		on!(update_succeed);
 		on!(spawn);
 

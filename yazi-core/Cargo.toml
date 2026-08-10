@@ -47,6 +47,5 @@ strum           = { workspace = true }
 syntect         = { workspace = true }
 tokio           = { workspace = true }
 tokio-util      = { workspace = true }
-tracing         = { workspace = true }
 unicode-width   = { workspace = true }
 yazi-prebuilt   = "0.1.0"
