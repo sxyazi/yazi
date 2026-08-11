@@ -43,7 +43,7 @@ parts:
       - xclip
       - zoxide
     override-build: |
-      craftctl default
+      cargo xtask install --bin-dir "$CRAFT_PART_INSTALL"
       craftctl set version=$(git describe --tags --abbrev=0)
     build-attributes:
       - enable-patchelf
