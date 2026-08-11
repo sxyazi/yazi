@@ -29,6 +29,10 @@ pub(super) fn workspace_root() -> Result<PathBuf> {
 		.context("yazi-build must be inside the Yazi workspace")
 }
 
+pub(super) fn is_linux_target(target: &str) -> bool {
+	target.contains("-linux-") || (target.is_empty() && cfg!(target_os = "linux"))
+}
+
 pub(super) fn is_windows_target(target: &str) -> bool {
 	target.contains("-windows-") || (target.is_empty() && cfg!(windows))
 }

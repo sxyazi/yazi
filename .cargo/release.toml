@@ -2,4 +2,17 @@
 trim-paths = "all"
 
 [target.'cfg(all())']
-rustflags = [ "-Cpasses=mergefunc" ]
+rustflags = [
+	"-Cpasses=mergefunc",
+	"-Zshare-generics=true",
+]
+
+[target.'cfg(target_os = "linux")']
+rustflags = [
+	"-Clink-arg=-fuse-ld=lld",
+	"-Clink-arg=-Wl,--icf=safe",
+	"-Clink-arg=-Wl,-z,pack-relative-relocs",
+]
+
+[target.'cfg(target_os = "macos")']
+rustflags = [ "-Clink-arg=-Wl,-O1" ]

@@ -4,6 +4,7 @@
   rev ? "unknown",
   date ? "19700101",
   lib,
+  stdenv,
 
   installShellFiles,
   fetchFromGitHub,
@@ -15,6 +16,7 @@ let
   src = lib.fileset.toSource {
     root = ../.;
     fileset = lib.fileset.unions [
+      ../.cargo
       ../assets
       ../Cargo.toml
       ../Cargo.lock
@@ -34,6 +36,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     YAZI_GEN_COMPLETIONS = true;
     VERGEN_GIT_SHA = rev;
     VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
+    CARGO_NET_OFFLINE = "true";
   };
 
   nativeBuildInputs = [
@@ -44,6 +47,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
   buildInputs = [
     rust-jemalloc-sys
   ];
+
+  buildPhase = ''
+    runHook preBuild
+    cargo xtask build --target ${stdenv.hostPlatform.rust.rustcTarget}
+    runHook postBuild
+  '';
 
   postInstall = ''
     installShellCompletion --cmd yazi \
