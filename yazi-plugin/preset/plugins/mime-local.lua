@@ -34,20 +34,26 @@ function M:fetch(job)
 
 			match, ignore = M.match_mimetype(line)
 			if match then
-				if coroutine.yield(job.files[i], match) then
+				if coroutine.yield(job.files[i], { match }) then
 					updates[job.files[i].url] = match
 					flush()
 				end
 				i = i + 1
 			elseif not ignore then
-				coroutine.yield(job.files[i], Err("Failed to determine MIME type for `%s`", job.files[i].url))
+				coroutine.yield(job.files[i], {
+					error = Err("Failed to determine MIME type for `%s`", job.files[i].url),
+					retry = true,
+				})
 				i = i + 1
 			end
 			::continue::
 		until i > #paths
 
 		for j = i, #paths do
-			coroutine.yield(job.files[j], Err("Failed to read `file` output"))
+			coroutine.yield(job.files[j], {
+				error = Err("Failed to read `file` output"),
+				retry = true,
+			})
 		end
 		flush(true)
 	end)
@@ -99,8 +105,8 @@ function M.placeholder(err, files)
 	local mime, updates = "null/file1-not-found", {}
 	for _, file in ipairs(files) do
 		if err.kind ~= "NotFound" then
-			coroutine.yield(file, Error(err))
-		elseif coroutine.yield(file, mime) then
+			coroutine.yield(file, { error = Error(err), retry = true })
+		elseif coroutine.yield(file, { mime }) then
 			updates[file.url] = mime
 		end
 	end

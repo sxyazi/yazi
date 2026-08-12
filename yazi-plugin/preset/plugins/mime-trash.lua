@@ -11,15 +11,18 @@ function M:fetch(job)
 		end)
 
 		local next = require("mime.local"):fetch(job)
-		local file, value = next()
+		local file, result = next()
 		while file do
-			if type(value) ~= "string" then
-				coroutine.yield(file, value)
-			elseif coroutine.yield(file, "trash/" .. value) then
-				updates[file.url] = "trash/" .. value
+			local mime = type(result[1]) == "string" and "trash/" .. result[1]
+			if mime then
+				result[1] = mime
+			end
+
+			if coroutine.yield(file, result) then
+				updates[file.url] = mime
 				flush()
 			end
-			file, value = next()
+			file, result = next()
 		end
 		flush(true)
 	end)

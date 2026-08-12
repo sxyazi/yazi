@@ -7,7 +7,7 @@ function M:seek() end
 function M:fetch(job)
 	return ya.co(function()
 		for _, file in ipairs(job.files) do
-			coroutine.yield(file)
+			coroutine.yield(file, {})
 		end
 	end)
 end

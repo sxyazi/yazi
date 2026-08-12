@@ -45,7 +45,7 @@ anyhow                = { workspace = true }
 clap                  = { workspace = true }
 clap_complete         = "4.6.9"
 clap_complete_fig     = "4.5.2"
-clap_complete_nushell = "4.6.1"
+clap_complete_nushell = "4.6.2"
 serde                 = { workspace = true }
 serde_json            = { workspace = true }
 

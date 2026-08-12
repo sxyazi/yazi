@@ -19,13 +19,13 @@ function M:fetch(job)
 		local unknown, updates = {}, {}
 		for _, file in ipairs(job.files) do
 			if file.cha.is_dummy then
-				coroutine.yield(file)
+				coroutine.yield(file, {})
 			elseif not file.cache then
 				unknown[#unknown + 1] = file
 			elseif not fs.cha(Url(file.cache)) then
-				updates[file.url] = coroutine.yield(file, "vfs/absent") and "vfs/absent" or nil
+				updates[file.url] = coroutine.yield(file, { "vfs/absent" }) and "vfs/absent" or nil
 			elseif stale_cache(file) then
-				updates[file.url] = coroutine.yield(file, "vfs/stale") and "vfs/stale" or nil
+				updates[file.url] = coroutine.yield(file, { "vfs/stale" }) and "vfs/stale" or nil
 			else
 				unknown[#unknown + 1] = file
 			end
@@ -40,9 +40,9 @@ end
 
 function M.fallback_local(job, unknown)
 	local next = require("mime.local"):fetch(ya.dict_merge(job, { files = unknown }))
-	local file, value = next()
+	local file, result = next()
 	while file do
-		file, value = next(coroutine.yield(file, value))
+		file, result = next(coroutine.yield(file, result))
 	end
 end
 
