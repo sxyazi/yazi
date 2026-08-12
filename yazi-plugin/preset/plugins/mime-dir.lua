@@ -12,7 +12,7 @@ function M:fetch(job)
 				mime = "folder/local"
 			end
 
-			if coroutine.yield(file, mime) then
+			if coroutine.yield(file, { mime }) then
 				updates[file.url] = mime
 			end
 		end

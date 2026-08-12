@@ -32,11 +32,9 @@ impl Fetch {
 		let (id, fetcher) = (task.id, task.fetcher.clone());
 
 		for status in RUNNER.fetch(task.into()).await? {
-			if status.success {
-				continue;
+			if status.retry {
+				self.loaded.lock().get_mut(&status.hash).map(|x| *x &= !(1 << fetcher.idx));
 			}
-
-			self.loaded.lock().get_mut(&status.hash).map(|x| *x &= !(1 << fetcher.idx));
 			if let Some(e) = status.error {
 				error!("Error when running fetcher '{}':\n{e:?}", fetcher.name);
 			}

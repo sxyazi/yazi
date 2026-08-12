@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
-- Drag and drop ([#4005])
+- Drag and drop ([#4005], [#4225])
 - Trash bin ([#4144], [#4204], [#4212])
 - Bulk create ([#3793])
 - Make help menu a command palette ([#4074])
@@ -69,6 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Eliminate hacks in image and UI conflict resolution ([#4022])
 - Make terminal capability probing async ([#4194])
 - Enable SSO (small string optimization) for custom schemes and custom styles ([#4164])
+- Reduce binary size and build time ([#4228])
 
 ## [v26.5.6]
 
@@ -1810,3 +1811,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4204]: https://github.com/sxyazi/yazi/pull/4204
 [#4212]: https://github.com/sxyazi/yazi/pull/4212
 [#4216]: https://github.com/sxyazi/yazi/pull/4216
+[#4225]: https://github.com/sxyazi/yazi/pull/4225
+[#4228]: https://github.com/sxyazi/yazi/pull/4228
