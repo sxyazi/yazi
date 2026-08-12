@@ -1,6 +1,6 @@
 [package]
 name                   = "yazi-packing"
-description            = "Yazi packing"
+description            = "Blazing fast terminal file manager written in Rust, based on async I/O."
 version.workspace      = true
 edition.workspace      = true
 license.workspace      = true
@@ -15,8 +15,8 @@ workspace = true
 [package.metadata.deb]
 name                      = "yazi"
 license-file              = [ "../LICENSE", "0" ]
-depends                   = "file, ffmpeg, 7zip, jq, poppler-utils, fd-find|fd, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
-recommends                = "bash-completion"
+depends                   = "$auto, file"
+recommends                = "bash-completion, ffmpeg, 7zip, jq, poppler-utils, fd-find|fd, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
 extended-description-file = "README.md"
 section                   = "utility"
 priority                  = "optional"
