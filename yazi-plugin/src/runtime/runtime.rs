@@ -2,7 +2,8 @@ use mlua::{FromLua, Function, IntoLua, Lua, LuaSerdeExt, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::Wrap, runtime};
 use yazi_boot::ARGS;
 use yazi_config::{YAZI, mgr::MgrRatio};
-use yazi_shared::url::UrlBuf;
+use yazi_fs::Xdg;
+use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 use yazi_shim::mlua::SER_OPT;
 use yazi_tty::TTY;
 
@@ -10,6 +11,7 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"args" => args().into_lua(lua)?,
+			b"path" => path().into_lua(lua)?,
 
 			b"tty" => TTY.into_lua(lua)?,
 			b"term" => super::term().into_lua(lua)?,
@@ -24,6 +26,19 @@ pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
+	}
+
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+
+	Composer::new(get, set)
+}
+
+fn path() -> Composer<ComposerGet, ComposerSet> {
+	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
+		match key {
+			b"config_dir" => PathBufDyn::from(Xdg::config_dir()).into_lua(lua),
+			_ => Ok(Value::Nil),
+		}
 	}
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }

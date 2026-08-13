@@ -2,6 +2,13 @@ use std::fmt::{self, Display};
 
 use bitflags::bitflags;
 
+/// Request keyboard enhancement flags
+pub struct RequestCsiU;
+
+impl Display for RequestCsiU {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?u") }
+}
+
 /// Pop keyboard enhancement flags
 pub struct PopKeyboardFlags;
 

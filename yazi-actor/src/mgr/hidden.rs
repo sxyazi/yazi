@@ -44,7 +44,7 @@ impl Actor for Hidden {
 			act!(mgr:peek, cx, true)?;
 		} else if cx.hovered().map(|f| f.key()) != hovered.as_ref().map(Into::into) {
 			act!(mgr:peek, cx)?;
-			act!(mgr:watch, cx)?;
+			act!(mgr:watch, cx).ok();
 		}
 
 		succ!()

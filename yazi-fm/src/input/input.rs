@@ -8,11 +8,11 @@ use yazi_fs::{cha::{Cha, ChaKind}, file::File};
 use yazi_shim::path::CROSS_SEPARATOR;
 
 pub(crate) struct Input<'a> {
-	core: &'a Core,
+	core: &'a mut Core,
 }
 
 impl<'a> Input<'a> {
-	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
+	pub(crate) fn new(core: &'a mut Core) -> Self { Self { core } }
 
 	fn icon(&self) -> Option<Icon> {
 		let input = &self.core.input.main;
@@ -43,21 +43,21 @@ impl<'a> Input<'a> {
 
 impl Widget for Input<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
-		let input = &self.core.input.main;
-
-		let outer = self.core.mgr.area(input.position);
+		let outer = self.core.mgr.area(self.core.input.main.position);
 		yazi_widgets::clear::Clear::default().render(outer, buf);
 
 		let mut block = Block::bordered()
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.input.border.get())
-			.title(Line::styled(&input.title, THEME.input.title.get()));
+			.title(Line::styled(&self.core.input.main.title, THEME.input.title.get()));
 
 		if let Some(i) = self.icon() {
 			block = block.title_bottom(Line::raw(format!("{} ", i.text)).style(i.style).right_aligned());
 		}
-
 		block.render(outer, buf);
-		input.render(outer.inner(Margin::new(1, 1)), buf);
+
+		let inner = outer.inner(Margin::new(1, 1));
+		self.core.input.main.repos(inner);
+		self.core.input.main.render(inner, buf);
 	}
 }

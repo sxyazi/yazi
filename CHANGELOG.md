@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `theme` DDS event for plugins to watch theme reloads ([#4203])
 - Preview images in Zellij via kitty graphics protocol ([#4216])
 - Image preview with Überzug++ on Niri ([#3990])
+- New `ind-watch` DDS event for custom file watching ([#4237])
 - Unicode normalization for user regex patterns in `find`, `filter`, and `search` actions ([#4177])
 - New gait for input `backward` and `forward` actions ([#4012])
 
@@ -1815,3 +1816,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4225]: https://github.com/sxyazi/yazi/pull/4225
 [#4228]: https://github.com/sxyazi/yazi/pull/4228
 [#4235]: https://github.com/sxyazi/yazi/pull/4235
+[#4237]: https://github.com/sxyazi/yazi/pull/4237

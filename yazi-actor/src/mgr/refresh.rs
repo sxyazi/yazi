@@ -27,7 +27,7 @@ impl Actor for Refresh {
 		);
 
 		act!(mgr:peek, cx)?;
-		act!(mgr:watch, cx)?;
+		act!(mgr:watch, cx).ok();
 		act!(mgr:update_paged, cx)?;
 
 		cx.tasks.prework_sorted(&cx.current().entries);

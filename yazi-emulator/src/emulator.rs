@@ -15,6 +15,7 @@ pub static EMULATOR: RoCell<ArcSwap<Emulator>> = RoCell::new();
 pub struct Emulator {
 	pub brand:        Brand,
 	pub version:      String,
+	pub csi_u:        Option<u8>,
 	pub kgp:          bool,
 	pub sixel:        bool,
 	pub background:   Option<[u16; 3]>,
@@ -34,6 +35,7 @@ impl Emulator {
 
 	pub fn apply(&mut self, report: &Report) {
 		match report {
+			Report::CsiU(flags) => self.csi_u = Some(*flags),
 			Report::CursorBlink(blink) => self.cursor_blink = *blink,
 			Report::CursorShape(shape) => self.cursor_shape = Some(*shape),
 			Report::Da1(attrs) => self.sixel = attrs.contains(&4),
