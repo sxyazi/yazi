@@ -12,6 +12,7 @@ impl Widget for &Input {
 		let normal = self.styles.normal.unwrap_or_default();
 		let selected = self.styles.selected.unwrap_or_default();
 
+		buf.set_style(Rect { height: area.height.min(1), ..area }, normal);
 		Line::styled(self.display(), normal).render(area, buf);
 
 		if let Some(Range { start, end }) = self.selected() {
