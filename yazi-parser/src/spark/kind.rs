@@ -17,6 +17,8 @@ pub enum SparkKind {
 	// mgr:stash
 	IndStash,
 	RelayStash,
+	// mgr:watch
+	IndWatch,
 	// mgr:quit
 	KeyQuit,
 

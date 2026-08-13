@@ -29,7 +29,7 @@ impl Actor for Arrow {
 
 		act!(mgr:hover, cx)?;
 		act!(mgr:peek, cx)?;
-		act!(mgr:watch, cx)?;
+		act!(mgr:watch, cx).ok();
 
 		cx.tasks.scheduler.behavior.reset();
 		succ!(render!());

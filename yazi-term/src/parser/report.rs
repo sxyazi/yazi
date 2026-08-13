@@ -31,6 +31,9 @@ impl Parser {
 				Report::CellPixelSize { width: w.parse()?, height: h.parse()? }
 			}
 
+			// `CSI ? flags u` (`\x1b[?...u`) - keyboard enhancement flags response.
+			(b'?', b'u') => Report::CsiU(str::from_utf8(mid)?.parse()?),
+
 			// `CSI ? 12 ; Ps $ y` (`\x1b[?12;...$y`) - DECRPM response for DEC mode 12.
 			(b'?', b'y')
 				if let Some(s) = mid.strip_prefix(b"12;")

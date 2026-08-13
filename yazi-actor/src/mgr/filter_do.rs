@@ -22,7 +22,7 @@ impl Actor for FilterDo {
 		if cx.hovered().map(|f| f.key()) != hovered.as_ref().map(Into::into) {
 			act!(mgr:hover, cx, hovered)?;
 			act!(mgr:peek, cx)?;
-			act!(mgr:watch, cx)?;
+			act!(mgr:watch, cx).ok();
 		}
 
 		if opt.done {

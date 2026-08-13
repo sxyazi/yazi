@@ -97,7 +97,7 @@ pub enum Spark<'a> {
 	UpdateYanked(crate::mgr::UpdateYankedForm<'a>),
 	Upload(crate::mgr::UploadForm),
 	VisualMode(crate::mgr::VisualModeForm),
-	Watch(crate::VoidForm),
+	Watch(crate::mgr::WatchForm),
 	Yank(crate::mgr::YankForm),
 
 	// Cmp
@@ -184,6 +184,8 @@ impl<'a> Spark<'a> {
 			// mgr:stash
 			IndStash => Self::Stash(<_>::from_lua(value, lua)?),
 			RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
+			// mgr:watch
+			IndWatch => Self::Watch(<_>::from_lua(value, lua)?),
 			// mgr:quit
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
 
@@ -386,7 +388,6 @@ try_from_spark!(
 	mgr:search_stop,
 	mgr:suspend,
 	mgr:unyank,
-	mgr:watch,
 	input:remember,
 	which:dismiss
 );
@@ -459,6 +460,7 @@ try_from_spark!(crate::mgr::UpdateSpottedForm, mgr:update_spotted);
 try_from_spark!(crate::mgr::UpdateYankedForm<'a>, mgr:update_yanked);
 try_from_spark!(crate::mgr::UploadForm, mgr:upload);
 try_from_spark!(crate::mgr::VisualModeForm, mgr:visual_mode);
+try_from_spark!(crate::mgr::WatchForm, mgr:watch);
 try_from_spark!(crate::mgr::YankForm, mgr:yank);
 try_from_spark!(crate::notify::PushForm, notify:push);
 try_from_spark!(crate::notify::TickForm, notify:tick);

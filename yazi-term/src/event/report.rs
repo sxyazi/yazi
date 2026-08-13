@@ -4,6 +4,7 @@ use strum::EnumIs;
 
 #[derive(Clone, Debug, EnumIs, Eq, PartialEq)]
 pub enum Report {
+	CsiU(u8),
 	CursorBlink(bool),
 	CursorShape(u8),
 	Da1(Vec<u16>),

@@ -33,7 +33,7 @@ impl Actor for UpdateFiles {
 		if revision != cx.current().entries.revision {
 			act!(mgr:hover, cx)?;
 			act!(mgr:peek, cx)?;
-			act!(mgr:watch, cx)?;
+			act!(mgr:watch, cx).ok();
 			act!(mgr:update_paged, cx)?;
 		}
 		succ!();

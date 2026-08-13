@@ -44,5 +44,6 @@ yazi_macro::mod_flat!(
 	update_yanked
 	upload
 	visual_mode
+	watch
 	yank
 );

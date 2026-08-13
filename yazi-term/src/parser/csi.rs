@@ -44,8 +44,7 @@ impl Parser {
 			b'Q' => Event::Key(KeyCode::Fn(2).into()),
 			b'S' => Event::Key(KeyCode::Fn(4).into()),
 			b'?' => match last {
-				b'c' | b'n' | b'y' => return self.parse_csi_report(),
-				b'u' => return Err(ParseError::Ignored),
+				b'c' | b'n' | b'u' | b'y' => return self.parse_csi_report(),
 				_ => bail!(),
 			},
 			b'>' => match seq[seq.len() - 2..] {

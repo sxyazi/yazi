@@ -34,7 +34,7 @@ impl Actor for Reveal {
 		act!(mgr:hover, cx, Some(child.into()))?;
 
 		act!(mgr:peek, cx)?;
-		act!(mgr:watch, cx)?;
+		act!(mgr:watch, cx).ok();
 		succ!();
 	}
 }

@@ -5,7 +5,7 @@ use tokio::time;
 use yazi_macro::{error, writef};
 use yazi_shared::id::{Id, Ids};
 use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
-use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
+use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
 
 use crate::{Brand, Emulator, Mux};
 
@@ -39,7 +39,7 @@ impl Probe {
 
 		writef!(
 			TTY.writer(),
-			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{ProbeClipboard}{}{RestoreCursorPos}",
+			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{ProbeClipboard}{RequestCsiU}{}{RestoreCursorPos}",
 			w(&RequestXtVersion),
 			w(&RequestKittyGraphics),
 			w(&RequestDA1),
