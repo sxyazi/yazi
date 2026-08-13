@@ -189,7 +189,7 @@ impl Scheduler {
 	}
 
 	pub fn preload_paged(&self, preloader: PreloaderArc, file: &File, mime: Symbol<str>) {
-		let hook = HookInPreload::new(preloader.idx, FileSig(file).hash_u64());
+		let hook = HookInPreload::new(&preloader, FileSig(file).hash_u64());
 		let mut r#in = PreloadInPreload { id: Id::ZERO, preloader, file: file.clone(), mime };
 
 		self.add_hooked(&mut r#in, hook, |_| ());

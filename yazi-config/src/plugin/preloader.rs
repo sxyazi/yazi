@@ -12,8 +12,6 @@ use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{Pre
 pub struct Preloader {
 	#[serde(skip, default = "preloader_id")]
 	pub id:       Id,
-	#[serde(skip)]
-	pub idx:      u8,
 	#[serde(flatten)]
 	pub selector: Selector,
 	pub run:      Cmd,

@@ -10,13 +10,13 @@ use yazi_macro::error;
 use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
 use yazi_shared::id::Id;
 
-use crate::{HIGH, LOW, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadInPreload, PreloadOut}};
+use crate::{HIGH, LOW, Loaded, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadInPreload, PreloadOut}};
 
 pub struct Preload {
 	ops: TaskOps,
 	tx:  async_priority_channel::Sender<PreloadIn, u8>,
 
-	pub loaded:  Mutex<LruCache<u64, u16>>,
+	pub loaded:  Mutex<LruCache<u64, Loaded>>,
 	pub loading: Mutex<LruCache<u64, Id>>,
 }
 
@@ -51,7 +51,7 @@ impl Preload {
 		};
 
 		if !state.complete {
-			self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.preloader.idx));
+			self.loaded.lock().get_mut(&hash).map(|x| x.clear(task.preloader.idx, task.preloader.rev));
 		}
 		if let Some(e) = state.error {
 			error!("Error when running preloader '{}':\n{e}", task.preloader.name);

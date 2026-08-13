@@ -105,7 +105,7 @@ impl Hook {
 	// --- Preload
 	pub(crate) async fn preload(&self, task: HookInPreload) {
 		if !self.ongoing.lock().intact(task.id) {
-			self.preload.loaded.lock().get_mut(&task.hash).map(|x| *x &= !(1 << task.idx));
+			self.preload.loaded.lock().get_mut(&task.hash).map(|x| x.clear(task.idx, task.rev));
 		}
 
 		self.ops.out(task.id, PreloadOut::Clean);

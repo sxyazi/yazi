@@ -13,8 +13,6 @@ use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{Fet
 pub struct Fetcher {
 	#[serde(skip, default = "fetcher_id")]
 	pub id:       Id,
-	#[serde(skip)]
-	pub idx:      u8,
 	#[serde(flatten)]
 	pub selector: Selector,
 	pub run:      Cmd,
@@ -55,7 +53,20 @@ impl From<&Fetchers> for FetcherMatcher<'_> {
 	}
 }
 
-impl FetcherMatcher<'_> {
+impl<'a> FetcherMatcher<'a> {
+	pub fn new<F, M>(fetchers: &Arc<Vec<FetcherArc>>, file: F, mime: M) -> Self
+	where
+		F: Into<Cow<'a, File>>,
+		M: Into<Cow<'a, str>>,
+	{
+		Self {
+			fetchers: fetchers.clone(),
+			file: Some(file.into()),
+			mime: Some(mime.into()),
+			..Default::default()
+		}
+	}
+
 	pub fn matches(&self, fetcher: &Fetcher) -> bool {
 		if self.all {
 			true
