@@ -8,12 +8,12 @@ use yazi_config::Priority;
 use yazi_macro::error;
 use yazi_runner::RUNNER;
 
-use crate::{HIGH, LOW, TaskOp, TaskOps, fetch::{FetchIn, FetchInFetch, FetchOutFetch}};
+use crate::{HIGH, LOW, Loaded, TaskOp, TaskOps, fetch::{FetchIn, FetchInFetch, FetchOutFetch}};
 
 pub struct Fetch {
 	ops:        TaskOps,
 	tx:         async_priority_channel::Sender<FetchIn, u8>,
-	pub loaded: Mutex<LruCache<u64, u16>>,
+	pub loaded: Mutex<LruCache<u64, Loaded>>,
 }
 
 impl Fetch {
@@ -33,7 +33,7 @@ impl Fetch {
 
 		for status in RUNNER.fetch(task.into()).await? {
 			if status.retry {
-				self.loaded.lock().get_mut(&status.hash).map(|x| *x &= !(1 << fetcher.idx));
+				self.loaded.lock().get_mut(&status.hash).map(|x| x.clear(fetcher.idx, fetcher.rev));
 			}
 			if let Some(e) = status.error {
 				error!("Error when running fetcher '{}':\n{e:?}", fetcher.name);

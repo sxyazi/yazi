@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Context-aware icons for inputs ([#4080])
 - Show file icons in trash/delete/overwrite confirmations ([#4096])
 - Dynamic keymap Lua API ([#4031])
+- Dynamic Lua API for preloader, spotter, fetcher ([#4235])
 - Configurable border for the which component ([#4189])
 - Official APT repository for Debian and Ubuntu ([#4198])
 - New `--follow` option for the `link` action ([#4184])
@@ -1813,3 +1814,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4216]: https://github.com/sxyazi/yazi/pull/4216
 [#4225]: https://github.com/sxyazi/yazi/pull/4225
 [#4228]: https://github.com/sxyazi/yazi/pull/4228
+[#4235]: https://github.com/sxyazi/yazi/pull/4235

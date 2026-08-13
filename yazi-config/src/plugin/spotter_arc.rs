@@ -1,6 +1,6 @@
 use std::{ops::{Deref, DerefMut}, sync::Arc};
 
-use mlua::{UserData, UserDataFields};
+use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, Value};
 use serde::Deserialize;
 use yazi_shim::mlua::UserDataFieldsExt;
 
@@ -24,6 +24,12 @@ impl From<Spotter> for SpotterArc {
 }
 
 impl Mixable for SpotterArc {}
+
+impl FromLua for SpotterArc {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(lua.from_value::<Spotter>(value)?.into())
+	}
+}
 
 impl UserData for SpotterArc {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {

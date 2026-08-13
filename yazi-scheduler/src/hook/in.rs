@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use yazi_config::plugin::PreloaderArc;
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{Task, TaskIn, TaskProg};
@@ -351,6 +352,7 @@ impl HookInUpload {
 pub(crate) struct HookInPreload {
 	pub(crate) id:   Id,
 	pub(crate) idx:  u8,
+	pub(crate) rev:  u16,
 	pub(crate) hash: u64,
 }
 
@@ -368,5 +370,7 @@ impl TaskIn for HookInPreload {
 }
 
 impl HookInPreload {
-	pub(crate) fn new(idx: u8, hash: u64) -> Self { Self { id: Id::ZERO, idx, hash } }
+	pub(crate) fn new(preloader: &PreloaderArc, hash: u64) -> Self {
+		Self { id: Id::ZERO, idx: preloader.idx, rev: preloader.rev, hash }
+	}
 }

@@ -1,5 +1,6 @@
-use yazi_config::{YAZI, plugin::MAX_FETCHERS};
+use yazi_config::{YAZI, plugin::{FetcherMatcher, MAX_FETCHERS}};
 use yazi_fs::{Entries, FsHash64, SortBy, file::{File, FileSig}};
+use yazi_scheduler::Loaded;
 use yazi_shared::pool::InternStr;
 
 use super::Tasks;
@@ -7,22 +8,24 @@ use crate::mgr::Mimetype;
 
 impl Tasks {
 	pub fn fetch_paged(&self, paged: &[File], mimetype: &Mimetype) {
+		let fetchers = YAZI.plugin.fetchers.load_full();
 		let mut loaded = self.scheduler.fetch.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
+
 		for f in paged {
 			let hash = FileSig(f).hash_u64();
-			for g in YAZI.plugin.fetchers.matches(f, mimetype.get(&f.url).unwrap_or_default()) {
-				match loaded.get_mut(&hash) {
-					Some(n) if *n & (1 << g.idx) != 0 => continue,
-					Some(n) => *n |= 1 << g.idx,
-					None => _ = loaded.put(hash, 1 << g.idx),
+			for g in FetcherMatcher::new(&fetchers, f, mimetype.get(&f.url).unwrap_or_default()) {
+				let fresh = match loaded.get_mut(&hash) {
+					Some(l) => l.mark(g.idx, g.rev),
+					None => loaded.put(hash, Loaded::new(g.idx, g.rev)).is_none(),
+				};
+				if fresh {
+					tasks[g.idx as usize].push(f.clone());
 				}
-				tasks[g.idx as usize].push(f.clone());
 			}
 		}
 
 		drop(loaded);
-		let fetchers = YAZI.plugin.fetchers.load();
 		for (i, tasks) in tasks.into_iter().enumerate() {
 			if !tasks.is_empty() {
 				self.scheduler.fetch_paged(fetchers[i].clone(), tasks);
@@ -36,12 +39,13 @@ impl Tasks {
 			let hash = FileSig(f).hash_u64();
 			let mime = mimetype.get(&f.url).unwrap_or_default();
 			for p in YAZI.plugin.preloaders.matches(f, mime) {
-				match loaded.get_mut(&hash) {
-					Some(n) if *n & (1 << p.idx) != 0 => continue,
-					Some(n) => *n |= 1 << p.idx,
-					None => _ = loaded.put(hash, 1 << p.idx),
+				let fresh = match loaded.get_mut(&hash) {
+					Some(l) => l.mark(p.idx, p.rev),
+					None => loaded.put(hash, Loaded::new(p.idx, p.rev)).is_none(),
+				};
+				if fresh {
+					self.scheduler.preload_paged(p, f, mime.intern());
 				}
-				self.scheduler.preload_paged(p, f, mime.intern());
 			}
 		}
 	}
