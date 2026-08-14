@@ -184,6 +184,8 @@ impl<'a> Spark<'a> {
 			// mgr:stash
 			IndStash => Self::Stash(<_>::from_lua(value, lua)?),
 			RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
+			// mgr:update_files
+			RelayUpdateFiles => Self::UpdateFiles(<_>::from_lua(value, lua)?),
 			// mgr:watch
 			IndWatch => Self::Watch(<_>::from_lua(value, lua)?),
 			// mgr:quit

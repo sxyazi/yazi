@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use std::{mem, ops::{Deref, DerefMut}};
 
 use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}};
@@ -29,12 +29,7 @@ impl DerefMut for Ctx<'_> {
 impl<'a> Ctx<'a> {
 	pub fn new(action: &Action, core: &'a mut Core, term: &'a mut Option<Raterm>) -> Result<Self> {
 		let tab = if let Ok(id) = action.get::<Id>("tab") {
-			core
-				.mgr
-				.tabs
-				.iter()
-				.position(|t| t.id == id)
-				.ok_or_else(|| anyhow!("Tab with id {id} not found"))?
+			core.mgr.tabs.idx(id).ok_or_else(|| anyhow!("Tab with id {id} not found"))?
 		} else {
 			core.mgr.tabs.cursor
 		};
@@ -48,6 +43,16 @@ impl<'a> Ctx<'a> {
 			#[cfg(debug_assertions)]
 			backtrace: vec![],
 		})
+	}
+
+	pub fn with<F, T>(&mut self, tab: usize, f: F) -> T
+	where
+		F: FnOnce(&mut Self) -> T,
+	{
+		let prev = mem::replace(&mut self.tab, tab);
+		let result = f(self);
+		self.tab = prev;
+		result
 	}
 
 	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Self {

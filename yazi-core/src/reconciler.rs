@@ -10,7 +10,7 @@ pub struct Reconciler<'a> {
 }
 
 impl<'a> Reconciler<'a> {
-	pub fn new(mgr: &'a mut Mgr, tab: usize) -> Self {
+	pub fn new(tab: usize, mgr: &'a mut Mgr) -> Self {
 		let Mgr { tabs, yanked, .. } = mgr;
 		Self { selected: &mut tabs[tab].selected, yanked }
 	}
