@@ -51,6 +51,7 @@ impl UpdateFiles {
 
 		act!(mgr:hidden, cx).ok();
 		act!(mgr:sort, cx).ok();
+
 		if revision != cx.current().entries.revision {
 			act!(mgr:hover, cx)?;
 			act!(mgr:peek, cx)?;
