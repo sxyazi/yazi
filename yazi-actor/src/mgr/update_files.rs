@@ -1,9 +1,11 @@
+use std::iter;
+
 use anyhow::Result;
 use yazi_core::{Invalidator, Reconciler};
 use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
-use yazi_parser::mgr::UpdateFilesForm;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_parser::{mgr::UpdateFilesForm, spark::SparkKind};
+use yazi_shared::{Source, data::Data, url::UrlLike};
 use yazi_watcher::local::LINKED;
 
 use crate::{Actor, Ctx};
@@ -16,20 +18,39 @@ impl Actor for UpdateFiles {
 	const NAME: &str = "update_files";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let tab = cx.tab;
-		let revision = cx.current().entries.revision;
 		let linked: Vec<_> = LINKED.read().from_dir(form.op.cwd()).map(|u| form.op.chdir(u)).collect();
+		let ops: Vec<_> = iter::once(form.op).chain(linked).collect();
 
-		for op in [form.op].into_iter().chain(linked) {
-			Invalidator::new(&mut cx.mgr).apply(&op);
-			Reconciler::new(&mut cx.mgr, tab).apply(&op);
-			Self::update_tab(cx, op).ok();
+		for op in &ops {
+			Invalidator::new(&mut cx.mgr).apply(op);
+			Reconciler::new(cx.tab, &mut cx.mgr).apply(op);
+		}
+		render!(cx.mgr.yanked.catchup_revision(false));
+
+		let tabs = cx.tabs().indices_or_active(form.tabs);
+		let Some((&last, tabs)) = tabs.split_last() else { succ!() };
+
+		for &tab in tabs {
+			cx.with(tab, |cx| Self::update_tab(cx, ops.iter().cloned()))?;
+		}
+		cx.with(last, |cx| Self::update_tab(cx, ops))
+	}
+
+	fn hook(cx: &Ctx, _: &Self::Form) -> Option<SparkKind> {
+		(cx.source() == Source::Relay).then_some(SparkKind::RelayUpdateFiles)
+	}
+}
+
+impl UpdateFiles {
+	fn update_tab(cx: &mut Ctx, ops: impl IntoIterator<Item = FilesOp>) -> Result<Data> {
+		let revision = cx.current().entries.revision;
+
+		for op in ops {
+			Self::update_pane(cx, op).ok();
 		}
 
-		render!(cx.mgr.yanked.catchup_revision(false));
 		act!(mgr:hidden, cx).ok();
 		act!(mgr:sort, cx).ok();
-
 		if revision != cx.current().entries.revision {
 			act!(mgr:hover, cx)?;
 			act!(mgr:peek, cx)?;
@@ -38,10 +59,8 @@ impl Actor for UpdateFiles {
 		}
 		succ!();
 	}
-}
 
-impl UpdateFiles {
-	fn update_tab(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
+	fn update_pane(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let url = op.cwd();
 
 		if url == cx.cwd() {

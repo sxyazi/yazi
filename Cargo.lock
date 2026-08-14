@@ -5425,6 +5425,7 @@ dependencies = [
  "windows 0.62.2",
  "windows-sys 0.61.2",
  "yazi-binding",
+ "yazi-codegen",
  "yazi-ffi",
  "yazi-macro",
  "yazi-shared",

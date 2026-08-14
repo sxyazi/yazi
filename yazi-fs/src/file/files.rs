@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use std::{ops::{Deref, DerefMut}, vec};
 
 use mlua::{FromLua, IntoLua, Lua, Value};
 use yazi_shared::url::UrlBuf;
@@ -34,6 +34,13 @@ impl Files {
 	pub fn hashes(&self) -> impl Iterator<Item = u64> + '_ {
 		self.iter().map(|f| FileSig(f).hash_u64())
 	}
+}
+
+impl IntoIterator for Files {
+	type IntoIter = vec::IntoIter<File>;
+	type Item = File;
+
+	fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
 }
 
 impl FromLua for Files {

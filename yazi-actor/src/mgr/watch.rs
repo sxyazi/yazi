@@ -1,7 +1,7 @@
 use std::iter;
 
 use anyhow::Result;
-use yazi_macro::succ;
+use yazi_macro::{succ, tab};
 use yazi_parser::{mgr::WatchForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
@@ -19,7 +19,7 @@ impl Actor for Watch {
 			succ!(cx.core.mgr.watcher.watch(form.files));
 		}
 
-		let tab = cx.core.mgr.tabs.active();
+		let tab = tab!(cx);
 		let it = iter::once(&tab.current.file)
 			.chain(tab.hovered_folder().map(|h| &h.file).or(tab.hovered().filter(|f| f.is_dir())))
 			.chain(tab.parent.as_ref().map(|p| &p.file));

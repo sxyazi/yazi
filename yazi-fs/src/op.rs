@@ -1,6 +1,8 @@
 use std::{iter, path::Path};
 
 use hashbrown::{HashMap, HashSet};
+use mlua::{UserData, UserDataFields};
+use yazi_codegen::FromLuaOwned;
 use yazi_macro::{impl_data_any, relay};
 use yazi_shared::{id::{Id, Ids}, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike, UrlMapExt}};
 
@@ -8,7 +10,7 @@ use crate::file::File;
 
 pub static FILES_TICKET: Ids = Ids::new();
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, FromLuaOwned)]
 pub enum FilesOp {
 	Full(File, Vec<File>),
 	Part(UrlBuf, Vec<File>, Id),
@@ -22,7 +24,7 @@ pub enum FilesOp {
 	Upserting(UrlBuf, HashMap<PathBufDyn, File>),
 }
 
-impl_data_any!(FilesOp);
+impl_data_any!(FilesOp, from_into_lua = inherit);
 
 impl FilesOp {
 	pub fn cwd(&self) -> &UrlBuf {
@@ -152,5 +154,11 @@ impl FilesOp {
 			Self::Updating(_, map) => Self::Updating(w, map!(map)),
 			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
 		}
+	}
+}
+
+impl UserData for FilesOp {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("cwd", |_, me| Ok(me.cwd().clone()));
 	}
 }
