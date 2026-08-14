@@ -21,7 +21,7 @@ impl Mux {
 				"set",
 				"-p",
 				"allow-passthrough",
-				"on",
+				"all",
 				";",
 				"set",
 				"-s",
