@@ -58,6 +58,8 @@ impl Raterm {
 			If(opt.mouse, EnableMouseCapture),
 		)?;
 
+		let probe = Probe::start()?;
+
 		let mut inner = Terminal::new(RatermBackend::new(TTY.writer()))?;
 		inner.hide_cursor()?;
 		inner.clear()?;
@@ -67,7 +69,7 @@ impl Raterm {
 			inner,
 			forwarder: Self::spawn(&mut stream),
 			_stream: stream,
-			probe: Probe::start()?,
+			probe,
 			last_area: Default::default(),
 			last_buffer: Default::default(),
 		})
@@ -134,10 +136,5 @@ impl Raterm {
 
 	pub fn can_partial(&mut self) -> bool {
 		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().area()
-	}
-
-	pub fn clear(&mut self) -> io::Result<()> {
-		self.inner.clear()?;
-		self.inner.flush()
 	}
 }

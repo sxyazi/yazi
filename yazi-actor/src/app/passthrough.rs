@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use yazi_emulator::EMULATOR;
-use yazi_macro::{error, succ};
+use yazi_macro::{error, render_force, succ};
 use yazi_parser::app::PassthroughForm;
 use yazi_shared::data::Data;
 
@@ -24,6 +24,8 @@ impl Actor for Passthrough {
 
 		if let Err(e) = term.probe.restart() {
 			error!("Failed to request terminal capabilities through tmux: {e}");
+		} else {
+			render_force!();
 		}
 
 		EMULATOR.store(Arc::new(term.probe.emulator.clone()));

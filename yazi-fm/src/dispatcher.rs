@@ -1,9 +1,7 @@
-use std::sync::atomic::Ordering;
-
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::{act, emit, warn};
-use yazi_shared::event::{ActionCow, Event, NEED_RENDER};
+use yazi_shared::event::{ActionCow, Event};
 use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 
 use crate::{Executor, Router, app::App};
@@ -19,7 +17,6 @@ impl<'a> Dispatcher<'a> {
 		let result = match event {
 			Event::Call(action) => Ok(self.dispatch_call(action)),
 			Event::Seq(actions) => Ok(self.dispatch_seq(actions)),
-			Event::Render(partial) => self.dispatch_render(partial),
 			Event::Term(TermEvent::Key(key)) => self.dispatch_key(key),
 			Event::Term(TermEvent::Mouse(mouse)) => self.dispatch_mouse(mouse),
 			Event::Term(TermEvent::Resize(_)) => self.dispatch_resize(),
@@ -55,15 +52,6 @@ impl<'a> Dispatcher<'a> {
 		if !actions.is_empty() {
 			emit!(Seq(actions));
 		}
-	}
-
-	fn dispatch_render(&mut self, partial: bool) -> Result<()> {
-		if partial {
-			_ = NEED_RENDER.compare_exchange(0, 2, Ordering::Relaxed, Ordering::Relaxed);
-		} else {
-			NEED_RENDER.store(1, Ordering::Relaxed);
-		}
-		Ok(())
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) -> Result<()> {

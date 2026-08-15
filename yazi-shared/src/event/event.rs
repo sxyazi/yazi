@@ -11,7 +11,6 @@ pub enum Event {
 	Call(ActionCow),
 	Seq(Vec<ActionCow>),
 	Term(yazi_term::event::Event),
-	Render(bool),
 }
 
 impl Event {
