@@ -449,9 +449,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.4.2"
+version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d262e149917187838d5b42777c8253bcb64500067342904e7d429499a6f277e"
+checksum = "509591b7bcd67f4ef775afad7662703b4935daaa6ec0e5605cfb1090b32a2b6d"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -1225,9 +1225,9 @@ checksum = "64cd1e32ddd350061ae6edb1b082d7c54915b5c672c389143b9a63403a109f24"
 
 [[package]]
 name = "find-msvc-tools"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26b73573e6edcd2af0cdf47bd6cb58f0b3839491263c314eaad1ccf24430e1de"
+checksum = "d45db016d36b838f563236e9193d0ee6ce38f3f68b6c94e914b4929c96bbb890"
 
 [[package]]
 name = "flate2"
@@ -1843,9 +1843,9 @@ dependencies = [
 
 [[package]]
 name = "inotify"
-version = "0.11.4"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "153be1941a183ec9ccd095ddbe17a8b8d435ef6c76e9e02451b933c3999af2c8"
+checksum = "4cc00ea907cab49550b7da656f80ebb97be1b997d931fbcd28d39734e17ce592"
 dependencies = [
  "bitflags 2.13.1",
  "inotify-sys",
@@ -2122,9 +2122,9 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "libredox"
-version = "0.1.19"
+version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2026a5056764a10b2bf5d56488cba40da507f5493a6a429340e2004d9ed085fa"
+checksum = "28d0a00925a9f930d679b6789b721e3a7f9ed110f41b86d2497caa780c3a070a"
 dependencies = [
  "libc",
 ]
@@ -2776,9 +2776,9 @@ dependencies = [
 
 [[package]]
 name = "pkg-config"
-version = "0.3.33"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f132c84eca552bf34cab8ec81f1c1dcc229b811638f9d283dceabe58c5569e"
+checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "plist"
@@ -3443,9 +3443,9 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "safe_arch"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a52ec151f024d703f9fd65abb7cbe81e7cdb39f18917a3a37e3014470dc7c59"
+checksum = "42c6efa15875e6ecb39ca61fb0b0c1a40b84fac5a5ffe71eef7d1000c8eb3f5f"
 dependencies = [
  "bytemuck",
 ]
@@ -5072,7 +5072,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-actor"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "either",
@@ -5113,7 +5113,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adapter"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5138,7 +5138,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-binding"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5166,7 +5166,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "clap",
  "clap_complete",
@@ -5184,7 +5184,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-build"
-version = "26.5.9"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "yazi-macro",
@@ -5193,7 +5193,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "clap",
@@ -5223,7 +5223,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5232,7 +5232,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5262,7 +5262,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "dyn-clone",
@@ -5297,7 +5297,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "hashbrown 0.17.1",
@@ -5322,7 +5322,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-emulator"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5336,7 +5336,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -5348,7 +5348,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "fdlimit",
@@ -5392,7 +5392,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5435,15 +5435,15 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "26.5.6"
+version = "26.8.15"
 
 [[package]]
 name = "yazi-packing"
-version = "26.5.6"
+version = "26.8.15"
 
 [[package]]
 name = "yazi-parser"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "bitflags 2.13.1",
@@ -5472,7 +5472,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5520,7 +5520,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "tokio",
@@ -5536,7 +5536,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-runner"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "compact_str 0.10.0",
@@ -5557,7 +5557,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -5585,7 +5585,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-sftp"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "bitflags 2.13.1",
  "hashbrown 0.17.1",
@@ -5598,7 +5598,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "compact_str 0.10.0",
@@ -5631,7 +5631,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shim"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5654,7 +5654,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-term"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -5677,7 +5677,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-tty"
-version = "26.5.9"
+version = "26.8.15"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -5692,7 +5692,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-tui"
-version = "26.5.9"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "ratatui-core",
@@ -5709,14 +5709,14 @@ dependencies = [
 
 [[package]]
 name = "yazi-version"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "vergen-gitcl",
 ]
 
 [[package]]
 name = "yazi-vfs"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "chrono",
  "deadpool",
@@ -5741,7 +5741,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-watcher"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "futures",
  "hashbrown 0.17.1",
@@ -5761,7 +5761,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-widgets"
-version = "26.5.6"
+version = "26.8.15"
 dependencies = [
  "anyhow",
  "clipboard-win",
