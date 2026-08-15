@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+## [v26.8.15]
+
 ### Added
 
 - Drag and drop ([#4005], [#4225])
@@ -1130,6 +1132,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [v26.1.4]: https://github.com/sxyazi/yazi/compare/v25.12.29...v26.1.4
 [v26.1.22]: https://github.com/sxyazi/yazi/compare/v26.1.4...v26.1.22
 [v26.5.6]: https://github.com/sxyazi/yazi/compare/v26.1.22...v26.5.6
+[v26.8.15]: https://github.com/sxyazi/yazi/compare/v26.5.6...v26.8.15
 [#4]: https://github.com/sxyazi/yazi/pull/4
 [#5]: https://github.com/sxyazi/yazi/pull/5
 [#6]: https://github.com/sxyazi/yazi/pull/6

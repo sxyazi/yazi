@@ -13,14 +13,14 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-binding = { path = "../yazi-binding", version = "26.5.6" }
-yazi-config  = { path = "../yazi-config", version = "26.5.6" }
-yazi-fs      = { path = "../yazi-fs", version = "26.5.6" }
-yazi-macro   = { path = "../yazi-macro", version = "26.5.6" }
-yazi-runner  = { path = "../yazi-runner", version = "26.5.6" }
-yazi-sftp    = { path = "../yazi-sftp", version = "26.5.6" }
-yazi-shared  = { path = "../yazi-shared", version = "26.5.6" }
-yazi-shim    = { path = "../yazi-shim", version = "26.5.6" }
+yazi-binding = { path = "../yazi-binding", version = "26.8.15" }
+yazi-config  = { path = "../yazi-config", version = "26.8.15" }
+yazi-fs      = { path = "../yazi-fs", version = "26.8.15" }
+yazi-macro   = { path = "../yazi-macro", version = "26.8.15" }
+yazi-runner  = { path = "../yazi-runner", version = "26.8.15" }
+yazi-sftp    = { path = "../yazi-sftp", version = "26.8.15" }
+yazi-shared  = { path = "../yazi-shared", version = "26.8.15" }
+yazi-shim    = { path = "../yazi-shim", version = "26.8.15" }
 
 # External dependencies
 chrono      = { workspace = true }
