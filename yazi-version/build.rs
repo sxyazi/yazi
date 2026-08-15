@@ -11,7 +11,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 		.emit()?;
 
 	if env::var_os("YAZI_NO_GITCL").is_none() {
-		Emitter::default().add_instructions(&Gitcl::builder().sha(true).build())?.emit()?;
+		Emitter::default()
+			.default_on_error()
+			.add_instructions(&Gitcl::builder().sha(true).build())?
+			.emit()?;
 	} else {
 		println!("cargo:rustc-env=VERGEN_GIT_SHA=no-gitcl");
 	}
