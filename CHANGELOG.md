@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Fixed
+
+- Avoid flicker caused by screen clear on final response from terminal ([#4250])
+
 ## [v26.8.15]
 
 ### Added
@@ -1818,3 +1822,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4225]: https://github.com/sxyazi/yazi/pull/4225
 [#4228]: https://github.com/sxyazi/yazi/pull/4228
 [#4235]: https://github.com/sxyazi/yazi/pull/4235
+[#4250]: https://github.com/sxyazi/yazi/pull/4250

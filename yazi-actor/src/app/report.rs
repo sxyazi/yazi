@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use yazi_adapter::ADAPTOR;
 use yazi_emulator::{EMULATOR, Mux};
-use yazi_macro::{act, render, succ};
+use yazi_macro::{act, succ};
 use yazi_proxy::AppProxy;
 use yazi_shared::data::Data;
 use yazi_term::event::Report as TermReport;
@@ -32,7 +32,6 @@ impl Actor for Report {
 		} else if !report.is_da_1() {
 			succ!();
 		} else if !term.probe.needs_passthrough() {
-			render!(term.clear().is_ok());
 			ADAPTOR.resolve(&term.probe.emulator);
 			return act!(app:theme, cx);
 		}

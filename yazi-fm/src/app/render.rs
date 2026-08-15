@@ -1,6 +1,7 @@
 use std::{sync::atomic::Ordering, time::Instant};
 
 use anyhow::Result;
+use ratatui_core::{buffer::{Buffer, CellDiffOption}, layout::Position};
 use yazi_actor::{Ctx, lives::Lives};
 use yazi_adapter::ADAPTOR;
 use yazi_binding::runtime_scope;
@@ -13,12 +14,12 @@ use super::SyncGuard;
 use crate::{app::App, root::Root};
 
 impl App {
-	pub(crate) fn render(&mut self, partial: bool) -> Result<Data> {
+	pub(crate) fn render(&mut self) -> Result<Data> {
 		self.last_render = Instant::now();
 		NEED_RENDER.store(0, Ordering::Relaxed);
 		let Some(term) = &mut self.term else { succ!() };
 
-		if partial {
+		if self.need_render == /* partial */ 1 {
 			return self.render_partially();
 		}
 
@@ -29,6 +30,10 @@ impl App {
 			_ = Lives::scope(&mut self.core, |core| {
 				runtime_scope!(LUA, "root", Ok(f.render_widget(Root::new(core), f.area())))
 			});
+
+			if self.need_render == /* force */ 3 {
+				Self::render_forcibly(f.buffer_mut());
+			}
 		})?;
 
 		if !self.core.notify.messages.is_empty() {
@@ -49,7 +54,8 @@ impl App {
 	pub(crate) fn render_partially(&mut self) -> Result<Data> {
 		let Some(term) = &mut self.term else { succ!() };
 		if !term.can_partial() {
-			return self.render(false);
+			self.need_render = /* normal */ 2;
+			return self.render();
 		}
 
 		let guard = SyncGuard::enter();
@@ -65,5 +71,20 @@ impl App {
 
 		guard.finish(self.core.cursor());
 		succ!();
+	}
+
+	fn render_forcibly(buffer: &mut Buffer) {
+		let area = buffer.area;
+		let image_area = ADAPTOR.shown_area();
+
+		for y in area.top()..area.bottom() {
+			for x in area.left()..area.right() {
+				if image_area.is_some_and(|area| area.contains(Position { x, y })) {
+					continue;
+				}
+
+				buffer[(x, y)].set_diff_option(CellDiffOption::AlwaysUpdate);
+			}
+		}
 	}
 }

@@ -46,6 +46,8 @@ impl Adapter {
 		}
 	}
 
+	pub fn shown_area(&self) -> Option<Rect> { self.shown.get() }
+
 	pub(super) fn shown_store(&self, area: Rect) { self.shown.set(Some(area)); }
 
 	pub fn resolve(&self, emulator: &Emulator) -> Driver {

@@ -14,7 +14,7 @@ pub(crate) struct App {
 	pub(crate) core: Core,
 	pub(crate) term: Option<Raterm>,
 
-	need_render:            u8,
+	pub(super) need_render: u8,
 	pub(crate) last_render: Instant,
 	next_render:            Option<Duration>,
 }
@@ -43,7 +43,7 @@ impl App {
 			if let Some(t) = app.next_render.take() {
 				select! {
 					_ = sleep(t) => {
-						app.render(app.need_render == 2)?;
+						app.render()?;
 					}
 					r = app.drain(&mut rx) => if !r? {
 						break;
@@ -86,7 +86,7 @@ impl App {
 
 		self.next_render = Duration::from_millis(10).checked_sub(self.last_render.elapsed());
 		if self.next_render.is_none() {
-			self.render(self.need_render == 2)?;
+			self.render()?;
 		}
 
 		Ok(())
