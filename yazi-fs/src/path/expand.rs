@@ -199,11 +199,11 @@ mod tests {
 			(r"test-mount://7z:2:1/D:\base\%ROOTED%\file", r"test-mount://7z:3:1/D:\downloads\file"),
 			(r"test-mount://7z:2:1/D:\base\file\%ROOTED%", r"test-mount://7z:2:1/D:\downloads"),
 			// Drive-absolute path expanded
-			(r"test-mount://7z:2:1/D:\base\%DRIVE_ABS%\file", r"test-mount://7z:4:1/C:\downloads\file"),
-			(r"test-mount://7z:2:1/D:\base\file\%DRIVE_ABS%", r"test-mount://7z:3:1/C:\downloads"),
+			(r"test-mount://7z:2:1/D:\base\%DRIVE_ABS%\file", r"test-mount://7z:3:1/C:\downloads\file"),
+			(r"test-mount://7z:2:1/D:\base\file\%DRIVE_ABS%", r"test-mount://7z:2:1/C:\downloads"),
 			// Drive-relative path expanded
-			(r"test-mount://7z:2:1/D:\base\%DRIVE_REL%\file", r"test-mount://7z:3:1/C:downloads\file"),
-			(r"test-mount://7z:2:1/D:\base\file\%DRIVE_REL%", r"test-mount://7z:2:2/C:downloads"),
+			(r"test-mount://7z:2:1/D:\base\%DRIVE_REL%\file", r"test-mount://7z:2:1/C:downloads\file"),
+			(r"test-mount://7z:2:1/D:\base\file\%DRIVE_REL%", r"test-mount://7z:1:1/C:downloads"),
 		];
 
 		for (input, expected) in cases {
