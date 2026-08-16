@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
+- Expand environment variables containing absolute paths without crashing ([#])
 - Avoid flicker caused by screen clear on final response from terminal ([#4250])
 - Fall back when `vergen` cannot determine Git SHA ([#4252])
 

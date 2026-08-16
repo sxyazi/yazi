@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::{Utf8BytePredictor, path::{Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand}};
+use crate::{Utf8BytePredictor, path::{Component, Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand}};
 
 pub trait PathLike: DynPath {
 	fn as_os(&self) -> Result<&std::path::Path, PathDynError> { self.dyn_path().as_os() }
@@ -16,6 +16,8 @@ pub trait PathLike: DynPath {
 	fn encoded_bytes(&self) -> &[u8] { self.dyn_path().encoded_bytes() }
 
 	fn ext(&self) -> Option<Strand<'_>> { self.dyn_path().ext() }
+
+	fn has_prefix(&self) -> bool { matches!(self.components().next(), Some(Component::Prefix(_))) }
 
 	fn has_root(&self) -> bool { self.dyn_path().has_root() }
 
