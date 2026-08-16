@@ -1,37 +1,46 @@
 use std::borrow::Cow;
 
-use yazi_shared::{loc::LocBuf, path::{PathBufDyn, PathCow, PathKind, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, path::{Component, PathBufDyn, PathCow, PathKind, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 use yazi_shim::wtf8::FromWtf8Vec;
 
 #[inline]
 pub fn expand_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { expand_url_impl(url.into()) }
 
 fn expand_url_impl(url: UrlCow) -> UrlCow {
-	let (o_base, o_rest, o_urn) = url.triple();
+	let (base, rest, urn) = url.triple();
 
-	let n_base = expand_variables(o_base.into());
-	let n_rest = expand_variables(o_rest.into());
-	let n_urn = expand_variables(o_urn.into());
-	if n_base.is_borrowed() && n_rest.is_borrowed() && n_urn.is_borrowed() {
+	let base = expand_variables(base.into());
+	let rest = expand_variables(rest.into());
+	let urn = expand_variables(urn.into());
+	if base.is_borrowed() && rest.is_borrowed() && urn.is_borrowed() {
 		return url;
 	}
 
-	let rest_diff = n_rest.components().count() as isize - o_rest.components().count() as isize;
-	let urn_diff = n_urn.components().count() as isize - o_urn.components().count() as isize;
+	let mut path = PathBufDyn::with_capacity(url.kind(), base.len() + rest.len() + urn.len());
+	path.try_push(&base).expect("push original base should not fail");
+	let c_base = path.components().count();
 
-	let uri_count = url.uri().components().count() as isize;
-	let urn_count = url.urn().components().count() as isize;
+	path.try_push(&rest).expect("push original URI should not fail");
+	let c_trail = path.components().count();
 
-	let mut path = PathBufDyn::with_capacity(url.kind(), n_base.len() + n_rest.len() + n_urn.len());
-	path.try_extend([n_base, n_rest, n_urn]).expect("extend original parts should not fail");
+	path.try_push(&urn).expect("push original URN should not fail");
+	let c_full = path.components().count();
 
-	let uri = (uri_count + rest_diff + urn_diff) as usize;
-	let urn = (urn_count + urn_diff) as usize;
+	let uri = if urn.has_prefix() || rest.has_prefix() {
+		c_full
+	} else if urn.has_root() || rest.has_root() {
+		c_full - c_base.min(path.has_prefix() as usize)
+	} else {
+		c_full - c_base
+	};
+	let urn = if urn.has_prefix() || urn.has_root() {
+		path.components().rev().take_while(|&c| c != Component::RootDir).count()
+	} else {
+		c_full - c_trail
+	};
 
 	match url.as_url() {
-		Url::Regular(_) => UrlBuf::Regular(
-			LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
-		),
+		Url::Regular(_) => UrlBuf::from(path.into_os().unwrap()),
 		Url::Search { auth, .. } => UrlBuf::Search {
 			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
 			auth: auth.clone(),
@@ -98,9 +107,28 @@ mod tests {
 			std::env::set_var("BAR_BAZ", "bar/baz");
 			std::env::set_var("BAR/BAZ", "bar_baz");
 			std::env::set_var("EM/PT/Y", "");
+
+			std::env::set_var("ABS", "/tmp/downloads");
+			std::env::set_var("DOT", ".");
+			std::env::set_var("DOT_FOO", "./foo");
 		}
 
 		let cases = [
+			// Absolute path expanded
+			("$ABS", "/tmp/downloads"),
+			("test-mount://7z:1//$ABS", "test-mount://7z:3//tmp/downloads"),
+			("test-mount://7z:1:1//$ABS", "test-mount://7z:3:2//tmp/downloads"),
+			("test-scope://aws//$ABS", "test-scope://aws:3:2//tmp/downloads"),
+			// Current directory expanded
+			("test-mount://7z:1/$DOT", "test-mount://7z:1/."),
+			("test-mount://7z:1//$DOT", "test-mount://7z//"),
+			("test-mount://7z:1:1/$DOT", "test-mount://7z:1:1/."),
+			("test-mount://7z:1:1//$DOT", "test-mount://7z//"),
+			("test-mount://7z:2:1//base/$DOT/file", "test-mount://7z:1:1//base/./file"),
+			("test-mount://7z:1:1/$DOT_FOO", "test-mount://7z:2:2/./foo"),
+			("test-mount://7z:1:1//$DOT_FOO", "test-mount://7z:1:1//./foo"),
+			("test-scope://aws/$DOT", "test-scope://aws:1:1/."),
+			("test-scope://aws//$DOT", "test-scope://aws//."),
 			// Zero extra component expanded
 			("test-mount://7z//tmp/test.zip/$FOO/bar", "test-mount://7z//tmp/test.zip/foo/bar"),
 			("test-mount://7z:1//tmp/test.zip/$FOO/bar", "test-mount://7z:1//tmp/test.zip/foo/bar"),
@@ -146,6 +174,36 @@ mod tests {
 			("test-mount://7z:2//${EM/PT/Y}", "test-mount://7z:2//${EM/PT/Y}"),
 			("test-mount://7z:3//${EM/PT/Y}", "test-mount://7z//"),
 			("test-mount://7z:4//${EM/PT/Y}", "test-mount://7z:1//"),
+		];
+
+		for (input, expected) in cases {
+			let u: UrlBuf = input.parse()?;
+			assert_eq!(format!("{:?}", expand_url(u).as_url()), expected);
+		}
+
+		Ok(())
+	}
+
+	#[cfg(windows)]
+	#[test]
+	fn test_expand_url() -> Result<()> {
+		yazi_shared::init_tests();
+		unsafe {
+			std::env::set_var("ROOTED", r"\downloads");
+			std::env::set_var("DRIVE_ABS", r"C:\downloads");
+			std::env::set_var("DRIVE_REL", r"C:downloads");
+		}
+
+		let cases = [
+			// Rooted path expanded
+			(r"test-mount://7z:2:1/D:\base\%ROOTED%\file", r"test-mount://7z:3:1/D:\downloads\file"),
+			(r"test-mount://7z:2:1/D:\base\file\%ROOTED%", r"test-mount://7z:2:1/D:\downloads"),
+			// Drive-absolute path expanded
+			(r"test-mount://7z:2:1/D:\base\%DRIVE_ABS%\file", r"test-mount://7z:3:1/C:\downloads\file"),
+			(r"test-mount://7z:2:1/D:\base\file\%DRIVE_ABS%", r"test-mount://7z:2:1/C:\downloads"),
+			// Drive-relative path expanded
+			(r"test-mount://7z:2:1/D:\base\%DRIVE_REL%\file", r"test-mount://7z:2:1/C:downloads\file"),
+			(r"test-mount://7z:2:1/D:\base\file\%DRIVE_REL%", r"test-mount://7z:1:1/C:downloads"),
 		];
 
 		for (input, expected) in cases {

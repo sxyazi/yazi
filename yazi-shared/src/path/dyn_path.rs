@@ -44,6 +44,10 @@ impl DynPath for PathCow<'_> {
 	}
 }
 
+impl DynPath for &PathCow<'_> {
+	fn dyn_path(&self) -> PathDyn<'_> { (*self).dyn_path() }
+}
+
 impl DynPath for super::Components<'_> {
 	fn dyn_path(&self) -> PathDyn<'_> { self.path() }
 }
