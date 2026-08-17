@@ -24,7 +24,11 @@ impl From<Previewer> for PreviewerArc {
 	fn from(value: Previewer) -> Self { Self(value.into()) }
 }
 
-impl Mixable for PreviewerArc {}
+impl Mixable for PreviewerArc {
+	fn any_file(&self) -> bool { self.0.any_file() }
+
+	fn any_dir(&self) -> bool { self.0.any_dir() }
+}
 
 impl FromLua for PreviewerArc {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {

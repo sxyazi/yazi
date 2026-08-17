@@ -23,7 +23,11 @@ impl From<Spotter> for SpotterArc {
 	fn from(value: Spotter) -> Self { Self(value.into()) }
 }
 
-impl Mixable for SpotterArc {}
+impl Mixable for SpotterArc {
+	fn any_file(&self) -> bool { self.0.any_file() }
+
+	fn any_dir(&self) -> bool { self.0.any_dir() }
+}
 
 impl FromLua for SpotterArc {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
