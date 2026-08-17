@@ -1,4 +1,3 @@
 use tokio::sync::Semaphore;
-use yazi_shim::cell::RoCell;
 
-pub static YIELD_TO_SUBPROCESS: RoCell<Semaphore> = RoCell::new();
+pub static YIELD_TO_SUBPROCESS: Semaphore = Semaphore::const_new(1);

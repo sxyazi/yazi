@@ -2,34 +2,29 @@
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
+extern crate self as yazi_fm;
+
 yazi_macro::mod_pub!(app cmp confirm help input mgr notify pick spot tasks which);
 
 yazi_macro::mod_flat!(dispatcher executor logs panic renderer root router signals);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-	Panic::install();
 	yazi_shim::init()?;
+
 	yazi_shared::init();
-
-	Logs::start()?;
-	_ = fdlimit::raise_fd_limit();
-
-	yazi_fs::init();
 
 	yazi_tty::init();
 
-	yazi_config::init()?;
+	yazi_emulator::init();
+
+	yazi_fs::init();
 
 	yazi_vfs::init();
 
 	yazi_runner::init(yazi_plugin::slim_lua);
 
 	yazi_boot::init();
-
-	yazi_term::init()?;
-
-	yazi_emulator::init();
 
 	yazi_adapter::init();
 
@@ -39,11 +34,27 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_watcher::init();
 
-	yazi_plugin::init()?;
+	yazi_actor::init();
+
+	yazi_fm::serve().await
+}
+
+async fn serve() -> anyhow::Result<()> {
+	Logs::start()?;
+	Signals::start()?;
+
+	yazi_boot::serve();
+
+	yazi_term::setup()?;
+
+	let _deinit = yazi_emulator::setup()?;
+	Panic::install();
+
+	yazi_config::setup()?;
 
 	yazi_dds::serve();
 
-	yazi_actor::init();
+	yazi_plugin::setup()?;
 
 	yazi_shared::LOCAL_SET.run_until(app::App::serve()).await
 }

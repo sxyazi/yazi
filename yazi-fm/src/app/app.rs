@@ -8,7 +8,7 @@ use yazi_macro::{act, render, succ};
 use yazi_shared::{data::Data, event::{Event, NEED_RENDER}};
 use yazi_tui::Raterm;
 
-use crate::{Dispatcher, Signals};
+use crate::Dispatcher;
 
 pub(crate) struct App {
 	pub(crate) core: Core,
@@ -33,7 +33,6 @@ impl App {
 
 	pub(crate) async fn serve() -> Result<()> {
 		let term = Raterm::start()?;
-		Signals::start()?;
 
 		let mut app = Self::make(term)?;
 		app.bootstrap()?;

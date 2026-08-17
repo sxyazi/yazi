@@ -33,7 +33,7 @@ impl Adapter {
 	{
 		let driver = match timeout(Duration::from_secs(10), self.driver.wait()).await {
 			Ok(driver) => *driver,
-			Err(_) => self.resolve(&EMULATOR.load()),
+			Err(_) => self.resolve(&EMULATOR),
 		};
 		driver.image_show(path, max).await
 	}

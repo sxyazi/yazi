@@ -4,12 +4,12 @@ use anyhow::Result;
 use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{CompletedFrame, Frame, Terminal}};
 use tokio::task::JoinHandle;
 use yazi_config::YAZI;
-use yazi_emulator::{EMULATOR, Probe};
+use yazi_emulator::EMULATOR;
 use yazi_macro::writef;
 use yazi_proxy::AppProxy;
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
-use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableClipboard, DisableColorSchemeUpdates, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableClipboard, EnableColorSchemeUpdates, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
+use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableClipboard, DisableColorSchemeUpdates, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableClipboard, EnableColorSchemeUpdates, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, If, PopKeyboardFlags, PushKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
 
 use crate::{RatermBackend, RatermOption, RatermState};
 
@@ -18,7 +18,6 @@ pub static STATE: SyncCell<RatermState> = SyncCell::new(RatermState::default());
 pub struct Raterm {
 	inner:       Terminal<RatermBackend<TtyWriter<'static>>>,
 	_stream:     EventStream,
-	pub probe:   Probe,
 	forwarder:   JoinHandle<()>,
 	last_area:   Rect,
 	last_buffer: Buffer,
@@ -39,8 +38,7 @@ impl Drop for Raterm {
 
 impl Raterm {
 	pub fn start() -> Result<Self> {
-		TERM.setup()?;
-		TERM.enter_raw_mode()?;
+		EMULATOR.start()?;
 
 		let opt = RatermOption::default();
 		STATE.set(RatermState::new(&opt));
@@ -48,7 +46,7 @@ impl Raterm {
 		let mut stream = EventStream::from(&*TERM);
 		writef!(
 			TTY.writer(),
-			"{EnterAlternateScreen}{EnableBracketedPaste}{EnableClipboard}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}{}{}",
+			"{EnableBracketedPaste}{EnableClipboard}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}{}{}",
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
 				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
@@ -57,8 +55,6 @@ impl Raterm {
 			EnableDrop(&["text/uri-list"]),
 			If(opt.mouse, EnableMouseCapture),
 		)?;
-
-		let probe = Probe::start()?;
 
 		let mut inner = Terminal::new(RatermBackend::new(TTY.writer()))?;
 		inner.hide_cursor()?;
@@ -69,26 +65,27 @@ impl Raterm {
 			inner,
 			forwarder: Self::spawn(&mut stream),
 			_stream: stream,
-			probe,
 			last_area: Default::default(),
 			last_buffer: Default::default(),
 		})
 	}
 
 	pub fn stop() {
-		let emu = EMULATOR.load();
 		let state = STATE.get();
+		if !state.started {
+			return EMULATOR.stop();
+		}
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisableClipboard}{DisableBracketedPaste}{LeaveAlternateScreen}{ShowCursor}",
+			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisableClipboard}{DisableBracketedPaste}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
-			RestoreCursorStyle { blink: emu.cursor_blink, shape: emu.cursor_shape },
+			RestoreCursorStyle { blink: EMULATOR.cursor_blink.get(), shape: EMULATOR.cursor_shape.get() },
 			If(state.title, SetTitle("")),
 		);
 
-		TERM.source.wake().ok();
-		TERM.restorer.restore(&TTY);
+		STATE.set(RatermState::default());
+		EMULATOR.stop();
 	}
 
 	fn spawn(stream: &mut EventStream) -> JoinHandle<()> {

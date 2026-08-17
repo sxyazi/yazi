@@ -17,7 +17,7 @@ pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 }
 
 fn light(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|lua, ()| EMULATOR.load().light().into_lua(lua))
+	lua.create_function(|lua, ()| EMULATOR.light().into_lua(lua))
 }
 
 fn cell_size(lua: &Lua) -> mlua::Result<Function> {

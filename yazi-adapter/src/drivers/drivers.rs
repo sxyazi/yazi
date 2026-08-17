@@ -20,14 +20,14 @@ impl DerefMut for Drivers {
 
 impl From<&Emulator> for Drivers {
 	fn from(value: &Emulator) -> Self {
-		match value.brand {
-			Brand::Unknown => Self(match (value.kgp, value.sixel) {
+		match value.brand.get() {
+			Brand::Unknown => Self(match (value.kgp.get(), value.sixel.get()) {
 				(true, true) => vec![D::Sixel, D::KgpOld],
 				(true, false) => vec![D::KgpOld],
 				(false, true) => vec![D::Sixel],
 				(false, false) => vec![],
 			}),
-			Brand::Zellij => Self(match (value.kgp, value.sixel) {
+			Brand::Zellij => Self(match (value.kgp.get(), value.sixel.get()) {
 				(true, true) => vec![D::KgpOld, D::Sixel],
 				(true, false) => vec![D::KgpOld],
 				(false, true) => vec![D::Sixel],
@@ -71,9 +71,9 @@ impl From<Brand> for Drivers {
 impl Drivers {
 	pub fn matches(emu: &Emulator) -> D {
 		let mut drivers: Self = emu.into();
-		if emu.sixel && emu.mux.is_some_and(|mux| mux.sixel) {
+		if emu.sixel.get() && emu.mux.get().is_some_and(|mux| mux.sixel) {
 			return D::Sixel;
-		} else if emu.mux.is_some() {
+		} else if emu.mux.get().is_some() {
 			drivers.retain(|p| *p != D::KgpOld);
 		}
 		if let Some(d) = drivers.first() {

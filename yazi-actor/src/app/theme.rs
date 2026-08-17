@@ -19,7 +19,7 @@ impl Actor for Theme {
 	const NAME: &str = "theme";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		match build_flavor(EMULATOR.load().light().unwrap_or_default()) {
+		match build_flavor(EMULATOR.light().unwrap_or_default()) {
 			Ok(theme) => THEME.overlay(theme),
 			Err(e) => succ!(NotifyProxy::push_error("Theme load failed", format!("{e:#}"))),
 		};

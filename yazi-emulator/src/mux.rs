@@ -73,7 +73,10 @@ pub struct MuxSequence(&'static str, &'static str);
 
 impl Display for MuxSequence {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		let emu = EMULATOR.load();
-		f.write_str(if emu.mux.is_none_or(|mux| mux.sixel && emu.sixel) { self.0 } else { self.1 })
+		f.write_str(if EMULATOR.mux.get().is_none_or(|mux| mux.sixel && EMULATOR.sixel.get()) {
+			self.0
+		} else {
+			self.1
+		})
 	}
 }

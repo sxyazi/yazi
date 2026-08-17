@@ -3,64 +3,68 @@ use std::io::{BufWriter, Write};
 use anyhow::Result;
 use arc_swap::ArcSwap;
 use yazi_macro::writef;
-use yazi_shim::cell::RoCell;
+use yazi_shared::id::Id;
+use yazi_shim::cell::{RoCell, SyncCell};
 use yazi_term::{TERM, event::Report};
 use yazi_tty::{Handle, TTY, sequence::{HideCursor, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
 
 use crate::{Brand, Mux};
 
-pub static EMULATOR: RoCell<ArcSwap<Emulator>> = RoCell::new();
+pub static EMULATOR: RoCell<Emulator> = RoCell::new();
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Emulator {
-	pub brand:        Brand,
-	pub version:      String,
-	pub csi_u:        Option<u8>,
-	pub kgp:          bool,
-	pub sixel:        bool,
-	pub background:   Option<[u16; 3]>,
-	pub color_scheme: Option<bool>,
-	pub csi_16t:      (u16, u16),
-	pub force_16t:    bool,
-	pub osc_5522:     bool,
-	pub cursor_blink: bool,
-	pub cursor_shape: Option<u8>,
-	pub mux:          Option<Mux>,
+	pub brand:        SyncCell<Brand>,
+	pub version:      ArcSwap<String>,
+	pub csi_u:        SyncCell<Option<u8>>,
+	pub kgp:          SyncCell<bool>,
+	pub sixel:        SyncCell<bool>,
+	pub background:   SyncCell<Option<[u16; 3]>>,
+	pub color_scheme: SyncCell<Option<bool>>,
+	pub csi_16t:      SyncCell<(u16, u16)>,
+	pub force_16t:    SyncCell<bool>,
+	pub osc_5522:     SyncCell<bool>,
+	pub cursor_blink: SyncCell<bool>,
+	pub cursor_shape: SyncCell<Option<u8>>,
+	pub mux:          SyncCell<Option<Mux>>,
+
+	pub probe_id:       SyncCell<Id>,
+	pub(super) started: SyncCell<bool>,
 }
 
 impl Emulator {
 	pub(super) fn from_env() -> Self {
-		Self { brand: Brand::from_env().unwrap_or(Brand::Unknown), ..Default::default() }
+		Self { brand: Brand::from_env().unwrap_or(Brand::Unknown).into(), ..Default::default() }
 	}
 
-	pub fn apply(&mut self, report: &Report) {
+	pub fn apply(&self, report: &Report) {
 		match report {
-			Report::CsiU(flags) => self.csi_u = Some(*flags),
-			Report::CursorBlink(blink) => self.cursor_blink = *blink,
-			Report::CursorShape(shape) => self.cursor_shape = Some(*shape),
-			Report::Da1(attrs) => self.sixel = attrs.contains(&4),
+			Report::CsiU(flags) => self.csi_u.set(Some(*flags)),
+			Report::CursorBlink(blink) => self.cursor_blink.set(*blink),
+			Report::CursorShape(shape) => self.cursor_shape.set(Some(*shape)),
+			Report::Da1(attrs) => self.sixel.set(attrs.contains(&4)),
 			Report::XtVersion(version) => {
-				self.version = version.to_string();
+				self.version.store(version.to_string().into());
 				if let Some(brand) = Brand::from_csi(version) {
-					self.brand = brand;
+					self.brand.set(brand);
 				}
 			}
 			Report::CellPixelSize { width, height } => {
-				self.csi_16t = (*width, *height);
-				self.force_16t = Self::force_16t(self.csi_16t);
+				self.csi_16t.set((*width, *height));
+				self.force_16t.set(Self::force_16t((*width, *height)));
 			}
-			Report::BackgroundColor(rgb) => self.background = Some(*rgb),
-			Report::ColorScheme(light) => self.color_scheme = Some(*light),
-			Report::KittyGraphics { id: 31, ok } => self.kgp = *ok,
-			Report::Clipboard(supported) => self.osc_5522 = *supported,
+			Report::BackgroundColor(rgb) => self.background.set(Some(*rgb)),
+			Report::ColorScheme(light) => self.color_scheme.set(Some(*light)),
+			Report::KittyGraphics { id: 31, ok } => self.kgp.set(*ok),
+			Report::Clipboard(supported) => self.osc_5522.set(*supported),
 			_ => {}
 		}
 	}
 
-	pub const fn light(&self) -> Option<bool> {
-		if let Some(light) = self.color_scheme {
+	pub fn light(&self) -> Option<bool> {
+		if let Some(light) = self.color_scheme.get() {
 			Some(light)
-		} else if let Some([r, g, b]) = self.background {
+		} else if let Some([r, g, b]) = self.background.get() {
 			let luma =
 				r as f32 * 0.2627 / 65535.0 + g as f32 * 0.6780 / 65535.0 + b as f32 * 0.0593 / 65535.0;
 			Some(luma > 0.6)
@@ -76,7 +80,7 @@ impl Emulator {
 		use std::{thread, time::Duration};
 
 		let mut w = TTY.lockout();
-		let tmux = EMULATOR.load().mux.is_some();
+		let tmux = EMULATOR.mux.get().is_some();
 
 		// I really don't want to add this,
 		// But tmux and ConPTY sometimes cause the cursor position to get out of sync.
