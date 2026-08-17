@@ -1,3 +1,10 @@
-yazi_macro::mod_flat!(brand dimension emulator mux probe);
+yazi_macro::mod_flat!(brand deinit dimension emulator mux probe);
 
-pub fn init() { EMULATOR.init(arc_swap::ArcSwap::from_pointee(Emulator::from_env())); }
+pub fn init() { EMULATOR.init(Emulator::from_env()); }
+
+pub fn setup() -> anyhow::Result<Deinit> {
+	let deinit = Deinit;
+	EMULATOR.start()?;
+
+	Ok(deinit)
+}

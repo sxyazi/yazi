@@ -109,7 +109,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::Cache(cmd) => {
 			yazi_tty::init();
-			yazi_config::init()?;
+			yazi_config::setup()?;
 
 			match cmd {
 				CommandCache::Clear => {
@@ -120,8 +120,8 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::Env => {
 			yazi_tty::init();
-			yazi_term::init()?;
-			yazi_config::init()?;
+			yazi_term::setup()?;
+			yazi_config::setup()?;
 			outln!("{}", env::Env::print().await?)?;
 		}
 	}

@@ -10,11 +10,6 @@ pub struct SyncCell<T: ?Sized>(Cell<T>);
 
 unsafe impl<T: ?Sized + Sync> Sync for SyncCell<T> {}
 
-impl<T> SyncCell<T> {
-	#[inline]
-	pub const fn new(value: T) -> Self { Self(Cell::new(value)) }
-}
-
 impl<T: Default> Default for SyncCell<T> {
 	fn default() -> Self { Self::new(T::default()) }
 }
@@ -47,6 +42,16 @@ impl<T: Copy + PartialEq> PartialEq<T> for SyncCell<T> {
 impl<T: Copy + PartialOrd> PartialOrd<T> for SyncCell<T> {
 	#[inline]
 	fn partial_cmp(&self, other: &T) -> Option<Ordering> { self.get().partial_cmp(other) }
+}
+
+impl<T> From<T> for SyncCell<T> {
+	#[inline]
+	fn from(value: T) -> Self { Self::new(value) }
+}
+
+impl<T> SyncCell<T> {
+	#[inline]
+	pub const fn new(value: T) -> Self { Self(Cell::new(value)) }
 }
 
 impl<T> Serialize for SyncCell<T>

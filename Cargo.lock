@@ -5351,7 +5351,6 @@ name = "yazi-fm"
 version = "26.8.15"
 dependencies = [
  "anyhow",
- "fdlimit",
  "libc",
  "log",
  "mlua",
@@ -5635,6 +5634,7 @@ version = "26.8.15"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "fdlimit",
  "hashbrown 0.17.1",
  "mlua",
  "percent-encoding",

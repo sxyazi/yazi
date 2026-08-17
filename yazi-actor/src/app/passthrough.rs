@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use yazi_emulator::EMULATOR;
 use yazi_macro::{error, render_force, succ};
@@ -16,19 +14,20 @@ impl Actor for Passthrough {
 	const NAME: &str = "passthrough";
 
 	fn act(cx: &mut Ctx, PassthroughForm { id }: Self::Form) -> Result<Data> {
-		let Some(term) = cx.term.as_mut() else { succ!() };
-
-		if term.probe.id != id || !term.probe.needs_passthrough() {
+		if cx.term.is_none() {
 			succ!();
 		}
 
-		if let Err(e) = term.probe.restart() {
+		if EMULATOR.probe_id != id || !EMULATOR.needs_passthrough() {
+			succ!();
+		}
+
+		if let Err(e) = EMULATOR.restart() {
 			error!("Failed to request terminal capabilities through tmux: {e}");
 		} else {
 			render_force!();
 		}
 
-		EMULATOR.store(Arc::new(term.probe.emulator.clone()));
 		succ!();
 	}
 }

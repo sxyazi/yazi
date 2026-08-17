@@ -43,7 +43,6 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.8.15" }
 
 # External dependencies
 anyhow             = { workspace = true }
-fdlimit            = "0.3.0"
 log                = { workspace = true }
 mlua               = { workspace = true }
 paste              = { workspace = true }
