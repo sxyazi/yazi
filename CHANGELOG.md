@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Improved
 
 - Send terminal probe requests immediately at startup ([#4260])
+- Tune light/dark theme detection ([#4265])
 
 ## [v26.8.15]
 
@@ -1832,3 +1833,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4252]: https://github.com/sxyazi/yazi/pull/4252
 [#4256]: https://github.com/sxyazi/yazi/pull/4256
 [#4260]: https://github.com/sxyazi/yazi/pull/4260
+[#4265]: https://github.com/sxyazi/yazi/pull/4265
