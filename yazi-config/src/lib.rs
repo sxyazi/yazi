@@ -25,7 +25,6 @@ pub fn setup() -> anyhow::Result<()> {
 		try_init(false)?;
 	}
 
-	THEME.init(Preset::theme(false)?.reshape(false)?);
 	Ok(())
 }
 
@@ -33,20 +32,24 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut yazi = Preset::yazi()?;
 	let mut keymap = Preset::keymap()?;
 	let mut vfs = Preset::vfs()?;
+	let mut theme = Preset::theme(false)?;
 
 	if merge {
 		yazi = parse("yazi.toml", yazi.deserialize_over(&yazi::Yazi::read()?))?;
 		keymap = parse("keymap.toml", keymap.deserialize_over(&keymap::Keymap::read()?))?;
 		vfs = parse("vfs.toml", vfs.deserialize_over(&vfs::Vfs::read()?))?;
+		theme = parse("theme.toml", theme.deserialize_over(&Theme::read()?))?;
 	} else {
 		yazi = yazi.deserialize_over("")?;
 		keymap = keymap.deserialize_over("")?;
 		vfs = vfs.deserialize_over("")?;
+		theme = theme.deserialize_over("")?;
 	}
 
 	YAZI.init(yazi);
 	KEYMAP.init(keymap);
 	VFS.init(vfs);
+	THEME.init(theme.reshape(false)?);
 	Ok(())
 }
 

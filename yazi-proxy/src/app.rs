@@ -16,8 +16,4 @@ impl AppProxy {
 	pub fn quit(opt: QuitOpt) {
 		emit!(Call(relay!(app:quit).with_any("opt", opt)));
 	}
-
-	pub fn theme() {
-		emit!(Call(relay!(app:theme)));
-	}
 }

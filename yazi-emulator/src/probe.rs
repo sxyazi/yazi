@@ -39,18 +39,11 @@ impl Emulator {
 		self.mux.set(Some(Mux { sixel: self.sixel.get() }));
 		self.probe_id.set(IDS.next());
 
+		// Only these requests are passed through tmux after restarting.
 		self.brand.set(Brand::Unknown);
 		self.version.store(Default::default());
-		self.csi_u.set(None);
 		self.kgp.set(false);
 		self.sixel.set(false);
-		self.background.set(None);
-		self.color_scheme.set(None);
-		self.csi_16t.set((0, 0));
-		self.force_16t.set(false);
-		self.osc_5522.set(false);
-		self.cursor_blink.set(false);
-		self.cursor_shape.set(None);
 
 		self.request()
 	}
@@ -110,7 +103,7 @@ impl Emulator {
 
 		writef!(
 			TTY.writer(),
-			"{SaveCursorPos}{}{RequestCursorBlink}{RequestCursorStyle}{RequestColorScheme}{RequestBgColor}{}{RequestCellPixelSize}{ProbeClipboard}{RequestCsiU}{}{RestoreCursorPos}",
+			"{SaveCursorPos}{RequestColorScheme}{RequestBgColor}{RequestCursorBlink}{RequestCursorStyle}{}{}{RequestCellPixelSize}{ProbeClipboard}{RequestCsiU}{}{RestoreCursorPos}",
 			w(&RequestXtVersion),
 			w(&RequestKittyGraphics),
 			w(&RequestDA1),

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_adapter::ADAPTOR;
 use yazi_emulator::{EMULATOR, Mux};
-use yazi_macro::{act, succ};
+use yazi_macro::{act, log_if_err, succ};
 use yazi_proxy::AppProxy;
 use yazi_shared::data::Data;
 use yazi_term::event::Report as TermReport;
@@ -23,24 +23,31 @@ impl Actor for Report {
 		let old_light = EMULATOR.light();
 		EMULATOR.apply(&report);
 
-		if report.is_color_scheme()
-			&& old_light.zip(EMULATOR.light()).is_some_and(|(a, b)| a != b)
-			&& !EMULATOR.needs_passthrough()
-		{
-			return act!(app:theme, cx);
-		} else if !report.is_da_1() {
-			succ!();
-		} else if !EMULATOR.needs_passthrough() {
-			ADAPTOR.resolve(&EMULATOR);
-			return act!(app:theme, cx);
+		if EMULATOR.light() != old_light {
+			log_if_err!(act!(app:theme, cx));
 		}
 
+		if !report.is_da_1() {
+			succ!();
+		} else if EMULATOR.needs_passthrough() {
+			succ!(Self::reprobe());
+		}
+
+		ADAPTOR.resolve(&EMULATOR);
+		if EMULATOR.light().is_none() {
+			log_if_err!(act!(app:theme, cx));
+		}
+
+		succ!();
+	}
+}
+
+impl Report {
+	fn reprobe() {
 		let id = EMULATOR.probe_id.get();
 		tokio::spawn(async move {
 			Mux::tmux_setup().await;
 			AppProxy::passthrough(id);
 		});
-
-		succ!();
 	}
 }

@@ -16,7 +16,7 @@ end
 
 function M:fetch(job)
 	return ya.co(function()
-		local unknown, updates = {}, {}
+		local updates, unknown = {}, {}
 		for _, file in ipairs(job.files) do
 			if file.cha.is_dummy then
 				coroutine.yield(file, {})
