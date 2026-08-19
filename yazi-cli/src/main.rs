@@ -2,30 +2,29 @@ yazi_macro::mod_pub!(cache dds env package shared);
 
 yazi_macro::mod_flat!(args);
 
-use std::process::ExitCode;
-
 use clap::Parser;
 use yazi_macro::{errln, outln};
 use yazi_shared::LOCAL_SET;
 
 #[tokio::main]
-async fn main() -> ExitCode {
-	yazi_shim::init();
+async fn main() -> anyhow::Result<()> {
+	yazi_shim::init()?;
 	yazi_shared::init();
 	yazi_fs::init();
 
 	match LOCAL_SET.run_until(run()).await {
-		Ok(()) => ExitCode::SUCCESS,
+		Ok(()) => Ok(()),
 		Err(e) => {
 			for cause in e.chain() {
 				if let Some(ioerr) = cause.downcast_ref::<std::io::Error>()
 					&& ioerr.kind() == std::io::ErrorKind::BrokenPipe
 				{
-					return ExitCode::from(0);
+					return Ok(());
 				}
 			}
+
 			errln!("{e:#}").ok();
-			ExitCode::FAILURE
+			Err(e)
 		}
 	}
 }
