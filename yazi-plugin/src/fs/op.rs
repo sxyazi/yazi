@@ -1,7 +1,8 @@
 use mlua::{Lua, Table, UserData};
 use yazi_codegen::FromLuaOwned;
+use yazi_fs::file::File;
 use yazi_macro::impl_data_any;
-use yazi_shared::url::UrlBuf;
+use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 
 #[derive(Clone, FromLuaOwned, UserData)]
 pub(super) struct FilesOp(yazi_fs::FilesOp);
@@ -41,5 +42,13 @@ impl FilesOp {
 		let sizes: Table = t.raw_get("sizes")?;
 
 		Ok(Self(yazi_fs::FilesOp::Size(url, sizes.pairs().collect::<mlua::Result<_>>()?)))
+	}
+
+	pub(super) fn upsert(_: &Lua, t: Table) -> mlua::Result<Self> {
+		let url: UrlBuf = t.raw_get("url")?;
+		let files: Table = t.raw_get("files")?;
+		let files = files.pairs::<PathBufDyn, File>().collect::<mlua::Result<_>>()?;
+
+		Ok(Self(yazi_fs::FilesOp::Upserting(url, files)))
 	}
 }
