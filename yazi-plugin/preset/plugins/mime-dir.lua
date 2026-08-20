@@ -7,7 +7,7 @@ function M:fetch(job)
 			if file.url.spec.scheme == "sftp" then
 				mime = "folder/remote"
 			elseif file.url.spec.scheme == "trash" then
-				mime = "folder/trash"
+				mime = "trash/folder"
 			else
 				mime = "folder/local"
 			end
