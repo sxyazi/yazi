@@ -29,16 +29,8 @@ pub(super) fn workspace_root() -> Result<PathBuf> {
 		.context("yazi-build must be inside the Yazi workspace")
 }
 
-pub(super) fn is_linux_target(target: &str) -> bool {
-	target.contains("-linux-") || (target.is_empty() && cfg!(target_os = "linux"))
-}
-
 pub(super) fn is_windows_target(target: &str) -> bool {
 	target.contains("-windows-") || (target.is_empty() && cfg!(windows))
-}
-
-pub(super) fn is_sparc64_target(target: &str) -> bool {
-	target.starts_with("sparc64-") || (target.is_empty() && cfg!(target_arch = "sparc64"))
 }
 
 pub(super) fn copy_bins(target: &str, profile: &str, to: &Path) -> Result<()> {

@@ -4,13 +4,14 @@ trim-paths = "all"
 [target.'cfg(all())']
 rustflags = [
 	"-Cpasses=mergefunc",
+	"-Zunstable-options",
 	"-Zshare-generics=true",
 ]
 
 # LLD lacks the SPARC GOTDATA_OP relocations emitted by GCC.
 [target.'cfg(all(target_os = "linux", not(target_arch = "sparc64")))']
 rustflags = [
-	"-Clink-arg=-fuse-ld=lld",
+	"-Clinker-features=+lld",
 	"-Clink-arg=-Wl,--icf=safe",
 	"-Clink-arg=-Wl,-z,pack-relative-relocs",
 ]
