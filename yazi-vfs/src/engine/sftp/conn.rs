@@ -1,7 +1,7 @@
 use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
 use chrono::DateTime;
-use russh::keys::{PrivateKeyWithHashAlg, agent::AgentIdentity};
+use russh::keys::{PrivateKeyWithHashAlg, PublicKeyOrCertificate, agent::AgentIdentity};
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::engine::local::Local;
 
@@ -21,7 +21,7 @@ impl russh::client::Handler for Conn {
 
 	async fn check_server_key(
 		&mut self,
-		_server_public_key: &russh::keys::PublicKey,
+		_server_public_key: &PublicKeyOrCertificate,
 	) -> Result<bool, Self::Error> {
 		Ok(true)
 	}

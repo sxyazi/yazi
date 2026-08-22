@@ -1,10 +1,8 @@
-use std::{fmt::{self, Debug}, path::PathBuf};
+use std::{fmt::{self, Debug}, path::PathBuf, sync::OnceLock};
 
 use anyhow::Result;
 use ratatui_core::layout::Rect;
-use tokio::time::{Duration, timeout};
-use yazi_emulator::{EMULATOR, Emulator};
-use yazi_shared::CompletionCell;
+use yazi_emulator::EMULATOR;
 use yazi_shim::cell::SyncCell;
 use yazi_widgets::clear::ClearInventory;
 
@@ -12,7 +10,7 @@ use crate::{ADAPTOR, drivers::{Driver, Drivers}};
 
 #[derive(Default)]
 pub struct Adapter {
-	driver:        CompletionCell<Driver>,
+	driver:        OnceLock<Driver>,
 	shown:         SyncCell<Option<Rect>>,
 	pub collision: SyncCell<bool>,
 }
@@ -31,10 +29,14 @@ impl Adapter {
 	where
 		P: Into<PathBuf>,
 	{
-		let driver = match timeout(Duration::from_secs(10), self.driver.wait()).await {
-			Ok(driver) => *driver,
-			Err(_) => self.resolve(&EMULATOR),
-		};
+		let probe = &EMULATOR.probe;
+		probe.wait(probe.id.get()).await;
+
+		let driver = self.driver.get_or_init(|| {
+			let driver = Drivers::matches(&EMULATOR);
+			driver.start();
+			driver
+		});
 		driver.image_show(path, max).await
 	}
 
@@ -49,14 +51,6 @@ impl Adapter {
 	pub fn shown_area(&self) -> Option<Rect> { self.shown.get() }
 
 	pub(super) fn shown_store(&self, area: Rect) { self.shown.set(Some(area)); }
-
-	pub fn resolve(&self, emulator: &Emulator) -> Driver {
-		*self.driver.get_or_init(|| {
-			let driver = Drivers::matches(emulator);
-			driver.start();
-			driver
-		})
-	}
 }
 
 inventory::submit! {
