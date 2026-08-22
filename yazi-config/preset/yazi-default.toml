@@ -114,8 +114,6 @@ fetchers = [
 spotters = [
 	# Multi-file
 	{ mime = "multi/*", run = "multi" },
-	# Trash
-	{ mime = "trash/**", run = "trash" },
 	# Folder
 	{ mime = "folder/*", run = "folder" },
 	# Code
@@ -129,6 +127,8 @@ spotters = [
 	{ mime = "video/*", run = "video" },
 	# Virtual file system
 	{ mime = "vfs/*", run = "vfs" },
+	# Trash
+	{ mime = "trash/**", run = "trash" },
 	# Error
 	{ mime = "null/*", run = "null" },
 	# Fallback
