@@ -71,7 +71,7 @@ trash = [
 [open]
 rules = [
 	# Folder
-	{ url = "*/", use = [ "edit", "open", "reveal" ] },
+	{ mime = "folder/*", use = [ "edit", "open", "reveal" ] },
 	# Text
 	{ mime = "text/*", use = [ "edit", "reveal" ] },
 	# Image
@@ -114,10 +114,8 @@ fetchers = [
 spotters = [
 	# Multi-file
 	{ mime = "multi/*", run = "multi" },
-	# Trash
-	{ mime = "trash/**", run = "trash" },
 	# Folder
-	{ url = "*/", run = "folder" },
+	{ mime = "folder/*", run = "folder" },
 	# Code
 	{ mime = "text/*", run = "code" },
 	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
@@ -129,6 +127,8 @@ spotters = [
 	{ mime = "video/*", run = "video" },
 	# Virtual file system
 	{ mime = "vfs/*", run = "vfs" },
+	# Trash
+	{ mime = "trash/**", run = "trash" },
 	# Error
 	{ mime = "null/*", run = "null" },
 	# Fallback
@@ -150,7 +150,7 @@ preloaders = [
 	{ mime = "trash/**", run = "trash" },
 ]
 previewers = [
-	{ url = "*/", run = "folder" },
+	{ mime = "folder/*", run = "folder" },
 	# Code
 	{ mime = "text/*", run = "code" },
 	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },

@@ -49,9 +49,17 @@ impl Open {
 		M: AsRef<str>,
 	{
 		let mime = mime.as_ref();
+
+		let is_dir = match mime.rsplit_once('/') {
+			Some((_, last)) if last.is_empty() => false,
+			Some(("folder", _)) => true,
+			Some((rest, _)) => rest.ends_with("/folder"),
+			None => false,
+		};
+
 		let file = File::from_dummy(
 			url.as_url().to_owned(),
-			Some(if mime.starts_with("folder/") { ChaType::Dir } else { ChaType::File }),
+			Some(if is_dir { ChaType::Dir } else { ChaType::File }),
 		);
 
 		self.matches(&file, mime)
