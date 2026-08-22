@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Assertion failure on expanding URLs with variables containing absolute paths ([#4256])
+- Correct open rule matching for trashed directories ([#4268])
 - Wait for terminal probe echo back before stopping instance ([#4271])
 - Avoid flicker caused by screen clear on final response from terminal ([#4250])
 - Fall back when `vergen` cannot determine Git SHA ([#4252])
@@ -1835,4 +1836,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4256]: https://github.com/sxyazi/yazi/pull/4256
 [#4260]: https://github.com/sxyazi/yazi/pull/4260
 [#4265]: https://github.com/sxyazi/yazi/pull/4265
+[#4268]: https://github.com/sxyazi/yazi/pull/4268
 [#4271]: https://github.com/sxyazi/yazi/pull/4271
