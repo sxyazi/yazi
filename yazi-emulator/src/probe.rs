@@ -6,7 +6,7 @@ use yazi_macro::{error, writef};
 use yazi_shared::id::{Id, Ids};
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
-use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
+use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos}};
 
 use crate::{Emulator, Mux};
 
@@ -103,7 +103,7 @@ impl Emulator {
 	}
 
 	pub(super) fn request(&self) -> Result<()> {
-		let w = |t: &'static dyn Display| TmuxPassthrough(t, self.mux.get().is_some());
+		let w = |t: &'static dyn Display| TTY.tmux_passthrough(t);
 
 		writef!(
 			TTY.writer(),

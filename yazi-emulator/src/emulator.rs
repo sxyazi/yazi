@@ -61,6 +61,7 @@ impl Emulator {
 
 	pub fn restart(&self) -> Result<()> {
 		self.mux.set(Some(Mux { sixel: self.sixel.get() }));
+		TTY.enable_tmux_passthrough();
 
 		// Only these requests are passed through tmux after restarting.
 		self.brand.set(Brand::Unknown);

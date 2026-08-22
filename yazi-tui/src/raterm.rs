@@ -46,15 +46,14 @@ impl Raterm {
 		let mut stream = EventStream::from(&*TERM);
 		writef!(
 			TTY.writer(),
-			"{EnableBracketedPaste}{EnableClipboard}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}{}{}",
+			"{EnableBracketedPaste}{EnableClipboard}{EnableFocusChange}{EnableColorSchemeUpdates}{}{}",
 			PushKeyboardFlags::DISAMBIGUATE_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ALTERNATE_KEYS
 				| PushKeyboardFlags::REPORT_ALL_KEYS_AS_ESCAPE_CODES
 				| PushKeyboardFlags::REPORT_ASSOCIATED_TEXT,
-			EnableDrag(""),
-			EnableDrop(&["text/uri-list"]),
 			If(opt.mouse, EnableMouseCapture),
 		)?;
+		Self::enable_dnd()?;
 
 		let mut inner = Terminal::new(RatermBackend::new(TTY.writer()))?;
 		inner.hide_cursor()?;
@@ -78,14 +77,26 @@ impl Raterm {
 
 		_ = writef!(
 			TTY.writer(),
-			"{}{PopKeyboardFlags}{DisableDrop}{DisableDrag}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisableClipboard}{DisableBracketedPaste}{ShowCursor}",
+			"{}{PopKeyboardFlags}{}{}{}{}{DisableColorSchemeUpdates}{DisableFocusChange}{DisableClipboard}{DisableBracketedPaste}{ShowCursor}",
 			If(state.mouse, DisableMouseCapture),
+			TTY.tmux_passthrough(DisableDrop),
+			TTY.tmux_passthrough(DisableDrag),
 			RestoreCursorStyle { blink: EMULATOR.cursor_blink.get(), shape: EMULATOR.cursor_shape.get() },
 			If(state.title, SetTitle("")),
 		);
 
 		STATE.set(RatermState::default());
 		EMULATOR.stop();
+	}
+
+	pub fn enable_dnd() -> Result<()> {
+		writef!(
+			TTY.writer(),
+			"{}{}",
+			TTY.tmux_passthrough(EnableDrag("")),
+			TTY.tmux_passthrough(EnableDrop(&["text/uri-list"])),
+		)?;
+		Ok(())
 	}
 
 	fn spawn(stream: &mut EventStream) -> JoinHandle<()> {

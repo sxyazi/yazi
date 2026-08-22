@@ -3,6 +3,7 @@ use yazi_emulator::EMULATOR;
 use yazi_macro::{error, render_force, succ};
 use yazi_parser::app::PassthroughForm;
 use yazi_shared::data::Data;
+use yazi_tui::Raterm;
 
 use crate::{Actor, Ctx};
 
@@ -24,9 +25,12 @@ impl Actor for Passthrough {
 
 		if let Err(e) = EMULATOR.restart() {
 			error!("Failed to request terminal capabilities through tmux: {e}");
-		} else {
-			render_force!();
+			succ!();
 		}
+		if let Err(e) = Raterm::enable_dnd() {
+			error!("Failed to enable drag and drop through tmux: {e}");
+		}
+		render_force!();
 
 		succ!();
 	}
