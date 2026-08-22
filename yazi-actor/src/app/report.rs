@@ -1,5 +1,4 @@
 use anyhow::Result;
-use yazi_adapter::ADAPTOR;
 use yazi_emulator::{EMULATOR, Mux};
 use yazi_macro::{act, log_if_err, succ};
 use yazi_proxy::AppProxy;
@@ -33,7 +32,6 @@ impl Actor for Report {
 			succ!(Self::reprobe());
 		}
 
-		ADAPTOR.resolve(&EMULATOR);
 		EMULATOR.probe.complete();
 		if EMULATOR.light().is_none() {
 			log_if_err!(act!(app:theme, cx));

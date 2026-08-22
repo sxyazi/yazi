@@ -35,11 +35,14 @@ impl Probe {
 
 	pub async fn wait(&self, id: Id) {
 		loop {
-			let notified = self.notifier.notified();
-			if self.id != id || self.completed.get() {
+			if self.completed.get() {
 				return;
 			}
-			if timeout(Duration::from_secs(5), notified).await.is_err() {
+
+			let notified = self.notifier.notified();
+			if self.completed.get() {
+				return;
+			} else if timeout(Duration::from_secs(5), notified).await.is_err() {
 				self.cancel(id);
 			}
 		}

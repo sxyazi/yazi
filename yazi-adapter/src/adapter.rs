@@ -2,7 +2,7 @@ use std::{fmt::{self, Debug}, path::PathBuf, sync::OnceLock};
 
 use anyhow::Result;
 use ratatui_core::layout::Rect;
-use yazi_emulator::{EMULATOR, Emulator};
+use yazi_emulator::EMULATOR;
 use yazi_shim::cell::SyncCell;
 use yazi_widgets::clear::ClearInventory;
 
@@ -32,7 +32,12 @@ impl Adapter {
 		let probe = &EMULATOR.probe;
 		probe.wait(probe.id.get()).await;
 
-		self.resolve(&EMULATOR).image_show(path, max).await
+		let driver = self.driver.get_or_init(|| {
+			let driver = Drivers::matches(&EMULATOR);
+			driver.start();
+			driver
+		});
+		driver.image_show(path, max).await
 	}
 
 	pub fn image_hide(&self) -> Result<()> {
@@ -46,14 +51,6 @@ impl Adapter {
 	pub fn shown_area(&self) -> Option<Rect> { self.shown.get() }
 
 	pub(super) fn shown_store(&self, area: Rect) { self.shown.set(Some(area)); }
-
-	pub fn resolve(&self, emulator: &Emulator) -> Driver {
-		*self.driver.get_or_init(|| {
-			let driver = Drivers::matches(emulator);
-			driver.start();
-			driver
-		})
-	}
 }
 
 inventory::submit! {
