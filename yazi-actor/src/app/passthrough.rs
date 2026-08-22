@@ -18,7 +18,7 @@ impl Actor for Passthrough {
 			succ!();
 		}
 
-		if EMULATOR.probe_id != id || !EMULATOR.needs_passthrough() {
+		if EMULATOR.probe.id != id || !EMULATOR.needs_passthrough() {
 			succ!();
 		}
 

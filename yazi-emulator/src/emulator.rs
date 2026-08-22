@@ -3,12 +3,11 @@ use std::io::{BufWriter, Write};
 use anyhow::Result;
 use arc_swap::ArcSwap;
 use yazi_macro::writef;
-use yazi_shared::id::Id;
 use yazi_shim::cell::{RoCell, SyncCell};
 use yazi_term::{TERM, event::Report};
-use yazi_tty::{Handle, TTY, sequence::{HideCursor, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
+use yazi_tty::{Handle, TTY, sequence::{EnterAlternateScreen, HideCursor, LeaveAlternateScreen, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
 
-use crate::{Brand, Mux};
+use crate::{Brand, Mux, Probe};
 
 pub static EMULATOR: RoCell<Emulator> = RoCell::new();
 
@@ -28,13 +27,49 @@ pub struct Emulator {
 	pub cursor_shape: SyncCell<Option<u8>>,
 	pub mux:          SyncCell<Option<Mux>>,
 
-	pub probe_id:       SyncCell<Id>,
+	pub probe:          Probe,
 	pub(super) started: SyncCell<bool>,
 }
 
 impl Emulator {
 	pub(super) fn from_env() -> Self {
 		Self { brand: Brand::from_env().unwrap_or(Brand::Unknown).into(), ..Default::default() }
+	}
+
+	pub fn start(&self) -> Result<()> {
+		if self.started.replace(true) {
+			return Ok(());
+		}
+
+		TERM.setup()?;
+		TERM.enter_raw_mode()?;
+		writef!(TTY.writer(), "{EnterAlternateScreen}")?;
+
+		self.probe.reset();
+		self.request()
+	}
+
+	pub fn stop(&self) {
+		if !self.started.replace(false) {
+			return;
+		}
+
+		writef!(TTY.writer(), "{LeaveAlternateScreen}").ok();
+		TERM.source.wake().ok();
+		TERM.restorer.restore(&TTY);
+	}
+
+	pub fn restart(&self) -> Result<()> {
+		self.mux.set(Some(Mux { sixel: self.sixel.get() }));
+
+		// Only these requests are passed through tmux after restarting.
+		self.brand.set(Brand::Unknown);
+		self.version.store(Default::default());
+		self.kgp.set(false);
+		self.sixel.set(false);
+
+		self.probe.reset();
+		self.request()
 	}
 
 	pub fn apply(&self, report: &Report) {
@@ -102,6 +137,10 @@ impl Emulator {
 
 		w.flush()?;
 		result
+	}
+
+	pub fn needs_passthrough(&self) -> bool {
+		self.brand.get() == Brand::Tmux && self.mux.get().is_none()
 	}
 
 	fn force_16t((w, h): (u16, u16)) -> bool {

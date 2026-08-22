@@ -34,6 +34,7 @@ impl Actor for Report {
 		}
 
 		ADAPTOR.resolve(&EMULATOR);
+		EMULATOR.probe.complete();
 		if EMULATOR.light().is_none() {
 			log_if_err!(act!(app:theme, cx));
 		}
@@ -44,7 +45,7 @@ impl Actor for Report {
 
 impl Report {
 	fn reprobe() {
-		let id = EMULATOR.probe_id.get();
+		let id = EMULATOR.probe.id.get();
 		tokio::spawn(async move {
 			Mux::tmux_setup().await;
 			AppProxy::passthrough(id);

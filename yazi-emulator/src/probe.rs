@@ -1,53 +1,58 @@
 use std::{fmt::Display, time::Duration};
 
 use anyhow::{Result, bail};
-use tokio::time;
+use tokio::{sync::Notify, time::{self, timeout}};
 use yazi_macro::{error, writef};
-use yazi_shared::id::Ids;
+use yazi_shared::id::{Id, Ids};
+use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
-use yazi_tty::{TTY, sequence::{EnterAlternateScreen, LeaveAlternateScreen, ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
+use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
 
-use crate::{Brand, Emulator, Mux};
+use crate::{Emulator, Mux};
 
 static IDS: Ids = Ids::new();
 
+#[derive(Debug, Default)]
+pub struct Probe {
+	pub id:    SyncCell<Id>,
+	completed: SyncCell<bool>,
+	notifier:  Notify,
+}
+
+impl Probe {
+	pub(crate) fn reset(&self) {
+		self.id.set(IDS.next());
+		self.completed.set(false);
+	}
+
+	pub fn complete(&self) {
+		if !self.completed.replace(true) {
+			self.notifier.notify_waiters();
+		}
+	}
+
+	pub fn pending(&self) -> Option<Id> { (!self.completed.get()).then(|| self.id.get()) }
+
+	pub async fn wait(&self, id: Id) {
+		loop {
+			let notified = self.notifier.notified();
+			if self.id != id || self.completed.get() {
+				return;
+			}
+			if timeout(Duration::from_secs(5), notified).await.is_err() {
+				self.cancel(id);
+			}
+		}
+	}
+
+	pub fn cancel(&self, id: Id) {
+		if self.id == id {
+			self.complete();
+		}
+	}
+}
+
 impl Emulator {
-	pub fn start(&self) -> Result<()> {
-		if self.started.replace(true) {
-			return Ok(());
-		}
-
-		TERM.setup()?;
-		TERM.enter_raw_mode()?;
-		writef!(TTY.writer(), "{EnterAlternateScreen}")?;
-
-		self.probe_id.set(IDS.next());
-		self.request()
-	}
-
-	pub fn stop(&self) {
-		if !self.started.replace(false) {
-			return;
-		}
-
-		writef!(TTY.writer(), "{LeaveAlternateScreen}").ok();
-		TERM.source.wake().ok();
-		TERM.restorer.restore(&TTY);
-	}
-
-	pub fn restart(&self) -> Result<()> {
-		self.mux.set(Some(Mux { sixel: self.sixel.get() }));
-		self.probe_id.set(IDS.next());
-
-		// Only these requests are passed through tmux after restarting.
-		self.brand.set(Brand::Unknown);
-		self.version.store(Default::default());
-		self.kgp.set(false);
-		self.sixel.set(false);
-
-		self.request()
-	}
-
 	pub async fn probe() -> Result<Self> {
 		TERM.enter_raw_mode()?;
 		let mut stream = EventStream::from(&*TERM);
@@ -94,11 +99,7 @@ impl Emulator {
 		result
 	}
 
-	pub fn needs_passthrough(&self) -> bool {
-		self.brand.get() == Brand::Tmux && self.mux.get().is_none()
-	}
-
-	fn request(&self) -> Result<()> {
+	pub(super) fn request(&self) -> Result<()> {
 		let w = |t: &'static dyn Display| TmuxPassthrough(t, self.mux.get().is_some());
 
 		writef!(
