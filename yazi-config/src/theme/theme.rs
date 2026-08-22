@@ -71,6 +71,9 @@ pub struct Mgr {
 	pub find_keyword:  SyncCell<StyleFlat>,
 	pub find_position: SyncCell<StyleFlat>,
 
+	// Filter
+	pub filter_keyword: SyncCell<StyleFlat>,
+
 	// Symlink
 	pub symlink_target: SyncCell<StyleFlat>,
 
