@@ -1,7 +1,8 @@
 use mlua::{ExternalError, Function, Lua, Table};
 use tokio::sync::mpsc;
+use yazi_binding::runtime;
 use yazi_macro::emit;
-use yazi_shared::{Layer, Source, data::Sendable, event::Action};
+use yazi_shared::{Layer, Source, data::Sendable, event::{Action, Event}};
 
 use super::Utils;
 
@@ -10,7 +11,15 @@ impl Utils {
 		lua.create_function(|lua, (name, args): (String, Table)| {
 			let mut action = Action::new(name, Source::Emit, Layer::Mgr)?;
 			action.args = Sendable::table_to_args(lua, args)?;
-			Ok(emit!(Call(action)))
+
+			let event = Event::Call(action.into());
+			if runtime!(lua)?.is_blocking() {
+				event.preempt();
+			} else {
+				event.emit();
+			}
+
+			Ok(())
 		})
 	}
 

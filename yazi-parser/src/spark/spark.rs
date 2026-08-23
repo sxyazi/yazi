@@ -96,6 +96,7 @@ pub enum Spark<'a> {
 	UpdateSpotted(crate::mgr::UpdateSpottedForm),
 	UpdateYanked(crate::mgr::UpdateYankedForm<'a>),
 	Upload(crate::mgr::UploadForm),
+	VisualArrow(crate::mgr::VisualArrowForm),
 	VisualMode(crate::mgr::VisualModeForm),
 	Watch(crate::mgr::WatchForm),
 	Yank(crate::mgr::YankForm),
@@ -299,6 +300,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::UpdateSpotted(b) => b.into_lua(lua),
 			Self::UpdateYanked(b) => b.into_lua(lua),
 			Self::Upload(b) => b.into_lua(lua),
+			Self::VisualArrow(b) => b.into_lua(lua),
 			Self::VisualMode(b) => b.into_lua(lua),
 			Self::Watch(b) => b.into_lua(lua),
 			Self::Yank(b) => b.into_lua(lua),
@@ -461,6 +463,7 @@ try_from_spark!(crate::mgr::UpdatePeekedForm, mgr:update_peeked);
 try_from_spark!(crate::mgr::UpdateSpottedForm, mgr:update_spotted);
 try_from_spark!(crate::mgr::UpdateYankedForm<'a>, mgr:update_yanked);
 try_from_spark!(crate::mgr::UploadForm, mgr:upload);
+try_from_spark!(crate::mgr::VisualArrowForm, mgr:visual_arrow);
 try_from_spark!(crate::mgr::VisualModeForm, mgr:visual_mode);
 try_from_spark!(crate::mgr::WatchForm, mgr:watch);
 try_from_spark!(crate::mgr::YankForm, mgr:yank);
