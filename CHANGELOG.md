@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Assertion failure on expanding URLs with variables containing absolute paths ([#4256])
 - Correct open rule matching for trashed directories ([#4268])
+- Honor associated text when matching character keybindings
 - Materialize Git symlinks for consistent hashes ([#4276])
 - Wait for terminal probe echo back before stopping instance ([#4271])
 - Avoid flicker caused by screen clear on final response from terminal ([#4250])
