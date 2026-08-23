@@ -43,6 +43,7 @@ yazi_macro::mod_flat!(
 	update_spotted
 	update_yanked
 	upload
+	visual_arrow
 	visual_mode
 	watch
 	yank

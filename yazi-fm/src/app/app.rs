@@ -1,11 +1,11 @@
 use std::{sync::atomic::Ordering, time::{Duration, Instant}};
 
 use anyhow::Result;
-use tokio::{select, sync::mpsc, time::sleep};
+use tokio::{select, time::sleep};
 use yazi_actor::Ctx;
 use yazi_core::Core;
 use yazi_macro::{act, render, succ};
-use yazi_shared::{data::Data, event::{Event, NEED_RENDER}};
+use yazi_shared::{data::Data, event::{Event, EventRx, NEED_RENDER}};
 use yazi_tui::Raterm;
 
 use crate::Dispatcher;
@@ -62,7 +62,7 @@ impl App {
 		succ!(render!())
 	}
 
-	async fn drain(&mut self, rx: &mut mpsc::UnboundedReceiver<Event>) -> Result<bool> {
+	async fn drain(&mut self, rx: &mut EventRx) -> Result<bool> {
 		let Some(event) = rx.recv().await else {
 			return Ok(false);
 		};
