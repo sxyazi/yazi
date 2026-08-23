@@ -33,11 +33,16 @@ impl Key {
 
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
+		let (code, shift) = match value.text(&mut [0; 4]).and_then(|s| s.parse().ok()) {
+			Some(c) => (KeyCode::Char(c), c.is_uppercase()),
+			None => (value.code, value.modifiers.contains(Modifiers::SHIFT)),
+		};
+
 		Self {
-			code:   value.code,
-			shift:  value.modifiers.contains(Modifiers::SHIFT),
-			ctrl:   value.modifiers.contains(Modifiers::CONTROL),
-			alt:    value.modifiers.contains(Modifiers::ALT),
+			code,
+			shift,
+			ctrl: value.modifiers.contains(Modifiers::CONTROL),
+			alt: value.modifiers.contains(Modifiers::ALT),
 			super_: value.modifiers.contains(Modifiers::SUPER),
 		}
 	}
