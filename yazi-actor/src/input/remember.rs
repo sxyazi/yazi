@@ -1,7 +1,6 @@
 use anyhow::Result;
 use yazi_core::input::InputMutGuard;
-use yazi_dds::Pubsub;
-use yazi_macro::{log_if_err, succ};
+use yazi_macro::succ;
 use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
@@ -21,18 +20,14 @@ impl Actor for Remember {
 
 		match &mut input {
 			InputMutGuard::Main(input) => {
-				let group = &input.main.history.name;
-				let value = input.main.value();
-				if input.histories.remember(group, value) {
-					log_if_err!(Pubsub::pub_after_history(group, value));
-				}
+				crate::input::remember_history(
+					&mut input.histories,
+					&input.main.history.name,
+					input.main.value(),
+				);
 			}
 			InputMutGuard::Alt(input, guard) => {
-				let group = &guard.history.name;
-				let value = guard.value();
-				if input.histories.remember(group, value) {
-					log_if_err!(Pubsub::pub_after_history(group, value));
-				}
+				crate::input::remember_history(&mut input.histories, &guard.history.name, guard.value());
 			}
 		}
 
