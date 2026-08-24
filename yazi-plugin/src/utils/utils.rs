@@ -89,6 +89,9 @@ pub(crate) fn compose(
 			#[cfg(unix)]
 			b"host_name" => Utils::host_name(lua)?,
 
+			// History
+			b"input_history_max" => Utils::input_history_max(lua)?,
+
 			// HTTP
 			b"http" => return Utils::http(lua)?.into_lua(lua),
 
