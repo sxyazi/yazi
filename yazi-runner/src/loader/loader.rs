@@ -51,7 +51,6 @@ impl Default for Loader {
 			("noop".to_owned(), preset!("plugins/noop").into()),
 			("null".to_owned(), preset!("plugins/null").into()),
 			("pdf".to_owned(), preset!("plugins/pdf").into()),
-			("rclone".to_owned(), preset!("plugins/rclone").into()),
 			("session".to_owned(), preset!("plugins/session").into()),
 			("svg".to_owned(), preset!("plugins/svg").into()),
 			("trash".to_owned(), preset!("plugins/trash").into()),

@@ -14,22 +14,13 @@ pub struct Child {
 	stdout:     Option<BufReader<ChildStdout>>,
 	stderr:     Option<BufReader<ChildStderr>>,
 	#[cfg(windows)]
-	job_handle: Option<std::os::windows::io::RawHandle>,
-}
-
-#[cfg(windows)]
-impl Drop for Child {
-	fn drop(&mut self) {
-		if let Some(h) = self.job_handle.take() {
-			unsafe { windows_sys::Win32::Foundation::CloseHandle(h) };
-		}
-	}
+	job_handle: Option<std::os::windows::io::OwnedHandle>,
 }
 
 impl Child {
 	pub fn new(
 		mut inner: tokio::process::Child,
-		#[cfg(windows)] job_handle: Option<std::os::windows::io::RawHandle>,
+		#[cfg(windows)] job_handle: Option<std::os::windows::io::OwnedHandle>,
 	) -> Self {
 		let stdin = inner.stdin.take().map(BufWriter::new);
 		let stdout = inner.stdout.take().map(BufReader::new);

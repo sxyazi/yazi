@@ -53,18 +53,19 @@ impl Command {
 
 	#[cfg(windows)]
 	fn spawn(&mut self) -> io::Result<Child> {
-		use std::os::windows::io::RawHandle;
+		use std::{mem, os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle}};
 
-		use windows_sys::Win32::{Foundation::CloseHandle, System::JobObjects::{AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation, SetInformationJobObject}};
+		use windows_sys::Win32::System::JobObjects::{AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation, SetInformationJobObject};
 
-		fn create_job(handle: RawHandle, memory: Option<usize>) -> io::Result<RawHandle> {
+		fn create_job(handle: RawHandle, memory: Option<usize>) -> io::Result<OwnedHandle> {
 			unsafe {
 				let job = CreateJobObjectW(std::ptr::null_mut(), std::ptr::null());
 				if job.is_null() {
 					return Err(io::Error::last_os_error());
 				}
 
-				let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+				let job = OwnedHandle::from_raw_handle(job);
+				let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = mem::zeroed();
 				info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
 				if let Some(m) = memory {
 					info.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_PROCESS_MEMORY;
@@ -72,18 +73,16 @@ impl Command {
 				}
 
 				if SetInformationJobObject(
-					job,
+					job.as_raw_handle(),
 					JobObjectExtendedLimitInformation,
 					&mut info as *mut _ as *mut _,
-					std::mem::size_of_val(&info) as u32,
+					mem::size_of_val(&info) as u32,
 				) == 0
 				{
-					CloseHandle(job);
 					return Err(io::Error::last_os_error());
 				}
 
-				if AssignProcessToJobObject(job, handle) == 0 {
-					CloseHandle(job);
+				if AssignProcessToJobObject(job.as_raw_handle(), handle) == 0 {
 					return Err(io::Error::last_os_error());
 				}
 
