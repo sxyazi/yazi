@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{IntoLua, Lua, Value};
 use yazi_shared::id::Id;
 
-use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
+use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHistory, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
 use crate::Payload;
 
 #[derive(Clone, Debug)]
@@ -23,6 +23,7 @@ pub enum Ember<'a> {
 	Delete(EmberDelete<'a>),
 	Download(EmberDownload<'a>),
 	Input(EmberInput<'a>),
+	History(EmberHistory<'a>),
 	Mount(EmberMount),
 	Theme(EmberTheme),
 	Custom(EmberCustom),
@@ -49,6 +50,7 @@ impl Ember<'static> {
 			"input" => Self::Input(serde_json::from_str(body)?),
 			"mount" => Self::Mount(serde_json::from_str(body)?),
 			"theme" => Self::Theme(serde_json::from_str(body)?),
+			"history" => Self::History(serde_json::from_str(body)?),
 			_ => EmberCustom::from_str(kind, body)?,
 		})
 	}
@@ -77,6 +79,7 @@ impl Ember<'static> {
 				| "delete"
 				| "download"
 				| "input"
+				| "history"
 				| "mount"
 				| "theme"
 		) || kind.starts_with("key-")
@@ -118,6 +121,7 @@ impl<'a> Ember<'a> {
 			Self::Delete(_) => "delete",
 			Self::Download(_) => "download",
 			Self::Input(_) => "input",
+			Self::History(_) => "history",
 			Self::Mount(_) => "mount",
 			Self::Theme(_) => "theme",
 			Self::Custom(b) => b.kind.as_str(),
@@ -148,6 +152,7 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Delete(b) => b.into_lua(lua),
 			Self::Download(b) => b.into_lua(lua),
 			Self::Input(b) => b.into_lua(lua),
+			Self::History(b) => b.into_lua(lua),
 			Self::Mount(b) => b.into_lua(lua),
 			Self::Theme(b) => b.into_lua(lua),
 			Self::Custom(b) => b.into_lua(lua),
