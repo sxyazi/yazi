@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(http inventory);
+yazi_macro::mod_flat!(headers inventory method request response transport);

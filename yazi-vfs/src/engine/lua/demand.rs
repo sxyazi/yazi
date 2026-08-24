@@ -41,7 +41,7 @@ impl FileBuilder for Demand {
 			ProvideJob::Open { url: engine.url.to_owned(), attrs: self.0.attrs, demand: self.0 };
 
 		let pos = engine.call(job).await?.0?;
-		Ok(File::new(engine.url, engine.run, pos, self.0))
+		Ok(File::new(engine.url, engine.service, pos, self.0))
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

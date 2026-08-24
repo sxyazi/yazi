@@ -3,7 +3,8 @@ use std::str::FromStr;
 use anyhow::{Result, bail};
 use hashbrown::HashMap;
 use tokio::io::AsyncWriteExt;
-use yazi_dds::{ID, Payload, Peer, Stream, ember::{Ember, EmberBye, EmberHi}};
+use yazi_boot::ID;
+use yazi_dds::{Payload, Peer, Stream, ember::{Ember, EmberBye, EmberHi}};
 use yazi_macro::try_format;
 use yazi_shared::id::Id;
 

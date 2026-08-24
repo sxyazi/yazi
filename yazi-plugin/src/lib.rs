@@ -15,3 +15,5 @@ pub fn setup() -> anyhow::Result<()> {
 
 	Ok(())
 }
+
+pub fn shutdown() { utils::shutdown() }

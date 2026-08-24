@@ -6,7 +6,7 @@ use yazi_shared::auth::Auth;
 
 #[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ServiceSftp {
-	#[serde(skip, default)]
+	#[serde(skip)]
 	pub auth:           Arc<Auth>,
 	pub host:           String,
 	pub user:           String,

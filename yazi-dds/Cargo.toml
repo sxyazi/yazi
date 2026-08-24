@@ -38,5 +38,5 @@ serde_json   = { workspace = true }
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }
 
-[target.'cfg(windows)'.dependencies]
+[target."cfg(windows)".dependencies]
 uds_windows = "1.2.1"

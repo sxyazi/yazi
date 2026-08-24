@@ -5,7 +5,7 @@ use arc_swap::ArcSwap;
 use yazi_macro::writef;
 use yazi_shim::cell::{RoCell, SyncCell};
 use yazi_term::{TERM, event::Report};
-use yazi_tty::{Handle, TTY, sequence::{EnterAlternateScreen, HideCursor, LeaveAlternateScreen, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
+use yazi_tty::{Handle, TTY, sequence::{HideCursor, MoveTo, RestoreCursorPos, SaveCursorPos, ShowCursor}};
 
 use crate::{Brand, Mux, Probe};
 
@@ -43,10 +43,10 @@ impl Emulator {
 
 		TERM.setup()?;
 		TERM.enter_raw_mode()?;
-		writef!(TTY.writer(), "{EnterAlternateScreen}")?;
 
+		self.request()?;
 		self.probe.reset();
-		self.request()
+		Ok(())
 	}
 
 	pub fn stop(&self) {
@@ -54,7 +54,6 @@ impl Emulator {
 			return;
 		}
 
-		writef!(TTY.writer(), "{LeaveAlternateScreen}").ok();
 		TERM.source.wake().ok();
 		TERM.restorer.restore(&TTY);
 	}
@@ -68,8 +67,9 @@ impl Emulator {
 		self.kgp.set(false);
 		self.sixel.set(false);
 
+		self.request()?;
 		self.probe.reset();
-		self.request()
+		Ok(())
 	}
 
 	pub fn apply(&self, report: &Report) {

@@ -6,15 +6,14 @@ use yazi_binding::MpscTx;
 use yazi_config::vfs::{ServiceLua, Vfs};
 use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::File};
 use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideResult}};
-use yazi_shared::{event::Cmd, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{data::{Data, DataKey}, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::engine::lua::{DirEntry, ReadDir};
 
 #[derive(Clone)]
 pub struct Lua<'a> {
-	pub(super) url: Url<'a>,
-
-	pub(super) run: &'static Cmd,
+	pub(super) url:     Url<'a>,
+	pub(crate) service: &'static ServiceLua,
 }
 
 impl<'a> Engine for Lua<'a> {
@@ -69,9 +68,9 @@ impl<'a> Engine for Lua<'a> {
 			tx:    MpscTx::map(tx.clone(), Ok),
 		};
 
-		let run = self.run;
+		let service = self.service;
 		tokio::spawn(async move {
-			match RUNNER.provide(run, job).await.ok() {
+			match RUNNER.provide(service, job).await.ok() {
 				Ok(()) => tx.send(Ok(0)).await.ok(),
 				Err(e) => tx.send(Err(e.into())).await.ok(),
 			};
@@ -117,7 +116,7 @@ impl<'a> Engine for Lua<'a> {
 		};
 
 		let service = Vfs::service::<&ServiceLua>(auth)?;
-		Ok(Self::Me { url, run: &service.run })
+		Ok(Self::Me { url, service })
 	}
 
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
@@ -206,6 +205,6 @@ impl<'a> Lua<'a> {
 	where
 		T: FromLua + Send + 'static,
 	{
-		Ok(RUNNER.provide(self.run, job).await)
+		Ok(RUNNER.provide(self.service, job).await)
 	}
 }

@@ -38,11 +38,13 @@ yazi-term      = { path = "../yazi-term", version = "26.8.15" }
 yazi-tty       = { path = "../yazi-tty", version = "26.8.15" }
 yazi-tui       = { path = "../yazi-tui", version = "26.8.15" }
 yazi-vfs       = { path = "../yazi-vfs", version = "26.8.15" }
+yazi-version   = { path = "../yazi-version", version = "26.8.15" }
 yazi-watcher   = { path = "../yazi-watcher", version = "26.8.15" }
 yazi-widgets   = { path = "../yazi-widgets", version = "26.8.15" }
 
 # External dependencies
 anyhow             = { workspace = true }
+clap               = { workspace = true }
 log                = { workspace = true }
 mlua               = { workspace = true }
 paste              = { workspace = true }

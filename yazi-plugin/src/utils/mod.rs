@@ -1,3 +1,5 @@
 yazi_macro::mod_flat!(
-	app cache call http image json layer log preview process spot sync target tasks text time user utils
+	app cache call hold http image json layer log preview process spot sync target tasks text time user utils
 );
+
+pub fn shutdown() { HELD.lock().clear(); }

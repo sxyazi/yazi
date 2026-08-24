@@ -37,6 +37,7 @@ fn path() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"config_dir" => PathBufDyn::from(Xdg::config_dir()).into_lua(lua),
+			b"runtime_dir" => PathBufDyn::from(Xdg::runtime_dir()).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}
