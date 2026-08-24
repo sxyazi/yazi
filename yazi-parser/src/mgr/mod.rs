@@ -16,6 +16,7 @@ yazi_macro::mod_flat!(
 	hover
 	linemode
 	link
+	load_history
 	open
 	open_do
 	paste

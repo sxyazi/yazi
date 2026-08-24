@@ -1,6 +1,7 @@
 use anyhow::Result;
 use yazi_core::input::InputMutGuard;
-use yazi_macro::{act, render, succ};
+use yazi_dds::Pubsub;
+use yazi_macro::{act, log_if_err, render, succ};
 use yazi_parser::{input::CloseForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 use yazi_widgets::input::InputEvent;
@@ -28,7 +29,11 @@ impl Actor for Close {
 		if form.submit
 			&& let InputMutGuard::Main(input) = guard
 		{
-			input.histories.remember(&input.main.history.name, input.main.value());
+			let group = &input.main.history.name;
+			let value = input.main.value();
+			if input.histories.remember(group, value) {
+				log_if_err!(Pubsub::pub_after_history(group, value))
+			}
 		}
 
 		cx.input.main.visible = false;
