@@ -1,5 +1,4 @@
--- MAX set in code at yazi-core/src/input/history.rs
-local MAX = 20
+local MAX = ya.input_history_max()
 
 local function state_path()
 	-- Follows state logic in yazi-fs/src/xdg.rs
@@ -25,8 +24,8 @@ local function remember(entries, group, value)
 	entries[group] = list
 end
 
--- Needs a `require("history").setup()` in ~/.config/yazi/init.lua to work for any/all plugins using this
-local function setup()
+-- Needs a `require("history"):setup()` in ~/.config/yazi/init.lua to work for any/all plugins using this
+local function setup(_)
 	local path = state_path()
 	local entries = {}
 
@@ -44,8 +43,12 @@ local function setup()
 			return nil, Err("Invalid history file %s: %s", path, raw)
 		end
 
+		for group, list in pairs(json) do
+			entries[group] = entries[group] or list
+		end
+
 		if next(json) then
-			ya.emit("load_history", json)
+			ya.emit("load_history", { json })
 		end
 	end)
 

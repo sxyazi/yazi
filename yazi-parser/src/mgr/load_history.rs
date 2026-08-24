@@ -17,9 +17,7 @@ impl TryFrom<ActionCow> for LoadHistoryForm {
 }
 
 impl FromLua for LoadHistoryForm {
-	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> {
-		Err("unexpected LoadHistoryForm from Lua".into_lua_err())
-	}
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
 }
 
 impl IntoLua for LoadHistoryForm {
