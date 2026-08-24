@@ -11,6 +11,7 @@ pub fn compose(
 			// App
 			b"id" => Utils::id(lua)?,
 			b"drop" => Utils::drop(lua)?,
+			b"hold" => Utils::hold(lua)?,
 
 			// Cache
 			b"file_cache" => Utils::file_cache(lua)?,

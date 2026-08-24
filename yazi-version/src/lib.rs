@@ -1,4 +1,4 @@
-use std::{env::consts::{ARCH, OS}, fmt::Write};
+use std::{env::{self, consts::{ARCH, OS}}, fmt::Write};
 
 pub fn version() -> &'static str { concat!(env!("CARGO_PKG_VERSION"), " ", env!("VERGEN_GIT_SHA")) }
 
@@ -24,4 +24,8 @@ pub fn version_full() -> String {
 	writeln!(s, "    Rustc  : {} ({} {})", env!("VERGEN_RUSTC_SEMVER"), &env!("VERGEN_RUSTC_COMMIT_HASH")[..8], env!("VERGEN_RUSTC_COMMIT_DATE")).ok();
 
 	s
+}
+
+pub fn has_dash_v() -> bool {
+	env::args_os().skip(1).take_while(|arg| arg != "--").any(|arg| arg == "-V" || arg == "--version")
 }

@@ -5,13 +5,13 @@ use hashbrown::{HashMap, HashSet};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
+use yazi_boot::ID;
 use yazi_macro::{error, try_format};
 use yazi_shared::id::Id;
 use yazi_shim::cell::RoCell;
 
 use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberHey}};
 
-pub static ID: RoCell<Id> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<Id, Peer>>> = RoCell::new();
 
 pub(super) static QUEUE_TX: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();

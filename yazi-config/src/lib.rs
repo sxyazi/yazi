@@ -79,9 +79,9 @@ where
 fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
 	let mut stdout = TTY.lockout();
 
-	write!(stdout, "{e}\r\n")?;
+	write!(stdout, "{}\r\n", e.to_string().replace('\n', "\r\n"))?;
 	if let Some(src) = e.source() {
-		write!(stdout, "\r\nCaused by:\r\n{src}\r\n")?;
+		write!(stdout, "\r\nCaused by:\r\n{}\r\n", src.to_string().replace('\n', "\r\n"))?;
 	}
 
 	writef!(

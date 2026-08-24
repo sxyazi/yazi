@@ -4,7 +4,7 @@ use mlua::{IntoLua, Lua, Value};
 use strum::AsRefStr;
 use yazi_binding::MpscTx;
 use yazi_fs::{engine::{Attrs, Demand}, file::File};
-use yazi_shared::{path::PathBufDyn, url::UrlBuf};
+use yazi_shared::{data::{Data, DataKey, Sendable}, path::PathBufDyn, url::UrlBuf};
 
 #[derive(AsRefStr)]
 #[strum(serialize_all = "PascalCase")]

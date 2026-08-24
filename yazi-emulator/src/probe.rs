@@ -6,7 +6,7 @@ use yazi_macro::{error, writef};
 use yazi_shared::id::{Id, Ids};
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
-use yazi_tty::{TTY, sequence::{ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursorPos, SaveCursorPos, TmuxPassthrough}};
+use yazi_tty::{TTY, sequence::{EraseLine, ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKittyGraphics, RequestXtVersion, RestoreCursor, SaveCursor, TmuxPassthrough}};
 
 use crate::{Emulator, Mux};
 
@@ -31,7 +31,10 @@ impl Probe {
 		}
 	}
 
-	pub fn pending(&self) -> Option<Id> { (!self.completed.get()).then(|| self.id.get()) }
+	pub fn pending(&self) -> Option<Id> {
+		let id = self.id.get();
+		(id != Id::ZERO && !self.completed.get()).then_some(id)
+	}
 
 	pub async fn wait(&self, id: Id) {
 		loop {
@@ -107,10 +110,11 @@ impl Emulator {
 
 		writef!(
 			TTY.writer(),
-			"{SaveCursorPos}{RequestColorScheme}{RequestBgColor}{RequestCursorBlink}{RequestCursorStyle}{}{}{RequestCellPixelSize}{ProbeClipboard}{RequestCsiU}{}{RestoreCursorPos}",
+			"{SaveCursor}{RequestColorScheme}{RequestBgColor}{RequestCursorBlink}{RequestCursorStyle}{}{}{RequestCellPixelSize}{ProbeClipboard}{RequestCsiU}{}{}{RestoreCursor}",
 			w(&RequestXtVersion),
 			w(&RequestKittyGraphics),
 			w(&RequestDA1),
+			EraseLine::BeforeCursor
 		)?;
 
 		Ok(())

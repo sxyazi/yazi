@@ -12,7 +12,7 @@ use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
 use yazi_shared::{data::Data, strand::Strand, url::{UrlBuf, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_term::YIELD_TO_SUBPROCESS;
-use yazi_tty::{TTY, sequence::EraseScreen};
+use yazi_tty::{TTY, sequence::EraseDisplay};
 use yazi_vfs::engine;
 use yazi_watcher::WATCHER;
 
@@ -60,7 +60,7 @@ impl Actor for BulkCreate {
 
 impl BulkCreate {
 	async fn r#do(cwd: UrlBuf, todo: Vec<Entry<'_>>) -> Result<()> {
-		writef!(TTY.writer(), "{EraseScreen}\n")?;
+		writef!(TTY.writer(), "{}\n", EraseDisplay::All)?;
 		if todo.is_empty() {
 			return Ok(());
 		} else if !Self::ask_continue(&todo, None)? {
@@ -133,7 +133,7 @@ impl BulkCreate {
 
 	async fn output_failed(failed: Vec<(Entry<'_>, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
-		writeln!(stdout, "{EraseScreen}")?;
+		writeln!(stdout, "{}", EraseDisplay::All)?;
 
 		writeln!(stdout, "Failed to create:")?;
 		for (entry, err) in failed {

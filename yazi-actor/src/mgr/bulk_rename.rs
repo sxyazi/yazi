@@ -14,7 +14,7 @@ use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
 use yazi_shared::{data::Data, path::PathDyn, strand::{AsStrand, AsStrandJoin, Strand, StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_term::YIELD_TO_SUBPROCESS;
-use yazi_tty::{TTY, sequence::EraseScreen};
+use yazi_tty::{TTY, sequence::EraseDisplay};
 use yazi_vfs::{engine::{self, Demand}, maybe_exists};
 use yazi_watcher::WATCHER;
 
@@ -93,7 +93,7 @@ impl BulkRename {
 		selected: Vec<UrlBuf>,
 		decision: Option<bool>,
 	) -> Result<()> {
-		writef!(TTY.writer(), "{EraseScreen}\n")?;
+		writef!(TTY.writer(), "{}\n", EraseDisplay::All)?;
 		if old.len() != new.len() {
 			#[rustfmt::skip]
 			writef!(TTY.writer(), "Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len())?;
@@ -178,7 +178,7 @@ impl BulkRename {
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
-		writeln!(stdout, "{EraseScreen}")?;
+		writeln!(stdout, "{}", EraseDisplay::All)?;
 
 		writeln!(stdout, "Failed to rename:")?;
 		for (old, new, err) in failed {

@@ -3,7 +3,8 @@ use std::str::FromStr;
 use anyhow::{Result, bail};
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
-use yazi_dds::{ID, Payload, Stream, ember::{Ember, EmberHi}};
+use yazi_boot::ID;
+use yazi_dds::{Payload, Stream, ember::{Ember, EmberHi}};
 use yazi_macro::try_format;
 use yazi_shared::{data::Data, id::Id};
 
@@ -12,7 +13,7 @@ use crate::{CommandExec, CommandPub, dds::Dds};
 impl Dds {
 	pub(crate) async fn exec(cmd: CommandExec) -> anyhow::Result<Data> {
 		let receiver = CommandPub::receiver()?;
-		let req = cmd.body(*yazi_dds::ID)?;
+		let req = cmd.body(*yazi_boot::ID)?;
 		let resp = Self::ask("dds-exec", receiver, &req, "dds-exec-result").await?;
 
 		#[derive(Deserialize)]

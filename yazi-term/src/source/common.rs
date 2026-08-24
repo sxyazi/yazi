@@ -30,7 +30,7 @@ impl<'a> EventSource<'a> {
 		}
 	}
 
-	pub(crate) fn drain(&self) -> io::Result<()> {
+	pub fn drain(&self) -> io::Result<()> {
 		let result = self.waker.drain();
 		self.parser.lock().drain();
 		result

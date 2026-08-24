@@ -32,8 +32,12 @@ ratatui-widgets      = { workspace = true }
 rustls               = { workspace = true }
 serde                = { workspace = true }
 thiserror            = { workspace = true }
+tokio                = { workspace = true }
 toml                 = { workspace = true }
 tracing-core         = { workspace = true }
 twox-hash            = { workspace = true }
 unicode-segmentation = { version = "1.13.3" }
 unicode-width        = { workspace = true }
+
+[target."cfg(windows)".dependencies]
+uds_windows = "1.2.1"

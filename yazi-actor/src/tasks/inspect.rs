@@ -9,7 +9,7 @@ use yazi_parser::VoidForm;
 use yazi_scheduler::AppProxy;
 use yazi_shared::data::Data;
 use yazi_term::{TERM, YIELD_TO_SUBPROCESS};
-use yazi_tty::{TTY, sequence::EraseScreen};
+use yazi_tty::{TTY, sequence::EraseDisplay};
 
 use crate::{Actor, Ctx};
 
@@ -40,7 +40,7 @@ impl Actor for Inspect {
 
 			// Stop the app and clear the terminal
 			AppProxy::stop().await;
-			writeln!(TTY.writer(), "{EraseScreen}").ok();
+			writeln!(TTY.writer(), "{}", EraseDisplay::All).ok();
 
 			// Print the buffered logs
 			TTY.writer().write_all(buffered.as_bytes()).ok();

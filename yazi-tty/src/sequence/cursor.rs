@@ -23,6 +23,20 @@ impl Display for HideCursor {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b[?25l") }
 }
 
+/// Save cursor position and character attributes (DECSC, `ESC 7`)
+pub struct SaveCursor;
+
+impl Display for SaveCursor {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b7") }
+}
+
+/// Restore cursor position and character attributes (DECRC, `ESC 8`)
+pub struct RestoreCursor;
+
+impl Display for RestoreCursor {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("\x1b8") }
+}
+
 /// Save cursor position
 pub struct SaveCursorPos;
 

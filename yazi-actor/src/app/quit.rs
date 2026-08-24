@@ -19,6 +19,7 @@ impl Actor for Quit {
 	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
 		cx.tasks.shutdown();
 		cx.mgr.shutdown();
+		yazi_plugin::shutdown();
 
 		futures::executor::block_on(async {
 			_ = futures::join!(

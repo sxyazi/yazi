@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn run() -> anyhow::Result<()> {
-	if std::env::args_os().nth(1).is_some_and(|s| s == "-V" || s == "--version") {
+	if yazi_version::has_dash_v() {
 		outln!("Ya\n{}", yazi_version::version_full())?;
 		return Ok(());
 	}
