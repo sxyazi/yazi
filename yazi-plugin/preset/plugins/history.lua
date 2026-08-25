@@ -1,5 +1,7 @@
 local MAX = ya.input_history_max()
 
+local M = {}
+
 local function state_path()
 	-- Follows state logic in yazi-fs/src/xdg.rs
 	if ya.target_family() == "windows" then
@@ -25,7 +27,7 @@ local function remember(entries, group, value)
 end
 
 -- Needs a `require("history"):setup()` in ~/.config/yazi/init.lua to work for any/all plugins using this
-local function setup(_)
+function M:setup(_)
 	local path = state_path()
 	local entries = {}
 
@@ -67,4 +69,4 @@ local function setup(_)
 	end)
 end
 
-return { setup = setup }
+return M
