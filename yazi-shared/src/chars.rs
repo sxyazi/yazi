@@ -19,17 +19,6 @@ where
 	}
 }
 
-pub fn replacen_cow<'a, T>(s: T, from: &str, to: &str, n: usize) -> Cow<'a, str>
-where
-	T: Into<Cow<'a, str>>,
-{
-	let cow = s.into();
-	match replace_cow_impl(&cow, cow.match_indices(from).take(n), to) {
-		Cow::Borrowed(_) => cow,
-		Cow::Owned(now) => Cow::Owned(now),
-	}
-}
-
 fn replace_cow_impl<'a, T>(src: &'a str, mut indices: T, to: &str) -> Cow<'a, str>
 where
 	T: Iterator<Item = (usize, &'a str)>,
@@ -91,7 +80,7 @@ pub fn replace_to_printable(b: &[u8], lf: bool, tab_size: u8, replacement: bool)
 }
 
 #[inline]
-pub fn push_printable_char(buf: &mut Vec<u8>, c: u8, lf: bool, tab_size: u8, replacement: bool) {
+fn push_printable_char(buf: &mut Vec<u8>, c: u8, lf: bool, tab_size: u8, replacement: bool) {
 	match c {
 		b'\n' if lf => buf.push(b'\n'),
 		b'\t' => {

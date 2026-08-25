@@ -9,12 +9,12 @@ use crate::{Selectable, YAZI, open::{OpenRule, OpenRuleArc, OpenRules}};
 
 #[derive(Default)]
 pub struct OpenRuleMatcher<'a> {
-	pub rules:  Arc<Vec<OpenRuleArc>>,
-	pub id:     Id,
-	pub file:   Option<Cow<'a, File>>,
-	pub mime:   Option<Cow<'a, str>>,
-	pub all:    bool,
-	pub offset: usize,
+	pub(crate) rules:  Arc<Vec<OpenRuleArc>>,
+	pub(crate) id:     Id,
+	pub(crate) file:   Option<Cow<'a, File>>,
+	pub(crate) mime:   Option<Cow<'a, str>>,
+	pub(crate) all:    bool,
+	pub(crate) offset: usize,
 }
 
 impl From<&OpenRules> for OpenRuleMatcher<'_> {
@@ -24,7 +24,7 @@ impl From<&OpenRules> for OpenRuleMatcher<'_> {
 }
 
 impl OpenRuleMatcher<'_> {
-	pub fn matches(&self, rule: &OpenRule) -> bool {
+	pub(crate) fn matches(&self, rule: &OpenRule) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {

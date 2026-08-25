@@ -10,7 +10,7 @@ use crate::{BytesExt, SnakeCasedKey};
 pub struct KebabCasedKey(CompactString);
 
 impl KebabCasedKey {
-	pub fn new(s: impl Into<CompactString>) -> Option<Self> {
+	pub(crate) fn new(s: impl Into<CompactString>) -> Option<Self> {
 		let s = s.into();
 		(!s.is_empty() && s.len() <= 20 && s.as_bytes().kebab_cased()).then_some(Self(s))
 	}

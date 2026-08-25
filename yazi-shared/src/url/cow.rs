@@ -212,10 +212,6 @@ impl<'a> UrlCow<'a> {
 		(Spec { auth, uri, urn }, path)
 	}
 
-	pub fn into_spec(self) -> Spec { self.into_pair().0 }
-
-	pub fn into_path(self) -> PathCow<'a> { self.into_pair().1 }
-
 	pub fn to_owned(&self) -> UrlBuf { self.as_url().into() }
 }
 

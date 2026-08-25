@@ -11,11 +11,11 @@ use crate::{Mixable, Pattern, Selectable, Selector, plugin::open_rule_id};
 #[derive(Clone, Debug, Deserialize, DeserializeOver2)]
 pub struct OpenRule {
 	#[serde(skip, default = "open_rule_id")]
-	pub id:       Id,
+	pub(crate) id:    Id,
 	#[serde(flatten)]
-	pub selector: Selector,
+	selector:         Selector,
 	#[serde_as(as = "OneOrMany<_, PreferOne>")]
-	pub r#use:    Vec<String>,
+	pub(crate) r#use: Vec<String>,
 }
 
 impl PartialEq for OpenRule {

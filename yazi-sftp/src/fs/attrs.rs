@@ -17,7 +17,7 @@ pub struct Attrs {
 impl Attrs {
 	pub fn is_empty(&self) -> bool { *self == Self::default() }
 
-	pub fn len(&self) -> usize {
+	pub(crate) fn len(&self) -> usize {
 		let mut len = 4;
 		if let Some(size) = self.size {
 			len += size_of_val(&size);

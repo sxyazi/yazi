@@ -14,11 +14,11 @@ pub struct Input {
 }
 
 impl Input {
-	pub fn focus(&self) -> bool { self.main.visible || self.alt.is_some() }
+	pub(crate) fn focus(&self) -> bool { self.main.visible || self.alt.is_some() }
 
 	pub fn padding(&self) -> Padding { Padding::new(1, 1, 1, 1) }
 
-	pub fn position(&self) -> Option<Position> {
+	pub(crate) fn position(&self) -> Option<Position> {
 		if self.main.visible {
 			Some(self.main.position)
 		} else if let Some(alt) = &self.alt {

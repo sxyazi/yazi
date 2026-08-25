@@ -11,10 +11,10 @@ use crate::{Mixable, Pattern, Selectable, Selector, YAZI, plugin::{SpotterArc, S
 #[derive(Debug, Deserialize)]
 pub struct Spotter {
 	#[serde(skip, default = "spotter_id")]
-	pub id:       Id,
+	pub(crate) id: Id,
 	#[serde(flatten)]
-	pub selector: Selector,
-	pub run:      Cmd,
+	selector:      Selector,
+	run:           Cmd,
 }
 
 impl Deref for Spotter {
@@ -39,12 +39,12 @@ impl Mixable for Spotter {
 // --- Matcher
 #[derive(Default)]
 pub struct SpotterMatcher<'a> {
-	pub spotters: Arc<Vec<SpotterArc>>,
-	pub id:       Id,
-	pub file:     Option<Cow<'a, File>>,
-	pub mime:     Option<Cow<'a, str>>,
-	pub all:      bool,
-	pub offset:   usize,
+	pub(crate) spotters: Arc<Vec<SpotterArc>>,
+	pub(crate) id:       Id,
+	pub(crate) file:     Option<Cow<'a, File>>,
+	pub(crate) mime:     Option<Cow<'a, str>>,
+	pub(crate) all:      bool,
+	pub(crate) offset:   usize,
 }
 
 impl From<&Spotters> for SpotterMatcher<'_> {
@@ -54,7 +54,7 @@ impl From<&Spotters> for SpotterMatcher<'_> {
 }
 
 impl SpotterMatcher<'_> {
-	pub fn matches(&self, spotter: &Spotter) -> bool {
+	pub(crate) fn matches(&self, spotter: &Spotter) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {

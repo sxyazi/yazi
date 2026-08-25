@@ -11,14 +11,14 @@ use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{Pre
 #[derive(Debug, Deserialize)]
 pub struct Preloader {
 	#[serde(skip, default = "preloader_id")]
-	pub id:       Id,
+	pub(crate) id: Id,
 	#[serde(flatten)]
-	pub selector: Selector,
-	pub run:      Cmd,
+	selector:      Selector,
+	run:           Cmd,
 	#[serde(default)]
-	pub next:     bool,
+	next:          bool,
 	#[serde(default)]
-	pub prio:     Priority,
+	pub prio:      Priority,
 }
 
 impl Deref for Preloader {
@@ -38,13 +38,13 @@ impl Mixable for Preloader {}
 // --- Matcher
 #[derive(Default)]
 pub struct PreloaderMatcher<'a> {
-	pub preloaders: Arc<Vec<PreloaderArc>>,
-	pub id:         Id,
-	pub file:       Option<Cow<'a, File>>,
-	pub mime:       Option<Cow<'a, str>>,
-	pub all:        bool,
-	pub offset:     usize,
-	pub stop:       bool,
+	pub(crate) preloaders: Arc<Vec<PreloaderArc>>,
+	pub(crate) id:         Id,
+	pub(crate) file:       Option<Cow<'a, File>>,
+	pub(crate) mime:       Option<Cow<'a, str>>,
+	pub(crate) all:        bool,
+	pub(crate) offset:     usize,
+	pub(crate) stop:       bool,
 }
 
 impl From<&Preloaders> for PreloaderMatcher<'_> {
@@ -54,7 +54,7 @@ impl From<&Preloaders> for PreloaderMatcher<'_> {
 }
 
 impl PreloaderMatcher<'_> {
-	pub fn matches(&self, preloader: &Preloader) -> bool {
+	pub(crate) fn matches(&self, preloader: &Preloader) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {

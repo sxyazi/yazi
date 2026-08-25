@@ -11,11 +11,11 @@ use crate::vfs::Service;
 pub struct Authorities(HashMap<Scheme, Domains>);
 
 impl Authorities {
-	pub fn service(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<&Service> {
+	pub(crate) fn service(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<&Service> {
 		self.0.get(scheme)?.get(domain)
 	}
 
-	pub fn auth(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Auth>> {
+	pub(crate) fn auth(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Auth>> {
 		let service = self.service(scheme, domain)?;
 		if service.auth().domain.is_catchall() {
 			Some(Auth::new(service.kind(), scheme.clone(), domain.clone()))

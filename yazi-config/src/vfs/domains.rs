@@ -13,11 +13,11 @@ pub struct Domains {
 }
 
 impl Domains {
-	pub fn get(&self, domain: &Domain<'_>) -> Option<&Service> {
+	pub(crate) fn get(&self, domain: &Domain<'_>) -> Option<&Service> {
 		self.exact.get(domain.as_ref()).or(self.catchall.as_ref())
 	}
 
-	pub fn extend(&mut self, other: Self) {
+	pub(crate) fn extend(&mut self, other: Self) {
 		self.exact.extend(other.exact);
 		if other.catchall.is_some() {
 			self.catchall = other.catchall;

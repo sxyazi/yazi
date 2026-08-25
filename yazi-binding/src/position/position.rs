@@ -8,9 +8,9 @@ use super::{Offset, Origin};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Position {
-	pub origin:  Origin,
-	pub offset:  Offset,
-	pub padding: Padding,
+	pub origin:         Origin,
+	pub offset:         Offset,
+	pub(crate) padding: Padding,
 }
 
 impl Deref for Position {
@@ -94,7 +94,7 @@ impl Position {
 		.padding(self.padding)
 	}
 
-	pub fn padding(mut self, padding: impl Into<Padding>) -> Self {
+	pub(crate) fn padding(mut self, padding: impl Into<Padding>) -> Self {
 		let p = padding.into();
 		self.padding.left = self.padding.left.saturating_add(p.left);
 		self.padding.right = self.padding.right.saturating_add(p.right);

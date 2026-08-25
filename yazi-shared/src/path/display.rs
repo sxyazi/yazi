@@ -1,6 +1,6 @@
 use crate::path::PathDyn;
 
-pub struct Display<'a>(pub PathDyn<'a>);
+pub struct Display<'a>(pub(crate) PathDyn<'a>);
 
 impl std::fmt::Display for Display<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

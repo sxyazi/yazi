@@ -4,11 +4,11 @@ use yazi_shared::url::UrlBuf;
 pub struct MgrProxy;
 
 impl MgrProxy {
-	pub fn refresh() {
+	pub(crate) fn refresh() {
 		emit!(Call(relay!(mgr:refresh)));
 	}
 
-	pub fn upload<I>(urls: I)
+	pub(crate) fn upload<I>(urls: I)
 	where
 		I: IntoIterator<Item = UrlBuf>,
 	{

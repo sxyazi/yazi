@@ -6,10 +6,6 @@ use yazi_shim::{SStr, strum::IntoStr};
 pub struct MgrProxy;
 
 impl MgrProxy {
-	pub fn arrow(step: impl Into<SStr>) {
-		emit!(Call(relay!(mgr:arrow, [step.into()])));
-	}
-
 	pub fn cd(target: impl Into<UrlBuf>, source: CdSource) {
 		emit!(Call(
 			relay!(mgr:cd, [target.into()]).with("raw", true).with("source", source.into_str())

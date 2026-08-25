@@ -48,7 +48,7 @@ impl<'a> Components<'a> {
 		s.into()
 	}
 
-	pub fn auth(&self) -> &'a Auth { self.url.auth() }
+	fn auth(&self) -> &'a Auth { self.url.auth() }
 
 	fn ports(&self) -> (usize, usize) {
 		let left = self.inner.clone().count();
@@ -74,7 +74,7 @@ impl<'a> Components<'a> {
 		buf.into()
 	}
 
-	pub fn url(&self) -> Url<'a> {
+	pub(crate) fn url(&self) -> Url<'a> {
 		let path = self.inner.path();
 		let (uri, urn) = self.ports();
 		match self.url {

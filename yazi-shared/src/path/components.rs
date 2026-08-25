@@ -21,14 +21,14 @@ impl<'a> From<&'a typed_path::UnixPath> for Components<'a> {
 impl<'a> Components<'a> {
 	pub fn auth_depth(self) -> usize { self.filter(Component::has_auth).count() }
 
-	pub fn path(&self) -> PathDyn<'a> {
+	pub(crate) fn path(&self) -> PathDyn<'a> {
 		match self {
 			Self::Os(c) => PathDyn::Os(c.as_path()),
 			Self::Unix(c) => PathDyn::Unix(c.as_path()),
 		}
 	}
 
-	pub fn strand(&self) -> Strand<'a> {
+	pub(crate) fn strand(&self) -> Strand<'a> {
 		match self {
 			Self::Os(c) => Strand::Os(c.as_path().as_os_str()),
 			Self::Unix(c) => Strand::Bytes(c.as_bytes()),

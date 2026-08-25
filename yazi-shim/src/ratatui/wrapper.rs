@@ -9,9 +9,8 @@ pub trait LineComposer<'a> {
 }
 
 pub struct WrappedLine<'lend, 'text> {
-	pub graphemes: &'lend [StyledGrapheme<'text>],
-	pub width:     u16,
-	pub alignment: Alignment,
+	pub(crate) graphemes: &'lend [StyledGrapheme<'text>],
+	pub(crate) alignment: Alignment,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -37,7 +36,7 @@ where
 	O: Iterator<Item = (I, Alignment)>,
 	I: Iterator<Item = StyledGrapheme<'a>>,
 {
-	pub const fn new(lines: O, max_line_width: u16, trim: bool) -> Self {
+	pub(crate) const fn new(lines: O, max_line_width: u16, trim: bool) -> Self {
 		Self {
 			input_lines: lines,
 			max_line_width,
@@ -176,12 +175,9 @@ where
 
 		loop {
 			if let Some(line) = self.wrapped_lines.pop_front() {
-				let line_width = line.iter().map(|grapheme| grapheme.symbol.width() as u16).sum();
-
 				self.replace_current_line(line);
 				return Some(WrappedLine {
 					graphemes: &self.current_line,
-					width:     line_width,
 					alignment: self.current_alignment,
 				});
 			}

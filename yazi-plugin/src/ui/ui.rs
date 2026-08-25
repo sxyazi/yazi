@@ -6,7 +6,7 @@ use yazi_macro::log_if_err;
 use yazi_shim::strum::IntoStr;
 use yazi_widgets::{clear::Clear, input::{InputArc, InputEvent}};
 
-pub fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			// Elements

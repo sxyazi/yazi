@@ -11,14 +11,14 @@ use crate::keymap::ChordArc;
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Keymap {
-	pub mgr:     KeymapSection,
-	pub tasks:   KeymapSection,
-	pub spot:    KeymapSection,
-	pub pick:    KeymapSection,
-	pub input:   KeymapSection,
-	pub confirm: KeymapSection,
-	pub help:    KeymapSection,
-	pub cmp:     KeymapSection,
+	mgr:     KeymapSection,
+	tasks:   KeymapSection,
+	spot:    KeymapSection,
+	pick:    KeymapSection,
+	input:   KeymapSection,
+	confirm: KeymapSection,
+	help:    KeymapSection,
+	cmp:     KeymapSection,
 }
 
 impl Keymap {

@@ -57,7 +57,7 @@ impl Highlighter {
 		})
 	}
 
-	pub fn abort() { INCR.next(); }
+	pub(crate) fn abort() { INCR.next(); }
 
 	fn highlight(mut self) -> Result<Text<'static>, PeekError> {
 		self.load_syntax()?;

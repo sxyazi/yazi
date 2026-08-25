@@ -10,7 +10,7 @@ pub struct Output {
 }
 
 impl Output {
-	pub fn new(inner: std::process::Output) -> Self { Self { inner } }
+	pub(crate) fn new(inner: std::process::Output) -> Self { Self { inner } }
 }
 
 impl UserData for Output {

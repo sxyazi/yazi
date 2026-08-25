@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 
-use crate::path::{DynPath, PathBufDyn, PathDyn, PathDynError, PathKind};
+use crate::path::{DynPath, PathBufDyn, PathDyn, PathKind};
 
 #[derive(Debug)]
 pub enum PathCow<'a> {
@@ -44,30 +44,23 @@ impl PartialEq<&str> for PathCow<'_> {
 }
 
 impl<'a> PathCow<'a> {
-	pub fn into_encoded_bytes(self) -> Cow<'a, [u8]> {
+	pub(crate) fn into_encoded_bytes(self) -> Cow<'a, [u8]> {
 		match self {
 			Self::Borrowed(p) => Cow::Borrowed(p.encoded_bytes()),
 			Self::Owned(p) => Cow::Owned(p.into_encoded_bytes()),
 		}
 	}
 
-	pub fn into_owned(self) -> PathBufDyn {
+	fn into_owned(self) -> PathBufDyn {
 		match self {
 			Self::Borrowed(p) => p.to_owned(),
 			Self::Owned(p) => p,
 		}
 	}
 
-	pub fn into_os(self) -> Result<std::path::PathBuf, PathDynError> {
-		match self {
-			PathCow::Borrowed(p) => p.to_os_owned(),
-			PathCow::Owned(p) => p.into_os(),
-		}
-	}
-
 	pub fn is_borrowed(&self) -> bool { matches!(self, Self::Borrowed(_)) }
 
-	pub fn with<K, T>(kind: K, bytes: T) -> Result<Self>
+	pub(crate) fn with<K, T>(kind: K, bytes: T) -> Result<Self>
 	where
 		K: Into<PathKind>,
 		T: Into<Cow<'a, [u8]>>,

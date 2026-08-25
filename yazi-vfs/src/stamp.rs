@@ -90,7 +90,7 @@ impl Stamp {
 	pub fn sig(&self) -> &str { unsafe { str::from_utf8_unchecked(&self.0[..Self::SIG_LEN]) } }
 
 	#[inline]
-	pub fn name(&self) -> &[u8] { &self.0[Self::SIG_LEN..] }
+	fn name(&self) -> &[u8] { &self.0[Self::SIG_LEN..] }
 }
 
 impl TryFrom<Vec<u8>> for Stamp {

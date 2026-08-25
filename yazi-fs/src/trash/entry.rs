@@ -63,9 +63,9 @@ impl TrashEntry {
 		Self::new(self.id.child(&name)?, self.backing.join(&name), original)
 	}
 
-	pub(super) fn key(&self) -> &OsStr { self.rel().file_name().unwrap_or(self.top().as_os_str()) }
+	fn key(&self) -> &OsStr { self.rel().file_name().unwrap_or(self.top().as_os_str()) }
 
-	pub(super) fn name(&self) -> &OsStr {
+	fn name(&self) -> &OsStr {
 		self
 			.rel()
 			.file_name()

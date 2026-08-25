@@ -9,12 +9,12 @@ use crate::{TaskIn, custom::{CustomPool, CustomProg}};
 
 #[derive(Clone, Debug, Default)]
 pub struct CustomIn {
-	pub id:       Id,
-	pub pool:     CustomPool,
-	pub scope:    Scope,
-	pub title:    SStr,
-	pub track:    bool,
-	pub progress: bool,
+	id:                  Id,
+	pub(crate) pool:     CustomPool,
+	pub(crate) scope:    Scope,
+	title:               SStr,
+	pub(crate) track:    bool,
+	pub(crate) progress: bool,
 }
 
 impl TaskIn for CustomIn {

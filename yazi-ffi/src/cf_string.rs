@@ -24,11 +24,9 @@ impl CFString {
 		Ok(Self(key))
 	}
 
-	pub fn len(&self) -> usize { unsafe { CFStringGetLength(self.0) as _ } }
+	fn len(&self) -> usize { unsafe { CFStringGetLength(self.0) as _ } }
 
-	pub fn is_empty(&self) -> bool { self.len() == 0 }
-
-	pub fn os_string(&self) -> Result<OsString> {
+	pub(crate) fn os_string(&self) -> Result<OsString> {
 		let len = self.len();
 		let capacity =
 			unsafe { CFStringGetMaximumSizeForEncoding(len as _, kCFStringEncodingUTF8) } + 1;

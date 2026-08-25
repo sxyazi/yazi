@@ -8,10 +8,10 @@ use crate::opener::{OpenerRule, OpenerRuleArc, OpenerRulesArc};
 
 #[derive(Default)]
 pub struct OpenerRuleMatcher {
-	pub rules:  Arc<Vec<OpenerRuleArc>>,
-	pub id:     Id,
-	pub all:    bool,
-	pub offset: usize,
+	rules:  Arc<Vec<OpenerRuleArc>>,
+	id:     Id,
+	all:    bool,
+	offset: usize,
 }
 
 impl From<&OpenerRulesArc> for OpenerRuleMatcher {
@@ -21,7 +21,7 @@ impl From<&OpenerRulesArc> for OpenerRuleMatcher {
 }
 
 impl OpenerRuleMatcher {
-	pub fn matches(&self, rule: &OpenerRule) -> bool {
+	pub(crate) fn matches(&self, rule: &OpenerRule) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {

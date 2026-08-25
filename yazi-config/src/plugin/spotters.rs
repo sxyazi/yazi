@@ -28,7 +28,7 @@ impl Spotters {
 		self.matcher(Some(file), Some(mime)).next()
 	}
 
-	pub fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> SpotterMatcher<'a>
+	fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> SpotterMatcher<'a>
 	where
 		F: Into<Cow<'a, File>>,
 		M: Into<Cow<'a, str>>,
@@ -42,7 +42,7 @@ impl Spotters {
 		}
 	}
 
-	pub fn insert(&self, index: isize, spotter: SpotterArc) -> Result<(), IndexAtError> {
+	fn insert(&self, index: isize, spotter: SpotterArc) -> Result<(), IndexAtError> {
 		self.0.try_rcu(|spotters| {
 			let i = spotters.index_at(index)?;
 			if i == spotters.len() {
@@ -60,7 +60,7 @@ impl Spotters {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: SpotterMatcher) {
+	fn remove(&self, matcher: SpotterMatcher) {
 		self.0.rcu(|spotters| {
 			let mut next = Vec::clone(spotters);
 			next.retain(|spotter| !matcher.matches(spotter));

@@ -27,13 +27,13 @@ impl Default for Parser {
 }
 
 impl Parser {
-	pub fn parse(&mut self, bytes: &[u8]) {
+	pub(crate) fn parse(&mut self, bytes: &[u8]) {
 		for &b in bytes {
 			self.step(b);
 		}
 	}
 
-	pub fn step(&mut self, b: u8) {
+	pub(super) fn step(&mut self, b: u8) {
 		// If the sequence is too long, mark it for discard.
 		if self.seq.len() >= self.state.limit() {
 			self.seq.clear();
@@ -85,8 +85,6 @@ impl Parser {
 	pub(crate) fn emit(&mut self, event: impl Into<Event>) { self.events.push_back(event.into()); }
 
 	fn emit_key(&mut self, event: impl Into<KeyEvent>) { self.emit(Event::Key(event.into())); }
-
-	pub fn pop(&mut self) -> Option<Event> { self.events.pop_front() }
 
 	fn on_ground(&mut self, b: u8) {
 		match b {

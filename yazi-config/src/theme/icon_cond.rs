@@ -6,13 +6,13 @@ use crate::{Icon, Mixable};
 
 #[derive(Debug, Deserialize)]
 pub struct IconCond {
-	pub r#if: Condition,
+	r#if:            Condition,
 	#[serde(flatten)]
-	pub icon: Icon,
+	pub(crate) icon: Icon,
 }
 
 impl IconCond {
-	pub fn matches(&self, file: &File, hovered: bool) -> bool {
+	pub(crate) fn matches(&self, file: &File, hovered: bool) -> bool {
 		let f = |s: &str| match s {
 			"dir" => file.is_dir(),
 			"hidden" => file.is_hidden(),

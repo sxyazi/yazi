@@ -16,7 +16,7 @@ use crate::theme::{Flavor, Theme};
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static THEME: RoCell<Theme> = RoCell::new();
-pub static VFS: RoCell<vfs::Vfs> = RoCell::new();
+pub(crate) static VFS: RoCell<vfs::Vfs> = RoCell::new();
 pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
 
 pub fn setup() -> anyhow::Result<()> {

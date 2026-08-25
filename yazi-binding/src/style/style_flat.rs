@@ -3,17 +3,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 pub struct StyleFlat {
-	pub fg:          Option<Color>,
-	pub bg:          Option<Color>,
-	pub bold:        Option<bool>,
-	pub dim:         Option<bool>,
-	pub italic:      Option<bool>,
-	pub underline:   Option<bool>,
-	pub blink:       Option<bool>,
-	pub blink_rapid: Option<bool>,
-	pub reversed:    Option<bool>,
-	pub hidden:      Option<bool>,
-	pub crossed:     Option<bool>,
+	fg:          Option<Color>,
+	pub bg:      Option<Color>,
+	bold:        Option<bool>,
+	dim:         Option<bool>,
+	italic:      Option<bool>,
+	underline:   Option<bool>,
+	blink:       Option<bool>,
+	blink_rapid: Option<bool>,
+	reversed:    Option<bool>,
+	hidden:      Option<bool>,
+	crossed:     Option<bool>,
 }
 
 impl From<ratatui_core::style::Style> for StyleFlat {

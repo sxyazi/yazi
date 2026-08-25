@@ -54,7 +54,7 @@ impl Ongoing {
 	pub fn get_id(&self, idx: usize) -> Option<Id> { self.values().nth(idx).map(|t| t.id) }
 
 	#[inline]
-	pub fn get_handle(&self, id: Id) -> Option<TaskHandle> {
+	pub(crate) fn get_handle(&self, id: Id) -> Option<TaskHandle> {
 		self.inner.get(&id).map(|t| t.handle.clone())
 	}
 
@@ -70,7 +70,9 @@ impl Ongoing {
 	pub fn exists(&self, id: Id) -> bool { self.inner.contains_key(&id) }
 
 	#[inline]
-	pub fn intact(&self, id: Id) -> bool { self.inner.get(&id).is_some_and(|t| !t.is_canceled()) }
+	pub(crate) fn intact(&self, id: Id) -> bool {
+		self.inner.get(&id).is_some_and(|t| !t.is_canceled())
+	}
 
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
 		if YAZI.tasks.suppress_preload {

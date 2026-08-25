@@ -9,7 +9,7 @@ use yazi_plugin::LUA;
 use super::{Core, PtrCell};
 use crate::lives::MutCell;
 
-pub(super) static TO_DESTROY: MutCell<Vec<AnyUserData>> = MutCell::new(Vec::new());
+static TO_DESTROY: MutCell<Vec<AnyUserData>> = MutCell::new(Vec::new());
 pub(super) static FILE_CACHE: MutCell<
 	MaybeUninit<HashMap<PtrCell<yazi_fs::file::File>, AnyUserData>>,
 > = MutCell::new(MaybeUninit::uninit());

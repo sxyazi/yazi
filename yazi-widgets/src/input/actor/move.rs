@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{Input, op::InputOp, parser::MoveOpt, snap::InputSnap};
 
 impl Input {
-	pub fn r#move(&mut self, opt: MoveOpt) -> Result<Data> {
+	pub(crate) fn r#move(&mut self, opt: MoveOpt) -> Result<Data> {
 		let snap = self.snap();
 		if opt.in_operating && snap.op == InputOp::None {
 			succ!();

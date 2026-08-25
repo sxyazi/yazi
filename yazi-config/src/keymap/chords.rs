@@ -23,7 +23,7 @@ impl From<Vec<ChordArc>> for Chords {
 }
 
 impl Chords {
-	pub fn insert(&self, index: isize, rule: ChordArc) -> Result<(), IndexAtError> {
+	fn insert(&self, index: isize, rule: ChordArc) -> Result<(), IndexAtError> {
 		self.0.try_rcu(|rules| {
 			let (before, after) = rules.split_at(rules.index_at(index)?);
 			Ok(
@@ -39,7 +39,7 @@ impl Chords {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: ChordMatcher) {
+	fn remove(&self, matcher: ChordMatcher) {
 		self.0.rcu(|chords| {
 			let mut next = Vec::clone(chords);
 			next.retain(|arc| !matcher.matches(arc));
@@ -47,7 +47,7 @@ impl Chords {
 		});
 	}
 
-	pub fn update<E>(
+	fn update<E>(
 		&self,
 		matcher: ChordMatcher,
 		f: impl Fn(Chord) -> Result<Chord, E>,

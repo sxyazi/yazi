@@ -21,7 +21,7 @@ pub enum Driver {
 }
 
 impl Driver {
-	pub async fn image_show<P>(self, path: P, max: Rect) -> Result<Rect>
+	pub(crate) async fn image_show<P>(self, path: P, max: Rect) -> Result<Rect>
 	where
 		P: Into<PathBuf>,
 	{
@@ -40,7 +40,7 @@ impl Driver {
 		}
 	}
 
-	pub fn image_erase(self, area: Rect) -> Result<()> {
+	pub(crate) fn image_erase(self, area: Rect) -> Result<()> {
 		match self {
 			Self::Kgp => Kgp::image_erase(area),
 			Self::KgpOld => KgpOld::image_erase(area),

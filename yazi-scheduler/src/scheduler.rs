@@ -8,7 +8,7 @@ use yazi_shared::{Throttle, id::Id, pool::Symbol, url::{UrlBuf, UrlLike}};
 use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskHandle, TaskIn, TaskProg, Worker, custom::{CustomIn, CustomOut, CustomPool}, fetch::FetchInFetch, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInMove, FileInTrash, FileInUpload, FileOutCopy, FileOutDownload, FileOutHardlink, FileOutMove, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadInPreload, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
 pub struct Scheduler {
-	pub worker:   Worker,
+	worker:       Worker,
 	pub behavior: Behavior,
 	handles:      Vec<JoinHandle<()>>,
 }

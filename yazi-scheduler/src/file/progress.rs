@@ -5,13 +5,13 @@ use crate::{CleanupState, Progress, TaskSummary};
 // --- Copy
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgCopy {
-	pub total_files:     u32,
-	pub success_files:   u32,
-	pub failed_files:    u32,
-	pub total_bytes:     u64,
-	pub processed_bytes: u64,
-	pub collected:       Option<bool>,
-	pub cleaned:         CleanupState,
+	pub(crate) total_files:     u32,
+	pub(crate) success_files:   u32,
+	pub(crate) failed_files:    u32,
+	pub(crate) total_bytes:     u64,
+	pub(crate) processed_bytes: u64,
+	pub(crate) collected:       Option<bool>,
+	pub(crate) cleaned:         CleanupState,
 }
 
 impl From<FileProgCopy> for TaskSummary {
@@ -46,13 +46,13 @@ impl Progress for FileProgCopy {
 // --- Move
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgMove {
-	pub total_files:     u32,
-	pub success_files:   u32,
-	pub failed_files:    u32,
-	pub total_bytes:     u64,
-	pub processed_bytes: u64,
-	pub collected:       Option<bool>,
-	pub cleaned:         CleanupState,
+	pub(crate) total_files:     u32,
+	pub(crate) success_files:   u32,
+	pub(crate) failed_files:    u32,
+	pub(crate) total_bytes:     u64,
+	pub(crate) processed_bytes: u64,
+	pub(crate) collected:       Option<bool>,
+	pub(crate) cleaned:         CleanupState,
 }
 
 impl From<FileProgMove> for TaskSummary {
@@ -87,8 +87,8 @@ impl Progress for FileProgMove {
 // --- Link
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgLink {
-	pub state:   Option<bool>,
-	pub cleaned: CleanupState,
+	pub(crate) state:   Option<bool>,
+	pub(crate) cleaned: CleanupState,
 }
 
 impl From<FileProgLink> for TaskSummary {
@@ -115,11 +115,11 @@ impl Progress for FileProgLink {
 // --- Hardlink
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgHardlink {
-	pub total:     u32,
-	pub success:   u32,
-	pub failed:    u32,
-	pub collected: Option<bool>,
-	pub cleaned:   CleanupState,
+	pub(crate) total:     u32,
+	pub(crate) success:   u32,
+	pub(crate) failed:    u32,
+	pub(crate) collected: Option<bool>,
+	pub(crate) cleaned:   CleanupState,
 }
 
 impl From<FileProgHardlink> for TaskSummary {
@@ -148,13 +148,13 @@ impl Progress for FileProgHardlink {
 // --- Delete
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgDelete {
-	pub total_files:     u32,
-	pub success_files:   u32,
-	pub failed_files:    u32,
-	pub total_bytes:     u64,
-	pub processed_bytes: u64,
-	pub collected:       Option<bool>,
-	pub cleaned:         CleanupState,
+	pub(crate) total_files:     u32,
+	pub(crate) success_files:   u32,
+	pub(crate) failed_files:    u32,
+	pub(crate) total_bytes:     u64,
+	pub(crate) processed_bytes: u64,
+	pub(crate) collected:       Option<bool>,
+	pub(crate) cleaned:         CleanupState,
 }
 
 impl From<FileProgDelete> for TaskSummary {
@@ -189,8 +189,8 @@ impl Progress for FileProgDelete {
 // --- Trash
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgTrash {
-	pub state:   Option<bool>,
-	pub cleaned: CleanupState,
+	pub(crate) state:   Option<bool>,
+	pub(crate) cleaned: CleanupState,
 }
 
 impl From<FileProgTrash> for TaskSummary {
@@ -217,13 +217,13 @@ impl Progress for FileProgTrash {
 // --- Download
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgDownload {
-	pub total_files:     u32,
-	pub success_files:   u32,
-	pub failed_files:    u32,
-	pub total_bytes:     u64,
-	pub processed_bytes: u64,
-	pub collected:       Option<bool>,
-	pub cleaned:         CleanupState,
+	pub(crate) total_files:     u32,
+	pub(crate) success_files:   u32,
+	pub(crate) failed_files:    u32,
+	pub(crate) total_bytes:     u64,
+	pub(crate) processed_bytes: u64,
+	pub(crate) collected:       Option<bool>,
+	pub(crate) cleaned:         CleanupState,
 }
 
 impl From<FileProgDownload> for TaskSummary {
@@ -258,13 +258,13 @@ impl Progress for FileProgDownload {
 // --- Upload
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgUpload {
-	pub total_files:     u32,
-	pub success_files:   u32,
-	pub failed_files:    u32,
-	pub total_bytes:     u64,
-	pub processed_bytes: u64,
-	pub collected:       Option<bool>,
-	pub cleaned:         CleanupState,
+	pub(crate) total_files:     u32,
+	pub(crate) success_files:   u32,
+	pub(crate) failed_files:    u32,
+	pub(crate) total_bytes:     u64,
+	pub(crate) processed_bytes: u64,
+	pub(crate) collected:       Option<bool>,
+	pub(crate) cleaned:         CleanupState,
 }
 
 impl From<FileProgUpload> for TaskSummary {

@@ -9,7 +9,7 @@ pub struct Domain<'a>(Cow<'a, [u8]>);
 
 impl Domain<'static> {
 	pub const CATCHALL: Self = Self(Cow::Borrowed(b"*"));
-	pub const EMPTY: Self = Self(Cow::Borrowed(b""));
+	pub(crate) const EMPTY: Self = Self(Cow::Borrowed(b""));
 }
 
 impl Deref for Domain<'_> {
@@ -50,11 +50,11 @@ impl Display for Domain<'_> {
 }
 
 impl<'a> Domain<'a> {
-	pub fn into_owned(self) -> Domain<'static> { Domain(Cow::Owned(self.0.into_owned())) }
+	pub(crate) fn into_owned(self) -> Domain<'static> { Domain(Cow::Owned(self.0.into_owned())) }
 
 	pub fn is_catchall(&self) -> bool { *self == Domain::CATCHALL }
 
-	pub fn to_str(&self) -> Result<&str, str::Utf8Error> { str::from_utf8(&self.0) }
+	fn to_str(&self) -> Result<&str, str::Utf8Error> { str::from_utf8(&self.0) }
 }
 
 impl<'de, 'a: 'de> IntoDeserializer<'de, de::value::Error> for Domain<'a> {

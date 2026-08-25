@@ -22,7 +22,7 @@ impl Deref for HttpResponse {
 }
 
 impl HttpResponse {
-	pub fn new(mut response: reqwest::Response) -> Self {
+	pub(crate) fn new(mut response: reqwest::Response) -> Self {
 		let url = response.url().as_str().to_owned();
 		let len = response.content_length();
 		let status = response.status();

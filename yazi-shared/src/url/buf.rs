@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
 use yazi_codegen::FromLuaOwned;
 use yazi_macro::impl_data_any;
 
-use crate::{auth::{Auth, Domain}, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}};
+use crate::{auth::{Auth, Domain}, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer}};
 
 #[derive(Clone, Eq, FromLuaOwned)]
 pub enum UrlBuf {
@@ -131,12 +131,6 @@ impl Hash for UrlBuf {
 
 impl UrlBuf {
 	#[inline]
-	pub fn new() -> &'static Self {
-		static U: UrlBuf = UrlBuf::Regular(LocBuf::empty());
-		&U
-	}
-
-	#[inline]
 	pub fn into_loc(self) -> PathBufDyn {
 		match self {
 			Self::Regular(loc) => loc.into_inner().into(),
@@ -146,11 +140,6 @@ impl UrlBuf {
 			Self::Scope { loc, .. } => loc.into_inner().into(),
 			Self::Sftp { loc, .. } => loc.into_inner().into(),
 		}
-	}
-
-	#[inline]
-	pub fn into_local(self) -> Option<PathBuf> {
-		if self.kind().is_local() { self.into_loc().into_os().ok() } else { None }
 	}
 
 	pub fn try_set_name(&mut self, name: impl AsStrand) -> Result<(), SetNameError> {
@@ -182,19 +171,14 @@ impl UrlBuf {
 	pub fn to_regular(&self) -> Result<Self, PathDynError> { Ok(self.as_url().as_regular()?.into()) }
 
 	#[inline]
-	pub fn into_regular(self) -> Result<Self, PathDynError> {
-		Ok(Self::Regular(self.into_loc().into_os()?.into()))
-	}
-
-	#[inline]
-	pub fn into_search(self, query: impl AsRef<str>) -> Result<Self, PathDynError> {
+	pub(crate) fn into_search(self, query: impl AsRef<str>) -> Result<Self, PathDynError> {
 		Ok(Self::Search {
 			loc:  LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
 			auth: Auth::search(query.as_ref()),
 		})
 	}
 
-	pub fn into_domain<'a>(mut self, domain: impl Into<Domain<'a>>) -> Self {
+	pub(crate) fn into_domain<'a>(mut self, domain: impl Into<Domain<'a>>) -> Self {
 		match &mut self {
 			Self::Regular(_) => {}
 			Self::Search { auth, .. }

@@ -9,19 +9,19 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberLoad<'a> {
-	pub tab:   Id,
-	pub url:   Cow<'a, UrlBuf>,
-	pub stage: Cow<'a, FolderStage>,
+	tab:   Id,
+	url:   Cow<'a, UrlBuf>,
+	stage: Cow<'a, FolderStage>,
 }
 
 impl<'a> EmberLoad<'a> {
-	pub fn borrowed(tab: Id, url: &'a UrlBuf, stage: &'a FolderStage) -> Ember<'a> {
+	pub(crate) fn borrowed(tab: Id, url: &'a UrlBuf, stage: &'a FolderStage) -> Ember<'a> {
 		Self { tab, url: url.into(), stage: Cow::Borrowed(stage) }.into()
 	}
 }
 
 impl EmberLoad<'static> {
-	pub fn owned(tab: Id, url: &UrlBuf, stage: &FolderStage) -> Ember<'static> {
+	pub(crate) fn owned(tab: Id, url: &UrlBuf, stage: &FolderStage) -> Ember<'static> {
 		Self { tab, url: url.clone().into(), stage: Cow::Owned(stage.clone()) }.into()
 	}
 }

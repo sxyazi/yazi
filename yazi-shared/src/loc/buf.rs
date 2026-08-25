@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl}, path::{DynPath, PathDyn, PathView, SetNameError}, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl, LocLike}, path::{DynPath, PathDyn, PathView, SetNameError}, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct LocBuf<P = std::path::PathBuf> {
@@ -102,7 +102,7 @@ where
 	P: LocBufAble + LocBufAbleImpl,
 	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
-	pub fn new<'a, S>(path: P, base: S, trail: S) -> Self
+	pub(crate) fn new<'a, S>(path: P, base: S, trail: S) -> Self
 	where
 		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as LocAble<'b>>::Strand<'a>>,
 	{
@@ -124,7 +124,7 @@ where
 		Ok(Self { inner: loc.inner, uri, urn })
 	}
 
-	pub fn zeroed<T>(path: T) -> Self
+	pub(crate) fn zeroed<T>(path: T) -> Self
 	where
 		T: Into<P>,
 	{
@@ -135,7 +135,7 @@ where
 		Self { inner: loc.inner, uri, urn }
 	}
 
-	pub fn floated<'a, S>(path: P, base: S) -> Self
+	pub(crate) fn floated<'a, S>(path: P, base: S) -> Self
 	where
 		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as LocAble<'b>>::Strand<'a>>,
 	{
@@ -155,7 +155,7 @@ where
 	}
 
 	#[inline]
-	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed<'a>> {
+	pub(crate) fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed<'a>> {
 		Loc {
 			inner:    self.inner.path_view(),
 			uri:      self.uri,
@@ -167,7 +167,7 @@ where
 	#[inline]
 	pub fn into_inner(self) -> P { self.inner }
 
-	pub fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
+	pub(crate) fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
 	where
 		T: AsStrandView<'a, P::Strand<'a>>,
 	{
@@ -197,7 +197,7 @@ where
 	}
 
 	#[inline]
-	pub fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Self
+	pub(crate) fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Self
 	where
 		'a: 'b,
 		for<'c> <P::Borrowed<'c> as LocAble<'c>>::Owned: Into<Self>,
@@ -208,9 +208,6 @@ where
 	}
 
 	#[inline]
-	pub fn parent(&self) -> Option<P::Borrowed<'_>> { self.as_loc().parent() }
-
-	#[inline]
 	fn mutate<T, F: FnOnce(&mut P) -> T>(&mut self, f: F) -> T {
 		let mut inner = mem::take(&mut self.inner);
 		let result = f(&mut inner);
@@ -219,41 +216,12 @@ where
 	}
 }
 
-// FIXME: macro
-impl<P> LocBuf<P>
-where
-	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
-{
-	#[inline]
-	pub fn uri(&self) -> P::Borrowed<'_> { self.as_loc().uri() }
-
-	#[inline]
-	pub fn urn(&self) -> P::Borrowed<'_> { self.as_loc().urn() }
-
-	#[inline]
-	pub fn base(&self) -> P::Borrowed<'_> { self.as_loc().base() }
-
-	#[inline]
-	pub fn has_base(&self) -> bool { self.as_loc().has_base() }
-
-	#[inline]
-	pub fn trail(&self) -> P::Borrowed<'_> { self.as_loc().trail() }
-
-	#[inline]
-	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
-}
-
-impl LocBuf<std::path::PathBuf> {
-	pub const fn empty() -> Self { Self { inner: std::path::PathBuf::new(), uri: 0, urn: 0 } }
-}
-
 #[cfg(test)]
 mod tests {
 	use std::path::{Path, PathBuf};
 
 	use super::*;
-	use crate::url::{UrlBuf, UrlLike};
+	use crate::{loc::LocLike, url::{UrlBuf, UrlLike}};
 
 	#[test]
 	fn test_new() {

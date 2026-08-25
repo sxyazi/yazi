@@ -7,18 +7,18 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberInput<'a> {
-	pub r#type: Cow<'a, str>,
-	pub value:  Cow<'a, str>,
+	r#type: Cow<'a, str>,
+	value:  Cow<'a, str>,
 }
 
 impl<'a> EmberInput<'a> {
-	pub fn borrowed(r#type: &'a str, value: &'a str) -> Ember<'a> {
+	pub(crate) fn borrowed(r#type: &'a str, value: &'a str) -> Ember<'a> {
 		Self { r#type: r#type.into(), value: value.into() }.into()
 	}
 }
 
 impl EmberInput<'static> {
-	pub fn owned(r#type: &'static str, value: &str) -> Ember<'static> {
+	pub(crate) fn owned(r#type: &'static str, value: &str) -> Ember<'static> {
 		Self { r#type: r#type.into(), value: value.to_owned().into() }.into()
 	}
 }

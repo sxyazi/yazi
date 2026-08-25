@@ -8,11 +8,10 @@ use yazi_shim::SStr;
 // --- SearchOpt
 #[derive(Clone, Debug)]
 pub struct SearchOpt {
-	pub via:      SearchVia,
-	pub subject:  SStr,
-	pub args:     Vec<String>,
-	pub args_raw: SStr,
-	pub r#in:     Option<UrlBuf>,
+	pub via:     SearchVia,
+	pub subject: SStr,
+	pub args:    Vec<String>,
+	pub r#in:    Option<UrlBuf>,
 }
 
 impl_data_any!(SearchOpt);
@@ -36,7 +35,6 @@ impl TryFrom<ActionCow> for SearchOpt {
 			via: a.str("via").parse()?,
 			subject: a.take_first().unwrap_or_default(),
 			args: args.0,
-			args_raw: a.take("args").unwrap_or_default(),
 			r#in,
 		})
 	}

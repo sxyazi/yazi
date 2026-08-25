@@ -16,8 +16,8 @@ pub struct Preload {
 	ops: TaskOps,
 	tx:  async_priority_channel::Sender<PreloadIn, u8>,
 
-	pub loaded:  Mutex<LruCache<u64, Loaded>>,
-	pub loading: Mutex<LruCache<u64, Id>>,
+	pub loaded:         Mutex<LruCache<u64, Loaded>>,
+	pub(crate) loading: Mutex<LruCache<u64, Id>>,
 }
 
 impl Preload {

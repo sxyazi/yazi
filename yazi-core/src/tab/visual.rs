@@ -27,7 +27,7 @@ impl Visual {
 		first.contains(&index) || second.contains(&index)
 	}
 
-	pub fn indices(&self, end: usize, len: usize) -> VisualIndices {
+	pub(crate) fn indices(&self, end: usize, len: usize) -> VisualIndices {
 		let (first, second) = self.ranges(end, len);
 		first.chain(second)
 	}

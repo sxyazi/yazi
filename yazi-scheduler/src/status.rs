@@ -12,17 +12,17 @@ pub enum TaskStatus {
 }
 
 impl TaskStatus {
-	pub fn has_started(self) -> bool {
+	pub(crate) fn has_started(self) -> bool {
 		matches!(self, Self::Started | Self::Succeeded | Self::Failed)
 	}
 
-	pub fn is_cancelable(self) -> bool {
+	pub(crate) fn is_cancelable(self) -> bool {
 		matches!(self, Self::Pending | Self::Started | Self::Failed)
 	}
 
-	pub fn is_finishable(self) -> bool { matches!(self, Self::Pending | Self::Started) }
+	pub(crate) fn is_finishable(self) -> bool { matches!(self, Self::Pending | Self::Started) }
 
-	pub fn is_finished(self) -> bool {
+	pub(crate) fn is_finished(self) -> bool {
 		matches!(self, Self::Succeeded | Self::Failed | Self::Canceled)
 	}
 }

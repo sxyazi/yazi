@@ -78,7 +78,7 @@ impl Display for StartDrag {
 }
 
 /// Start requesting dropped data: `OSC 72 ; t=r:x=idx ST`
-pub struct StartDrop(pub u8);
+pub struct StartDrop(pub(crate) u8);
 
 impl Display for StartDrop {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -87,7 +87,7 @@ impl Display for StartDrop {
 }
 
 /// Present drag data: `OSC 72 ; t=p:x=idx ; base64 encoded data ST`
-pub struct PresentDrag<'a>(pub u8, pub &'a [u8]);
+pub struct PresentDrag<'a>(pub(crate) u8, pub(crate) &'a [u8]);
 
 impl Display for PresentDrag<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -110,11 +110,11 @@ impl Display for PresentDrag<'_> {
 /// Present drag icon data:
 /// `OSC 72 ; t=p:x=-1:y=fmt:X=width:Y=height:o=opacity ; base64 payload ST`
 pub struct PresentDragIcon<'a> {
-	pub format:  u8,
-	pub opacity: u16,
-	pub width:   u32,
-	pub height:  u32,
-	pub data:    &'a [u8],
+	pub(crate) format:  u8,
+	pub(crate) opacity: u16,
+	pub(crate) width:   u32,
+	pub(crate) height:  u32,
+	pub(crate) data:    &'a [u8],
 }
 
 impl Display for PresentDragIcon<'_> {

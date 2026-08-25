@@ -18,7 +18,7 @@ pub struct Tasks {
 }
 
 impl Tasks {
-	pub fn serve() -> Self {
+	pub(crate) fn serve() -> Self {
 		let scheduler = Scheduler::serve();
 		let ongoing = scheduler.ongoing.clone();
 

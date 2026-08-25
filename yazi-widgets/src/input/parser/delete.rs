@@ -3,8 +3,8 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct DeleteOpt {
-	pub cut:    bool,
-	pub insert: bool,
+	pub(crate) cut:    bool,
+	pub(crate) insert: bool,
 }
 
 impl From<ActionCow> for DeleteOpt {

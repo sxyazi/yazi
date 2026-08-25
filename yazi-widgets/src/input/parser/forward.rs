@@ -8,9 +8,9 @@ use crate::input::Gait;
 #[serde(rename_all = "kebab-case")]
 pub struct ForwardOpt {
 	#[serde(alias = "0", default)]
-	pub gait:        Gait,
+	pub(crate) gait:        Gait,
 	#[serde(default)]
-	pub end_of_word: bool,
+	pub(crate) end_of_word: bool,
 }
 
 impl TryFrom<ActionCow> for ForwardOpt {

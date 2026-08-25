@@ -53,7 +53,7 @@ impl File {
 	}
 
 	#[inline]
-	pub fn chdir(&self, wd: &Path) -> Self {
+	pub(crate) fn chdir(&self, wd: &Path) -> Self {
 		Self { url: self.url.rebase(wd), cha: self.cha, extra: self.extra.clone() }
 	}
 
@@ -73,9 +73,6 @@ impl File {
 	// --- Url
 	#[inline]
 	pub fn url_owned(&self) -> UrlBuf { self.url.clone() }
-
-	#[inline]
-	pub fn uri(&self) -> PathDyn<'_> { self.url.uri() }
 
 	#[inline]
 	pub fn urn(&self) -> PathDyn<'_> { self.url.urn() }

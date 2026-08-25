@@ -17,7 +17,7 @@ const PIPED: u8 = 1;
 const INHERIT: u8 = 2;
 
 impl Command {
-	pub fn install(lua: &Lua) -> mlua::Result<()> {
+	pub(crate) fn install(lua: &Lua) -> mlua::Result<()> {
 		let new = lua.create_function(|_, (_, program): (Table, String)| {
 			let mut inner = tokio::process::Command::new(program);
 			inner.kill_on_drop(true).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());

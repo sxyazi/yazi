@@ -15,7 +15,9 @@ pub struct History {
 impl History {
 	pub fn get(&self, url: &UrlBuf) -> Option<&Folder> { self.entries.get(url) }
 
-	pub fn get_mut(&mut self, url: &UrlBuf) -> Option<&mut Folder> { self.entries.get_mut(url) }
+	pub(crate) fn get_mut(&mut self, url: &UrlBuf) -> Option<&mut Folder> {
+		self.entries.get_mut(url)
+	}
 
 	pub fn ensure(&mut self, url: &UrlBuf) -> (&mut Folder, Option<Folder>) {
 		let evicted =
@@ -44,7 +46,7 @@ impl History {
 		self.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
-	pub fn for_each_mut<F>(&mut self, trail: &UrlBuf, keys: &HashSet<PathBufDyn>, mut f: F)
+	pub(crate) fn for_each_mut<F>(&mut self, trail: &UrlBuf, keys: &HashSet<PathBufDyn>, mut f: F)
 	where
 		F: FnMut(&mut Folder),
 	{

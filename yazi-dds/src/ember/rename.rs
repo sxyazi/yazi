@@ -8,19 +8,19 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberRename<'a> {
-	pub tab:  Id,
-	pub from: Cow<'a, UrlBuf>,
-	pub to:   Cow<'a, UrlBuf>,
+	tab:  Id,
+	from: Cow<'a, UrlBuf>,
+	to:   Cow<'a, UrlBuf>,
 }
 
 impl<'a> EmberRename<'a> {
-	pub fn borrowed(tab: Id, from: &'a UrlBuf, to: &'a UrlBuf) -> Ember<'a> {
+	pub(crate) fn borrowed(tab: Id, from: &'a UrlBuf, to: &'a UrlBuf) -> Ember<'a> {
 		Self { tab, from: from.into(), to: to.into() }.into()
 	}
 }
 
 impl EmberRename<'static> {
-	pub fn owned(tab: Id, from: &UrlBuf, to: &UrlBuf) -> Ember<'static> {
+	pub(crate) fn owned(tab: Id, from: &UrlBuf, to: &UrlBuf) -> Ember<'static> {
 		Self { tab, from: from.clone().into(), to: to.clone().into() }.into()
 	}
 }

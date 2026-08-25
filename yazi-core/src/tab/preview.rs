@@ -49,7 +49,7 @@ impl Preview {
 		}));
 	}
 
-	pub fn abort(&mut self) {
+	fn abort(&mut self) {
 		self.handle.take().map(|ct| ct.abort());
 		self.scope.take().cancel();
 		Highlighter::abort();

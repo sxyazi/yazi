@@ -11,7 +11,7 @@ pub struct RatermBackend<W> {
 }
 
 impl<W> RatermBackend<W> {
-	pub fn new(writer: W) -> Self { Self { writer, cursor_pos: Position::default() } }
+	pub(crate) fn new(writer: W) -> Self { Self { writer, cursor_pos: Position::default() } }
 }
 
 impl<W> Deref for RatermBackend<W> {

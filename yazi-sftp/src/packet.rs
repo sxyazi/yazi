@@ -123,7 +123,7 @@ impl Packet<'_> {
 		}
 	}
 
-	pub fn id(&self) -> u32 {
+	pub(crate) fn id(&self) -> u32 {
 		match self {
 			Self::Init(_) => 0,
 			Self::Open(v) => v.id,
@@ -160,7 +160,7 @@ impl Packet<'_> {
 		}
 	}
 
-	pub fn with_id(mut self, id: u32) -> Self {
+	pub(crate) fn with_id(mut self, id: u32) -> Self {
 		match &mut self {
 			Self::Init(_) => {}
 			Self::Open(v) => v.id = id,
@@ -237,7 +237,7 @@ impl Packet<'_> {
 	}
 }
 
-pub fn to_bytes<'a, T>(value: T) -> Result<Vec<u8>, Error>
+pub(crate) fn to_bytes<'a, T>(value: T) -> Result<Vec<u8>, Error>
 where
 	T: Into<Packet<'a>> + Serialize,
 {
@@ -255,7 +255,7 @@ where
 }
 
 // TODO: use Vec<u8>
-pub fn from_bytes(mut bytes: &[u8]) -> Result<Packet<'static>, Error> {
+pub(crate) fn from_bytes(mut bytes: &[u8]) -> Result<Packet<'static>, Error> {
 	let kind = *bytes.first().ok_or(Error::serde("empty packet"))?;
 	bytes = &bytes[1..];
 

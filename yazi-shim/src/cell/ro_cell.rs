@@ -22,15 +22,6 @@ impl<T> RoCell<T> {
 	}
 
 	#[inline]
-	pub const fn new_const(value: T) -> Self {
-		Self {
-			inner:                                UnsafeCell::new(MaybeUninit::new(value)),
-			#[cfg(debug_assertions)]
-			initialized:                          UnsafeCell::new(true),
-		}
-	}
-
-	#[inline]
 	pub fn init(&self, value: T) {
 		unsafe {
 			#[cfg(debug_assertions)]

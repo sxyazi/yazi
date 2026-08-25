@@ -60,7 +60,7 @@ where
 }
 
 impl<'a> LocCow<'a> {
-	pub fn as_loc(&self) -> Loc<'_> {
+	pub(crate) fn as_loc(&self) -> Loc<'_> {
 		match self {
 			Self::Borrowed(loc) => *loc,
 			Self::Owned(loc) => loc.as_loc(),
@@ -76,17 +76,10 @@ impl<'a> LocCow<'a> {
 }
 
 impl<'a> LocCow<'a, &'a typed_path::UnixPath, typed_path::UnixPathBuf> {
-	pub fn as_loc(&self) -> Loc<'_, &'_ typed_path::UnixPath> {
+	pub(crate) fn as_loc(&self) -> Loc<'_, &'_ typed_path::UnixPath> {
 		match self {
 			Self::Borrowed(loc) => *loc,
 			Self::Owned(loc) => loc.as_loc(),
-		}
-	}
-
-	pub fn into_inner(self) -> Cow<'a, typed_path::UnixPath> {
-		match self {
-			Self::Borrowed(loc) => Cow::Borrowed(loc.as_inner()),
-			Self::Owned(loc) => Cow::Owned(loc.into_inner()),
 		}
 	}
 }
@@ -96,7 +89,7 @@ where
 	B: LocAble<'a, Owned = O> + LocAbleImpl<'a>,
 	O: LocBufAble,
 {
-	pub fn into_owned(self) -> LocBuf<O> {
+	pub(crate) fn into_owned(self) -> LocBuf<O> {
 		match self {
 			Self::Borrowed(loc) => {
 				LocBuf { inner: loc.inner.to_path_buf(), uri: loc.uri, urn: loc.urn }
@@ -105,9 +98,9 @@ where
 		}
 	}
 
-	pub fn is_borrowed(&self) -> bool { matches!(self, Self::Borrowed(_)) }
+	fn is_borrowed(&self) -> bool { matches!(self, Self::Borrowed(_)) }
 
-	pub fn is_owned(&self) -> bool { !self.is_borrowed() }
+	pub(crate) fn is_owned(&self) -> bool { !self.is_borrowed() }
 }
 
 impl<'a, B, O> LocCow<'a, B, O>
@@ -115,7 +108,7 @@ where
 	B: LocAble<'a, Owned = O> + Into<PathDyn<'a>>,
 	O: LocBufAble + Into<PathBufDyn>,
 {
-	pub fn into_path(self) -> PathCow<'a> {
+	pub(crate) fn into_path(self) -> PathCow<'a> {
 		match self {
 			Self::Borrowed(loc) => PathCow::Borrowed(loc.inner.into()),
 			Self::Owned(loc) => PathCow::Owned(loc.inner.into()),

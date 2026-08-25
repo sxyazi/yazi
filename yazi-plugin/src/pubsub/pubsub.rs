@@ -3,7 +3,7 @@ use yazi_binding::runtime;
 use yazi_dds::ember::Ember;
 use yazi_shared::id::Id;
 
-pub struct Pubsub;
+pub(crate) struct Pubsub;
 
 impl Pubsub {
 	pub(super) fn r#pub(lua: &Lua) -> mlua::Result<Function> {

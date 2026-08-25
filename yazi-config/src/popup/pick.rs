@@ -7,9 +7,9 @@ use crate::popup::PickCfg;
 #[derive(Deserialize, DeserializeOver, DeserializeOver2)]
 pub struct Pick {
 	// open
-	pub open_title:  String,
-	pub open_origin: Origin,
-	pub open_offset: Offset,
+	open_title:  String,
+	open_origin: Origin,
+	open_offset: Offset,
 }
 
 impl Pick {

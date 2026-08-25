@@ -5,7 +5,7 @@ use hashbrown::Equivalent;
 use serde::Serialize;
 
 use super::Encode as EncodeUrl;
-use crate::{auth::{Auth, AuthKind}, loc::{Loc, LocBuf}, path::{DynPath, DynPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError, StripSuffixError}, spec::{EncodeSpec, ParsedSpec, Spec}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
+use crate::{auth::{Auth, AuthKind}, loc::{Loc, LocBuf}, path::{DynPath, DynPathRef, EndsWithError, JoinError, PathBufDyn, PathDyn, PathDynError, PathLike, StartsWithError, StripPrefixError}, spec::{EncodeSpec, ParsedSpec, Spec}, strand::{AsStrand, Strand}, url::{AsUrl, Components, UrlBuf, UrlCow}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum Url<'a> {
@@ -82,7 +82,7 @@ impl<'a> Url<'a> {
 		Ok(Self::Regular(Loc::bare(self.loc().as_os()?)))
 	}
 
-	pub fn base(self) -> Self {
+	pub(crate) fn base(self) -> Self {
 		match self {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.base())),
 			Self::Search { loc, auth } => Self::Search { loc: Loc::zeroed(loc.base()), auth },
@@ -100,13 +100,13 @@ impl<'a> Url<'a> {
 	pub fn components(self) -> Components<'a> { Components::from(self) }
 
 	#[inline]
-	pub fn covariant(self, other: impl AsUrl) -> bool {
+	pub(crate) fn covariant(self, other: impl AsUrl) -> bool {
 		let other = other.as_url();
 		self.loc() == other.loc() && self.auth().covariant(other.auth())
 	}
 
 	#[inline]
-	pub fn ext(self) -> Option<Strand<'a>> {
+	pub(crate) fn ext(self) -> Option<Strand<'a>> {
 		Some(match self {
 			Self::Regular(loc) => loc.extension()?.as_strand(),
 			Self::Search { loc, .. } => loc.extension()?.as_strand(),
@@ -118,7 +118,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn has_base(self) -> bool {
+	pub(crate) fn has_base(self) -> bool {
 		match self {
 			Self::Regular(loc) => loc.has_base(),
 			Self::Search { loc, .. } => loc.has_base(),
@@ -130,10 +130,10 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn has_root(self) -> bool { self.loc().has_root() }
+	pub(crate) fn has_root(self) -> bool { self.loc().has_root() }
 
 	#[inline]
-	pub fn has_trail(self) -> bool {
+	pub(crate) fn has_trail(self) -> bool {
 		match self {
 			Self::Regular(loc) => loc.has_trail(),
 			Self::Search { loc, .. } => loc.has_trail(),
@@ -145,16 +145,16 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn is_absolute(self) -> bool { self.loc().is_absolute() }
+	pub(crate) fn is_absolute(self) -> bool { self.loc().is_absolute() }
 
 	#[inline]
-	pub fn is_regular(self) -> bool { matches!(self, Self::Regular(_)) }
+	pub(crate) fn is_regular(self) -> bool { matches!(self, Self::Regular(_)) }
 
 	#[inline]
 	pub fn is_search(self) -> bool { matches!(self, Self::Search { .. }) }
 
 	#[inline]
-	pub fn key(self) -> PathDyn<'a> {
+	pub(crate) fn key(self) -> PathDyn<'a> {
 		match self {
 			Self::Hub { auth, .. } => PathDyn::Unix(typed_path::UnixPath::new(&auth.domain)),
 			_ => self.urn(),
@@ -192,7 +192,7 @@ impl<'a> Url<'a> {
 	pub fn os_str(self) -> Cow<'a, OsStr> { self.components().os_str() }
 
 	#[inline]
-	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> {
+	pub(crate) fn pair(self) -> Option<(Self, PathDyn<'a>)> {
 		let key = self.key();
 		(!key.is_empty()).then_some((self.trail(), key))
 	}
@@ -237,7 +237,7 @@ impl<'a> Url<'a> {
 		Self::Regular(Loc::bare(path.as_ref()))
 	}
 
-	pub fn spec(self) -> Spec {
+	pub(crate) fn spec(self) -> Spec {
 		let auth = match self {
 			Self::Regular(_) => Auth::default_arc(),
 			Self::Search { auth, .. }
@@ -252,7 +252,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn stem(self) -> Option<Strand<'a>> {
+	pub(crate) fn stem(self) -> Option<Strand<'a>> {
 		Some(match self {
 			Self::Regular(loc) => loc.file_stem()?.as_strand(),
 			Self::Search { loc, .. } => loc.file_stem()?.as_strand(),
@@ -273,7 +273,7 @@ impl<'a> Url<'a> {
 		})
 	}
 
-	pub fn trail(self) -> Self {
+	pub(crate) fn trail(self) -> Self {
 		let uri = self.uri();
 		match self {
 			Self::Regular(loc) => Self::Regular(Loc::bare(loc.trail())),
@@ -303,7 +303,7 @@ impl<'a> Url<'a> {
 		}
 	}
 
-	pub fn triple(self) -> (PathDyn<'a>, PathDyn<'a>, PathDyn<'a>) {
+	pub(crate) fn triple(self) -> (PathDyn<'a>, PathDyn<'a>, PathDyn<'a>) {
 		match self {
 			Self::Regular(loc)
 			| Self::Search { loc, .. }
@@ -320,7 +320,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn try_ends_with(self, child: impl AsUrl) -> Result<bool, EndsWithError> {
+	pub(crate) fn try_ends_with(self, child: impl AsUrl) -> Result<bool, EndsWithError> {
 		let child = child.as_url();
 		Ok(self.loc().try_ends_with(child.loc())? && self.auth().covariant(child.auth()))
 	}
@@ -363,7 +363,7 @@ impl<'a> Url<'a> {
 		})
 	}
 
-	pub fn try_replace<'b>(self, take: usize, to: impl DynPathRef<'b>) -> Result<UrlCow<'b>> {
+	pub(crate) fn try_replace<'b>(self, take: usize, to: impl DynPathRef<'b>) -> Result<UrlCow<'b>> {
 		self.try_replace_impl(take, to.dyn_path_ref())
 	}
 
@@ -428,7 +428,7 @@ impl<'a> Url<'a> {
 		Ok(url.into())
 	}
 
-	pub fn try_starts_with(self, base: impl AsUrl) -> Result<bool, StartsWithError> {
+	pub(crate) fn try_starts_with(self, base: impl AsUrl) -> Result<bool, StartsWithError> {
 		let base = base.as_url();
 		Ok(
 			self.loc().try_starts_with(base.loc())?
@@ -436,7 +436,7 @@ impl<'a> Url<'a> {
 		)
 	}
 
-	pub fn try_strip_prefix(self, base: impl AsUrl) -> Result<PathDyn<'a>, StripPrefixError> {
+	pub(crate) fn try_strip_prefix(self, base: impl AsUrl) -> Result<PathDyn<'a>, StripPrefixError> {
 		use StripPrefixError::{Exotic, NotPrefix};
 		use Url as U;
 
@@ -458,30 +458,8 @@ impl<'a> Url<'a> {
 		}
 	}
 
-	pub fn try_strip_suffix(self, other: impl AsUrl) -> Result<PathDyn<'a>, StripSuffixError> {
-		use StripSuffixError::{Exotic, NotSuffix};
-		use Url as U;
-
-		let other = other.as_url();
-		let suffix = self.loc().try_strip_suffix(other.loc())?;
-		if self.auth().covariant(other.auth()) {
-			return Ok(suffix);
-		}
-
-		match (self, other) {
-			// A mount portal is the local source file until it gains an inner URI.
-			(U::Regular(_) | U::Search { .. }, U::Mount { .. }) => {
-				other.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
-			}
-			(U::Mount { .. }, U::Regular(_) | U::Search { .. }) => {
-				self.uri().is_empty().then_some(suffix).ok_or(NotSuffix)
-			}
-			_ => Err(Exotic),
-		}
-	}
-
 	#[inline]
-	pub fn uri(self) -> PathDyn<'a> {
+	pub(crate) fn uri(self) -> PathDyn<'a> {
 		match self {
 			Self::Regular(loc) => loc.uri().dyn_path(),
 			Self::Search { loc, .. } => loc.uri().dyn_path(),

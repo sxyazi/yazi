@@ -15,7 +15,7 @@ pub struct EmberHey {
 }
 
 impl EmberHey {
-	pub fn owned(peers: HashMap<Id, Peer>) -> Ember<'static> {
+	pub(crate) fn owned(peers: HashMap<Id, Peer>) -> Ember<'static> {
 		Self { peers, version: yazi_version::version().into() }.into()
 	}
 }

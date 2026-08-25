@@ -57,7 +57,7 @@ impl Pattern {
 		}
 	}
 
-	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
+	pub(crate) fn match_mime(&self, mime: impl AsRef<str>) -> bool {
 		self.is_star || (!mime.as_ref().is_empty() && self.inner.is_match(mime.as_ref()))
 	}
 }

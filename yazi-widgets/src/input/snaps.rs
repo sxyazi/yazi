@@ -20,7 +20,7 @@ impl Default for InputSnaps {
 }
 
 impl InputSnaps {
-	pub fn new(value: String, obscure: bool) -> Self {
+	pub(crate) fn new(value: String, obscure: bool) -> Self {
 		let current = InputSnap::new(value, obscure);
 		Self { idx: 0, versions: vec![current.clone()], current }
 	}
@@ -72,7 +72,7 @@ impl InputSnaps {
 
 impl InputSnaps {
 	#[inline]
-	pub fn current(&self) -> &InputSnap { &self.current }
+	pub(crate) fn current(&self) -> &InputSnap { &self.current }
 
 	#[inline]
 	pub(super) fn current_mut(&mut self) -> &mut InputSnap { &mut self.current }

@@ -9,9 +9,9 @@ use crate::{auth::{Auth, AuthKind, Domain, EncodeAuth, Scheme}, path::{PathCow, 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct Spec {
 	#[serde(flatten)]
-	pub auth: Arc<Auth>,
-	pub uri:  usize,
-	pub urn:  usize,
+	pub auth:       Arc<Auth>,
+	pub(crate) uri: usize,
+	pub(crate) urn: usize,
 }
 
 impl Deref for Spec {
@@ -48,7 +48,7 @@ impl Spec {
 		Ok((Self { auth, uri, urn }, path))
 	}
 
-	pub const fn ports(&self) -> (usize, usize) { (self.uri, self.urn) }
+	pub(crate) const fn ports(&self) -> (usize, usize) { (self.uri, self.urn) }
 
 	#[inline]
 	pub fn with_ports(self, uri: usize, urn: usize) -> Self { Self { uri, urn, ..self } }
@@ -152,7 +152,7 @@ impl Spec {
 		})
 	}
 
-	pub fn retrieve_ports(url: Url) -> (usize, usize) {
+	pub(crate) fn retrieve_ports(url: Url) -> (usize, usize) {
 		match url {
 			Url::Regular(loc) => (loc.file_name().is_some() as usize, loc.file_name().is_some() as usize),
 			Url::Search { loc, .. } | Url::Mount { loc, .. } | Url::Hub { loc, .. } => {

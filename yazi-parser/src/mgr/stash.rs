@@ -10,7 +10,7 @@ use crate::mgr::CdForm;
 pub struct StashForm {
 	#[serde(alias = "0")]
 	pub target: UrlBuf,
-	pub source: CdSource,
+	source:     CdSource,
 }
 
 impl TryFrom<ActionCow> for StashForm {

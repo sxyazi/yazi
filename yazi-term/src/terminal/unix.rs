@@ -16,7 +16,7 @@ impl Drop for Terminal<'_> {
 }
 
 impl<'a> Terminal<'a> {
-	pub fn new(tty: &'a Tty) -> io::Result<Self> {
+	pub(crate) fn new(tty: &'a Tty) -> io::Result<Self> {
 		let source = Arc::new(EventSource::new(tty.reader(), tty.writer())?);
 		let restorer = Restorer::new(tty)?;
 

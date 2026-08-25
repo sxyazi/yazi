@@ -6,12 +6,12 @@ use crate::Error;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Extended<'a> {
-	pub id:   u32,
-	pub data: ExtendedData<'a>,
+	pub(crate) id: u32,
+	data:          ExtendedData<'a>,
 }
 
 impl<'a> Extended<'a> {
-	pub fn len(&self) -> usize { size_of_val(&self.id) + self.data.len() }
+	pub(crate) fn len(&self) -> usize { size_of_val(&self.id) + self.data.len() }
 }
 
 // --- Data
@@ -70,10 +70,10 @@ impl<'de> Deserialize<'de> for ExtendedData<'_> {
 // --- Limits
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ExtendedLimits {
-	pub packet_len:   u64,
-	pub read_len:     u64,
-	pub write_len:    u64,
-	pub open_handles: u64,
+	packet_len:   u64,
+	read_len:     u64,
+	write_len:    u64,
+	open_handles: u64,
 }
 
 impl TryFrom<Extended<'_>> for ExtendedLimits {

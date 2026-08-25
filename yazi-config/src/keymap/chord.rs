@@ -56,13 +56,13 @@ impl Hash for Chord {
 impl Chord {
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
-	pub fn run(&self) -> String {
+	fn run(&self) -> String {
 		RE.get_or_init(|| Regex::new(r"\s+").unwrap())
 			.replace_all(&self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; "), " ")
 			.into_owned()
 	}
 
-	pub fn desc(&self) -> Option<Cow<'_, str>> {
+	fn desc(&self) -> Option<Cow<'_, str>> {
 		Some(&self.desc)
 			.filter(|s| !s.is_empty())
 			.map(|s| RE.get_or_init(|| Regex::new(r"\s+").unwrap()).replace_all(s, " "))
@@ -71,7 +71,7 @@ impl Chord {
 	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }
 
 	#[inline]
-	pub(super) fn noop(&self) -> bool {
+	fn noop(&self) -> bool {
 		self.run.len() == 1 && self.run[0].name == "noop" && self.run[0].args.is_empty()
 	}
 }
@@ -94,12 +94,12 @@ where
 // --- Matcher
 #[derive(Default)]
 pub struct ChordMatcher {
-	pub id:  Id,
-	pub all: bool,
+	id:  Id,
+	all: bool,
 }
 
 impl ChordMatcher {
-	pub fn matches(&self, chord: &Chord) -> bool {
+	pub(crate) fn matches(&self, chord: &Chord) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {
@@ -132,9 +132,9 @@ impl FromLua for ChordMatcher {
 // --- Iter
 #[derive(Default)]
 pub struct ChordIter {
-	pub chords:  Arc<Vec<ChordArc>>,
-	pub matcher: ChordMatcher,
-	pub offset:  usize,
+	pub(crate) chords:  Arc<Vec<ChordArc>>,
+	pub(crate) matcher: ChordMatcher,
+	pub(crate) offset:  usize,
 }
 
 impl From<&Chords> for ChordIter {

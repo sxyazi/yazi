@@ -20,7 +20,7 @@ impl From<Vec<OpenerRuleArc>> for OpenerRules {
 }
 
 impl OpenerRules {
-	pub fn insert(&self, index: isize, rule: OpenerRuleArc) -> Result<(), IndexAtError> {
+	pub(crate) fn insert(&self, index: isize, rule: OpenerRuleArc) -> Result<(), IndexAtError> {
 		self.0.try_rcu(|rules| {
 			let (before, after) = rules.split_at(rules.index_at(index)?);
 			Ok(
@@ -36,7 +36,7 @@ impl OpenerRules {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: OpenerRuleMatcher) {
+	pub(crate) fn remove(&self, matcher: OpenerRuleMatcher) {
 		self.0.rcu(|rules| {
 			let mut next = Vec::clone(rules);
 			next.retain(|rule| !matcher.matches(rule));
@@ -44,7 +44,7 @@ impl OpenerRules {
 		});
 	}
 
-	pub(crate) fn unwrap_unchecked(self) -> Vec<OpenerRuleArc> {
+	fn unwrap_unchecked(self) -> Vec<OpenerRuleArc> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique opener rules arc")
 	}
 }

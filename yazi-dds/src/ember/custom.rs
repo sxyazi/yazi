@@ -6,16 +6,16 @@ use super::Ember;
 
 #[derive(Clone, Debug)]
 pub struct EmberCustom {
-	pub kind: String,
-	pub data: Data,
+	pub(crate) kind: String,
+	pub data:        Data,
 }
 
 impl EmberCustom {
-	pub fn from_str(kind: &str, data: &str) -> anyhow::Result<Ember<'static>> {
+	pub(crate) fn from_str(kind: &str, data: &str) -> anyhow::Result<Ember<'static>> {
 		Ok(Self { kind: kind.to_owned(), data: serde_json::from_str(data)? }.into())
 	}
 
-	pub fn from_lua(lua: &Lua, kind: &str, data: Value) -> mlua::Result<Ember<'static>> {
+	pub(crate) fn from_lua(lua: &Lua, kind: &str, data: Value) -> mlua::Result<Ember<'static>> {
 		Ok(Self { kind: kind.to_owned(), data: Sendable::value_to_data(lua, data)? }.into())
 	}
 }

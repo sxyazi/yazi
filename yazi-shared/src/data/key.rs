@@ -25,7 +25,7 @@ pub enum DataKey {
 }
 
 impl DataKey {
-	pub fn is_integer(&self) -> bool { matches!(self, Self::Integer(_)) }
+	pub(crate) fn is_integer(&self) -> bool { matches!(self, Self::Integer(_)) }
 
 	pub fn as_str(&self) -> Option<&str> {
 		match self {

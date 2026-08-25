@@ -4,13 +4,13 @@ use crate::{Progress, TaskSummary};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct CustomProg {
-	pub state:     Option<bool>,
-	pub total:     u32,
-	pub success:   u32,
-	pub failed:    u32,
-	pub workload:  u64,
-	pub processed: u64,
-	pub progress:  bool,
+	pub(crate) state:     Option<bool>,
+	pub(crate) total:     u32,
+	pub(crate) success:   u32,
+	pub(crate) failed:    u32,
+	pub(crate) workload:  u64,
+	pub(crate) processed: u64,
+	pub(crate) progress:  bool,
 }
 
 impl From<CustomProg> for TaskSummary {

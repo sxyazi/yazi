@@ -13,22 +13,22 @@ pub static EMULATOR: RoCell<Emulator> = RoCell::new();
 
 #[derive(Debug, Default)]
 pub struct Emulator {
-	pub brand:        SyncCell<Brand>,
-	pub version:      ArcSwap<String>,
-	pub csi_u:        SyncCell<Option<u8>>,
-	pub kgp:          SyncCell<bool>,
-	pub sixel:        SyncCell<bool>,
-	pub background:   SyncCell<Option<[u16; 3]>>,
-	pub color_scheme: SyncCell<Option<bool>>,
-	pub csi_16t:      SyncCell<(u16, u16)>,
-	pub force_16t:    SyncCell<bool>,
-	pub osc_5522:     SyncCell<bool>,
-	pub cursor_blink: SyncCell<bool>,
-	pub cursor_shape: SyncCell<Option<u8>>,
-	pub mux:          SyncCell<Option<Mux>>,
+	pub brand:            SyncCell<Brand>,
+	version:              ArcSwap<String>,
+	csi_u:                SyncCell<Option<u8>>,
+	pub kgp:              SyncCell<bool>,
+	pub sixel:            SyncCell<bool>,
+	background:           SyncCell<Option<[u16; 3]>>,
+	color_scheme:         SyncCell<Option<bool>>,
+	pub(crate) csi_16t:   SyncCell<(u16, u16)>,
+	pub(crate) force_16t: SyncCell<bool>,
+	osc_5522:             SyncCell<bool>,
+	pub cursor_blink:     SyncCell<bool>,
+	pub cursor_shape:     SyncCell<Option<u8>>,
+	pub mux:              SyncCell<Option<Mux>>,
 
-	pub probe:          Probe,
-	pub(super) started: SyncCell<bool>,
+	pub probe: Probe,
+	started:   SyncCell<bool>,
 }
 
 impl Emulator {

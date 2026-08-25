@@ -18,7 +18,7 @@ impl CompletionToken {
 		}
 	}
 
-	pub fn completed(&self) -> Option<bool> {
+	fn completed(&self) -> Option<bool> {
 		let state = self.inner.0.load(Ordering::Relaxed);
 		if state == 0 { None } else { Some(state == 1) }
 	}

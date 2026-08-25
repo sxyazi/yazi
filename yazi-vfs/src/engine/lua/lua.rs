@@ -6,7 +6,7 @@ use yazi_binding::MpscTx;
 use yazi_config::vfs::{ServiceLua, Vfs};
 use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine}, file::File};
 use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideResult}};
-use yazi_shared::{data::{Data, DataKey}, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::engine::lua::{DirEntry, ReadDir};
 

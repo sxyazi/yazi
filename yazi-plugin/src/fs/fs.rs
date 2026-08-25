@@ -10,7 +10,7 @@ use yazi_vfs::engine;
 
 use crate::fs::SizeCalculator;
 
-pub fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"access" => access(lua)?,
@@ -158,6 +158,7 @@ fn partitions(lua: &Lua) -> mlua::Result<Function> {
 					("dist", p.dist.clone().into_lua(&lua)?),
 					("label", p.label.clone().into_lua(&lua)?),
 					("fstype", p.fstype.clone().into_lua(&lua)?),
+					("capacity", p.capacity.into_lua(&lua)?),
 					("external", p.external.into_lua(&lua)?),
 					("removable", p.removable.into_lua(&lua)?),
 				])

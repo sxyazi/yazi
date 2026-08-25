@@ -7,18 +7,18 @@ use crate::{Platform, plugin::opener_rule_id};
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OpenerRule {
 	#[serde(skip, default = "opener_rule_id")]
-	pub id:     Id,
-	pub run:    NonEmptyString,
+	pub(crate) id:    Id,
+	pub run:          NonEmptyString,
 	#[serde(default)]
-	pub block:  bool,
+	pub block:        bool,
 	#[serde(default)]
-	pub orphan: bool,
+	pub orphan:       bool,
 	#[serde(default)]
-	pub desc:   String,
+	pub(crate) desc:  String,
 	#[serde(default)]
-	pub r#for:  Platform,
+	pub(crate) r#for: Platform,
 	#[serde(skip)]
-	pub spread: bool,
+	pub spread:       bool,
 }
 
 impl OpenerRule {
@@ -32,5 +32,5 @@ impl OpenerRule {
 		}
 	}
 
-	pub fn fill(&mut self) { self.spread = Splatter::<()>::spread(&self.run); }
+	pub(crate) fn fill(&mut self) { self.spread = Splatter::<()>::spread(&self.run); }
 }

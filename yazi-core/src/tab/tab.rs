@@ -81,10 +81,7 @@ impl Tab {
 	#[inline]
 	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.current.hovered_url() }
 
-	#[inline]
-	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.current.hovered_mut() }
-
-	pub fn hovered_rect(&self) -> Option<Rect> {
+	fn hovered_rect(&self) -> Option<Rect> {
 		let y = self.current.entries.position(self.hovered()?.key())? - self.current.offset;
 
 		let mut rect = LAYOUT.get().current;
@@ -93,7 +90,7 @@ impl Tab {
 		Some(rect)
 	}
 
-	pub fn hovered_rect_based(&self, pos: Position) -> Rect {
+	pub(crate) fn hovered_rect_based(&self, pos: Position) -> Rect {
 		let area = TERM.dimension().area();
 		if let Some(r) = self.hovered_rect() {
 			pos.sticky(r, area)
@@ -115,17 +112,6 @@ impl Tab {
 			Box::new(self.hovered_url().into_iter())
 		} else {
 			Box::new(self.selected.urls())
-		}
-	}
-
-	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
-		let Some(h) = self.hovered() else {
-			return Box::new([UrlBuf::new()].into_iter().chain(self.selected.urls()));
-		};
-		if self.selected.is_empty() {
-			Box::new([&h.url, &h.url].into_iter())
-		} else {
-			Box::new([&h.url].into_iter().chain(self.selected.urls()))
 		}
 	}
 

@@ -6,10 +6,10 @@ use crate::{BytesExt, auth::Scheme};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ParsedSpec<'a> {
-	bytes:      &'a [u8],
-	skip:       usize,
-	pub scheme: Scheme,
-	pub tilde:  bool,
+	bytes:             &'a [u8],
+	skip:              usize,
+	pub(crate) scheme: Scheme,
+	pub(crate) tilde:  bool,
 }
 
 impl fmt::Display for ParsedSpec<'_> {
@@ -19,7 +19,7 @@ impl fmt::Display for ParsedSpec<'_> {
 }
 
 impl<'a> ParsedSpec<'a> {
-	pub fn parse(bytes: &'a [u8]) -> Result<Self> {
+	pub(crate) fn parse(bytes: &'a [u8]) -> Result<Self> {
 		let Some((scheme, _)) = bytes.split_seq_once(b"://") else {
 			return Ok(Self { bytes, skip: 0, scheme: Scheme::Regular, tilde: false });
 		};
@@ -36,8 +36,8 @@ impl<'a> ParsedSpec<'a> {
 	}
 
 	#[inline]
-	pub fn has_scheme(&self) -> bool { self.skip > 0 }
+	pub(crate) fn has_scheme(&self) -> bool { self.skip > 0 }
 
 	#[inline]
-	pub fn rest(&self) -> &'a [u8] { &self.bytes[self.skip..] }
+	pub(crate) fn rest(&self) -> &'a [u8] { &self.bytes[self.skip..] }
 }

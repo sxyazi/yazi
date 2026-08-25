@@ -85,11 +85,11 @@ impl Help {
 	}
 
 	// --- Cursor
-	pub fn cursor(&self) -> Option<u16> { self.visible.then_some(self.input.cursor()) }
+	pub(crate) fn cursor(&self) -> Option<u16> { self.visible.then_some(self.input.cursor()) }
 
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 
-	pub fn cursor_shape(&self) -> Option<SetCursorStyle> {
+	pub(crate) fn cursor_shape(&self) -> Option<SetCursorStyle> {
 		self.visible.then_some(self.input.cursor_shape())
 	}
 }

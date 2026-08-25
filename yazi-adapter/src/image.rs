@@ -63,7 +63,7 @@ impl Image {
 		Ok(img)
 	}
 
-	pub(super) fn max_pixel(rect: Rect) -> (u16, u16) {
+	fn max_pixel(rect: Rect) -> (u16, u16) {
 		Dimension::cell_size()
 			.map(|(cw, ch)| {
 				let (w, h) = ((rect.width as f64 * cw) as u16, (rect.height as f64 * ch) as u16);

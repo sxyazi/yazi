@@ -51,7 +51,7 @@ impl Probe {
 		}
 	}
 
-	pub fn cancel(&self, id: Id) {
+	fn cancel(&self, id: Id) {
 		if self.id == id {
 			self.complete();
 		}

@@ -109,7 +109,7 @@ impl Loader {
 		result.map(|_| inspect)
 	}
 
-	pub async fn load(&self, lua: &Lua, name: &str) -> mlua::Result<Table> {
+	pub(crate) async fn load(&self, lua: &Lua, name: &str) -> mlua::Result<Table> {
 		let (name, ..) = Self::explode_name_parts(name)?;
 
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;

@@ -27,7 +27,7 @@ impl Yanked {
 		Self { cut, files, ..Default::default() }
 	}
 
-	pub fn files(&self) -> impl Iterator<Item = &File> { self.files.iter().map(|f| &f.0) }
+	pub(crate) fn files(&self) -> impl Iterator<Item = &File> { self.files.iter().map(|f| &f.0) }
 
 	pub fn urls(&self) -> impl Iterator<Item = &UrlBuf> { self.files.iter().map(|f| &f.url) }
 

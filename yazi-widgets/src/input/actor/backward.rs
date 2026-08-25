@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{CharKind, Input, parser::BackwardOpt};
 
 impl Input {
-	pub fn backward(&mut self, opt: BackwardOpt) -> Result<Data> {
+	pub(crate) fn backward(&mut self, opt: BackwardOpt) -> Result<Data> {
 		let snap = self.snap();
 		if snap.cursor == 0 {
 			return act!(r#move, self);

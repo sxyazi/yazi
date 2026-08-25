@@ -3,7 +3,7 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct PasteOpt {
-	pub before: bool,
+	pub(crate) before: bool,
 }
 
 impl From<ActionCow> for PasteOpt {

@@ -8,20 +8,20 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberCd<'a> {
-	pub tab: Id,
-	pub url: Cow<'a, UrlBuf>,
+	tab:   Id,
+	url:   Cow<'a, UrlBuf>,
 	#[serde(skip)]
-	dummy:   bool,
+	dummy: bool,
 }
 
 impl<'a> EmberCd<'a> {
-	pub fn borrowed(tab: Id, url: &'a UrlBuf) -> Ember<'a> {
+	pub(crate) fn borrowed(tab: Id, url: &'a UrlBuf) -> Ember<'a> {
 		Self { tab, url: url.into(), dummy: false }.into()
 	}
 }
 
 impl EmberCd<'static> {
-	pub fn owned(tab: Id, _: &UrlBuf) -> Ember<'static> {
+	pub(crate) fn owned(tab: Id, _: &UrlBuf) -> Ember<'static> {
 		Self { tab, url: Default::default(), dummy: true }.into()
 	}
 }

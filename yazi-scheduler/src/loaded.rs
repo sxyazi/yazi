@@ -22,7 +22,7 @@ impl Loaded {
 		true
 	}
 
-	pub fn clear(&mut self, idx: u8, rev: u16) {
+	pub(crate) fn clear(&mut self, idx: u8, rev: u16) {
 		debug_assert!(idx < 16);
 
 		if self.0 >> 16 == rev as u32 {

@@ -3,7 +3,7 @@ use yazi_shared::Layer;
 use yazi_shim::ratatui::Padable;
 use yazi_tty::sequence::SetCursorStyle;
 
-use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::{Input, InputGuard}, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
+use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::{Input, InputGuard}, mgr::Mgr, notify::Notify, pick::Pick, tab::Tab, tasks::Tasks, which::Which};
 
 pub struct Core {
 	pub mgr:     Mgr,
@@ -78,10 +78,4 @@ impl Core {
 
 	#[inline]
 	pub fn active_mut(&mut self) -> &mut Tab { self.mgr.active_mut() }
-
-	#[inline]
-	pub fn current_mut(&mut self) -> &mut Folder { self.mgr.current_mut() }
-
-	#[inline]
-	pub fn parent_mut(&mut self) -> Option<&mut Folder> { self.mgr.parent_mut() }
 }

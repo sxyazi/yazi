@@ -56,9 +56,9 @@ impl<'de> Deserialize<'de> for SftpPath<'_> {
 }
 
 impl<'a> SftpPath<'a> {
-	pub fn len(&self) -> usize { self.as_bytes().len() }
+	pub(crate) fn len(&self) -> usize { self.as_bytes().len() }
 
-	pub fn into_owned(self) -> typed_path::UnixPathBuf {
+	pub(crate) fn into_owned(self) -> typed_path::UnixPathBuf {
 		match self {
 			SftpPath::Borrowed(p) => p.to_owned(),
 			SftpPath::Owned(p) => p,

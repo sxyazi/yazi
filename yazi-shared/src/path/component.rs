@@ -12,13 +12,6 @@ pub enum Component<'a> {
 }
 
 impl<'a> Component<'a> {
-	pub fn as_normal(&self) -> Option<Strand<'a>> {
-		match self {
-			Self::Normal(s) => Some(*s),
-			_ => None,
-		}
-	}
-
 	#[inline]
 	pub fn has_auth(&self) -> bool { matches!(self, Self::ParentDir | Self::Normal(_)) }
 }

@@ -5,7 +5,7 @@ use crate::{Progress, TaskSummary};
 // --- Block
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgBlock {
-	pub state: Option<bool>,
+	pub(crate) state: Option<bool>,
 }
 
 impl From<ProcessProgBlock> for TaskSummary {
@@ -30,7 +30,7 @@ impl Progress for ProcessProgBlock {
 // --- Orphan
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgOrphan {
-	pub state: Option<bool>,
+	pub(crate) state: Option<bool>,
 }
 
 impl From<ProcessProgOrphan> for TaskSummary {
@@ -55,7 +55,7 @@ impl Progress for ProcessProgOrphan {
 // --- Bg
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgBg {
-	pub state: Option<bool>,
+	pub(crate) state: Option<bool>,
 }
 
 impl From<ProcessProgBg> for TaskSummary {

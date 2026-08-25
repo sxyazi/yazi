@@ -5,7 +5,7 @@ use yazi_term::TERM;
 use yazi_watcher::Watcher;
 
 use super::{Batcher, Mimetype, Tabs, Yanked};
-use crate::tab::{Folder, Tab};
+use crate::tab::Tab;
 
 pub struct Mgr {
 	pub tabs:   Tabs,
@@ -17,7 +17,7 @@ pub struct Mgr {
 }
 
 impl Mgr {
-	pub fn make() -> Self {
+	pub(crate) fn make() -> Self {
 		Self {
 			tabs:   Default::default(),
 			yanked: Default::default(),
@@ -44,17 +44,8 @@ impl Mgr {
 	pub fn cwd(&self) -> &UrlBuf { self.active().cwd() }
 
 	#[inline]
-	pub fn active(&self) -> &Tab { self.tabs.active() }
+	pub(crate) fn active(&self) -> &Tab { self.tabs.active() }
 
 	#[inline]
-	pub fn active_mut(&mut self) -> &mut Tab { self.tabs.active_mut() }
-
-	#[inline]
-	pub fn current(&self) -> &Folder { &self.active().current }
-
-	#[inline]
-	pub fn current_mut(&mut self) -> &mut Folder { &mut self.active_mut().current }
-
-	#[inline]
-	pub fn parent_mut(&mut self) -> Option<&mut Folder> { self.active_mut().parent.as_mut() }
+	pub(crate) fn active_mut(&mut self) -> &mut Tab { self.tabs.active_mut() }
 }

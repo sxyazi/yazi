@@ -7,13 +7,13 @@ use yazi_shared::{Source, event::Action, id::Id, url::UrlBuf};
 use yazi_tui::Raterm;
 
 pub struct Ctx<'a> {
-	pub core:      &'a mut Core,
-	pub term:      &'a mut Option<Raterm>,
-	pub tab:       usize,
-	pub level:     usize,
-	pub source:    Source,
+	pub(crate) core: &'a mut Core,
+	pub(crate) term: &'a mut Option<Raterm>,
+	pub(crate) tab:  usize,
+	pub level:       usize,
+	source:          Source,
 	#[cfg(debug_assertions)]
-	pub backtrace: Vec<&'static str>,
+	pub backtrace:   Vec<&'static str>,
 }
 
 impl Deref for Ctx<'_> {
@@ -45,7 +45,7 @@ impl<'a> Ctx<'a> {
 		})
 	}
 
-	pub fn with<F, T>(&mut self, tab: usize, f: F) -> T
+	pub(crate) fn with<F, T>(&mut self, tab: usize, f: F) -> T
 	where
 		F: FnOnce(&mut Self) -> T,
 	{
@@ -55,7 +55,7 @@ impl<'a> Ctx<'a> {
 		result
 	}
 
-	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Self {
+	pub(crate) fn renew<'b>(cx: &'a mut Ctx<'b>) -> Self {
 		let tab = cx.core.mgr.tabs.cursor;
 		Self {
 			core: cx.core,
@@ -84,45 +84,45 @@ impl<'a> Ctx<'a> {
 
 impl<'a> Ctx<'a> {
 	#[inline]
-	pub fn tabs(&self) -> &Tabs { &self.mgr.tabs }
+	pub(crate) fn tabs(&self) -> &Tabs { &self.mgr.tabs }
 
 	#[inline]
-	pub fn tabs_mut(&mut self) -> &mut Tabs { &mut self.mgr.tabs }
+	pub(crate) fn tabs_mut(&mut self) -> &mut Tabs { &mut self.mgr.tabs }
 
 	#[inline]
-	pub fn tab(&self) -> &Tab { &self.tabs()[self.tab] }
+	pub(crate) fn tab(&self) -> &Tab { &self.tabs()[self.tab] }
 
 	#[inline]
-	pub fn tab_mut(&mut self) -> &mut Tab { &mut self.core.mgr.tabs[self.tab] }
+	pub(crate) fn tab_mut(&mut self) -> &mut Tab { &mut self.core.mgr.tabs[self.tab] }
 
 	#[inline]
-	pub fn cwd(&self) -> &UrlBuf { self.tab().cwd() }
+	pub(crate) fn cwd(&self) -> &UrlBuf { self.tab().cwd() }
 
 	#[inline]
-	pub fn parent(&self) -> Option<&Folder> { self.tab().parent.as_ref() }
+	pub(crate) fn parent(&self) -> Option<&Folder> { self.tab().parent.as_ref() }
 
 	#[inline]
-	pub fn parent_mut(&mut self) -> Option<&mut Folder> { self.tab_mut().parent.as_mut() }
+	pub(crate) fn parent_mut(&mut self) -> Option<&mut Folder> { self.tab_mut().parent.as_mut() }
 
 	#[inline]
-	pub fn current(&self) -> &Folder { &self.tab().current }
+	pub(crate) fn current(&self) -> &Folder { &self.tab().current }
 
 	#[inline]
-	pub fn current_mut(&mut self) -> &mut Folder { &mut self.tab_mut().current }
+	pub(crate) fn current_mut(&mut self) -> &mut Folder { &mut self.tab_mut().current }
 
 	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.tab().hovered() }
+	pub(crate) fn hovered(&self) -> Option<&File> { self.tab().hovered() }
 
 	#[inline]
-	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.tab().hovered_url() }
+	pub(crate) fn hovered_url(&self) -> Option<&UrlBuf> { self.tab().hovered_url() }
 
 	#[inline]
-	pub fn hovered_folder(&self) -> Option<&Folder> { self.tab().hovered_folder() }
+	pub(crate) fn hovered_folder(&self) -> Option<&Folder> { self.tab().hovered_folder() }
 
 	#[inline]
-	pub fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
+	pub(crate) fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
 		self.tab_mut().hovered_folder_mut()
 	}
 
-	pub fn source(&self) -> Source { if self.level != 1 { Source::Ind } else { self.source } }
+	pub(crate) fn source(&self) -> Source { if self.level != 1 { Source::Ind } else { self.source } }
 }

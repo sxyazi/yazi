@@ -119,7 +119,7 @@ impl Pubsub {
 		Ok(())
 	}
 
-	pub fn pub_inner_hi() -> bool {
+	pub(crate) fn pub_inner_hi() -> bool {
 		let abilities = REMOTE.read().keys().cloned().collect();
 		let abilities = BOOT.remote_events.union(&abilities).map(AsRef::as_ref);
 

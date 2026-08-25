@@ -7,10 +7,10 @@ use crate::{TaskHandle, TaskIn, TaskProg, hook::HookIn};
 
 #[derive(Debug)]
 pub struct Task {
-	pub handle:      TaskHandle,
-	pub title:       String,
-	pub(crate) prog: TaskProg,
-	pub(crate) hook: Option<HookIn>,
+	pub(crate) handle: TaskHandle,
+	pub title:         String,
+	pub(crate) prog:   TaskProg,
+	pub(crate) hook:   Option<HookIn>,
 
 	pub logs:   String,
 	pub logger: Option<mpsc::UnboundedSender<String>>,

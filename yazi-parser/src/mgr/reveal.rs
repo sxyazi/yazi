@@ -10,7 +10,7 @@ pub struct RevealForm {
 	#[serde(alias = "0")]
 	pub target:   UrlBuf,
 	#[serde(default)]
-	pub raw:      bool,
+	raw:          bool,
 	#[serde(default = "default_source")]
 	pub source:   CdSource,
 	#[serde(alias = "no-dummy", default)]

@@ -15,9 +15,9 @@ pub struct Text {
 	area: Area,
 
 	// TODO: block
-	pub inner:  ratatui_core::text::Text<'static>,
-	pub wrap:   Wrap,
-	pub scroll: ratatui_core::layout::Position,
+	pub(crate) inner: ratatui_core::text::Text<'static>,
+	wrap:             Wrap,
+	scroll:           ratatui_core::layout::Position,
 }
 
 impl Text {

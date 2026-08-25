@@ -4,10 +4,10 @@ use crate::Error;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Status {
-	pub id:       u32,
-	pub code:     StatusCode,
-	pub message:  String,
-	pub language: String,
+	pub(crate) id:   u32,
+	pub(crate) code: StatusCode,
+	message:         String,
+	language:        String,
 }
 
 impl From<Status> for Result<(), Error> {
@@ -17,16 +17,16 @@ impl From<Status> for Result<(), Error> {
 }
 
 impl Status {
-	pub fn len(&self) -> usize {
+	pub(crate) fn len(&self) -> usize {
 		size_of_val(&self.id)
 			+ size_of_val(&(self.code as u32))
 			+ 4 + self.message.len()
 			+ 4 + self.language.len()
 	}
 
-	pub fn is_ok(&self) -> bool { self.code == StatusCode::Ok }
+	pub(crate) fn is_ok(&self) -> bool { self.code == StatusCode::Ok }
 
-	pub fn is_eof(&self) -> bool { self.code == StatusCode::Eof }
+	pub(crate) fn is_eof(&self) -> bool { self.code == StatusCode::Eof }
 
 	pub fn is_failure(&self) -> bool { self.code == StatusCode::Failure }
 

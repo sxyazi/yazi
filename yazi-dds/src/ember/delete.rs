@@ -8,15 +8,19 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberDelete<'a> {
-	pub urls: Cow<'a, Vec<UrlBuf>>,
+	urls: Cow<'a, Vec<UrlBuf>>,
 }
 
 impl<'a> EmberDelete<'a> {
-	pub fn borrowed(urls: &'a Vec<UrlBuf>) -> Ember<'a> { Self { urls: Cow::Borrowed(urls) }.into() }
+	pub(crate) fn borrowed(urls: &'a Vec<UrlBuf>) -> Ember<'a> {
+		Self { urls: Cow::Borrowed(urls) }.into()
+	}
 }
 
 impl EmberDelete<'static> {
-	pub fn owned(urls: Vec<UrlBuf>) -> Ember<'static> { Self { urls: Cow::Owned(urls) }.into() }
+	pub(crate) fn owned(urls: Vec<UrlBuf>) -> Ember<'static> {
+		Self { urls: Cow::Owned(urls) }.into()
+	}
 }
 
 impl<'a> From<EmberDelete<'a>> for Ember<'a> {

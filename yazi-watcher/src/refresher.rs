@@ -15,7 +15,6 @@ pub struct Refresher {
 enum Op {
 	Sync(IndexSet<FileCov>),
 	Refresh(IndexMap<FileCov, bool>),
-	Touch(IndexSet<UrlBuf>),
 	Done(Entry, io::Result<Option<Vec<File>>>),
 }
 
@@ -66,13 +65,6 @@ impl Refresher {
 					};
 
 					(entry.dirty, entry.report, entry.force) = (true, true, entry.force || force);
-					self.spawn(entry);
-				}
-			}
-			Op::Touch(urls) => {
-				for url in urls {
-					let Some(entry) = entries.get_mut(&url) else { continue };
-					entry.dirty = true;
 					self.spawn(entry);
 				}
 			}
@@ -144,13 +136,6 @@ impl Refresher {
 				.or_insert(request.force);
 		}
 		self.tx.send(Op::Refresh(files)).ok();
-	}
-
-	pub fn touch<I>(&self, urls: I)
-	where
-		I: IntoIterator<Item = UrlBuf>,
-	{
-		self.tx.send(Op::Touch(urls.into_iter().collect())).ok();
 	}
 }
 

@@ -15,7 +15,7 @@ pub enum Event {
 
 impl Event {
 	#[inline]
-	pub fn init() {
+	pub(crate) fn init() {
 		let (high_tx, high_rx) = mpsc::unbounded_channel();
 		let (normal_tx, normal_rx) = mpsc::unbounded_channel();
 

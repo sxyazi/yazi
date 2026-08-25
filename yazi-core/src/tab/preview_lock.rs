@@ -7,8 +7,8 @@ use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug, Default)]
 pub struct PreviewLock {
-	pub url: UrlBuf,
-	pub sig: Id,
+	pub url:        UrlBuf,
+	pub(crate) sig: Id,
 
 	pub skip: usize,
 	pub area: Rect,

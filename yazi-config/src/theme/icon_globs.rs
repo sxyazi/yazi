@@ -22,7 +22,7 @@ impl From<Vec<IconGlob>> for IconGlobs {
 }
 
 impl IconGlobs {
-	pub fn matches(&self, file: &File) -> Option<Icon> {
+	pub(crate) fn matches(&self, file: &File) -> Option<Icon> {
 		self.0.load().iter().find(|&g| g.match_with(Some(file), None)).map(|g| g.icon.clone())
 	}
 

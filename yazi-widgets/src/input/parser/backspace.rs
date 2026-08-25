@@ -3,7 +3,7 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default)]
 pub struct BackspaceOpt {
-	pub under: bool,
+	pub(crate) under: bool,
 }
 
 impl From<ActionCow> for BackspaceOpt {

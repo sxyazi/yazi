@@ -24,68 +24,68 @@ pub enum DndEvent {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragOffer {
-	pub x: u32,
-	pub y: u32,
+	x: u32,
+	y: u32,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragAccept {
-	pub idx: u8,
+	idx: u8,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragChange {
-	pub op: DndOp,
+	op: DndOp,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragEnd {
-	pub canceled: bool,
+	canceled: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragSend {
-	pub idx: u8,
+	idx: u8,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragError {
-	pub idx:  u8,
-	pub name: String,
-	pub desc: String,
+	idx:  u8,
+	name: String,
+	desc: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDropEnter {
-	pub x:     u32,
-	pub y:     u32,
-	pub op:    DndOp,
-	pub mimes: MimeList,
+	x:     u32,
+	y:     u32,
+	op:    DndOp,
+	mimes: MimeList,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDropReady {
-	pub x:     u32,
-	pub y:     u32,
-	pub op:    DndOp,
-	pub mimes: MimeList,
+	x:     u32,
+	y:     u32,
+	op:    DndOp,
+	mimes: MimeList,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDropArrive {
-	pub idx:  u8,
-	pub data: Vec<u8>,
+	idx:             u8,
+	pub(crate) data: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDropError {
-	pub idx:  u8,
-	pub name: String,
-	pub desc: String,
+	idx:  u8,
+	name: String,
+	desc: String,
 }
 
 impl DndEvent {
-	pub fn r#type(&self) -> &'static str {
+	pub(crate) fn r#type(&self) -> &'static str {
 		match self {
 			Self::DragOffer(_) => "offer",
 			Self::DragAccept(_) => "accept",
@@ -103,7 +103,7 @@ impl DndEvent {
 		}
 	}
 
-	pub fn x(&self) -> Option<u32> {
+	pub(crate) fn x(&self) -> Option<u32> {
 		match self {
 			Self::DragOffer(e) => Some(e.x),
 			Self::DropEnter(e) => Some(e.x),
@@ -112,7 +112,7 @@ impl DndEvent {
 		}
 	}
 
-	pub fn y(&self) -> Option<u32> {
+	pub(crate) fn y(&self) -> Option<u32> {
 		match self {
 			Self::DragOffer(e) => Some(e.y),
 			Self::DropEnter(e) => Some(e.y),
@@ -121,7 +121,7 @@ impl DndEvent {
 		}
 	}
 
-	pub fn idx(&self) -> Option<u8> {
+	pub(crate) fn idx(&self) -> Option<u8> {
 		match self {
 			Self::DragAccept(e) => Some(e.idx),
 			Self::DragSend(e) => Some(e.idx),
@@ -132,7 +132,7 @@ impl DndEvent {
 		}
 	}
 
-	pub fn op(&self) -> Option<DndOp> {
+	pub(crate) fn op(&self) -> Option<DndOp> {
 		match self {
 			Self::DragChange(e) => Some(e.op),
 			Self::DropEnter(e) => Some(e.op),
@@ -141,7 +141,7 @@ impl DndEvent {
 		}
 	}
 
-	pub fn mimes(&self) -> Option<&MimeList> {
+	pub(crate) fn mimes(&self) -> Option<&MimeList> {
 		match self {
 			Self::DropEnter(e) => Some(&e.mimes),
 			Self::DropReady(e) => Some(&e.mimes),

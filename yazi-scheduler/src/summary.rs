@@ -6,10 +6,10 @@ use crate::{Ongoing, Progress};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct TaskSummary {
-	pub total:   u32,
-	pub success: u32,
-	pub failed:  u32,
-	pub percent: Option<OrderedFloat<f32>>,
+	pub total:          u32,
+	pub(crate) success: u32,
+	pub(crate) failed:  u32,
+	pub(crate) percent: Option<OrderedFloat<f32>>,
 }
 
 impl_data_any!(TaskSummary);

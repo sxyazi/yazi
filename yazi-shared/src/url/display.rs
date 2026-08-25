@@ -1,6 +1,6 @@
 use crate::{spec::EncodeSpec, url::Url};
 
-pub struct Display<'a>(pub Url<'a>);
+pub struct Display<'a>(pub(crate) Url<'a>);
 
 impl std::fmt::Display for Display<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

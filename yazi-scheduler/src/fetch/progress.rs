@@ -4,7 +4,7 @@ use crate::{Progress, TaskSummary};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FetchProg {
-	pub state: Option<bool>,
+	pub(crate) state: Option<bool>,
 }
 
 impl From<FetchProg> for TaskSummary {

@@ -29,7 +29,7 @@ pub enum Ember<'a> {
 }
 
 impl Ember<'static> {
-	pub fn from_str(kind: &str, body: &str) -> Result<Self> {
+	pub(crate) fn from_str(kind: &str, body: &str) -> Result<Self> {
 		Ok(match kind {
 			"hi" => Self::Hi(serde_json::from_str(body)?),
 			"hey" => Self::Hey(serde_json::from_str(body)?),
@@ -124,7 +124,7 @@ impl<'a> Ember<'a> {
 		}
 	}
 
-	pub fn with_receiver(self, receiver: Id) -> Payload<'a> {
+	pub(crate) fn with_receiver(self, receiver: Id) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}
 }

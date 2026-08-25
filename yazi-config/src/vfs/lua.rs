@@ -7,10 +7,10 @@ use yazi_shared::{auth::Auth, data::{Data, DataKey}, event::Cmd};
 #[derive(Deserialize)]
 pub struct ServiceLua {
 	#[serde(skip)]
-	pub auth: Arc<Auth>,
-	pub run:  Cmd,
+	pub(crate) auth: Arc<Auth>,
+	run:             Cmd,
 	#[serde(flatten)]
-	pub opts: HashMap<DataKey, Data>,
+	pub opts:        HashMap<DataKey, Data>,
 }
 
 impl Deref for ServiceLua {
