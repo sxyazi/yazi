@@ -196,17 +196,6 @@ impl Handle {
 		}
 	}
 
-	pub(super) fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
-		use windows_sys::Win32::{Foundation::{WAIT_FAILED, WAIT_OBJECT_0}, System::Threading::WaitForSingleObject};
-
-		let millis = timeout.as_millis();
-		match unsafe { WaitForSingleObject(self.inner, millis as u32) } {
-			WAIT_FAILED => Err(Error::last_os_error()),
-			WAIT_OBJECT_0 => Ok(true),
-			_ => Ok(false),
-		}
-	}
-
 	pub fn try_clone(&self) -> std::io::Result<Self> {
 		use std::ptr;
 
