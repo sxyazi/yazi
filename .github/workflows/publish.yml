@@ -8,6 +8,24 @@ permissions:
   contents: read
 
 jobs:
+  tag:
+    if: ${{ !github.event.release.prerelease }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Update shipped tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git tag --force shipped "${RELEASE_TAG}^{commit}"
+          git push --force origin tag shipped
+
   apt:
     if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
@@ -34,12 +52,9 @@ jobs:
           token: ${{ secrets.WINGET_TOKEN }}
 
   snapcraft:
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v8
-        with:
-          merge-multiple: true
-
       - name: Promote snap to stable
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}

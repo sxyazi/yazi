@@ -44,7 +44,7 @@ parts:
       - zoxide
     override-build: |
       cargo xtask install --bin-dir "$CRAFT_PART_INSTALL"
-      craftctl set version=$(git describe --tags --abbrev=0)
+      craftctl set version="v$("$CRAFT_PART_INSTALL/yazi" --version | sed -nE 's/^\s+Version:\s+//p' | sed -E 's/[ ()]+/-/g; s/-+$//')"
     build-attributes:
       - enable-patchelf
     organize:

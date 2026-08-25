@@ -176,14 +176,14 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
-          parallel 'snapcraft upload -v --release latest/candidate {}' ::: yazi-*.snap || true
+          parallel 'snapcraft upload -v --release latest/candidate {}' ::: yazi-*.snap
 
       - name: Push snap to edge channel
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
-          parallel 'snapcraft upload -v --release latest/edge {}' ::: yazi-*.snap || true
+          parallel 'snapcraft upload -v --release latest/edge {}' ::: yazi-*.snap
 
   draft:
     if: startsWith(github.ref, 'refs/tags/')
@@ -228,9 +228,8 @@ jobs:
 
       - name: Update the tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag --force nightly && git push --force origin tag nightly
+          git tag --force nightly "$GITHUB_SHA"
+          git push --force origin tag nightly
 
       - name: Nightly
         uses: softprops/action-gh-release@v3
