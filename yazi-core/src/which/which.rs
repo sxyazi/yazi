@@ -17,7 +17,7 @@ pub struct Which {
 
 impl Which {
 	pub fn r#type(&mut self, key: Key) -> bool {
-		if key.code.is_modifier() {
+		if key.code.is_modifier() || key.code.is_lock() {
 			return false;
 		}
 

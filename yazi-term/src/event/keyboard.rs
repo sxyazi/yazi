@@ -117,6 +117,8 @@ pub enum KeyCode {
 impl KeyCode {
 	pub fn implies_shift(self) -> bool { matches!(self, Self::Char(c) if c.is_uppercase()) }
 
+	pub fn is_lock(self) -> bool { matches!(self, Self::CapsLock | Self::ScrollLock | Self::NumLock) }
+
 	pub(crate) fn from_xterm_modifier(r#final: u8) -> Result<Self> {
 		Ok(match r#final {
 			b'A' => Self::Up,
