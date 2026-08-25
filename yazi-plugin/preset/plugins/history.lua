@@ -6,7 +6,7 @@ local function state_path()
 	-- Follows state logic in yazi-fs/src/xdg.rs
 	if ya.target_family() == "windows" then
 		-- As per rust Rust dirs crate
-		return (os.getenv("APPDATA") or "") .. "Roaming/yazi/state/history.json"
+		return (os.getenv("APPDATA") or "") .. "/yazi/state/history.json"
 	end
 	return (os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")) .. "/yazi/history.json"
 end
