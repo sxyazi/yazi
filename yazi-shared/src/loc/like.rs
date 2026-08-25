@@ -20,7 +20,10 @@ where
 	P: LocBufAble + LocBufAbleImpl,
 	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
-	type Borrowed<'a> = P::Borrowed<'a> where Self: 'a;
+	type Borrowed<'a>
+		= P::Borrowed<'a>
+	where
+		Self: 'a;
 
 	fn base(&self) -> Self::Borrowed<'_> { self.as_loc().base() }
 
