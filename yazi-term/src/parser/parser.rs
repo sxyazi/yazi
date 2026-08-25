@@ -33,7 +33,7 @@ impl Parser {
 		}
 	}
 
-	fn step(&mut self, b: u8) {
+	pub(super) fn step(&mut self, b: u8) {
 		// If the sequence is too long, mark it for discard.
 		if self.seq.len() >= self.state.limit() {
 			self.seq.clear();
