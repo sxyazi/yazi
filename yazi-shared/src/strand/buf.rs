@@ -72,6 +72,15 @@ impl StrandBuf {
 		}
 	}
 
+	#[cfg(windows)]
+	pub fn into_encoded_bytes(self) -> Vec<u8> {
+		match self {
+			Self::Os(s) => s.into_encoded_bytes(),
+			Self::Utf8(s) => s.into_bytes(),
+			Self::Bytes(b) => b,
+		}
+	}
+
 	pub(crate) fn into_string_lossy(self) -> String {
 		match self {
 			Self::Os(s) => match s.to_string_lossy() {
