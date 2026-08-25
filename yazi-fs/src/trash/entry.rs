@@ -15,7 +15,7 @@ pub(crate) struct TrashEntry {
 	pub(super) cha:      Cha,
 	pub(super) lcha:     Cha,
 	pub(super) original: Option<PathBuf>,
-	link_to:             Option<PathBuf>,
+	pub(super) link_to:  Option<PathBuf>,
 	pub(super) backing:  PathBuf,
 }
 
