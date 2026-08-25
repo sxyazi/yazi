@@ -26,11 +26,11 @@ pub trait DataAny: Any + Send + Sync + DynClone {
 }
 
 impl dyn DataAny {
-	pub fn downcast_ref<T: 'static>(&self) -> Option<&T> {
+	pub(crate) fn downcast_ref<T: 'static>(&self) -> Option<&T> {
 		self.as_any(TypeId::of::<T>()).and_then(|a| a.downcast_ref::<T>())
 	}
 
-	pub fn downcast<T: 'static>(self: Box<Self>) -> Result<Box<T>, Box<dyn Any>> {
+	pub(crate) fn downcast<T: 'static>(self: Box<Self>) -> Result<Box<T>, Box<dyn Any>> {
 		let id = TypeId::of::<T>();
 		self.into_any(id).map_or_else(|me| Err(me as Box<dyn Any>), |a| a.downcast::<T>())
 	}

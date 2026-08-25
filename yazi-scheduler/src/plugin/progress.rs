@@ -5,7 +5,7 @@ use crate::{Progress, TaskSummary};
 // --- Entry
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct PluginProgEntry {
-	pub state: Option<bool>,
+	pub(crate) state: Option<bool>,
 }
 
 impl From<PluginProgEntry> for TaskSummary {

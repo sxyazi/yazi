@@ -6,13 +6,13 @@ use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug)]
 pub struct SpotLock {
-	pub url:  UrlBuf,
-	pub cha:  Cha,
-	pub mime: String,
+	pub url:         UrlBuf,
+	pub(crate) cha:  Cha,
+	pub(crate) mime: String,
 
-	pub id:   Id,
-	pub skip: usize,
-	pub data: Vec<Renderable>,
+	pub id:          Id,
+	pub(crate) skip: usize,
+	pub data:        Vec<Renderable>,
 }
 
 impl_data_any!(SpotLock);
@@ -54,7 +54,7 @@ impl SpotLock {
 		})
 	}
 
-	pub fn table_mut(&mut self) -> Option<&mut yazi_binding::elements::Table> {
+	fn table_mut(&mut self) -> Option<&mut yazi_binding::elements::Table> {
 		self.data.iter_mut().rev().find_map(|r| match r {
 			Renderable::Table(t) => Some(t.as_mut()),
 			_ => None,

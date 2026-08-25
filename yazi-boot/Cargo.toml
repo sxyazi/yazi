@@ -17,7 +17,6 @@ yazi-fs      = { path = "../yazi-fs", version = "26.8.15" }
 yazi-macro   = { path = "../yazi-macro", version = "26.8.15" }
 yazi-shared  = { path = "../yazi-shared", version = "26.8.15" }
 yazi-shim    = { path = "../yazi-shim", version = "26.8.15" }
-yazi-version = { path = "../yazi-version", version = "26.8.15" }
 yazi-vfs     = { path = "../yazi-vfs", version = "26.8.15" }
 
 # External dependencies

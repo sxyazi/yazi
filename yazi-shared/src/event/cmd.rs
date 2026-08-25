@@ -31,7 +31,7 @@ impl FromStr for Cmd {
 }
 
 impl Cmd {
-	pub fn null() -> Self { Self { name: "null".into(), ..Default::default() } }
+	pub(crate) fn null() -> Self { Self { name: "null".into(), ..Default::default() } }
 
 	pub fn parse_args<I>(words: I, last: Option<String>) -> Result<HashMap<DataKey, Data>>
 	where

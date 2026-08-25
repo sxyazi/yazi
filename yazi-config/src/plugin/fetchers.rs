@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ops::Deref, sync::Arc};
+use std::{ops::Deref, sync::Arc};
 
 use anyhow::{Result, ensure};
 use arc_swap::ArcSwap;
@@ -31,23 +31,6 @@ impl TryFrom<Vec<FetcherArc>> for Fetchers {
 }
 
 impl Fetchers {
-	pub fn matches<'a>(&self, file: &'a File, mime: &'a str) -> FetcherMatcher<'a> {
-		self.matcher(Some(file), Some(mime))
-	}
-
-	pub fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> FetcherMatcher<'a>
-	where
-		F: Into<Cow<'a, File>>,
-		M: Into<Cow<'a, str>>,
-	{
-		FetcherMatcher {
-			fetchers: self.load_full(),
-			file: file.map(Into::into),
-			mime: mime.map(Into::into),
-			..Default::default()
-		}
-	}
-
 	pub fn mime(&self, files: Vec<File>) -> impl Iterator<Item = (FetcherArc, Vec<File>)> {
 		let fetchers = self.load_full();
 		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
@@ -66,7 +49,7 @@ impl Fetchers {
 		})
 	}
 
-	pub fn insert(&self, index: isize, fetcher: FetcherArc) -> Result<()> {
+	fn insert(&self, index: isize, fetcher: FetcherArc) -> Result<()> {
 		self.0.try_rcu(|fetchers| {
 			let i = fetchers.index_at(index)?;
 			let next = if i == fetchers.len() {
@@ -87,7 +70,7 @@ impl Fetchers {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: FetcherMatcher) {
+	fn remove(&self, matcher: FetcherMatcher) {
 		self.0.rcu(|fetchers| {
 			let mut next = Vec::clone(fetchers);
 			next.retain(|fetcher| !matcher.matches(fetcher));

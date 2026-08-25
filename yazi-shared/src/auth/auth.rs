@@ -25,24 +25,24 @@ impl fmt::Display for Auth {
 }
 
 impl Auth {
-	pub const DEFAULT: Self = Self {
+	pub(crate) const DEFAULT: Self = Self {
 		kind:   AuthKind::Regular,
 		scheme: Scheme::Regular,
 		domain: Domain::EMPTY,
 		parent: None,
 	};
 
-	pub fn default_arc() -> Arc<Self> { DEFAULT_ARC.clone() }
+	pub(crate) fn default_arc() -> Arc<Self> { DEFAULT_ARC.clone() }
 
 	pub fn new<'a>(kind: AuthKind, scheme: Scheme, domain: impl Into<Domain<'a>>) -> Arc<Self> {
 		Arc::new(Self { kind, scheme, domain: domain.into().into_owned(), parent: None })
 	}
 
-	pub fn search<'a>(query: impl Into<Domain<'a>>) -> Arc<Self> {
+	pub(crate) fn search<'a>(query: impl Into<Domain<'a>>) -> Arc<Self> {
 		Self::new(AuthKind::Search, Scheme::Search, query)
 	}
 
-	pub fn get(scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Self>> {
+	pub(crate) fn get(scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Self>> {
 		match scheme {
 			Scheme::Regular => Some(Self::default_arc()),
 			Scheme::Search => Some(Self::search(domain)),
@@ -50,7 +50,7 @@ impl Auth {
 		}
 	}
 
-	pub fn child(self: Arc<Self>) -> Arc<Self> {
+	fn child(self: Arc<Self>) -> Arc<Self> {
 		Arc::new(Self {
 			kind:   self.kind,
 			scheme: self.scheme.clone(),
@@ -59,14 +59,10 @@ impl Auth {
 		})
 	}
 
-	pub fn root(mut self: &Arc<Self>) -> &Arc<Self> {
-		while let Some(parent) = &self.parent {
-			self = parent;
-		}
-		self
-	}
-
-	pub fn descend<'a>(mut self: Arc<Self>, components: impl Into<Components<'a>>) -> Arc<Self> {
+	pub(crate) fn descend<'a, C>(mut self: Arc<Self>, components: C) -> Arc<Self>
+	where
+		C: Into<Components<'a>>,
+	{
 		for component in components.into() {
 			match component {
 				Component::RootDir => self = Self::new(self.kind, self.scheme.clone(), Domain::EMPTY),
@@ -77,7 +73,7 @@ impl Auth {
 		self
 	}
 
-	pub fn parent_at(mut self: &Arc<Self>, depth: usize) -> &Arc<Self> {
+	pub(crate) fn parent_at(mut self: &Arc<Self>, depth: usize) -> &Arc<Self> {
 		for _ in 0..depth {
 			self = self.parent.as_ref().expect("Auth parent depth out of bounds");
 		}
@@ -109,7 +105,7 @@ impl Auth {
 		self
 	}
 
-	pub fn parent_depth(&self) -> usize {
+	pub(crate) fn parent_depth(&self) -> usize {
 		let mut depth = 0;
 		let mut parent = self.parent.as_deref();
 		while let Some(auth) = parent {

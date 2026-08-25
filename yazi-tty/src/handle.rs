@@ -1,4 +1,4 @@
-use std::{io::{Error, Read, Write}, ptr, time::Duration};
+use std::io::{Error, Read, Write};
 
 use yazi_macro::error;
 
@@ -58,6 +58,8 @@ impl Read for Handle {
 		}
 		#[cfg(windows)]
 		{
+			use std::ptr;
+
 			use windows_sys::Win32::Storage::FileSystem::ReadFile;
 			use yazi_shim::bool_ok;
 
@@ -81,6 +83,8 @@ impl Write for Handle {
 		}
 		#[cfg(windows)]
 		{
+			use std::ptr;
+
 			use windows_sys::Win32::Storage::FileSystem::WriteFile;
 			use yazi_shim::bool_ok;
 
@@ -130,7 +134,7 @@ impl std::os::windows::io::IntoRawHandle for Handle {
 
 #[cfg(unix)]
 impl Handle {
-	pub fn new(out: bool) -> Self {
+	pub(crate) fn new(out: bool) -> Self {
 		use std::{fs::OpenOptions, os::fd::IntoRawFd};
 
 		use libc::{STDIN_FILENO, STDOUT_FILENO};
@@ -149,26 +153,6 @@ impl Handle {
 		}
 	}
 
-	pub(super) fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
-		let mut tv = libc::timeval {
-			tv_sec:  timeout.as_secs() as libc::time_t,
-			tv_usec: timeout.subsec_micros() as libc::suseconds_t,
-		};
-
-		let result = unsafe {
-			let mut set: libc::fd_set = std::mem::zeroed();
-			libc::FD_ZERO(&mut set);
-			libc::FD_SET(self.inner, &mut set);
-			libc::select(self.inner + 1, &mut set, ptr::null_mut(), ptr::null_mut(), &mut tv)
-		};
-
-		match result {
-			-1 => Err(Error::last_os_error()),
-			0 => Ok(false),
-			_ => Ok(true),
-		}
-	}
-
 	pub fn try_clone(&self) -> std::io::Result<Self> {
 		match unsafe { libc::dup(self.inner) } {
 			-1 => Err(Error::last_os_error()),
@@ -180,7 +164,7 @@ impl Handle {
 #[cfg(windows)]
 impl Handle {
 	pub fn new(out: bool) -> Self {
-		use std::{io::{Error, stdin, stdout}, os::windows::io::AsRawHandle};
+		use std::{io::{Error, stdin, stdout}, os::windows::io::AsRawHandle, ptr};
 
 		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
 
@@ -224,6 +208,8 @@ impl Handle {
 	}
 
 	pub fn try_clone(&self) -> std::io::Result<Self> {
+		use std::ptr;
+
 		use windows_sys::Win32::{Foundation::{DUPLICATE_SAME_ACCESS, DuplicateHandle, HANDLE}, System::Threading::GetCurrentProcess};
 
 		let proc = unsafe { GetCurrentProcess() };

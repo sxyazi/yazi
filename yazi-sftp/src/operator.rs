@@ -35,15 +35,15 @@ impl Operator {
 		Ok(File::new(&self.0, handle.handle))
 	}
 
-	pub fn close(&self, handle: &str) -> Result<Receiver, Error> {
+	pub(crate) fn close(&self, handle: &str) -> Result<Receiver, Error> {
 		self.send_sync(requests::Close::new(handle))
 	}
 
-	pub fn read(&self, handle: &str, offset: u64, len: u32) -> Result<Receiver, Error> {
+	pub(crate) fn read(&self, handle: &str, offset: u64, len: u32) -> Result<Receiver, Error> {
 		self.send_sync(requests::Read::new(handle, offset, len))
 	}
 
-	pub fn write(&self, handle: &str, offset: u64, data: &[u8]) -> Result<Receiver, Error> {
+	pub(crate) fn write(&self, handle: &str, offset: u64, data: &[u8]) -> Result<Receiver, Error> {
 		self.send_sync(requests::Write::new(handle, offset, data))
 	}
 
@@ -55,7 +55,7 @@ impl Operator {
 		Ok(attrs.attrs)
 	}
 
-	pub async fn fstat(&self, handle: &str) -> Result<Attrs, Error> {
+	pub(crate) async fn fstat(&self, handle: &str) -> Result<Attrs, Error> {
 		let attrs: responses::Attrs = self.send(requests::Fstat::new(handle)).await?;
 		Ok(attrs.attrs)
 	}
@@ -68,7 +68,7 @@ impl Operator {
 		status.into()
 	}
 
-	pub async fn fsetstat(&self, handle: &str, attrs: &Attrs) -> Result<(), Error> {
+	pub(crate) async fn fsetstat(&self, handle: &str, attrs: &Attrs) -> Result<(), Error> {
 		let status: responses::Status = self.send(requests::FSetStat::new(handle, attrs)).await?;
 		status.into()
 	}
@@ -172,7 +172,7 @@ impl Operator {
 		status.into()
 	}
 
-	pub fn fsync(&self, handle: &str) -> Result<Receiver, Error> {
+	pub(crate) fn fsync(&self, handle: &str) -> Result<Receiver, Error> {
 		if self.extensions.lock().get("fsync@openssh.com").is_none_or(|s| s != "1") {
 			return Err(Error::Unsupported);
 		}
@@ -194,15 +194,5 @@ impl Operator {
 		let status: responses::Status =
 			self.send(requests::Extended::new("hardlink@openssh.com", data)).await?;
 		status.into()
-	}
-
-	pub async fn limits(&self) -> Result<responses::ExtendedLimits, Error> {
-		if self.extensions.lock().get("limits@openssh.com").is_none_or(|s| s != "1") {
-			return Err(Error::Unsupported);
-		}
-
-		let extended: responses::Extended =
-			self.send(requests::Extended::new("limits@openssh.com", requests::ExtendedLimits)).await?;
-		extended.try_into()
 	}
 }

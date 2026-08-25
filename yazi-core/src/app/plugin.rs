@@ -98,7 +98,7 @@ pub enum PluginMode {
 }
 
 impl PluginMode {
-	pub fn auto_then(self, sync: bool) -> Self {
+	fn auto_then(self, sync: bool) -> Self {
 		if self != Self::Auto {
 			return self;
 		}

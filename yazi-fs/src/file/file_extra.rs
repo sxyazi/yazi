@@ -30,7 +30,7 @@ impl FileExtra {
 	pub fn link_to(&self) -> Option<&PathBufDyn> { self.0.as_ref()?.link_to.as_ref() }
 
 	#[inline]
-	pub fn backing(&self) -> Option<&Path> { self.0.as_ref()?.backing.as_deref() }
+	pub(crate) fn backing(&self) -> Option<&Path> { self.0.as_ref()?.backing.as_deref() }
 }
 
 impl TryFrom<Table> for FileExtra {

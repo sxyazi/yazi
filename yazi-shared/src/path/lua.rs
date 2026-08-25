@@ -3,7 +3,7 @@ use yazi_shim::{OptionExt, log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
 use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
 
-pub type PathRef = UserDataRef<PathBufDyn>;
+type PathRef = UserDataRef<PathBufDyn>;
 
 impl PathBufDyn {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {

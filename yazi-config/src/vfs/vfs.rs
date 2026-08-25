@@ -13,7 +13,7 @@ use crate::VFS;
 #[derive(Deserialize, DeserializeOver)]
 pub struct Vfs {
 	#[serde(flatten)]
-	pub authorities: Authorities,
+	authorities: Authorities,
 }
 
 impl Vfs {

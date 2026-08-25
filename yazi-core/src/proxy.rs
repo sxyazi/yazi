@@ -17,7 +17,7 @@ impl AppProxy {
 		emit!(Call(relay!(app:plugin).with_any("opt", opt)));
 	}
 
-	pub fn plugin_peek(job: PeekJob, scope: Scope) {
+	pub(crate) fn plugin_peek(job: PeekJob, scope: Scope) {
 		let name = job.previewer.name.clone();
 		Self::plugin(PluginOpt {
 			scope,
@@ -25,7 +25,7 @@ impl AppProxy {
 		});
 	}
 
-	pub fn update_progress(summary: TaskSummary) {
+	pub(crate) fn update_progress(summary: TaskSummary) {
 		emit!(Call(relay!(app:update_progress).with_any("summary", summary)));
 	}
 }
@@ -34,7 +34,7 @@ impl AppProxy {
 pub struct MgrProxy;
 
 impl MgrProxy {
-	pub fn update_paged_by<U>(page: usize, only_if: U)
+	pub(crate) fn update_paged_by<U>(page: usize, only_if: U)
 	where
 		U: AsUrl,
 	{
@@ -45,7 +45,7 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:update_peeked).with_any("lock", lock).with_any("scope", scope)));
 	}
 
-	pub fn update_peeked_error(job: PeekJob, error: String, scope: Scope) {
+	pub(crate) fn update_peeked_error(job: PeekJob, error: String, scope: Scope) {
 		let area = LAYOUT.get().preview;
 		Self::update_peeked(
 			PreviewLock {

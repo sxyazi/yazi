@@ -7,7 +7,7 @@ use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 use yazi_shim::mlua::SER_OPT;
 use yazi_tty::TTY;
 
-pub fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"args" => args().into_lua(lua)?,

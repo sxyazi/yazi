@@ -5,10 +5,10 @@ use yazi_shared::{natsort, translit::Transliterator};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct WhichSorter {
-	pub by:        SortBy,
-	pub sensitive: bool,
-	pub reverse:   bool,
-	pub translit:  bool,
+	by:        SortBy,
+	sensitive: bool,
+	reverse:   bool,
+	translit:  bool,
 }
 
 impl Default for WhichSorter {

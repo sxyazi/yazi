@@ -3,7 +3,7 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct CasefyOpt {
-	pub upper: bool,
+	upper: bool,
 }
 
 impl From<ActionCow> for CasefyOpt {
@@ -19,7 +19,7 @@ impl IntoLua for CasefyOpt {
 }
 
 impl CasefyOpt {
-	pub fn transform(&self, s: &str) -> String {
+	pub(crate) fn transform(&self, s: &str) -> String {
 		if self.upper { s.to_ascii_uppercase() } else { s.to_ascii_lowercase() }
 	}
 }

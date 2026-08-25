@@ -3,7 +3,7 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug)]
 pub struct InsertOpt {
-	pub append: bool,
+	pub(crate) append: bool,
 }
 
 impl From<ActionCow> for InsertOpt {

@@ -10,7 +10,7 @@ pub struct PreviewSig<'a> {
 }
 
 impl<'a> PreviewSig<'a> {
-	pub fn new(file: &'a File, mime: &'a str) -> Self {
+	pub(crate) fn new(file: &'a File, mime: &'a str) -> Self {
 		Self { file: FileSig(file), mime, area: LAYOUT.get().preview }
 	}
 }

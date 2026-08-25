@@ -26,7 +26,7 @@ pub struct Client {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Peer {
-	pub(super) abilities: HashSet<String>,
+	abilities: HashSet<String>,
 }
 
 impl Client {

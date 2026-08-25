@@ -9,16 +9,16 @@ use yazi_term::event::{KeyCode, KeyEvent, Modifiers};
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct Key {
 	#[serde(flatten)]
-	pub code:   KeyCode,
-	pub shift:  bool,
-	pub ctrl:   bool,
-	pub alt:    bool,
+	pub code: KeyCode,
+	shift:    bool,
+	ctrl:     bool,
+	alt:      bool,
 	#[serde(rename = "super")]
-	pub super_: bool,
+	super_:   bool,
 }
 
 impl Key {
-	pub fn plain(&self) -> Option<char> {
+	fn plain(&self) -> Option<char> {
 		if self.ctrl || self.alt || self.super_ {
 			None
 		} else if self.shift && !self.code.implies_shift() {

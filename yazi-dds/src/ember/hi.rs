@@ -11,8 +11,8 @@ use super::Ember;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberHi<'a> {
 	/// Kinds of events the client can handle
-	pub abilities: HashSet<Cow<'a, str>>,
-	pub version:   SStr,
+	pub(crate) abilities: HashSet<Cow<'a, str>>,
+	version:              SStr,
 }
 
 impl<'a> EmberHi<'a> {

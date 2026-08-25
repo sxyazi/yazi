@@ -4,9 +4,9 @@ use crate::{Icon, Mixable, Pattern, Selectable};
 
 #[derive(Debug, Deserialize)]
 pub struct IconGlob {
-	pub url:  Pattern,
+	url:             Pattern,
 	#[serde(flatten)]
-	pub icon: Icon,
+	pub(crate) icon: Icon,
 }
 
 impl Selectable for IconGlob {

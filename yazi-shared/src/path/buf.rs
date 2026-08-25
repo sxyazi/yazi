@@ -1,11 +1,11 @@
-use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
+use std::{borrow::Cow, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::wtf8::FromWtf8Vec;
 
-use crate::{path::{Component, DynPath, PathDyn, PathDynError, PathKind, SetNameError}, strand::AsStrand};
+use crate::path::{Component, DynPath, PathDyn, PathDynError, PathKind};
 
 // --- PathBufDyn
 #[derive(Clone, Debug, Eq, FromLuaOwned)]
@@ -74,17 +74,6 @@ impl Equivalent<PathDyn<'_>> for PathBufDyn {
 
 impl PathBufDyn {
 	#[inline]
-	pub unsafe fn from_encoded_bytes<K>(kind: K, bytes: Vec<u8>) -> Self
-	where
-		K: Into<PathKind>,
-	{
-		match kind.into() {
-			PathKind::Os => Self::Os(unsafe { OsString::from_encoded_bytes_unchecked(bytes) }.into()),
-			PathKind::Unix => Self::Unix(bytes.into()),
-		}
-	}
-
-	#[inline]
 	pub fn from_components<'a, K, I>(kind: K, iter: I) -> Result<Self, PathDynError>
 	where
 		K: Into<PathKind>,
@@ -96,7 +85,7 @@ impl PathBufDyn {
 		})
 	}
 
-	pub fn into_encoded_bytes(self) -> Vec<u8> {
+	pub(crate) fn into_encoded_bytes(self) -> Vec<u8> {
 		match self {
 			Self::Os(p) => p.into_os_string().into_encoded_bytes(),
 			Self::Unix(p) => p.into_vec(),
@@ -119,25 +108,6 @@ impl PathBufDyn {
 		})
 	}
 
-	#[inline]
-	pub fn new(kind: PathKind) -> Self {
-		match kind {
-			PathKind::Os => Self::Os(std::path::PathBuf::new()),
-			PathKind::Unix => Self::Unix(typed_path::UnixPathBuf::new()),
-		}
-	}
-
-	pub fn try_extend<T>(&mut self, paths: T) -> Result<(), PathDynError>
-	where
-		T: IntoIterator,
-		T::Item: DynPath,
-	{
-		for p in paths {
-			self.try_push(p)?;
-		}
-		Ok(())
-	}
-
 	pub fn try_push<T>(&mut self, path: T) -> Result<(), PathDynError>
 	where
 		T: DynPath,
@@ -149,18 +119,7 @@ impl PathBufDyn {
 		})
 	}
 
-	pub fn try_set_name<T>(&mut self, name: T) -> Result<(), SetNameError>
-	where
-		T: AsStrand,
-	{
-		let s = name.as_strand();
-		Ok(match self {
-			Self::Os(p) => p.set_file_name(s.as_os()?),
-			Self::Unix(p) => p.set_file_name(s.encoded_bytes()),
-		})
-	}
-
-	pub fn with<K>(kind: K, bytes: Vec<u8>) -> Result<Self, PathDynError>
+	pub(crate) fn with<K>(kind: K, bytes: Vec<u8>) -> Result<Self, PathDynError>
 	where
 		K: Into<PathKind>,
 	{

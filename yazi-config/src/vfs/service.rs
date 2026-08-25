@@ -39,7 +39,7 @@ impl TryFrom<&'static Service> for &'static ServiceLua {
 }
 
 impl Service {
-	pub fn kind(&self) -> AuthKind {
+	pub(crate) fn kind(&self) -> AuthKind {
 		match self {
 			Self::Sftp(_) => AuthKind::Sftp,
 			Self::Mount(_) => AuthKind::Mount,
@@ -48,7 +48,7 @@ impl Service {
 		}
 	}
 
-	pub fn auth(&self) -> &Arc<Auth> {
+	pub(crate) fn auth(&self) -> &Arc<Auth> {
 		match self {
 			Self::Sftp(sftp) => &sftp.auth,
 			Self::Mount(lua) => &lua.auth,
@@ -57,7 +57,7 @@ impl Service {
 		}
 	}
 
-	pub fn auth_mut(&mut self) -> &mut Arc<Auth> {
+	pub(crate) fn auth_mut(&mut self) -> &mut Arc<Auth> {
 		match self {
 			Self::Sftp(sftp) => &mut sftp.auth,
 			Self::Mount(lua) => &mut lua.auth,

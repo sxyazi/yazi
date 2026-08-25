@@ -8,7 +8,7 @@ pub struct Layout {
 }
 
 impl Layout {
-	pub const fn default() -> Self {
+	pub(crate) const fn default() -> Self {
 		Self { current: Rect::ZERO, preview: Rect::ZERO, progress: Rect::ZERO }
 	}
 

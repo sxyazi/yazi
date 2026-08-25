@@ -11,10 +11,10 @@ use crate::{Mixable, Pattern, Selectable, Selector, YAZI, plugin::{PreviewerArc,
 #[derive(Debug, Deserialize)]
 pub struct Previewer {
 	#[serde(skip, default = "previewer_id")]
-	pub id:       Id,
+	pub(crate) id: Id,
 	#[serde(flatten)]
-	pub selector: Selector,
-	pub run:      Cmd,
+	selector:      Selector,
+	run:           Cmd,
 }
 
 impl Deref for Previewer {
@@ -39,12 +39,12 @@ impl Mixable for Previewer {
 // --- Matcher
 #[derive(Default)]
 pub struct PreviewerMatcher<'a> {
-	pub previewers: Arc<Vec<PreviewerArc>>,
-	pub id:         Id,
-	pub file:       Option<Cow<'a, File>>,
-	pub mime:       Option<Cow<'a, str>>,
-	pub all:        bool,
-	pub offset:     usize,
+	pub(crate) previewers: Arc<Vec<PreviewerArc>>,
+	pub(crate) id:         Id,
+	pub(crate) file:       Option<Cow<'a, File>>,
+	pub(crate) mime:       Option<Cow<'a, str>>,
+	pub(crate) all:        bool,
+	pub(crate) offset:     usize,
 }
 
 impl From<&Previewers> for PreviewerMatcher<'_> {
@@ -54,7 +54,7 @@ impl From<&Previewers> for PreviewerMatcher<'_> {
 }
 
 impl PreviewerMatcher<'_> {
-	pub fn matches(&self, previewer: &Previewer) -> bool {
+	pub(crate) fn matches(&self, previewer: &Previewer) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {

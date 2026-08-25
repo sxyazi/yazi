@@ -5,7 +5,7 @@ use yazi_shared::url::UrlBuf;
 
 use crate::{LUA, theme::icon};
 
-pub fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"app" => app(),

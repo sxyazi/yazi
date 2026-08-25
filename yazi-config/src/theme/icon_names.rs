@@ -23,7 +23,7 @@ impl From<HashMap<NonEmptyString, Icon>> for IconNames {
 }
 
 impl IconNames {
-	pub fn matches<S>(&self, name: S) -> Option<Icon>
+	pub(crate) fn matches<S>(&self, name: S) -> Option<Icon>
 	where
 		S: AsStrand,
 	{

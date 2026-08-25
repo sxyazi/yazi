@@ -52,7 +52,7 @@ impl<T: Into<UrlBuf>> From<T> for Folder {
 }
 
 impl Folder {
-	pub fn update(&mut self, op: FilesOp) -> bool {
+	fn update(&mut self, op: FilesOp) -> bool {
 		let (stage, revision) = (self.stage.clone(), self.entries.revision);
 		match op {
 			FilesOp::Full(ref file, _) => {
@@ -145,7 +145,7 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn invalidate(&mut self) { self.stale = true; }
+	pub(crate) fn invalidate(&mut self) { self.stale = true; }
 
 	#[inline]
 	pub fn take_request(&mut self) -> RefreshRequest {
@@ -187,10 +187,10 @@ impl Folder {
 	pub fn hovered(&self) -> Option<&File> { self.entries.get(self.cursor) }
 
 	#[inline]
-	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.entries.get_mut(self.cursor) }
+	pub(crate) fn hovered_mut(&mut self) -> Option<&mut File> { self.entries.get_mut(self.cursor) }
 
 	#[inline]
-	pub fn hovered_url(&self) -> Option<&UrlBuf> { self.hovered().map(|f| &f.url) }
+	pub(crate) fn hovered_url(&self) -> Option<&UrlBuf> { self.hovered().map(|f| &f.url) }
 
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.entries.len();

@@ -6,10 +6,10 @@ use yazi_binding::deprecate;
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(try_from = "[u16; 3]")]
 pub struct MgrRatio {
-	pub parent:  u16,
-	pub current: u16,
-	pub preview: u16,
-	pub all:     u16,
+	parent:  u16,
+	current: u16,
+	preview: u16,
+	all:     u16,
 }
 
 impl TryFrom<[u16; 3]> for MgrRatio {

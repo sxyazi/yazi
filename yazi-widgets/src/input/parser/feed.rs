@@ -5,7 +5,7 @@ use yazi_shared::event::ActionCow;
 
 #[derive(Debug, Default)]
 pub struct FeedOpt<'a> {
-	pub text: Cow<'a, str>,
+	text: Cow<'a, str>,
 }
 
 impl<'a> AsRef<str> for FeedOpt<'a> {

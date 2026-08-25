@@ -23,7 +23,7 @@ impl From<HashMap<SnakeCasedKey, CustomSection>> for Custom {
 }
 
 impl Custom {
-	pub(super) fn unwrap_unchecked(self) -> HashMap<SnakeCasedKey, CustomSection> {
+	fn unwrap_unchecked(self) -> HashMap<SnakeCasedKey, CustomSection> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique custom arc")
 	}
 }

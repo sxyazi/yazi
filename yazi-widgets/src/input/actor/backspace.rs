@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{Input, parser::BackspaceOpt};
 
 impl Input {
-	pub fn backspace(&mut self, opt: BackspaceOpt) -> Result<Data> {
+	pub(crate) fn backspace(&mut self, opt: BackspaceOpt) -> Result<Data> {
 		let snap = self.snap_mut();
 		if !opt.under && snap.cursor < 1 {
 			succ!();

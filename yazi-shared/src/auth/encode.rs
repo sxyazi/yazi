@@ -5,10 +5,10 @@ use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 use super::{Auth, AuthKind, Domain};
 
 // --- EncodeAuth
-pub struct EncodeAuth<'a>(pub &'a Auth, pub bool);
+pub struct EncodeAuth<'a>(pub(crate) &'a Auth, pub(crate) bool);
 
 impl EncodeAuth<'_> {
-	pub fn domain<'a>(s: &'a Domain<'_>) -> EncodeDomain<'a> {
+	pub(crate) fn domain<'a>(s: &'a Domain<'_>) -> EncodeDomain<'a> {
 		const SET: &AsciiSet = &CONTROLS.add(b'/').add(b':').add(b'%');
 		EncodeDomain(s, SET)
 	}
@@ -27,10 +27,10 @@ impl fmt::Display for EncodeAuth<'_> {
 }
 
 // --- EncodePrefix
-pub struct EncodePrefix<'a>(pub &'a Auth);
+pub struct EncodePrefix<'a>(pub(crate) &'a Auth);
 
 impl EncodePrefix<'_> {
-	pub fn parent<'a>(s: &'a Domain<'_>) -> EncodeDomain<'a> {
+	fn parent<'a>(s: &'a Domain<'_>) -> EncodeDomain<'a> {
 		const SET: &AsciiSet = &CONTROLS.add(b'/').add(b',').add(b'@').add(b'%');
 		EncodeDomain(s, SET)
 	}

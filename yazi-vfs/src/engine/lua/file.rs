@@ -42,12 +42,12 @@ impl File {
 		}
 	}
 
-	pub async fn set_len(&self, size: u64) -> io::Result<()> {
+	pub(crate) async fn set_len(&self, size: u64) -> io::Result<()> {
 		let url = self.url.clone();
 		Ok(RUNNER.provide(self.service, ProvideJob::SetLen { url, size }).await.ok()?)
 	}
 
-	pub async fn set_attrs(&self, attrs: yazi_fs::engine::Attrs) -> io::Result<()> {
+	pub(crate) async fn set_attrs(&self, attrs: yazi_fs::engine::Attrs) -> io::Result<()> {
 		let url = self.url.clone();
 		Ok(RUNNER.provide(self.service, ProvideJob::SetAttrs { url, attrs }).await.ok()?)
 	}

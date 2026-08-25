@@ -64,7 +64,7 @@ impl StrandBuf {
 	}
 
 	#[inline]
-	pub unsafe fn from_encoded_bytes(kind: impl Into<StrandKind>, bytes: Vec<u8>) -> Self {
+	pub(crate) unsafe fn from_encoded_bytes(kind: impl Into<StrandKind>, bytes: Vec<u8>) -> Self {
 		match kind.into() {
 			StrandKind::Utf8 => Self::Utf8(unsafe { String::from_utf8_unchecked(bytes) }),
 			StrandKind::Os => Self::Os(unsafe { OsString::from_encoded_bytes_unchecked(bytes) }),
@@ -72,15 +72,7 @@ impl StrandBuf {
 		}
 	}
 
-	pub fn into_encoded_bytes(self) -> Vec<u8> {
-		match self {
-			Self::Os(s) => s.into_encoded_bytes(),
-			Self::Utf8(s) => s.into_bytes(),
-			Self::Bytes(b) => b,
-		}
-	}
-
-	pub fn into_string_lossy(self) -> String {
+	pub(crate) fn into_string_lossy(self) -> String {
 		match self {
 			Self::Os(s) => match s.to_string_lossy() {
 				Cow::Borrowed(_) => unsafe { String::from_utf8_unchecked(s.into_encoded_bytes()) },
@@ -94,8 +86,6 @@ impl StrandBuf {
 		}
 	}
 
-	pub fn new(kind: impl Into<StrandKind>) -> Self { Self::with_str(kind, "") }
-
 	pub fn push_str(&mut self, s: impl AsRef<str>) {
 		let s = s.as_ref();
 		match self {
@@ -105,7 +95,7 @@ impl StrandBuf {
 		}
 	}
 
-	pub fn reserve_exact(&mut self, additional: usize) {
+	pub(crate) fn reserve_exact(&mut self, additional: usize) {
 		match self {
 			Self::Os(buf) => buf.reserve_exact(additional),
 			Self::Utf8(buf) => buf.reserve_exact(additional),
@@ -125,7 +115,7 @@ impl StrandBuf {
 		})
 	}
 
-	pub fn with<K>(kind: K, bytes: Vec<u8>) -> Result<Self>
+	pub(crate) fn with<K>(kind: K, bytes: Vec<u8>) -> Result<Self>
 	where
 		K: Into<StrandKind>,
 	{
@@ -147,7 +137,7 @@ impl StrandBuf {
 		}
 	}
 
-	pub fn with_str<K, S>(kind: K, s: S) -> Self
+	pub(crate) fn with_str<K, S>(kind: K, s: S) -> Self
 	where
 		K: Into<StrandKind>,
 		S: Into<String>,

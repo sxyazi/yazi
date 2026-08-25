@@ -7,7 +7,7 @@ use crate::input::Gait;
 #[derive(Debug, Deserialize)]
 pub struct BackwardOpt {
 	#[serde(alias = "0", default)]
-	pub gait: Gait,
+	pub(crate) gait: Gait,
 }
 
 impl TryFrom<ActionCow> for BackwardOpt {

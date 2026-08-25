@@ -78,7 +78,7 @@ impl std::fmt::Debug for SymbolCow<'_, str> {
 }
 
 impl SymbolCow<'_, [u8]> {
-	pub fn into_owned(self) -> Symbol<[u8]> {
+	fn into_owned(self) -> Symbol<[u8]> {
 		match self {
 			Self::Borrowed(t) => Pool::<[u8]>::intern(t),
 			Self::Owned(t) => t,
@@ -87,7 +87,7 @@ impl SymbolCow<'_, [u8]> {
 }
 
 impl SymbolCow<'_, str> {
-	pub fn into_owned(self) -> Symbol<str> {
+	fn into_owned(self) -> Symbol<str> {
 		match self {
 			Self::Borrowed(t) => Pool::<str>::intern(t),
 			Self::Owned(t) => t,

@@ -27,7 +27,7 @@ impl From<super::lua::File> for RwFile {
 }
 
 impl RwFile {
-	pub async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
 		Ok(match self {
 			Self::Tokio(f, url) => {
 				yazi_fs::cha::Cha::new(url.name().unwrap_or_default(), f.metadata().await?)
@@ -62,7 +62,7 @@ impl RwFile {
 		})
 	}
 
-	pub async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
+	pub(crate) async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
 		match self {
 			Self::Tokio(f, _) => {
 				let (perm, times) = (attrs.try_into(), attrs.try_into());
@@ -88,7 +88,7 @@ impl RwFile {
 		Ok(())
 	}
 
-	pub async fn set_len(&self, size: u64) -> io::Result<()> {
+	pub(crate) async fn set_len(&self, size: u64) -> io::Result<()> {
 		Ok(match self {
 			Self::Tokio(f, _) => f.set_len(size).await?,
 			Self::Sftp(f, _) => {

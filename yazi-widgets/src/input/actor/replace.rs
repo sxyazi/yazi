@@ -5,7 +5,7 @@ use yazi_shared::{data::Data, replace_cow};
 use crate::input::{Input, InputMode, op::InputOp};
 
 impl Input {
-	pub fn replace(&mut self, _: ()) -> Result<Data> {
+	pub(crate) fn replace(&mut self, _: ()) -> Result<Data> {
 		let snap = self.snap_mut();
 		if snap.mode == InputMode::Normal {
 			snap.op = InputOp::None;
@@ -15,7 +15,7 @@ impl Input {
 		succ!();
 	}
 
-	pub fn insert_str(&mut self, s: &str) -> Result<Data> {
+	pub(crate) fn insert_str(&mut self, s: &str) -> Result<Data> {
 		let s = replace_cow(replace_cow(s, "\r", " "), "\n", " ");
 
 		let snap = self.snap_mut();
@@ -30,7 +30,7 @@ impl Input {
 		succ!(render!());
 	}
 
-	pub fn replace_str(&mut self, s: &str) -> Result<Data> {
+	pub(crate) fn replace_str(&mut self, s: &str) -> Result<Data> {
 		let s = replace_cow(replace_cow(s, "\r", " "), "\n", " ");
 
 		let snap = self.snap_mut();

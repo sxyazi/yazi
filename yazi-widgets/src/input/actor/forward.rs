@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{CharKind, Input, op::InputOp, parser::ForwardOpt};
 
 impl Input {
-	pub fn forward(&mut self, opt: ForwardOpt) -> Result<Data> {
+	pub(crate) fn forward(&mut self, opt: ForwardOpt) -> Result<Data> {
 		let snap = self.snap();
 
 		let mut it = snap.value.chars().skip(snap.cursor).enumerate();

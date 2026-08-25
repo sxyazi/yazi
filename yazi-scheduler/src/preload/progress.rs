@@ -4,8 +4,8 @@ use crate::{CleanupState, Progress, TaskSummary};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct PreloadProg {
-	pub state:   Option<bool>,
-	pub cleaned: CleanupState,
+	pub(crate) state:   Option<bool>,
+	pub(crate) cleaned: CleanupState,
 }
 
 impl From<PreloadProg> for TaskSummary {

@@ -37,10 +37,10 @@ impl Display for DisableClipboard {
 /// Request clipboard data for the given MIME types.
 /// `OSC 5522 ; type=read[:metadata] ; <base64 MIME list> ST`
 pub struct ReadClipboard<'a, M> {
-	pub mimes:   M,
-	pub pw:      &'a str,
-	pub name:    &'a str,
-	pub primary: bool,
+	pub(crate) mimes:   M,
+	pub(crate) pw:      &'a str,
+	pub(crate) name:    &'a str,
+	pub(crate) primary: bool,
 }
 
 impl<M: Mimelist> Display for ReadClipboard<'_, M> {
@@ -68,7 +68,7 @@ impl<M: Mimelist> Display for ReadClipboard<'_, M> {
 
 /// Write a complete OSC 5522 clipboard transmission.
 pub struct WriteClipboard<'a, M> {
-	pub data: Vec<WriteClipboardData<'a, M>>,
+	data: Vec<WriteClipboardData<'a, M>>,
 }
 
 impl<M: Mimelist> Display for WriteClipboard<'_, M> {
@@ -96,9 +96,9 @@ impl Display for WriteClipboardHead {
 /// `OSC 5522 ; type=wdata:mime=<base64 MIME type> ; <base64 data chunk> ST`
 /// packets, followed by an optional `type=walias` packet.
 pub struct WriteClipboardData<'a, M> {
-	pub mime:    &'a str,
-	pub payload: &'a [u8],
-	pub aliases: M,
+	pub(crate) mime:    &'a str,
+	pub(crate) payload: &'a [u8],
+	pub(crate) aliases: M,
 }
 
 impl<M: Mimelist> Display for WriteClipboardData<'_, M> {

@@ -14,7 +14,7 @@ pub enum ClipboardEvent {
 }
 
 impl ClipboardEvent {
-	pub fn r#type(&self) -> &'static str {
+	pub(crate) fn r#type(&self) -> &'static str {
 		match self {
 			Self::Read { .. } => "read",
 			Self::ReadError(_) | Self::WriteError(_) => "error",
@@ -22,28 +22,28 @@ impl ClipboardEvent {
 		}
 	}
 
-	pub fn primary(&self) -> Option<bool> {
+	pub(crate) fn primary(&self) -> Option<bool> {
 		match self {
 			Self::Read { primary, .. } => Some(*primary),
 			_ => None,
 		}
 	}
 
-	pub fn pw(&mut self) -> Option<&mut String> {
+	pub(crate) fn pw(&mut self) -> Option<&mut String> {
 		match self {
 			Self::Read { pw, .. } => Some(pw),
 			_ => None,
 		}
 	}
 
-	pub fn data(&mut self) -> Option<&mut ClipboardData> {
+	pub(crate) fn data(&mut self) -> Option<&mut ClipboardData> {
 		match self {
 			Self::Read { data, .. } => Some(data),
 			_ => None,
 		}
 	}
 
-	pub fn is_write(&self) -> bool {
+	pub(crate) fn is_write(&self) -> bool {
 		match self {
 			Self::WriteSuccess | Self::WriteError(_) => true,
 			_ => false,

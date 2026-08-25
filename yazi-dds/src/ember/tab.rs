@@ -6,13 +6,13 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberTab {
-	pub id: Id,
+	id: Id,
 }
 
 impl EmberTab {
-	pub fn borrowed(id: Id) -> Ember<'static> { Self { id }.into() }
+	pub(crate) fn borrowed(id: Id) -> Ember<'static> { Self { id }.into() }
 
-	pub fn owned(id: Id) -> Ember<'static> { Self::borrowed(id) }
+	pub(crate) fn owned(id: Id) -> Ember<'static> { Self::borrowed(id) }
 }
 
 impl From<EmberTab> for Ember<'_> {

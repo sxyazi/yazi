@@ -25,7 +25,7 @@ impl Deref for State {
 }
 
 impl State {
-	pub fn set(&self, kind: &str, sender: u64, body: &str) -> bool {
+	pub(crate) fn set(&self, kind: &str, sender: u64, body: &str) -> bool {
 		debug_assert!(kind.starts_with('@'));
 		let Some(inner) = &mut *self.inner.write() else { return false };
 
@@ -46,7 +46,7 @@ impl State {
 		true
 	}
 
-	pub async fn load_or_create(&self) {
+	pub(crate) async fn load_or_create(&self) {
 		if self.load().await.is_err() {
 			self.inner.write().replace(Default::default());
 			self.last.store(timestamp_us(), Ordering::Relaxed);

@@ -80,11 +80,11 @@ impl Error {
 		Self::Custom { kind: io::ErrorKind::Other, code: None, message: message.into() }
 	}
 
-	pub fn custom(kind: &str, code: Option<i32>, message: &str) -> Result<Self> {
+	fn custom(kind: &str, code: Option<i32>, message: &str) -> Result<Self> {
 		Ok(Self::Custom { kind: kind_from_str(kind)?, code, message: message.into() })
 	}
 
-	pub fn kind(&self) -> io::ErrorKind {
+	fn kind(&self) -> io::ErrorKind {
 		match self {
 			Self::Kind(kind) => *kind,
 			Self::Raw(code) => io::Error::from_raw_os_error(*code).kind(),
@@ -92,9 +92,9 @@ impl Error {
 		}
 	}
 
-	pub fn kind_str(&self) -> &'static str { kind_to_str(self.kind()) }
+	fn kind_str(&self) -> &'static str { kind_to_str(self.kind()) }
 
-	pub fn raw_os_error(&self) -> Option<i32> {
+	fn raw_os_error(&self) -> Option<i32> {
 		match self {
 			Self::Kind(_) => None,
 			Self::Raw(code) => Some(*code),

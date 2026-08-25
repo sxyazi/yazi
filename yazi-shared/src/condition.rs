@@ -20,7 +20,7 @@ pub enum ConditionOp {
 }
 
 impl ConditionOp {
-	pub fn new(c: char) -> Self {
+	fn new(c: char) -> Self {
 		match c {
 			'|' => Self::Or,
 			'&' => Self::And,

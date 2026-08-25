@@ -6,15 +6,15 @@ use super::{InputMode, InputOp};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct InputSnap {
-	pub value: String,
+	pub(crate) value: String,
 
 	pub op: InputOp,
 
-	pub mode:    InputMode,
-	pub obscure: bool,
+	pub mode:           InputMode,
+	pub(crate) obscure: bool,
 
-	pub offset: usize,
-	pub cursor: usize,
+	pub(crate) offset: usize,
+	pub(crate) cursor: usize,
 }
 
 impl InputSnap {

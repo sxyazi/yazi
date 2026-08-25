@@ -256,7 +256,7 @@ impl PartialEq<bool> for Data {
 }
 
 impl Data {
-	pub fn as_str(&self) -> Option<&str> {
+	pub(crate) fn as_str(&self) -> Option<&str> {
 		match self {
 			Self::String(s) => Some(s),
 			_ => None,

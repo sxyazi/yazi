@@ -8,13 +8,13 @@ use yazi_vfs::engine;
 #[derive(Debug, Deserialize)]
 pub struct CdForm {
 	#[serde(alias = "0", default)]
-	pub target:      UrlBuf,
+	pub target:        UrlBuf,
 	#[serde(default)]
-	pub interactive: bool,
+	pub interactive:   bool,
 	#[serde(default)]
-	pub raw:         bool,
+	raw:               bool,
 	#[serde(default)]
-	pub source:      CdSource,
+	pub(crate) source: CdSource,
 }
 
 impl TryFrom<ActionCow> for CdForm {

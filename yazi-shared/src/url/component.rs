@@ -27,7 +27,7 @@ impl<'a> From<path::Component<'a>> for Component<'a> {
 }
 
 impl<'a> Component<'a> {
-	pub fn downgrade(self) -> Option<path::Component<'a>> {
+	fn downgrade(self) -> Option<path::Component<'a>> {
 		Some(match self {
 			Self::Auth(_) => None?,
 			Self::Prefix(p) => path::Component::Prefix(p),

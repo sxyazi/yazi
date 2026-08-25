@@ -14,11 +14,11 @@ pub struct Worker {
 	pub preload:        Arc<Preload>,
 	pub size:           Arc<Size>,
 	pub(super) process: Arc<Process>,
-	pub(super) custom:  Custom,
+	custom:             Custom,
 	pub(super) hook:    Arc<Hook>,
 
-	pub ops:     TaskOps,
-	pub ongoing: Arc<Mutex<Ongoing>>,
+	pub(crate) ops: TaskOps,
+	pub ongoing:    Arc<Mutex<Ongoing>>,
 }
 
 impl Worker {

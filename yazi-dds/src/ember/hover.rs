@@ -8,18 +8,20 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberHover<'a> {
-	pub tab: Id,
-	pub url: Option<Cow<'a, UrlBuf>>,
+	tab: Id,
+	url: Option<Cow<'a, UrlBuf>>,
 }
 
 impl<'a> EmberHover<'a> {
-	pub fn borrowed(tab: Id, url: Option<&'a UrlBuf>) -> Ember<'a> {
+	pub(crate) fn borrowed(tab: Id, url: Option<&'a UrlBuf>) -> Ember<'a> {
 		Self { tab, url: url.map(Into::into) }.into()
 	}
 }
 
 impl EmberHover<'static> {
-	pub fn owned(tab: Id, _: Option<&UrlBuf>) -> Ember<'static> { Self { tab, url: None }.into() }
+	pub(crate) fn owned(tab: Id, _: Option<&UrlBuf>) -> Ember<'static> {
+		Self { tab, url: None }.into()
+	}
 }
 
 impl<'a> From<EmberHover<'a>> for Ember<'a> {

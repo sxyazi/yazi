@@ -56,7 +56,7 @@ impl FromStr for Scheme {
 }
 
 impl Scheme {
-	pub fn as_str(&self) -> &str {
+	pub(crate) fn as_str(&self) -> &str {
 		match self {
 			Self::Regular => "regular",
 			Self::Search => "search",

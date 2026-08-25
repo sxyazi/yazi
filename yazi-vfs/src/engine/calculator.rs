@@ -31,7 +31,7 @@ impl SizeCalculator {
 		}
 	}
 
-	pub async fn total<U>(url: U) -> io::Result<u64>
+	pub(crate) async fn total<U>(url: U) -> io::Result<u64>
 	where
 		U: AsUrl,
 	{

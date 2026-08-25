@@ -2,10 +2,10 @@ use crate::{Result, bail, event::Modifiers};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MouseEvent {
-	pub kind:      MouseEventKind,
-	pub column:    u16,
-	pub row:       u16,
-	pub modifiers: Modifiers,
+	pub kind:             MouseEventKind,
+	pub(crate) column:    u16,
+	pub(crate) row:       u16,
+	pub(crate) modifiers: Modifiers,
 }
 
 // --- Kind

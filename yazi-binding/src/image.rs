@@ -6,11 +6,11 @@ use mlua::{MetaMethod, UserData, UserDataFields, UserDataMethods};
 // --- ImageInfo
 #[derive(Clone, Copy)]
 pub struct ImageInfo {
-	pub format:      image::ImageFormat,
-	pub width:       u32,
-	pub height:      u32,
-	pub color:       image::ColorType,
-	pub orientation: Option<image::metadata::Orientation>,
+	format:      image::ImageFormat,
+	width:       u32,
+	height:      u32,
+	color:       image::ColorType,
+	orientation: Option<image::metadata::Orientation>,
 }
 
 impl ImageInfo {

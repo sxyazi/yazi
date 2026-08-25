@@ -16,7 +16,7 @@ impl Selected {
 
 	pub fn files(&self) -> impl Iterator<Item = &File> { self.inner.keys().map(|f| &f.0) }
 
-	pub fn urls(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(|f| &f.url) }
+	pub(crate) fn urls(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(|f| &f.url) }
 
 	pub fn contains(&self, url: impl AsUrl) -> bool {
 		self.inner.contains_key(&UrlCov::new(url.as_url()))

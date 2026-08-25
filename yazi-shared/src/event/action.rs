@@ -9,9 +9,9 @@ use crate::{Layer, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Action {
-	pub cmd:    Cmd,
-	pub layer:  Layer,
-	pub source: Source,
+	pub(crate) cmd: Cmd,
+	pub layer:      Layer,
+	pub source:     Source,
 }
 
 impl Deref for Action {
@@ -65,9 +65,7 @@ impl Action {
 
 	fn null() -> Self { Self { cmd: Cmd::null(), layer: Layer::Null, source: Source::Unknown } }
 
-	pub fn len(&self) -> usize { self.args.len() }
-
-	pub fn is_empty(&self) -> bool { self.args.is_empty() }
+	fn len(&self) -> usize { self.args.len() }
 
 	// --- With
 	pub fn with(mut self, name: impl Into<DataKey>, value: impl Into<Data>) -> Self {
@@ -129,7 +127,7 @@ impl Action {
 
 	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.get(name).unwrap_or(false) }
 
-	pub fn any<T: 'static>(&self, name: impl Into<DataKey>) -> Option<&T> {
+	fn any<T: 'static>(&self, name: impl Into<DataKey>) -> Option<&T> {
 		self.args.get(&name.into())?.as_any()
 	}
 
@@ -151,7 +149,7 @@ impl Action {
 		self.get(1)
 	}
 
-	pub fn seq<'a, T>(&'a self) -> Vec<T>
+	pub(crate) fn seq<'a, T>(&'a self) -> Vec<T>
 	where
 		T: TryFrom<&'a Data>,
 	{
@@ -169,7 +167,7 @@ impl Action {
 	}
 
 	// --- Take
-	pub fn take<T>(&mut self, name: impl Into<DataKey>) -> Result<T>
+	pub(crate) fn take<T>(&mut self, name: impl Into<DataKey>) -> Result<T>
 	where
 		T: TryFrom<Data>,
 		T::Error: Into<anyhow::Error>,
@@ -181,7 +179,7 @@ impl Action {
 		}
 	}
 
-	pub fn take_first<T>(&mut self) -> Result<T>
+	pub(crate) fn take_first<T>(&mut self) -> Result<T>
 	where
 		T: TryFrom<Data>,
 		T::Error: Into<anyhow::Error>,
@@ -189,7 +187,7 @@ impl Action {
 		self.take(0)
 	}
 
-	pub fn take_second<T>(&mut self) -> Result<T>
+	pub(crate) fn take_second<T>(&mut self) -> Result<T>
 	where
 		T: TryFrom<Data>,
 		T::Error: Into<anyhow::Error>,
@@ -197,7 +195,7 @@ impl Action {
 		self.take(1)
 	}
 
-	pub fn take_seq<T>(&mut self) -> Vec<T>
+	pub(crate) fn take_seq<T>(&mut self) -> Vec<T>
 	where
 		T: TryFrom<Data>,
 	{
@@ -214,19 +212,19 @@ impl Action {
 		seq
 	}
 
-	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
+	pub(crate) fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
 		self.args.remove(&name.into())?.into_any()
 	}
 
-	pub fn take_any2<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<Result<T>> {
+	pub(crate) fn take_any2<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<Result<T>> {
 		self.args.remove(&name.into()).map(Data::into_any2)
 	}
 
-	pub fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
+	pub(crate) fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
 		(0..self.len()).filter_map(|i| self.args.remove(&DataKey::from(i))?.into_any())
 	}
 
-	pub fn take_replier(&mut self) -> Option<Replier> {
+	pub(crate) fn take_replier(&mut self) -> Option<Replier> {
 		let replier: Replier = self.take_any("replier")?;
 		replier.claim();
 		Some(replier)

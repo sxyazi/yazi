@@ -1,6 +1,6 @@
 use std::{num, str, string};
 
-pub type Result<T, E = ParseError> = std::result::Result<T, E>;
+pub(crate) type Result<T, E = ParseError> = std::result::Result<T, E>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ParseError {

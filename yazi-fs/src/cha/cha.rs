@@ -57,7 +57,7 @@ impl Cha {
 		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta) | ChaKind::reparse(&meta))
 	}
 
-	pub fn from_dummy<U>(_url: U, r#type: Option<ChaType>) -> Self
+	pub(crate) fn from_dummy<U>(_url: U, r#type: Option<ChaType>) -> Self
 	where
 		U: AsUrl,
 	{
@@ -127,7 +127,7 @@ impl Cha {
 	}
 
 	#[inline]
-	pub fn attach(mut self, kind: ChaKind) -> Self {
+	fn attach(mut self, kind: ChaKind) -> Self {
 		self.kind |= kind;
 		self
 	}
@@ -166,12 +166,12 @@ impl Cha {
 	pub const fn is_dummy(self) -> bool { self.kind.contains(ChaKind::DUMMY) }
 
 	#[inline]
-	pub const fn is_reparse(self) -> bool { self.kind.contains(ChaKind::REPARSE) }
+	const fn is_reparse(self) -> bool { self.kind.contains(ChaKind::REPARSE) }
 
 	#[inline]
 	pub fn is_indirect(self) -> bool { self.is_link() || self.is_reparse() }
 
-	pub fn atime_dur(self) -> anyhow::Result<Duration> {
+	pub(crate) fn atime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(atime) = self.atime {
 			Ok(atime.duration_since(UNIX_EPOCH)?)
 		} else {
@@ -179,7 +179,7 @@ impl Cha {
 		}
 	}
 
-	pub fn btime_dur(self) -> anyhow::Result<Duration> {
+	pub(crate) fn btime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(btime) = self.btime {
 			Ok(btime.duration_since(UNIX_EPOCH)?)
 		} else {
@@ -187,7 +187,7 @@ impl Cha {
 		}
 	}
 
-	pub fn ctime_dur(self) -> anyhow::Result<Duration> {
+	pub(crate) fn ctime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(ctime) = self.ctime {
 			Ok(ctime.duration_since(UNIX_EPOCH)?)
 		} else {

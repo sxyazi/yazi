@@ -1,4 +1,4 @@
-use std::{io::{BufWriter, Error, ErrorKind, Read}, time::{Duration, Instant}};
+use std::io::BufWriter;
 
 use parking_lot::{Mutex, MutexGuard};
 
@@ -27,35 +27,4 @@ impl Tty {
 	pub fn lockin(&self) -> MutexGuard<'_, Handle> { self.stdin.lock() }
 
 	pub fn lockout(&self) -> MutexGuard<'_, BufWriter<Handle>> { self.stdout.lock() }
-
-	pub fn read_until<P>(&self, timeout: Duration, predicate: P) -> (Vec<u8>, std::io::Result<()>)
-	where
-		P: Fn(u8, &[u8]) -> bool,
-	{
-		let mut buf: Vec<u8> = Vec::with_capacity(200);
-		let now = Instant::now();
-
-		let mut read = || {
-			let mut stdin = self.stdin.lock();
-			loop {
-				if now.elapsed() > timeout {
-					return Err(Error::from(ErrorKind::TimedOut));
-				} else if !stdin.poll(Duration::from_millis(30))? {
-					continue;
-				}
-
-				let mut b = [0u8];
-				stdin.read_exact(&mut b)?;
-				buf.push(b[0]);
-
-				if predicate(b[0], &buf) {
-					break;
-				}
-			}
-			Ok(())
-		};
-
-		let result = read();
-		(buf, result)
-	}
 }

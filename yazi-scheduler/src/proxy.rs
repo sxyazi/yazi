@@ -28,10 +28,10 @@ impl AppProxy {
 }
 
 // --- Tasks
-pub struct TasksProxy;
+pub(crate) struct TasksProxy;
 
 impl TasksProxy {
-	pub fn update_succeed<I>(id: Id, urls: I, track: bool)
+	pub(crate) fn update_succeed<I>(id: Id, urls: I, track: bool)
 	where
 		I: IntoIterator,
 		I::Item: Into<UrlBuf>,

@@ -6,9 +6,11 @@ pub struct Runner {
 }
 
 impl Runner {
-	pub fn spawn(&self, name: &str) -> mlua::Result<Lua> { self.spawn_with(Scope::default(), name) }
+	pub(crate) fn spawn(&self, name: &str) -> mlua::Result<Lua> {
+		self.spawn_with(Scope::default(), name)
+	}
 
-	pub fn spawn_with<S>(&self, scope: S, name: &str) -> mlua::Result<Lua>
+	pub(crate) fn spawn_with<S>(&self, scope: S, name: &str) -> mlua::Result<Lua>
 	where
 		S: Into<Scope>,
 	{

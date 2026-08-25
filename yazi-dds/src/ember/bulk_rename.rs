@@ -7,11 +7,11 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberBulkRename<'a> {
-	pub changes: HashMap<UrlCow<'a>, UrlCow<'a>>,
+	changes: HashMap<UrlCow<'a>, UrlCow<'a>>,
 }
 
 impl<'a> EmberBulkRename<'a> {
-	pub fn borrowed<I>(changes: I) -> Ember<'a>
+	pub(crate) fn borrowed<I>(changes: I) -> Ember<'a>
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)>,
 	{
@@ -20,7 +20,7 @@ impl<'a> EmberBulkRename<'a> {
 }
 
 impl EmberBulkRename<'static> {
-	pub fn owned<'a, I>(changes: I) -> Ember<'static>
+	pub(crate) fn owned<'a, I>(changes: I) -> Ember<'static>
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)>,
 	{

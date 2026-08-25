@@ -27,7 +27,7 @@ impl OpenRules {
 		self.matcher(Some(file), Some(mime)).next()
 	}
 
-	pub fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> OpenRuleMatcher<'a>
+	fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> OpenRuleMatcher<'a>
 	where
 		F: Into<Cow<'a, File>>,
 		M: Into<Cow<'a, str>>,
@@ -40,7 +40,7 @@ impl OpenRules {
 		}
 	}
 
-	pub fn insert(&self, index: isize, rule: OpenRuleArc) -> Result<(), IndexAtError> {
+	fn insert(&self, index: isize, rule: OpenRuleArc) -> Result<(), IndexAtError> {
 		self.0.try_rcu(|rules| {
 			let i = rules.index_at(index)?;
 			Ok(if i == rules.len() {
@@ -58,7 +58,7 @@ impl OpenRules {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: OpenRuleMatcher) {
+	fn remove(&self, matcher: OpenRuleMatcher) {
 		self.0.rcu(|rules| {
 			let mut next = Vec::clone(rules);
 			next.retain(|rule| !matcher.matches(rule));
@@ -66,7 +66,7 @@ impl OpenRules {
 		});
 	}
 
-	pub fn update<E>(
+	fn update<E>(
 		&self,
 		matcher: OpenRuleMatcher,
 		f: impl Fn(OpenRule) -> Result<OpenRule, E>,

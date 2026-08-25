@@ -20,13 +20,13 @@ pub struct EmberYank<'a> {
 impl_data_any!(EmberYank<'static>, from_into_lua = inherit);
 
 impl<'a> EmberYank<'a> {
-	pub fn borrowed(cut: bool, files: &'a IndexSet<FileCov>) -> Ember<'a> {
+	pub(crate) fn borrowed(cut: bool, files: &'a IndexSet<FileCov>) -> Ember<'a> {
 		Self { cut, files: Cow::Borrowed(files) }.into()
 	}
 }
 
 impl EmberYank<'static> {
-	pub fn owned(cut: bool, _: &IndexSet<FileCov>) -> Ember<'static> {
+	pub(crate) fn owned(cut: bool, _: &IndexSet<FileCov>) -> Ember<'static> {
 		Self { cut, files: Default::default() }.into()
 	}
 }
@@ -64,7 +64,7 @@ pub struct EmberYankIter {
 }
 
 impl EmberYankIter {
-	pub fn collect(self, lua: &Lua) -> mlua::Result<EmberYank<'static>> {
+	fn collect(self, lua: &Lua) -> mlua::Result<EmberYank<'static>> {
 		Ok(EmberYank {
 			cut:   self.cut,
 			files: Cow::Owned(self.inner.take::<Iter>()?.into_iter(lua).collect::<mlua::Result<_>>()?),

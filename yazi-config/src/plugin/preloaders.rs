@@ -37,7 +37,7 @@ impl Preloaders {
 		self.matcher(Some(file), Some(mime))
 	}
 
-	pub fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> PreloaderMatcher<'a>
+	fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> PreloaderMatcher<'a>
 	where
 		F: Into<Cow<'a, File>>,
 		M: Into<Cow<'a, str>>,
@@ -50,7 +50,7 @@ impl Preloaders {
 		}
 	}
 
-	pub fn insert(&self, index: isize, preloader: PreloaderArc) -> Result<()> {
+	fn insert(&self, index: isize, preloader: PreloaderArc) -> Result<()> {
 		self.0.try_rcu(|preloaders| {
 			let i = preloaders.index_at(index)?;
 			let next = if i == preloaders.len() {
@@ -74,7 +74,7 @@ impl Preloaders {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: PreloaderMatcher) {
+	fn remove(&self, matcher: PreloaderMatcher) {
 		self.0.rcu(|preloaders| {
 			let mut next = Vec::clone(preloaders);
 			next.retain(|preloader| !matcher.matches(preloader));

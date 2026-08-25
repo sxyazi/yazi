@@ -6,8 +6,8 @@ use yazi_shared::{data::Data, event::ActionCow};
 
 #[derive(Debug, Default)]
 pub struct MoveOpt {
-	pub step:         MoveOptStep,
-	pub in_operating: bool,
+	pub(crate) step:         MoveOptStep,
+	pub(crate) in_operating: bool,
 }
 
 impl From<ActionCow> for MoveOpt {
@@ -38,7 +38,7 @@ pub enum MoveOptStep {
 }
 
 impl MoveOptStep {
-	pub fn add(self, s: &str, cursor: usize) -> usize {
+	pub(crate) fn add(self, s: &str, cursor: usize) -> usize {
 		match self {
 			Self::Offset(n) if n <= 0 => cursor.saturating_add_signed(n),
 			Self::Offset(n) => s.chars().count().min(cursor + n as usize),

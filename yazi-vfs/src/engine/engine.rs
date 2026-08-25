@@ -133,7 +133,7 @@ where
 	}
 }
 
-pub async fn identical<U, V>(a: U, b: V) -> io::Result<bool>
+async fn identical<U, V>(a: U, b: V) -> io::Result<bool>
 where
 	U: AsUrl,
 	V: AsUrl,
@@ -160,7 +160,7 @@ where
 	identical(a, b).await.unwrap_or(false)
 }
 
-pub async fn open<U>(url: U) -> io::Result<RwFile>
+pub(crate) async fn open<U>(url: U) -> io::Result<RwFile>
 where
 	U: AsUrl,
 {
@@ -181,7 +181,7 @@ where
 	Engines::new(url.as_url()).await?.read_link().await
 }
 
-pub async fn revalidate(file: &File) -> io::Result<Option<File>> {
+pub(crate) async fn revalidate(file: &File) -> io::Result<Option<File>> {
 	Engines::new(file.as_url()).await?.revalidate(file.clone()).await
 }
 
@@ -240,22 +240,6 @@ where
 	F: AsyncFnOnce() -> io::Result<bool>,
 {
 	Engines::new(link.as_url()).await?.symlink(original, is_dir).await
-}
-
-pub async fn symlink_dir<U, S>(link: U, original: S) -> io::Result<()>
-where
-	U: AsUrl,
-	S: AsStrand,
-{
-	Engines::new(link.as_url()).await?.symlink_dir(original).await
-}
-
-pub async fn symlink_file<U, S>(link: U, original: S) -> io::Result<()>
-where
-	U: AsUrl,
-	S: AsStrand,
-{
-	Engines::new(link.as_url()).await?.symlink_file(original).await
 }
 
 pub async fn symlink_metadata<U>(url: U) -> io::Result<Cha>

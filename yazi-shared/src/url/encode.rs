@@ -5,10 +5,10 @@ use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 use crate::{auth::{EncodeAuth, EncodePrefix}, spec::EncodeSpec, url::Url};
 
 #[derive(Clone, Copy)]
-pub struct Encode<'a>(pub Url<'a>);
+pub struct Encode<'a>(pub(crate) Url<'a>);
 
 impl Encode<'_> {
-	pub fn loc(b: &[u8]) -> PercentEncode<'_> {
+	fn loc(b: &[u8]) -> PercentEncode<'_> {
 		const SET: &AsciiSet = &CONTROLS.add(b'%');
 		percent_encode(b, SET)
 	}

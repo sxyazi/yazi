@@ -44,7 +44,7 @@ impl LocBufAble for typed_path::UnixPathBuf {
 }
 
 // --- StrandAble
-pub trait StrandAble<'a>: Copy {}
+pub(crate) trait StrandAble<'a>: Copy {}
 
 impl<'a> StrandAble<'a> for &'a OsStr {}
 

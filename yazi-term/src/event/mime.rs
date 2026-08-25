@@ -4,7 +4,7 @@ use std::str::SplitWhitespace;
 pub struct MimeList(String);
 
 impl MimeList {
-	pub fn new(b: Vec<u8>) -> Option<Self> { Some(Self(String::from_utf8(b).ok()?)) }
+	pub(crate) fn new(b: Vec<u8>) -> Option<Self> { Some(Self(String::from_utf8(b).ok()?)) }
 
-	pub fn iter(&self) -> SplitWhitespace<'_> { self.0.split_whitespace() }
+	pub(crate) fn iter(&self) -> SplitWhitespace<'_> { self.0.split_whitespace() }
 }

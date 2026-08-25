@@ -1,11 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
 use yazi_dds::Pubsub;
-use yazi_fs::file::File;
 use yazi_macro::log_if_err;
 use yazi_shared::id::Id;
 
-use crate::tab::{Folder, Tab};
+use crate::tab::Tab;
 
 pub struct Tabs {
 	pub cursor: usize,
@@ -51,17 +50,8 @@ impl Tabs {
 
 impl Tabs {
 	#[inline]
-	pub fn active(&self) -> &Tab { &self[self.cursor] }
+	pub(crate) fn active(&self) -> &Tab { &self[self.cursor] }
 
 	#[inline]
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
-
-	#[inline]
-	pub fn parent(&self) -> Option<&Folder> { self.active().parent.as_ref() }
-
-	#[inline]
-	pub fn current(&self) -> &Folder { &self.active().current }
-
-	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.current().hovered() }
 }

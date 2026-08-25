@@ -5,7 +5,7 @@ pub struct Status {
 }
 
 impl Status {
-	pub fn new(inner: std::process::ExitStatus) -> Self { Self { inner } }
+	pub(crate) fn new(inner: std::process::ExitStatus) -> Self { Self { inner } }
 }
 
 impl UserData for Status {

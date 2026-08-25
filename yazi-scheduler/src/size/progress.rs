@@ -4,7 +4,7 @@ use crate::{Progress, TaskSummary};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct SizeProg {
-	pub done: bool,
+	pub(crate) done: bool,
 }
 
 impl From<SizeProg> for TaskSummary {

@@ -1,3 +1,3 @@
 #![allow(private_bounds)]
 
-yazi_macro::mod_flat!(able buf cow loc);
+yazi_macro::mod_flat!(able buf cow like loc);

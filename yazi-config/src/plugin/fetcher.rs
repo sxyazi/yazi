@@ -12,13 +12,13 @@ use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{Fet
 #[derive(Debug, Deserialize)]
 pub struct Fetcher {
 	#[serde(skip, default = "fetcher_id")]
-	pub id:       Id,
+	pub(crate) id:    Id,
 	#[serde(flatten)]
-	pub selector: Selector,
-	pub run:      Cmd,
+	selector:         Selector,
+	run:              Cmd,
 	#[serde(default)]
-	pub prio:     Priority,
-	pub group:    String,
+	pub prio:         Priority,
+	pub(crate) group: String,
 }
 
 impl Deref for Fetcher {
@@ -38,13 +38,13 @@ impl Mixable for Fetcher {}
 // --- Matcher
 #[derive(Default)]
 pub struct FetcherMatcher<'a> {
-	pub fetchers: Arc<Vec<FetcherArc>>,
-	pub id:       Id,
-	pub file:     Option<Cow<'a, File>>,
-	pub mime:     Option<Cow<'a, str>>,
-	pub all:      bool,
-	pub offset:   usize,
-	pub seen:     HashSet<String>,
+	fetchers: Arc<Vec<FetcherArc>>,
+	id:       Id,
+	file:     Option<Cow<'a, File>>,
+	mime:     Option<Cow<'a, str>>,
+	all:      bool,
+	offset:   usize,
+	seen:     HashSet<String>,
 }
 
 impl From<&Fetchers> for FetcherMatcher<'_> {
@@ -67,7 +67,7 @@ impl<'a> FetcherMatcher<'a> {
 		}
 	}
 
-	pub fn matches(&self, fetcher: &Fetcher) -> bool {
+	pub(crate) fn matches(&self, fetcher: &Fetcher) -> bool {
 		if self.all {
 			true
 		} else if self.id != Id::ZERO {

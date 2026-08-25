@@ -27,7 +27,7 @@ impl Previewers {
 		self.matcher(Some(file), Some(mime)).next()
 	}
 
-	pub fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> PreviewerMatcher<'a>
+	fn matcher<'a, F, M>(&self, file: Option<F>, mime: Option<M>) -> PreviewerMatcher<'a>
 	where
 		F: Into<Cow<'a, File>>,
 		M: Into<Cow<'a, str>>,
@@ -40,7 +40,7 @@ impl Previewers {
 		}
 	}
 
-	pub fn insert(&self, index: isize, previewer: PreviewerArc) -> Result<(), IndexAtError> {
+	fn insert(&self, index: isize, previewer: PreviewerArc) -> Result<(), IndexAtError> {
 		self.0.try_rcu(|previewers| {
 			let i = previewers.index_at(index)?;
 			if i == previewers.len() {
@@ -58,7 +58,7 @@ impl Previewers {
 		Ok(())
 	}
 
-	pub fn remove(&self, matcher: PreviewerMatcher) {
+	fn remove(&self, matcher: PreviewerMatcher) {
 		self.0.rcu(|previewers| {
 			let mut next = Vec::clone(previewers);
 			next.retain(|previewer| !matcher.matches(previewer));

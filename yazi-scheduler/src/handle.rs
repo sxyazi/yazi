@@ -23,7 +23,7 @@ impl TaskHandle {
 		Self { id, inner: Arc::new((AtomicU8::new(TaskStatus::Pending as u8), Notify::new())) }
 	}
 
-	pub fn start(&self) {
+	pub(crate) fn start(&self) {
 		let result = self.inner.0.compare_exchange(
 			TaskStatus::Pending as u8,
 			TaskStatus::Started as u8,
@@ -36,23 +36,25 @@ impl TaskHandle {
 		}
 	}
 
-	pub fn succeed(&self) { self.transition(TaskStatus::Succeeded, TaskStatus::is_finishable); }
+	pub(crate) fn succeed(&self) {
+		self.transition(TaskStatus::Succeeded, TaskStatus::is_finishable);
+	}
 
-	pub fn fail(&self) { self.transition(TaskStatus::Failed, TaskStatus::is_finishable); }
+	pub(crate) fn fail(&self) { self.transition(TaskStatus::Failed, TaskStatus::is_finishable); }
 
-	pub fn cancel(&self) { self.transition(TaskStatus::Canceled, TaskStatus::is_cancelable); }
+	pub(crate) fn cancel(&self) { self.transition(TaskStatus::Canceled, TaskStatus::is_cancelable); }
 
-	pub fn status(&self) -> TaskStatus {
+	pub(crate) fn status(&self) -> TaskStatus {
 		TaskStatus::from_repr(self.inner.0.load(Ordering::Relaxed)).unwrap_or_default()
 	}
 
-	pub fn is_canceled(&self) -> bool { self.status().is_canceled() }
+	pub(crate) fn is_canceled(&self) -> bool { self.status().is_canceled() }
 
 	pub async fn started(&self) -> bool {
 		self.wait(|status| !status.is_pending()).await.has_started()
 	}
 
-	pub async fn finished(&self) -> TaskStatus { self.wait(TaskStatus::is_finished).await }
+	pub(crate) async fn finished(&self) -> TaskStatus { self.wait(TaskStatus::is_finished).await }
 
 	pub async fn future(&self) -> bool { self.finished().await.is_succeeded() }
 

@@ -34,7 +34,7 @@ impl Dependency {
 			self.hash = self.hash().await?;
 		}
 
-		Local::regular(&to).remove_dir_clean().await;
+		Local::regular(&to).remove_dir_clean().await.ok();
 		res2?;
 		res1?;
 

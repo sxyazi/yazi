@@ -7,11 +7,11 @@ use yazi_shared::path::PathBufDyn;
 use super::{headers::HttpHeaders, method::HttpMethod};
 
 pub struct HttpRequest {
-	pub url:     String,
-	pub method:  Method,
-	pub headers: HeaderMap,
-	pub body:    Option<Vec<u8>>,
-	pub socket:  PathBuf,
+	pub(crate) url:     String,
+	pub(crate) method:  Method,
+	pub(crate) headers: HeaderMap,
+	pub(crate) body:    Option<Vec<u8>>,
+	pub(crate) socket:  PathBuf,
 }
 
 impl FromLua for HttpRequest {

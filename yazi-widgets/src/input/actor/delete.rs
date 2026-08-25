@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{Input, op::InputOp, parser::DeleteOpt};
 
 impl Input {
-	pub fn delete(&mut self, opt: DeleteOpt) -> Result<Data> {
+	pub(crate) fn delete(&mut self, opt: DeleteOpt) -> Result<Data> {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, self.snap().cursor);

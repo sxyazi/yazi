@@ -28,7 +28,7 @@ pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
 }
 
 #[cfg(unix)]
-pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
+pub(crate) fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
 	use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
 	match escape_os_bytes(s.as_bytes()) {

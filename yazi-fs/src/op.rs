@@ -1,4 +1,4 @@
-use std::{iter, path::Path};
+use std::path::Path;
 
 use hashbrown::{HashMap, HashSet};
 use mlua::{UserData, UserDataFields};
@@ -39,22 +39,6 @@ impl FilesOp {
 			Self::Deleting(u, _) => u,
 			Self::Updating(u, _) => u,
 			Self::Upserting(u, _) => u,
-		}
-	}
-
-	pub fn files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
-		match self {
-			Self::Full(_, files) | Self::Part(_, files, _) | Self::Creating(_, files) => {
-				Box::new(files.iter().filter(|f| !f.key().is_empty()))
-			}
-			Self::Done(..) => Box::new(iter::empty()),
-			Self::Size(..) => Box::new(iter::empty()),
-			Self::IOErr(..) => Box::new(iter::empty()),
-
-			Self::Deleting(..) => Box::new(iter::empty()),
-			Self::Updating(_, map) | Self::Upserting(_, map) => {
-				Box::new(map.values().filter(|f| !f.key().is_empty()))
-			}
 		}
 	}
 

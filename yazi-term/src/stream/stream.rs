@@ -26,7 +26,7 @@ impl From<&'static Terminal<'_>> for EventStream {
 }
 
 impl EventStream {
-	pub fn new<F>(source: Arc<EventSource<'static>>, filter: F) -> Self
+	fn new<F>(source: Arc<EventSource<'static>>, filter: F) -> Self
 	where
 		F: Fn(&Event) -> bool + Send + 'static,
 	{

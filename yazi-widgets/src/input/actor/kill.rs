@@ -7,7 +7,7 @@ use yazi_shared::data::Data;
 use crate::input::{CharKind, Input, parser::KillOpt};
 
 impl Input {
-	pub fn kill(&mut self, opt: KillOpt) -> Result<Data> {
+	pub(crate) fn kill(&mut self, opt: KillOpt) -> Result<Data> {
 		let snap = self.snap_mut();
 		match opt.kind.as_ref() {
 			"all" => self.kill_range(..),

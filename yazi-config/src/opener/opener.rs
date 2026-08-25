@@ -48,7 +48,7 @@ impl Opener {
 			.find_map(|rules| rules.load().iter().find(|r| r.block).cloned())
 	}
 
-	pub fn insert(&self, name: &str, rules: &OpenerRulesArc) {
+	fn insert(&self, name: &str, rules: &OpenerRulesArc) {
 		self.0.rcu(|inner| {
 			let mut next = HashMap::clone(inner);
 			next.insert(name.to_owned(), rules.clone());
@@ -56,7 +56,7 @@ impl Opener {
 		});
 	}
 
-	pub fn remove(&self, name: &str) {
+	fn remove(&self, name: &str) {
 		self.0.rcu(|inner| {
 			let mut next = HashMap::clone(inner);
 			next.remove(name);
@@ -64,7 +64,7 @@ impl Opener {
 		});
 	}
 
-	pub(crate) fn unwrap_unchecked(self) -> HashMap<String, OpenerRulesArc> {
+	fn unwrap_unchecked(self) -> HashMap<String, OpenerRulesArc> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique opener arc")
 	}
 }

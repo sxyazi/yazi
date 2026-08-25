@@ -15,7 +15,4 @@ pub enum Source {
 impl Source {
 	#[inline]
 	pub fn is_key(self) -> bool { self == Self::Key }
-
-	#[inline]
-	pub fn is_ind(self) -> bool { self == Self::Ind }
 }

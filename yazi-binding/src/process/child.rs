@@ -18,7 +18,7 @@ pub struct Child {
 }
 
 impl Child {
-	pub fn new(
+	pub(crate) fn new(
 		mut inner: tokio::process::Child,
 		#[cfg(windows)] job_handle: Option<std::os::windows::io::OwnedHandle>,
 	) -> Self {
@@ -35,7 +35,7 @@ impl Child {
 		}
 	}
 
-	pub(super) async fn wait(&mut self) -> io::Result<ExitStatus> {
+	async fn wait(&mut self) -> io::Result<ExitStatus> {
 		drop(self.stdin.take());
 		self.inner.wait().await
 	}

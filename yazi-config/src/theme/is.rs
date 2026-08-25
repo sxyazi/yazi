@@ -20,9 +20,9 @@ pub enum Is {
 
 impl Is {
 	#[inline]
-	pub fn enabled(self) -> Option<Self> { (!matches!(self, Self::None)).then_some(self) }
+	pub(crate) fn enabled(self) -> Option<Self> { (!matches!(self, Self::None)).then_some(self) }
 
-	pub fn check(self, cha: &Cha) -> bool {
+	pub(crate) fn check(self, cha: &Cha) -> bool {
 		match self {
 			Self::None => true,
 			Self::Hidden => cha.is_hidden(),

@@ -16,10 +16,6 @@ impl<'a> AnyAsciiChar<'a> {
 	pub const SEP: Self = Self(b"/\\");
 	#[cfg(not(windows))]
 	pub const SEP: Self = Self(b"/");
-
-	pub fn new(chars: &'a [u8]) -> Option<Self> {
-		if chars.iter().all(|&b| b <= 0x7f) { Some(Self(chars)) } else { None }
-	}
 }
 
 impl Utf8BytePredictor for AnyAsciiChar<'_> {

@@ -65,7 +65,7 @@ impl Parser {
 		})
 	}
 
-	pub(super) fn parse_csi_u_key(&self) -> Result<Event> {
+	fn parse_csi_u_key(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 		debug_assert!(seq.ends_with(b"u"));
@@ -120,7 +120,7 @@ impl Parser {
 	/// Parses `CSI [1;] modifier[:kind] final` — sequences that carry a
 	/// semicolon, e.g. `\x1B[;2A` (Shift+Up, leading 1 omitted) or `\x1B[1;2A`
 	/// (Shift+Up).
-	pub(super) fn parse_csi_modifier_key(&self) -> Result<Event> {
+	fn parse_csi_modifier_key(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 
@@ -135,7 +135,7 @@ impl Parser {
 
 	/// Parses legacy `CSI modifier final` - no semicolon, modifier digit
 	/// immediately before the final byte, e.g. `\x1B[2A` = Shift+Up.
-	pub(super) fn parse_csi_modifier_legacy_key(&self) -> Result<Event> {
+	fn parse_csi_modifier_legacy_key(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 
@@ -151,7 +151,7 @@ impl Parser {
 		}))
 	}
 
-	pub(super) fn parse_csi_special_key(&self) -> Result<Event> {
+	fn parse_csi_special_key(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 		debug_assert!(seq.ends_with(b"~"));
@@ -185,7 +185,7 @@ impl Parser {
 	}
 
 	// Parse rxvt mouse: CSI Cb ; Cx ; Cy ; M
-	pub(super) fn parse_csi_rxvt_mouse(&self) -> Result<Event> {
+	fn parse_csi_rxvt_mouse(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 		debug_assert!(seq.ends_with(b"M"));
@@ -225,7 +225,7 @@ impl Parser {
 	}
 
 	// Parse SGR mouse: CSI < Cb ; Cx ; Cy (;) (M or m)
-	pub(super) fn parse_csi_sgr_mouse(&self) -> Result<Event> {
+	fn parse_csi_sgr_mouse(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[<")); // CSI <
 

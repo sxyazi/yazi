@@ -20,15 +20,15 @@ pub struct Args {
 
 	/// Use the specified client ID, must be a globally unique number
 	#[arg(long)]
-	pub client_id:     Option<Id>,
+	pub(crate) client_id:     Option<Id>,
 	/// Report the specified local events to stdout
 	#[arg(long)]
-	pub local_events:  Option<String>,
+	pub(crate) local_events:  Option<String>,
 	/// Report the specified remote events to stdout
 	#[arg(long)]
-	pub remote_events: Option<String>,
+	pub(crate) remote_events: Option<String>,
 
 	/// Print version
 	#[arg(short = 'V', long)]
-	pub version: bool,
+	pub(crate) version: bool,
 }

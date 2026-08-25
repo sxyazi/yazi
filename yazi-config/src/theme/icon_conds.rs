@@ -22,7 +22,7 @@ impl From<Vec<IconCond>> for IconConds {
 }
 
 impl IconConds {
-	pub fn matches(&self, file: &File, hovered: bool) -> Option<Icon> {
+	pub(crate) fn matches(&self, file: &File, hovered: bool) -> Option<Icon> {
 		self.0.load().iter().find(|&c| c.matches(file, hovered)).map(|c| c.icon.clone())
 	}
 

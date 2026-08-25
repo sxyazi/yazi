@@ -8,11 +8,11 @@ use yazi_vfs::engine;
 #[derive(Debug, Deserialize)]
 pub struct TabCreateForm {
 	#[serde(alias = "0")]
-	pub target:  Option<UrlBuf>,
+	pub target: Option<UrlBuf>,
 	#[serde(default)]
-	pub current: bool,
+	current:    bool,
 	#[serde(default)]
-	pub raw:     bool,
+	raw:        bool,
 }
 
 impl TryFrom<ActionCow> for TabCreateForm {

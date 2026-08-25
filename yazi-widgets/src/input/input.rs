@@ -12,13 +12,13 @@ use crate::{CLIPBOARD, input::{InputCallback, InputEvent, InputOpt, InputStyles}
 
 #[derive(Debug, Default)]
 pub struct Input {
-	pub size:       Size,
-	pub snaps:      InputSnaps,
-	pub history:    InputHistory,
-	pub styles:     InputStyles,
-	pub obscure:    bool,
-	pub realtime:   bool,
-	pub completion: bool,
+	pub(crate) size:    Size,
+	pub(crate) snaps:   InputSnaps,
+	pub history:        InputHistory,
+	pub(crate) styles:  InputStyles,
+	pub(crate) obscure: bool,
+	realtime:           bool,
+	completion:         bool,
 
 	pub cb:     Option<Box<dyn InputCallback>>,
 	pub ticket: Ids,
@@ -123,7 +123,7 @@ impl Input {
 impl Input {
 	pub fn value(&self) -> &str { &self.snap().value }
 
-	pub fn display(&self) -> Cow<'_, str> {
+	pub(crate) fn display(&self) -> Cow<'_, str> {
 		if self.obscure {
 			"•".repeat(self.snap().window(self.size.width as usize).len()).into()
 		} else {
@@ -150,7 +150,7 @@ impl Input {
 		}
 	}
 
-	pub fn selected(&self) -> Option<Range<u16>> {
+	pub(crate) fn selected(&self) -> Option<Range<u16>> {
 		let snap = self.snap();
 		let start = snap.op.start()?;
 
@@ -177,5 +177,5 @@ impl Input {
 
 	pub fn snap(&self) -> &InputSnap { self.snaps.current() }
 
-	pub fn snap_mut(&mut self) -> &mut InputSnap { self.snaps.current_mut() }
+	pub(crate) fn snap_mut(&mut self) -> &mut InputSnap { self.snaps.current_mut() }
 }

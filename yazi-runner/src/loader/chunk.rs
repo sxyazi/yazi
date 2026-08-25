@@ -4,15 +4,15 @@ use mlua::chunk::{AsChunk, ChunkMode};
 use yazi_shared::natsort;
 
 pub struct Chunk {
-	pub mode:       ChunkMode,
-	pub bytes:      Cow<'static, [u8]>,
-	pub since:      String,
-	pub sync_peek:  bool,
-	pub sync_entry: bool,
+	pub(crate) mode:  ChunkMode,
+	pub(crate) bytes: Cow<'static, [u8]>,
+	pub(crate) since: String,
+	pub sync_peek:    bool,
+	pub sync_entry:   bool,
 }
 
 impl Chunk {
-	pub fn compatible(&self) -> bool {
+	pub(crate) fn compatible(&self) -> bool {
 		let s = yazi_version::version();
 		natsort(s.as_bytes(), self.since.as_bytes(), false) != std::cmp::Ordering::Less
 	}

@@ -96,7 +96,7 @@ impl Sendable {
 		})
 	}
 
-	pub fn data_to_value_ref(lua: &Lua, data: &Data) -> mlua::Result<Value> {
+	fn data_to_value_ref(lua: &Lua, data: &Data) -> mlua::Result<Value> {
 		Ok(match data {
 			Data::Nil => Value::Nil,
 			Data::Boolean(b) => Value::Boolean(*b),

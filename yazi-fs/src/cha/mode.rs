@@ -90,7 +90,7 @@ impl ChaMode {
 	// Convert a file mode to a string representation
 	#[cfg(unix)]
 	#[allow(clippy::collapsible_else_if)]
-	pub fn permissions(self, dummy: bool) -> [u8; 10] {
+	pub(crate) fn permissions(self, dummy: bool) -> [u8; 10] {
 		let mut s = *b"-?????????";
 
 		// File type

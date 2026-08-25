@@ -85,7 +85,7 @@ impl Session {
 		me
 	}
 
-	pub async fn send<'a, I, O>(self: &Arc<Self>, input: I) -> Result<O, Error>
+	pub(crate) async fn send<'a, I, O>(self: &Arc<Self>, input: I) -> Result<O, Error>
 	where
 		I: Into<Packet<'a>> + Serialize,
 		O: TryFrom<Packet<'static>, Error = Error> + 'static,
@@ -93,7 +93,7 @@ impl Session {
 		self.send_with_timeout(input, Duration::from_secs(45)).await
 	}
 
-	pub fn send_sync<'a, I>(self: &Arc<Self>, input: I) -> Result<Receiver, Error>
+	pub(crate) fn send_sync<'a, I>(self: &Arc<Self>, input: I) -> Result<Receiver, Error>
 	where
 		I: Into<Packet<'a>> + Serialize,
 	{
@@ -110,7 +110,7 @@ impl Session {
 		Ok(Receiver::new(self, id, rx))
 	}
 
-	pub async fn send_with_timeout<'a, I, O>(
+	pub(crate) async fn send_with_timeout<'a, I, O>(
 		self: &Arc<Self>,
 		input: I,
 		timeout: Duration,

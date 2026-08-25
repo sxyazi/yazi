@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{Input, InputMode, op::InputOp};
 
 impl Input {
-	pub fn visual(&mut self, _: ()) -> Result<Data> {
+	pub(crate) fn visual(&mut self, _: ()) -> Result<Data> {
 		if self.snap().mode != InputMode::Normal {
 			act!(escape, self)?;
 		}

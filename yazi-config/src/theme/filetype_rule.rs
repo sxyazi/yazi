@@ -7,11 +7,11 @@ use crate::{Pattern, Selectable};
 #[derive(Deserialize)]
 pub struct FiletypeRule {
 	#[serde(default)]
-	is:        super::Is,
+	is:               super::Is,
 	#[serde(flatten)]
-	selector:  crate::Selector,
+	selector:         crate::Selector,
 	#[serde(flatten)]
-	pub style: StyleFlat,
+	pub(crate) style: StyleFlat,
 }
 
 impl Selectable for FiletypeRule {

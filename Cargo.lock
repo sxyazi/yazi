@@ -5105,7 +5105,6 @@ dependencies = [
  "scopeguard",
  "tokio",
  "tokio-stream",
- "yazi-adapter",
  "yazi-binding",
  "yazi-boot",
  "yazi-config",
@@ -5199,7 +5198,6 @@ dependencies = [
  "yazi-macro",
  "yazi-shared",
  "yazi-shim",
- "yazi-version",
  "yazi-vfs",
 ]
 

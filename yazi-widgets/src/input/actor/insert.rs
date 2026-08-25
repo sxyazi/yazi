@@ -5,7 +5,7 @@ use yazi_shared::data::Data;
 use crate::input::{Input, InputMode, op::InputOp, parser::InsertOpt};
 
 impl Input {
-	pub fn insert(&mut self, opt: InsertOpt) -> Result<Data> {
+	pub(crate) fn insert(&mut self, opt: InsertOpt) -> Result<Data> {
 		let snap = self.snap_mut();
 		if snap.mode == InputMode::Normal {
 			snap.op = InputOp::None;

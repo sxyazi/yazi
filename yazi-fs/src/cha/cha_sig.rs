@@ -3,7 +3,7 @@ use std::{hash::{Hash, Hasher}, ops::Deref};
 use crate::cha::Cha;
 
 #[derive(Clone, Copy, Debug)]
-pub struct ChaSig(pub Cha);
+pub struct ChaSig(pub(crate) Cha);
 
 impl Deref for ChaSig {
 	type Target = Cha;

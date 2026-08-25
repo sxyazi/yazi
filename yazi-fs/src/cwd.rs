@@ -30,7 +30,7 @@ impl Default for Cwd {
 }
 
 impl Cwd {
-	pub fn path(&self) -> PathBuf { self.0.load().as_url().working_path().into_owned() }
+	pub(crate) fn path(&self) -> PathBuf { self.0.load().as_url().working_path().into_owned() }
 
 	pub fn set(&self, url: &UrlBuf, callback: fn()) -> bool {
 		if !url.is_absolute() {

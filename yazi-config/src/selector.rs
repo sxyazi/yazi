@@ -6,8 +6,8 @@ use crate::{Mixable, Pattern, Selectable};
 
 #[derive(Clone, Debug)]
 pub struct Selector {
-	pub url:  Option<Pattern>,
-	pub mime: Option<Pattern>,
+	url:  Option<Pattern>,
+	mime: Option<Pattern>,
 }
 
 impl<'de> Deserialize<'de> for Selector {
@@ -34,7 +34,7 @@ impl DeserializeOverWith for Selector {
 }
 
 impl Selector {
-	pub fn new(url: Option<Pattern>, mime: Option<Pattern>) -> Result<Self> {
+	fn new(url: Option<Pattern>, mime: Option<Pattern>) -> Result<Self> {
 		ensure!(url.is_some() || mime.is_some(), "at least one of `url` or `mime` must be specified");
 		Ok(Self { url, mime })
 	}

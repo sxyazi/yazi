@@ -16,7 +16,7 @@ impl CFDict {
 		Ok(Self(dict))
 	}
 
-	pub fn value(&self, key: &str) -> Result<*const c_void> {
+	fn value(&self, key: &str) -> Result<*const c_void> {
 		let key_ = CFString::new(key)?;
 		let mut value = std::ptr::null();
 		if unsafe { CFDictionaryGetValueIfPresent(self.0, key_.as_void_ptr(), &mut value) } == 0

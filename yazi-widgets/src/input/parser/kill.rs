@@ -4,7 +4,7 @@ use yazi_shim::SStr;
 
 #[derive(Debug)]
 pub struct KillOpt {
-	pub kind: SStr,
+	pub(crate) kind: SStr,
 }
 
 impl From<ActionCow> for KillOpt {
