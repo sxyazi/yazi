@@ -15,6 +15,7 @@ workspace = true
 [dependencies]
 yazi-config   = { path = "../yazi-config", version = "26.8.15" }
 yazi-emulator = { path = "../yazi-emulator", version = "26.8.15" }
+yazi-ffi      = { path = "../yazi-ffi", version = "26.8.15" }
 yazi-fs       = { path = "../yazi-fs", version = "26.8.15" }
 yazi-macro    = { path = "../yazi-macro", version = "26.8.15" }
 yazi-shared   = { path = "../yazi-shared", version = "26.8.15" }

@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Improved
 
+- Kitty graphics over shared memory ([#4294])
 - Send terminal probe requests immediately at startup ([#4260])
 - Tune light/dark theme detection ([#4265])
 
@@ -1842,3 +1843,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4271]: https://github.com/sxyazi/yazi/pull/4271
 [#4276]: https://github.com/sxyazi/yazi/pull/4276
 [#4279]: https://github.com/sxyazi/yazi/pull/4279
+[#4294]: https://github.com/sxyazi/yazi/pull/4294

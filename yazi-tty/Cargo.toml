@@ -13,6 +13,7 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
+yazi-ffi   = { path = "../yazi-ffi", version = "26.8.15" }
 yazi-macro = { path = "../yazi-macro", version = "26.8.15" }
 yazi-shim  = { path = "../yazi-shim", version = "26.8.15" }
 
