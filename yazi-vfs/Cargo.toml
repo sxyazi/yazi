@@ -24,7 +24,7 @@ yazi-shim    = { path = "../yazi-shim", version = "26.8.15" }
 
 # External dependencies
 chrono      = { workspace = true }
-deadpool    = { version = "0.13.0", default-features = false, features = [ "managed", "rt_tokio_1" ] }
+deadpool    = { version = "0.13.1", default-features = false, features = [ "managed", "rt_tokio_1" ] }
 either      = { workspace = true }
 futures     = { workspace = true }
 hashbrown   = { workspace = true }
