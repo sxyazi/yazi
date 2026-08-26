@@ -17,6 +17,7 @@ pub struct Emulator {
 	version:              ArcSwap<String>,
 	csi_u:                SyncCell<Option<u8>>,
 	pub kgp:              SyncCell<bool>,
+	pub kgp_shm:          SyncCell<bool>,
 	pub sixel:            SyncCell<bool>,
 	background:           SyncCell<Option<[u16; 3]>>,
 	color_scheme:         SyncCell<Option<bool>>,
@@ -65,6 +66,7 @@ impl Emulator {
 		self.brand.set(Brand::Unknown);
 		self.version.store(Default::default());
 		self.kgp.set(false);
+		self.kgp_shm.set(false);
 		self.sixel.set(false);
 
 		self.request()?;
@@ -90,7 +92,8 @@ impl Emulator {
 			}
 			Report::BackgroundColor(rgb) => self.background.set(Some(*rgb)),
 			Report::ColorScheme(light) => self.color_scheme.set(Some(*light)),
-			Report::KittyGraphics { id: 31, ok } => self.kgp.set(*ok),
+			Report::KittyGraphics { id: 278941603, ok } => self.kgp.set(*ok),
+			Report::KittyGraphics { id: 916472805, ok } => self.kgp_shm.set(*ok),
 			Report::Clipboard(supported) => self.osc_5522.set(*supported),
 			_ => {}
 		}

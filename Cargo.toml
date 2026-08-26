@@ -71,6 +71,7 @@ regex                 = "1.13.1"
 regex-syntax          = "0.8.11"
 reqwest               = { version = "0.13.4", default-features = false, features = [ "rustls-no-provider", "stream" ] }
 rustls                = { version = "0.23.43", default-features = false, features = [ "ring", "std" ] }
+rustix                = { version = "1.1.4", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event" ] }
 russh                 = { version = "0.63.1", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard            = "1.2.0"
 serde                 = { version = "1.0.229", features = [ "derive" ] }

@@ -16,14 +16,18 @@ workspace = true
 yazi-macro = { path = "../yazi-macro", version = "26.8.15" }
 
 # External dependencies
-anyhow = { workspace = true }
+anyhow        = { workspace = true }
+data-encoding = { workspace = true }
+rand          = { workspace = true }
 
 [target."cfg(unix)".dependencies]
-libc = { workspace = true }
+libc   = { workspace = true }
+rustix = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
 objc2               = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62.2", features = [ "Win32_System_Com" ] }
+windows     = { version = "0.62.2", features = [ "Win32_System_Com" ] }
+windows-sys = { version = "0.61.2", features = [ "Win32_Foundation", "Win32_System_Memory" ] }

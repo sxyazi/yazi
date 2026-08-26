@@ -5145,6 +5145,7 @@ dependencies = [
  "tokio",
  "yazi-config",
  "yazi-emulator",
+ "yazi-ffi",
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
@@ -5359,9 +5360,13 @@ version = "26.8.15"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
+ "data-encoding",
  "libc",
  "objc2",
+ "rand 0.10.2",
+ "rustix",
  "windows 0.62.2",
+ "windows-sys 0.61.2",
  "yazi-macro",
 ]
 
@@ -5710,6 +5715,7 @@ dependencies = [
  "parking_lot",
  "ratatui-core",
  "windows-sys 0.61.2",
+ "yazi-ffi",
  "yazi-macro",
  "yazi-shim",
 ]
