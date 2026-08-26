@@ -409,7 +409,7 @@ impl Kgp {
 		Ok(buf)
 	}
 
-	fn image_id() -> u32 {
+	pub(super) fn image_id() -> u32 {
 		static CACHE: SyncCell<Option<u32>> = SyncCell::new(None);
 		match CACHE.get() {
 			Some(n) => n,
