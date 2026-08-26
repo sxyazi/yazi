@@ -53,7 +53,9 @@ impl Backstack {
 	}
 
 	pub fn shift_backward(&mut self) -> Option<&UrlBuf> {
-		while self.cursor > 0 && self.stack[self.cursor - 1].as_local().map(Path::exists) == Some(false)
+		while self.cursor > 0
+			&& self.stack[self.cursor - 1].is_absolute()
+			&& self.stack[self.cursor - 1].as_local().map(Path::exists) == Some(false)
 		{
 			let _ = self.stack.remove(self.cursor - 1);
 			self.cursor -= 1;
@@ -70,6 +72,7 @@ impl Backstack {
 
 	pub fn shift_forward(&mut self) -> Option<&UrlBuf> {
 		while self.cursor + 1 < self.stack.len()
+			&& self.stack[self.cursor + 1].is_absolute()
 			&& self.stack[self.cursor + 1].as_local().map(Path::exists) == Some(false)
 		{
 			let _ = self.stack.remove(self.cursor + 1);
