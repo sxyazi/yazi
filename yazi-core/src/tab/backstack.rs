@@ -1,4 +1,6 @@
-use yazi_shared::url::{Url, UrlBuf};
+use std::path::Path;
+
+use yazi_shared::url::{Url, UrlBuf, UrlLike as _};
 
 #[derive(Default)]
 pub struct Backstack {
@@ -35,7 +37,29 @@ impl Backstack {
 
 	pub fn current(&self) -> Option<&UrlBuf> { self.stack.get(self.cursor) }
 
+	fn remove_duplicates(&mut self) {
+		loop {
+			if self.cursor > 0 && self.stack[self.cursor] == self.stack[self.cursor - 1] {
+				let _ = self.stack.remove(self.cursor);
+				self.cursor -= 1;
+			} else if self.cursor + 1 < self.stack.len()
+				&& self.stack[self.cursor] == self.stack[self.cursor + 1]
+			{
+				let _ = self.stack.remove(self.cursor + 1);
+			} else {
+				break;
+			}
+		}
+	}
+
 	pub fn shift_backward(&mut self) -> Option<&UrlBuf> {
+		while self.cursor > 0 && self.stack[self.cursor - 1].as_local().map(Path::exists) == Some(false)
+		{
+			let _ = self.stack.remove(self.cursor - 1);
+			self.cursor -= 1;
+		}
+		self.remove_duplicates();
+
 		if self.cursor > 0 {
 			self.cursor -= 1;
 			Some(&self.stack[self.cursor])
@@ -45,6 +69,14 @@ impl Backstack {
 	}
 
 	pub fn shift_forward(&mut self) -> Option<&UrlBuf> {
+		while self.cursor + 1 < self.stack.len()
+			&& self.stack[self.cursor + 1].as_local().map(Path::exists) == Some(false)
+		{
+			let _ = self.stack.remove(self.cursor + 1);
+		}
+
+		self.remove_duplicates();
+
 		if self.cursor + 1 >= self.stack.len() {
 			None
 		} else {
