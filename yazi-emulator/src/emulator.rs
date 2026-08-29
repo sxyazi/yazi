@@ -111,6 +111,8 @@ impl Emulator {
 		}
 	}
 
+	pub fn background(&self) -> Option<[u16; 3]> { self.background.get() }
+
 	pub fn move_lock<F, T>((x, y): (u16, u16), cb: F) -> Result<T>
 	where
 		F: FnOnce(&mut BufWriter<Handle>) -> Result<T>,

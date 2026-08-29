@@ -1,9 +1,43 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, style::Style};
-use yazi_config::{THEME, theme::CustomSectionArc};
+use ratatui_core::style::Color;
+use yazi_binding::{Composer, ComposerGet, ComposerSet, style::{Style, StyleFlat}};
+use yazi_config::{THEME, theme::{CustomSectionArc, RowFlat}};
+use yazi_emulator::EMULATOR;
 use yazi_shared::url::UrlBuf;
 
 use crate::{LUA, theme::icon};
+
+// Resolves darken/lighten against the terminal bg (OSC 11) or the entry's own
+// bg.
+fn row(r: &RowFlat) -> StyleFlat {
+	let mut s = r.style;
+	let k = (r.lighten.unwrap_or(0.0) - r.darken.unwrap_or(0.0)).clamp(-1.0, 1.0);
+	if k != 0.0 {
+		let base = match s.bg {
+			Some(Color::Rgb(r, g, b)) => Some((r, g, b)),
+			_ => EMULATOR.background().map(|c| {
+				let [r, g, b] = c.map(|v| (v / 257) as u8);
+				(r, g, b)
+			}),
+		};
+		if let Some((r, g, b)) = base {
+			let f = |c: u8| {
+				(if k >= 0.0 { c as f32 + (255.0 - c as f32) * k } else { c as f32 * (1.0 + k) }).round()
+					as u8
+			};
+			s.bg = Some(Color::Rgb(f(r), f(g), f(b)));
+		}
+	}
+	s
+}
+
+fn rows(lua: &Lua, list: &[RowFlat]) -> mlua::Result<Value> {
+	lua
+		.create_sequence_from(
+			list.iter().map(|r| Style::from(row(r)).into_lua(lua)).collect::<mlua::Result<Vec<_>>>()?,
+		)?
+		.into_lua(lua)
+}
 
 pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
@@ -56,6 +90,11 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 		let m = &THEME.mgr;
 		match key {
 			b"cwd" => Style::from(&m.cwd).into_lua(lua),
+
+			b"rows" => rows(lua, &m.rows.load()),
+			b"rows_parent" => rows(lua, &m.rows_parent.load()),
+			b"rows_current" => rows(lua, &m.rows_current.load()),
+			b"rows_preview" => rows(lua, &m.rows_preview.load()),
 
 			b"find_keyword" => Style::from(&m.find_keyword).into_lua(lua),
 			b"find_position" => Style::from(&m.find_position).into_lua(lua),

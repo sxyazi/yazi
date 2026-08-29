@@ -62,10 +62,27 @@ pub struct App {
 	pub overall: SyncCell<StyleFlat>,
 }
 
+#[derive(Deserialize)]
+pub struct RowFlat {
+	#[serde(flatten)]
+	pub style: StyleFlat,
+
+	#[serde(default)]
+	pub darken:  Option<f32>,
+	#[serde(default)]
+	pub lighten: Option<f32>,
+}
+
 // --- Mgr
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Mgr {
 	pub cwd: SyncCell<StyleFlat>,
+
+	// Rows
+	pub rows:         ArcSwap<Vec<RowFlat>>,
+	pub rows_parent:  ArcSwap<Vec<RowFlat>>,
+	pub rows_current: ArcSwap<Vec<RowFlat>>,
+	pub rows_preview: ArcSwap<Vec<RowFlat>>,
 
 	// Find
 	pub find_keyword:  SyncCell<StyleFlat>,

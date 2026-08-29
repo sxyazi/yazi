@@ -29,6 +29,16 @@ overall = {}
 [mgr]
 cwd = { fg = "cyan" }
 
+# Rows: styles cycled by row index; `darken`/`lighten` (0–1) shift the bg
+# relative to the terminal's (or the entry's own `bg`).
+# rows_parent/current/preview override per pane; empty falls back to `rows`.
+# Lowest priority: hover, markers, and filetype rules always win.
+rows         = []
+rows_parent  = []
+rows_current = []
+rows_preview = []
+
+
 # Find
 find_keyword  = { fg = "yellow", bold = true, italic = true, underline = true }
 find_position = { fg = "magenta", bg = "reset", bold = true, italic = true }

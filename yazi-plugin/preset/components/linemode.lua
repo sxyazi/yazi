@@ -82,7 +82,12 @@ function Linemode:redraw()
 	for _, c in ipairs(self._children) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
-	return ui.Line(lines)
+	local line = ui.Line(lines)
+	if not self._file.is_hovered then
+		local row = Rows.pick(self._file)
+		if row then return line:style(row) end
+	end
+	return line
 end
 
 -- Children
