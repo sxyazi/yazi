@@ -85,7 +85,9 @@ function Linemode:redraw()
 	local line = ui.Line(lines)
 	if not self._file.is_hovered then
 		local row = Rows.pick(self._file)
-		if row then return line:style(row) end
+		if row then
+			return line:style(row)
+		end
 	end
 	return line
 end

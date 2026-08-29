@@ -101,7 +101,9 @@ function Entity:style()
 	local s = self._file:style() or ui.Style()
 	if not self._file.is_hovered then
 		local row = Rows.pick(self._file)
-		if row then s = row:patch(s) end
+		if row then
+			s = row:patch(s)
+		end
 		return s
 	elseif self._file.in_current then
 		return s:patch(th.indicator.current)
