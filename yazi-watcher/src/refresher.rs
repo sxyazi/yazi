@@ -145,6 +145,12 @@ pub struct RefreshRequest {
 	pub force: bool,
 }
 
+impl Deref for RefreshRequest {
+	type Target = File;
+
+	fn deref(&self) -> &Self::Target { &self.file }
+}
+
 impl RefreshRequest {
 	pub fn force(file: impl Into<File>) -> Self { Self { file: file.into(), force: true } }
 }

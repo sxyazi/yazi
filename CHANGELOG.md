@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Assertion failure on expanding URLs with variables containing absolute paths ([#4256])
 - Correct open rule matching for trashed directories ([#4268])
+- Lock directories under timeless mounts on first peek ([#4306])
 - Honor associated text when matching character keybindings ([#4279])
 - Materialize Git symlinks for consistent hashes ([#4276])
 - Wait for terminal probe echo back before stopping instance ([#4271])
@@ -1844,3 +1845,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4276]: https://github.com/sxyazi/yazi/pull/4276
 [#4279]: https://github.com/sxyazi/yazi/pull/4279
 [#4294]: https://github.com/sxyazi/yazi/pull/4294
+[#4306]: https://github.com/sxyazi/yazi/pull/4306
