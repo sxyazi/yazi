@@ -58,4 +58,17 @@ impl<'a> Terminal<'a> {
 		termios::tcsetattr(self.tty.writer(), termios::OptionalActions::Now, &self.restorer.termios)?;
 		Ok(())
 	}
+
+	pub fn tcsetpgrp(&self, pgid: u32) -> io::Result<()> {
+		#[cfg(target_os = "linux")]
+		{
+			use rustix::process::{Pid, tcsetpgrp};
+			if let Err(e) = tcsetpgrp(self.tty.writer(), Pid::from_raw(pgid as i32)) {
+				if e.raw_os_error() != Some(libc::ENOTTY) && e.raw_os_error() != Some(libc::EPERM) {
+					return Err(e.into());
+				}
+			}
+		}
+		Ok(())
+	}
 }
