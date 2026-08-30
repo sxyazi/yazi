@@ -29,6 +29,9 @@ impl Actor for Peek {
 		if !cx.tab().preview.same_file(&hovered, &mime) {
 			cx.tab_mut().preview.reset();
 		}
+		if !cx.tab().preview.same_folder(&hovered.url) {
+			cx.tab_mut().preview.folder_lock = None;
+		}
 		if matches!(form.only_if, Some(u) if u != hovered.url) {
 			succ!();
 		}
@@ -43,8 +46,13 @@ impl Actor for Peek {
 		}
 
 		if let Some(folder) = tab!(cx).hovered_folder_mut() {
-			cx.core.mgr.watcher.refresher.refresh([folder.take_request()]);
+			let req = folder.take_request();
+			if req.force || cx.tab().preview.folder_lock.is_none() {
+				cx.tab_mut().preview.folder_lock = Some(req.url.clone());
+				cx.core.mgr.watcher.refresher.refresh([req]);
+			}
 		} else if hovered.is_dir() {
+			cx.tab_mut().preview.folder_lock = Some(hovered.url.clone());
 			cx.core.mgr.watcher.refresher.refresh([RefreshRequest::force(&hovered)]);
 		}
 
