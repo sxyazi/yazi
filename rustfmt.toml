@@ -28,4 +28,4 @@ use_field_init_shorthand     = true
 use_small_heuristics         = "Max"
 use_try_shorthand            = true
 style_edition                = "2024"
-wrap_comments                = true
+wrap_comments                = false
