@@ -81,15 +81,16 @@ impl Backstack {
 	}
 
 	fn dedup(&mut self) {
-		let current = self.current().cloned();
-
+		let Some(stack) = self.stack.get(..=self.cursor) else { return };
+		self.cursor -= stack.windows(2).filter(|w| w[0] == w[1]).count();
 		self.stack.dedup();
-		self.cursor = current.and_then(|u| self.stack.iter().position(|ent| ent == u)).unwrap_or(0);
 	}
 }
 
 #[cfg(test)]
 mod tests {
+	use std::path::Path;
+
 	use super::*;
 
 	#[test]
@@ -119,5 +120,35 @@ mod tests {
 		assert_eq!(bs.stack[bs.cursor], Url::regular("4"));
 		assert_eq!(bs.shift_forward(), None);
 		assert_eq!(bs.shift_backward().unwrap(), Url::regular("2"));
+	}
+
+	#[test]
+	fn test_remove_keys() {
+		let a = Url::regular("/a");
+		let b = Url::regular("/b");
+
+		let mut bs = Backstack::default();
+		bs.push(a);
+		bs.push(b);
+		bs.push(a);
+
+		bs.remove_keys(&Url::regular("/").to_owned(), &HashSet::from([Path::new("b").into()]));
+		assert_eq!(bs.stack, vec![a.to_owned()]);
+		assert_eq!(bs.cursor, 0);
+	}
+
+	#[test]
+	fn test_remove_keys_keeps_cursor() {
+		let a = Url::regular("/a");
+		let b = Url::regular("/b");
+
+		let mut bs = Backstack::default();
+		bs.push(a);
+		bs.push(b);
+		bs.push(a);
+
+		bs.remove_keys(&Url::regular("/").to_owned(), &HashSet::from([Path::new("c").into()]));
+		assert_eq!(bs.stack, vec![a.to_owned(), b.to_owned(), a.to_owned()]);
+		assert_eq!(bs.cursor, 2);
 	}
 }
