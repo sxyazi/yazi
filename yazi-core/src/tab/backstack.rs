@@ -1,4 +1,5 @@
-use yazi_shared::url::{Url, UrlBuf};
+use hashbrown::HashSet;
+use yazi_shared::{path::PathBufDyn, url::{AsUrl, Url, UrlBuf}};
 
 #[derive(Default)]
 pub struct Backstack {
@@ -52,10 +53,44 @@ impl Backstack {
 			Some(&self.stack[self.cursor])
 		}
 	}
+
+	pub fn remove_keys(&mut self, trail: &UrlBuf, keys: &HashSet<PathBufDyn>) {
+		let mut old = self.cursor;
+
+		self.stack.retain(|entry| {
+			let rm = Self::matches_keys(entry.as_url(), trail, keys);
+			old -= (rm && self.cursor > 0) as usize;
+
+			self.cursor = self.cursor.saturating_sub(1);
+			!rm
+		});
+
+		self.cursor = old.min(self.stack.len().saturating_sub(1));
+		self.dedup();
+	}
+
+	fn matches_keys(mut url: Url, trail: &UrlBuf, keys: &HashSet<PathBufDyn>) -> bool {
+		loop {
+			if url.pair().is_some_and(|(t, k)| t == *trail && keys.contains(&k)) {
+				return true;
+			}
+
+			let Some(parent) = url.parent() else { return false };
+			url = parent;
+		}
+	}
+
+	fn dedup(&mut self) {
+		let Some(stack) = self.stack.get(..=self.cursor) else { return };
+		self.cursor -= stack.windows(2).filter(|w| w[0] == w[1]).count();
+		self.stack.dedup();
+	}
 }
 
 #[cfg(test)]
 mod tests {
+	use std::path::Path;
+
 	use super::*;
 
 	#[test]
@@ -85,5 +120,35 @@ mod tests {
 		assert_eq!(bs.stack[bs.cursor], Url::regular("4"));
 		assert_eq!(bs.shift_forward(), None);
 		assert_eq!(bs.shift_backward().unwrap(), Url::regular("2"));
+	}
+
+	#[test]
+	fn test_remove_keys() {
+		let a = Url::regular("/a");
+		let b = Url::regular("/b");
+
+		let mut bs = Backstack::default();
+		bs.push(a);
+		bs.push(b);
+		bs.push(a);
+
+		bs.remove_keys(&Url::regular("/").to_owned(), &HashSet::from([Path::new("b").into()]));
+		assert_eq!(bs.stack, vec![a.to_owned()]);
+		assert_eq!(bs.cursor, 0);
+	}
+
+	#[test]
+	fn test_remove_keys_keeps_cursor() {
+		let a = Url::regular("/a");
+		let b = Url::regular("/b");
+
+		let mut bs = Backstack::default();
+		bs.push(a);
+		bs.push(b);
+		bs.push(a);
+
+		bs.remove_keys(&Url::regular("/").to_owned(), &HashSet::from([Path::new("c").into()]));
+		assert_eq!(bs.stack, vec![a.to_owned(), b.to_owned(), a.to_owned()]);
+		assert_eq!(bs.cursor, 2);
 	}
 }
