@@ -192,7 +192,7 @@ impl<'a> Url<'a> {
 	pub fn os_str(self) -> Cow<'a, OsStr> { self.components().os_str() }
 
 	#[inline]
-	pub(crate) fn pair(self) -> Option<(Self, PathDyn<'a>)> {
+	pub fn pair(self) -> Option<(Self, PathDyn<'a>)> {
 		let key = self.key();
 		(!key.is_empty()).then_some((self.trail(), key))
 	}

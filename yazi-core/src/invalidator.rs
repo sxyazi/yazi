@@ -49,6 +49,8 @@ impl<'a> Invalidator<'a> {
 			if let Some(parent) = tab.parent.as_mut().filter(|f| matches(&f.url)) {
 				parent.invalidate();
 			}
+
+			tab.backstack.remove_keys(trail, keys);
 			tab.history.for_each_mut(trail, keys, |folder| folder.invalidate());
 		}
 	}

@@ -1,4 +1,5 @@
-use yazi_shared::url::{Url, UrlBuf};
+use hashbrown::HashSet;
+use yazi_shared::{path::PathBufDyn, url::{AsUrl, Url, UrlBuf}};
 
 #[derive(Default)]
 pub struct Backstack {
@@ -51,6 +52,39 @@ impl Backstack {
 			self.cursor += 1;
 			Some(&self.stack[self.cursor])
 		}
+	}
+
+	pub fn remove_keys(&mut self, trail: &UrlBuf, keys: &HashSet<PathBufDyn>) {
+		let mut old = self.cursor;
+
+		self.stack.retain(|entry| {
+			let rm = Self::matches_keys(entry.as_url(), trail, keys);
+			old -= (rm && self.cursor > 0) as usize;
+
+			self.cursor = self.cursor.saturating_sub(1);
+			!rm
+		});
+
+		self.cursor = old.min(self.stack.len().saturating_sub(1));
+		self.dedup();
+	}
+
+	fn matches_keys(mut url: Url, trail: &UrlBuf, keys: &HashSet<PathBufDyn>) -> bool {
+		loop {
+			if url.pair().is_some_and(|(t, k)| t == *trail && keys.contains(&k)) {
+				return true;
+			}
+
+			let Some(parent) = url.parent() else { return false };
+			url = parent;
+		}
+	}
+
+	fn dedup(&mut self) {
+		let current = self.current().cloned();
+
+		self.stack.dedup();
+		self.cursor = current.and_then(|u| self.stack.iter().position(|ent| ent == u)).unwrap_or(0);
 	}
 }
 
