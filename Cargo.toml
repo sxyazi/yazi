@@ -102,3 +102,6 @@ module_inception     = "allow"
 option_map_unit_fn   = "allow"
 unit_arg             = "allow"
 use_self             = "warn"
+
+[patch.crates-io]
+ratatui-core = { git = "https://github.com/yazi-rs/ratatui.git", branch = "fix_buffer_diff_wide_cells" }

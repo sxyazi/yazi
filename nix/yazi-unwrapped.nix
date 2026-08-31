@@ -30,6 +30,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
+    allowBuiltinFetchGit = true;
   };
 
   env = {
