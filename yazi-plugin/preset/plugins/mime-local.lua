@@ -22,7 +22,7 @@ function M:fetch(job)
 			return M.placeholder(err, job.files)
 		end
 
-		local i, match, ignore = 1, nil, nil
+		local i, f, match, ignore = 1, nil, nil, nil
 		repeat
 			local line, event = child:read_line_with { timeout = 300 }
 			if event == 3 then
@@ -32,16 +32,16 @@ function M:fetch(job)
 				break
 			end
 
-			match, ignore = M.match_mimetype(line)
+			f, match, ignore = job.files[i], M.match_mimetype(line)
 			if match then
-				if coroutine.yield(job.files[i], { match }) then
-					updates[job.files[i].url] = match
+				if coroutine.yield(f, { match }) and not f.cha.is_dummy then
+					updates[f.url] = match
 					flush()
 				end
 				i = i + 1
 			elseif not ignore then
-				coroutine.yield(job.files[i], {
-					error = Err("Failed to determine MIME type for `%s`", job.files[i].url),
+				coroutine.yield(f, {
+					error = Err("Failed to determine MIME type for `%s`", f.url),
 					retry = true,
 				})
 				i = i + 1
@@ -106,7 +106,7 @@ function M.placeholder(err, files)
 	for _, file in ipairs(files) do
 		if err.kind ~= "NotFound" then
 			coroutine.yield(file, { error = Error(err), retry = true })
-		elseif coroutine.yield(file, { mime }) then
+		elseif coroutine.yield(file, { mime }) and not file.cha.is_dummy then
 			updates[file.url] = mime
 		end
 	end

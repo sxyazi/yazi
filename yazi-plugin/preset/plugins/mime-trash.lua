@@ -18,7 +18,7 @@ function M:fetch(job)
 				result[1] = mime
 			end
 
-			if coroutine.yield(file, result) then
+			if coroutine.yield(file, result) and not file.cha.is_dummy then
 				updates[file.url] = mime
 				flush()
 			end

@@ -29,6 +29,7 @@ impl TrashInfo {
 		// cat.jpg
 		let stem = info
 			.file_stem()
+			.filter(|&stem| stem != OsStr::new(".") && stem != OsStr::new(".."))
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid trash info path"))?;
 
 		let original = Self::parse_original(info, root)?;

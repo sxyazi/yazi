@@ -133,6 +133,7 @@ spotters = [
 	{ mime = "null/*", run = "null" },
 	# Fallback
 	{ url = "*", run = "file" },
+	{ url = "*/", run = "file" },
 ]
 preloaders = [
 	# Image
