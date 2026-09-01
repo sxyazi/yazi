@@ -177,6 +177,8 @@ impl Pubsub {
 
 	pub_after!(input(r#type: &'static str, value: &str), (r#type, value));
 
+	pub_after!(history(group: &str, value: &str), (group, value));
+
 	pub_after!(mount(), ());
 
 	pub_after!(theme(), ());

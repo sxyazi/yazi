@@ -104,6 +104,7 @@ impl Display for Payload<'_> {
 			Ember::Delete(b) => serde_json::to_string(b),
 			Ember::Download(b) => serde_json::to_string(b),
 			Ember::Input(b) => serde_json::to_string(b),
+			Ember::History(b) => serde_json::to_string(b),
 			Ember::Mount(b) => serde_json::to_string(b),
 			Ember::Theme(b) => serde_json::to_string(b),
 			Ember::Custom(b) => serde_json::to_string(b),

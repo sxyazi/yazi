@@ -20,10 +20,14 @@ impl Actor for Remember {
 
 		match &mut input {
 			InputMutGuard::Main(input) => {
-				input.histories.remember(&input.main.history.name, input.main.value());
+				crate::input::remember_history(
+					&mut input.histories,
+					&input.main.history.name,
+					input.main.value(),
+				);
 			}
 			InputMutGuard::Alt(input, guard) => {
-				input.histories.remember(&guard.history.name, guard.value());
+				crate::input::remember_history(&mut input.histories, &guard.history.name, guard.value());
 			}
 		}
 

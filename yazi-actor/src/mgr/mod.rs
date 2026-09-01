@@ -26,6 +26,7 @@ yazi_macro::mod_flat!(
 	leave
 	linemode
 	link
+	load_history
 	open
 	open_do
 	paste

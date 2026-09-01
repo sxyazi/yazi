@@ -75,6 +75,7 @@ impl<'a> Executor<'a> {
 
 		on!(cd);
 		on!(update_yanked);
+		on!(load_history);
 
 		on!(update_files);
 		on!(update_mimes);

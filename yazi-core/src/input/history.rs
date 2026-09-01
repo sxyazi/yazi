@@ -6,6 +6,8 @@ pub struct InputHistories {
 }
 
 impl InputHistories {
+	pub const MAX: usize = 20;
+
 	pub fn get(&self, group: &str) -> &[String] {
 		self.inner.get(group).map(Vec::as_slice).unwrap_or(&[])
 	}
@@ -22,10 +24,19 @@ impl InputHistories {
 
 		entries.retain(|entry| entry != value);
 		entries.push(value.to_owned());
-		if entries.len() > 20 {
-			entries.drain(..entries.len() - 20);
+		if entries.len() > Self::MAX {
+			entries.drain(..entries.len() - Self::MAX);
 		}
 
 		true
+	}
+
+	pub fn load(&mut self, entries: HashMap<String, Vec<String>>) {
+		for (group, mut values) in entries {
+			if values.len() > Self::MAX {
+				values.drain(..values.len() - Self::MAX);
+			}
+			self.inner.insert(group, values);
+		}
 	}
 }

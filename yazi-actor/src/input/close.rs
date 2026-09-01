@@ -28,7 +28,11 @@ impl Actor for Close {
 		if form.submit
 			&& let InputMutGuard::Main(input) = guard
 		{
-			input.histories.remember(&input.main.history.name, input.main.value());
+			crate::input::remember_history(
+				&mut input.histories,
+				&input.main.history.name,
+				input.main.value(),
+			);
 		}
 
 		cx.input.main.visible = false;

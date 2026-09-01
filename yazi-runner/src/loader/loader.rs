@@ -38,6 +38,7 @@ impl Default for Loader {
 			("folder".to_owned(), preset!("plugins/folder").into()),
 			("font".to_owned(), preset!("plugins/font").into()),
 			("fzf".to_owned(), preset!("plugins/fzf").into()),
+			("history".to_owned(), preset!("plugins/history").into()),
 			("image".to_owned(), preset!("plugins/image").into()),
 			("init".to_owned(), preset!("plugins/init").into()),
 			("json".to_owned(), preset!("plugins/json").into()),
