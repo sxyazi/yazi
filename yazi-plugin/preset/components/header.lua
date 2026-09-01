@@ -27,8 +27,14 @@ function Header:cwd()
 		return ""
 	end
 
-	local s = ya.readable_path(tostring(self._current.cwd)) .. self:flags()
-	return ui.Span(ui.truncate(s, { max = max, rtl = true })):style(th.mgr.cwd)
+	local path = ya.readable_path(tostring(self._current.cwd))
+	local flags = self:flags()
+	local flag_str = #flags == 0 and "" or " (" .. table.concat(flags, ", ") .. ")"
+
+	return ui.Line {
+		ui.Span(ui.truncate(path, { max = max - #flag_str, rtl = true })):style(th.mgr.cwd),
+		ui.Span(flag_str):style(th.mgr.filter_keyword),
+	}
 end
 
 function Header:flags()
@@ -46,7 +52,7 @@ function Header:flags()
 	if finder then
 		t[#t + 1] = string.format("find: %s", finder)
 	end
-	return #t == 0 and "" or " (" .. table.concat(t, ", ") .. ")"
+	return t
 end
 
 function Header:count()
