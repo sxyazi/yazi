@@ -1,4 +1,5 @@
 use anyhow::Result;
+use tokio::task;
 use yazi_emulator::EMULATOR;
 use yazi_macro::succ;
 use yazi_parser::app::StopForm;
@@ -16,7 +17,7 @@ impl Actor for Stop {
 
 	fn act(cx: &mut Ctx, Self::Form { replier }: Self::Form) -> Result<Data> {
 		if let Some(id) = EMULATOR.probe.pending() {
-			tokio::spawn(async move {
+			task::spawn_local(async move {
 				EMULATOR.probe.wait(id).await;
 				AppProxy::stop_with(replier);
 			});

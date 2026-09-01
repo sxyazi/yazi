@@ -1,6 +1,6 @@
 use std::io;
 
-use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
+use tokio::{join, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::{Entries, engine::{DirReader, FileHolder}, file::File, mounts::PARTITIONS};
 use yazi_shared::url::UrlBuf;
 
@@ -55,13 +55,8 @@ impl VfsEntries for Entries {
 			files
 		}
 
-		Ok(
-			futures::future::join_all([go(first), go(second), go(third)])
-				.await
-				.into_iter()
-				.flatten()
-				.collect(),
-		)
+		let (first, second, third) = join!(go(first), go(second), go(third));
+		Ok([first, second, third].into_iter().flatten().collect())
 	}
 
 	async fn revalidate(old: &File) -> io::Result<Option<File>> {

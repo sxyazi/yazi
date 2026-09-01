@@ -1,8 +1,7 @@
 use std::pin::Pin;
 
 use anyhow::{Result, bail};
-use futures::{Stream, StreamExt};
-use tokio_stream::wrappers::UnboundedReceiverStream;
+use tokio_stream::{Stream, StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_fs::{FilesOp, file::File};
 use yazi_macro::{input, ok_or_not_found, succ};
@@ -26,9 +25,7 @@ impl Actor for Create {
 
 		let mut target: Pin<Box<dyn Stream<Item = StrandBuf> + Send>> = if target.is_empty() {
 			let input = input!(cx, YAZI.input.create(dir))?;
-			Box::pin(
-				UnboundedReceiverStream::new(input).filter_map(|event| async { event.map(Into::into) }),
-			)
+			Box::pin(UnboundedReceiverStream::new(input).filter_map(|event| event.map(Into::into)))
 		} else {
 			Box::pin(tokio_stream::iter(vec![target]))
 		};

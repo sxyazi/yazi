@@ -1,8 +1,7 @@
 use std::{ops::DerefMut, process::ExitStatus, time::Duration};
 
-use futures::future::try_join3;
 use mlua::{ExternalError, IntoLua, IntoLuaMulti, LuaString, Table, UserData, UserDataMethods, Value};
-use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
+use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select, try_join};
 use yazi_shim::fs::Error;
 
 use super::Status;
@@ -80,7 +79,7 @@ impl Child {
 		let mut stdout = self.stdout.take();
 		let mut stderr = self.stderr.take();
 
-		let result = try_join3(self.inner.wait(), read(&mut stdout), read(&mut stderr)).await?;
+		let result = try_join!(self.inner.wait(), read(&mut stdout), read(&mut stderr))?;
 		Ok(std::process::Output { status: result.0, stdout: result.1, stderr: result.2 })
 	}
 }
