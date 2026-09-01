@@ -67,14 +67,21 @@ impl Git {
 				Path::from_wtf8(&ent[tab + 1..]).context("Git path cannot be represented by the OS")?,
 			);
 
-			let original = PathBuf::from_wtf8_vec(fs::read(&link).await?)
-				.context("Git symlink origin cannot be represented by the OS")?;
+			let is_symlink = fs::symlink_metadata(&link).await?.file_type().is_symlink();
+			let original = if is_symlink {
+				fs::read_link(&link).await? // TODO: compat for old caches, remove in the future
+			} else {
+				PathBuf::from_wtf8_vec(fs::read(&link).await?)
+					.context("Git symlink origin cannot be represented by the OS")?
+			};
 			let original = fs::canonicalize(link.parent().unwrap_or(&path).join(original))
 				.await
 				.with_context(|| format!("failed to resolve Git symlink target `{}`", link.display()))?;
 
 			if !original.starts_with(&path) {
 				bail!("Git symlink target escapes repository: `{}`", link.display());
+			} else if is_symlink {
+				fs::remove_file(&link).await?;
 			}
 
 			fs::copy(original, &link)
