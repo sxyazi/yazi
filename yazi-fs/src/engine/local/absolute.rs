@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use yazi_shared::{loc::LocBuf, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use crate::CWD;
+use crate::{CWD, path::clean_url};
 
 pub fn try_absolute<'a, U>(url: U) -> Option<UrlCow<'a>>
 where
@@ -43,12 +43,18 @@ fn try_absolute_impl<'a>(url: UrlCow<'a>) -> Option<UrlCow<'a>> {
 		)
 		.expect("Loc from home directory")
 	} else if !url.is_absolute() {
-		LocBuf::<PathBuf>::with(
-			CWD.path().join(path),
-			url.uri().components().count(),
-			url.urn().components().count(),
-		)
-		.expect("Loc from relative path")
+		// Clean the joined path so a trailing "." or ".." doesn't erase the key.
+		let joined =
+			clean_url(UrlBuf::from(CWD.path().join(path))).into_loc().into_os().expect("local path");
+		match url.as_url() {
+			Url::Regular(_) => LocBuf::<PathBuf>::from(joined),
+			_ => LocBuf::<PathBuf>::with(
+				joined,
+				url.uri().components().count(),
+				url.urn().components().count(),
+			)
+			.expect("Loc from relative path"),
+		}
 	} else {
 		return Some(url);
 	};
