@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Fixed
+
+- Compatibility with legacy Git symlinks in package cache ([#4319])
+
 ## [v26.9.1]
 
 ### Fixed
@@ -1851,3 +1855,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4294]: https://github.com/sxyazi/yazi/pull/4294
 [#4306]: https://github.com/sxyazi/yazi/pull/4306
 [#4309]: https://github.com/sxyazi/yazi/pull/4309
+[#4319]: https://github.com/sxyazi/yazi/pull/4319
