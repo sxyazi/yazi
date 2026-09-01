@@ -19,23 +19,17 @@ impl Boot {
 			return (vec![CWD.load().as_ref().clone()], vec![Default::default()]);
 		}
 
-		async fn go(entry: &UrlBuf) -> (UrlBuf, StrandBuf) {
-			let mut entry = clean_url(entry);
+		async fn go(ent: &UrlBuf) -> (UrlBuf, StrandBuf) {
+			let ent = clean_url(engine::absolute(ent).await.unwrap_or(ent.into()));
 
-			if let Ok(u) = engine::absolute(&entry).await
-				&& u.is_owned()
-			{
-				entry = u.into_owned();
-			}
-
-			let Some((trail, child)) = entry.pair() else {
-				return (entry, Default::default());
+			let Some((trail, child)) = ent.pair() else {
+				return (ent, Default::default());
 			};
 
-			if engine::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
+			if engine::metadata(&ent).await.is_ok_and(|m| m.is_file()) {
 				(trail.into(), child.into())
 			} else {
-				(entry, Default::default())
+				(ent, Default::default())
 			}
 		}
 
