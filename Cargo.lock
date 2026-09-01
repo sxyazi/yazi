@@ -5126,7 +5126,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-actor"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "either",
@@ -5166,7 +5166,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adapter"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5192,7 +5192,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-binding"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5223,7 +5223,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "clap",
  "clap_complete",
@@ -5240,7 +5240,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-build"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "yazi-macro",
@@ -5249,7 +5249,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -5279,7 +5279,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5288,7 +5288,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5318,7 +5318,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "dyn-clone",
@@ -5353,7 +5353,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "hashbrown 0.17.1",
@@ -5378,7 +5378,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-emulator"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5392,7 +5392,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -5408,7 +5408,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -5453,7 +5453,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5496,15 +5496,15 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "26.8.15"
+version = "26.9.1"
 
 [[package]]
 name = "yazi-packing"
-version = "26.8.15"
+version = "26.9.1"
 
 [[package]]
 name = "yazi-parser"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "bitflags 2.13.1",
@@ -5533,7 +5533,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -5582,7 +5582,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "tokio",
@@ -5598,7 +5598,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-runner"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -5619,7 +5619,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -5647,7 +5647,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-sftp"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "bitflags 2.13.1",
  "hashbrown 0.17.1",
@@ -5660,7 +5660,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -5693,7 +5693,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shim"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5719,7 +5719,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-term"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -5742,7 +5742,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-tty"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -5758,7 +5758,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-tui"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "ratatui-core",
@@ -5775,14 +5775,14 @@ dependencies = [
 
 [[package]]
 name = "yazi-version"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "vergen-gitcl",
 ]
 
 [[package]]
 name = "yazi-vfs"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "chrono",
  "deadpool",
@@ -5807,7 +5807,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-watcher"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "futures",
  "hashbrown 0.17.1",
@@ -5827,7 +5827,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-widgets"
-version = "26.8.15"
+version = "26.9.1"
 dependencies = [
  "anyhow",
  "clipboard-win",

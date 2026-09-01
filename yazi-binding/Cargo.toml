@@ -17,10 +17,10 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-codegen = { path = "../yazi-codegen", version = "26.8.15" }
-yazi-macro   = { path = "../yazi-macro", version = "26.8.15" }
-yazi-shared  = { path = "../yazi-shared", version = "26.8.15" }
-yazi-shim    = { path = "../yazi-shim", version = "26.8.15" }
+yazi-codegen = { path = "../yazi-codegen", version = "26.9.1" }
+yazi-macro   = { path = "../yazi-macro", version = "26.9.1" }
+yazi-shared  = { path = "../yazi-shared", version = "26.9.1" }
+yazi-shim    = { path = "../yazi-shim", version = "26.9.1" }
 
 # External dependencies
 ansi-to-tui     = { workspace = true }
