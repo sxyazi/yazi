@@ -17,25 +17,25 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter   = { path = "../yazi-adapter", version = "26.8.15" }
-yazi-binding   = { path = "../yazi-binding", version = "26.8.15" }
-yazi-boot      = { path = "../yazi-boot", version = "26.8.15" }
-yazi-codegen   = { path = "../yazi-codegen", version = "26.8.15" }
-yazi-config    = { path = "../yazi-config", version = "26.8.15" }
-yazi-core      = { path = "../yazi-core", version = "26.8.15" }
-yazi-dds       = { path = "../yazi-dds", version = "26.8.15" }
-yazi-emulator  = { path = "../yazi-emulator", version = "26.8.15" }
-yazi-fs        = { path = "../yazi-fs", version = "26.8.15" }
-yazi-macro     = { path = "../yazi-macro", version = "26.8.15" }
-yazi-proxy     = { path = "../yazi-proxy", version = "26.8.15" }
-yazi-runner    = { path = "../yazi-runner", version = "26.8.15" }
-yazi-scheduler = { path = "../yazi-scheduler", version = "26.8.15" }
-yazi-shared    = { path = "../yazi-shared", version = "26.8.15" }
-yazi-shim      = { path = "../yazi-shim", version = "26.8.15" }
-yazi-term      = { path = "../yazi-term", version = "26.8.15" }
-yazi-tty       = { path = "../yazi-tty", version = "26.8.15" }
-yazi-vfs       = { path = "../yazi-vfs", version = "26.8.15" }
-yazi-widgets   = { path = "../yazi-widgets", version = "26.8.15" }
+yazi-adapter   = { path = "../yazi-adapter", version = "26.9.1" }
+yazi-binding   = { path = "../yazi-binding", version = "26.9.1" }
+yazi-boot      = { path = "../yazi-boot", version = "26.9.1" }
+yazi-codegen   = { path = "../yazi-codegen", version = "26.9.1" }
+yazi-config    = { path = "../yazi-config", version = "26.9.1" }
+yazi-core      = { path = "../yazi-core", version = "26.9.1" }
+yazi-dds       = { path = "../yazi-dds", version = "26.9.1" }
+yazi-emulator  = { path = "../yazi-emulator", version = "26.9.1" }
+yazi-fs        = { path = "../yazi-fs", version = "26.9.1" }
+yazi-macro     = { path = "../yazi-macro", version = "26.9.1" }
+yazi-proxy     = { path = "../yazi-proxy", version = "26.9.1" }
+yazi-runner    = { path = "../yazi-runner", version = "26.9.1" }
+yazi-scheduler = { path = "../yazi-scheduler", version = "26.9.1" }
+yazi-shared    = { path = "../yazi-shared", version = "26.9.1" }
+yazi-shim      = { path = "../yazi-shim", version = "26.9.1" }
+yazi-term      = { path = "../yazi-term", version = "26.9.1" }
+yazi-tty       = { path = "../yazi-tty", version = "26.9.1" }
+yazi-vfs       = { path = "../yazi-vfs", version = "26.9.1" }
+yazi-widgets   = { path = "../yazi-widgets", version = "26.9.1" }
 
 # External dependencies
 ansi-to-tui      = { workspace = true }

@@ -1,7 +1,7 @@
 [package]
 name                   = "yazi-tty"
 description            = "Yazi TTY access layer"
-version                = "26.8.15"
+version                = "26.9.1"
 edition.workspace      = true
 license.workspace      = true
 authors.workspace      = true
@@ -13,9 +13,9 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-ffi   = { path = "../yazi-ffi", version = "26.8.15" }
-yazi-macro = { path = "../yazi-macro", version = "26.8.15" }
-yazi-shim  = { path = "../yazi-shim", version = "26.8.15" }
+yazi-ffi   = { path = "../yazi-ffi", version = "26.9.1" }
+yazi-macro = { path = "../yazi-macro", version = "26.9.1" }
+yazi-shim  = { path = "../yazi-shim", version = "26.9.1" }
 
 # External dependencies
 base64       = { workspace = true }

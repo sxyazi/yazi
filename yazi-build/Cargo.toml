@@ -1,7 +1,7 @@
 [package]
 name                   = "yazi-build"
 description            = "Yazi build system"
-version                = "26.8.15"
+version                = "26.9.1"
 edition.workspace      = true
 license.workspace      = true
 authors.workspace      = true
@@ -13,13 +13,13 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-macro = { path = "../yazi-macro", version = "26.8.15" }
+yazi-macro = { path = "../yazi-macro", version = "26.9.1" }
 
 # External dependencies
 anyhow = { workspace = true }
 
 [build-dependencies]
-yazi-tty = { path = "../yazi-tty", version = "26.8.15" }
+yazi-tty = { path = "../yazi-tty", version = "26.9.1" }
 
 # External dependencies
 anyhow = { workspace = true }

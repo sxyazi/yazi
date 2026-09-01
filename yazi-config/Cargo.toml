@@ -13,15 +13,15 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-binding = { path = "../yazi-binding", version = "26.8.15" }
-yazi-codegen = { path = "../yazi-codegen", version = "26.8.15" }
-yazi-fs      = { path = "../yazi-fs", version = "26.8.15" }
-yazi-macro   = { path = "../yazi-macro", version = "26.8.15" }
-yazi-shared  = { path = "../yazi-shared", version = "26.8.15" }
-yazi-shim    = { path = "../yazi-shim", version = "26.8.15" }
-yazi-term    = { path = "../yazi-term", version = "26.8.15" }
-yazi-tty     = { path = "../yazi-tty", version = "26.8.15" }
-yazi-widgets = { path = "../yazi-widgets", version = "26.8.15" }
+yazi-binding = { path = "../yazi-binding", version = "26.9.1" }
+yazi-codegen = { path = "../yazi-codegen", version = "26.9.1" }
+yazi-fs      = { path = "../yazi-fs", version = "26.9.1" }
+yazi-macro   = { path = "../yazi-macro", version = "26.9.1" }
+yazi-shared  = { path = "../yazi-shared", version = "26.9.1" }
+yazi-shim    = { path = "../yazi-shim", version = "26.9.1" }
+yazi-term    = { path = "../yazi-term", version = "26.9.1" }
+yazi-tty     = { path = "../yazi-tty", version = "26.9.1" }
+yazi-widgets = { path = "../yazi-widgets", version = "26.9.1" }
 
 # External dependencies
 anyhow          = { workspace = true }
