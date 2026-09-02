@@ -29,6 +29,8 @@ Yazi (means "duck") is a terminal file manager written in Rust, based on non-blo
 
 https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265cc7
 
+[![Live demo by Demoshell](https://build.demoshell.com/v1/embed/badge.svg)](https://build.demoshell.com/launch?snapshot=demoshell%2Ftui%3Ayazi)
+
 ## Project status
 
 Public beta, can be used as a daily driver.
