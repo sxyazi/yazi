@@ -5,11 +5,11 @@ use yazi_shared::event::ActionCow;
 bitflags! {
 	#[derive(Debug)]
 	pub struct EscapeForm: u8 {
-		const FIND   = 0b00001;
-		const VISUAL = 0b00010;
-		const FILTER = 0b00100;
-		const SELECT = 0b01000;
-		const SEARCH = 0b10000;
+		const FIND   = 1 << 0;
+		const VISUAL = 1 << 1;
+		const FILTER = 1 << 2;
+		const SELECT = 1 << 3;
+		const VIEW   = 1 << 4;
 	}
 }
 
@@ -22,7 +22,7 @@ impl From<ActionCow> for EscapeForm {
 				("visual", true) => acc | Self::VISUAL,
 				("filter", true) => acc | Self::FILTER,
 				("select", true) => acc | Self::SELECT,
-				("search", true) => acc | Self::SEARCH,
+				("view", true) => acc | Self::VIEW,
 				_ => acc,
 			}
 		})

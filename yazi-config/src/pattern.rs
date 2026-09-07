@@ -110,7 +110,6 @@ enum PatternScheme {
 	Any,
 	Local,
 	Remote,
-	Virtual,
 
 	Custom(String),
 }
@@ -125,7 +124,6 @@ impl PatternScheme {
 			"*" => Self::Any,
 			"local" => Self::Local,
 			"remote" => Self::Remote,
-			"virtual" => Self::Virtual,
 
 			"" => bail!("Invalid URL pattern: scheme is empty"),
 			other => Self::Custom(other.to_owned()),
@@ -138,9 +136,8 @@ impl PatternScheme {
 	fn matches(&self, auth: &Auth) -> bool {
 		match self {
 			Self::Any => true,
-			Self::Local => auth.kind.is_local(),
-			Self::Remote => auth.kind.is_remote(),
-			Self::Virtual => auth.kind.is_virtual(),
+			Self::Local => auth.is_local(),
+			Self::Remote => auth.is_remote(),
 			Self::Custom(name) => auth.scheme == name,
 		}
 	}

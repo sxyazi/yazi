@@ -238,6 +238,9 @@ impl Entries {
 impl Entries {
 	// --- Items
 	#[inline]
+	pub fn all(&self) -> impl Iterator<Item = &File> { self.items.iter().chain(&self.hidden) }
+
+	#[inline]
 	pub fn position(&self, key: PathDyn) -> Option<usize> {
 		if key.is_empty() { None } else { self.iter().position(|f| f.key() == key) }
 	}

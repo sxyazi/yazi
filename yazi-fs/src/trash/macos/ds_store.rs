@@ -11,7 +11,7 @@ pub(super) struct DsStore {
 }
 
 impl DsStore {
-	pub(super) fn parse(path: &Path) -> io::Result<HashMap<OsString, DsStore>> {
+	pub(super) fn parse(path: &Path) -> io::Result<HashMap<OsString, Self>> {
 		let bytes = fs::read(path)?;
 		let store = ds_parser::parse(&bytes).map_err(io::Error::other)?;
 

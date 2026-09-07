@@ -1,15 +1,13 @@
 use std::{io, sync::Arc};
 
-use tokio::{io::{AsyncWriteExt, BufReader, BufWriter}, sync::mpsc::Receiver};
 use yazi_config::vfs::{ServiceSftp, Vfs};
-use yazi_fs::engine::{Capabilities, DirReader, Engine, FileHolder};
-use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{auth::AuthKind, loc::LocBuf, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_fs::engine::{Capabilities, DirReader, Engine, FileHolder, Transmit};
+use yazi_sftp::fs::Attrs;
+use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
 use crate::engine::sftp::Conn;
 
-#[derive(Clone)]
 pub struct Sftp<'a> {
 	url:             Url<'a>,
 	pub(super) path: &'a typed_path::UnixPath,
@@ -33,19 +31,14 @@ impl<'a> Engine for Sftp<'a> {
 	}
 
 	async fn canonicalize(&self) -> io::Result<UrlBuf> {
-		Ok(UrlBuf::Sftp {
+		Ok(UrlBuf::Unix {
 			loc:  self.op().await?.realpath(self.path).await?.into(),
 			auth: self.config.auth.clone(),
 		})
 	}
 
 	async fn capabilities(&self) -> io::Result<Capabilities> {
-		Ok(Capabilities {
-			symlink: true,
-			hard_link: true,
-			copy_progressive: true,
-			..Default::default()
-		})
+		Ok(Capabilities::for_kind(AuthKind::Sftp))
 	}
 
 	async fn casefold(&self) -> io::Result<UrlBuf> {
@@ -78,45 +71,22 @@ impl<'a> Engine for Sftp<'a> {
 		similar.map(|n| parent.try_join(n)).transpose()?.ok_or(io::ErrorKind::NotFound.into())
 	}
 
-	async fn copy<P>(&self, to: P, attrs: yazi_fs::engine::Attrs) -> io::Result<u64>
-	where
-		P: DynPath,
-	{
-		let to = to.dyn_path().as_unix()?;
-		let attrs = super::Attrs(attrs).try_into().unwrap_or_default();
-
-		let op = self.op().await?;
-		let from = op.open(self.path, Flags::READ, &Attrs::default()).await?;
-		let to = op.open(to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, &attrs).await?;
-
-		let mut reader = BufReader::with_capacity(524288, from);
-		let mut writer = BufWriter::with_capacity(524288, to);
-		let written = tokio::io::copy(&mut reader, &mut writer).await?;
-
-		writer.flush().await?;
-		if !attrs.is_empty() {
-			writer.get_ref().fsetstat(&attrs).await.ok();
+	async fn copy_to(&self, to: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
+		let to = to.physical();
+		if self.url.auth() != to.auth() {
+			return Ok(Transmit::unsupported());
 		}
 
-		writer.shutdown().await.ok();
-		Ok(written)
+		Ok(crate::engine::copy_progressive_impl(self.url.into(), to.into(), attrs))
 	}
 
-	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<Receiver<io::Result<u64>>>
-	where
-		P: DynPath,
-		A: Into<yazi_fs::engine::Attrs>,
-	{
-		let to = UrlBuf::Sftp {
-			loc:  LocBuf::<typed_path::UnixPathBuf>::saturated(
-				to.dyn_path().to_unix_owned()?,
-				AuthKind::Sftp,
-			),
-			auth: self.config.auth.clone(),
-		};
-		let from = self.url.to_owned();
+	async fn copy_from(&self, from: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
+		let from = from.physical();
+		if self.url.auth() != from.auth() {
+			return Ok(Transmit::unsupported());
+		}
 
-		Ok(crate::engine::copy_progressive_impl(from, to, attrs.into()))
+		Ok(crate::engine::copy_progressive_impl(from.into(), self.url.into(), attrs))
 	}
 
 	async fn create_dir(&self) -> io::Result<()> {
@@ -148,8 +118,8 @@ impl<'a> Engine for Sftp<'a> {
 	}
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
-		let Url::Sftp { loc, auth } = url else {
-			return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url:?}")));
+		let Url::Unix { loc, auth } = url else {
+			return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url}")));
 		};
 
 		let config = Vfs::service::<&ServiceSftp>(auth)?;

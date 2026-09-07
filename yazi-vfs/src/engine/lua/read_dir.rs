@@ -1,17 +1,16 @@
-use std::{io, vec};
+use std::io;
 
 use mlua::{FromLua, Lua, Table, Value};
+use tokio::sync::mpsc;
 use yazi_fs::{cha::{Cha, ChaType}, engine::{DirReader, FileHolder}, file::File};
 use yazi_shared::{path::PathBufDyn, strand::StrandCow, url::{UrlBuf, UrlLike}};
 
-pub struct ReadDir {
-	pub(super) entries: vec::IntoIter<DirEntry>,
-}
+pub struct ReadDir(pub(super) mpsc::Receiver<io::Result<DirEntry>>);
 
 impl DirReader for ReadDir {
 	type Entry = DirEntry;
 
-	async fn next(&mut self) -> io::Result<Option<Self::Entry>> { Ok(self.entries.next()) }
+	async fn next(&mut self) -> io::Result<Option<Self::Entry>> { self.0.recv().await.transpose() }
 }
 
 // --- Entry

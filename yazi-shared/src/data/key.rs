@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use anyhow::{Result, bail};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 use yazi_shim::SStr;
@@ -71,6 +72,15 @@ impl From<&'static str> for DataKey {
 
 impl From<String> for DataKey {
 	fn from(value: String) -> Self { Self::String(Cow::Owned(value)) }
+}
+
+impl TryFrom<DataKey> for String {
+	type Error = anyhow::Error;
+
+	fn try_from(value: DataKey) -> Result<Self, Self::Error> {
+		let DataKey::String(s) = value else { bail!("not a string") };
+		Ok(s.into_owned())
+	}
 }
 
 impl_into_integer!(DataKey, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, crate::id::Id);

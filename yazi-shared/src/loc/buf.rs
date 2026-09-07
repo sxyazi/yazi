@@ -319,7 +319,7 @@ mod tests {
 			let b: UrlBuf = expected.parse()?;
 			a.try_set_name(name).unwrap();
 			assert_eq!(
-				(a.name(), format!("{a:?}").replace(r"\", "/")),
+				(a.name(), format!("{a}").replace(r"\", "/")),
 				(b.name(), expected.replace(r"\", "/"))
 			);
 		}

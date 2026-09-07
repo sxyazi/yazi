@@ -11,7 +11,7 @@ use crate::file::File;
 impl UserData for Trash {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_function("empty", |lua, ()| async move {
-			match spawn_blocking(|| Trash::new()?.empty()).await.into_lua_err()? {
+			match spawn_blocking(|| Self::new()?.empty()).await.into_lua_err()? {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
@@ -23,21 +23,21 @@ impl UserData for Trash {
 			}
 
 			let id = TrashId::from_lua(value, &lua)?;
-			match spawn_blocking(move || Trash::new()?.entry(&id)).await.into_lua_err()? {
+			match spawn_blocking(move || Self::new()?.entry(&id)).await.into_lua_err()? {
 				Ok(entry) => entry.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 
 		methods.add_async_function("list", |lua, entry: Option<TrashEntry>| async move {
-			match spawn_blocking(move || Trash::new()?.list(entry.as_ref())).await.into_lua_err()? {
+			match spawn_blocking(move || Self::new()?.list(entry.as_ref())).await.into_lua_err()? {
 				Ok(items) => lua.create_sequence_from(items)?.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 
 		methods.add_async_function("metadata", |lua, (entry, follow): (TrashEntry, bool)| async move {
-			match spawn_blocking(move || Trash::new()?.metadata(&entry, follow)).await.into_lua_err()? {
+			match spawn_blocking(move || Self::new()?.metadata(&entry, follow)).await.into_lua_err()? {
 				Ok(cha) => cha.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
@@ -46,13 +46,13 @@ impl UserData for Trash {
 		methods.add_async_function(
 			"remove",
 			|lua, (kind, entry): (LuaString, TrashEntry)| async move {
-				let f: fn(&Trash, &TrashEntry) -> io::Result<()> = match &*kind.as_bytes() {
-					b"file" => Trash::remove_file,
-					b"dir" => Trash::remove_dir,
+				let f: fn(&Self, &TrashEntry) -> io::Result<()> = match &*kind.as_bytes() {
+					b"file" => Self::remove_file,
+					b"dir" => Self::remove_dir,
 					_ => Err("Removal type must be 'file' or 'dir'".into_lua_err())?,
 				};
 
-				match spawn_blocking(move || f(&Trash::new()?, &entry)).await.into_lua_err()? {
+				match spawn_blocking(move || f(&Self::new()?, &entry)).await.into_lua_err()? {
 					Ok(()) => true.into_lua_multi(&lua),
 					Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 				}
@@ -62,7 +62,7 @@ impl UserData for Trash {
 		methods.add_async_function(
 			"rename",
 			|lua, (entry, path): (TrashEntry, PathBufDyn)| async move {
-				match spawn_blocking(move || Trash::new()?.rename(&entry, path.as_os()?))
+				match spawn_blocking(move || Self::new()?.rename(&entry, path.as_os()?))
 					.await
 					.into_lua_err()?
 				{
@@ -73,7 +73,7 @@ impl UserData for Trash {
 		);
 
 		methods.add_async_function("restore", |lua, entries: TrashEntries| async move {
-			match spawn_blocking(move || Trash::new()?.restore(entries)).await.into_lua_err()? {
+			match spawn_blocking(move || Self::new()?.restore(entries)).await.into_lua_err()? {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
@@ -82,7 +82,7 @@ impl UserData for Trash {
 		methods.add_async_function(
 			"revalidate",
 			|lua, (entry, file): (Option<TrashEntry>, File)| async move {
-				match spawn_blocking(move || Trash::new()?.revalidate(entry.as_ref(), &file))
+				match spawn_blocking(move || Self::new()?.revalidate(entry.as_ref(), &file))
 					.await
 					.into_lua_err()?
 				{

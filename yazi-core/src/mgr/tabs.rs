@@ -33,6 +33,7 @@ impl Tabs {
 		// Reset the preview of the last active tab
 		if let Some(active) = self.items.get_mut(self.cursor) {
 			active.preview.reset_image();
+			active.preview.folder_lock = None;
 		}
 
 		self.cursor = idx;

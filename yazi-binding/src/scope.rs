@@ -10,7 +10,7 @@ pub struct Scope(Option<CancellationToken>);
 impl_data_any!(Scope, from_into_lua = inherit);
 
 impl From<&Scope> for Scope {
-	fn from(value: &Scope) -> Self { value.clone() }
+	fn from(value: &Self) -> Self { value.clone() }
 }
 
 impl From<CancellationToken> for Scope {

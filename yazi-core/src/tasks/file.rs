@@ -11,11 +11,11 @@ impl Tasks {
 
 		for u in src.urls() {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
-				debug!("file_move: cannot join {u:?} with {dest:?}");
+				debug!("file_move: cannot join {u} with {dest}");
 				continue;
 			};
 			if force && u == to {
-				debug!("file_move: same file, skip {to:?}");
+				debug!("file_move: same file, skip {to}");
 			} else {
 				self.scheduler.file_move(FileInMove::new(u.clone(), to, force));
 			}
@@ -27,11 +27,11 @@ impl Tasks {
 
 		for u in src.urls() {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
-				debug!("file_copy: cannot join {u:?} with {dest:?}");
+				debug!("file_copy: cannot join {u} with {dest}");
 				continue;
 			};
 			if force && u == to {
-				debug!("file_copy: same file, skip {to:?}");
+				debug!("file_copy: same file, skip {to}");
 			} else {
 				self.scheduler.file_copy(FileInCopy::new(u.clone(), to, force, follow));
 			}
@@ -43,11 +43,11 @@ impl Tasks {
 
 		for u in src.urls() {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
-				debug!("file_link: cannot join {u:?} with {dest:?}");
+				debug!("file_link: cannot join {u} with {dest}");
 				continue;
 			};
 			if force && u == to {
-				debug!("file_link: same file, skip {to:?}");
+				debug!("file_link: same file, skip {to}");
 			} else {
 				self.scheduler.file_link(FileInLink::new(u.clone(), to, relative, force, follow));
 			}
@@ -59,11 +59,11 @@ impl Tasks {
 
 		for u in src.urls() {
 			let Some(Ok(to)) = u.name().map(|n| dest.try_join(n)) else {
-				debug!("file_hardlink: cannot join {u:?} with {dest:?}");
+				debug!("file_hardlink: cannot join {u} with {dest}");
 				continue;
 			};
 			if force && u == to {
-				debug!("file_hardlink: same file, skip {to:?}");
+				debug!("file_hardlink: same file, skip {to}");
 			} else {
 				self.scheduler.file_hardlink(u.clone(), to, force, follow);
 			}

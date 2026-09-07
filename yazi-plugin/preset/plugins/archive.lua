@@ -21,7 +21,7 @@ function M:peek(job)
 	for i = job.skip + 1, #items do
 		local f = items[i]
 		local icon = th.icon:match(File {
-			url = Url(f.path),
+			url = Url(ya.clone(f.path)),
 			cha = Cha { mode = tonumber(f.is_dir and "40700" or "100644", 8) },
 		})
 

@@ -3,7 +3,7 @@ use std::ops::Deref;
 use mlua::{IntoLua, Lua, Value};
 use yazi_config::plugin::FetcherArc;
 use yazi_fs::file::Files;
-use yazi_shared::data::Sendable;
+use yazi_shared::sendable::Sendable;
 
 pub struct FetchJob {
 	pub fetcher: FetcherArc,

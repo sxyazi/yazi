@@ -41,7 +41,7 @@ impl Stamp {
 		path.push(key.as_os()?);
 
 		let stamp = Self::read_at(&path).await?;
-		let name = StrandCow::with(dir.kind(), stamp.name()).map_err(io::Error::other)?;
+		let name = StrandCow::with(dir.loc().kind(), stamp.name()).map_err(io::Error::other)?;
 
 		let url = dir.try_join(name)?;
 		if url.hash_u128_str(&mut [0; Self::SIG_LEN]).as_bytes() != key.encoded_bytes() {

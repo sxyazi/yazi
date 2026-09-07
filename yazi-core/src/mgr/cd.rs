@@ -13,7 +13,6 @@ pub enum CdSource {
 	Leave,
 
 	Follow,
-	Search,
 	Escape,
 
 	Forward,

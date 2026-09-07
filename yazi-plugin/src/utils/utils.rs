@@ -9,9 +9,10 @@ pub(crate) fn compose(
 	fn get(lua: &Lua, key: &[u8], isolate: bool) -> mlua::Result<Value> {
 		match key {
 			// App
-			b"id" => Utils::id(lua)?,
+			b"clone" => Utils::clone(lua)?,
 			b"drop" => Utils::drop(lua)?,
 			b"hold" => Utils::hold(lua)?,
+			b"id" => Utils::id(lua)?,
 
 			// Cache
 			b"file_cache" => Utils::file_cache(lua)?,
@@ -45,6 +46,12 @@ pub(crate) fn compose(
 
 			// Process
 			b"proc_info" => Utils::proc_info(lua)?,
+
+			// Regex
+			b"regex" => return Utils::regex(lua)?.into_lua(lua),
+
+			// Shell
+			b"shell" => return Utils::shell(lua)?.into_lua(lua),
 
 			// Spot
 			b"spot_table" => Utils::spot_table(lua)?,

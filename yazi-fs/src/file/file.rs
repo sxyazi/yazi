@@ -1,5 +1,6 @@
-use std::{borrow::Cow, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::Cow, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
+use hashbrown::Equivalent;
 use serde::{Deserialize, Serialize};
 use yazi_shared::{path::PathDyn, strand::Strand, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
@@ -17,6 +18,16 @@ impl Deref for File {
 	type Target = Cha;
 
 	fn deref(&self) -> &Self::Target { &self.cha }
+}
+
+impl PartialEq for File {
+	fn eq(&self, other: &Self) -> bool { self.url == other.url }
+}
+
+impl Eq for File {}
+
+impl Hash for File {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.url.hash(state); }
 }
 
 impl From<&Self> for File {
@@ -37,6 +48,14 @@ impl AsUrl for File {
 
 impl AsUrl for &File {
 	fn as_url(&self) -> Url<'_> { self.url.as_url() }
+}
+
+impl Equivalent<File> for Url<'_> {
+	fn equivalent(&self, key: &File) -> bool { *self == key.url }
+}
+
+impl Equivalent<File> for UrlBuf {
+	fn equivalent(&self, key: &File) -> bool { self == &key.url }
 }
 
 impl File {

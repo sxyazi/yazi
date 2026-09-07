@@ -22,7 +22,7 @@ impl Actor for Refresh {
 			[Some(&mut tab.current), tab.parent.as_mut()]
 				.into_iter()
 				.flatten()
-				.filter(|f| f.url.is_absolute() && !f.url.is_search())
+				.filter(|f| f.url.is_absolute())
 				.map(|f| f.take_request()),
 		);
 
@@ -37,7 +37,7 @@ impl Actor for Refresh {
 
 impl Refresh {
 	fn cwd_changed() {
-		if CWD.load().kind().is_virtual() {
+		if !CWD.load().auth().is_local() {
 			MgrProxy::watch();
 		}
 	}

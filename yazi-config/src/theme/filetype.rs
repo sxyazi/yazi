@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use yazi_binding::style::StyleFlat;
+use yazi_binding::style::Style;
 use yazi_codegen::{DeserializeOver, DeserializeOver2, Overlay};
 use yazi_fs::file::File;
 
@@ -12,7 +12,7 @@ pub struct Filetype {
 }
 
 impl Filetype {
-	pub fn match_style(&self, file: &File, mime: &str) -> Option<StyleFlat> {
+	pub fn match_style(&self, file: &File, mime: &str) -> Option<Style> {
 		self.rules.load().iter().find(|rule| rule.matches(file, mime)).map(|rule| rule.style)
 	}
 }

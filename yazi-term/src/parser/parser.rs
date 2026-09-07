@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, mem, num::NonZeroU8, str, time::{Duration, Instant}};
 
-use yazi_shim::utf8_char_width;
+use yazi_shim::utf8::utf8_char_width;
 
 use super::state::State;
 use crate::event::{ClipboardEvent, DndEvent, Event, KeyCode, KeyEvent, Modifiers};

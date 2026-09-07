@@ -216,11 +216,6 @@ find_title  = [ "Find next:", "Find previous:" ]
 find_origin = "top-center"
 find_offset = [ 0, 2, 50, 3 ]
 
-# search
-search_title  = "Search via {n}:"
-search_origin = "top-center"
-search_offset = [ 0, 2, 50, 3 ]
-
 # shell
 shell_title  = [ "Shell:", "Shell (block):" ]
 shell_origin = "top-center"

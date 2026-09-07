@@ -1,27 +1,22 @@
-use std::{borrow::Cow, fmt::{Debug, Formatter}, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr, sync::Arc};
+use std::{borrow::Cow, fmt::Formatter, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr};
 
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
-use yazi_codegen::FromLuaOwned;
 use yazi_macro::impl_data_any;
 
-use crate::{auth::{Auth, Domain}, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer}};
+use crate::{auth::{AuthArc, View}, domain::Domain, loc::LocBuf, path::{PathBufDyn, PathDynError, SetNameError}, spec::Spec, strand::AsStrand, url::{AsUrl, Url, UrlCow, UrlDeserializer, UrlLike}, wire::Wire};
 
-#[derive(Clone, Eq, FromLuaOwned)]
+#[derive(Clone, Debug, Eq)]
 pub enum UrlBuf {
-	Regular(LocBuf),
-	Search { loc: LocBuf, auth: Arc<Auth> },
-	Mount { loc: LocBuf, auth: Arc<Auth> },
-	Hub { loc: LocBuf, auth: Arc<Auth> },
-	Scope { loc: LocBuf<typed_path::UnixPathBuf>, auth: Arc<Auth> },
-	Sftp { loc: LocBuf<typed_path::UnixPathBuf>, auth: Arc<Auth> },
+	Os { loc: LocBuf, auth: AuthArc },
+	Unix { loc: LocBuf<typed_path::UnixPathBuf>, auth: AuthArc },
 }
 
 impl_data_any!(UrlBuf);
 
 // FIXME: remove
 impl Default for UrlBuf {
-	fn default() -> Self { Self::Regular(Default::default()) }
+	fn default() -> Self { Self::Os { loc: Default::default(), auth: Default::default() } }
 }
 
 impl From<&Self> for UrlBuf {
@@ -31,12 +26,8 @@ impl From<&Self> for UrlBuf {
 impl From<Url<'_>> for UrlBuf {
 	fn from(url: Url<'_>) -> Self {
 		match url {
-			Url::Regular(loc) => Self::Regular(loc.into()),
-			Url::Search { loc, auth } => Self::Search { loc: loc.into(), auth: auth.clone() },
-			Url::Mount { loc, auth } => Self::Mount { loc: loc.into(), auth: auth.clone() },
-			Url::Hub { loc, auth } => Self::Hub { loc: loc.into(), auth: auth.clone() },
-			Url::Scope { loc, auth } => Self::Scope { loc: loc.into(), auth: auth.clone() },
-			Url::Sftp { loc, auth } => Self::Sftp { loc: loc.into(), auth: auth.clone() },
+			Url::Os { loc, auth } => Self::Os { loc: loc.into(), auth: auth.clone() },
+			Url::Unix { loc, auth } => Self::Unix { loc: loc.into(), auth: auth.clone() },
 		}
 	}
 }
@@ -46,7 +37,7 @@ impl From<&Url<'_>> for UrlBuf {
 }
 
 impl From<LocBuf> for UrlBuf {
-	fn from(loc: LocBuf) -> Self { Self::Regular(loc) }
+	fn from(loc: LocBuf) -> Self { Self::Os { loc, auth: Default::default() } }
 }
 
 impl From<PathBuf> for UrlBuf {
@@ -133,35 +124,45 @@ impl UrlBuf {
 	#[inline]
 	pub fn into_loc(self) -> PathBufDyn {
 		match self {
-			Self::Regular(loc) => loc.into_inner().into(),
-			Self::Search { loc, .. } => loc.into_inner().into(),
-			Self::Mount { loc, .. } => loc.into_inner().into(),
-			Self::Hub { loc, .. } => loc.into_inner().into(),
-			Self::Scope { loc, .. } => loc.into_inner().into(),
-			Self::Sftp { loc, .. } => loc.into_inner().into(),
+			Self::Os { loc, .. } => loc.into_inner().into(),
+			Self::Unix { loc, .. } => loc.into_inner().into(),
+		}
+	}
+
+	pub fn into_view(self, auth: AuthArc, data: Wire) -> Result<Self> {
+		ensure!(auth.kind.is_view(), "View authority required");
+
+		let source = self.physical().auth().clone();
+		let auth = auth.with_view(View { source, data });
+		auth.validate()?;
+
+		Ok(match self {
+			Self::Os { loc, .. } => Self::Os { loc: LocBuf::zeroed(loc.into_inner()), auth },
+			Self::Unix { loc, .. } => Self::Unix { loc: LocBuf::zeroed(loc.into_inner()), auth },
+		})
+	}
+
+	pub fn into_physical(self) -> Self {
+		let Some(auth) = self.auth().view.auth().cloned() else { return self };
+
+		match self {
+			Self::Os { loc, .. } => Self::Os { loc: loc.into_inner().into(), auth },
+			Self::Unix { loc, .. } => Self::Unix { loc: loc.into_inner().into(), auth },
 		}
 	}
 
 	pub fn try_set_name(&mut self, name: impl AsStrand) -> Result<(), SetNameError> {
 		let name = name.as_strand();
 		Ok(match self {
-			Self::Regular(loc) => loc.try_set_name(name.as_os()?)?,
-			Self::Search { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Mount { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Hub { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Scope { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
-			Self::Sftp { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
+			Self::Os { loc, .. } => loc.try_set_name(name.as_os()?)?,
+			Self::Unix { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
 		})
 	}
 
 	pub fn rebase(&self, base: &Path) -> Self {
 		match self {
-			Self::Regular(loc) => Self::Regular(loc.rebase(base)),
-			Self::Search { loc, auth } => Self::Search { loc: loc.rebase(base), auth: auth.clone() },
-			Self::Mount { loc, auth } => Self::Mount { loc: loc.rebase(base), auth: auth.clone() },
-			Self::Hub { .. } => todo!(),
-			Self::Scope { .. } => todo!(),
-			Self::Sftp { .. } => todo!(),
+			Self::Os { loc, auth } => Self::Os { loc: loc.rebase(base), auth: auth.clone() },
+			Self::Unix { .. } => todo!(),
 		}
 	}
 }
@@ -171,28 +172,15 @@ impl UrlBuf {
 	pub fn to_regular(&self) -> Result<Self, PathDynError> { Ok(self.as_url().as_regular()?.into()) }
 
 	#[inline]
-	pub(crate) fn into_search(self, query: impl AsRef<str>) -> Result<Self, PathDynError> {
-		Ok(Self::Search {
-			loc:  LocBuf::<PathBuf>::zeroed(self.into_loc().into_os()?),
-			auth: Auth::search(query.as_ref()),
-		})
-	}
-
-	pub(crate) fn into_domain<'a>(mut self, domain: impl Into<Domain<'a>>) -> Self {
+	pub(crate) fn with_domain<'a>(mut self, domain: impl Into<Domain<'a>>) -> Self {
 		match &mut self {
-			Self::Regular(_) => {}
-			Self::Search { auth, .. }
-			| Self::Mount { auth, .. }
-			| Self::Hub { auth, .. }
-			| Self::Scope { auth, .. }
-			| Self::Sftp { auth, .. } => Arc::make_mut(auth).domain = domain.into().into_owned(),
+			Self::Os { auth, .. } | Self::Unix { auth, .. } if !auth.is_regular() => {
+				auth.make_mut().domain = domain.into().into_owned()
+			}
+			_ => {}
 		}
 		self
 	}
-}
-
-impl Debug for UrlBuf {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.as_url().fmt(f) }
 }
 
 impl Serialize for UrlBuf {
@@ -229,6 +217,13 @@ impl<'de> Deserialize<'de> for UrlBuf {
 				UrlBuf::try_from(value).map_err(E::custom)
 			}
 
+			fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+			where
+				A: de::MapAccess<'de>,
+			{
+				self.visit_newtype_struct(de::value::MapAccessDeserializer::new(map))
+			}
+
 			fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
 			where
 				D: de::Deserializer<'de>,
@@ -240,14 +235,15 @@ impl<'de> Deserialize<'de> for UrlBuf {
 					path: Vec<u8>,
 				}
 
-				let Shadow { spec, path } = Deserialize::deserialize(deserializer)?;
-				let path = PathBufDyn::with(spec.kind, path).map_err(de::Error::custom)?;
+				let Shadow { spec, path } = Shadow::deserialize(deserializer)?;
+				let kind = spec.path_kind().map_err(de::Error::custom)?;
+				let path = PathBufDyn::with(kind, path).map_err(de::Error::custom)?;
 
 				UrlBuf::try_from((spec, path)).map_err(de::Error::custom)
 			}
 		}
 
-		deserializer.deserialize_string(Visitor)
+		deserializer.deserialize_any(Visitor)
 	}
 }
 
@@ -266,14 +262,14 @@ impl<'de> IntoDeserializer<'de, de::value::Error> for &'de UrlBuf {
 // --- Tests
 #[cfg(test)]
 mod tests {
-	use std::fmt::Debug;
+	use std::fmt::Display;
 
 	use anyhow::Result;
 
 	use super::*;
 	use crate::{path::PathKind, url::UrlLike};
 
-	fn debug(value: impl Debug) -> String { format!("{value:?}").replace(r"\", "/") }
+	fn fmt(value: impl Display) -> String { format!("{value}").replace(r"\", "/") }
 
 	#[test]
 	fn test_join() -> anyhow::Result<()> {
@@ -281,9 +277,9 @@ mod tests {
 		let cases = [
 			// Regular
 			("/a", "b/c", "/a/b/c"),
-			// Search
-			("search://kw//a", "b/c", "search://kw:2:2//a/b/c"),
-			("search://kw:2:2//a/b/c", "d/e", "search://kw:4:4//a/b/c/d/e"),
+			// View
+			("test-view://fx/@Ds2kw0A//a", "b/c", "test-view://fx:2:2/@Ds2kw0A//a/b/c"),
+			("test-view://fx:2:2/@Ds2kw0A//a/b/c", "d/e", "test-view://fx:4:4/@Ds2kw0A//a/b/c/d/e"),
 			// Mount
 			("test-mount://7z//a/b.zip", "c/d", "test-mount://7z:2:1//a/b.zip/c/d"),
 			("test-mount://7z:2:1//a/b.zip/c/d", "e/f", "test-mount://7z:4:1//a/b.zip/c/d/e/f"),
@@ -291,14 +287,13 @@ mod tests {
 			// SFTP
 			("sftp://vps//a", "b/c", "sftp://vps//a/b/c"),
 			("sftp://vps:1:1//a/b/c", "d/e", "sftp://vps//a/b/c/d/e"),
-			// Relative
-			("search://kw", "b/c", "search://kw:2:2/b/c"),
-			("search://kw/", "b/c", "search://kw:2:2/b/c"),
+			// Relative view
+			("test-view://fx/@Ds2kw0A/", "b/c", "test-view://fx:2:2/@Ds2kw0A/b/c"),
 		];
 
 		for (base, path, expected) in cases {
 			let base: UrlBuf = base.parse()?;
-			assert_eq!(debug(base.try_join(path)?), expected);
+			assert_eq!(fmt(base.try_join(path)?), expected);
 		}
 
 		Ok(())
@@ -313,10 +308,10 @@ mod tests {
 			("/", None),
 			("a", Some("")),
 			("", None),
-			// Search
-			("search://kw:2:2//a/b/c", Some("search://kw:1:1//a/b")),
-			("search://kw:1:1//a/b", Some("search://kw//a")),
-			("search://kw//a", Some("/")),
+			// View
+			("test-view://fx:2:2/@Ds2kw0A//a/b/c", Some("test-view://fx:1:1/@Ds2kw0A//a/b")),
+			("test-view://fx:1:1/@Ds2kw0A//a/b", Some("test-view://fx/@Ds2kw0A//a")),
+			("test-view://fx/@Ds2kw0A//a", Some("/")),
 			// Mount
 			("test-mount://7z:2:1//a/b.zip/c/d", Some("test-mount://7z:1:1//a/b.zip/c")),
 			("test-mount://7z:1:1//a/b.zip/c", Some("test-mount://7z//a/b.zip")),
@@ -328,10 +323,10 @@ mod tests {
 			("sftp://vps//a", Some("sftp://vps//")),
 			("sftp://vps:1//", None),
 			("sftp://vps//", None),
-			// Relative
-			("search://kw:2:2/a/b", Some("search://kw:1:1/a")),
-			("search://kw:1:1/a", Some("search://kw/")),
-			("search://kw/", None),
+			// Relative view
+			("test-view://fx:2:2/@Ds2kw0A/a/b", Some("test-view://fx:1:1/@Ds2kw0A/a")),
+			("test-view://fx:1:1/@Ds2kw0A/a", Some("test-view://fx/@Ds2kw0A/")),
+			("test-view://fx/@Ds2kw0A/", None),
 			("test-mount://7z:1:1/a", Some("test-mount://7z/")),
 			("test-scope://aws/a", Some("test-scope://aws/")),
 			("sftp://vps/a", Some("sftp://vps/")),
@@ -339,37 +334,41 @@ mod tests {
 
 		for (path, expected) in cases {
 			let path: UrlBuf = path.parse()?;
-			assert_eq!(path.parent().map(debug).as_deref(), expected);
+			assert_eq!(path.parent().map(fmt).as_deref(), expected);
 		}
 
 		Ok(())
 	}
 
 	#[test]
-	fn test_into_search() -> Result<()> {
+	fn test_view() -> Result<()> {
 		crate::init_tests();
 
-		let u: UrlBuf = "/root".parse()?;
-		assert_eq!(debug(&u), "/root");
-
-		let u = u.into_search("kw")?;
-		assert_eq!(debug(&u), "search://kw//root");
-		assert_eq!(debug(u.parent().unwrap()), "/");
+		let u: UrlBuf = "test-view://fx/@Ds2kw0A//root".parse()?;
+		assert_eq!(fmt(&u), "test-view://fx/@Ds2kw0A//root");
+		assert_eq!(fmt(u.physical()), "/root");
+		assert_eq!(fmt(u.parent().unwrap()), "/");
 
 		let u = u.try_join("examples")?;
-		assert_eq!(debug(&u), "search://kw:1:1//root/examples");
+		assert_eq!(fmt(&u), "test-view://fx:1:1/@Ds2kw0A//root/examples");
+		assert_eq!(u.urn(), "examples");
+		assert_eq!(fmt(u.physical()), "/root/examples");
 
 		let u = u.try_join("README.md")?;
-		assert_eq!(debug(&u), "search://kw:2:2//root/examples/README.md");
+		assert_eq!(fmt(&u), "test-view://fx:2:2/@Ds2kw0A//root/examples/README.md");
+		assert_eq!(u.urn(), "examples/README.md");
+		assert_eq!(fmt(u.physical()), "/root/examples/README.md");
 
 		let u = u.parent().unwrap();
-		assert_eq!(debug(u), "search://kw:1:1//root/examples");
+		assert_eq!(fmt(u), "test-view://fx:1:1/@Ds2kw0A//root/examples");
+		assert_eq!(u.urn(), "examples");
 
 		let u = u.parent().unwrap();
-		assert_eq!(debug(u), "search://kw//root");
+		assert_eq!(fmt(u), "test-view://fx/@Ds2kw0A//root");
+		assert!(u.urn().is_empty());
 
 		let u = u.parent().unwrap();
-		assert_eq!(debug(u), "/");
+		assert_eq!(fmt(u), "/");
 
 		Ok(())
 	}
@@ -379,13 +378,13 @@ mod tests {
 		crate::init_tests();
 
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
-		assert_eq!(debug(&root), "test-hub://root/@/");
+		assert_eq!(fmt(&root), "test-hub://root/@/");
 		assert_eq!(root.loc().kind(), PathKind::Os);
 
 		let encoded: UrlBuf = "test-hub://%252C/@/".parse()?;
-		assert_eq!(debug(encoded), "test-hub://%252C/@/");
+		assert_eq!(fmt(encoded.encode()), "test-hub~://%252C/@/");
 		let encoded: UrlBuf = "test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar".parse()?;
-		assert_eq!(debug(encoded), "test-hub://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar");
+		assert_eq!(fmt(encoded.encode()), "test-hub~://b1/@a%2Cb%40c%25d%2Fe,root/foo/bar");
 
 		Ok(())
 	}
@@ -395,18 +394,18 @@ mod tests {
 		crate::init_tests();
 
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
-		let foo = root.try_join("foo")?.into_domain("a1");
-		assert_eq!(debug(&foo), "test-hub://a1/@root/foo");
+		let foo = root.try_join("foo")?.with_domain("a1");
+		assert_eq!(fmt(&foo), "test-hub://a1/@root/foo");
 
-		let bar = foo.try_join("bar")?.into_domain("b1");
+		let bar = foo.try_join("bar")?.with_domain("b1");
 		assert_eq!(bar.key(), "b1");
-		assert_eq!(debug(&bar), "test-hub://b1/@a1,root/foo/bar");
-		assert_eq!(debug(bar.parent().unwrap()), "test-hub://a1/@root/foo");
-		assert_eq!(debug(bar.parent().unwrap().parent().unwrap()), "test-hub://root/@/");
+		assert_eq!(fmt(&bar), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(fmt(bar.parent().unwrap()), "test-hub://a1/@root/foo");
+		assert_eq!(fmt(bar.parent().unwrap().parent().unwrap()), "test-hub://root/@/");
 
 		let relative = UrlCow::try_from("test-hub://a1/@/@abc")?;
-		assert_eq!(debug(relative.as_url()), "test-hub://a1/@/@abc");
-		assert_eq!(debug(relative.parent().unwrap().as_url()), "test-hub:///@/");
+		assert_eq!(fmt(&relative), "test-hub://a1/@/@abc");
+		assert_eq!(fmt(relative.parent().unwrap()), "test-hub:///@/");
 		assert_eq!(relative.key(), "a1");
 		assert!(!relative.is_owned());
 		assert!(relative.parent().unwrap().key().is_empty());
@@ -421,17 +420,17 @@ mod tests {
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
 		let bar: UrlBuf = "test-hub://b1/@a1,root/foo/bar".parse()?;
 
-		assert_eq!(debug(bar.try_join(".")?), "test-hub://b1/@a1,root/foo/bar");
-		assert_eq!(debug(bar.try_join("..")?), "test-hub:///@b1,a1,root/foo/bar/..");
+		assert_eq!(fmt(bar.try_join(".")?), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(fmt(bar.try_join("..")?), "test-hub:///@b1,a1,root/foo/bar/..");
 
-		assert_eq!(debug(bar.try_join("/x/y")?), "test-hub:///@,//x/y");
-		assert_eq!(debug(root.try_join("../../..")?), "test-hub:///@,,root/../../..");
+		assert_eq!(fmt(bar.try_join("/x/y")?), "test-hub:///@,//x/y");
+		assert_eq!(fmt(root.try_join("../../..")?), "test-hub:///@,,root/../../..");
 
 		let absolute = root.try_join("/foo")?;
-		assert_eq!(debug(&absolute), "test-hub:///@//foo");
-		let absolute = absolute.into_domain("a1");
-		assert_eq!(debug(&absolute), "test-hub://a1/@//foo");
-		assert_eq!(debug(absolute.parent().unwrap().try_join("..")?), "test-hub:///@//..");
+		assert_eq!(fmt(&absolute), "test-hub:///@//foo");
+		let absolute = absolute.with_domain("a1");
+		assert_eq!(fmt(&absolute), "test-hub://a1/@//foo");
+		assert_eq!(fmt(absolute.parent().unwrap().try_join("..")?), "test-hub:///@//..");
 
 		Ok(())
 	}
@@ -441,16 +440,16 @@ mod tests {
 		crate::init_tests();
 
 		let ports: UrlBuf = "test-hub://b1:2:1/@a1,root/foo/bar".parse()?;
-		assert_eq!(debug(ports.base()), "test-hub://root/@/");
-		assert_eq!(debug(ports.trail()), "test-hub://a1/@root/foo");
+		assert_eq!(fmt(ports.base()), "test-hub://root/@/");
+		assert_eq!(fmt(ports.trail()), "test-hub://a1/@root/foo");
 
 		let ports: UrlBuf = "test-hub://b1:3:1/@a1,root//foo/bar".parse()?;
-		assert_eq!(debug(ports.base()), "test-hub://root/@/");
-		assert_eq!(debug(ports.trail()), "test-hub://a1/@root//foo");
+		assert_eq!(fmt(ports.base()), "test-hub://root/@/");
+		assert_eq!(fmt(ports.trail()), "test-hub://a1/@root//foo");
 
 		let zeroed: UrlBuf = "test-hub://b1:0:0/@a1,root/foo/bar".parse()?;
-		assert_eq!(debug(zeroed.base()), "test-hub://b1/@a1,root/foo/bar");
-		assert_eq!(debug(zeroed.trail()), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(fmt(zeroed.base()), "test-hub://b1/@a1,root/foo/bar");
+		assert_eq!(fmt(zeroed.trail()), "test-hub://b1/@a1,root/foo/bar");
 
 		Ok(())
 	}
@@ -469,10 +468,10 @@ mod tests {
 
 		let url: UrlBuf = "test-hub://b1/@a1,root/foo/bar".parse()?;
 		assert_eq!(
-			debug(url.try_replace(2, Path::new("baz/qux"))?.as_url()),
+			fmt(url.try_replace(2, Path::new("baz/qux"))?),
 			"test-hub://b1:2:2/@,a1,root/foo/baz/qux"
 		);
-		assert_eq!(debug(url.try_replace(1, Path::new("qux"))?.as_url()), "test-hub://b1/@root/qux");
+		assert_eq!(fmt(url.try_replace(1, Path::new("qux"))?), "test-hub://b1/@root/qux");
 
 		Ok(())
 	}
@@ -483,11 +482,11 @@ mod tests {
 		crate::init_tests();
 
 		let root: UrlBuf = "test-hub://root/@/".parse()?;
-		let c = root.try_join(r"C:\")?.into_domain("c-root");
+		let c = root.try_join(r"C:\")?.with_domain("c-root");
 		assert_eq!(c.key(), "c-root");
 		assert_eq!(c.auth().parent_depth(), 0);
 
-		let drive = c.try_join(r"Users\file.txt")?.into_domain("file");
+		let drive = c.try_join(r"Users\file.txt")?.with_domain("file");
 		assert_eq!(drive.loc(), Path::new(r"C:\Users\file.txt"));
 		assert_eq!(drive.auth().parent_depth(), 2);
 

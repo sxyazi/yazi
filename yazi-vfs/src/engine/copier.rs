@@ -2,36 +2,18 @@ use std::{io::{self, SeekFrom}, sync::{Arc, atomic::{AtomicU64, Ordering}}};
 
 use futures::{StreamExt, TryStreamExt};
 use tokio::{io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt, BufReader, BufWriter}, select, sync::{mpsc, oneshot}};
-use yazi_fs::{cha::Cha, engine::{Attrs, FileBuilder}};
-use yazi_shared::url::{Url, UrlBuf};
+use yazi_fs::{cha::Cha, engine::{Attrs, FileBuilder, Transmit}};
+use yazi_shared::url::UrlBuf;
 
 use crate::engine::{self, Demand, RwFile};
 
 const BUF_SIZE: usize = 512 * 1024;
 const PER_CHUNK: u64 = 8 * 1024 * 1024;
 
-pub(super) async fn copy_impl(from: Url<'_>, to: Url<'_>, attrs: Attrs) -> io::Result<u64> {
-	let src = engine::open(from).await?;
-	let dist = engine::create(to).await?;
-
-	let mut reader = BufReader::with_capacity(BUF_SIZE, src);
-	let mut writer = BufWriter::with_capacity(BUF_SIZE, dist);
-	let written = tokio::io::copy(&mut reader, &mut writer).await?;
-
-	writer.flush().await?;
-	writer.get_ref().set_attrs(attrs).await.ok();
-	writer.shutdown().await.ok();
-	Ok(written)
-}
-
-pub(super) fn copy_progressive_impl(
-	from: UrlBuf,
-	to: UrlBuf,
-	attrs: Attrs,
-) -> mpsc::Receiver<io::Result<u64>> {
+pub(super) fn copy_progressive_impl(from: UrlBuf, to: UrlBuf, attrs: Attrs) -> Transmit {
 	let (copier, rx) = ProgressiveCopier::new(from, to, attrs);
 	copier.spawn();
-	rx
+	Transmit::new(rx)
 }
 
 // --- ProgressiveCopier

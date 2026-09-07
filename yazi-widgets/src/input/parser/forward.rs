@@ -16,21 +16,7 @@ pub struct ForwardOpt {
 impl TryFrom<ActionCow> for ForwardOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
-		// TODO: remove
-		if a.bool("far") {
-			static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-			if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-				yazi_macro::emit!(Call(yazi_shared::event::Action::new_relay("app:deprecate").with(
-					"content",
-					"`forward --far` is deprecated, use `forward wide` under `[input]` instead".to_string()
-				)));
-			}
-
-			return Ok(Self { gait: Gait::Wide, end_of_word: a.bool("end-of-word") });
-		}
-		Ok(a.deserialize()?)
-	}
+	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for ForwardOpt {

@@ -1,6 +1,6 @@
 yazi_macro::mod_pub!(entry evaluator fetcher loader preloader previewer provider);
 
-yazi_macro::mod_flat!(runner spot);
+yazi_macro::mod_flat!(coroutine runner spot);
 
 pub static RUNNER: yazi_shim::cell::RoCell<Runner> = yazi_shim::cell::RoCell::new();
 

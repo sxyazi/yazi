@@ -36,7 +36,6 @@ yazi_macro::mod_flat!(
 	remove_do
 	rename
 	reveal
-	search
 	seek
 	shell
 	sort

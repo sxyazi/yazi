@@ -4,9 +4,9 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, MetaMethod, Table,
 use ratatui_core::style::Modifier;
 use yazi_shim::{cell::SyncCell, mlua::SER_OPT};
 
-use crate::{elements::Color, style::StyleFlat};
+use crate::elements::Color;
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Style(pub ratatui_core::style::Style);
 
 impl Deref for Style {
@@ -15,12 +15,8 @@ impl Deref for Style {
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl From<StyleFlat> for Style {
-	fn from(value: StyleFlat) -> Self { Self(value.into()) }
-}
-
-impl From<&SyncCell<StyleFlat>> for Style {
-	fn from(value: &SyncCell<StyleFlat>) -> Self { value.get().into() }
+impl From<&SyncCell<Style>> for Style {
+	fn from(value: &SyncCell<Style>) -> Self { value.get() }
 }
 
 impl From<Style> for ratatui_core::style::Style {
@@ -136,6 +132,6 @@ impl UserData for Style {
 
 		methods.add_method("patch", |_, me, other: Self| Ok(Self(me.patch(other))));
 
-		methods.add_method("raw", |lua, me, ()| lua.to_value_with(&StyleFlat::from(me.0), SER_OPT));
+		methods.add_method("raw", |lua, me, ()| lua.to_value_with(me, SER_OPT));
 	}
 }

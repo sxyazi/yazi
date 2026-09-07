@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use hashbrown::HashMap;
 use mlua::{FromLua, Lua, Table, Value};
 use yazi_runner::entry::EntryJob;
-use yazi_shared::{data::{Data, DataKey, Sendable}, id::Id};
+use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
 use yazi_shim::SStr;
 
 use crate::{TaskIn, custom::CustomIn, plugin::PluginProgEntry};

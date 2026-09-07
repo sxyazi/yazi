@@ -1,31 +1,31 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not};
 
-use crate::{auth::Auth, loc::Loc, path, spec::{EncodeSpec, Spec}, strand::{StrandBuf, StrandCow}, url::{Component, Encode as EncodeUrl, Url}};
+use crate::{auth::AuthArc, loc::Loc, path, spec::{Encode as EncodeSpec, Spec}, strand::{StrandBuf, StrandCow}, url::{Component, Url}};
 
 #[derive(Clone)]
 pub struct Components<'a> {
-	inner:          path::Components<'a>,
-	url:            Url<'a>,
-	auth_yields:    usize,
-	back_yields:    usize,
-	scheme_yielded: bool,
+	inner:        path::Components<'a>,
+	url:          Url<'a>,
+	auth_yields:  usize,
+	back_yields:  usize,
+	auth_yielded: bool,
 }
 
 impl<'a> From<Url<'a>> for Components<'a> {
 	fn from(value: Url<'a>) -> Self {
 		Self {
-			inner:          value.loc().components(),
-			url:            value,
-			auth_yields:    0,
-			back_yields:    0,
-			scheme_yielded: false,
+			inner:        value.loc().components(),
+			url:          value,
+			auth_yields:  0,
+			back_yields:  0,
+			auth_yielded: false,
 		}
 	}
 }
 
 impl<'a> Components<'a> {
 	pub fn covariant(&self, other: &Self) -> bool {
-		match (self.scheme_yielded, other.scheme_yielded) {
+		match (self.auth_yielded, other.auth_yielded) {
 			(true, true) => {}
 			(false, false) if self.auth().covariant(other.auth()) => {}
 			_ => return false,
@@ -35,10 +35,10 @@ impl<'a> Components<'a> {
 
 	pub fn os_str(&self) -> Cow<'a, OsStr> {
 		let Ok(os) = self.inner.strand().as_os() else {
-			return OsString::from(EncodeUrl(self.url()).to_string()).into();
+			return OsString::from(self.url().encode().to_string()).into();
 		};
 
-		if self.url.is_regular() || self.scheme_yielded {
+		if self.url.is_regular() || self.auth_yielded {
 			return os.into();
 		}
 
@@ -48,7 +48,7 @@ impl<'a> Components<'a> {
 		s.into()
 	}
 
-	fn auth(&self) -> &'a Auth { self.url.auth() }
+	fn auth(&self) -> &'a AuthArc { self.url.auth() }
 
 	fn ports(&self) -> (usize, usize) {
 		let left = self.inner.clone().count();
@@ -64,7 +64,7 @@ impl<'a> Components<'a> {
 
 	pub fn strand(&self) -> StrandCow<'a> {
 		let s = self.inner.strand();
-		if self.url.is_regular() || self.scheme_yielded {
+		if self.url.is_regular() || self.auth_yielded {
 			return s.into();
 		}
 
@@ -78,22 +78,15 @@ impl<'a> Components<'a> {
 		let path = self.inner.path();
 		let (uri, urn) = self.ports();
 		match self.url {
-			Url::Regular(_) => Url::Regular(Loc::with(path.as_os().unwrap(), uri, urn).unwrap()),
-			Url::Search { auth, .. } => {
-				Url::Search { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), auth }
-			}
-			Url::Mount { auth, .. } => {
-				Url::Mount { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), auth }
-			}
-			Url::Hub { auth, .. } => Url::Hub {
+			Url::Os { auth, .. } if auth.kind.is_hub() => Url::Os {
 				loc:  Loc::with(path.as_os().unwrap(), uri, urn).unwrap(),
 				auth: auth.parent_at(self.auth_yields),
 			},
-			Url::Scope { auth, .. } => {
-				Url::Scope { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), auth }
+			Url::Os { auth, .. } => {
+				Url::Os { loc: Loc::with(path.as_os().unwrap(), uri, urn).unwrap(), auth }
 			}
-			Url::Sftp { auth, .. } => {
-				Url::Sftp { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), auth }
+			Url::Unix { auth, .. } => {
+				Url::Unix { loc: Loc::with(path.as_unix().unwrap(), uri, urn).unwrap(), auth }
 			}
 		}
 	}
@@ -103,8 +96,8 @@ impl<'a> Iterator for Components<'a> {
 	type Item = Component<'a>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if !self.scheme_yielded {
-			self.scheme_yielded = true;
+		if !self.auth_yielded {
+			self.auth_yielded = true;
 			Some(Component::Auth(self.auth()))
 		} else {
 			self.inner.next().map(Into::into)
@@ -113,9 +106,9 @@ impl<'a> Iterator for Components<'a> {
 
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		let (min, max) = self.inner.size_hint();
-		let scheme = self.scheme_yielded.not() as usize;
+		let auth = self.auth_yielded.not() as usize;
 
-		(min + scheme, max.map(|n| n + scheme))
+		(min + auth, max.map(|n| n + auth))
 	}
 }
 
@@ -125,8 +118,8 @@ impl<'a> DoubleEndedIterator for Components<'a> {
 			self.auth_yields += c.has_auth() as usize;
 			self.back_yields += 1;
 			Some(c.into())
-		} else if !self.scheme_yielded {
-			self.scheme_yielded = true;
+		} else if !self.auth_yielded {
+			self.auth_yielded = true;
 			Some(Component::Auth(self.auth()))
 		} else {
 			None
@@ -141,7 +134,7 @@ impl<'a> PartialEq for Components<'a> {
 		if self.inner != other.inner {
 			return false;
 		}
-		match (self.scheme_yielded, other.scheme_yielded) {
+		match (self.auth_yielded, other.auth_yielded) {
 			(true, true) => true,
 			(false, false) if self.auth() == other.auth() => true,
 			_ => false,
@@ -154,20 +147,21 @@ impl<'a> PartialEq for Components<'a> {
 mod tests {
 	use anyhow::Result;
 
-	use crate::{auth::Auth as A, spec::Spec as D, url::{Component, UrlBuf, UrlLike}};
+	use crate::url::{Component, UrlBuf, UrlLike};
 
 	#[test]
 	fn test_url() -> Result<()> {
 		use Component::*;
 
 		crate::init_tests();
-		let s = |uri, urn| D { auth: A::search("keyword"), uri, urn };
 
-		let search: UrlBuf = "search://keyword//root/projects/yazi".parse()?;
-		assert_eq!(search.uri(), "");
-		assert_eq!(search.spec(), s(0, 0));
+		let view: UrlBuf = "test-view://fx/@Ds2kw0A//root/projects/yazi".parse()?;
+		let s = |uri, urn| view.spec().with_ports(uri, urn);
 
-		let src = search.try_join("src")?;
+		assert_eq!(view.uri(), "");
+		assert_eq!(view.spec(), s(0, 0));
+
+		let src = view.try_join("src")?;
 		assert_eq!(src.uri(), "src");
 		assert_eq!(src.spec(), s(1, 1));
 
@@ -185,7 +179,7 @@ mod tests {
 		assert_eq!(it.url().spec(), s(0, 0));
 
 		let mut it = main.components();
-		assert_eq!(it.next(), Some(Auth(&A::search("keyword"))));
+		assert_eq!(it.next(), Some(Auth(view.auth())));
 		assert_eq!(it.next(), Some(RootDir));
 		assert_eq!(it.next(), Some(Normal("root".into())));
 		assert_eq!(it.next(), Some(Normal("projects".into())));

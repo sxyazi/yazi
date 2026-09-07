@@ -1,30 +1,22 @@
-use std::{borrow::Cow, hash::{Hash, Hasher}, path::PathBuf, sync::Arc};
+use std::{borrow::Cow, hash::{Hash, Hasher}, path::PathBuf};
 
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Deserializer, Serialize};
 use typed_path::{UnixPath, UnixPathBuf};
 
-use crate::{auth::{Auth, AuthKind}, loc::{Loc, LocBuf, LocCow}, path::{DynPath, PathBufDyn, PathCow, PathDyn}, spec::Spec, url::{AsUrl, Url, UrlBuf}};
+use crate::{auth::AuthArc, loc::{Loc, LocBuf, LocCow}, path::{DynPath, PathBufDyn, PathCow, PathDyn}, spec::Spec, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
 #[derive(Clone, Debug)]
 pub enum UrlCow<'a> {
-	Regular(LocCow<'a>),
-	Search { loc: LocCow<'a>, auth: Arc<Auth> },
-	Mount { loc: LocCow<'a>, auth: Arc<Auth> },
-	Hub { loc: LocCow<'a>, auth: Arc<Auth> },
-	Scope { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, auth: Arc<Auth> },
-	Sftp { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, auth: Arc<Auth> },
+	Os { loc: LocCow<'a>, auth: AuthArc },
+	Unix { loc: LocCow<'a, &'a UnixPath, UnixPathBuf>, auth: AuthArc },
 }
 
 impl<'a> From<Url<'a>> for UrlCow<'a> {
 	fn from(value: Url<'a>) -> Self {
 		match value {
-			Url::Regular(loc) => Self::Regular(loc.into()),
-			Url::Search { loc, auth } => Self::Search { loc: loc.into(), auth: auth.clone() },
-			Url::Mount { loc, auth } => Self::Mount { loc: loc.into(), auth: auth.clone() },
-			Url::Hub { loc, auth } => Self::Hub { loc: loc.into(), auth: auth.clone() },
-			Url::Scope { loc, auth } => Self::Scope { loc: loc.into(), auth: auth.clone() },
-			Url::Sftp { loc, auth } => Self::Sftp { loc: loc.into(), auth: auth.clone() },
+			Url::Os { loc, auth } => Self::Os { loc: loc.into(), auth: auth.clone() },
+			Url::Unix { loc, auth } => Self::Unix { loc: loc.into(), auth: auth.clone() },
 		}
 	}
 }
@@ -39,12 +31,8 @@ where
 impl From<UrlBuf> for UrlCow<'_> {
 	fn from(value: UrlBuf) -> Self {
 		match value {
-			UrlBuf::Regular(loc) => Self::Regular(loc.into()),
-			UrlBuf::Search { loc, auth } => Self::Search { loc: loc.into(), auth },
-			UrlBuf::Mount { loc, auth } => Self::Mount { loc: loc.into(), auth },
-			UrlBuf::Hub { loc, auth } => Self::Hub { loc: loc.into(), auth },
-			UrlBuf::Scope { loc, auth } => Self::Scope { loc: loc.into(), auth },
-			UrlBuf::Sftp { loc, auth } => Self::Sftp { loc: loc.into(), auth },
+			UrlBuf::Os { loc, auth } => Self::Os { loc: loc.into(), auth },
+			UrlBuf::Unix { loc, auth } => Self::Unix { loc: loc.into(), auth },
 		}
 	}
 }
@@ -116,15 +104,12 @@ impl<'a> TryFrom<(Spec, PathDyn<'a>)> for UrlCow<'a> {
 
 	fn try_from((spec, path): (Spec, PathDyn<'a>)) -> Result<Self, Self::Error> {
 		let Spec { auth, uri, urn } = spec;
-		validate_auth_depth(&auth, path)?;
+		validate_auth_path(&auth, path)?;
 
-		Ok(match auth.kind {
-			AuthKind::Regular => Self::Regular(Loc::bare(path.as_os()?).into()),
-			AuthKind::Search => Self::Search { loc: Loc::with(path.as_os()?, uri, urn)?.into(), auth },
-			AuthKind::Mount => Self::Mount { loc: Loc::with(path.as_os()?, uri, urn)?.into(), auth },
-			AuthKind::Hub => Self::Hub { loc: Loc::with(path.as_os()?, uri, urn)?.into(), auth },
-			AuthKind::Scope => Self::Scope { loc: Loc::with(path.as_unix()?, uri, urn)?.into(), auth },
-			AuthKind::Sftp => Self::Sftp { loc: Loc::with(path.as_unix()?, uri, urn)?.into(), auth },
+		Ok(match path {
+			PathDyn::Os(path) if auth.is_regular() => Self::Os { loc: Loc::bare(path).into(), auth },
+			PathDyn::Os(path) => Self::Os { loc: Loc::with(path, uri, urn)?.into(), auth },
+			PathDyn::Unix(path) => Self::Unix { loc: Loc::with(path, uri, urn)?.into(), auth },
 		})
 	}
 }
@@ -134,29 +119,14 @@ impl<'a> TryFrom<(Spec, PathBufDyn)> for UrlCow<'a> {
 
 	fn try_from((spec, path): (Spec, PathBufDyn)) -> Result<Self, Self::Error> {
 		let Spec { auth, uri, urn } = spec;
-		validate_auth_depth(&auth, path.dyn_path())?;
+		validate_auth_path(&auth, path.dyn_path())?;
 
-		Ok(match auth.kind {
-			AuthKind::Regular => {
-				Self::Regular(LocBuf::<std::path::PathBuf>::from(path.into_os()?).into())
+		Ok(match path {
+			PathBufDyn::Os(path) if auth.is_regular() => {
+				Self::Os { loc: LocBuf::from(path).into(), auth }
 			}
-			AuthKind::Search => Self::Search {
-				loc: LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?.into(),
-				auth,
-			},
-			AuthKind::Mount => Self::Mount {
-				loc: LocBuf::<std::path::PathBuf>::with(path.try_into()?, uri, urn)?.into(),
-				auth,
-			},
-			AuthKind::Hub => {
-				Self::Hub { loc: LocBuf::<PathBuf>::with(path.try_into()?, uri, urn)?.into(), auth }
-			}
-			AuthKind::Scope => {
-				Self::Scope { loc: LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(), auth }
-			}
-			AuthKind::Sftp => {
-				Self::Sftp { loc: LocBuf::<UnixPathBuf>::with(path.try_into()?, uri, urn)?.into(), auth }
-			}
+			PathBufDyn::Os(path) => Self::Os { loc: LocBuf::with(path, uri, urn)?.into(), auth },
+			PathBufDyn::Unix(path) => Self::Unix { loc: LocBuf::with(path, uri, urn)?.into(), auth },
 		})
 	}
 }
@@ -180,36 +150,35 @@ impl Hash for UrlCow<'_> {
 impl<'a> UrlCow<'a> {
 	pub fn is_owned(&self) -> bool {
 		match self {
-			Self::Regular(loc) => loc.is_owned(),
-			Self::Search { loc, .. } => loc.is_owned(),
-			Self::Mount { loc, .. } => loc.is_owned(),
-			Self::Hub { loc, .. } => loc.is_owned(),
-			Self::Scope { loc, .. } => loc.is_owned(),
-			Self::Sftp { loc, .. } => loc.is_owned(),
+			Self::Os { loc, .. } => loc.is_owned(),
+			Self::Unix { loc, .. } => loc.is_owned(),
 		}
 	}
 
 	pub fn into_owned(self) -> UrlBuf {
 		match self {
-			Self::Regular(loc) => UrlBuf::Regular(loc.into_owned()),
-			Self::Search { loc, auth } => UrlBuf::Search { loc: loc.into_owned(), auth },
-			Self::Mount { loc, auth } => UrlBuf::Mount { loc: loc.into_owned(), auth },
-			Self::Hub { loc, auth } => UrlBuf::Hub { loc: loc.into_owned(), auth },
-			Self::Scope { loc, auth } => UrlBuf::Scope { loc: loc.into_owned(), auth },
-			Self::Sftp { loc, auth } => UrlBuf::Sftp { loc: loc.into_owned(), auth },
+			Self::Os { loc, auth } => UrlBuf::Os { loc: loc.into_owned(), auth },
+			Self::Unix { loc, auth } => UrlBuf::Unix { loc: loc.into_owned(), auth },
 		}
 	}
 
 	pub fn into_pair(self) -> (Spec, PathCow<'a>) {
 		let (uri, urn) = Spec::retrieve_ports(self.as_url());
 		let (auth, path) = match self {
-			Self::Regular(loc) => (Auth::default_arc(), loc.into_path()),
-			Self::Search { loc, auth } | Self::Mount { loc, auth } | Self::Hub { loc, auth } => {
-				(auth, loc.into_path())
-			}
-			Self::Scope { loc, auth } | Self::Sftp { loc, auth } => (auth, loc.into_path()),
+			Self::Os { loc, auth } => (auth, loc.into_path()),
+			Self::Unix { loc, auth } => (auth, loc.into_path()),
 		};
 		(Spec { auth, uri, urn }, path)
+	}
+
+	pub fn with_ports(self, uri: usize, urn: usize) -> Result<Self> {
+		let url = match self {
+			Self::Os { loc, auth } => Self::Os { loc: loc.with_ports(uri, urn)?, auth },
+			Self::Unix { loc, auth } => Self::Unix { loc: loc.with_ports(uri, urn)?, auth },
+		};
+
+		validate_auth_path(url.auth(), url.loc())?;
+		Ok(url)
 	}
 
 	pub fn to_owned(&self) -> UrlBuf { self.as_url().into() }
@@ -233,8 +202,11 @@ impl<'de> Deserialize<'de> for UrlCow<'_> {
 	}
 }
 
-fn validate_auth_depth(auth: &Auth, path: PathDyn) -> Result<()> {
-	if auth.kind == AuthKind::Hub {
+fn validate_auth_path(auth: &AuthArc, path: PathDyn) -> Result<()> {
+	auth.validate()?;
+	ensure!(auth.path_kind()? == path.kind(), "URL path kind does not match Auth kind");
+
+	if auth.kind.is_hub() {
 		ensure!(
 			auth.parent_depth() == path.components().auth_depth(),
 			"Hub URL parent depth does not match its path"
@@ -269,21 +241,21 @@ mod tests {
 				trail: "/root/music/rock/",
 				base:  "/root/music/rock/",
 			},
-			// Search portal
+			// View portal
 			Case {
-				url:   "search://keyword//root/Documents/reports",
+				url:   "test-view://fx/@Ds2kw0A//root/Documents/reports",
 				urn:   "",
 				uri:   "",
-				trail: "search://keyword//root/Documents/reports",
-				base:  "search://keyword//root/Documents/reports",
+				trail: "test-view://fx/@Ds2kw0A//root/Documents/reports",
+				base:  "test-view://fx/@Ds2kw0A//root/Documents/reports",
 			},
-			// Search item
+			// View item
 			Case {
-				url:   "search://keyword:2:2//root/Documents/reports/2023/summary.docx",
+				url:   "test-view://fx:2:2/@Ds2kw0A//root/Documents/reports/2023/summary.docx",
 				urn:   "2023/summary.docx",
 				uri:   "2023/summary.docx",
-				trail: "search://keyword//root/Documents/reports/",
-				base:  "search://keyword//root/Documents/reports/",
+				trail: "test-view://fx/@Ds2kw0A//root/Documents/reports/",
+				base:  "test-view://fx/@Ds2kw0A//root/Documents/reports/",
 			},
 			// Mount portal
 			Case {
@@ -315,14 +287,8 @@ mod tests {
 			let url = UrlCow::try_from(case.url)?;
 			assert_eq!(url.urn().to_str()?, case.urn);
 			assert_eq!(url.uri().to_str()?, case.uri);
-			assert_eq!(
-				format!("{:?}", url.trail()),
-				format!("{:?}", UrlCow::try_from(case.trail)?.as_url())
-			);
-			assert_eq!(
-				format!("{:?}", url.base()),
-				format!("{:?}", UrlCow::try_from(case.base)?.as_url())
-			);
+			assert_eq!(format!("{}", url.trail()), format!("{}", UrlCow::try_from(case.trail)?));
+			assert_eq!(format!("{}", url.base()), format!("{}", UrlCow::try_from(case.base)?));
 		}
 
 		Ok(())

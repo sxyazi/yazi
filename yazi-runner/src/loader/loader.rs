@@ -34,6 +34,7 @@ impl Default for Loader {
 			("dnd".to_owned(), preset!("plugins/dnd").into()),
 			("empty".to_owned(), preset!("plugins/empty").into()),
 			("extract".to_owned(), preset!("plugins/extract").into()),
+			("fd".to_owned(), preset!("plugins/fd").into()),
 			("file".to_owned(), preset!("plugins/file").into()),
 			("folder".to_owned(), preset!("plugins/folder").into()),
 			("font".to_owned(), preset!("plugins/font").into()),
@@ -51,6 +52,8 @@ impl Default for Loader {
 			("noop".to_owned(), preset!("plugins/noop").into()),
 			("null".to_owned(), preset!("plugins/null").into()),
 			("pdf".to_owned(), preset!("plugins/pdf").into()),
+			("rg".to_owned(), preset!("plugins/rg").into()),
+			("search".to_owned(), preset!("plugins/search").into()),
 			("session".to_owned(), preset!("plugins/session").into()),
 			("svg".to_owned(), preset!("plugins/svg").into()),
 			("trash".to_owned(), preset!("plugins/trash").into()),
@@ -79,7 +82,9 @@ impl Default for Loader {
 			("tasks".to_owned(), [][..].into()),
 			("tip".to_owned(), [][..].into()),
 			// Reserved
+			("history".to_owned(), [][..].into()),
 			("inline".to_owned(), [][..].into()),
+			("sftp".to_owned(), [][..].into()),
 		]);
 		Self { cache: RwLock::new(cache) }
 	}

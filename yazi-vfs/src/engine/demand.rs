@@ -1,7 +1,7 @@
 use std::io;
 
 use mlua::{AnyUserData, IntoLuaMulti, UserData, UserDataMethods, Value};
-use yazi_fs::engine::{Attrs, FileBuilder};
+use yazi_fs::engine::{Attrs, Capabilities as C, Engine, FileBuilder};
 use yazi_shared::{auth::AuthKind, url::{AsUrl, UrlRef}};
 use yazi_shim::fs::Error;
 
@@ -36,15 +36,22 @@ impl FileBuilder for Demand {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		Ok(match url.kind() {
-			AuthKind::Regular | AuthKind::Search => {
-				(self.0.build::<yazi_fs::engine::local::Demand>().open(url).await?, url.to_owned()).into()
-			}
-			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope => {
-				self.0.build::<super::lua::Demand>().open(url).await?.into()
-			}
+		if url.is_view() && super::lua::Lua::new(url).await?.handles(C::OPEN).await? {
+			return Ok(self.0.build::<super::lua::Demand>().open(url).await?.into());
+		}
+
+		let physical = url.physical();
+		Ok(match physical.kind() {
+			AuthKind::Regular => (
+				self.0.build::<yazi_fs::engine::local::Demand>().open(physical).await?,
+				physical.to_owned(),
+			)
+				.into(),
 			AuthKind::Sftp => {
-				(self.0.build::<super::sftp::Demand>().open(url).await?, url.to_owned()).into()
+				(self.0.build::<super::sftp::Demand>().open(physical).await?, physical.to_owned()).into()
+			}
+			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope | AuthKind::View => {
+				self.0.build::<super::lua::Demand>().open(physical).await?.into()
 			}
 		})
 	}

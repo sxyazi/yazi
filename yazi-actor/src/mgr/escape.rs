@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use yazi_core::mgr::CdSource;
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::{VoidForm, mgr::EscapeForm};
 use yazi_scheduler::NotifyProxy;
@@ -19,7 +20,7 @@ impl Actor for Escape {
 				|| act!(mgr:escape_visual, cx)? != false
 				|| act!(mgr:escape_filter, cx)? != false
 				|| act!(mgr:escape_select, cx)? != false
-				|| act!(mgr:escape_search, cx)? != false;
+				|| act!(mgr:escape_view, cx)? != false;
 			succ!();
 		}
 
@@ -35,8 +36,8 @@ impl Actor for Escape {
 		if form.contains(EscapeForm::SELECT) {
 			act!(mgr:escape_select, cx)?;
 		}
-		if form.contains(EscapeForm::SEARCH) {
-			act!(mgr:escape_search, cx)?;
+		if form.contains(EscapeForm::VIEW) {
+			act!(mgr:escape_view, cx)?;
 		}
 		succ!();
 	}
@@ -131,17 +132,21 @@ impl Actor for EscapeSelect {
 	}
 }
 
-// --- Search
-pub struct EscapeSearch;
+// --- View
+pub struct EscapeView;
 
-impl Actor for EscapeSearch {
+impl Actor for EscapeView {
 	type Form = VoidForm;
 
-	const NAME: &str = "escape_search";
+	const NAME: &str = "escape_view";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		let b = cx.cwd().is_search();
-		act!(mgr:search_stop, cx)?;
-		succ!(render_and!(b));
+		if !cx.cwd().is_view() {
+			succ!(false);
+		}
+
+		let url = cx.cwd().physical().to_owned();
+		act!(mgr:cd, cx, (url, CdSource::Escape))?;
+		succ!(true);
 	}
 }

@@ -30,6 +30,7 @@ futures     = { workspace = true }
 hashbrown   = { workspace = true }
 inventory   = { workspace = true }
 mlua        = { workspace = true }
+paste       = { workspace = true }
 parking_lot = { workspace = true }
 russh       = { workspace = true }
 tokio       = { workspace = true }

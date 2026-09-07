@@ -1,5 +1,6 @@
 mod actor;
 mod asset;
+mod capability;
 mod confirm;
 mod context;
 mod data;

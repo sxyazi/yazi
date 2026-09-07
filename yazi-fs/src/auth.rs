@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use yazi_shared::{auth::{Auth, AuthKind}, path::PathBufDyn, spec::SpecInventory};
+use yazi_shared::{auth::Auth, path::PathBufDyn, spec::SpecInventory};
 use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 
 use crate::{FsHash128, Xdg};
@@ -18,17 +18,16 @@ pub trait FsAuth {
 
 impl FsAuth for Auth {
 	fn cache_root(&self) -> Option<PathBuf> {
-		match self.kind {
-			AuthKind::Regular | AuthKind::Search => None,
-			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope | AuthKind::Sftp => {
-				Some(Xdg::temp_dir().join(format!(
-					"{}_{}_{}",
-					self.kind.into_str(),
-					self.scheme,
-					self.domain.hash_u128_str(&mut [0; 26])
-				)))
-			}
+		if self.is_local() {
+			return None;
 		}
+
+		Some(Xdg::temp_dir().join(format!(
+			"{}_{}_{}",
+			self.kind.into_str(),
+			self.scheme,
+			self.domain.hash_u128_str(&mut [0; 26])
+		)))
 	}
 }
 

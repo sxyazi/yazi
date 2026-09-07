@@ -46,12 +46,6 @@ impl FilesOp {
 		yazi_shared::event::Event::Call(relay!(mgr:update_files).with_any("op", self).into()).emit();
 	}
 
-	pub fn prepare(cwd: &UrlBuf) -> Id {
-		let ticket = FILES_TICKET.next();
-		Self::Part(cwd.clone(), vec![], ticket).emit();
-		ticket
-	}
-
 	pub fn create(files: Vec<File>) {
 		let mut trails: HashMap<UrlBuf, Vec<_>> = Default::default();
 		for file in files {

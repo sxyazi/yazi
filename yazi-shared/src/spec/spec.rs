@@ -1,15 +1,15 @@
-use std::{borrow::Cow, ops::Deref, sync::Arc};
+use std::{borrow::Cow, ops::Deref};
 
 use anyhow::{Result, anyhow, ensure};
 use percent_encoding::percent_decode;
 use serde::Deserialize;
 
-use crate::{auth::{Auth, AuthKind, Domain, EncodeAuth, Scheme}, path::{PathCow, PathLike}, spec::ParsedSpec, url::Url};
+use crate::{auth::{Auth, AuthArc, AuthKind, Scheme, View}, domain::Domain, path::{PathCow, PathKind, PathLike}, spec::ParsedSpec, url::Url, wire::Wire};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct Spec {
 	#[serde(flatten)]
-	pub auth:       Arc<Auth>,
+	pub auth:       AuthArc,
 	pub(crate) uri: usize,
 	pub(crate) urn: usize,
 }
@@ -33,15 +33,13 @@ impl Spec {
 		};
 
 		// Resolve authority
-		let auth = Auth::get(&parsed.scheme, &domain).ok_or_else(|| {
-			anyhow!("unknown VFS authority: {parsed}://{}", EncodeAuth::domain(&domain))
-		})?;
+		let auth = AuthArc::get(&parsed.scheme, &domain)?;
 
 		// Decode path
-		let (path, auth) = if auth.kind == AuthKind::Hub {
-			Self::decode_hub(auth, parsed.tilde, &rest[skip..])?
-		} else {
-			(Self::decode_path(auth.kind, parsed.tilde, &rest[skip..])?, auth)
+		let (path, auth) = match auth.kind {
+			AuthKind::Hub => Self::decode_hub(auth, parsed.tilde, &rest[skip..])?,
+			AuthKind::View => Self::decode_view(auth, parsed.tilde, &rest[skip..])?,
+			_ => (Self::decode_path(auth.path_kind()?, parsed.tilde, &rest[skip..])?, auth),
 		};
 
 		let (uri, urn) = Self::normalize_ports(auth.kind, uri, urn, &path)?;
@@ -87,16 +85,16 @@ impl Spec {
 		Ok((b, a))
 	}
 
-	fn decode_path<'a>(kind: AuthKind, tilde: bool, bytes: &'a [u8]) -> Result<PathCow<'a>> {
+	fn decode_path<'a>(kind: PathKind, tilde: bool, bytes: &'a [u8]) -> Result<PathCow<'a>> {
 		let bytes: Cow<_> = if tilde { percent_decode(bytes).into() } else { bytes.into() };
 		PathCow::with(kind, bytes)
 	}
 
 	fn decode_hub<'a>(
-		mut auth: Arc<Auth>,
+		mut auth: AuthArc,
 		tilde: bool,
 		bytes: &'a [u8],
-	) -> Result<(PathCow<'a>, Arc<Auth>)> {
+	) -> Result<(PathCow<'a>, AuthArc)> {
 		ensure!(bytes.first() == Some(&b'@'), "Hub URL requires an `@` parent marker");
 		let end = bytes[1..]
 			.iter()
@@ -104,7 +102,7 @@ impl Spec {
 			.map(|i| i + 1)
 			.ok_or_else(|| anyhow!("Hub URL requires a path delimiter"))?;
 
-		let path = Self::decode_path(AuthKind::Hub, tilde, &bytes[end + 1..])?;
+		let path = Self::decode_path(PathKind::Os, tilde, &bytes[end + 1..])?;
 		let depth = path.components().auth_depth();
 		if depth == 0 {
 			ensure!(bytes[1..end].is_empty(), "Hub URL has too many parent domains");
@@ -114,16 +112,44 @@ impl Spec {
 		let (mut count, mut parent) = (0, None);
 		for domain in bytes[1..end].rsplit(|&b| b == b',') {
 			count += 1;
-			parent = Some(Arc::new(Auth {
+			parent = Some(AuthArc::from(Auth {
 				kind: auth.kind,
 				scheme: auth.scheme.clone(),
 				domain: Domain::from(Cow::from(percent_decode(domain))).into_owned(),
 				parent,
+				view: Default::default(),
 			}));
 		}
 
 		ensure!(count == depth, "Hub URL parent depth does not match its path");
-		Arc::make_mut(&mut auth).parent = parent;
+		auth.make_mut().parent = parent;
+		Ok((path, auth))
+	}
+
+	fn decode_view<'a>(
+		mut auth: AuthArc,
+		tilde: bool,
+		bytes: &'a [u8],
+	) -> Result<(PathCow<'a>, AuthArc)> {
+		ensure!(bytes.first() == Some(&b'@'), "View URL requires an `@` metadata marker");
+		let end = bytes[1..]
+			.iter()
+			.position(|&b| b == b'/')
+			.map(|i| i + 1)
+			.ok_or_else(|| anyhow!("View URL requires a path delimiter"))?;
+
+		let meta: Cow<[u8]> = percent_decode(&bytes[1..end]).into();
+		let data = Wire::decode(&meta)?;
+
+		let (Self { auth: source, .. }, path) = if tilde {
+			let physical: Cow<[u8]> = percent_decode(&bytes[end + 1..]).into();
+			Self::parse(&physical).map(|(s, p)| (s, p.into_owned().into()))?
+		} else {
+			Self::parse(&bytes[end + 1..])?
+		};
+
+		auth.make_mut().view = View { source, data }.into();
+		auth.validate()?;
 		Ok((path, auth))
 	}
 
@@ -138,9 +164,9 @@ impl Spec {
 				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
 				(path.name().is_some() as usize, path.name().is_some() as usize)
 			}
-			AuthKind::Search => {
+			AuthKind::View => {
 				let (uri, urn) = (uri.unwrap_or(0), urn.unwrap_or(0));
-				ensure!(uri == urn, "Search scheme requires URI and URN to be equal");
+				ensure!(urn <= uri, "View URN cannot be longer than URI");
 				(uri, urn)
 			}
 			AuthKind::Mount => (uri.unwrap_or(0), urn.unwrap_or(0)),
@@ -154,13 +180,11 @@ impl Spec {
 
 	pub(crate) fn retrieve_ports(url: Url) -> (usize, usize) {
 		match url {
-			Url::Regular(loc) => (loc.file_name().is_some() as usize, loc.file_name().is_some() as usize),
-			Url::Search { loc, .. } | Url::Mount { loc, .. } | Url::Hub { loc, .. } => {
-				(loc.uri().components().count(), loc.urn().components().count())
+			Url::Os { loc, .. } if url.is_regular() => {
+				(loc.file_name().is_some() as usize, loc.file_name().is_some() as usize)
 			}
-			Url::Scope { loc, .. } | Url::Sftp { loc, .. } => {
-				(loc.uri().components().count(), loc.urn().components().count())
-			}
+			Url::Os { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
+			Url::Unix { loc, .. } => (loc.uri().components().count(), loc.urn().components().count()),
 		}
 	}
 }

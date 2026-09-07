@@ -1,10 +1,16 @@
+use std::iter;
+
 use hashbrown::{HashMap, HashSet};
 use yazi_fs::{FilesOp, file::File};
 use yazi_shared::{path::{PathBufDyn, PathDyn}, url::{UrlBuf, UrlLike}};
 
-use crate::{mgr::{Mgr, Yanked}, tab::Selected};
+use crate::{mgr::{Mgr, Yanked}, tab::{Folder, History, Selected, Tab}};
 
 pub struct Reconciler<'a> {
+	current: &'a Folder,
+	parent:  &'a Option<Folder>,
+	history: &'a History,
+
 	selected: &'a mut Selected,
 	yanked:   &'a mut Yanked,
 }
@@ -12,24 +18,33 @@ pub struct Reconciler<'a> {
 impl<'a> Reconciler<'a> {
 	pub fn new(tab: usize, mgr: &'a mut Mgr) -> Self {
 		let Mgr { tabs, yanked, .. } = mgr;
-		Self { selected: &mut tabs[tab].selected, yanked }
+		let Tab { current, parent, history, selected, .. } = &mut tabs[tab];
+		Self { current, parent, history, selected, yanked }
 	}
 
 	pub fn apply(&mut self, op: &FilesOp) {
+		let cwd = op.cwd();
+
 		match op {
-			FilesOp::Full(_, files) => self.scan(op.cwd(), files, true),
-			FilesOp::Part(_, files, _) | FilesOp::Creating(_, files) => {
-				self.scan(op.cwd(), files, false);
+			FilesOp::Full(_, files) => self.scan(cwd, files, true),
+			FilesOp::Done(_, ticket) if let Some(f) = self.folder(cwd) => {
+				if f.stage.is_loading() && f.entries.ticket() == *ticket {
+					self.scan(cwd, f.entries.all(), true);
+				}
 			}
-			FilesOp::Deleting(cwd, keys) => self.delete(cwd, keys),
-			FilesOp::Updating(cwd, files) | FilesOp::Upserting(cwd, files) => {
+			FilesOp::Creating(_, files) => self.scan(cwd, files, false),
+			FilesOp::Deleting(_, keys) => self.delete(cwd, keys),
+			FilesOp::Updating(_, files) | FilesOp::Upserting(_, files) => {
 				self.update(cwd, files);
 			}
 			_ => {}
 		}
 	}
 
-	fn scan(&mut self, cwd: &UrlBuf, files: &[File], authoritative: bool) {
+	fn scan<'f, I>(&mut self, cwd: &UrlBuf, files: I, authoritative: bool)
+	where
+		I: IntoIterator<Item = &'f File>,
+	{
 		let mut tracked: HashMap<_, _> = self
 			.selected
 			.urls()
@@ -68,6 +83,13 @@ impl<'a> Reconciler<'a> {
 
 		selected.apply_selected(self.selected);
 		yanked.apply_yanked(self.yanked);
+	}
+
+	fn folder(&self, cwd: &UrlBuf) -> Option<&'a Folder> {
+		iter::once(self.current)
+			.chain(self.parent.as_ref())
+			.chain(self.history.get(cwd))
+			.find(|f| f.url == *cwd)
 	}
 }
 

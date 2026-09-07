@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(spec encode inventory lua parsed);
+yazi_macro::mod_flat!(display encode inventory lua parsed spec);

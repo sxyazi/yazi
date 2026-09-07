@@ -3,13 +3,11 @@ use std::{hash::{Hash, Hasher}, ops::Deref};
 use hashbrown::Equivalent;
 use mlua::{FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::url::{UrlBuf, UrlBufCov, UrlCov};
+use yazi_shared::url::UrlCov;
 
 use crate::file::File;
 
-/// A newtype around [`File`] that hashes and compares by URL only
-/// (covariantly), via [`UrlCov`]. Useful as a key in [`IndexMap`] / [`HashMap`]
-/// when the file's metadata should not affect identity.
+/// A newtype around [`File`] that compares by its physical URL.
 #[derive(Clone, Debug, Default)]
 pub struct FileCov(pub File);
 
@@ -40,21 +38,13 @@ impl Hash for FileCov {
 }
 
 impl PartialEq for FileCov {
-	fn eq(&self, other: &Self) -> bool { UrlCov::from(&self.url).eq(&UrlCov::from(&other.url)) }
-}
-
-impl PartialEq<UrlBufCov> for FileCov {
-	fn eq(&self, other: &UrlBufCov) -> bool { UrlCov::from(&self.url).eq(other) }
-}
-
-impl PartialEq<UrlBuf> for FileCov {
-	fn eq(&self, other: &UrlBuf) -> bool { UrlCov::from(&self.url).eq(&UrlCov::from(other)) }
+	fn eq(&self, other: &Self) -> bool { UrlCov::from(&self.url) == UrlCov::from(&other.url) }
 }
 
 impl Eq for FileCov {}
 
 impl Equivalent<FileCov> for UrlCov<'_> {
-	fn equivalent(&self, key: &FileCov) -> bool { self.eq(&UrlCov::from(&key.url)) }
+	fn equivalent(&self, key: &FileCov) -> bool { self == &UrlCov::from(&key.url) }
 }
 
 impl Serialize for FileCov {

@@ -15,9 +15,6 @@ impl Actor for Copy {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
-		if form.r#type == "dirname" {
-			yazi_proxy::deprecate!("`copy dirname` is deprecated, use `copy dirpath` instead");
-		}
 
 		let mut s = Vec::<u8>::new();
 		let mut it = if form.hovered {

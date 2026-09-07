@@ -2,7 +2,7 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_binding::elements::Rect;
 use yazi_config::{LAYOUT, plugin::PreloaderArc};
 use yazi_fs::file::File;
-use yazi_shared::{data::Sendable, pool::Symbol};
+use yazi_shared::{pool::Symbol, sendable::Sendable};
 
 pub struct PreloadJob {
 	pub preloader: PreloaderArc,

@@ -34,6 +34,7 @@ macro_rules! deprecate {
 		if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
 			let source = match $crate::runtime!($lua)?.name()? {
 				"init" => "`init.lua` config file",
+				"root" => "custom UI plugin",
 				s => &format!("`{s}.yazi` plugin"),
 			};
 			yazi_macro::emit!(Call(

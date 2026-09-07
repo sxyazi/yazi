@@ -6,7 +6,7 @@ use mlua::{UserData, UserDataFields};
 use serde_with::DeserializeFromStr;
 use yazi_shim::{SStr, mlua::UserDataFieldsExt};
 
-use crate::data::{Data, DataKey, Sendable};
+use crate::{data::{Data, DataKey}, sendable::Sendable};
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Cmd {

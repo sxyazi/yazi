@@ -29,14 +29,6 @@ local function file(url, ent)
 	}
 end
 
-local function files(parent, ents)
-	for i, ent in ipairs(ents) do
-		local url = parent:join(ent.name):into_domain(ent.key)
-		ents[i] = { cha = ent.lcha, file = file(url, ent) }
-	end
-	return ents
-end
-
 local function notify(action, err)
 	ya.notify {
 		title = "Trash",
@@ -293,16 +285,20 @@ function M:provide(job)
 			return Cha { mode = tonumber("40700", 8) }
 		end
 	elseif op == "ReadDir" then
-		local ent, err = entry(job.url)
-		if err then
-			return nil, err
-		end
-		local ents, err = fs.trash.list(ent)
-		if ents then
-			return files(job.url, ents)
-		else
-			return nil, err
-		end
+		return ya.co(function()
+			local ent, err = entry(job.url)
+			if err then
+				return nil, err
+			end
+			local ents, err = fs.trash.list(ent)
+			if not ents then
+				return nil, err
+			end
+			for _, ent in ipairs(ents) do
+				local url = job.url:join(ent.name):with_domain(ent.key)
+				coroutine.yield { cha = ent.lcha, file = file(url, ent) }
+			end
+		end)
 	elseif op == "Revalidate" then
 		local ent, err = entry(job.file.url)
 		if err then

@@ -65,7 +65,7 @@ impl History {
 
 	fn remove(&mut self, url: impl AsUrl) -> Option<Folder> {
 		let (url, folder) = self.entries.remove_entry(&url.as_url())?;
-		self.queue.retain(|other| other != &url);
+		self.queue.retain(|other| other != url);
 		self.unindex(&url);
 		Some(folder)
 	}

@@ -8,11 +8,11 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberMove<'a> {
-	items: Cow<'a, Vec<EmberMoveItem>>,
+	items: Cow<'a, [EmberMoveItem]>,
 }
 
 impl<'a> EmberMove<'a> {
-	pub(crate) fn borrowed(items: &'a Vec<EmberMoveItem>) -> Ember<'a> {
+	pub(crate) fn borrowed(items: &'a [EmberMoveItem]) -> Ember<'a> {
 		Self { items: Cow::Borrowed(items) }.into()
 	}
 }

@@ -1,8 +1,5 @@
-use std::io;
-
 use mlua::{IntoLua, Lua, Value};
 use strum::AsRefStr;
-use yazi_binding::MpscTx;
 use yazi_fs::{engine::{Attrs, Demand}, file::File};
 use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 
@@ -40,6 +37,9 @@ pub enum ProvideJob {
 		demand: Demand,
 	},
 	CreateDir {
+		url: UrlBuf,
+	},
+	CreateDirAll {
 		url: UrlBuf,
 	},
 	HardLink {
@@ -80,16 +80,15 @@ pub enum ProvideJob {
 		offset: u64,
 		bytes:  Vec<u8>,
 	},
-	Copy {
-		from:  UrlBuf,
-		to:    PathBufDyn,
+	CopyTo {
+		from: UrlBuf,
+		to:   UrlBuf,
 		attrs: Attrs,
 	},
-	CopyProgressive {
-		from:  UrlBuf,
-		to:    PathBufDyn,
+	CopyFrom {
+		from: UrlBuf,
+		to:   UrlBuf,
 		attrs: Attrs,
-		tx:    MpscTx<u64, io::Result<u64>>,
 	},
 	SetLen {
 		url:  UrlBuf,
@@ -118,6 +117,7 @@ impl IntoLua for ProvideJob {
 			| Self::ReadDir { url }
 			| Self::File { url }
 			| Self::CreateDir { url }
+			| Self::CreateDirAll { url }
 			| Self::ReadLink { url }
 			| Self::RemoveDir { url }
 			| Self::RemoveDirAll { url }
@@ -148,16 +148,10 @@ impl IntoLua for ProvideJob {
 				t.raw_set("offset", offset)?;
 				t.raw_set("bytes", lua.create_external_string(bytes)?)?;
 			}
-			Self::Copy { from, to, attrs } => {
+			Self::CopyTo { from, to, attrs } | Self::CopyFrom { from, to, attrs } => {
 				t.raw_set("from", from)?;
 				t.raw_set("to", to)?;
 				t.raw_set("attrs", attrs)?;
-			}
-			Self::CopyProgressive { from, to, attrs, tx } => {
-				t.raw_set("from", from)?;
-				t.raw_set("to", to)?;
-				t.raw_set("attrs", attrs)?;
-				t.raw_set("tx", tx)?;
 			}
 			Self::SetLen { url, size } => {
 				t.raw_set("url", url)?;

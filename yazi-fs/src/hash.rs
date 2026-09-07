@@ -2,7 +2,7 @@ use std::hash::{BuildHasher, Hash};
 
 use data_encoding::BASE32_NOPAD;
 use mlua::UserDataMethods;
-use yazi_shared::{auth::Domain, id::Id, url::{AsUrl, Url, UrlBuf, UrlBufInventory}};
+use yazi_shared::{domain::Domain, id::Id, url::{AsUrl, Url, UrlBuf, UrlBufInventory}};
 use yazi_shim::Twox128;
 
 use crate::{cha::Cha, file::FileSig};

@@ -1,6 +1,8 @@
 use std::{borrow::Cow, fmt::{self, Debug}};
 
-use crate::{loc::{Loc, LocAble, LocAbleImpl, LocBuf, LocBufAble}, path::{PathBufDyn, PathCow, PathDyn}};
+use anyhow::Result;
+
+use crate::{loc::{Loc, LocAble, LocAbleImpl, LocBuf, LocBufAble, LocBufAbleImpl}, path::{PathBufDyn, PathCow, PathDyn, PathView}};
 
 #[derive(Clone)]
 pub enum LocCow<'a, B = &'a std::path::Path, O = std::path::PathBuf>
@@ -86,8 +88,9 @@ impl<'a> LocCow<'a, &'a typed_path::UnixPath, typed_path::UnixPathBuf> {
 
 impl<'a, B, O> LocCow<'a, B, O>
 where
-	B: LocAble<'a, Owned = O> + LocAbleImpl<'a>,
-	O: LocBufAble,
+	B: LocAble<'a, Owned = O> + LocAbleImpl<'a> + PathView<'a, B>,
+	O: LocBufAble + LocBufAbleImpl,
+	for<'b> &'b O: PathView<'b, O::Borrowed<'b>>,
 {
 	pub(crate) fn into_owned(self) -> LocBuf<O> {
 		match self {
@@ -96,6 +99,13 @@ where
 			}
 			Self::Owned(loc) => loc,
 		}
+	}
+
+	pub(crate) fn with_ports(self, uri: usize, urn: usize) -> Result<Self> {
+		Ok(match self {
+			Self::Borrowed(loc) => Self::Borrowed(Loc::with(loc.as_inner(), uri, urn)?),
+			Self::Owned(loc) => Self::Owned(LocBuf::with(loc.into_inner(), uri, urn)?),
+		})
 	}
 
 	fn is_borrowed(&self) -> bool { matches!(self, Self::Borrowed(_)) }

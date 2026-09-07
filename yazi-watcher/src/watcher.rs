@@ -40,7 +40,7 @@ impl Watcher {
 				urls.insert(cache.into());
 			}
 			urls.insert(file.url.clone());
-			files.insert(file.into());
+			files.insert(file);
 		}
 
 		self.last.set(urls);

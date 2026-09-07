@@ -1,43 +1,32 @@
+use anyhow::bail;
 use serde::Deserialize;
-use strum::{EnumString, IntoStaticStr};
+use strum::{EnumIs, EnumString, IntoStaticStr};
+
+use crate::path::PathKind;
 
 #[derive(
-	Clone, Copy, Debug, Default, Deserialize, EnumString, Eq, Hash, IntoStaticStr, PartialEq,
+	Clone, Copy, Debug, Default, Deserialize, EnumIs, EnumString, Eq, Hash, IntoStaticStr, PartialEq,
 )]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum AuthKind {
 	#[default]
 	Regular,
-	Search,
 	Mount,
 	Hub,
 	Scope,
 	Sftp,
+	View,
 }
 
-impl AuthKind {
-	#[inline]
-	pub fn is_local(self) -> bool {
-		match self {
-			Self::Regular | Self::Search => true,
-			Self::Mount | Self::Hub | Self::Scope | Self::Sftp => false,
-		}
-	}
+impl TryFrom<AuthKind> for PathKind {
+	type Error = anyhow::Error;
 
-	#[inline]
-	pub fn is_remote(self) -> bool {
-		match self {
-			Self::Regular | Self::Search | Self::Mount | Self::Hub | Self::Scope => false,
-			Self::Sftp => true,
-		}
-	}
-
-	#[inline]
-	pub fn is_virtual(self) -> bool {
-		match self {
-			Self::Regular | Self::Search => false,
-			Self::Mount | Self::Hub | Self::Scope | Self::Sftp => true,
+	fn try_from(kind: AuthKind) -> Result<Self, Self::Error> {
+		match kind {
+			AuthKind::Regular | AuthKind::Mount | AuthKind::Hub => Ok(Self::Os),
+			AuthKind::Scope | AuthKind::Sftp => Ok(Self::Unix),
+			AuthKind::View => bail!("Auth kind has no path kind"),
 		}
 	}
 }

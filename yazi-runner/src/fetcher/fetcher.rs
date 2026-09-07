@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
-use mlua::{ExternalError, ExternalResult, FromLuaMulti, Function, MultiValue, ObjectLike, Value};
+use mlua::{ExternalError, ExternalResult, ObjectLike};
 use tokio::runtime::Handle;
 use yazi_macro::error;
 
-use crate::{Runner, fetcher::{FetchJob, FetchStatus}, loader::LOADER};
+use crate::{LuaCoroutine, Runner, fetcher::{FetchJob, FetchStatus}, loader::LOADER};
 
 impl Runner {
 	pub async fn fetch(&'static self, job: FetchJob) -> mlua::Result<Vec<FetchStatus>> {
@@ -26,20 +26,14 @@ impl Runner {
 		let lua = self.spawn(&fetcher.name)?;
 		let plugin = LOADER.load(&lua, &fetcher.name).await?;
 
-		let next: Function = plugin.call_async_method("fetch", job).await?;
-		let mut values: MultiValue = next.call_async(()).await?;
-		loop {
-			if values.front().is_none_or(Value::is_nil) {
-				break;
-			}
-
-			let status = FetchStatus::from_lua_multi(values, &lua)?;
+		let f = plugin.call_async_method("fetch", job).await?;
+		let mut co = LuaCoroutine::new(f).await?;
+		while let Some(status) = co.next::<FetchStatus>(&lua).await? {
 			if !pending.remove(&status.hash) {
 				return Err("fetcher reported an unknown or duplicate file".into_lua_err());
 			}
 
 			statuses.push(status);
-			values = next.call_async(true).await?;
 		}
 
 		if !pending.is_empty() {

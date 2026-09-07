@@ -102,7 +102,7 @@ impl Trash {
 				io::Error::new(io::ErrorKind::NotFound, "trash item has no put-back location")
 			})?;
 
-			restore_item(&entry.backing, &to)?;
+			restore_item(&entry.backing, to)?;
 		}
 		Ok(())
 	}

@@ -1,30 +1,57 @@
-use mlua::{AnyUserData, BorrowedBytes, ExternalError, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::{log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
-use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{StrandCow, StrandLike, ToStrand}, url::{UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use crate::{auth::{AuthArc, Scheme, View}, domain::Domain, path::{PathBufDyn, StripPrefixError}, spec::Spec, strand::{StrandCow, StrandLike, ToStrand}, url::{AsUrl, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 
 pub type UrlRef = UserDataRef<UrlBuf>;
 
+impl TryFrom<Value> for UrlBuf {
+	type Error = mlua::Error;
+
+	fn try_from(value: Value) -> Result<Self, Self::Error> {
+		match value {
+			Value::String(s) => Ok(UrlCow::try_from(&*s.as_bytes())?.into()),
+			Value::UserData(ud) => ud.try_into(),
+			_ => Err("expected a string, Path, or Url".into_lua_err()),
+		}
+	}
+}
+
+impl TryFrom<Table> for UrlBuf {
+	type Error = mlua::Error;
+
+	fn try_from(t: Table) -> Result<Self, Self::Error> {
+		let url: Self = t.raw_get::<Value>(1)?.try_into()?;
+		let scheme: Scheme = t.raw_get("scheme")?;
+		let domain: Domain<'static> = t.raw_get("domain")?;
+
+		let mut auth = AuthArc::get(&scheme, &domain)?;
+		if auth.kind.is_view() {
+			auth = auth.with_view(View { source: url.auth().clone(), data: t.raw_get("data")? });
+		}
+
+		let (uri, urn) = if auth.kind.is_view() { (0, 0) } else { Spec::retrieve_ports(url.as_url()) };
+		Ok(UrlBuf::try_from((Spec { auth, uri, urn }, url.into_loc()))?)
+	}
+}
+
+impl TryFrom<AnyUserData> for UrlBuf {
+	type Error = mlua::Error;
+
+	fn try_from(ud: AnyUserData) -> Result<Self, Self::Error> {
+		if let Ok(url) = ud.take::<Self>() {
+			Ok(url)
+		} else if let Ok(path) = ud.take::<PathBufDyn>() {
+			Ok(path.into_os()?.into())
+		} else {
+			Err("expected a Path or Url".into_lua_err())
+		}
+	}
+}
+
 impl UrlBuf {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		lua.globals().raw_set(
-			"Url",
-			lua.create_function(|_, value: Value| {
-				Ok(match value {
-					Value::String(s) => UrlCow::try_from(&*s.as_bytes())?.into(),
-					Value::UserData(ud) => {
-						if let Ok(url) = ud.borrow::<Self>() {
-							url.clone()
-						} else if let Ok(path) = ud.borrow::<PathBufDyn>() {
-							path.as_os()?.into()
-						} else {
-							Err("expected a string, Path, or Url".into_lua_err())?
-						}
-					}
-					_ => Err("expected a string, Path, or Url".into_lua_err())?,
-				})
-			})?,
-		)
+		lua.globals().raw_set("Url", lua.create_function(|_, value: Self| Ok(value))?)
 	}
 
 	fn ends_with(&self, child: Value) -> mlua::Result<bool> {
@@ -85,6 +112,16 @@ impl UrlBuf {
 	}
 }
 
+impl FromLua for UrlBuf {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Table(t) => t.try_into(),
+			Value::String(_) | Value::UserData(_) => value.try_into(),
+			_ => Err("expected a string, table, Path, or Url".into_lua_err()),
+		}
+	}
+}
+
 impl UserData for UrlBuf {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_cached_field("path", |_, me| Ok(me.loc().to_owned()));
@@ -102,6 +139,7 @@ impl UserData for UrlBuf {
 			Ok(Some(me.base()).filter(|u| !u.loc().is_empty()).map(Self::from))
 		});
 		fields.add_cached_field("parent", |_, me| Ok(me.parent().map(Self::from)));
+		fields.add_cached_field("physical", |_, me| Ok(Self::from(me.physical())));
 		fields.add_cached_field("trail", |_, me| Ok(Self::from(me.trail())));
 
 		fields.add_cached_field("spec", |_, me| Ok(me.spec()));
@@ -117,11 +155,8 @@ impl UserData for UrlBuf {
 		methods.add_method("starts_with", |_, me, base: Value| me.starts_with(base));
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
-		methods.add_method_once("into_search", |_, me, domain: LuaString| {
-			Ok(me.into_search(domain.to_str()?)?)
-		});
-		methods.add_method_once("into_domain", |_, me, domain: BorrowedBytes| {
-			Ok(me.into_domain(domain.to_vec()))
+		methods.add_method_once("with_domain", |_, me, domain: BorrowedBytes| {
+			Ok(me.with_domain(domain.to_vec()))
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(*me == *other));
@@ -134,7 +169,7 @@ impl UserData for UrlBuf {
 
 		if !LOG_LEVEL.get().is_none() {
 			methods.add_meta_function(MetaMethod::ToDebugString, |_, ud: AnyUserData| {
-				Ok(format!("Url({:?}): {:?}", ud.to_pointer(), *ud.borrow::<Self>()?))
+				Ok(format!("Url({:?}): {}", ud.to_pointer(), *ud.borrow::<Self>()?))
 			});
 		}
 	}

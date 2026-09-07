@@ -106,7 +106,7 @@ impl Local {
 						continue;
 					}
 					Err(e) => {
-						yazi_macro::error!("Failed to update {url:?}: {e:?}");
+						yazi_macro::error!("Failed to update {url}: {e:?}");
 						continue;
 					}
 				};

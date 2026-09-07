@@ -18,9 +18,9 @@ impl TrashCha for Cha {
 	}
 
 	fn from_trash(path: &std::path::Path, name: &std::ffi::OsStr) -> std::io::Result<(Self, Self)> {
-		let lcha = Cha::new(name, fs::symlink_metadata(path)?);
+		let lcha = Self::new(name, fs::symlink_metadata(path)?);
 		let cha = if lcha.is_link() {
-			lcha.follow(fs::metadata(path).ok().map(|meta| Cha::new(name, meta)))
+			lcha.follow(fs::metadata(path).ok().map(|meta| Self::new(name, meta)))
 		} else {
 			lcha
 		};

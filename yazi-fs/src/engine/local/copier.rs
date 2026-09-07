@@ -2,7 +2,7 @@ use std::{io, path::PathBuf};
 
 use tokio::{select, sync::{mpsc, oneshot}};
 
-use crate::engine::Attrs;
+use crate::engine::{Attrs, Transmit};
 
 pub(super) async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::Result<u64> {
 	#[cfg(any(target_os = "linux", target_os = "android"))]
@@ -48,11 +48,7 @@ pub(super) async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::R
 	}
 }
 
-pub(super) fn copy_progressive_impl(
-	from: PathBuf,
-	to: PathBuf,
-	attrs: Attrs,
-) -> mpsc::Receiver<Result<u64, io::Error>> {
+pub(super) fn copy_progressive_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> Transmit {
 	let (prog_tx, prog_rx) = mpsc::channel(20);
 	let (done_tx, mut done_rx) = oneshot::channel();
 
@@ -96,5 +92,5 @@ pub(super) fn copy_progressive_impl(
 		}
 	});
 
-	prog_rx
+	Transmit::new(prog_rx)
 }

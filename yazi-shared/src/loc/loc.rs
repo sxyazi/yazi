@@ -76,6 +76,15 @@ where
 	#[inline]
 	pub fn as_inner(self) -> P { self.inner }
 
+	pub(crate) fn ascend(self) -> Option<Self>
+	where
+		P: PathView<'p, P>,
+	{
+		let uri = self.uri().components().count().saturating_sub(1);
+		let urn = self.urn().components().count().saturating_sub(1);
+		Self::with(self.parent()?, uri, urn).ok()
+	}
+
 	pub(crate) fn bare<T>(path: T) -> Self
 	where
 		T: PathView<'p, P>,
@@ -145,12 +154,8 @@ where
 		T: PathView<'p, P>,
 	{
 		match kind {
-			AuthKind::Regular => Self::bare(path),
-			AuthKind::Search => Self::zeroed(path),
-			AuthKind::Mount => Self::zeroed(path),
-			AuthKind::Hub => Self::bare(path),
-			AuthKind::Scope => Self::bare(path),
-			AuthKind::Sftp => Self::bare(path),
+			AuthKind::Regular | AuthKind::Hub | AuthKind::Scope | AuthKind::Sftp => Self::bare(path),
+			AuthKind::View | AuthKind::Mount => Self::zeroed(path),
 		}
 	}
 

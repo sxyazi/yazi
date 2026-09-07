@@ -30,7 +30,7 @@ impl Actor for TabCreate {
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();
 			(false, h.url.clone())
-		} else if !cx.cwd().is_search() {
+		} else if !cx.cwd().is_view() {
 			tab.pref = cx.tab().pref.clone();
 			(true, cx.cwd().clone())
 		} else if let Some(u) = tab.backstack.current().cloned() {
@@ -38,7 +38,7 @@ impl Actor for TabCreate {
 			(true, u)
 		} else {
 			tab.pref = cx.tab().pref.clone();
-			(true, tab.cwd().to_regular()?)
+			(true, tab.cwd().clone())
 		};
 
 		let tabs = &mut cx.mgr.tabs;

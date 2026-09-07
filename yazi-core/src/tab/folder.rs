@@ -2,7 +2,7 @@ use std::{mem, ops::Deref};
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{Entries, FilesOp, FolderStage, cha::ChaType, file::File};
+use yazi_fs::{Entries, FilesOp, FolderStage, cha::{ChaKind, ChaType}, file::File};
 use yazi_macro::log_if_err;
 use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_watcher::RefreshRequest;
@@ -58,16 +58,23 @@ impl Folder {
 			FilesOp::Full(ref file, _) => {
 				(self.file, self.stage) = (file.clone(), FolderStage::Loaded);
 			}
+			FilesOp::Part(_, _, ticket) if self.stage.is_loaded() && ticket <= self.entries.ticket() => {
+				return false;
+			}
 			FilesOp::Part(_, ref files, _) if files.is_empty() => {
 				self.stage = FolderStage::Loading;
 			}
 			FilesOp::Part(_, _, ticket) if ticket == self.entries.ticket() => {
 				self.stage = FolderStage::Loading;
 			}
+			FilesOp::Done(_, ticket) if self.stage.is_loaded() && ticket <= self.entries.ticket() => {
+				return false;
+			}
 			FilesOp::Done(ref file, ticket) if ticket == self.entries.ticket() => {
 				(self.file, self.stage) = (file.clone(), FolderStage::Loaded);
 			}
 			FilesOp::IOErr(_, ref err) => {
+				self.file.cha.kind.insert(ChaKind::DUMMY);
 				self.stage = FolderStage::Failed(err.clone());
 			}
 			_ => {}
@@ -149,7 +156,12 @@ impl Folder {
 
 	#[inline]
 	pub fn take_request(&mut self) -> RefreshRequest {
-		RefreshRequest { file: self.file.clone(), force: mem::take(&mut self.stale) }
+		RefreshRequest {
+			file:   self.file.clone(),
+			force:  mem::take(&mut self.stale),
+			stream: !self.stage.is_loaded(),
+			ticket: self.entries.ticket(),
+		}
 	}
 
 	pub fn sync_page(&mut self, force: bool) {

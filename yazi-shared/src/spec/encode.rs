@@ -1,57 +1,57 @@
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}, ops::Deref};
 
-use crate::{auth::{AuthKind, EncodeAuth, EncodePrefix}, url::Url};
+use crate::{auth::{AuthKind, EncodePrefix}, spec::Spec, url::Url};
 
+// --- Encode
 #[derive(Clone, Copy)]
-pub struct EncodeSpec<'a>(pub Url<'a>);
+pub struct Encode<'a>(pub Url<'a>);
 
-impl<'a> From<crate::url::Encode<'a>> for EncodeSpec<'a> {
-	fn from(value: crate::url::Encode<'a>) -> Self { Self(value.0) }
+impl<'a> Deref for Encode<'a> {
+	type Target = Url<'a>;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl<'a> EncodeSpec<'a> {
-	pub(crate) fn ports(self) -> impl Display {
-		struct D<'a>(EncodeSpec<'a>);
+impl Display for Encode<'_> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let auth = self.auth();
+		write!(f, "{}{}{}", auth.encode(false), EncodePorts(self.0), EncodePrefix(auth))?;
 
-		impl Display for D<'_> {
-			fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-				macro_rules! w {
-					($default_uri:expr, $default_urn:expr) => {{
-						let (uri, urn) = self.0.0.spec().ports();
-						match (uri != $default_uri, urn != $default_urn) {
-							(true, true) => write!(f, ":{uri}:{urn}"),
-							(true, false) => write!(f, ":{uri}"),
-							(false, true) => write!(f, "::{urn}"),
-							(false, false) => Ok(()),
-						}
-					}};
-				}
-
-				match self.0.0.kind() {
-					AuthKind::Regular => Ok(()),
-					AuthKind::Search | AuthKind::Mount => w!(0, 0),
-					AuthKind::Hub | AuthKind::Scope | AuthKind::Sftp => {
-						w!(self.0.0.loc().name().is_some() as usize, self.0.0.loc().name().is_some() as usize)
-					}
-				}
+		if self.0.is_view() {
+			let source = self.base().physical();
+			if !source.is_regular() {
+				Self(source).fmt(f)?;
 			}
 		}
 
-		D(self)
+		Ok(())
 	}
 }
 
-impl Display for EncodeSpec<'_> {
+// --- EncodePorts
+#[derive(Clone, Copy)]
+pub struct EncodePorts<'a>(pub(crate) Url<'a>);
+
+impl<'a> Deref for EncodePorts<'a> {
+	type Target = Url<'a>;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl Display for EncodePorts<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self.0 {
-			Url::Regular(_) => write!(f, "regular://"),
-			Url::Search { auth, .. }
-			| Url::Mount { auth, .. }
-			| Url::Hub { auth, .. }
-			| Url::Scope { auth, .. }
-			| Url::Sftp { auth, .. } => {
-				write!(f, "{}{}{}", EncodeAuth(auth, false), self.ports(), EncodePrefix(auth))
-			}
+		let (uri, urn) = Spec::retrieve_ports(self.0);
+		let default = match self.kind() {
+			AuthKind::Regular => return Ok(()),
+			AuthKind::View | AuthKind::Mount => 0,
+			_ => self.name().is_some() as usize,
+		};
+
+		match (uri != default, urn != default) {
+			(true, true) => write!(f, ":{uri}:{urn}"),
+			(true, false) => write!(f, ":{uri}"),
+			(false, true) => write!(f, "::{urn}"),
+			(false, false) => Ok(()),
 		}
 	}
 }

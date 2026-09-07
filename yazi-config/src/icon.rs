@@ -1,12 +1,12 @@
 use mlua::{IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_binding::style::{Style, StyleFlat};
+use yazi_binding::style::Style;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Icon {
 	pub text:  String,
 	#[serde(flatten)]
-	pub style: StyleFlat,
+	pub style: Style,
 }
 
 impl IntoLua for Icon {
@@ -14,7 +14,7 @@ impl IntoLua for Icon {
 		lua
 			.create_table_from([
 				("text", self.text.into_lua(lua)?),
-				("style", Style::from(self.style).into_lua(lua)?),
+				("style", self.style.into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

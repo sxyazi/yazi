@@ -1,4 +1,4 @@
-use std::io::{self};
+use std::io;
 
 use yazi_shared::{strand::{StrandBuf, StrandLike}, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_shim::OptionExt;
@@ -30,7 +30,7 @@ async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 
 	let dot_ext = match url.ext() {
 		Some(e) => {
-			let mut s = StrandBuf::with_capacity(url.kind(), e.len() + 1);
+			let mut s = StrandBuf::with_capacity(url.loc().kind(), e.len() + 1);
 			s.push_str(".");
 			s.try_push(e)?;
 			s
@@ -38,7 +38,7 @@ async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 		None => StrandBuf::default(),
 	};
 
-	let mut name = StrandBuf::with_capacity(url.kind(), stem.len() + dot_ext.len() + 5);
+	let mut name = StrandBuf::with_capacity(url.loc().kind(), stem.len() + dot_ext.len() + 5);
 	for i in 1u64.. {
 		name.clear();
 		name.try_push(&stem)?;
@@ -61,7 +61,7 @@ async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 		match result {
 			Ok(()) => break,
 			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
-			Err(e) => Err(e)?,
+			Err(e) => return Err(e),
 		};
 	}
 

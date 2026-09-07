@@ -4,7 +4,7 @@ use yazi_binding::Scope;
 use yazi_config::plugin::SpotterArc;
 use yazi_fs::file::File;
 use yazi_macro::error;
-use yazi_shared::{data::Sendable, id::Ids, pool::Symbol};
+use yazi_shared::{id::Ids, pool::Symbol, sendable::Sendable};
 
 use crate::{Runner, loader::LOADER};
 

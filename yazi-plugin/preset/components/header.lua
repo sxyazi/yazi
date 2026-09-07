@@ -33,12 +33,13 @@ end
 
 function Header:flags()
 	local cwd = self._current.cwd
+	local data = cwd.spec.is_view and cwd.spec.data
 	local filter = self._current.files.filter
 	local finder = self._tab.finder
 
 	local t = {}
-	if cwd.spec.is_search then
-		t[#t + 1] = string.format("search: %s", cwd.spec.domain)
+	if type(data) == "table" then
+		t[#t + 1] = string.format("search: %s", data[1])
 	end
 	if filter then
 		t[#t + 1] = string.format("filter: %s", filter)

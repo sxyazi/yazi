@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use yazi_shared::{loc::LocBuf, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
 use crate::CWD;
 
@@ -12,7 +12,7 @@ where
 }
 
 fn try_absolute_impl<'a>(url: UrlCow<'a>) -> Option<UrlCow<'a>> {
-	if url.kind().is_virtual() {
+	if !url.auth().is_local() {
 		return None;
 	}
 
@@ -53,9 +53,5 @@ fn try_absolute_impl<'a>(url: UrlCow<'a>) -> Option<UrlCow<'a>> {
 		return Some(url);
 	};
 
-	Some(match url.as_url() {
-		Url::Regular(_) => UrlBuf::Regular(loc).into(),
-		Url::Search { auth, .. } => UrlBuf::Search { loc, auth: auth.clone() }.into(),
-		Url::Mount { .. } | Url::Hub { .. } | Url::Scope { .. } | Url::Sftp { .. } => None?,
-	})
+	Some(UrlBuf::Os { loc, auth: url.as_url().auth().clone() }.into())
 }

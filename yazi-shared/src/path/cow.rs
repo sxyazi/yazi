@@ -51,7 +51,7 @@ impl<'a> PathCow<'a> {
 		}
 	}
 
-	fn into_owned(self) -> PathBufDyn {
+	pub fn into_owned(self) -> PathBufDyn {
 		match self {
 			Self::Borrowed(p) => p.to_owned(),
 			Self::Owned(p) => p,

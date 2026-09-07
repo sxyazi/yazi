@@ -41,7 +41,7 @@ impl FileBuilder for Demand {
 		if let Some(path) = url.as_local() {
 			self.0.open(path).await
 		} else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url:?}")))
+			Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url}")))
 		}
 	}
 

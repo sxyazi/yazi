@@ -20,6 +20,7 @@ yazi-term    = { path = "../yazi-term", version = "26.9.1" }
 
 # External dependencies
 anyhow           = { workspace = true }
+bitflags         = { workspace = true }
 compact_str      = { workspace = true }
 dyn-clone        = { workspace = true }
 foldhash         = { workspace = true }

@@ -63,7 +63,7 @@ impl Virtual {
 						continue;
 					}
 					Err(e) => {
-						yazi_macro::debug!("Failed to update {url:?}: {e:?}");
+						yazi_macro::debug!("Failed to update {url}: {e:?}");
 						continue;
 					}
 				};

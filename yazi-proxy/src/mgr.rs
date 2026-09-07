@@ -1,4 +1,4 @@
-use yazi_core::{mgr::{CdSource, DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt}, spot::SpotLock};
+use yazi_core::{mgr::{CdSource, DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt}, spot::SpotLock};
 use yazi_macro::{emit, relay};
 use yazi_shared::{id::Id, url::UrlBuf};
 use yazi_shim::{SStr, strum::IntoStr};
@@ -40,10 +40,6 @@ impl MgrProxy {
 
 	pub fn reveal(target: impl Into<UrlBuf>) {
 		emit!(Call(relay!(mgr:reveal, [target.into()]).with("raw", true).with("no-dummy", true)));
-	}
-
-	pub fn search_do(opt: SearchOpt) {
-		emit!(Call(relay!(mgr:search_do).with_any("opt", opt)));
 	}
 
 	pub fn tab_rename(tab: Id, name: impl Into<SStr>) {

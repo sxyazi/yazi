@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, de::{self, DeserializeSeed, Error}};
-use yazi_shared::auth::{AuthKind, Domain, Scheme};
+use yazi_shared::{auth::{AuthArc, Scheme}, domain::Domain};
 
 use super::{Service, ServiceSftp};
 
@@ -26,21 +24,11 @@ impl Domains {
 
 	fn init(&mut self, scheme: &Scheme) {
 		for (domain, service) in &mut self.exact {
-			let kind = service.kind();
-			let auth = Arc::get_mut(service.auth_mut()).expect("unique auth arc");
-
-			auth.kind = kind;
-			auth.scheme = scheme.clone();
-			auth.domain = domain.clone();
+			*service.auth_mut() = AuthArc::new(service.kind(), scheme.clone(), domain);
 		}
 
 		if let Some(service) = &mut self.catchall {
-			let kind = service.kind();
-			let auth = Arc::get_mut(service.auth_mut()).expect("unique auth arc");
-
-			auth.kind = kind;
-			auth.scheme = scheme.clone();
-			auth.domain = Domain::CATCHALL;
+			*service.auth_mut() = AuthArc::new(service.kind(), scheme.clone(), Domain::CATCHALL);
 		}
 	}
 
@@ -55,7 +43,7 @@ impl Domains {
 				continue;
 			}
 
-			if service.kind() == AuthKind::Hub {
+			if service.kind().is_hub() {
 				return Err(E::custom("Hub services require a `*` catch-all domain"));
 			}
 			domains.exact.insert(domain, service);
@@ -72,7 +60,7 @@ impl<'de> DeserializeSeed<'de> for DomainSeed<'_> {
 
 	fn deserialize<D: Deserializer<'de>>(self, deserializer: D) -> Result<Self::Value, D::Error> {
 		let mut domains = match self.0 {
-			Scheme::Regular | Scheme::Search => {
+			Scheme::Regular => {
 				return Err(D::Error::custom("scheme cannot be configured"));
 			}
 			Scheme::Sftp => {

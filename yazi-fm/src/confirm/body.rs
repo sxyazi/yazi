@@ -31,7 +31,7 @@ impl Widget for Body<'_> {
 			.clone()
 			.alignment(ratatui_core::layout::Alignment::Center)
 			.block(block)
-			.style(THEME.confirm.body.get().derive(Styled::style(&confirm.body)))
+			.style(THEME.confirm.body.get().patch(Styled::style(&confirm.body)))
 			.render(inner, buf);
 	}
 }

@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, de::{MapAccess, Visitor}};
-use yazi_shared::auth::{Auth, Domain, Scheme};
+use yazi_shared::{auth::{AuthArc, Scheme}, domain::Domain};
 use yazi_shim::toml::DeserializeOverWith;
 
 use super::{DomainSeed, Domains};
@@ -15,13 +13,13 @@ impl Authorities {
 		self.0.get(scheme)?.get(domain)
 	}
 
-	pub(crate) fn auth(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Auth>> {
+	pub(crate) fn auth(&self, scheme: &Scheme, domain: &Domain<'_>) -> Option<AuthArc> {
 		let service = self.service(scheme, domain)?;
-		if service.auth().domain.is_catchall() {
-			Some(Auth::new(service.kind(), scheme.clone(), domain.clone()))
+		Some(if service.auth().domain.is_catchall() {
+			AuthArc::new(service.kind(), scheme.clone(), domain.clone())
 		} else {
-			Some(service.auth().clone())
-		}
+			service.auth().clone()
+		})
 	}
 }
 

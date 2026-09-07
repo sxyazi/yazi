@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use yazi_binding::style::StyleFlat;
+use yazi_binding::style::Style;
 use yazi_config::THEME;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -22,7 +22,7 @@ impl MessageLevel {
 		}
 	}
 
-	pub fn style(self) -> StyleFlat {
+	pub fn style(self) -> Style {
 		match self {
 			Self::Info => THEME.notify.title_info.get(),
 			Self::Warn => THEME.notify.title_warn.get(),

@@ -1,27 +1,19 @@
-use std::{fmt, sync::Arc};
+use anyhow::{Result, bail, ensure};
+use serde::{Deserialize, Deserializer, de::Error};
 
-use serde::Deserialize;
-use yazi_shim::cell::RoCell;
+use crate::{auth::{AuthArc, AuthKind, Scheme, ViewBox}, domain::Domain, path::PathKind};
 
-use crate::{auth::{AuthInventory, AuthKind, Domain, EncodeAuth, Scheme}, path::{Component, Components}};
-
-pub(super) static DEFAULT_ARC: RoCell<Arc<Auth>> = RoCell::new();
-
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Auth {
 	pub kind:   AuthKind,
 	pub scheme: Scheme,
 	pub domain: Domain<'static>,
-	#[serde(default)]
-	pub parent: Option<Arc<Auth>>,
+	pub parent: Option<AuthArc>,
+	pub view:   ViewBox,
 }
 
 impl Default for Auth {
 	fn default() -> Self { Self::DEFAULT }
-}
-
-impl fmt::Display for Auth {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { EncodeAuth(self, false).fmt(f) }
 }
 
 impl Auth {
@@ -30,97 +22,82 @@ impl Auth {
 		scheme: Scheme::Regular,
 		domain: Domain::EMPTY,
 		parent: None,
+		view:   ViewBox::DEFAULT,
 	};
 
-	pub(crate) fn default_arc() -> Arc<Self> { DEFAULT_ARC.clone() }
-
-	pub fn new<'a>(kind: AuthKind, scheme: Scheme, domain: impl Into<Domain<'a>>) -> Arc<Self> {
-		Arc::new(Self { kind, scheme, domain: domain.into().into_owned(), parent: None })
-	}
-
-	pub(crate) fn search<'a>(query: impl Into<Domain<'a>>) -> Arc<Self> {
-		Self::new(AuthKind::Search, Scheme::Search, query)
-	}
-
-	pub(crate) fn get(scheme: &Scheme, domain: &Domain<'_>) -> Option<Arc<Self>> {
-		match scheme {
-			Scheme::Regular => Some(Self::default_arc()),
-			Scheme::Search => Some(Self::search(domain)),
-			_ => inventory::iter::<AuthInventory>().find_map(|entry| (entry.get)(scheme, domain)),
+	pub fn new<'a>(kind: AuthKind, scheme: Scheme, domain: impl Into<Domain<'a>>) -> Self {
+		Self {
+			kind,
+			scheme,
+			domain: domain.into().into_owned(),
+			parent: None,
+			view: Default::default(),
 		}
 	}
 
-	fn child(self: Arc<Self>) -> Arc<Self> {
-		Arc::new(Self {
-			kind:   self.kind,
-			scheme: self.scheme.clone(),
-			domain: Domain::default(),
-			parent: Some(self),
-		})
+	#[inline]
+	pub fn is_local(&self) -> bool { self.kind.is_regular() || self.view.is_local() }
+
+	#[inline]
+	pub fn is_remote(&self) -> bool { self.kind.is_sftp() || self.view.is_remote() }
+
+	#[inline]
+	pub fn physical(&self) -> &Self { self.view.auth().map_or(self, |a| a) }
+
+	#[inline]
+	pub(crate) fn path_kind(&self) -> Result<PathKind> { self.physical().kind.try_into() }
+
+	#[inline]
+	pub fn covariant(&self, other: &Self) -> bool { self.physical() == other.physical() }
+
+	pub fn same_service(&self, other: &Self) -> bool {
+		self.covariant(other)
+			|| self.kind.is_hub() && other.kind.is_hub() && self.scheme == other.scheme
 	}
 
-	pub(crate) fn descend<'a, C>(mut self: Arc<Self>, components: C) -> Arc<Self>
-	where
-		C: Into<Components<'a>>,
-	{
-		for component in components.into() {
-			match component {
-				Component::RootDir => self = Self::new(self.kind, self.scheme.clone(), Domain::EMPTY),
-				c if c.has_auth() => self = self.child(),
-				_ => {}
+	pub(crate) fn validate(&self) -> Result<()> {
+		match (self.kind.is_view(), self.view.auth()) {
+			(true, None) => bail!("View auth requires view metadata"),
+			(false, Some(_)) => bail!("Non-view auth cannot have view metadata"),
+			(true, Some(source)) => {
+				ensure!(source.is_regular() || source.kind.is_sftp(), "View source must be Regular or Sftp")
 			}
+			_ => {}
 		}
-		self
-	}
-
-	pub(crate) fn parent_at(mut self: &Arc<Self>, depth: usize) -> &Arc<Self> {
-		for _ in 0..depth {
-			self = self.parent.as_ref().expect("Auth parent depth out of bounds");
-		}
-		self
-	}
-
-	pub fn with_parent_depth(mut self: Arc<Self>, depth: usize) -> Arc<Self> {
-		let current = self.parent_depth();
-		if current == depth {
-			return self;
-		}
-
-		let mut parent = if current < depth {
-			self.parent.clone()
-		} else {
-			self.parent_at(current - depth).parent.clone()
-		};
-
-		for _ in current..depth {
-			parent = Some(Arc::new(Self {
-				kind: self.kind,
-				scheme: self.scheme.clone(),
-				domain: Domain::default(),
-				parent,
-			}));
-		}
-
-		Arc::make_mut(&mut self).parent = parent;
-		self
+		Ok(())
 	}
 
 	pub(crate) fn parent_depth(&self) -> usize {
 		let mut depth = 0;
-		let mut parent = self.parent.as_deref();
+		let mut parent = self.parent.as_ref();
 		while let Some(auth) = parent {
 			depth += 1;
-			parent = auth.parent.as_deref();
+			parent = auth.parent.as_ref();
 		}
 		depth
 	}
+}
 
-	pub fn covariant(&self, other: &Self) -> bool {
-		!self.kind.is_virtual() && !other.kind.is_virtual() || self == other
-	}
+impl<'de> Deserialize<'de> for Auth {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		#[derive(Deserialize)]
+		struct Shadow {
+			kind:   AuthKind,
+			scheme: Scheme,
+			domain: Domain<'static>,
+			#[serde(default)]
+			parent: Option<AuthArc>,
+			#[serde(default)]
+			view:   ViewBox,
+		}
 
-	pub fn same_service(&self, other: &Self) -> bool {
-		self.covariant(other)
-			|| self.kind == AuthKind::Hub && other.kind == AuthKind::Hub && self.scheme == other.scheme
+		let Shadow { kind, scheme, domain, parent, view } = Shadow::deserialize(deserializer)?;
+		let auth = Self { kind, scheme, domain, parent, view };
+
+		auth.validate().map_err(D::Error::custom)?;
+		Ok(auth)
 	}
 }

@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use serde::Deserialize;
-use yazi_shared::auth::{Auth, AuthKind};
+use yazi_shared::auth::{AuthArc, AuthKind};
 
 use super::{ServiceLua, ServiceSftp};
 
@@ -12,6 +10,7 @@ pub enum Service {
 	Mount(ServiceLua),
 	Hub(ServiceLua),
 	Scope(ServiceLua),
+	View(ServiceLua),
 }
 
 impl TryFrom<&'static Service> for &'static ServiceSftp {
@@ -20,7 +19,7 @@ impl TryFrom<&'static Service> for &'static ServiceSftp {
 	fn try_from(value: &'static Service) -> Result<Self, Self::Error> {
 		match value {
 			Service::Sftp(p) => Ok(p),
-			Service::Mount(_) | Service::Hub(_) | Service::Scope(_) => {
+			Service::Mount(_) | Service::Hub(_) | Service::Scope(_) | Service::View(_) => {
 				Err("expected an SFTP service, got a custom VFS service")
 			}
 		}
@@ -33,7 +32,7 @@ impl TryFrom<&'static Service> for &'static ServiceLua {
 	fn try_from(value: &'static Service) -> Result<Self, Self::Error> {
 		match value {
 			Service::Sftp(_) => Err("expected a custom VFS service, got an SFTP service"),
-			Service::Mount(lua) | Service::Hub(lua) | Service::Scope(lua) => Ok(lua),
+			Service::Mount(lua) | Service::Hub(lua) | Service::Scope(lua) | Service::View(lua) => Ok(lua),
 		}
 	}
 }
@@ -45,24 +44,27 @@ impl Service {
 			Self::Mount(_) => AuthKind::Mount,
 			Self::Hub(_) => AuthKind::Hub,
 			Self::Scope(_) => AuthKind::Scope,
+			Self::View(_) => AuthKind::View,
 		}
 	}
 
-	pub(crate) fn auth(&self) -> &Arc<Auth> {
+	pub(crate) fn auth(&self) -> &AuthArc {
 		match self {
 			Self::Sftp(sftp) => &sftp.auth,
 			Self::Mount(lua) => &lua.auth,
 			Self::Hub(lua) => &lua.auth,
 			Self::Scope(lua) => &lua.auth,
+			Self::View(lua) => &lua.auth,
 		}
 	}
 
-	pub(crate) fn auth_mut(&mut self) -> &mut Arc<Auth> {
+	pub(crate) fn auth_mut(&mut self) -> &mut AuthArc {
 		match self {
 			Self::Sftp(sftp) => &mut sftp.auth,
 			Self::Mount(lua) => &mut lua.auth,
 			Self::Hub(lua) => &mut lua.auth,
 			Self::Scope(lua) => &mut lua.auth,
+			Self::View(lua) => &mut lua.auth,
 		}
 	}
 }

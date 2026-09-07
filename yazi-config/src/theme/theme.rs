@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
 use serde::{Deserialize, Deserializer, de};
-use yazi_binding::style::StyleFlat;
+use yazi_binding::style::Style;
 use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2, Overlay};
 use yazi_fs::{Xdg, ok_or_not_found, path::sanitize_path};
 use yazi_shim::{arc_swap::IntoPointee, cell::SyncCell};
@@ -59,36 +59,36 @@ impl Theme {
 // --- App
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct App {
-	pub overall: SyncCell<StyleFlat>,
+	pub overall: SyncCell<Style>,
 }
 
 // --- Mgr
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Mgr {
-	pub cwd: SyncCell<StyleFlat>,
+	pub cwd: SyncCell<Style>,
 
 	// Find
-	pub find_keyword:  SyncCell<StyleFlat>,
-	pub find_position: SyncCell<StyleFlat>,
+	pub find_keyword:  SyncCell<Style>,
+	pub find_position: SyncCell<Style>,
 
 	// Symlink
-	pub symlink_target: SyncCell<StyleFlat>,
+	pub symlink_target: SyncCell<Style>,
 
 	// Marker
-	pub marker_copied:   SyncCell<StyleFlat>,
-	pub marker_cut:      SyncCell<StyleFlat>,
-	pub marker_marked:   SyncCell<StyleFlat>,
-	pub marker_selected: SyncCell<StyleFlat>,
+	pub marker_copied:   SyncCell<Style>,
+	pub marker_cut:      SyncCell<Style>,
+	pub marker_marked:   SyncCell<Style>,
+	pub marker_selected: SyncCell<Style>,
 	pub marker_symbol:   ArcSwap<String>,
 
 	// Count
-	pub count_copied:   SyncCell<StyleFlat>,
-	pub count_cut:      SyncCell<StyleFlat>,
-	pub count_selected: SyncCell<StyleFlat>,
+	pub count_copied:   SyncCell<Style>,
+	pub count_cut:      SyncCell<Style>,
+	pub count_selected: SyncCell<Style>,
 
 	// Border
 	pub border_symbol: ArcSwap<String>,
-	pub border_style:  SyncCell<StyleFlat>,
+	pub border_style:  SyncCell<Style>,
 
 	// Highlighting
 	#[serde(deserialize_with = "deserialize_syntect_theme")]
@@ -98,8 +98,8 @@ pub struct Mgr {
 // --- Tabs
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Tabs {
-	pub active:   SyncCell<StyleFlat>,
-	pub inactive: SyncCell<StyleFlat>,
+	pub active:   SyncCell<Style>,
+	pub inactive: SyncCell<Style>,
 
 	pub sep_inner: ArcSwap<TabsSep>,
 	pub sep_outer: ArcSwap<TabsSep>,
@@ -114,22 +114,22 @@ pub struct TabsSep {
 // --- Mode
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Mode {
-	pub normal_main: SyncCell<StyleFlat>,
-	pub normal_alt:  SyncCell<StyleFlat>,
+	pub normal_main: SyncCell<Style>,
+	pub normal_alt:  SyncCell<Style>,
 
-	pub select_main: SyncCell<StyleFlat>,
-	pub select_alt:  SyncCell<StyleFlat>,
+	pub select_main: SyncCell<Style>,
+	pub select_alt:  SyncCell<Style>,
 
-	pub unset_main: SyncCell<StyleFlat>,
-	pub unset_alt:  SyncCell<StyleFlat>,
+	pub unset_main: SyncCell<Style>,
+	pub unset_alt:  SyncCell<Style>,
 }
 
 // --- Indicator
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Indicator {
-	pub parent:  SyncCell<StyleFlat>,
-	pub current: SyncCell<StyleFlat>,
-	pub preview: SyncCell<StyleFlat>,
+	pub parent:  SyncCell<Style>,
+	pub current: SyncCell<Style>,
+	pub preview: SyncCell<Style>,
 	pub padding: ArcSwap<IndicatorPadding>,
 }
 
@@ -142,21 +142,21 @@ pub struct IndicatorPadding {
 // --- Status
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Status {
-	pub overall:   SyncCell<StyleFlat>,
+	pub overall:   SyncCell<Style>,
 	pub sep_left:  ArcSwap<StatusSep>,
 	pub sep_right: ArcSwap<StatusSep>,
 
 	// Permissions
-	pub perm_sep:   SyncCell<StyleFlat>,
-	pub perm_type:  SyncCell<StyleFlat>,
-	pub perm_read:  SyncCell<StyleFlat>,
-	pub perm_write: SyncCell<StyleFlat>,
-	pub perm_exec:  SyncCell<StyleFlat>,
+	pub perm_sep:   SyncCell<Style>,
+	pub perm_type:  SyncCell<Style>,
+	pub perm_read:  SyncCell<Style>,
+	pub perm_write: SyncCell<Style>,
+	pub perm_exec:  SyncCell<Style>,
 
 	// Progress
-	pub progress_label:  SyncCell<StyleFlat>,
-	pub progress_normal: SyncCell<StyleFlat>,
-	pub progress_error:  SyncCell<StyleFlat>,
+	pub progress_label:  SyncCell<Style>,
+	pub progress_normal: SyncCell<Style>,
+	pub progress_error:  SyncCell<Style>,
 }
 
 #[derive(Deserialize)]
@@ -168,47 +168,47 @@ pub struct StatusSep {
 // --- Which
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Which {
-	pub border: SyncCell<StyleFlat>,
+	pub border: SyncCell<Style>,
 	#[serde(deserialize_with = "deserialize_which_cols")]
 	pub cols:   SyncCell<u8>,
-	pub mask:   SyncCell<StyleFlat>,
-	pub cand:   SyncCell<StyleFlat>,
-	pub rest:   SyncCell<StyleFlat>,
-	pub desc:   SyncCell<StyleFlat>,
+	pub mask:   SyncCell<Style>,
+	pub cand:   SyncCell<Style>,
+	pub rest:   SyncCell<Style>,
+	pub desc:   SyncCell<Style>,
 
 	pub separator:       ArcSwap<String>,
-	pub separator_style: SyncCell<StyleFlat>,
+	pub separator_style: SyncCell<Style>,
 }
 
 // --- Confirm
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Confirm {
-	pub border: SyncCell<StyleFlat>,
-	pub title:  SyncCell<StyleFlat>,
-	pub body:   SyncCell<StyleFlat>,
-	pub list:   SyncCell<StyleFlat>,
+	pub border: SyncCell<Style>,
+	pub title:  SyncCell<Style>,
+	pub body:   SyncCell<Style>,
+	pub list:   SyncCell<Style>,
 
-	pub btn_yes:    SyncCell<StyleFlat>,
-	pub btn_no:     SyncCell<StyleFlat>,
+	pub btn_yes:    SyncCell<Style>,
+	pub btn_no:     SyncCell<Style>,
 	pub btn_labels: ArcSwap<[String; 2]>,
 }
 
 // --- Spot
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Spot {
-	pub border: SyncCell<StyleFlat>,
-	pub title:  SyncCell<StyleFlat>,
+	pub border: SyncCell<Style>,
+	pub title:  SyncCell<Style>,
 
-	pub tbl_col:  SyncCell<StyleFlat>,
-	pub tbl_cell: SyncCell<StyleFlat>,
+	pub tbl_col:  SyncCell<Style>,
+	pub tbl_cell: SyncCell<Style>,
 }
 
 // --- Notify
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Notify {
-	pub title_info:  SyncCell<StyleFlat>,
-	pub title_warn:  SyncCell<StyleFlat>,
-	pub title_error: SyncCell<StyleFlat>,
+	pub title_info:  SyncCell<Style>,
+	pub title_warn:  SyncCell<Style>,
+	pub title_error: SyncCell<Style>,
 
 	pub icon_info:  ArcSwap<String>,
 	pub icon_warn:  ArcSwap<String>,
@@ -218,18 +218,18 @@ pub struct Notify {
 // --- Pick
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Pick {
-	pub border:   SyncCell<StyleFlat>,
-	pub active:   SyncCell<StyleFlat>,
-	pub inactive: SyncCell<StyleFlat>,
+	pub border:   SyncCell<Style>,
+	pub active:   SyncCell<Style>,
+	pub inactive: SyncCell<Style>,
 }
 
 // --- Input
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Input {
-	pub border:   SyncCell<StyleFlat>,
-	pub title:    SyncCell<StyleFlat>,
-	pub value:    SyncCell<StyleFlat>,
-	pub selected: SyncCell<StyleFlat>,
+	pub border:   SyncCell<Style>,
+	pub title:    SyncCell<Style>,
+	pub value:    SyncCell<Style>,
+	pub selected: SyncCell<Style>,
 }
 
 impl From<&Input> for yazi_widgets::input::InputStyles {
@@ -245,9 +245,9 @@ impl From<&Input> for yazi_widgets::input::InputStyles {
 // --- Cmp
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Cmp {
-	pub border:   SyncCell<StyleFlat>,
-	pub active:   SyncCell<StyleFlat>,
-	pub inactive: SyncCell<StyleFlat>,
+	pub border:   SyncCell<Style>,
+	pub active:   SyncCell<Style>,
+	pub inactive: SyncCell<Style>,
 
 	pub icon_file:    ArcSwap<String>,
 	pub icon_folder:  ArcSwap<String>,
@@ -257,18 +257,18 @@ pub struct Cmp {
 // --- Tasks
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Tasks {
-	pub border:  SyncCell<StyleFlat>,
-	pub title:   SyncCell<StyleFlat>,
-	pub hovered: SyncCell<StyleFlat>,
+	pub border:  SyncCell<Style>,
+	pub title:   SyncCell<Style>,
+	pub hovered: SyncCell<Style>,
 }
 
 // --- Help
 #[derive(Deserialize, DeserializeOver, DeserializeOver2, Overlay)]
 pub struct Help {
-	pub border:  SyncCell<StyleFlat>,
-	pub chord:   SyncCell<StyleFlat>,
-	pub action:  SyncCell<StyleFlat>,
-	pub hovered: SyncCell<StyleFlat>,
+	pub border:  SyncCell<Style>,
+	pub chord:   SyncCell<Style>,
+	pub action:  SyncCell<Style>,
+	pub hovered: SyncCell<Style>,
 }
 
 fn deserialize_syntect_theme<'de, D>(deserializer: D) -> Result<ArcSwap<PathBuf>, D::Error>

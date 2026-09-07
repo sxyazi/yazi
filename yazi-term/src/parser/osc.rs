@@ -79,7 +79,7 @@ impl Parser {
 		}
 
 		// Decode now since each payload may have its own padding.
-		let payload = STANDARD_PAD_INDIFFERENT.decode(&payload)?;
+		let payload = STANDARD_PAD_INDIFFERENT.decode(payload)?;
 		if len.saturating_add(payload.len()) > 16 << 20 {
 			bail!();
 		} else if state.payload.len() < state.mimes.len() {

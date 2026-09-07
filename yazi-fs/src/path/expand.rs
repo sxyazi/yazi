@@ -16,7 +16,7 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 		return url;
 	}
 
-	let mut path = PathBufDyn::with_capacity(url.kind(), base.len() + rest.len() + urn.len());
+	let mut path = PathBufDyn::with_capacity(url.loc().kind(), base.len() + rest.len() + urn.len());
 	path.try_push(&base).expect("push original base should not fail");
 	let c_base = path.components().count();
 
@@ -40,25 +40,17 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 	};
 
 	match url.as_url() {
-		Url::Regular(_) => UrlBuf::from(path.into_os().unwrap()),
-		Url::Search { auth, .. } => UrlBuf::Search {
-			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
-			auth: auth.clone(),
-		},
-		Url::Mount { auth, .. } => UrlBuf::Mount {
-			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
-			auth: auth.clone(),
-		},
-		Url::Hub { auth, .. } => UrlBuf::Hub {
+		Url::Os { auth, .. } if auth.is_regular() => UrlBuf::from(path.into_os().unwrap()),
+		Url::Os { auth, .. } if auth.kind.is_hub() => UrlBuf::Os {
 			auth: auth.clone().with_parent_depth(path.components().auth_depth()),
-			loc:  LocBuf::<std::path::PathBuf>::with(path.into_os().unwrap(), uri, urn).unwrap(),
+			loc:  LocBuf::with(path.into_os().unwrap(), uri, urn).unwrap(),
 		},
-		Url::Scope { auth, .. } => UrlBuf::Scope {
-			loc:  LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+		Url::Os { auth, .. } => UrlBuf::Os {
+			loc:  LocBuf::with(path.into_os().unwrap(), uri, urn).unwrap(),
 			auth: auth.clone(),
 		},
-		Url::Sftp { auth, .. } => UrlBuf::Sftp {
-			loc:  LocBuf::<typed_path::UnixPathBuf>::with(path.into_unix().unwrap(), uri, urn).unwrap(),
+		Url::Unix { auth, .. } => UrlBuf::Unix {
+			loc:  LocBuf::with(path.into_unix().unwrap(), uri, urn).unwrap(),
 			auth: auth.clone(),
 		},
 	}
@@ -178,7 +170,7 @@ mod tests {
 
 		for (input, expected) in cases {
 			let u: UrlBuf = input.parse()?;
-			assert_eq!(format!("{:?}", expand_url(u).as_url()), expected);
+			assert_eq!(format!("{}", expand_url(u)), expected);
 		}
 
 		Ok(())
@@ -208,7 +200,7 @@ mod tests {
 
 		for (input, expected) in cases {
 			let u: UrlBuf = input.parse()?;
-			assert_eq!(format!("{:?}", expand_url(u).as_url()), expected);
+			assert_eq!(format!("{}", expand_url(u)), expected);
 		}
 
 		Ok(())

@@ -35,7 +35,7 @@ impl VfsEntries for Entries {
 		Ok(rx)
 	}
 
-	async fn from_dir_bulk(dir: &UrlBuf) -> std::io::Result<Vec<File>> {
+	async fn from_dir_bulk(dir: &UrlBuf) -> io::Result<Vec<File>> {
 		let mut it = engine::read_dir(dir).await?;
 		let mut entries = Vec::new();
 		while let Ok(Some(dent)) = it.next().await {

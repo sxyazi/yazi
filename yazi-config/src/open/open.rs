@@ -51,7 +51,7 @@ impl Open {
 		let mime = mime.as_ref();
 
 		let is_dir = match mime.rsplit_once('/') {
-			Some((_, last)) if last.is_empty() => false,
+			Some((_, "")) => false,
 			Some(("folder", _)) => true,
 			Some((rest, _)) => rest.ends_with("/folder"),
 			None => false,

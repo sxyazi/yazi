@@ -2,7 +2,7 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_binding::elements::Rect;
 use yazi_config::{LAYOUT, plugin::PreviewerArc};
 use yazi_fs::file::File;
-use yazi_shared::{data::Sendable, id::Id, pool::Symbol};
+use yazi_shared::{id::Id, pool::Symbol, sendable::Sendable};
 
 #[derive(Clone, Debug)]
 pub struct PeekJob {

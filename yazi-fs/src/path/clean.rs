@@ -1,6 +1,6 @@
-use std::{iter, sync::Arc};
+use std::iter;
 
-use yazi_shared::{auth::{Auth, AuthKind}, path::{DynPath, PathBufDyn, PathDyn}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{auth::AuthArc, path::{DynPath, PathBufDyn, PathDyn}, url::{UrlBuf, UrlCow, UrlLike}};
 
 pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 	let cow: UrlCow = url.into();
@@ -10,12 +10,8 @@ pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 	let trail = depth - cow.urn().components().count();
 
 	let (mut spec, path) = cow.into_pair();
-	let (path, uri, urn, auth) = clean_path_impl(
-		path.dyn_path(),
-		base,
-		trail,
-		(spec.kind == AuthKind::Hub).then(|| spec.auth.clone()),
-	);
+	let (path, uri, urn, auth) =
+		clean_path_impl(path.dyn_path(), base, trail, spec.kind.is_hub().then(|| spec.auth.clone()));
 
 	spec.auth = auth.unwrap_or(spec.auth);
 	(spec.with_ports(uri, urn), path).try_into().expect("UrlBuf from cleaned path")
@@ -25,8 +21,8 @@ fn clean_path_impl(
 	path: PathDyn,
 	base: usize,
 	trail: usize,
-	auth: Option<Arc<Auth>>,
-) -> (PathBufDyn, usize, usize, Option<Arc<Auth>>) {
+	auth: Option<AuthArc>,
+) -> (PathBufDyn, usize, usize, Option<AuthArc>) {
 	use yazi_shared::path::Component::*;
 
 	let mut auths: Vec<_> = iter::successors(auth, |auth| auth.parent.clone()).collect();
@@ -84,7 +80,7 @@ fn clean_path_impl(
 
 	let auth = root.map(|mut parent| {
 		for mut auth in out.into_iter().filter_map(|(_, _, auth)| auth) {
-			Arc::make_mut(&mut auth).parent = Some(parent);
+			auth.make_mut().parent = Some(parent);
 			parent = auth;
 		}
 		parent
@@ -125,9 +121,9 @@ mod tests {
 		for (input, expected) in cases {
 			let input: UrlBuf = input.parse()?;
 			#[cfg(unix)]
-			assert_eq!(format!("{:?}", clean_url(input)), expected);
+			assert_eq!(format!("{}", clean_url(input)), expected);
 			#[cfg(windows)]
-			assert_eq!(format!("{:?}", clean_url(input)).replace(r"\", "/"), expected.replace(r"\", "/"));
+			assert_eq!(format!("{}", clean_url(input)).replace(r"\", "/"), expected.replace(r"\", "/"));
 		}
 		Ok(())
 	}
@@ -145,9 +141,9 @@ mod tests {
 		] {
 			let input: UrlBuf = input.parse()?;
 			#[cfg(unix)]
-			assert_eq!(format!("{:?}", clean_url(input)), expected);
+			assert_eq!(format!("{}", clean_url(input)), expected);
 			#[cfg(windows)]
-			assert_eq!(format!("{:?}", clean_url(input)).replace(r"\", "/"), expected);
+			assert_eq!(format!("{}", clean_url(input)).replace(r"\", "/"), expected);
 		}
 		Ok(())
 	}

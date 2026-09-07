@@ -154,7 +154,7 @@ impl BulkRename {
 	}
 
 	fn replace_url(url: &UrlBuf, take: usize, rep: &StrandBuf) -> Result<UrlBuf> {
-		Ok(url.try_replace(take, PathDyn::with(url.kind(), rep)?)?.into_owned())
+		Ok(url.try_replace(take, PathDyn::with(url.loc().kind(), rep)?)?.into_owned())
 	}
 
 	fn ask_continue(todo: &[(Tuple, Tuple)], decision: Option<bool>) -> Result<bool> {

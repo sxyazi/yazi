@@ -2,7 +2,7 @@ use compact_str::CompactString;
 use mlua::{ExternalError, HookTriggers, VmState};
 use tokio::{runtime::Handle, select};
 use yazi_binding::Scope;
-use yazi_shared::data::{Data, Sendable};
+use yazi_shared::{data::Data, sendable::Sendable};
 
 use crate::Runner;
 

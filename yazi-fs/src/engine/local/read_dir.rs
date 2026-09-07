@@ -1,23 +1,13 @@
-use std::{io, sync::Arc};
-
-use yazi_shared::url::UrlBuf;
+use std::io;
 
 use crate::engine::DirReader;
 
-pub enum ReadDir {
-	Regular(tokio::fs::ReadDir),
-	Others { reader: tokio::fs::ReadDir, dir: Arc<UrlBuf> },
-}
+pub struct ReadDir(pub(super) tokio::fs::ReadDir);
 
 impl DirReader for ReadDir {
 	type Entry = super::DirEntry;
 
 	async fn next(&mut self) -> io::Result<Option<Self::Entry>> {
-		Ok(match self {
-			Self::Regular(reader) => reader.next_entry().await?.map(Self::Entry::Regular),
-			Self::Others { reader, dir } => {
-				reader.next_entry().await?.map(|dent| Self::Entry::Others { dent, dir: dir.clone() })
-			}
-		})
+		Ok(self.0.next_entry().await?.map(super::DirEntry))
 	}
 }

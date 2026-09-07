@@ -13,6 +13,8 @@ pub enum Error {
 	Custom { kind: io::ErrorKind, code: Option<i32>, message: Arc<str> },
 }
 
+impl std::error::Error for Error {}
+
 impl From<io::Error> for Error {
 	fn from(err: io::Error) -> Self {
 		if err.get_ref().is_some() {
@@ -40,6 +42,14 @@ impl From<Error> for io::Error {
 			Error::Raw(code) => Self::from_raw_os_error(code),
 			Error::Custom { kind, message, .. } => Self::new(kind, message.to_string()),
 		}
+	}
+}
+
+impl TryFrom<mlua::Error> for Error {
+	type Error = mlua::Error;
+
+	fn try_from(value: mlua::Error) -> Result<Self, Self::Error> {
+		value.downcast_ref::<Self>().cloned().ok_or(value)
 	}
 }
 

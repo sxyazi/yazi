@@ -36,7 +36,10 @@ impl Mgr {
 		}
 	}
 
-	pub fn shutdown(&mut self) { self.tabs.iter_mut().for_each(|t| t.shutdown()); }
+	pub fn shutdown(&mut self) {
+		self.watcher.refresher.shutdown();
+		self.tabs.iter_mut().for_each(|t| t.shutdown());
+	}
 }
 
 impl Mgr {

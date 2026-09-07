@@ -2,7 +2,7 @@ use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, Value};
 use serde::Deserialize;
-use yazi_shared::data::Sendable;
+use yazi_shared::sendable::Sendable;
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{Mixable, plugin::Preloader};

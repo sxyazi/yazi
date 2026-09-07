@@ -3,7 +3,7 @@ use std::{hash::BuildHasher, path::{Path, PathBuf}};
 use hashbrown::{HashMap, hash_map::EntryRef};
 use indexmap::{IndexMap, map::RawEntryApiV1};
 
-use crate::{loc::Loc, url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlCow}};
+use crate::{auth::AuthArc, loc::Loc, url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -12,7 +12,7 @@ pub trait AsUrl {
 
 impl AsUrl for Path {
 	#[inline]
-	fn as_url(&self) -> Url<'_> { Url::Regular(Loc::bare(self)) }
+	fn as_url(&self) -> Url<'_> { Url::Os { loc: Loc::bare(self), auth: &AuthArc::DEFAULT } }
 }
 
 impl AsUrl for &Path {
@@ -39,12 +39,8 @@ impl AsUrl for UrlBuf {
 	#[inline]
 	fn as_url(&self) -> Url<'_> {
 		match self {
-			Self::Regular(loc) => Url::Regular(loc.as_loc()),
-			Self::Search { loc, auth } => Url::Search { loc: loc.as_loc(), auth },
-			Self::Mount { loc, auth } => Url::Mount { loc: loc.as_loc(), auth },
-			Self::Hub { loc, auth } => Url::Hub { loc: loc.as_loc(), auth },
-			Self::Scope { loc, auth } => Url::Scope { loc: loc.as_loc(), auth },
-			Self::Sftp { loc, auth } => Url::Sftp { loc: loc.as_loc(), auth },
+			Self::Os { loc, auth } => Url::Os { loc: loc.as_loc(), auth },
+			Self::Unix { loc, auth } => Url::Unix { loc: loc.as_loc(), auth },
 		}
 	}
 }
@@ -62,12 +58,8 @@ impl AsUrl for &mut UrlBuf {
 impl AsUrl for UrlCow<'_> {
 	fn as_url(&self) -> Url<'_> {
 		match self {
-			Self::Regular(loc) => Url::Regular(loc.as_loc()),
-			Self::Search { loc, auth } => Url::Search { loc: loc.as_loc(), auth },
-			Self::Mount { loc, auth } => Url::Mount { loc: loc.as_loc(), auth },
-			Self::Hub { loc, auth } => Url::Hub { loc: loc.as_loc(), auth },
-			Self::Scope { loc, auth } => Url::Scope { loc: loc.as_loc(), auth },
-			Self::Sftp { loc, auth } => Url::Sftp { loc: loc.as_loc(), auth },
+			Self::Os { loc, auth } => Url::Os { loc: loc.as_loc(), auth },
+			Self::Unix { loc, auth } => Url::Unix { loc: loc.as_loc(), auth },
 		}
 	}
 }

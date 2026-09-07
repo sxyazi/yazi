@@ -1,5 +1,6 @@
 use std::{borrow::{Borrow, Cow}, fmt::{self, Display, Formatter}, ops::Deref, str};
 
+use mlua::{BorrowedBytes, FromLua, Lua, Value};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::{self, IntoDeserializer, Visitor}};
 
 use crate::{BytesExt, data::BytesDeserializer};
@@ -57,12 +58,6 @@ impl<'a> Domain<'a> {
 	fn to_str(&self) -> Result<&str, str::Utf8Error> { str::from_utf8(&self.0) }
 }
 
-impl<'de, 'a: 'de> IntoDeserializer<'de, de::value::Error> for Domain<'a> {
-	type Deserializer = BytesDeserializer<'a>;
-
-	fn into_deserializer(self) -> Self::Deserializer { BytesDeserializer(self.0) }
-}
-
 impl Serialize for Domain<'_> {
 	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		match self.to_str() {
@@ -95,5 +90,17 @@ impl<'de> Deserialize<'de> for Domain<'_> {
 		}
 
 		deserializer.deserialize_any(V)
+	}
+}
+
+impl<'de, 'a: 'de> IntoDeserializer<'de, de::value::Error> for Domain<'a> {
+	type Deserializer = BytesDeserializer<'a>;
+
+	fn into_deserializer(self) -> Self::Deserializer { BytesDeserializer(self.0) }
+}
+
+impl FromLua for Domain<'static> {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		Ok(BorrowedBytes::from_lua(value, lua)?.to_vec().into())
 	}
 }

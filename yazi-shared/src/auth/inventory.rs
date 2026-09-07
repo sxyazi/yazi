@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
-use crate::auth::{Auth, Domain, Scheme};
+use crate::{auth::{AuthArc, Scheme}, domain::Domain};
 
 pub struct AuthInventory {
-	pub get: fn(&Scheme, &Domain<'_>) -> Option<Arc<Auth>>,
+	pub get: fn(&Scheme, &Domain<'_>) -> Option<AuthArc>,
 }
 
 inventory::collect!(AuthInventory);

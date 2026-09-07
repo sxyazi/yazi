@@ -8,7 +8,7 @@ use yazi_parser::app::PluginForm;
 use yazi_plugin::LUA;
 use yazi_runner::{entry::EntryJob, loader::{LOADER, Loader}};
 use yazi_scheduler::NotifyProxy;
-use yazi_shared::data::{Data, Sendable};
+use yazi_shared::{data::Data, sendable::Sendable};
 
 use crate::{Actor, Ctx, lives::Lives};
 

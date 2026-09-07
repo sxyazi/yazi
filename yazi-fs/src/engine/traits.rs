@@ -1,10 +1,10 @@
 use std::io;
 
-use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt}, sync::mpsc};
+use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
-use crate::{cha::{Cha, ChaType}, engine::{Attrs, Capabilities}, file::{File, FileExtra}};
+use crate::{cha::{Cha, ChaType}, engine::{Attrs, Capabilities, Transmit}, file::{File, FileExtra}};
 
 pub trait Engine: Sized {
 	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
@@ -21,14 +21,11 @@ pub trait Engine: Sized {
 
 	fn casefold(&self) -> impl Future<Output = io::Result<UrlBuf>>;
 
-	fn copy<P>(&self, to: P, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
-	where
-		P: DynPath;
+	fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> impl Future<Output = io::Result<Transmit>>;
 
-	fn copy_progressive<P, A>(&self, to: P, attrs: A) -> io::Result<mpsc::Receiver<io::Result<u64>>>
-	where
-		P: DynPath,
-		A: Into<Attrs>;
+	fn copy_from(&self, _from: Url<'_>, _attrs: Attrs) -> impl Future<Output = io::Result<Transmit>> {
+		async { Ok(Transmit::unsupported()) }
+	}
 
 	fn create(&self) -> impl Future<Output = io::Result<Self::File>> {
 		async move { self.demand().write(true).create(true).truncate(true).open(self.url()).await }
@@ -36,7 +33,9 @@ pub trait Engine: Sized {
 
 	fn create_dir(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn create_dir_all(&self) -> impl Future<Output = io::Result<()>> {
+	fn create_dir_all(&self) -> impl Future<Output = io::Result<()>> { self.create_dir_all_default() }
+
+	fn create_dir_all_default(&self) -> impl Future<Output = io::Result<()>> {
 		async move {
 			let mut url = self.url();
 			if url.loc().is_empty() {
@@ -121,7 +120,9 @@ pub trait Engine: Sized {
 
 	fn remove_dir(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn remove_dir_all(&self) -> impl Future<Output = io::Result<()>> {
+	fn remove_dir_all(&self) -> impl Future<Output = io::Result<()>> { self.remove_dir_all_default() }
+
+	fn remove_dir_all_default(&self) -> impl Future<Output = io::Result<()>> {
 		async fn remove_dir_all_impl<P>(url: Url<'_>) -> io::Result<()>
 		where
 			P: Engine,

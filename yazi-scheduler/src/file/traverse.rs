@@ -181,22 +181,22 @@ where
 	}
 
 	while let Some(src) = dirs.pop_front() {
-		let mut it = err!(engine::read_dir(&src).await, "Cannot read directory {src:?}");
+		let mut it = err!(engine::read_dir(&src).await, "Cannot read directory {src}");
 
 		let dest = if let Some(root) = root {
 			let s = skip_url(&src, skip);
-			err!(root.try_join(&s), "Cannot join {root:?} with {}", s.display())
+			err!(root.try_join(&s), "Cannot join {root} with {}", s.display())
 		} else {
 			src
 		};
 
-		() = err!(on_dir(dest.as_url()).await, "Cannot process directory {dest:?}");
+		() = err!(on_dir(dest.as_url()).await, "Cannot process directory {dest}");
 
 		while let Ok(Some(dent)) = it.next().await {
 			let from = dent.url();
 			let cha = err!(
 				super::File::cha(&from, task.follow(), Some(dent)).await,
-				"Cannot get metadata for {from:?}"
+				"Cannot get metadata for {from}"
 			);
 
 			let follow_symlink = cha.is_link() && task.follow();
@@ -207,7 +207,7 @@ where
 
 			let to = if root.is_some() {
 				let name = from.name().unwrap();
-				Some(err!(dest.try_join(name), "Cannot join {dest:?} with {}", name.display()))
+				Some(err!(dest.try_join(name), "Cannot join {dest} with {}", name.display()))
 			} else {
 				None
 			};

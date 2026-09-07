@@ -70,7 +70,10 @@ fn test_max_common_root() {
 	assert_eq!(max_common_root(&[]), 0);
 	assert(&[""], "");
 	assert(&["a"], "");
-	assert(&["search://kw:1:1/a", "search://kw:1:1/b"], "search://kw/");
+	assert(
+		&["test-view://fx:1:1/@Ds2kw0A//a", "test-view://fx:1:1/@Ds2kw0A//b"],
+		"test-view://fx/@Ds2kw0A/",
+	);
 	assert(&["test-hub://a1/@root/a", "test-hub://b1/@root/b"], "test-hub://root/@/");
 
 	assert(&["/a"], "/");

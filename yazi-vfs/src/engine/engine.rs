@@ -1,8 +1,7 @@
 use std::io;
 
-use tokio::sync::mpsc;
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, local::Local}, file::File};
-use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities as C, Engine, Transmit}, file::File};
+use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
 use super::{Engines, ReadDir, RwFile};
 
@@ -32,7 +31,7 @@ where
 	Engines::new(url.as_url()).await?.canonicalize().await
 }
 
-pub async fn capabilities<U>(url: U) -> io::Result<Capabilities>
+pub async fn capabilities<U>(url: U) -> io::Result<C>
 where
 	U: AsUrl,
 {
@@ -46,27 +45,7 @@ where
 	Engines::new(url.as_url()).await?.casefold().await
 }
 
-pub async fn copy<U, V>(from: U, to: V, attrs: Attrs) -> io::Result<u64>
-where
-	U: AsUrl,
-	V: AsUrl,
-{
-	let (from, to) = (from.as_url(), to.as_url());
-
-	match (from.kind().is_local(), to.kind().is_local()) {
-		(true, true) => Local::new(from).await?.copy(to.loc(), attrs).await,
-		(false, false) if from.auth().same_service(to.auth()) => {
-			Engines::new(from).await?.copy(to.loc(), attrs).await
-		}
-		(true, false) | (false, true) | (false, false) => super::copy_impl(from, to, attrs).await,
-	}
-}
-
-pub async fn copy_progressive<U, V, A>(
-	from: U,
-	to: V,
-	attrs: A,
-) -> io::Result<mpsc::Receiver<Result<u64, io::Error>>>
+pub async fn copy<U, V, A>(from: U, to: V, attrs: A) -> io::Result<Transmit>
 where
 	U: AsUrl,
 	V: AsUrl,
@@ -75,14 +54,17 @@ where
 	let (from, to) = (from.as_url(), to.as_url());
 	let attrs = attrs.into();
 
-	if from.auth().same_service(to.auth()) {
-		let engine = Engines::new(from).await?;
-		if engine.capabilities().await?.copy_progressive {
-			return engine.copy_progressive(to.loc(), attrs);
-		}
+	let mut rx = Engines::new(from).await?.copy_to(to, attrs).await?;
+	if rx.is_supported().await {
+		return Ok(rx);
 	}
 
-	Ok(super::copy_progressive_impl(from.to_owned(), to.to_owned(), attrs))
+	let mut rx = Engines::new(to).await?.copy_from(from, attrs).await?;
+	if rx.is_supported().await {
+		return Ok(rx);
+	}
+
+	Ok(super::copy_progressive_impl(from.into(), to.into(), attrs))
 }
 
 pub async fn create<U>(url: U) -> io::Result<RwFile>
@@ -138,10 +120,9 @@ where
 	U: AsUrl,
 	V: AsUrl,
 {
-	if let (Some(a), Some(b)) = (a.as_url().as_local(), b.as_url().as_local()) {
-		yazi_fs::engine::local::identical(a, b).await
-	} else {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
+	match (a.as_url().as_local(), b.as_url().as_local()) {
+		(Some(a), Some(b)) => yazi_fs::engine::local::identical(a, b).await,
+		_ => Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem")),
 	}
 }
 
@@ -157,7 +138,7 @@ where
 	U: AsUrl,
 	V: AsUrl,
 {
-	identical(a, b).await.unwrap_or(false)
+	identical(a, b).await.unwrap_or_default()
 }
 
 pub(crate) async fn open<U>(url: U) -> io::Result<RwFile>
@@ -261,11 +242,10 @@ where
 	U: Into<UrlCow<'a>>,
 {
 	let url = url.into();
-	match url.as_url() {
-		Url::Regular(_) | Url::Search { .. } => yazi_fs::engine::local::try_absolute(url),
-		Url::Mount { .. } | Url::Hub { .. } | Url::Scope { .. } | Url::Sftp { .. } => {
-			super::try_absolute_impl(url)
-		}
+	if url.is_regular() {
+		yazi_fs::engine::local::try_absolute(url)
+	} else {
+		super::try_absolute_impl(url)
 	}
 }
 

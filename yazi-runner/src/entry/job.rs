@@ -1,6 +1,6 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
-use yazi_shared::{data::{Data, DataKey, Sendable}, id::Id};
+use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
 use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default)]

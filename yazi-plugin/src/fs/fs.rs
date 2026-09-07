@@ -79,7 +79,10 @@ fn clean_url(lua: &Lua) -> mlua::Result<Function> {
 fn copy(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
 		match engine::copy(&*from, &*to, Attrs::default()).await {
-			Ok(len) => len.into_lua_multi(&lua),
+			Ok(tx) => match tx.total().await {
+				Ok(len) => len.into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
+			},
 			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})

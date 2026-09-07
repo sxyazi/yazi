@@ -5,7 +5,7 @@ use tokio::{select, sync::mpsc};
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
 use yazi_runner::{RUNNER, loader::LOADER};
-use yazi_shared::{LOCAL_SET, data::{Data, Sendable}};
+use yazi_shared::{LOCAL_SET, data::Data, sendable::Sendable};
 use yazi_shim::{ResultExt, fs::Error, log::LOG_LEVEL};
 
 use super::Utils;

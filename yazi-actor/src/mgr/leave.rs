@@ -20,10 +20,8 @@ impl Actor for Leave {
 			.filter(|u| u != cx.cwd())
 			.or_else(|| cx.cwd().parent());
 
-		let Some(mut url) = url else { succ!() };
-		if url.is_search() {
-			url = url.as_regular()?;
-		}
+		let Some(url) = url else { succ!() };
+		let url = url.physical().to_owned();
 
 		act!(mgr:cd, cx, (url, CdSource::Leave))
 	}

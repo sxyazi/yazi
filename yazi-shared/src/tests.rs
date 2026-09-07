@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use crate::auth::{Auth, AuthInventory, AuthKind};
+use crate::auth::{AuthArc, AuthInventory, AuthKind};
 
 pub fn init_tests() {
 	static INIT: OnceLock<()> = OnceLock::new();
@@ -11,10 +11,11 @@ pub fn init_tests() {
 inventory::submit! {
 	AuthInventory {
 		get: |scheme, domain| match (scheme.as_str(), domain.as_ref()) {
-			("test-mount", b"7z") => Some(Auth::new(AuthKind::Mount, scheme.clone(), "7z")),
-			("test-hub", _) => Some(Auth::new(AuthKind::Hub, scheme.clone(), domain.clone())),
-			("test-scope", b"aws") => Some(Auth::new(AuthKind::Scope, scheme.clone(), "aws")),
-			("sftp", b"vps") => Some(Auth::new(AuthKind::Sftp, scheme.clone(), "vps")),
+			("test-mount", b"7z") => Some(AuthArc::new(AuthKind::Mount, scheme.clone(), "7z")),
+			("test-hub", _) => Some(AuthArc::new(AuthKind::Hub, scheme.clone(), domain.clone())),
+			("test-scope", b"aws") => Some(AuthArc::new(AuthKind::Scope, scheme.clone(), "aws")),
+			("test-view", b"fx") => Some(AuthArc::new(AuthKind::View, scheme.clone(), "fx")),
+			("sftp", b"vps") => Some(AuthArc::new(AuthKind::Sftp, scheme.clone(), "vps")),
 			_ => None,
 		},
 	}

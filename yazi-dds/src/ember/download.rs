@@ -8,11 +8,11 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberDownload<'a> {
-	urls: Cow<'a, Vec<UrlBuf>>,
+	urls: Cow<'a, [UrlBuf]>,
 }
 
 impl<'a> EmberDownload<'a> {
-	pub(crate) fn borrowed(urls: &'a Vec<UrlBuf>) -> Ember<'a> {
+	pub(crate) fn borrowed(urls: &'a [UrlBuf]) -> Ember<'a> {
 		Self { urls: Cow::Borrowed(urls) }.into()
 	}
 }

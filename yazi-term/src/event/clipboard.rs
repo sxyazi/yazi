@@ -43,12 +43,7 @@ impl ClipboardEvent {
 		}
 	}
 
-	pub(crate) fn is_write(&self) -> bool {
-		match self {
-			Self::WriteSuccess | Self::WriteError(_) => true,
-			_ => false,
-		}
-	}
+	pub(crate) fn is_write(&self) -> bool { matches!(self, Self::WriteSuccess | Self::WriteError(_)) }
 
 	pub(crate) fn from_state(s: StateOsc5522) -> Option<Self> {
 		Some(match s {
