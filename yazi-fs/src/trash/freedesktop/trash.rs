@@ -1,4 +1,4 @@
-use std::{fs::{self}, hash::Hash, io, path::Path};
+use std::{fs::{self}, hash::Hash, io, path::{Path, PathBuf}};
 
 use trash::os_limited;
 use yazi_macro::ok_or_not_found;
@@ -139,16 +139,66 @@ impl Trash {
 	}
 
 	fn tops(&self) -> io::Result<Vec<TrashEntry>> {
+		Self::tops_from(os_limited::trash_folders().map_err(io::Error::other)?)
+	}
+
+	fn tops_from(roots: impl IntoIterator<Item = PathBuf>) -> io::Result<Vec<TrashEntry>> {
 		let mut tops = Vec::new();
-		for root in os_limited::trash_folders().map_err(io::Error::other)? {
+		for root in roots {
 			for dent in ok_or_not_found!(fs::read_dir(root.join("info")), continue) {
 				let dent = dent?;
 				let info = dent.path();
 				if let Ok(parsed) = TrashInfo::parse(&info) {
-					tops.push(TrashEntry::top(info, parsed.backing, Some(parsed.original))?);
+					match TrashEntry::top(info, parsed.backing, Some(parsed.original)) {
+						Ok(entry) => tops.push(entry),
+						Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
+						Err(error) => return Err(error),
+					}
 				}
 			}
 		}
 		Ok(tops)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn orphaned_trash_info_does_not_abort_listing() -> io::Result<()> {
+		let root = std::env::temp_dir().join(format!(
+			"yazi-fs-trash-{}-{}",
+			std::process::id(),
+			std::time::SystemTime::now()
+				.duration_since(std::time::UNIX_EPOCH)
+				.expect("system clock must be after Unix epoch")
+				.as_nanos()
+		));
+		let trash = root.join("Trash");
+		let info_dir = trash.join("info");
+		let files_dir = trash.join("files");
+		fs::create_dir_all(&info_dir)?;
+		fs::create_dir_all(&files_dir)?;
+
+		let present_info = info_dir.join("present.txt.trashinfo");
+		fs::write(
+			&present_info,
+			b"[Trash Info]\nPath=/home/test/present.txt\nDeletionDate=2026-09-06T12:00:00\n",
+		)?;
+		fs::write(files_dir.join("present.txt"), b"content")?;
+
+		let orphan_info = info_dir.join("orphan.txt.trashinfo");
+		fs::write(
+			&orphan_info,
+			b"[Trash Info]\nPath=/home/test/orphan.txt\nDeletionDate=2026-09-06T12:00:00\n",
+		)?;
+
+		let entries = Trash::tops_from([trash])?;
+
+		assert_eq!(entries.len(), 1);
+		assert_eq!(entries[0].backing, files_dir.join("present.txt"));
+		fs::remove_dir_all(root)?;
+		Ok(())
 	}
 }
