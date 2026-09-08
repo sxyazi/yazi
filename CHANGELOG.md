@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Changed
+
+- Supersede `search` action with `plugin rg` and `plugin fd` ([#4335])
+- Rename `Spec::is_search` property and `escape --search` action to `Spec::is_view` and `escape --view`, respectively ([#4335])
+- Move `search_title`, `search_origin`, and `search_offset` from `[input]` in `yazi.toml` to `[rg]`/`[fd]` in `theme.toml` as `title` and `position` ([#4335])
+
 ### Fixed
 
 - Compatibility with legacy Git symlinks in package cache ([#4319])
@@ -1856,3 +1862,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4306]: https://github.com/sxyazi/yazi/pull/4306
 [#4309]: https://github.com/sxyazi/yazi/pull/4309
 [#4319]: https://github.com/sxyazi/yazi/pull/4319
+[#4335]: https://github.com/sxyazi/yazi/pull/4335

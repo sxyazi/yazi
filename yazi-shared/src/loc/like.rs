@@ -1,5 +1,4 @@
 use super::{LocBuf, LocBufAble, LocBufAbleImpl};
-use crate::path::PathView;
 
 pub trait LocLike {
 	type Borrowed<'a>
@@ -18,7 +17,6 @@ pub trait LocLike {
 impl<P> LocLike for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	type Borrowed<'a>
 		= P::Borrowed<'a>

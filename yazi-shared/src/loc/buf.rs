@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl, LocLike}, path::{DynPath, PathDyn, PathView, SetNameError}, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl, LocLike}, path::{DynPath, PathDyn, SetNameError}, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct LocBuf<P = std::path::PathBuf> {
@@ -59,7 +59,6 @@ where
 impl<P> Hash for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
 }
@@ -67,7 +66,6 @@ where
 impl<P> Debug for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl + Debug,
-	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		f.debug_struct("LocBuf")
@@ -81,10 +79,9 @@ where
 impl<P> From<P> for LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	fn from(path: P) -> Self {
-		let Loc { inner, uri, urn, _phantom } = Loc::bare(&path);
+		let Loc { inner, uri, urn, _phantom } = Loc::bare(path.borrow());
 		let len = inner.len();
 
 		let mut bytes = path.into_encoded_bytes();
@@ -100,14 +97,13 @@ impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<std::path::PathBuf> {
 impl<P> LocBuf<P>
 where
 	P: LocBufAble + LocBufAbleImpl,
-	for<'a> &'a P: PathView<'a, P::Borrowed<'a>>,
 {
 	pub(crate) fn new<'a, S>(path: P, base: S, trail: S) -> Self
 	where
 		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as LocAble<'b>>::Strand<'a>>,
 	{
 		let loc = Self::from(path);
-		let Loc { inner, uri, urn, _phantom } = Loc::new(&loc.inner, base, trail);
+		let Loc { inner, uri, urn, _phantom } = Loc::new(loc.inner.borrow(), base, trail);
 
 		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
@@ -118,7 +114,7 @@ where
 		for<'a> P::Borrowed<'a>: LocAble<'a>,
 	{
 		let loc = Self::from(path);
-		let Loc { inner, uri, urn, _phantom } = Loc::with(&loc.inner, uri, urn)?;
+		let Loc { inner, uri, urn, _phantom } = Loc::with(loc.inner.borrow(), uri, urn)?;
 
 		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Ok(Self { inner: loc.inner, uri, urn })
@@ -129,7 +125,7 @@ where
 		T: Into<P>,
 	{
 		let loc = Self::from(path.into());
-		let Loc { inner, uri, urn, _phantom } = Loc::zeroed(&loc.inner);
+		let Loc { inner, uri, urn, _phantom } = Loc::zeroed(loc.inner.borrow());
 
 		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
@@ -140,7 +136,7 @@ where
 		S: for<'b> AsStrandView<'a, <P::Borrowed<'b> as LocAble<'b>>::Strand<'a>>,
 	{
 		let loc = Self::from(path);
-		let Loc { inner, uri, urn, _phantom } = Loc::floated(&loc.inner, base);
+		let Loc { inner, uri, urn, _phantom } = Loc::floated(loc.inner.borrow(), base);
 
 		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
@@ -148,7 +144,7 @@ where
 
 	pub fn saturated(path: P, kind: AuthKind) -> Self {
 		let loc = Self::from(path);
-		let Loc { inner, uri, urn, _phantom } = Loc::saturated(&loc.inner, kind);
+		let Loc { inner, uri, urn, _phantom } = Loc::saturated(loc.inner.borrow(), kind);
 
 		debug_assert!(inner.as_encoded_bytes() == loc.inner.as_encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
@@ -157,7 +153,7 @@ where
 	#[inline]
 	pub(crate) fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed<'a>> {
 		Loc {
-			inner:    self.inner.path_view(),
+			inner:    self.inner.borrow(),
 			uri:      self.uri,
 			urn:      self.urn,
 			_phantom: PhantomData,

@@ -62,8 +62,7 @@ impl File {
 
 	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut rx =
-			ctx!(task, engine::copy(&task.from, &task.to, task.cha.unwrap()).await)?;
+		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.cha.unwrap()).await)?;
 
 		loop {
 			match rx.recv().await.unwrap_or(Ok(0)) {
@@ -155,8 +154,7 @@ impl File {
 
 	pub(crate) async fn move_do(&self, mut task: FileInMove) -> Result<(), FileOutMoveDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut rx =
-			ctx!(task, engine::copy(&task.from, &task.to, task.cha.unwrap()).await)?;
+		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.cha.unwrap()).await)?;
 
 		loop {
 			match rx.recv().await.unwrap_or(Ok(0)) {

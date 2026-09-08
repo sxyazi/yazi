@@ -7,97 +7,31 @@ use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 #[strum(serialize_all = "PascalCase")]
 pub enum ProvideJob {
 	Capabilities,
-	Absolute {
-		url: UrlBuf,
-	},
-	Canonicalize {
-		url: UrlBuf,
-	},
-	Casefold {
-		url: UrlBuf,
-	},
-	SymlinkMetadata {
-		url: UrlBuf,
-	},
-	Metadata {
-		url: UrlBuf,
-	},
-	ReadDir {
-		url: UrlBuf,
-	},
-	Revalidate {
-		file: File,
-	},
-	File {
-		url: UrlBuf,
-	},
-	Open {
-		url:    UrlBuf,
-		attrs:  Attrs,
-		demand: Demand,
-	},
-	CreateDir {
-		url: UrlBuf,
-	},
-	CreateDirAll {
-		url: UrlBuf,
-	},
-	HardLink {
-		from: UrlBuf,
-		to:   PathBufDyn,
-	},
-	ReadLink {
-		url: UrlBuf,
-	},
-	RemoveDir {
-		url: UrlBuf,
-	},
-	RemoveDirAll {
-		url: UrlBuf,
-	},
-	RemoveFile {
-		url: UrlBuf,
-	},
-	Rename {
-		from: UrlBuf,
-		to:   PathBufDyn,
-	},
-	Symlink {
-		original: Vec<u8>,
-		url:      UrlBuf,
-		is_dir:   bool,
-	},
-	Trash {
-		url: UrlBuf,
-	},
-	Read {
-		url:    UrlBuf,
-		offset: u64,
-		len:    usize,
-	},
-	Write {
-		url:    UrlBuf,
-		offset: u64,
-		bytes:  Vec<u8>,
-	},
-	CopyTo {
-		from: UrlBuf,
-		to:   UrlBuf,
-		attrs: Attrs,
-	},
-	CopyFrom {
-		from: UrlBuf,
-		to:   UrlBuf,
-		attrs: Attrs,
-	},
-	SetLen {
-		url:  UrlBuf,
-		size: u64,
-	},
-	SetAttrs {
-		url:   UrlBuf,
-		attrs: Attrs,
-	},
+	Absolute { url: UrlBuf },
+	Canonicalize { url: UrlBuf },
+	Casefold { url: UrlBuf },
+	SymlinkMetadata { url: UrlBuf },
+	Metadata { url: UrlBuf },
+	ReadDir { url: UrlBuf },
+	Revalidate { file: File },
+	File { url: UrlBuf },
+	Open { url: UrlBuf, attrs: Attrs, demand: Demand },
+	CreateDir { url: UrlBuf },
+	CreateDirAll { url: UrlBuf },
+	HardLink { from: UrlBuf, to: PathBufDyn },
+	ReadLink { url: UrlBuf },
+	RemoveDir { url: UrlBuf },
+	RemoveDirAll { url: UrlBuf },
+	RemoveFile { url: UrlBuf },
+	Rename { from: UrlBuf, to: PathBufDyn },
+	Symlink { original: Vec<u8>, url: UrlBuf, is_dir: bool },
+	Trash { url: UrlBuf },
+	Read { url: UrlBuf, offset: u64, len: usize },
+	Write { url: UrlBuf, offset: u64, bytes: Vec<u8> },
+	CopyTo { from: UrlBuf, to: UrlBuf, attrs: Attrs },
+	CopyFrom { from: UrlBuf, to: UrlBuf, attrs: Attrs },
+	SetLen { url: UrlBuf, size: u64 },
+	SetAttrs { url: UrlBuf, attrs: Attrs },
 }
 
 impl IntoLua for ProvideJob {
