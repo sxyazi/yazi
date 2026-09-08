@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ## [Unreleased]
 
+### Added
+
+- Dynamic virtual file system Lua API ([#4338])
+
 ### Changed
 
 - Supersede `search` action with `plugin rg` and `plugin fd` ([#4335])
@@ -1863,3 +1867,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4309]: https://github.com/sxyazi/yazi/pull/4309
 [#4319]: https://github.com/sxyazi/yazi/pull/4319
 [#4335]: https://github.com/sxyazi/yazi/pull/4335
+[#4338]: https://github.com/sxyazi/yazi/pull/4338
