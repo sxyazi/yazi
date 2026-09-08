@@ -63,4 +63,4 @@ ds_parser           = "0.4.0"
 objc2               = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-trash = "5.2.7"
+trash = "5.2.8"

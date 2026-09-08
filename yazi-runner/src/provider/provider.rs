@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, sync::Arc};
 
 use mlua::{ExternalError, FromLua, FromLuaMulti, IntoLua, ObjectLike, Value};
 use tokio::{runtime::Handle, select, sync::mpsc};
@@ -11,7 +11,7 @@ use crate::{LuaCoroutine, Runner, loader::LOADER, provider::{ProvideJob, Provide
 impl Runner {
 	pub async fn provide<T>(
 		&'static self,
-		service: &'static ServiceLua,
+		service: Arc<ServiceLua>,
 		job: ProvideJob,
 	) -> ProvideResult<T>
 	where
@@ -25,7 +25,7 @@ impl Runner {
 
 	async fn provide_do<T>(
 		&'static self,
-		service: &'static ServiceLua,
+		service: Arc<ServiceLua>,
 		job: ProvideJob,
 	) -> ProvideResult<T>
 	where
@@ -56,7 +56,7 @@ impl Runner {
 
 	pub async fn provide_stream<T>(
 		&'static self,
-		service: &'static ServiceLua,
+		service: Arc<ServiceLua>,
 		job: ProvideJob,
 		tx: mpsc::Sender<io::Result<T>>,
 	) where
@@ -69,7 +69,7 @@ impl Runner {
 
 	async fn provide_stream_do<T>(
 		&'static self,
-		service: &'static ServiceLua,
+		service: Arc<ServiceLua>,
 		job: ProvideJob,
 		tx: mpsc::Sender<io::Result<T>>,
 	) -> io::Result<()>

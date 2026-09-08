@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, sync::Arc};
 
 use mlua::FromLua;
 use tokio::sync::mpsc;
@@ -11,7 +11,7 @@ use crate::engine::lua::ReadDir;
 
 pub struct Lua<'a> {
 	pub(crate) url:     Url<'a>,
-	pub(crate) service: &'static ServiceLua,
+	pub(crate) service: Arc<ServiceLua>,
 }
 
 impl<'a> Engine for Lua<'a> {
@@ -55,7 +55,7 @@ impl<'a> Engine for Lua<'a> {
 
 		let (tx, rx) = mpsc::channel(20);
 		tokio::spawn(RUNNER.provide_stream(
-			self.service,
+			self.service.clone(),
 			ProvideJob::CopyTo { from: self.url.into(), to: to.into(), attrs },
 			tx,
 		));
@@ -70,7 +70,7 @@ impl<'a> Engine for Lua<'a> {
 
 		let (tx, rx) = mpsc::channel(20);
 		tokio::spawn(RUNNER.provide_stream(
-			self.service,
+			self.service.clone(),
 			ProvideJob::CopyFrom { from: from.into(), to: self.url.into(), attrs },
 			tx,
 		));
@@ -215,7 +215,7 @@ impl<'a> Lua<'a> {
 	where
 		T: FromLua + Send + 'static,
 	{
-		RUNNER.provide(self.service, job).await
+		RUNNER.provide(self.service.clone(), job).await
 	}
 
 	pub(crate) async fn handles(&self, caps: C) -> io::Result<bool> {

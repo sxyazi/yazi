@@ -1,12 +1,13 @@
 use std::{fmt, str::FromStr};
 
 use anyhow::{Result, bail};
-use mlua::{FromLua, Lua, LuaString, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaString, Value};
 use serde_with::DeserializeFromStr;
+use strum::EnumIs;
 
 use crate::KebabCasedKey;
 
-#[derive(Clone, Debug, DeserializeFromStr, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, DeserializeFromStr, EnumIs, Eq, Hash, PartialEq)]
 pub enum Scheme {
 	Regular,
 	Sftp,
@@ -67,5 +68,17 @@ impl Scheme {
 impl FromLua for Scheme {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		Ok(LuaString::from_lua(value, lua)?.to_str()?.parse()?)
+	}
+}
+
+impl IntoLua for Scheme {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua.create_string(self.as_str())?.into_lua(lua)
+	}
+}
+
+impl IntoLua for &Scheme {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua.create_string(self.as_str())?.into_lua(lua)
 	}
 }

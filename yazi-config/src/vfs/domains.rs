@@ -1,54 +1,64 @@
+use std::{ops::Deref, sync::Arc};
+
+use arc_swap::ArcSwap;
 use hashbrown::HashMap;
-use serde::{Deserialize, Deserializer, de::{self, DeserializeSeed, Error}};
-use yazi_shared::{auth::{AuthArc, Scheme}, domain::Domain};
+use serde::{Deserialize, Deserializer, de::{DeserializeSeed, Error}};
+use yazi_shared::{auth::Scheme, domain::Domain};
+use yazi_shim::arc_swap::IntoPointee;
 
 use super::{Service, ServiceSftp};
 
-#[derive(Default)]
+#[derive(Debug)]
 pub struct Domains {
-	exact:    HashMap<Domain<'static>, Service>,
-	catchall: Option<Service>,
+	pub(super) scheme: Scheme,
+	inner:             ArcSwap<HashMap<Domain<'static>, Service>>,
+}
+
+impl Deref for Domains {
+	type Target = ArcSwap<HashMap<Domain<'static>, Service>>;
+
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl Domains {
-	pub(crate) fn get(&self, domain: &Domain<'_>) -> Option<&Service> {
-		self.exact.get(domain.as_ref()).or(self.catchall.as_ref())
-	}
-
-	pub(crate) fn extend(&mut self, other: Self) {
-		self.exact.extend(other.exact);
-		if other.catchall.is_some() {
-			self.catchall = other.catchall;
-		}
-	}
-
-	fn init(&mut self, scheme: &Scheme) {
-		for (domain, service) in &mut self.exact {
-			*service.auth_mut() = AuthArc::new(service.kind(), scheme.clone(), domain);
-		}
-
-		if let Some(service) = &mut self.catchall {
-			*service.auth_mut() = AuthArc::new(service.kind(), scheme.clone(), Domain::CATCHALL);
-		}
-	}
-
-	fn from_map<E>(map: HashMap<Domain<'static>, Service>) -> Result<Self, E>
+	pub(crate) fn get<'a, D>(&self, domain: D) -> Option<Service>
 	where
-		E: de::Error,
+		D: Into<Domain<'a>>,
 	{
-		let mut domains = Self::default();
-		for (domain, service) in map {
-			if domain.is_catchall() {
-				domains.catchall = Some(service);
-				continue;
-			}
+		let inner = self.load();
+		inner.get(&domain.into()).or_else(|| inner.get(&Domain::CATCHALL)).cloned()
+	}
 
-			if service.kind().is_hub() {
-				return Err(E::custom("Hub services require a `*` catch-all domain"));
-			}
-			domains.exact.insert(domain, service);
-		}
-		Ok(domains)
+	pub(crate) fn insert<'a, D>(&self, domain: D, service: Service)
+	where
+		D: Into<Domain<'a>>,
+	{
+		let domain = domain.into();
+		self.rcu(|inner| {
+			let mut next = HashMap::clone(inner);
+			next.insert(domain.to_static(), service.clone());
+			next
+		});
+	}
+
+	pub(crate) fn remove<'a, D>(&self, domain: D)
+	where
+		D: Into<Domain<'a>>,
+	{
+		let domain = domain.into();
+		self.rcu(|inner| {
+			let mut next = HashMap::clone(inner);
+			next.remove(domain.as_ref());
+			next
+		});
+	}
+
+	pub(crate) fn from_unchecked(scheme: Scheme, inner: HashMap<Domain<'static>, Service>) -> Self {
+		Self { scheme, inner: inner.into_pointee() }
+	}
+
+	pub(crate) fn unwrap_unchecked(self) -> HashMap<Domain<'static>, Service> {
+		Arc::try_unwrap(self.inner.into_inner()).expect("unique domains map")
 	}
 }
 
@@ -59,26 +69,19 @@ impl<'de> DeserializeSeed<'de> for DomainSeed<'_> {
 	type Value = Domains;
 
 	fn deserialize<D: Deserializer<'de>>(self, deserializer: D) -> Result<Self::Value, D::Error> {
-		let mut domains = match self.0 {
-			Scheme::Regular => {
-				return Err(D::Error::custom("scheme cannot be configured"));
-			}
+		let mut map = match self.0 {
+			Scheme::Regular => return Err(D::Error::custom("scheme cannot be configured")),
 			Scheme::Sftp => {
 				let map = HashMap::<Domain<'static>, ServiceSftp>::deserialize(deserializer)?;
-				Domains::from_map(
-					map.into_iter().map(|(domain, service)| (domain, Service::Sftp(service))).collect(),
-				)?
+				map.into_iter().map(|(domain, service)| (domain, Service::Sftp(service.into()))).collect()
 			}
-			Scheme::Custom(_) => {
-				let map = HashMap::<Domain<'static>, Service>::deserialize(deserializer)?;
-				if map.values().any(|service| matches!(service, Service::Sftp(_))) {
-					return Err(D::Error::custom("SFTP services must use the `sftp` scheme"));
-				}
-				Domains::from_map(map)?
-			}
+			Scheme::Custom(_) => HashMap::<Domain<'static>, Service>::deserialize(deserializer)?,
 		};
 
-		domains.init(self.0);
-		Ok(domains)
+		for (domain, service) in &mut map {
+			service.configure(self.0, domain).map_err(D::Error::custom)?;
+		}
+
+		Ok(Domains::from_unchecked(self.0.clone(), map))
 	}
 }

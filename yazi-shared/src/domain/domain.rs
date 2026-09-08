@@ -1,6 +1,6 @@
 use std::{borrow::{Borrow, Cow}, fmt::{self, Display, Formatter}, ops::Deref, str};
 
-use mlua::{BorrowedBytes, FromLua, Lua, Value};
+use mlua::{BorrowedBytes, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::{self, IntoDeserializer, Visitor}};
 
 use crate::{BytesExt, data::BytesDeserializer};
@@ -51,6 +51,8 @@ impl Display for Domain<'_> {
 }
 
 impl<'a> Domain<'a> {
+	pub fn to_static(&self) -> Domain<'static> { self.as_ref().to_owned().into() }
+
 	pub(crate) fn into_owned(self) -> Domain<'static> { Domain(Cow::Owned(self.0.into_owned())) }
 
 	pub fn is_catchall(&self) -> bool { *self == Domain::CATCHALL }
@@ -103,4 +105,18 @@ impl FromLua for Domain<'static> {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		Ok(BorrowedBytes::from_lua(value, lua)?.to_vec().into())
 	}
+}
+
+impl IntoLua for Domain<'_> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		match self.0 {
+			Cow::Borrowed(b) => lua.create_string(b)?,
+			Cow::Owned(b) => lua.create_external_string(b)?,
+		}
+		.into_lua(lua)
+	}
+}
+
+impl IntoLua for &Domain<'_> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_string(&*self)?.into_lua(lua) }
 }

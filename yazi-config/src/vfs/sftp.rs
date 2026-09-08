@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize, de};
 use yazi_fs::path::sanitize_path;
 use yazi_shared::auth::{Auth, AuthArc};
 
-#[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ServiceSftp {
 	#[serde(skip)]
 	pub auth:           AuthArc,

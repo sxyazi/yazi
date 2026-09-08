@@ -1,5 +1,6 @@
 use std::{io, sync::Arc};
 
+use deadpool::managed::PoolError;
 use yazi_config::vfs::{ServiceSftp, Vfs};
 use yazi_fs::engine::{Capabilities, DirReader, Engine, FileHolder, Transmit};
 use yazi_sftp::fs::Attrs;
@@ -12,7 +13,8 @@ pub struct Sftp<'a> {
 	url:             Url<'a>,
 	pub(super) path: &'a typed_path::UnixPath,
 
-	config: &'static ServiceSftp,
+	config: Arc<ServiceSftp>,
+	pool:   deadpool::managed::Pool<Conn>,
 }
 
 impl<'a> Engine for Sftp<'a> {
@@ -122,8 +124,9 @@ impl<'a> Engine for Sftp<'a> {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url}")));
 		};
 
-		let config = Vfs::service::<&ServiceSftp>(auth)?;
-		Ok(Self::Me { url, path: loc.as_inner(), config })
+		let config: Arc<ServiceSftp> = Vfs::service(auth)?;
+		let pool = Conn::pool(config.clone());
+		Ok(Self::Me { url, path: loc.as_inner(), config, pool })
 	}
 
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
@@ -195,8 +198,11 @@ impl<'a> Engine for Sftp<'a> {
 }
 
 impl<'a> Sftp<'a> {
-	#[inline]
 	pub(super) async fn op(&self) -> io::Result<deadpool::managed::Object<Conn>> {
-		Conn { config: self.config }.roll().await
+		self.pool.get().await.map_err(|e| match e {
+			PoolError::Timeout(_) => io::Error::new(io::ErrorKind::TimedOut, e.to_string()),
+			PoolError::Backend(e) => e,
+			e => io::Error::other(e.to_string()),
+		})
 	}
 }

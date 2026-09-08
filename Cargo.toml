@@ -71,14 +71,14 @@ ratatui-core          = { version = "0.1.2", default-features = false, features 
 ratatui-widgets       = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
 regex                 = "1.13.1"
 regex-syntax          = "0.8.11"
-reqwest               = { version = "0.13.4", default-features = false, features = [ "rustls-no-provider", "stream" ] }
-rustls                = { version = "0.23.43", default-features = false, features = [ "ring", "std" ] }
+reqwest               = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream" ] }
+rustls                = { version = "0.23.44", default-features = false, features = [ "ring", "std" ] }
 rustix                = { version = "1.1.4", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event" ] }
 russh                 = { version = "0.63.2", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard            = "1.2.0"
 serde                 = { version = "1.0.229", features = [ "derive" ] }
 serde_json            = "1.0.151"
-serde_with            = "3.22.0"
+serde_with            = "3.23.0"
 strum                 = { version = "0.28.0", features = [ "derive" ] }
 syntect               = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror             = "2.0.20"

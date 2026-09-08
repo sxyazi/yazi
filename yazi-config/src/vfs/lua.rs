@@ -6,7 +6,7 @@ use tokio::sync::OnceCell;
 use yazi_fs::engine::Capabilities;
 use yazi_shared::{auth::AuthArc, data::{Data, DataKey}, event::Cmd};
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct ServiceLua {
 	#[serde(skip)]
 	pub(crate) auth: AuthArc,

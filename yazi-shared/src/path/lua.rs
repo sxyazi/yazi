@@ -1,7 +1,7 @@
-use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_shim::{OptionExt, log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
-use crate::{path::{PathBufDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
+use crate::{path::{PathBufDyn, PathDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
 
 type PathRef = UserDataRef<PathBufDyn>;
 
@@ -55,6 +55,10 @@ impl PathBufDyn {
 			Err(e @ StripPrefixError::WrongEncoding) => Err(e)?,
 		})
 	}
+}
+
+impl IntoLua for PathDyn<'_> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.to_owned().into_lua(lua) }
 }
 
 impl UserData for PathBufDyn {

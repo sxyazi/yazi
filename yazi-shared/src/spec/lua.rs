@@ -1,4 +1,4 @@
-use mlua::{UserData, UserDataFields, UserDataRegistry};
+use mlua::{IntoLua, UserData, UserDataFields, UserDataRegistry};
 use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 
 use crate::{sendable::Sendable, spec::{Spec, SpecInventory}};
@@ -6,8 +6,8 @@ use crate::{sendable::Sendable, spec::{Spec, SpecInventory}};
 impl UserData for Spec {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_cached_field("kind", |_, me| Ok(me.kind.into_str()));
-		fields.add_cached_field("scheme", |lua, me| lua.create_string(&me.scheme));
-		fields.add_cached_field("domain", |lua, me| lua.create_string(&*me.domain));
+		fields.add_cached_field("scheme", |lua, me| (&me.scheme).into_lua(lua));
+		fields.add_cached_field("domain", |lua, me| (&me.domain).into_lua(lua));
 		fields.add_cached_field("data", |lua, me| {
 			me.view.data().map(|d| Sendable::wire_to_value_ref(lua, d)).transpose()
 		});

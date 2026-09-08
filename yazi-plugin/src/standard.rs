@@ -25,6 +25,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	globals.raw_set("ui", crate::ui::compose())?;
 	globals.raw_set("ya", crate::utils::compose(false))?;
 	globals.raw_set("fs", crate::fs::compose())?;
+	globals.raw_set("vf", &*yazi_config::VFS)?;
 	globals.raw_set("ps", crate::pubsub::compose())?;
 	globals.raw_set("rt", crate::runtime::compose())?;
 	globals.raw_set("km", crate::keymap::compose())?;
