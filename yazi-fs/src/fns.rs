@@ -72,7 +72,7 @@ fn test_max_common_root() {
 	assert(&["a"], "");
 	assert(
 		&["test-view://fx:1:1/@Ds2kw0A//a", "test-view://fx:1:1/@Ds2kw0A//b"],
-		"test-view://fx/@Ds2kw0A/",
+		"test-view://fx/@Ds2kw0A//",
 	);
 	assert(&["test-hub://a1/@root/a", "test-hub://b1/@root/b"], "test-hub://root/@/");
 
