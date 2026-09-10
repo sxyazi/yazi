@@ -94,6 +94,8 @@ impl Refresher {
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
 						if let Some((t, n)) = prev.url.pair() {
 							FilesOp::Deleting(t.into(), [n.into()].into()).emit();
+						} else if prev.report {
+							FilesOp::IOErr(mem::take(&mut prev.file.url), e.into()).emit();
 						}
 					}
 					Err(e) if prev.report => {

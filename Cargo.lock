@@ -5506,6 +5506,7 @@ version = "26.9.1"
 dependencies = [
  "anyhow",
  "compact_str",
+ "futures",
  "hashbrown 0.17.1",
  "mlua",
  "parking_lot",

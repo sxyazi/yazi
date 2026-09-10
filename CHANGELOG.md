@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
-- Dynamic virtual file system Lua API ([#4338])
+- Dynamic virtual filesystem Lua API ([#4338])
 
 ### Changed
 
@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Compatibility with legacy Git symlinks in package cache ([#4319])
+- Tolerate non-conforming orphaned trash items on Linux ([#4343])
 
 ## [v26.9.1]
 
@@ -1868,3 +1869,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4319]: https://github.com/sxyazi/yazi/pull/4319
 [#4335]: https://github.com/sxyazi/yazi/pull/4335
 [#4338]: https://github.com/sxyazi/yazi/pull/4338
+[#4343]: https://github.com/sxyazi/yazi/pull/4343
