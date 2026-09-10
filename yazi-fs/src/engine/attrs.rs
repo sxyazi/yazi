@@ -68,7 +68,9 @@ impl Attrs {
 	pub fn mode(mode: ChaMode) -> Self { Self { mode: Some(mode), ..Default::default() } }
 
 	fn has_times(self) -> bool {
-		self.atime.is_some() || self.btime.is_some() || self.mtime.is_some()
+		self.atime.is_some()
+			|| self.mtime.is_some()
+			|| (self.btime.is_some() && cfg!(any(target_os = "macos", target_os = "windows")))
 	}
 
 	pub fn atime_dur(self) -> Option<Duration> { self.atime?.duration_since(UNIX_EPOCH).ok() }
