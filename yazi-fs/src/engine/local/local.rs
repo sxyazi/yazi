@@ -1,4 +1,4 @@
-use std::{fs::FileTimes, io, path::Path};
+use std::{io, path::Path};
 
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
@@ -39,13 +39,13 @@ impl<'a> Engine for Local<'a> {
 	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
 		let Some(to) = to.as_local() else { return Ok(Transmit::unsupported()) };
 
-		Ok(super::copy_progressive_impl(self.path.to_owned(), to.to_owned(), attrs))
+		Ok(super::copy_progressive(self.path.to_owned(), to.to_owned(), attrs))
 	}
 
 	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
 		let Some(from) = from.as_local() else { return Ok(Transmit::unsupported()) };
 
-		Ok(super::copy_progressive_impl(from.to_owned(), self.path.to_owned(), attrs))
+		Ok(super::copy_progressive(from.to_owned(), self.path.to_owned(), attrs))
 	}
 
 	#[inline]
@@ -122,7 +122,7 @@ impl<'a> Engine for Local<'a> {
 		let path = self.path.to_owned();
 		tokio::task::spawn_blocking(move || {
 			let a = mode.map_or(Ok(()), |mode| Self::set_mode(&path, mode));
-			let b = times.map_or(Ok(()), |times| Self::set_times(&path, times));
+			let b = times.map_or(Ok(()), |times| yazi_shim::fs::set_times(&path, times));
 			a.and(b)
 		})
 		.await?
@@ -256,9 +256,5 @@ impl<'a> Local<'a> {
 			let result = unsafe { libc::wchmod(path.as_ptr(), perm) };
 			if result == 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
 		}
-	}
-
-	fn set_times(path: &Path, times: FileTimes) -> io::Result<()> {
-		std::fs::File::open(path)?.set_times(times)
 	}
 }

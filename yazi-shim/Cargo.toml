@@ -41,3 +41,4 @@ unicode-width        = { workspace = true }
 
 [target."cfg(windows)".dependencies]
 uds_windows = "1.2.1"
+windows-sys = { version = "0.61.2", features = [ "Win32_Storage_FileSystem" ] }
