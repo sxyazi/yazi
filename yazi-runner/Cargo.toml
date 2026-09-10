@@ -28,6 +28,7 @@ yazi-version = { path = "../yazi-version", version = "26.9.1" }
 # External dependencies
 anyhow      = { workspace = true }
 compact_str = { workspace = true }
+futures     = { workspace = true }
 hashbrown   = { workspace = true }
 mlua        = { workspace = true }
 parking_lot = { workspace = true }

@@ -271,7 +271,9 @@ end
 
 function M:provide(job)
 	local op = job.op
-	if op == "Absolute" or op == "Canonicalize" then
+	if op == "Capabilities" then
+		return {}
+	elseif op == "Absolute" or op == "Canonicalize" then
 		return absolute(job.url)
 	elseif op == "Casefold" then
 		return job.url

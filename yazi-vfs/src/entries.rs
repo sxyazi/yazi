@@ -20,14 +20,22 @@ impl VfsEntries for Entries {
 		let (tx, rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
-			while let Ok(Some(dent)) = it.next().await {
+			loop {
+				let future = async {
+					let dent = it.next().await.ok().flatten()?;
+					Some(match dent.file().await {
+						Ok(file) => file,
+						Err(_) => File::from_dummy(dent.url(), dent.file_type().await.ok()),
+					})
+				};
+
 				select! {
 					_ = tx.closed() => break,
-					result = dent.file() => {
-						_ = tx.send(match result {
-							Ok(file) => file,
-							Err(_) => File::from_dummy(dent.url(), dent.file_type().await.ok()),
-						});
+					file = future => {
+						let Some(file) = file else { break };
+						if tx.send(file).is_err() {
+							break;
+						}
 					}
 				}
 			}

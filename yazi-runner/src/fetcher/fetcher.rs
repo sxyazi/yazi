@@ -4,7 +4,7 @@ use mlua::{ExternalError, ExternalResult, ObjectLike};
 use tokio::runtime::Handle;
 use yazi_macro::error;
 
-use crate::{LuaCoroutine, Runner, fetcher::{FetchJob, FetchStatus}, loader::LOADER};
+use crate::{CoIter, Runner, fetcher::{FetchJob, FetchStatus}, loader::LOADER};
 
 impl Runner {
 	pub async fn fetch(&'static self, job: FetchJob) -> mlua::Result<Vec<FetchStatus>> {
@@ -26,8 +26,7 @@ impl Runner {
 		let lua = self.spawn(&fetcher.name)?;
 		let plugin = LOADER.load(&lua, &fetcher.name).await?;
 
-		let f = plugin.call_async_method("fetch", job).await?;
-		let mut co = LuaCoroutine::new(f).await?;
+		let mut co: CoIter = plugin.call_async_method("fetch", job).await?;
 		while let Some(status) = co.next::<FetchStatus>(&lua).await? {
 			if !pending.remove(&status.hash) {
 				return Err("fetcher reported an unknown or duplicate file".into_lua_err());

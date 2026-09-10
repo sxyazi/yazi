@@ -4,33 +4,14 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString
 use tokio::{select, sync::mpsc};
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
-use yazi_runner::{RUNNER, loader::LOADER};
+use yazi_runner::{CoHandle, RUNNER, loader::LOADER};
 use yazi_shared::{LOCAL_SET, data::Data, sendable::Sendable};
 use yazi_shim::{ResultExt, fs::Error, log::LOG_LEVEL};
 
 use super::Utils;
 
 impl Utils {
-	pub(super) fn co(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, f: Function| {
-			let thread = lua.create_thread(f)?;
-			lua.create_async_function(move |lua, mut args: MultiValue| {
-				let thread = thread.clone();
-				async move {
-					loop {
-						let values: MultiValue = thread.resume(args)?;
-						if let Some(Value::LightUserData(ud)) = values.front()
-							&& *ud == Lua::poll_pending()
-						{
-							args = lua.yield_with(values).await?;
-						} else {
-							return Ok(values);
-						}
-					}
-				}
-			})
-		})
-	}
+	pub(super) fn co(lua: &Lua) -> mlua::Result<Function> { lua.create_function(CoHandle::create) }
 
 	pub(super) fn sync(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, f: Function| {

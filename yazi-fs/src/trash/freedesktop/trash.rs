@@ -17,7 +17,6 @@ impl Trash {
 			return self.tops();
 		};
 
-		// TODO
 		if !entry.lcha.is_dir() {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"));
 		}
@@ -145,7 +144,10 @@ impl Trash {
 				let dent = dent?;
 				let info = dent.path();
 				if let Ok(parsed) = TrashInfo::parse(&info) {
-					tops.push(TrashEntry::top(info, parsed.backing, Some(parsed.original))?);
+					tops.push(ok_or_not_found!(
+						TrashEntry::top(info, parsed.backing, Some(parsed.original)),
+						continue
+					));
 				}
 			}
 		}

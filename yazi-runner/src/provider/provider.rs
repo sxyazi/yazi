@@ -6,7 +6,7 @@ use yazi_config::vfs::ServiceLua;
 use yazi_shared::sendable::Sendable;
 use yazi_shim::fs::Error as FsError;
 
-use crate::{LuaCoroutine, Runner, loader::LOADER, provider::{ProvideJob, ProvideResult}};
+use crate::{CoIter, Runner, loader::LOADER, provider::{ProvideJob, ProvideResult}};
 
 impl Runner {
 	pub async fn provide<T>(
@@ -88,8 +88,8 @@ impl Runner {
 				job.raw_set("args", Sendable::args_to_table_ref(&lua, &service.args)?)?;
 				job.raw_set("opts", Sendable::args_to_table_ref(&lua, &service.opts)?)?;
 
-				let f = LOADER.load(&lua, &service.name).await?.call_async_method("provide", job).await?;
-				let mut co = LuaCoroutine::new(f).await?;
+				let mut co: CoIter =
+					LOADER.load(&lua, &service.name).await?.call_async_method("provide", job).await?;
 				while let Some(value) = co.next(&lua).await? {
 					if tx.send(Ok(value)).await.is_err() {
 						break;

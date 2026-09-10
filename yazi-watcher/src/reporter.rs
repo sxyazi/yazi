@@ -16,11 +16,6 @@ impl Reporter {
 		I::Item: Into<UrlCow<'a>>,
 	{
 		for url in urls.into_iter().map(Into::into) {
-			if url.is_view() {
-				self.report(Some(url.physical()));
-				continue;
-			}
-
 			if url.is_regular() {
 				self.report_local(url);
 			} else {
@@ -55,12 +50,12 @@ impl Reporter {
 	}
 
 	fn report_virtual(&self, url: UrlCow) {
-		let Some(parent) = url.parent() else { return };
-		if !WATCHED.read().contains_url(parent) {
+		let Some((trail, _)) = url.pair() else { return };
+		if !WATCHED.read().contains_url(trail) {
 			return;
 		}
 
-		self.virtual_tx.send(VirtualReport::Url(parent.to_owned())).ok();
+		self.virtual_tx.send(VirtualReport::Url(trail.to_owned())).ok();
 		self.virtual_tx.send(VirtualReport::Url(url.into_owned())).ok();
 	}
 }
