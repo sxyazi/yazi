@@ -71,7 +71,7 @@ impl Parser {
 		debug_assert!(seq.ends_with(b"u"));
 
 		let s = str::from_utf8(&seq[2..seq.len() - 1])?;
-		let mut it = s.split(';');
+		let mut it = s.splitn(3, ';');
 
 		// In `CSI u`, this is parsed as:
 		//
@@ -83,41 +83,26 @@ impl Parser {
 		//
 		//     CSI unicode-key-code:alternate-key-codes ; modifiers:event-type ;
 		// text-as-codepoints u
-		let mut codepoints = it.next().ok_or(ParseError::Invalid)?.split(':');
+		let mut codepoints = it.next().ok_or(ParseError::Invalid)?.splitn(3, ':');
+		let (code, state_from_keycode) = KeyCode::from_codepoint(parse_next(&mut codepoints)?)?;
+		let shifted = parse_char(codepoints.next())?;
+		let basis = parse_char(codepoints.next())?;
 
-		let (mut code, state_from_keycode) = KeyCode::from_codepoint(parse_next(&mut codepoints)?)?;
-		let (mut modifiers, kind, state_from_modifiers) = parse_mks(&mut it).unwrap_or_default();
+		let (modifiers, kind, state_from_modifiers) = parse_mks(it.next().unwrap_or_default())?;
 		let text = parse_text(it.next().unwrap_or_default())?;
-
-		if let KeyCode::Modifier(c) = code
-			&& kind != KeyEventKind::Release
-			&& let Some(m) = c.to_modifier()
-		{
-			modifiers |= m;
-		}
-
-		// When the "report alternate keys" flag is enabled in the Kitty Keyboard
-		// Protocol and the terminal sends a keyboard event containing shift, the
-		// sequence will contain an additional codepoint separated by a ':' character
-		// which contains the shifted character according to the keyboard layout.
-		if modifiers.contains(Modifiers::SHIFT)
-			&& let Ok(Some(shifted)) = parse_next(&mut codepoints).map(char::from_u32)
-			&& code != KeyCode::Char(shifted)
-		{
-			code = KeyCode::Char(shifted);
-			modifiers.set(Modifiers::SHIFT, code.implies_shift());
-		}
 
 		Ok(Event::Key(KeyEvent {
 			code,
 			modifiers,
 			kind,
+			shifted,
+			basis,
 			state: state_from_keycode | state_from_modifiers,
 			text,
 		}))
 	}
 
-	/// Parses `CSI [1;] modifier[:kind] final` — sequences that carry a
+	/// Parses `CSI [1;] modifier[:kind] final` - sequences that carry a
 	/// semicolon, e.g. `\x1B[;2A` (Shift+Up, leading 1 omitted) or `\x1B[1;2A`
 	/// (Shift+Up).
 	fn parse_csi_modifier_key(&self) -> Result<Event> {
@@ -125,28 +110,29 @@ impl Parser {
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 
 		let s = str::from_utf8(&seq[2..seq.len() - 1])?;
-		let mut it = s.split(';');
-		it.next(); // skip leading "1" or empty string
+		let (first, modifiers) = s.split_once(';').ok_or(ParseError::Invalid)?;
+		if !matches!(first, "" | "1") {
+			bail!();
+		}
 
-		let (modifiers, kind, _) = parse_mks(&mut it).unwrap_or_default();
+		let (modifiers, kind, state) = parse_mks(modifiers)?;
 		let code = KeyCode::from_xterm_modifier(seq[seq.len() - 1])?;
-		Ok(Event::Key(KeyEvent { code, modifiers, kind, ..Default::default() }))
+		Ok(Event::Key(KeyEvent { code, modifiers, kind, state, ..Default::default() }))
 	}
 
-	/// Parses legacy `CSI modifier final` - no semicolon, modifier digit
+	/// Parses legacy `CSI modifier final` - no semicolon, modifier value
 	/// immediately before the final byte, e.g. `\x1B[2A` = Shift+Up.
 	fn parse_csi_modifier_legacy_key(&self) -> Result<Event> {
 		let seq = &self.seq;
 		debug_assert!(seq.starts_with(b"\x1B[")); // CSI
 
-		let modifier = seq[seq.len() - 2];
-		if !modifier.is_ascii_digit() {
-			bail!();
-		}
+		let (modifiers, kind, state) = parse_mks(str::from_utf8(&seq[2..seq.len() - 1])?)?;
 
 		Ok(Event::Key(KeyEvent {
 			code: KeyCode::from_xterm_modifier(seq[seq.len() - 1])?,
-			modifiers: Modifiers::from_vt_mask(modifier - b'0'),
+			modifiers,
+			kind,
+			state,
 			..Default::default()
 		}))
 	}
@@ -157,12 +143,11 @@ impl Parser {
 		debug_assert!(seq.ends_with(b"~"));
 
 		let s = str::from_utf8(&seq[2..seq.len() - 1])?;
-		let mut it = s.split(';');
+		let mut it = s.splitn(2, ';');
 
 		// This CSI sequence can be a list of semicolon-separated numbers.
 		let first: u8 = parse_next(&mut it)?;
-
-		let (modifiers, kind, state) = parse_mks(&mut it).unwrap_or_default();
+		let (modifiers, kind, state) = parse_mks(it.next().unwrap_or_default())?;
 
 		let code = match first {
 			1 | 7 => KeyCode::Home,
@@ -179,9 +164,7 @@ impl Parser {
 			_ => bail!(),
 		};
 
-		let event = Event::Key(KeyEvent { code, modifiers, kind, state, ..Default::default() });
-
-		Ok(event)
+		Ok(Event::Key(KeyEvent { code, modifiers, kind, state, ..Default::default() }))
 	}
 
 	// Parse rxvt mouse: CSI Cb ; Cx ; Cy ; M
@@ -265,23 +248,30 @@ impl Parser {
 fn parse_next<'a, T>(iter: &mut impl Iterator<Item = &'a str>) -> Result<T>
 where
 	T: FromStr,
+	ParseError: From<T::Err>,
 {
-	iter.next().ok_or(ParseError::Invalid)?.parse::<T>().map_err(|_| ParseError::Invalid)
+	Ok(iter.next().ok_or(ParseError::Invalid)?.parse::<T>()?)
 }
 
-fn parse_mks<'a, I>(mut it: I) -> Option<(Modifiers, KeyEventKind, KeyEventState)>
-where
-	I: Iterator<Item = &'a str>,
-{
-	let mut it = it.next()?.split(':');
-	let mask: u8 = it.next()?.parse().ok()?;
-	let code: u8 = it.next().and_then(|s| s.parse().ok()).unwrap_or(1);
+fn parse_mks(s: &str) -> Result<(Modifiers, KeyEventKind, KeyEventState)> {
+	let (code, kind) = s.split_once(':').unwrap_or((s, ""));
 
-	Some((
-		Modifiers::from_vt_mask(mask),
-		KeyEventKind::from_vt_code(code),
-		KeyEventState::from_vt_mask(mask),
+	let code = if code.is_empty() { "1" } else { code };
+	let kind = if kind.is_empty() { 1 } else { kind.parse()? };
+	let mask: u8 = code.parse::<u16>()?.checked_sub(1).ok_or(ParseError::Invalid)?.try_into()?;
+
+	Ok((
+		Modifiers::from_bits_truncate(mask),
+		KeyEventKind::from_vt_code(kind)?,
+		KeyEventState::from_mask(mask),
 	))
+}
+
+fn parse_char(s: Option<&str>) -> Result<Option<char>> {
+	match s {
+		None | Some("") => Ok(None),
+		Some(s) => char::from_u32(s.parse()?).map(Some).ok_or(ParseError::Invalid),
+	}
 }
 
 fn parse_text(s: &str) -> Result<CompactString> {
@@ -290,6 +280,8 @@ fn parse_text(s: &str) -> Result<CompactString> {
 	}
 
 	s.split(':')
-		.map(|codepoint| char::from_u32(codepoint.parse()?).ok_or(ParseError::Invalid))
+		.map(|codepoint| {
+			char::from_u32(codepoint.parse()?).filter(|c| !c.is_control()).ok_or(ParseError::Invalid)
+		})
 		.collect()
 }

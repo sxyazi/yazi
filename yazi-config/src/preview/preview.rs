@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, de};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{Xdg, create_owned_dir_blocking, path::sanitize_path};
 use yazi_shared::timestamp_us;
@@ -39,7 +39,7 @@ impl DeserializeOverHook for Preview {
 	fn deserialize_over_hook(self) -> Result<Self, toml::de::Error> {
 		create_owned_dir_blocking(&self.cache_dir)
 			.context(format!("Failed to create cache directory: {}", self.cache_dir.display()))
-			.map_err(|err| serde::de::Error::custom(format!("{err:#}")))?;
+			.map_err(|err| de::Error::custom(format!("{err:#}")))?;
 
 		Ok(self)
 	}
@@ -53,9 +53,8 @@ where
 	if path.as_os_str().is_empty() {
 		Ok(Xdg::temp_dir().to_owned())
 	} else {
-		sanitize_path(path).ok_or_else(|| {
-			serde::de::Error::custom("cache_dir must be either empty or an absolute path.")
-		})
+		sanitize_path(path)
+			.ok_or_else(|| de::Error::custom("cache_dir must be either empty or an absolute path."))
 	}
 }
 
@@ -67,7 +66,7 @@ where
 	if value <= 100 {
 		Ok(value)
 	} else {
-		Err(serde::de::Error::custom("image_delay must be between 0 and 100."))
+		Err(de::Error::custom("image_delay must be between 0 and 100."))
 	}
 }
 
@@ -79,6 +78,6 @@ where
 	if (50..=90).contains(&value) {
 		Ok(value)
 	} else {
-		Err(serde::de::Error::custom("image_quality must be between 50 and 90."))
+		Err(de::Error::custom("image_quality must be between 50 and 90."))
 	}
 }

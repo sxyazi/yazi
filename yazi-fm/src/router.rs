@@ -30,7 +30,7 @@ impl<'a> Router<'a> {
 		}
 
 		let layer = core.layer();
-		let key = Key::from(key);
+		let Ok(key) = Key::try_from(key) else { return Ok(false) };
 		Ok(match layer {
 			L::Null | L::App | L::Notify => unreachable!(),
 			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm => {

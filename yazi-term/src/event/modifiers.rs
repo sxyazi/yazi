@@ -14,7 +14,7 @@ bitflags! {
 }
 
 impl Modifiers {
-	pub(crate) fn from_vt_mask(mask: u8) -> Self { Self::from_bits_truncate(mask.saturating_sub(1)) }
+	pub fn is_literal(self) -> bool { self.difference(Self::SHIFT).is_empty() }
 
 	pub(crate) fn for_char(c: char) -> Self {
 		if c.is_uppercase() { Self::SHIFT } else { Self::empty() }

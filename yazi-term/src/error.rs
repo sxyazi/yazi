@@ -28,6 +28,10 @@ impl From<num::ParseIntError> for ParseError {
 	fn from(_: num::ParseIntError) -> Self { Self::Invalid }
 }
 
+impl From<num::TryFromIntError> for ParseError {
+	fn from(_: num::TryFromIntError) -> Self { Self::Invalid }
+}
+
 impl From<base64::DecodeError> for ParseError {
 	fn from(_: base64::DecodeError) -> Self { Self::Invalid }
 }

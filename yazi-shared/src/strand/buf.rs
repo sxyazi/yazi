@@ -72,7 +72,6 @@ impl StrandBuf {
 		}
 	}
 
-	#[cfg(windows)]
 	pub fn into_encoded_bytes(self) -> Vec<u8> {
 		match self {
 			Self::Os(s) => s.into_encoded_bytes(),

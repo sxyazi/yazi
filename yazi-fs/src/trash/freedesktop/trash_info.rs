@@ -1,9 +1,7 @@
 use std::{borrow::Cow, ffi::OsStr, fs::File, io::{self, BufRead, BufReader}, os::unix::ffi::OsStrExt, path::{Path, PathBuf}};
 
 use percent_encoding::percent_decode;
-use uzers::Users;
-use yazi_shared::USERS_CACHE;
-use yazi_shim::path::PathExt;
+use yazi_shim::{Uzers, path::PathExt};
 
 pub(super) struct TrashInfo {
 	pub(super) root:     PathBuf,
@@ -76,7 +74,7 @@ impl TrashInfo {
 	// /mnt/disk/.Trash/1000           =>  /mnt/disk
 	// /home/alice/.local/share/Trash  =>  /home/alice/.local/share
 	fn mount_point(root: &Path) -> io::Result<&Path> {
-		let uid = USERS_CACHE.get_current_uid().to_string();
+		let uid = Uzers::uid().to_string();
 
 		if root.file_name() == Some(OsStr::new(&uid))
 			&& let Some(parent) = root.parent()

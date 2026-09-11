@@ -94,8 +94,6 @@ pub fn create_owned_dir_blocking(p: &Path) -> io::Result<()> {
 		use std::{fs::{DirBuilder, OpenOptions}, mem, os::unix::{fs::{DirBuilderExt, OpenOptionsExt}, io::AsRawFd}};
 
 		use libc::{O_DIRECTORY, O_NOFOLLOW};
-		use uzers::Users;
-		use yazi_shared::USERS_CACHE;
 
 		DirBuilder::new().mode(0o700).recursive(true).create(p)?;
 		let dir = OpenOptions::new().read(true).custom_flags(O_DIRECTORY | O_NOFOLLOW).open(p)?;
@@ -106,7 +104,7 @@ pub fn create_owned_dir_blocking(p: &Path) -> io::Result<()> {
 		}
 
 		// Reject directories not owned by the current user.
-		let uid = USERS_CACHE.get_current_uid();
+		let uid = yazi_shim::Uzers::uid();
 		if stat.st_uid != uid {
 			return Err(io::Error::new(
 				io::ErrorKind::PermissionDenied,

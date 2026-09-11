@@ -22,7 +22,7 @@ pub(crate) struct Dependency {
 
 impl Dependency {
 	pub(super) fn local(&self) -> PathBuf {
-		Xdg::cache_dir()
+		Xdg::asset_dir()
 			.join("packages")
 			.join(format!("{:x}", XxHash3_128::oneshot(self.remote().as_bytes())))
 	}
