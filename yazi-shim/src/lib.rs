@@ -1,6 +1,6 @@
 yazi_macro::mod_pub!(arc_swap cell fs log mlua path ratatui rustls serde strum tokio toml vec utf8 wtf8);
 
-yazi_macro::mod_flat!(option percent_encoding result sstr twox);
+yazi_macro::mod_flat!(option percent_encoding result sstr tests twox uzers);
 
 #[cfg(windows)]
 yazi_macro::mod_flat!(win32);
@@ -9,6 +9,9 @@ pub fn init() -> anyhow::Result<()> {
 	_ = fdlimit::raise_fd_limit();
 
 	log::LOG_LEVEL.replace(<_>::from(std::env::var("YAZI_LOG").unwrap_or_default()));
+
+	#[cfg(unix)]
+	Uzers::init();
 
 	rustls::init()?;
 

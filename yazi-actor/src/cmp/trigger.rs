@@ -107,6 +107,7 @@ mod tests {
 	#[cfg(unix)]
 	#[test]
 	fn test_split() {
+		yazi_shim::init_tests();
 		yazi_shared::init_tests();
 		yazi_config::init_tests();
 		yazi_fs::init();
@@ -138,6 +139,7 @@ mod tests {
 	#[cfg(windows)]
 	#[test]
 	fn test_split() {
+		yazi_shim::init_tests();
 		yazi_shared::init_tests();
 		yazi_config::init_tests();
 		yazi_fs::init();

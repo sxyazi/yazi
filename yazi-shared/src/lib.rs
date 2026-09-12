@@ -7,9 +7,6 @@ yazi_macro::mod_flat!(bytes chars completion_token condition debounce env kebab_
 pub fn init() {
 	LOCAL_SET.with(tokio::task::LocalSet::new);
 
-	#[cfg(unix)]
-	USERS_CACHE.with(<_>::default);
-
 	pool::init();
 	event::Event::init();
 }

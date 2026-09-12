@@ -27,6 +27,10 @@ impl serde::de::Error for Error {
 	fn custom<T: std::fmt::Display>(msg: T) -> Self { Self::serde(msg.to_string()) }
 }
 
+impl From<std::str::Utf8Error> for Error {
+	fn from(err: std::str::Utf8Error) -> Self { Self::serde(err.to_string()) }
+}
+
 impl From<Error> for std::io::Error {
 	fn from(err: Error) -> Self {
 		match err {

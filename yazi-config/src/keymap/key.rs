@@ -31,20 +31,38 @@ impl Key {
 	}
 }
 
-impl From<KeyEvent> for Key {
-	fn from(value: KeyEvent) -> Self {
-		let (code, shift) = match value.text(&mut [0; 4]).and_then(|s| s.parse().ok()) {
-			Some(c) => (KeyCode::Char(c), c.is_uppercase()),
-			None => (value.code, value.modifiers.contains(Modifiers::SHIFT)),
-		};
+impl TryFrom<KeyEvent> for Key {
+	type Error = ();
 
-		Self {
+	fn try_from(value: KeyEvent) -> Result<Self, Self::Error> {
+		if value.modifiers.intersects(Modifiers::HYPER | Modifiers::META) {
+			return Err(());
+		}
+
+		let mut code = value.shifted_code();
+		let mut shift = value.modifiers.contains(Modifiers::SHIFT);
+		if value.modifiers.is_literal() && !value.text.is_empty() {
+			// `a` -> `text = "a"`; `Shift+A` -> `text = "A"`.
+			// Kitty's associated text is the char actually produced, so prefer it over `code`.
+			code = KeyCode::Char(value.text.parse().map_err(|_| ())?);
+			shift = code.implies_shift();
+		} else if shift && value.shifted.is_some() {
+			// `Shift+1` -> `shifted = Some('!')`, so `shifted_code()` already returns `!`.
+			// Recompute `shift` from the resolved shifted code, otherwise `Shift+1` would become `<S-!>` instead of `!`.
+			shift = code.implies_shift();
+		}
+
+		if code == KeyCode::Null {
+			return Err(());
+		}
+
+		Ok(Self {
 			code,
 			shift,
 			ctrl: value.modifiers.contains(Modifiers::CONTROL),
 			alt: value.modifiers.contains(Modifiers::ALT),
 			super_: value.modifiers.contains(Modifiers::SUPER),
-		}
+		})
 	}
 }
 

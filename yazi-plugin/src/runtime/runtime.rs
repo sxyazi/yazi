@@ -125,8 +125,6 @@ fn preview() -> Composer<ComposerGet, ComposerSet> {
 			b"max_width" => p.max_width.into_lua(lua)?,
 			b"max_height" => p.max_height.into_lua(lua)?,
 
-			b"cache_dir" => lua.to_value_with(&p.cache_dir, SER_OPT)?,
-
 			b"image_delay" => p.image_delay.into_lua(lua)?,
 			b"image_filter" => lua.create_string(&p.image_filter)?.into_lua(lua)?,
 			b"image_quality" => p.image_quality.into_lua(lua)?,

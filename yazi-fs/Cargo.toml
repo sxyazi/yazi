@@ -47,9 +47,6 @@ tokio                 = { workspace = true }
 typed-path            = { workspace = true }
 unicode-normalization = { workspace = true }
 
-[target."cfg(unix)".dependencies]
-uzers = { workspace = true }
-
 [target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
 percent-encoding = { workspace = true }
 

@@ -1,7 +1,4 @@
 #[cfg(unix)]
-pub static USERS_CACHE: yazi_shim::cell::RoCell<uzers::UsersCache> = yazi_shim::cell::RoCell::new();
-
-#[cfg(unix)]
 pub fn hostname() -> Option<&'static str> {
 	static CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
 

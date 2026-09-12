@@ -11,9 +11,13 @@ pub struct KeyEvent {
 	pub code:         KeyCode,
 	pub kind:         KeyEventKind,
 	pub modifiers:    Modifiers,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub shifted:      Option<char>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub basis:        Option<char>,
 	pub(crate) state: KeyEventState,
 	#[serde(skip_serializing_if = "CompactString::is_empty")]
-	pub(crate) text:  CompactString,
+	pub text:         CompactString,
 }
 
 impl KeyEvent {
@@ -21,15 +25,26 @@ impl KeyEvent {
 		Self { code, modifiers, ..Default::default() }
 	}
 
-	pub fn text<'a>(&'a self, buf: &'a mut [u8; 4]) -> Option<&'a str> {
-		use Modifiers as M;
-
-		match self.code {
-			_ if self.modifiers.intersects(M::CONTROL | M::ALT | M::SUPER) => None,
-			KeyCode::Char(c) if self.text.is_empty() => Some(c.encode_utf8(buf)),
-			KeyCode::Char(_) | KeyCode::Null if !self.text.is_empty() => Some(&self.text),
-			_ => None,
+	pub fn shifted_code(&self) -> KeyCode {
+		match (self.code, self.shifted) {
+			_ if !self.modifiers.contains(Modifiers::SHIFT) => self.code,
+			(_, Some(c)) => KeyCode::Char(c),
+			(KeyCode::Char(c), None) => KeyCode::Char(c.to_ascii_uppercase()),
+			_ => self.code,
 		}
+	}
+
+	/// Text input takes precedence over modifiers consumed by the keyboard layout.
+	pub fn text<'a>(&'a self, buf: &'a mut [u8; 4]) -> Option<&'a str> {
+		let c = match (self.code, self.shifted_code()) {
+			_ if self.kind == KeyEventKind::Release => return None,
+			_ if !self.text.is_empty() => return Some(&self.text),
+			_ if !self.modifiers.is_literal() => return None,
+			(KeyCode::Char(_), KeyCode::Char(c)) => c,
+			_ => return None,
+		};
+
+		(!c.is_control()).then(|| c.encode_utf8(buf) as &str)
 	}
 }
 
@@ -48,12 +63,13 @@ pub enum KeyEventKind {
 }
 
 impl KeyEventKind {
-	pub(crate) fn from_vt_code(code: u8) -> Self {
-		match code {
+	pub(crate) fn from_vt_code(code: u8) -> Result<Self> {
+		Ok(match code {
+			1 => Self::Press,
 			2 => Self::Repeat,
 			3 => Self::Release,
-			_ => Self::Press,
-		}
+			_ => bail!(),
+		})
 	}
 }
 
@@ -68,13 +84,12 @@ bitflags! {
 }
 
 impl KeyEventState {
-	pub(crate) fn from_vt_mask(mask: u8) -> Self {
-		let m = mask.saturating_sub(1);
+	pub(crate) fn from_mask(mask: u8) -> Self {
 		let mut state = Self::empty();
-		if m & 64 != 0 {
+		if mask & 64 != 0 {
 			state |= Self::CAPS_LOCK;
 		}
-		if m & 128 != 0 {
+		if mask & 128 != 0 {
 			state |= Self::NUM_LOCK;
 		}
 		state
@@ -252,20 +267,6 @@ pub enum ModifierKeyCode {
 	RightMeta,
 	IsoLevel3Shift,
 	IsoLevel5Shift,
-}
-
-impl ModifierKeyCode {
-	pub(crate) fn to_modifier(self) -> Option<Modifiers> {
-		match self {
-			Self::LeftShift | Self::RightShift => Some(Modifiers::SHIFT),
-			Self::LeftControl | Self::RightControl => Some(Modifiers::CONTROL),
-			Self::LeftAlt | Self::RightAlt => Some(Modifiers::ALT),
-			Self::LeftSuper | Self::RightSuper => Some(Modifiers::SUPER),
-			Self::LeftHyper | Self::RightHyper => Some(Modifiers::HYPER),
-			Self::LeftMeta | Self::RightMeta => Some(Modifiers::META),
-			_ => None,
-		}
-	}
 }
 
 // --- Media key

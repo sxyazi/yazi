@@ -158,6 +158,10 @@ pub trait IntoStrand {
 	fn into_strand(self) -> StrandBuf;
 }
 
+impl IntoStrand for OsString {
+	fn into_strand(self) -> StrandBuf { self.into() }
+}
+
 impl IntoStrand for PathBufDyn {
 	fn into_strand(self) -> StrandBuf {
 		match self {
