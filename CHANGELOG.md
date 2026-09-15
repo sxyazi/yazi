@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Tolerate non-conforming orphaned trash items on Linux ([#4343])
 - Correct diacritic input for <kbd>Option</kbd> key combos in kitty keyboard protocol ([#4346])
 
+### Improved
+
+- Asyncly parse the entry arguments to avoid blocking app startup ([#4352])
+
 ## [v26.9.1]
 
 ### Fixed
@@ -1872,3 +1876,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4338]: https://github.com/sxyazi/yazi/pull/4338
 [#4343]: https://github.com/sxyazi/yazi/pull/4343
 [#4346]: https://github.com/sxyazi/yazi/pull/4346
+[#4352]: https://github.com/sxyazi/yazi/pull/4352
