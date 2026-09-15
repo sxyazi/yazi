@@ -39,7 +39,6 @@ impl Tabs {
 		self.cursor = idx;
 		log_if_err!(Pubsub::pub_after_tab(self.active().id));
 	}
-
 }
 
 impl Tabs {
