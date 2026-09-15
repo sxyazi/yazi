@@ -20,6 +20,8 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_fs::init();
 
+	yazi_boot::init();
+
 	yazi_vfs::init();
 
 	yazi_runner::init(yazi_plugin::slim_lua);
@@ -32,21 +34,14 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_actor::init();
 
-	yazi_fm::init();
-
-	settle(yazi_fm::serve().await)
-}
-
-fn init() {
-	if yazi_version::has_dash_v() {
-		println!("Yazi\n{}", yazi_version::version_full());
-		std::process::exit(0);
-	}
+	yazi_fm::serve().await
 }
 
 async fn serve() -> anyhow::Result<()> {
 	Logs::start()?;
 	Signals::start()?;
+
+	yazi_version::setup!();
 
 	yazi_term::setup()?;
 
@@ -55,18 +50,9 @@ async fn serve() -> anyhow::Result<()> {
 
 	yazi_config::setup()?;
 
-	yazi_boot::setup()?;
-
 	yazi_dds::serve();
 
 	yazi_plugin::setup()?;
 
 	yazi_shared::LOCAL_SET.run_until(app::App::serve()).await
-}
-
-fn settle(result: anyhow::Result<()>) -> anyhow::Result<()> {
-	match &result {
-		Err(e) if let Some(e) = e.downcast_ref::<clap::Error>() => e.exit(),
-		_ => result,
-	}
 }

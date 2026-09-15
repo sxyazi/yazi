@@ -27,7 +27,7 @@ impl Actor for UpdateFiles {
 		}
 		render!(cx.mgr.yanked.catchup_revision(false));
 
-		let tabs = cx.tabs().indices_or_active(form.tabs);
+		let tabs = cx.indices_or_tab(form.tabs);
 		let Some((&last, tabs)) = tabs.split_last() else { succ!() };
 
 		for &tab in tabs {

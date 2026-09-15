@@ -15,14 +15,14 @@ impl Actor for Refresh {
 	const NAME: &str = "refresh";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		CWD.set(cx.cwd(), Self::cwd_changed);
+		CWD.set(cx.active().cwd(), Self::cwd_changed);
 
 		let tab = tab!(cx);
 		cx.core.mgr.watcher.refresher.refresh(
 			[Some(&mut tab.current), tab.parent.as_mut()]
 				.into_iter()
 				.flatten()
-				.filter(|f| f.url.is_absolute())
+				.filter(|f| f.url.is_absolute() || !f.url.auth().is_local())
 				.map(|f| f.take_request()),
 		);
 

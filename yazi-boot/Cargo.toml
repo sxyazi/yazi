@@ -13,15 +13,13 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-yazi-fs     = { path = "../yazi-fs", version = "26.9.1" }
-yazi-macro  = { path = "../yazi-macro", version = "26.9.1" }
-yazi-shared = { path = "../yazi-shared", version = "26.9.1" }
-yazi-shim   = { path = "../yazi-shim", version = "26.9.1" }
-yazi-vfs    = { path = "../yazi-vfs", version = "26.9.1" }
+yazi-fs      = { path = "../yazi-fs", version = "26.9.1" }
+yazi-macro   = { path = "../yazi-macro", version = "26.9.1" }
+yazi-shared  = { path = "../yazi-shared", version = "26.9.1" }
+yazi-shim    = { path = "../yazi-shim", version = "26.9.1" }
 
 # External dependencies
 clap      = { workspace = true }
-futures   = { workspace = true }
 hashbrown = { workspace = true }
 
 [build-dependencies]
@@ -29,6 +27,7 @@ yazi-shared = { path = "../yazi-shared", version = "26.9.1" }
 
 # External dependencies
 clap                  = { workspace = true }
-clap_complete         = "4.6.9"
+clap_complete         = "4.6.11"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.6.2"
+hashbrown             = { workspace = true }

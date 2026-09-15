@@ -1,7 +1,7 @@
 use std::io;
 
 use mlua::{AnyUserData, IntoLuaMulti, UserData, UserDataMethods, Value};
-use yazi_fs::engine::{Attrs, Capabilities as C, Engine, FileBuilder};
+use yazi_fs::engine::{Attrs, Engine, FileBuilder};
 use yazi_shared::{auth::AuthKind, url::{AsUrl, UrlRef}};
 use yazi_shim::fs::Error;
 
@@ -36,7 +36,7 @@ impl FileBuilder for Demand {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		if url.is_view() && super::lua::Lua::new(url).await?.handles(C::OPEN).await? {
+		if url.is_view() && super::lua::Lua::new(url).await?.handles(|c| c.open).await? {
 			return Ok(self.0.build::<super::lua::Demand>().open(url).await?.into());
 		}
 

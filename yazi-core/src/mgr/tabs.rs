@@ -39,14 +39,6 @@ impl Tabs {
 		self.cursor = idx;
 		log_if_err!(Pubsub::pub_after_tab(self.active().id));
 	}
-
-	pub fn indices_or_active(&self, ids: Vec<Id>) -> Vec<usize> {
-		if ids.is_empty() {
-			vec![self.cursor]
-		} else {
-			ids.into_iter().filter_map(|id| self.idx(id)).collect()
-		}
-	}
 }
 
 impl Tabs {

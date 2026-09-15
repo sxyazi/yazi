@@ -9,3 +9,11 @@ run  = "rg"
 [trash."*"]
 kind = "hub"
 run  = "trash"
+
+[go.boot]
+kind = "scope"
+run  = "go"
+
+[error.boot]
+kind = "scope"
+run  = "error"

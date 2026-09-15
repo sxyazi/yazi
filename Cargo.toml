@@ -43,7 +43,7 @@ arc-swap              = { version = "1.9.2", features = [ "serde" ] }
 base64                = "0.23.1"
 bitflags              = { version = "2.13.2", features = [ "serde" ] }
 chrono                = "0.4.45"
-clap                  = { version = "4.6.6", features = [ "derive" ] }
+clap                  = { version = "4.6.7", features = [ "derive" ] }
 compact_str           = { version = "0.10.0", features = [ "serde" ] }
 core-foundation-sys   = "0.8.7"
 data-encoding         = "2.11.1"
@@ -72,7 +72,7 @@ ratatui-widgets       = { version = "0.3.2", default-features = false, features 
 regex                 = "1.13.1"
 regex-syntax          = "0.8.11"
 reqwest               = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream" ] }
-rustls                = { version = "0.23.44", default-features = false, features = [ "ring", "std" ] }
+rustls                = { version = "0.23.45", default-features = false, features = [ "ring", "std" ] }
 rustix                = { version = "1.1.4", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event" ] }
 russh                 = { version = "0.63.3", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard            = "1.2.0"

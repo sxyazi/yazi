@@ -50,7 +50,7 @@ fn path() -> Composer<ComposerGet, ComposerSet> {
 fn args() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"entries" => lua.create_sequence_from(ARGS.entries.iter().cloned())?.into_lua(lua),
+			b"entries" => lua.create_sequence_from(ARGS.entries.as_slice())?.into_lua(lua),
 			b"cwd_file" => ARGS.cwd_file.as_ref().map(UrlBuf::from).into_lua(lua),
 			b"chooser_file" => ARGS.chooser_file.as_ref().map(UrlBuf::from).into_lua(lua),
 			_ => Ok(Value::Nil),

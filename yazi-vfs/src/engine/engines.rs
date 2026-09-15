@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities as C, Engine, Transmit}, file::File};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, Transmit}, file::File};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 pub(super) enum Engines<'a> {
@@ -20,7 +20,7 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn canonicalize(&self) -> io::Result<UrlBuf> { dispatch!(self, canonicalize) }
 
-	async fn capabilities(&self) -> io::Result<C> {
+	async fn capabilities(&self) -> io::Result<Capabilities> {
 		match self {
 			Self::Local(p) => p.capabilities().await,
 			Self::Lua(p) => p.capabilities().await,
@@ -66,7 +66,7 @@ impl<'a> Engine for Engines<'a> {
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
 		Ok(match self {
 			Self::Local(p) => p.read_dir().await?.into(),
-			Self::Lua(p) if p.handles(C::READ_DIR).await? => p.read_dir().await?.into(),
+			Self::Lua(p) if p.handles(|c| c.read_dir).await? => p.read_dir().await?.into(),
 			Self::Lua(p) => physical!(p, read_dir)?,
 			Self::Sftp(p) => p.read_dir().await?.into(),
 		})
@@ -74,10 +74,12 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn read_link(&self) -> io::Result<PathBufDyn> { dispatch!(self, read_link) }
 
+	async fn reroute(&self) -> io::Result<File> { dispatch!(self, reroute) }
+
 	async fn revalidate(&self, file: File) -> io::Result<Option<File>> {
 		match self {
 			Self::Local(p) => p.revalidate(file).await,
-			Self::Lua(p) if p.handles(C::REVALIDATE).await? => p.revalidate(file).await,
+			Self::Lua(p) if p.handles(|c| c.revalidate).await? => p.revalidate(file).await,
 			Self::Lua(p) => physical!(p, revalidate, File { url: file.url.into_physical(), ..file }),
 			Self::Sftp(p) => p.revalidate(file).await,
 		}

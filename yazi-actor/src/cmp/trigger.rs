@@ -98,15 +98,17 @@ mod tests {
 
 	fn compare(s: &str, parent: &str, child: &str) {
 		let (mut p, c) = Trigger::split_url(s).unwrap();
-		if let Ok(u) = p.try_strip_prefix(yazi_fs::CWD.load().as_ref()) {
+		if p.is_regular()
+			&& let Ok(u) = p.try_strip_prefix(yazi_fs::CWD.load().as_ref())
+		{
 			p = u.as_os().unwrap().into();
 		}
 		assert_eq!((p, c.to_str().unwrap()), (parent.parse().unwrap(), child));
 	}
 
 	#[cfg(unix)]
-	#[test]
-	fn test_split() {
+	#[tokio::test]
+	async fn test_split() {
 		yazi_shim::init_tests();
 		yazi_shared::init_tests();
 		yazi_config::init_tests();

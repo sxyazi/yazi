@@ -30,10 +30,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn run() -> anyhow::Result<()> {
-	if yazi_version::has_dash_v() {
-		outln!("Ya\n{}", yazi_version::version_full())?;
-		return Ok(());
-	}
+	yazi_version::setup!();
 
 	match Args::parse().command {
 		Command::Emit(cmd) => {

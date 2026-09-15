@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities as C, Engine, Transmit}, file::File};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, Transmit}, file::File};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
 use super::{Engines, ReadDir, RwFile};
@@ -31,7 +31,14 @@ where
 	Engines::new(url.as_url()).await?.canonicalize().await
 }
 
-pub async fn capabilities<U>(url: U) -> io::Result<C>
+pub async fn reroute<U>(url: U) -> io::Result<File>
+where
+	U: AsUrl,
+{
+	Engines::new(url.as_url()).await?.reroute().await
+}
+
+pub async fn capabilities<U>(url: U) -> io::Result<Capabilities>
 where
 	U: AsUrl,
 {

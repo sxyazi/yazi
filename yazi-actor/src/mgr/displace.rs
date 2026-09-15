@@ -1,3 +1,5 @@
+use std::io;
+
 use anyhow::Result;
 use yazi_core::mgr::DisplaceOpt;
 use yazi_macro::succ;
@@ -16,17 +18,20 @@ impl Actor for Displace {
 	const NAME: &str = "displace";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		if cx.cwd().is_absolute() {
+		if cx.cwd().is_regular() {
 			succ!();
 		}
 
 		let tab = cx.tab().id;
 		let from = cx.cwd().to_owned();
 		tokio::spawn(async move {
-			MgrProxy::displace_do(tab, DisplaceOpt {
-				to: engine::canonicalize(&from).await.map_err(Into::into),
-				from,
-			});
+			let to = match engine::reroute(&from).await {
+				Ok(file) => Ok(file),
+				Err(e) if e.kind() == io::ErrorKind::Unsupported => return,
+				Err(e) => Err(e.into()),
+			};
+
+			MgrProxy::displace_do(tab, DisplaceOpt { to, from });
 		});
 
 		succ!();

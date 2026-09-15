@@ -101,7 +101,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub(crate) fn is_absolute(self) -> bool { self.loc().is_absolute() }
+	pub fn is_absolute(self) -> bool { self.loc().is_absolute() }
 
 	#[inline]
 	pub fn is_regular(self) -> bool { self.auth().is_regular() }
