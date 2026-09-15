@@ -16,7 +16,7 @@ impl Actor for Title {
 	const NAME: &str = "title";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let s = form.value.unwrap_or_else(|| format!("Yazi: {}", cx.tab().name()).into());
+		let s = form.value.unwrap_or_else(|| format!("Yazi: {}", cx.active().name()).into());
 		writef!(TTY.writer(), "{}", SetTitle(&s))?;
 
 		yazi_tui::STATE.set(RatermState { title: !s.is_empty(), ..yazi_tui::STATE.get() });

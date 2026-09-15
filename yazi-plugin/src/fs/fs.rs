@@ -27,6 +27,7 @@ pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 			b"read_dir" => read_dir(lua)?,
 			b"remove" => remove(lua)?,
 			b"rename" => rename(lua)?,
+			b"reroute" => reroute(lua)?,
 			b"safename" => safename(lua)?,
 			b"trash" => return yazi_fs::trash::Trash.into_lua(lua),
 			b"unique" => unique(lua)?,
@@ -233,6 +234,15 @@ fn rename(lua: &Lua) -> mlua::Result<Function> {
 		match engine::rename(&*from, &*to).await {
 			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
+fn reroute(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, url: UrlRef| async move {
+		match engine::reroute(&*url).await {
+			Ok(file) => file.into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}
 	})
 }

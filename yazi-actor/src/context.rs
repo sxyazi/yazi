@@ -80,6 +80,14 @@ impl<'a> Ctx<'a> {
 			backtrace: vec![],
 		}
 	}
+
+	pub(crate) fn indices_or_tab(&self, ids: Vec<Id>) -> Vec<usize> {
+		if ids.is_empty() {
+			vec![self.tab]
+		} else {
+			ids.into_iter().filter_map(|id| self.tabs().idx(id)).collect()
+		}
+	}
 }
 
 impl<'a> Ctx<'a> {

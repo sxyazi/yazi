@@ -15,7 +15,7 @@ impl Actor for Refresh {
 	const NAME: &str = "refresh";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		CWD.set(cx.cwd(), Self::cwd_changed);
+		CWD.set(cx.active().cwd(), Self::cwd_changed);
 
 		let tab = tab!(cx);
 		cx.core.mgr.watcher.refresher.refresh(

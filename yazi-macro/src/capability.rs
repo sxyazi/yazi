@@ -1,9 +1,12 @@
 #[macro_export]
 macro_rules! capability {
 	(write) => {
-		::yazi_fs::engine::Capabilities::OPEN
+		|c: ::yazi_fs::engine::Capabilities| c.open
+	};
+	(reroute) => {
+		|c: ::yazi_fs::engine::Capabilities| c.reroute != 0
 	};
 	($method:ident) => {
-		paste::paste! { ::yazi_fs::engine::Capabilities::[<$method:upper>] }
+		|c: ::yazi_fs::engine::Capabilities| c.$method
 	};
 }

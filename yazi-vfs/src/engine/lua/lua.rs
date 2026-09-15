@@ -3,7 +3,7 @@ use std::{io, sync::Arc};
 use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_config::vfs::{ServiceLua, Vfs};
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities as C, Engine, Transmit}, file::File};
+use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, Transmit}, file::File};
 use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideResult}};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
@@ -33,7 +33,7 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideJob::Canonicalize { url }).await.0?)
 	}
 
-	async fn capabilities(&self) -> io::Result<C> {
+	async fn capabilities(&self) -> io::Result<Capabilities> {
 		self
 			.service
 			.caps
@@ -49,7 +49,7 @@ impl<'a> Engine for Lua<'a> {
 	}
 
 	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
-		if !self.capabilities().await?.contains(C::COPY_TO) {
+		if !self.capabilities().await?.copy_to {
 			return Ok(Transmit::unsupported());
 		}
 
@@ -64,7 +64,7 @@ impl<'a> Engine for Lua<'a> {
 	}
 
 	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
-		if !self.capabilities().await?.contains(C::COPY_FROM) {
+		if !self.capabilities().await?.copy_from {
 			return Ok(Transmit::unsupported());
 		}
 
@@ -85,7 +85,7 @@ impl<'a> Engine for Lua<'a> {
 	}
 
 	async fn create_dir_all(&self) -> io::Result<()> {
-		if self.capabilities().await?.contains(C::CREATE_DIR_ALL) {
+		if self.capabilities().await?.create_dir_all {
 			let url = self.url.to_owned();
 			Ok(self.call(ProvideJob::CreateDirAll { url }).await.ok()?)
 		} else {
@@ -133,6 +133,17 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideJob::ReadLink { url }).await.0?)
 	}
 
+	async fn reroute(&self) -> io::Result<File> {
+		let cap = self.capabilities().await?.reroute;
+		let mask = if self.url.is_absolute() { 0b10 } else { 0b01 };
+		if cap & mask == 0 {
+			return Err(io::ErrorKind::Unsupported.into());
+		}
+
+		let url = self.url.to_owned();
+		Ok(self.call(ProvideJob::Reroute { url }).await.0?)
+	}
+
 	async fn revalidate(&self, file: File) -> io::Result<Option<File>> {
 		Ok(self.call(ProvideJob::Revalidate { file }).await.0?)
 	}
@@ -144,7 +155,7 @@ impl<'a> Engine for Lua<'a> {
 	}
 
 	async fn remove_dir_all(&self) -> io::Result<()> {
-		if self.capabilities().await?.contains(C::REMOVE_DIR_ALL) {
+		if self.capabilities().await?.remove_dir_all {
 			let url = self.url.to_owned();
 			Ok(self.call(ProvideJob::RemoveDirAll { url }).await.ok()?)
 		} else {
@@ -218,7 +229,7 @@ impl<'a> Lua<'a> {
 		RUNNER.provide(self.service.clone(), job).await
 	}
 
-	pub(crate) async fn handles(&self, caps: C) -> io::Result<bool> {
-		Ok(!self.url.is_view() || self.capabilities().await?.contains(caps))
+	pub(crate) async fn handles(&self, check: fn(Capabilities) -> bool) -> io::Result<bool> {
+		Ok(!self.url.is_view() || check(self.capabilities().await?))
 	}
 }

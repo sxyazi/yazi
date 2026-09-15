@@ -2,9 +2,9 @@ use std::{io, sync::Arc};
 
 use deadpool::managed::PoolError;
 use yazi_config::vfs::{ServiceSftp, Vfs};
-use yazi_fs::engine::{Capabilities, DirReader, Engine, FileHolder, Transmit};
+use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileHolder, Transmit}, file::File};
 use yazi_sftp::fs::Attrs;
-use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Cha;
 use crate::engine::sftp::Conn;
@@ -138,6 +138,15 @@ impl<'a> Engine for Sftp<'a> {
 
 	async fn read_link(&self) -> io::Result<PathBufDyn> {
 		Ok(self.op().await?.readlink(self.path).await?.into())
+	}
+
+	async fn reroute(&self) -> io::Result<File> {
+		if self.url.is_absolute() {
+			return Err(io::ErrorKind::Unsupported.into());
+		}
+
+		let url = self.canonicalize().await?;
+		Self::new(url.as_url()).await?.file().await
 	}
 
 	async fn remove_dir(&self) -> io::Result<()> { Ok(self.op().await?.rmdir(self.path).await?) }

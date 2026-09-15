@@ -130,7 +130,7 @@ spotters = [
 	# Trash
 	{ mime = "trash/**", run = "trash" },
 	# Error
-	{ mime = "null/*", run = "null" },
+	{ mime = "error/*", run = "error" },
 	# Fallback
 	{ url = "*", run = "file" },
 	{ url = "*/", run = "file" },
@@ -183,7 +183,7 @@ previewers = [
 	# Trash
 	{ mime = "trash/**", run = "trash" },
 	# Error
-	{ mime = "null/*", run = "null" },
+	{ mime = "error/*", run = "error" },
 	# Fallback
 	{ url = "*", run = "file" },
 ]

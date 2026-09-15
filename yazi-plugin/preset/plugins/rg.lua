@@ -54,7 +54,7 @@ end
 function M:provide(job)
 	local op = job.op
 	if op == "Capabilities" then
-		return { file = true, read_dir = true, revalidate = true }
+		return { file = 1, read_dir = 1, revalidate = 1 }
 	elseif op == "File" then
 		return search.file(job.url)
 	elseif op == "Revalidate" then

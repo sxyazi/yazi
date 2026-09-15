@@ -7,6 +7,7 @@ use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 #[strum(serialize_all = "PascalCase")]
 pub enum ProvideJob {
 	Capabilities,
+	Reroute { url: UrlBuf },
 	Absolute { url: UrlBuf },
 	Canonicalize { url: UrlBuf },
 	Casefold { url: UrlBuf },
@@ -43,7 +44,8 @@ impl IntoLua for ProvideJob {
 			Self::Capabilities => {}
 			Self::Revalidate { file } => t.raw_set("file", file)?,
 
-			Self::Absolute { url }
+			Self::Reroute { url }
+			| Self::Absolute { url }
 			| Self::Canonicalize { url }
 			| Self::Casefold { url }
 			| Self::SymlinkMetadata { url }

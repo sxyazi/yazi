@@ -1,6 +1,7 @@
 use std::{borrow::Cow, ffi::OsString, hash::{Hash, Hasher}};
 
 use anyhow::Result;
+use clap::builder::{MapValueParser, OsStringValueParser, TypedValueParser, ValueParserFactory};
 use yazi_shim::wtf8::FromWtf8Vec;
 
 use crate::{path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}};
@@ -157,4 +158,10 @@ impl StrandBuf {
 			StrandKind::Bytes => Self::Bytes(s.into_bytes()),
 		}
 	}
+}
+
+impl ValueParserFactory for StrandBuf {
+	type Parser = MapValueParser<OsStringValueParser, fn(OsString) -> Self>;
+
+	fn value_parser() -> Self::Parser { OsStringValueParser::new().map(Self::from) }
 }

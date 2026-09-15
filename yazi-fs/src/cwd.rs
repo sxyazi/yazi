@@ -33,7 +33,7 @@ impl Cwd {
 	pub(crate) fn path(&self) -> PathBuf { self.0.load().as_url().working_path().into_owned() }
 
 	pub fn set(&self, url: &UrlBuf, callback: fn()) -> bool {
-		if !url.is_absolute() {
+		if !url.is_absolute() && url.auth().is_local() {
 			return false;
 		} else if self.0.load().as_ref() == url {
 			return false;

@@ -8,17 +8,14 @@ pub static ID: RoCell<Id> = RoCell::new();
 pub static ARGS: RoCell<Args> = RoCell::new();
 pub static BOOT: RoCell<Boot> = RoCell::new();
 
-pub fn setup() -> Result<(), clap::Error> {
-	ARGS.init(<_>::try_parse()?);
+pub fn init() {
+	ARGS.init(Args::parse());
 	ID.init(ARGS.client_id.unwrap_or_else(Id::unique));
-
-	BOOT.init(<_>::from(&*ARGS)); // Initialize after ID
-	Ok(())
+	BOOT.init(Default::default());
 }
 
 pub fn init_default() {
 	ARGS.with(<_>::default);
 	ID.init(ARGS.client_id.unwrap_or_else(Id::unique));
-
-	BOOT.with(<_>::default); // Initialize after ID
+	BOOT.with(<_>::default);
 }

@@ -3,7 +3,7 @@ use hashbrown::HashMap;
 use indexmap::IndexSet;
 use mlua::Function;
 use parking_lot::RwLock;
-use yazi_boot::{BOOT, ID};
+use yazi_boot::{ARGS, ID};
 use yazi_fs::{FolderStage, file::FileCov};
 use yazi_shared::{id::Id, url::{Url, UrlBuf}};
 use yazi_shim::cell::RoCell;
@@ -56,7 +56,7 @@ macro_rules! pub_after {
 				use crate::ember::[<Ember $name:camel>] as B;
 
 				let n = if $static { concat!("@", stringify!($name)) } else { stringify!($name) };
-				if BOOT.local_events.contains(n) {
+				if ARGS.local_events.contains(n) {
 					B::borrowed($($borrowed),*).with_receiver(*ID).flush()?;
 				}
 				if ($static && Self::any_remote_own(n)) || (!$static && PEERS.read().values().any(|p| p.able(n))) {
@@ -121,7 +121,7 @@ impl Pubsub {
 
 	pub(crate) fn pub_inner_hi() -> bool {
 		let abilities = REMOTE.read().keys().cloned().collect();
-		let abilities = BOOT.remote_events.union(&abilities).map(AsRef::as_ref);
+		let abilities = ARGS.remote_events.union(&abilities).map(AsRef::as_ref);
 
 		// FIXME: handle error
 		Client::push(EmberHi::borrowed(abilities)).ok();
@@ -132,7 +132,7 @@ impl Pubsub {
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)> + Clone,
 	{
-		if BOOT.local_events.contains("bulk-rename") {
+		if ARGS.local_events.contains("bulk-rename") {
 			EmberBulkRename::borrowed(changes.clone()).with_receiver(*ID).flush()?;
 		}
 		if PEERS.read().values().any(|p| p.able("bulk-rename")) {
@@ -147,7 +147,7 @@ impl Pubsub {
 	fn any_remote_own(kind: &str) -> bool {
 		REMOTE.read().contains_key(kind)  // Own remote abilities
 			|| PEERS.read().values().any(|p| p.able(kind))  // Remote peers' abilities
-			|| BOOT.remote_events.contains(kind) // Own abilities from the command-line argument
+			|| ARGS.remote_events.contains(kind) // Own abilities from the command-line argument
 	}
 }
 

@@ -3,7 +3,7 @@ use std::mem;
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use yazi_config::YAZI;
-use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, engine::{Attrs, Capabilities, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to};
+use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to};
 use yazi_macro::warn;
 use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{Stamp, VfsCha, engine::{self, DirEntry}, maybe_exists, unique_file};
@@ -105,8 +105,7 @@ impl File {
 		}
 
 		let (mut links, mut files) = (vec![], vec![]);
-		let reorder = task.follow
-			&& ctx!(task, engine::capabilities(&task.from).await)?.contains(Capabilities::SYMLINK);
+		let reorder = task.follow && ctx!(task, engine::capabilities(&task.from).await)?.symlink;
 
 		super::traverse::<FileOutMove, _, _, _, _, _>(
 			task,

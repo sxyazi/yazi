@@ -34,6 +34,19 @@ impl Backstack {
 		}
 	}
 
+	pub fn replace<U>(&mut self, url: U)
+	where
+		U: AsUrl,
+	{
+		let url = url.as_url();
+		let Some(current) = self.stack.get_mut(self.cursor) else { return };
+
+		if *current != url {
+			*current = url.to_owned();
+			self.dedup();
+		}
+	}
+
 	pub fn current(&self) -> Option<&UrlBuf> { self.stack.get(self.cursor) }
 
 	pub fn shift_backward(&mut self) -> Option<&UrlBuf> {

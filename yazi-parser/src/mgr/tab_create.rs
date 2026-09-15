@@ -24,7 +24,7 @@ impl TryFrom<ActionCow> for TabCreateForm {
 		if me.current {
 			me.target = None;
 		} else if me.target.is_none() {
-			me.target = Some(BOOT.cwds[0].clone());
+			me.target = Some(BOOT.cwd.clone());
 		} else if let Some(mut target) = me.target {
 			if !me.raw {
 				target = expand_url(target).into_owned();

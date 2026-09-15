@@ -111,6 +111,10 @@ pub trait Engine: Sized {
 
 	fn read_link(&self) -> impl Future<Output = io::Result<PathBufDyn>>;
 
+	fn reroute(&self) -> impl Future<Output = io::Result<File>> {
+		async { Err(io::ErrorKind::Unsupported.into()) }
+	}
+
 	fn revalidate(&self, file: File) -> impl Future<Output = io::Result<Option<File>>> {
 		async move {
 			let new = self.file().await?;

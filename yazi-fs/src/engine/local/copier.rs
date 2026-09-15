@@ -1,6 +1,7 @@
 use std::{fs, io, path::{Path, PathBuf}, time::Duration};
 
 use tokio::{select, sync::mpsc, task, time};
+use yazi_macro::warn;
 
 use crate::engine::{Attrs, Transmit};
 
@@ -62,6 +63,7 @@ fn primary_imp(from: &Path, to: &Path, attrs: Attrs) -> io::Result<u64> {
 		Ok(n) => n,
 		#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
 		Err(e) if matches!(e.kind(), io::ErrorKind::PermissionDenied | io::ErrorKind::Unsupported) => {
+			warn!("`fs::copy` failed: {e}; falling back to `io::copy` for {from:?} -> {to:?}");
 			return fallback_imp(from, to, attrs);
 		}
 		Err(e) => return Err(e),

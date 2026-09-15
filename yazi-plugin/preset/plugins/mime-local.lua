@@ -102,7 +102,7 @@ function M.spawn_file1(paths)
 end
 
 function M.placeholder(err, files)
-	local mime, updates = "null/file1-not-found", {}
+	local mime, updates = "error/file1-not-found", {}
 	for _, file in ipairs(files) do
 		if err.kind ~= "NotFound" then
 			coroutine.yield(file, { error = Error(err), retry = true })
