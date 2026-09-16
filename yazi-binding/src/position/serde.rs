@@ -18,6 +18,6 @@ impl<'de> Deserialize<'de> for Position {
 		}
 
 		let Flat { at, x, y, w, h } = Flat::deserialize(de)?;
-		Ok(Position::new(at, Offset { x, y, width: w, height: h }))
+		Ok(Self::new(at, Offset { x, y, width: w, height: h }))
 	}
 }

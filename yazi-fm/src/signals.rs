@@ -6,19 +6,24 @@ pub(super) struct Signals;
 impl Signals {
 	pub(super) fn start() -> Result<()> {
 		#[cfg(unix)]
-		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGTSTP};
+		use rustix::process::Signal;
 
 		#[cfg(unix)]
-		let mut stream = signal_hook_tokio::Signals::new([
-			// Interrupt signals (Ctrl-C, Ctrl-\)
-			SIGINT, SIGQUIT, //
-			// Hangup signal (Terminal closed)
-			SIGHUP, //
-			// Termination signal (kill)
-			SIGTERM, //
-			// Job control signals (Ctrl-Z, fg/bg)
-			SIGTSTP, SIGCONT,
-		])?;
+		let mut stream = signal_hook_tokio::Signals::new(
+			[
+				// Interrupt signals (Ctrl-C, Ctrl-\)
+				Signal::INT,
+				Signal::QUIT,
+				// Hangup signal (Terminal closed)
+				Signal::HUP,
+				// Termination signal (kill)
+				Signal::TERM,
+				// Job control signals (Ctrl-Z, fg/bg)
+				Signal::TSTP,
+				Signal::CONT,
+			]
+			.map(Signal::as_raw),
+		)?;
 		#[cfg(windows)]
 		let mut stream = tokio_stream::empty();
 
@@ -33,25 +38,29 @@ impl Signals {
 	}
 
 	#[cfg(unix)]
-	async fn handle(n: libc::c_int) -> bool {
-		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
+	async fn handle(n: i32) -> bool {
+		use rustix::process::{Signal, kill_current_process_group};
 		use yazi_macro::error;
 		use yazi_term::YIELD_TO_SUBPROCESS;
 
-		match n {
-			SIGINT => { /* ignored */ }
-			SIGQUIT | SIGHUP | SIGTERM => {
+		let Some(signal) = Signal::from_named_raw(n) else {
+			return true;
+		};
+
+		match signal {
+			Signal::INT => { /* ignored */ }
+			Signal::QUIT | Signal::HUP | Signal::TERM => {
 				yazi_proxy::AppProxy::quit(Default::default());
 				return false;
 			}
-			SIGTSTP => {
+			Signal::TSTP => {
 				yazi_scheduler::AppProxy::stop().await;
-				if unsafe { libc::kill(0, SIGSTOP) } != 0 {
-					error!("Failed to stop the process:\n{}", std::io::Error::last_os_error());
+				if let Err(e) = kill_current_process_group(Signal::STOP) {
+					error!("Failed to stop the process:\n{e}");
 					yazi_proxy::AppProxy::quit(Default::default());
 				}
 			}
-			SIGCONT if YIELD_TO_SUBPROCESS.try_acquire().is_ok() => {
+			Signal::CONT if YIELD_TO_SUBPROCESS.try_acquire().is_ok() => {
 				yazi_scheduler::AppProxy::resume().await;
 			}
 			_ => {}

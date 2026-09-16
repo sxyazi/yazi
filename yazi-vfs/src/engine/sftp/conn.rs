@@ -57,11 +57,10 @@ impl deadpool::managed::Manager for Conn {
 impl Conn {
 	pub(super) fn pool(config: Arc<ServiceSftp>) -> deadpool::managed::Pool<Self> {
 		let mut pools = super::CONN.lock();
-		if let Some(weak) = pools.get(&config.auth)
-			&& let Some(pool) = weak.upgrade()
+		if let Some(pool) = pools.get(&config.auth)
 			&& pool.manager().config == config
 		{
-			return pool;
+			return pool.clone();
 		}
 
 		let auth = config.auth.clone();
@@ -71,7 +70,7 @@ impl Conn {
 			.create_timeout(Some(Duration::from_secs(45)))
 			.build()
 			.unwrap();
-		pools.insert(auth, pool.weak());
+		pools.insert(auth, pool.clone());
 		pool
 	}
 

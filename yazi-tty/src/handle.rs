@@ -1,4 +1,4 @@
-use std::io::{Error, Read, Write};
+use std::io::{Read, Write};
 
 use yazi_macro::error;
 
@@ -20,7 +20,7 @@ impl Drop for Handle {
 	fn drop(&mut self) {
 		#[cfg(unix)]
 		if self.close {
-			unsafe { libc::close(self.inner) };
+			unsafe { rustix::io::close(self.inner) };
 		}
 		#[cfg(windows)]
 		if self.close {
@@ -51,10 +51,7 @@ impl Read for Handle {
 	fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
 		#[cfg(unix)]
 		{
-			match unsafe { libc::read(self.inner, buf.as_mut_ptr() as *mut _, buf.len()) } {
-				-1 => Err(Error::last_os_error()),
-				n => Ok(n as usize),
-			}
+			Ok(rustix::io::read(&*self, buf)?)
 		}
 		#[cfg(windows)]
 		{
@@ -76,10 +73,7 @@ impl Write for Handle {
 	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
 		#[cfg(unix)]
 		{
-			match unsafe { libc::write(self.inner, buf.as_ptr() as *const _, buf.len()) } {
-				-1 => Err(Error::last_os_error()),
-				n => Ok(n as usize),
-			}
+			Ok(rustix::io::write(&*self, buf)?)
 		}
 		#[cfg(windows)]
 		{
@@ -135,12 +129,12 @@ impl std::os::windows::io::IntoRawHandle for Handle {
 #[cfg(unix)]
 impl Handle {
 	pub(crate) fn new(out: bool) -> Self {
-		use std::{fs::OpenOptions, os::fd::IntoRawFd};
+		use std::{fs::OpenOptions, io::IsTerminal, os::fd::{AsRawFd, IntoRawFd}};
 
-		use libc::{STDIN_FILENO, STDOUT_FILENO};
+		let fd = if out { rustix::stdio::stdout() } else { rustix::stdio::stdin() };
+		let resort = Self { inner: fd.as_raw_fd(), close: false };
 
-		let resort = Self { inner: if out { STDOUT_FILENO } else { STDIN_FILENO }, close: false };
-		if unsafe { libc::isatty(resort.inner) } == 1 {
+		if fd.is_terminal() {
 			return resort;
 		}
 
@@ -154,10 +148,9 @@ impl Handle {
 	}
 
 	pub fn try_clone(&self) -> std::io::Result<Self> {
-		match unsafe { libc::dup(self.inner) } {
-			-1 => Err(Error::last_os_error()),
-			fd => Ok(Self { inner: fd, close: true }),
-		}
+		use std::os::fd::IntoRawFd;
+
+		Ok(Self { inner: rustix::io::dup(self)?.into_raw_fd(), close: true })
 	}
 }
 
@@ -200,10 +193,11 @@ impl Handle {
 		use std::ptr;
 
 		use windows_sys::Win32::{Foundation::{DUPLICATE_SAME_ACCESS, DuplicateHandle, HANDLE}, System::Threading::GetCurrentProcess};
+		use yazi_shim::bool_ok;
 
 		let proc = unsafe { GetCurrentProcess() };
 		let mut handle = ptr::null_mut();
-		let status = unsafe {
+		bool_ok(unsafe {
 			DuplicateHandle(
 				proc,
 				self.inner,
@@ -213,8 +207,8 @@ impl Handle {
 				0,
 				DUPLICATE_SAME_ACCESS,
 			)
-		};
+		})?;
 
-		if status == 0 { Err(Error::last_os_error()) } else { Ok(Self { inner: handle, close: true }) }
+		Ok(Self { inner: handle, close: true })
 	}
 }

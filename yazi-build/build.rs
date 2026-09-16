@@ -73,10 +73,7 @@ fn install_repo(tmp: &Path, bin_dir: &Path) -> Result<()> {
 }
 
 fn run_streamed(cmd: &mut Command) -> Result<()> {
-	let stdin = {
-		let input = TTY.lockin();
-		Stdio::from(input.try_clone()?)
-	};
+	let stdin = Stdio::from(TTY.lockin().try_clone()?);
 
 	let (stdout, stderr) = {
 		let mut output = TTY.lockout();

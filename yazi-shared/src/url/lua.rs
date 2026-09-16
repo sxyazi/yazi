@@ -31,7 +31,7 @@ impl TryFrom<Table> for UrlBuf {
 		}
 
 		let (uri, urn) = if auth.kind.is_view() { (0, 0) } else { Spec::retrieve_ports(url.as_url()) };
-		Ok(UrlBuf::try_from((Spec { auth, uri, urn }, url.into_loc()))?)
+		Ok(Self::try_from((Spec { auth, uri, urn }, url.into_loc()))?)
 	}
 }
 

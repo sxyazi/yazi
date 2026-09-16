@@ -1,8 +1,7 @@
-use std::{ffi::{CStr, CString, OsString, c_void}, mem, os::unix::{ffi::OsStringExt, fs::MetadataExt}};
+use std::{ffi::{CStr, CString, OsString, c_char, c_void}, mem, os::unix::{ffi::OsStringExt, fs::MetadataExt}};
 
 use anyhow::{Result, bail};
-use core_foundation_sys::{array::CFArrayRef, base::{CFRelease, kCFAllocatorDefault}, runloop::{CFRunLoopGetCurrent, CFRunLoopRun, kCFRunLoopDefaultMode}};
-use libc::{c_char, mach_port_t};
+use core_foundation_sys::{array::CFArrayRef, base::{CFRelease, kCFAllocatorDefault, mach_port_t}, runloop::{CFRunLoopGetCurrent, CFRunLoopRun, kCFRunLoopDefaultMode}};
 use objc2::{msg_send, runtime::AnyObject};
 use scopeguard::defer;
 use yazi_ffi::{CFDict, CFString, DADiskCopyDescription, DADiskCreateFromBSDName, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASessionCreate, DASessionScheduleWithRunLoop, IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};

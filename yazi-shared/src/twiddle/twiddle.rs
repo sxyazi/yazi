@@ -72,7 +72,7 @@ impl Twiddle {
 				}
 				_ => {
 					let low = *value.get(i + 2).ok_or_else(|| anyhow!("truncated twiddle data"))?;
-					decoded.push(Twiddle::hex(code)? << 4 | Twiddle::hex(low)?);
+					decoded.push(Self::hex(code)? << 4 | Self::hex(low)?);
 					i += 3;
 				}
 			}

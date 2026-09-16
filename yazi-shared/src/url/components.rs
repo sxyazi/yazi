@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator};
 
 use crate::{auth::AuthArc, loc::Loc, path, spec::{Encode as EncodeSpec, Spec}, strand::{StrandBuf, StrandCow}, url::{Component, Url}};
 
@@ -96,17 +96,17 @@ impl<'a> Iterator for Components<'a> {
 	type Item = Component<'a>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if !self.auth_yielded {
+		if self.auth_yielded {
+			self.inner.next().map(Into::into)
+		} else {
 			self.auth_yielded = true;
 			Some(Component::Auth(self.auth()))
-		} else {
-			self.inner.next().map(Into::into)
 		}
 	}
 
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		let (min, max) = self.inner.size_hint();
-		let auth = self.auth_yielded.not() as usize;
+		let auth = (!self.auth_yielded) as usize;
 
 		(min + auth, max.map(|n| n + auth))
 	}

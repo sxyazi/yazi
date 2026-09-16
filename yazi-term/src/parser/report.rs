@@ -35,10 +35,7 @@ impl Parser {
 			(b'?', b'u') => Report::CsiU(str::from_utf8(mid)?.parse()?),
 
 			// `CSI ? 12 ; Ps $ y` (`\x1b[?12;...$y`) - DECRPM response for DEC mode 12.
-			(b'?', b'y')
-				if let Some(s) = mid.strip_prefix(b"12;")
-					&& let Some(s) = s.strip_suffix(b"$") =>
-			{
+			(b'?', b'y') if let Some(s) = mid.strip_circumfix(b"12;", b"$") => {
 				let status: u8 = str::from_utf8(s)?.parse()?;
 				Report::CursorBlink(match status {
 					1 | 3 => true,
@@ -48,10 +45,7 @@ impl Parser {
 			}
 
 			// `CSI ? 5522 ; Ps $ y` (`\x1b[?5522;...$y`) - DECRPM response for clipboard support.
-			(b'?', b'y')
-				if let Some(s) = mid.strip_prefix(b"5522;")
-					&& let Some(s) = s.strip_suffix(b"$") =>
-			{
+			(b'?', b'y') if let Some(s) = mid.strip_circumfix(b"5522;", b"$") => {
 				let status: u8 = str::from_utf8(s)?.parse()?;
 				Report::Clipboard(matches!(status, 1..=3))
 			}

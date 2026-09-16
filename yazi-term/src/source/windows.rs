@@ -2,6 +2,7 @@ use std::{io, mem, os::windows::io::{AsRawHandle, RawHandle}};
 
 use parking_lot::Mutex;
 use windows_sys::Win32::{Foundation::{WAIT_FAILED, WAIT_OBJECT_0, WAIT_TIMEOUT}, System::{Console::{INPUT_RECORD, ReadConsoleInputA}, Threading::{INFINITE, WaitForMultipleObjects}}};
+use yazi_shim::bool_ok;
 use yazi_tty::TtyReader;
 
 use crate::{Timeout, parser::Parser, source::min_timeout, waker::Waker};
@@ -52,8 +53,6 @@ fn read_console(handle: RawHandle) -> io::Result<([INPUT_RECORD; 128], usize)> {
 	let mut buf = [unsafe { mem::zeroed::<INPUT_RECORD>() }; 128];
 	let mut len = 0u32;
 
-	match unsafe { ReadConsoleInputA(handle, buf.as_mut_ptr(), buf.len() as u32, &mut len) } {
-		0 => Err(io::Error::last_os_error()),
-		_ => Ok((buf, len as usize)),
-	}
+	bool_ok(unsafe { ReadConsoleInputA(handle, buf.as_mut_ptr(), buf.len() as u32, &mut len) })?;
+	Ok((buf, len as usize))
 }

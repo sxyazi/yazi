@@ -63,8 +63,7 @@ impl Brand {
 
 		match &*env::var("TERM").unwrap_or_default() {
 			"xterm-kitty" => return Some(Self::Kitty),
-			"foot" => return Some(Self::Foot),
-			"foot-extra" => return Some(Self::Foot),
+			"foot" | "foot-extra" => return Some(Self::Foot),
 			"xterm-ghostty" => return Some(Self::Ghostty),
 			"rio" => return Some(Self::Rio),
 			"rxvt-unicode-256color" => return Some(Self::Urxvt),

@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, sync::OnceLock};
+use std::{env, path::PathBuf, sync::LazyLock};
 
 use yazi_shim::Uzers;
 
@@ -14,8 +14,8 @@ impl Xdg {
 	}
 
 	pub fn config_dir() -> &'static PathBuf {
-		static ONCE: OnceLock<PathBuf> = OnceLock::new();
-		ONCE.get_or_init(Self::load_config_dir)
+		static DIR: LazyLock<PathBuf> = LazyLock::new(Xdg::load_config_dir);
+		&DIR
 	}
 
 	fn load_config_dir() -> PathBuf {
@@ -41,8 +41,8 @@ impl Xdg {
 	}
 
 	pub fn asset_dir() -> &'static PathBuf {
-		static ONCE: OnceLock<PathBuf> = OnceLock::new();
-		ONCE.get_or_init(Self::load_asset_dir)
+		static DIR: LazyLock<PathBuf> = LazyLock::new(Xdg::load_asset_dir);
+		&DIR
 	}
 
 	fn load_asset_dir() -> PathBuf {
@@ -62,8 +62,8 @@ impl Xdg {
 	}
 
 	pub fn state_dir() -> &'static PathBuf {
-		static ONCE: OnceLock<PathBuf> = OnceLock::new();
-		ONCE.get_or_init(Self::load_state_dir)
+		static DIR: LazyLock<PathBuf> = LazyLock::new(Xdg::load_state_dir);
+		&DIR
 	}
 
 	fn load_state_dir() -> PathBuf {
@@ -83,8 +83,8 @@ impl Xdg {
 	}
 
 	pub fn runtime_dir() -> &'static PathBuf {
-		static ONCE: OnceLock<PathBuf> = OnceLock::new();
-		ONCE.get_or_init(Self::load_runtime_dir)
+		static DIR: LazyLock<PathBuf> = LazyLock::new(Xdg::load_runtime_dir);
+		&DIR
 	}
 
 	fn load_runtime_dir() -> PathBuf {
@@ -98,8 +98,8 @@ impl Xdg {
 	}
 
 	pub fn temp_dir() -> &'static PathBuf {
-		static ONCE: OnceLock<PathBuf> = OnceLock::new();
-		ONCE.get_or_init(Self::load_temp_dir)
+		static DIR: LazyLock<PathBuf> = LazyLock::new(Xdg::load_temp_dir);
+		&DIR
 	}
 
 	fn load_temp_dir() -> PathBuf {

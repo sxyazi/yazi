@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{self, Display};
 
 use crate::BytePredictor;
 
@@ -18,21 +18,15 @@ pub trait BytesExt {
 
 impl BytesExt for [u8] {
 	fn display(&self) -> impl Display {
-		struct D<'a>(&'a [u8]);
-
-		impl Display for D<'_> {
-			fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-				for chunk in self.0.utf8_chunks() {
-					chunk.valid().fmt(f)?;
-					if !chunk.invalid().is_empty() {
-						char::REPLACEMENT_CHARACTER.fmt(f)?;
-					}
+		fmt::from_fn(|f| {
+			for chunk in self.utf8_chunks() {
+				chunk.valid().fmt(f)?;
+				if !chunk.invalid().is_empty() {
+					char::REPLACEMENT_CHARACTER.fmt(f)?;
 				}
-				Ok(())
 			}
-		}
-
-		D(self)
+			Ok(())
+		})
 	}
 
 	fn kebab_cased(&self) -> bool {

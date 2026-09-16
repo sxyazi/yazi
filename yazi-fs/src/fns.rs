@@ -91,33 +91,30 @@ pub async fn create_owned_dir(p: &Path) -> io::Result<()> {
 pub fn create_owned_dir_blocking(p: &Path) -> io::Result<()> {
 	#[cfg(unix)]
 	{
-		use std::{fs::{DirBuilder, OpenOptions}, mem, os::unix::{fs::{DirBuilderExt, OpenOptionsExt}, io::AsRawFd}};
+		use std::{fs::{DirBuilder, OpenOptions}, os::unix::fs::{DirBuilderExt, OpenOptionsExt}};
 
-		use libc::{O_DIRECTORY, O_NOFOLLOW};
+		use rustix::fs::{self, Mode, OFlags};
 
 		DirBuilder::new().mode(0o700).recursive(true).create(p)?;
-		let dir = OpenOptions::new().read(true).custom_flags(O_DIRECTORY | O_NOFOLLOW).open(p)?;
 
-		let mut stat: libc::stat = unsafe { mem::zeroed() };
-		if unsafe { libc::fstat(dir.as_raw_fd(), &mut stat) } != 0 {
-			return Err(io::Error::last_os_error());
-		}
+		// Open and stat the directory.
+		let dir = OpenOptions::new()
+			.read(true)
+			.custom_flags((OFlags::DIRECTORY | OFlags::NOFOLLOW).bits() as _)
+			.open(p)?;
+		let stat = fs::fstat(&dir)?;
 
 		// Reject directories not owned by the current user.
 		let uid = yazi_shim::Uzers::uid();
 		if stat.st_uid != uid {
 			return Err(io::Error::new(
 				io::ErrorKind::PermissionDenied,
-				format!("directory {:?} is owned by uid {} but current uid is {}", p, stat.st_uid, uid),
+				format!("directory {p:?} is owned by uid {} but current uid is {uid}", stat.st_uid),
 			));
 		}
 
 		// Enforce mode 0o700 via the fd.
-		if unsafe { libc::fchmod(dir.as_raw_fd(), 0o700) } != 0 {
-			return Err(io::Error::last_os_error());
-		}
-
-		Ok(())
+		Ok(fs::fchmod(&dir, Mode::RWXU)?)
 	}
 	#[cfg(not(unix))]
 	{

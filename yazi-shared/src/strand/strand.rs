@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::Display};
+use std::{borrow::Cow, ffi::OsStr, fmt::{self, Display}};
 
 use anyhow::Result;
 use yazi_shim::{OptionExt, wtf8::FromWtf8};
@@ -141,19 +141,11 @@ impl<'a> Strand<'a> {
 	}
 
 	pub fn display(self) -> impl Display {
-		struct D<'a>(Strand<'a>);
-
-		impl<'a> Display for D<'a> {
-			fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-				match self.0 {
-					Strand::Os(s) => s.display().fmt(f),
-					Strand::Utf8(s) => s.fmt(f),
-					Strand::Bytes(b) => b.display().fmt(f),
-				}
-			}
-		}
-
-		D(self)
+		fmt::from_fn(move |f| match self {
+			Strand::Os(s) => s.display().fmt(f),
+			Strand::Utf8(s) => s.fmt(f),
+			Strand::Bytes(b) => b.display().fmt(f),
+		})
 	}
 
 	#[inline]

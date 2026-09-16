@@ -53,6 +53,10 @@ end
 function Current:click(event, up)
 	if up or event.is_middle then
 		return
+	elseif event.is_back then
+		return ya.emit("back", {})
+	elseif event.is_forward then
+		return ya.emit("forward", {})
 	end
 
 	local y = event.y - self._area.y + 1

@@ -118,5 +118,5 @@ impl IntoLua for Domain<'_> {
 }
 
 impl IntoLua for &Domain<'_> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_string(&*self)?.into_lua(lua) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.create_string(self)?.into_lua(lua) }
 }

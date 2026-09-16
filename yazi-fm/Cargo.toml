@@ -56,7 +56,7 @@ tracing-appender   = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = [ "env-filter" ] }
 
 [target."cfg(unix)".dependencies]
-libc              = { workspace = true }
+rustix            = { workspace = true }
 signal-hook-tokio = { version = "0.4.0", features = [ "futures-v0_3" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]

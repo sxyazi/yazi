@@ -40,11 +40,13 @@ impl MouseEventKind {
 			(0, false) => Self::Down(MouseButton::Left),
 			(1, false) => Self::Down(MouseButton::Middle),
 			(2, false) => Self::Down(MouseButton::Right),
+			(8, false) => Self::Down(MouseButton::Back),
+			(9, false) => Self::Down(MouseButton::Forward),
 			(0, true) => Self::Drag(MouseButton::Left),
 			(1, true) => Self::Drag(MouseButton::Middle),
 			(2, true) => Self::Drag(MouseButton::Right),
 			(3, false) => Self::Up(MouseButton::Left),
-			(3, true) | (4, true) | (5, true) => Self::Moved,
+			(3 | 4 | 5, true) => Self::Moved,
 			(4, false) => Self::ScrollUp,
 			(5, false) => Self::ScrollDown,
 			(6, false) => Self::ScrollLeft,
@@ -71,6 +73,8 @@ impl MouseEventKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MouseButton {
 	Left,
-	Right,
 	Middle,
+	Right,
+	Back,
+	Forward,
 }

@@ -154,8 +154,8 @@ impl UrlBuf {
 	pub fn try_set_name(&mut self, name: impl AsStrand) -> Result<(), SetNameError> {
 		let name = name.as_strand();
 		Ok(match self {
-			Self::Os { loc, .. } => loc.try_set_name(name.as_os()?)?,
-			Self::Unix { loc, .. } => loc.try_set_name(name.encoded_bytes())?,
+			Self::Os { loc, .. } => loc.set_name(name.as_os()?),
+			Self::Unix { loc, .. } => loc.set_name(name.encoded_bytes()),
 		})
 	}
 

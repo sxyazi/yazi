@@ -20,21 +20,21 @@ pub(crate) struct App {
 }
 
 impl App {
-	fn make(term: Raterm) -> Result<Self> {
-		Ok(Self {
+	fn make(term: Raterm) -> Self {
+		Self {
 			core: Core::make(),
 			term: Some(term),
 
 			need_render: 0,
 			last_render: Instant::now(),
 			next_render: None,
-		})
+		}
 	}
 
 	pub(crate) async fn serve() -> Result<()> {
 		let term = Raterm::start()?;
 
-		let mut app = Self::make(term)?;
+		let mut app = Self::make(term);
 		app.bootstrap()?;
 
 		let mut rx = Event::take();

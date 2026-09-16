@@ -20,8 +20,7 @@ impl Normalizer {
 			return true;
 		}
 
-		let mut win = pat.as_bytes().windows(2);
-		win.any(|bytes| bytes[0] == b'\\' && matches!(bytes[1], b'x' | b'u' | b'U'))
+		pat.as_bytes().array_windows().any(|&[a, b]| a == b'\\' && matches!(b, b'x' | b'u' | b'U'))
 	}
 
 	fn normalize_ast(ast: &mut Ast, unicode: &mut bool) -> bool {
