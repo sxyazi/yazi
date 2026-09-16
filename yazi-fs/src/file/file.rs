@@ -55,7 +55,7 @@ impl Equivalent<File> for Url<'_> {
 }
 
 impl Equivalent<File> for UrlBuf {
-	fn equivalent(&self, key: &File) -> bool { self == &key.url }
+	fn equivalent(&self, key: &File) -> bool { self == key.url }
 }
 
 impl File {

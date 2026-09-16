@@ -42,9 +42,9 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
-	use std::{ffi::{CString, OsStr, OsString}, fs::File, os::{fd::{AsRawFd, FromRawFd}, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}};
+	use std::{ffi::{CString, OsStr, OsString}, fs::{File, OpenOptions}, os::{fd::AsRawFd, unix::{ffi::{OsStrExt, OsStringExt}, fs::{MetadataExt, OpenOptionsExt}}}};
 
-	use libc::{O_NOFOLLOW, O_PATH};
+	use rustix::fs::OFlags;
 
 	let cstr = CString::new(path.into_os_string().into_vec())?;
 	let path = Path::new(OsStr::from_bytes(cstr.as_bytes()));
@@ -52,10 +52,10 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 		return Ok(PathBuf::from(OsString::from_vec(cstr.into_bytes())));
 	};
 
-	let file = match unsafe { libc::open(cstr.as_ptr(), O_PATH | O_NOFOLLOW) } {
-		ret if ret < 0 => return Err(io::Error::last_os_error()),
-		ret => unsafe { File::from_raw_fd(ret) },
-	};
+	let file = OpenOptions::new()
+		.read(true)
+		.custom_flags((OFlags::PATH | OFlags::NOFOLLOW).bits() as _)
+		.open(path)?;
 
 	// Fast path: if the `/proc/self/fd/N` matches
 	if let Some(p) = try_from_fd(file.as_raw_fd(), path) {
@@ -103,9 +103,9 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 #[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
 #[allow(irrefutable_let_patterns)]
 fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
-	use std::{ffi::{CString, OsStr, OsString}, fs::File, os::{fd::{AsRawFd, FromRawFd}, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}};
+	use std::{ffi::{CString, OsStr, OsString}, fs::OpenOptions, os::{fd::AsRawFd, unix::{ffi::{OsStrExt, OsStringExt}, fs::{MetadataExt, OpenOptionsExt}}}};
 
-	use libc::{O_NOFOLLOW, O_RDONLY};
+	use rustix::fs::OFlags;
 
 	let cstr = CString::new(path.into_os_string().into_vec())?;
 	let path = Path::new(OsStr::from_bytes(cstr.as_bytes()));
@@ -114,9 +114,8 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	};
 
 	// Fast path: if it's not a symlink
-	if let fd = unsafe { libc::open(cstr.as_ptr(), O_RDONLY | O_NOFOLLOW) }
-		&& fd >= 0
-		&& let file = unsafe { File::from_raw_fd(fd) }
+	if let Ok(file) =
+		OpenOptions::new().read(true).custom_flags(OFlags::NOFOLLOW.bits() as _).open(path)
 	{
 		if let Some(p) = try_from_fd(file.as_raw_fd(), path) {
 			return Ok(p);
@@ -157,24 +156,33 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	}
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
+#[cfg(target_os = "macos")]
 fn final_path(path: &Path) -> io::Result<PathBuf> {
-	use std::{ffi::{CStr, CString, OsString}, os::{fd::{AsRawFd, FromRawFd, OwnedFd}, unix::ffi::{OsStrExt, OsStringExt}}};
+	use std::{ffi::OsString, fs::OpenOptions, os::unix::{ffi::OsStringExt, fs::OpenOptionsExt}};
 
-	use libc::{F_GETPATH, O_RDONLY, O_SYMLINK, PATH_MAX};
+	use libc::O_SYMLINK;
 
-	let cstr = CString::new(path.as_os_str().as_bytes())?;
-	let fd = match unsafe { libc::open(cstr.as_ptr(), O_RDONLY | O_SYMLINK) } {
-		ret if ret < 0 => return Err(io::Error::last_os_error()),
-		ret => unsafe { OwnedFd::from_raw_fd(ret) },
-	};
+	let file = OpenOptions::new().read(true).custom_flags(O_SYMLINK).open(path)?;
+	let path = rustix::fs::getpath(&file)?;
 
-	let mut buf = [0u8; PATH_MAX as usize];
-	if unsafe { libc::fcntl(fd.as_raw_fd(), F_GETPATH, buf.as_mut_ptr()) } < 0 {
+	Ok(OsString::from_vec(path.into_bytes()).into())
+}
+
+#[cfg(target_os = "freebsd")]
+fn final_path(path: &Path) -> io::Result<PathBuf> {
+	use std::{ffi::{CStr, OsString}, fs::OpenOptions, mem, os::{fd::AsRawFd, unix::{ffi::OsStringExt, fs::OpenOptionsExt}}};
+
+	use libc::{F_KINFO, O_NOFOLLOW, O_PATH, fcntl, kinfo_file};
+
+	let file = OpenOptions::new().read(true).custom_flags(O_PATH | O_NOFOLLOW).open(path)?;
+
+	let mut info = unsafe { mem::zeroed::<kinfo_file>() };
+	info.kf_structsize = mem::size_of::<kinfo_file>() as _;
+	if unsafe { fcntl(file.as_raw_fd(), F_KINFO, &mut info) } < 0 {
 		return Err(io::Error::last_os_error());
 	}
 
-	let cstr = unsafe { CStr::from_ptr(buf.as_ptr() as *const i8) };
+	let cstr = unsafe { CStr::from_ptr(info.kf_path.as_ptr()) };
 	Ok(OsString::from_vec(cstr.to_bytes().to_vec()).into())
 }
 

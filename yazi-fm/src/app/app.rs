@@ -2,9 +2,9 @@ use std::{sync::atomic::Ordering, time::{Duration, Instant}};
 
 use anyhow::Result;
 use tokio::{select, time::sleep};
-use yazi_actor::Ctx;
+use yazi_actor::{Ctx, act};
 use yazi_core::Core;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_shared::{data::Data, event::{Event, EventRx, NEED_RENDER}};
 use yazi_tui::Raterm;
 
@@ -20,21 +20,21 @@ pub(crate) struct App {
 }
 
 impl App {
-	fn make(term: Raterm) -> Result<Self> {
-		Ok(Self {
+	fn make(term: Raterm) -> Self {
+		Self {
 			core: Core::make(),
 			term: Some(term),
 
 			need_render: 0,
 			last_render: Instant::now(),
 			next_render: None,
-		})
+		}
 	}
 
 	pub(crate) async fn serve() -> Result<()> {
 		let term = Raterm::start()?;
 
-		let mut app = Self::make(term)?;
+		let mut app = Self::make(term);
 		app.bootstrap()?;
 
 		let mut rx = Event::take();

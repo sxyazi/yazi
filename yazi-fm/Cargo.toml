@@ -27,7 +27,6 @@ yazi-dds       = { path = "../yazi-dds", version = "26.9.1" }
 yazi-emulator  = { path = "../yazi-emulator", version = "26.9.1" }
 yazi-fs        = { path = "../yazi-fs", version = "26.9.1" }
 yazi-macro     = { path = "../yazi-macro", version = "26.9.1" }
-yazi-parser    = { path = "../yazi-parser", version = "26.9.1" }
 yazi-plugin    = { path = "../yazi-plugin", version = "26.9.1" }
 yazi-proxy     = { path = "../yazi-proxy", version = "26.9.1" }
 yazi-runner    = { path = "../yazi-runner", version = "26.9.1" }
@@ -46,7 +45,6 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.9.1" }
 anyhow             = { workspace = true }
 log                = { workspace = true }
 mlua               = { workspace = true }
-paste              = { workspace = true }
 ratatui-core       = { workspace = true }
 ratatui-widgets    = { workspace = true }
 tokio              = { workspace = true }
@@ -56,7 +54,7 @@ tracing-appender   = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = [ "env-filter" ] }
 
 [target."cfg(unix)".dependencies]
-libc              = { workspace = true }
+rustix            = { workspace = true }
 signal-hook-tokio = { version = "0.4.0", features = [ "futures-v0_3" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]

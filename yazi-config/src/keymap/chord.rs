@@ -1,4 +1,4 @@
-use std::{borrow::Cow, hash::{Hash, Hasher}, sync::{Arc, OnceLock}};
+use std::{borrow::Cow, hash::{Hash, Hasher}, sync::{Arc, LazyLock}};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use regex::Regex;
@@ -11,7 +11,7 @@ use yazi_shared::{event::{Actions, deserialize_actions}, id::Id};
 use super::{Key, ids::chord_id};
 use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
 
-static RE: OnceLock<Regex> = OnceLock::new();
+static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
 
 #[derive(Debug, Default, Deserialize, DeserializeOver2)]
 pub struct Chord {
@@ -57,15 +57,12 @@ impl Chord {
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	fn run(&self) -> String {
-		RE.get_or_init(|| Regex::new(r"\s+").unwrap())
-			.replace_all(&self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; "), " ")
+		RE.replace_all(&self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; "), " ")
 			.into_owned()
 	}
 
 	fn desc(&self) -> Option<Cow<'_, str>> {
-		Some(&self.desc)
-			.filter(|s| !s.is_empty())
-			.map(|s| RE.get_or_init(|| Regex::new(r"\s+").unwrap()).replace_all(s, " "))
+		Some(&self.desc).filter(|s| !s.is_empty()).map(|s| RE.replace_all(s, " "))
 	}
 
 	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }

@@ -1,8 +1,7 @@
-use std::{ffi::OsString, ops::Deref, os::unix::ffi::OsStringExt};
+use std::{ffi::{CStr, OsString}, ops::Deref, os::unix::ffi::OsStringExt};
 
 use anyhow::{Result, bail};
 use core_foundation_sys::{base::{CFRelease, kCFAllocatorDefault, kCFAllocatorNull}, string::{CFStringCreateWithBytesNoCopy, CFStringGetCString, CFStringGetLength, CFStringGetMaximumSizeForEncoding, CFStringRef, kCFStringEncodingUTF8}};
-use libc::strlen;
 
 pub struct CFString(pub(super) CFStringRef);
 
@@ -39,7 +38,7 @@ impl CFString {
 			bail!("Failed to get the C string from CFString");
 		}
 
-		unsafe { out.set_len(strlen(out.as_ptr().cast())) };
+		unsafe { out.set_len(CStr::from_ptr(out.as_ptr().cast()).count_bytes()) };
 		out.shrink_to_fit();
 		Ok(OsString::from_vec(out))
 	}

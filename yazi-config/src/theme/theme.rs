@@ -47,12 +47,12 @@ impl Theme {
 	}
 
 	// FIXME: remove
-	pub(crate) fn reshape(mut self, light: bool) -> Result<Self> {
+	pub(crate) fn reshape(mut self, light: bool) -> Self {
 		if let Some(p) = self.flavor.syntect_path(light) {
 			self.mgr.syntect_theme = p.into_pointee();
 		}
 
-		Ok(self)
+		self
 	}
 }
 

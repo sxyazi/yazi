@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use anyhow::Result;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_shared::data::Data;
 
 use crate::input::{Input, op::InputOp, parser::CasefyOpt};

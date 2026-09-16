@@ -15,8 +15,8 @@ impl Deref for Style {
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl From<&SyncCell<Style>> for Style {
-	fn from(value: &SyncCell<Style>) -> Self { value.get() }
+impl From<&SyncCell<Self>> for Style {
+	fn from(value: &SyncCell<Self>) -> Self { value.get() }
 }
 
 impl From<Style> for ratatui_core::style::Style {

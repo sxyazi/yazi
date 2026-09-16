@@ -132,5 +132,5 @@ impl<'a> Ctx<'a> {
 		self.tab_mut().hovered_folder_mut()
 	}
 
-	pub(crate) fn source(&self) -> Source { if self.level != 1 { Source::Ind } else { self.source } }
+	pub(crate) fn source(&self) -> Source { if self.level == 1 { self.source } else { Source::Ind } }
 }

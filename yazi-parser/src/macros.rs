@@ -1,12 +1,12 @@
 #[macro_export]
 macro_rules! spark {
 	(mgr: $name:ident, $body:expr) => {
-		paste::paste! {
+		$crate::paste::paste! {
 			$crate::spark::Spark::[<$name:camel>]($body)
 		}
 	};
 	($layer:ident : $name:ident, $body:expr) => {
-		paste::paste! {
+		$crate::paste::paste! {
 			$crate::spark::Spark::[<$layer:camel $name:camel>]($body.into())
 		}
 	};
@@ -30,7 +30,7 @@ macro_rules! try_from_spark {
 		try_from_spark!(@if : $name, $value);
 	};
 	(@if $($layer:ident)? : $name:ident, $value:ident) => {
-		if let paste::paste! { $crate::spark::Spark::[<$($layer:camel)* $name:camel>](opt) } = $value {
+		if let $crate::paste::paste! { $crate::spark::Spark::[<$($layer:camel)* $name:camel>](opt) } = $value {
 			return Ok(<_>::from(opt))
 		}
 	};

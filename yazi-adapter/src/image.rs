@@ -86,7 +86,6 @@ impl Image {
 	fn filter() -> FilterType {
 		match YAZI.preview.image_filter.as_str() {
 			"nearest" => FilterType::Nearest,
-			"triangle" => FilterType::Triangle,
 			"catmull-rom" => FilterType::CatmullRom,
 			"gaussian" => FilterType::Gaussian,
 			"lanczos3" => FilterType::Lanczos3,

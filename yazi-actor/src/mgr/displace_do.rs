@@ -1,11 +1,11 @@
 use anyhow::Result;
 use yazi_core::mgr::CdSource;
 use yazi_fs::FilesOp;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_parser::mgr::DisplaceDoForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct DisplaceDo;
 

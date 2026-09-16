@@ -58,9 +58,12 @@ end
 
 -- Mouse events
 function Tabs:click(event, up)
-	if up or event.is_middle then
+	if up then
+		return
+	elseif not event.is_left and not event.is_right then
 		return
 	end
+
 	for i = #cx.tabs, 1, -1 do
 		if event.x >= self._offsets[i] then
 			ya.emit("tab_switch", { i - 1 })

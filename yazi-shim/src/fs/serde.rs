@@ -48,7 +48,6 @@ pub(super) fn kind_to_str(kind: io::ErrorKind) -> &'static str {
 		K::UnexpectedEof => "UnexpectedEof",
 		K::OutOfMemory => "OutOfMemory",
 		// K::InProgress => "InProgress",
-		K::Other => "Other",
 		_ => "Other",
 	}
 }

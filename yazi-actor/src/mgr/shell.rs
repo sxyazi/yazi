@@ -4,14 +4,14 @@ use anyhow::Result;
 use yazi_config::YAZI;
 use yazi_core::mgr::MgrSnap;
 use yazi_fs::Splatter;
-use yazi_macro::{act, input, succ};
+use yazi_macro::succ;
 use yazi_parser::mgr::ShellForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::process::ShellOpt;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act, input};
 
 pub struct Shell;
 

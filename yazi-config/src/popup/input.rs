@@ -112,7 +112,7 @@ impl Input {
 			position: Position::new(Origin::TopCenter, Offset {
 				x:      0,
 				y:      2,
-				width:  50,
+				width:  80,
 				height: 3,
 			}),
 			..Default::default()

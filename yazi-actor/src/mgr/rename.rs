@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{FilesOp, file::File};
-use yazi_macro::{act, input, log_if_err, ok_or_not_found, succ};
+use yazi_macro::{log_if_err, ok_or_not_found, succ};
 use yazi_parser::mgr::RenameForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{data::Data, id::Id, url::{UrlBuf, UrlLike}};
@@ -10,7 +10,7 @@ use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act, input};
 
 pub struct Rename;
 

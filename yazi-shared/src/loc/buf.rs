@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl, LocLike}, path::{DynPath, PathDyn, SetNameError}, strand::AsStrandView};
+use crate::{auth::AuthKind, loc::{Loc, LocAble, LocAbleImpl, LocBufAble, LocBufAbleImpl, LocLike}, path::{DynPath, PathDyn}, strand::AsStrandView};
 
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct LocBuf<P = std::path::PathBuf> {
@@ -163,7 +163,7 @@ where
 	#[inline]
 	pub fn into_inner(self) -> P { self.inner }
 
-	pub(crate) fn try_set_name<'a, T>(&mut self, name: T) -> Result<(), SetNameError>
+	pub(crate) fn set_name<'a, T>(&mut self, name: T)
 	where
 		T: AsStrandView<'a, P::Strand<'a>>,
 	{
@@ -172,7 +172,7 @@ where
 
 		let new = self.inner.len();
 		if new == old {
-			return Ok(());
+			return;
 		}
 
 		if self.uri != 0 {
@@ -189,7 +189,6 @@ where
 				self.urn -= old - new;
 			}
 		}
-		Ok(())
 	}
 
 	#[inline]

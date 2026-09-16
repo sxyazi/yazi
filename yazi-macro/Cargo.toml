@@ -11,3 +11,6 @@ rust-version.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+inventory = { workspace = true }

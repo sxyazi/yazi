@@ -1,11 +1,11 @@
 use anyhow::Result;
 use yazi_core::{mgr::CdSource, tab::Tab};
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::mgr::TabCreateForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 const MAX_TABS: usize = 9;
 

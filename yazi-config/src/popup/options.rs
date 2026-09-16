@@ -50,7 +50,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.trash_title, files.len()),
 			YAZI.confirm.trash_position(),
 			None,
-			Self::truncate_files(files, 100),
+			Some(Self::truncate_files(files, 100)),
 		)
 	}
 
@@ -59,7 +59,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.delete_title, files.len()),
 			YAZI.confirm.delete_position(),
 			None,
-			Self::truncate_files(files, 100),
+			Some(Self::truncate_files(files, 100)),
 		)
 	}
 
@@ -68,7 +68,7 @@ impl ConfirmCfg {
 			YAZI.confirm.overwrite_title.clone(),
 			YAZI.confirm.overwrite_position(),
 			Some(Text::raw(&YAZI.confirm.overwrite_body)),
-			Self::truncate_files(slice::from_ref(file), 1),
+			Some(Self::truncate_files(slice::from_ref(file), 1)),
 		)
 	}
 
@@ -77,7 +77,7 @@ impl ConfirmCfg {
 			Self::replace_number(&YAZI.confirm.quit_title, len),
 			YAZI.confirm.quit_position(),
 			Some(Text::raw(&YAZI.confirm.quit_body)),
-			Self::truncate_lines(names, len, 10),
+			Some(Self::truncate_lines(names, len, 10)),
 		)
 	}
 
@@ -85,7 +85,7 @@ impl ConfirmCfg {
 		tpl.replace("{n}", &n.to_string()).replace("{s}", if n > 1 { "s" } else { "" })
 	}
 
-	fn truncate_lines<I>(it: I, len: usize, max: usize) -> Option<Text<'static>>
+	fn truncate_lines<I>(it: I, len: usize, max: usize) -> Text<'static>
 	where
 		I: IntoIterator,
 		I::Item: ToStrand,
@@ -98,10 +98,10 @@ impl ConfirmCfg {
 			}
 			lines.push(s.to_strand().into_string_lossy());
 		}
-		Some(Text::from_iter(lines))
+		Text::from_iter(lines)
 	}
 
-	fn truncate_files(files: &[File], max: usize) -> Option<Text<'static>> {
+	fn truncate_files(files: &[File], max: usize) -> Text<'static> {
 		let mut lines = Vec::with_capacity(files.len().min(max + 1));
 		for (i, f) in files.iter().enumerate() {
 			if i >= max {
@@ -116,6 +116,6 @@ impl ConfirmCfg {
 			}
 			lines[i].push_span(f.url.to_strand().into_string_lossy());
 		}
-		Some(lines.into())
+		lines.into()
 	}
 }

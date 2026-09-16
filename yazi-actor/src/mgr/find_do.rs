@@ -1,10 +1,10 @@
 use anyhow::Result;
 use yazi_core::tab::Finder;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::mgr::FindDoForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct FindDo;
 

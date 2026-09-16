@@ -2,11 +2,11 @@ use std::{sync::atomic::Ordering, time::Instant};
 
 use anyhow::Result;
 use ratatui_core::{buffer::{Buffer, CellDiffOption}, layout::Position};
-use yazi_actor::{Ctx, lives::Lives};
+use yazi_actor::{Ctx, act, lives::Lives};
 use yazi_adapter::ADAPTOR;
 use yazi_binding::runtime_scope;
 use yazi_config::LAYOUT;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_plugin::LUA;
 use yazi_shared::{data::Data, event::NEED_RENDER};
 

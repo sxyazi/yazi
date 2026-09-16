@@ -1,6 +1,6 @@
 use anyhow::Result;
-use yazi_actor::Ctx;
-use yazi_macro::{act, emit, warn};
+use yazi_actor::{Ctx, act};
+use yazi_macro::{emit, warn};
 use yazi_shared::event::{ActionCow, Event};
 use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 

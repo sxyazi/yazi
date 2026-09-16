@@ -44,8 +44,8 @@ pub(crate) async fn shell(opt: ShellOpt) -> Result<Child> {
 			.current_dir(cwd)
 			.kill_on_drop(!opt.orphan)
 			.pre_exec(move || {
-				if !opt.block && libc::setsid() < 0 {
-					return Err(std::io::Error::last_os_error());
+				if !opt.block {
+					rustix::process::setsid()?;
 				}
 				Ok(())
 			})

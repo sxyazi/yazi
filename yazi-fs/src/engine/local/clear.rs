@@ -2,67 +2,56 @@ use std::{io, path::Path};
 
 #[cfg(unix)]
 pub(super) fn remove_dir_clean_impl(path: &Path) -> io::Result<()> {
-	use std::{fs::OpenOptions, os::unix::fs::OpenOptionsExt};
+	use std::{fs::OpenOptions, io::ErrorKind, os::unix::fs::OpenOptionsExt};
 
-	use libc::{ELOOP, ENOENT, ENOTDIR, O_DIRECTORY, O_NOFOLLOW};
+	use rustix::{fs::OFlags, io::Errno};
 
-	let dir = match OpenOptions::new().read(true).custom_flags(O_DIRECTORY | O_NOFOLLOW).open(path) {
+	let dir = match OpenOptions::new()
+		.read(true)
+		.custom_flags((OFlags::DIRECTORY | OFlags::NOFOLLOW).bits() as _)
+		.open(path)
+	{
 		Ok(dir) => dir,
-		Err(e) if e.raw_os_error().is_some_and(|e| matches!(e, ENOENT | ENOTDIR | ELOOP)) => {
-			return Ok(());
-		}
+		Err(e) if e.kind() == ErrorKind::NotFound => return Ok(()),
+		Err(e) if e.kind() == ErrorKind::NotADirectory => return Ok(()),
+		Err(e) if e.raw_os_error() == Some(Errno::LOOP.raw_os_error()) => return Ok(()),
 		Err(e) => return Err(e),
 	};
 
-	clear_no_follow(dir);
+	clear_no_follow(dir.into());
 	std::fs::remove_dir(path)
 }
 
 #[cfg(unix)]
-fn clear_no_follow(dir: std::fs::File) {
-	use std::{ffi::CStr, os::fd::{AsRawFd, FromRawFd, IntoRawFd}};
+fn clear_no_follow(dir: rustix::fd::OwnedFd) {
+	use rustix::fs::{self, AtFlags, Dir, FileType, Mode, OFlags};
 
-	use libc::{AT_REMOVEDIR, DT_DIR, DT_UNKNOWN, O_CLOEXEC, O_DIRECTORY, O_NOFOLLOW, O_RDONLY};
-
-	struct Dropper(*mut libc::DIR);
-
-	impl Drop for Dropper {
-		fn drop(&mut self) { _ = unsafe { libc::closedir(self.0) }; }
-	}
-
-	let stream = unsafe { libc::fdopendir(dir.as_raw_fd()) };
-	if stream.is_null() {
+	let Ok(mut stream) = Dir::new(dir) else {
 		return;
-	}
+	};
 
-	let _ = dir.into_raw_fd();
-	let stream = Dropper(stream);
-	let fd = unsafe { libc::dirfd(stream.0) };
-
-	loop {
-		let entry = unsafe { libc::readdir(stream.0) };
-		if entry.is_null() {
-			break;
-		}
-
-		let name = unsafe { CStr::from_ptr((*entry).d_name.as_ptr()) };
+	while let Some(Ok(entry)) = stream.next() {
+		let name = entry.file_name();
 		if matches!(name.to_bytes(), b"." | b"..") {
 			continue;
 		}
 
-		let ty = unsafe { (*entry).d_type };
-		if ty != DT_DIR && ty != DT_UNKNOWN {
+		if !matches!(entry.file_type(), FileType::Directory | FileType::Unknown) {
 			continue;
 		}
 
-		let child =
-			unsafe { libc::openat(fd, name.as_ptr(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC) };
-		if child < 0 {
+		let Ok(fd) = stream.fd() else { break };
+		let Ok(child) = fs::openat(
+			fd,
+			name,
+			OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+			Mode::empty(),
+		) else {
 			continue;
-		}
+		};
 
-		clear_no_follow(unsafe { std::fs::File::from_raw_fd(child) });
-		_ = unsafe { libc::unlinkat(fd, name.as_ptr(), AT_REMOVEDIR) };
+		clear_no_follow(child);
+		fs::unlinkat(fd, name, AtFlags::REMOVEDIR).ok();
 	}
 }
 
@@ -108,19 +97,15 @@ fn remove_dir(dir: &std::fs::File) -> io::Result<()> {
 	use std::{mem, os::windows::io::AsRawHandle};
 
 	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_DISPOSITION_INFO, FileDispositionInfo, SetFileInformationByHandle}};
+	use yazi_shim::bool_ok;
 
 	let info = FILE_DISPOSITION_INFO { DeleteFile: true };
-	if unsafe {
+	bool_ok(unsafe {
 		SetFileInformationByHandle(
 			dir.as_raw_handle() as HANDLE,
 			FileDispositionInfo,
 			&info as *const FILE_DISPOSITION_INFO as _,
 			mem::size_of::<FILE_DISPOSITION_INFO>() as u32,
 		)
-	} == 0
-	{
-		Err(io::Error::last_os_error())
-	} else {
-		Ok(())
-	}
+	})
 }

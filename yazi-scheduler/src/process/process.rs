@@ -3,7 +3,7 @@ use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_binding::Permit;
 use yazi_term::YIELD_TO_SUBPROCESS;
 
-use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
+use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan};
 use crate::{AppProxy, NotifyProxy, TaskOp, TaskOps, process::{ProcessIn, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
 
 pub(crate) struct Process {
@@ -24,16 +24,18 @@ impl Process {
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());
-		let result = super::shell(task.into()).await;
-		if let Err(e) = result {
-			NotifyProxy::push_warn(
-				cmd.to_string_lossy().into_owned(),
-				format!("Failed to start process: {e}"),
-			);
-			return Ok(self.ops.out(id, ProcessOutBlock::Succ));
-		}
+		let mut child = match super::shell(task.into()).await {
+			Ok(c) => c,
+			Err(e) => {
+				NotifyProxy::push_warn(
+					cmd.to_string_lossy().into_owned(),
+					format!("Failed to start process: {e}"),
+				);
+				return Ok(self.ops.out(id, ProcessOutBlock::Succ));
+			}
+		};
 
-		let status = result.unwrap().wait().await?;
+		let status = child.wait().await?;
 		if !status.success() {
 			let content = match status.code() {
 				Some(130) => return Ok(self.ops.out(id, ProcessOutBlock::Succ)), // Ctrl-C pressed by user
@@ -54,22 +56,22 @@ impl Process {
 	}
 
 	pub(crate) async fn bg(&self, task: ProcessInBg) -> Result<(), ProcessOutBg> {
-		let mut child =
-			super::shell(ShellOpt { cwd: task.cwd, cmd: task.cmd, block: false, orphan: false }).await?;
+		let id = task.id;
+		let mut child = super::shell(task.into()).await?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
 		loop {
 			select! {
 				Ok(Some(line)) = stdout.next_line() => {
-					self.ops.out(task.id, ProcessOutBg::Log(line));
+					self.ops.out(id, ProcessOutBg::Log(line));
 				}
 				Ok(Some(line)) = stderr.next_line() => {
-					self.ops.out(task.id, ProcessOutBg::Log(line));
+					self.ops.out(id, ProcessOutBg::Log(line));
 				}
 				status = child.wait() => {
 					let status = status.map_err(anyhow::Error::from)?;
-					self.ops.out(task.id, ProcessOutBg::Log(match status.code() {
+					self.ops.out(id, ProcessOutBg::Log(match status.code() {
 						Some(code) => format!("Exited with status code: {code}"),
 						None => "Process terminated by signal".to_string(),
 					}));
@@ -81,7 +83,7 @@ impl Process {
 			}
 		}
 
-		Ok(self.ops.out(task.id, ProcessOutBg::Succ))
+		Ok(self.ops.out(id, ProcessOutBg::Succ))
 	}
 }
 

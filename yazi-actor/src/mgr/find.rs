@@ -5,13 +5,13 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::YAZI;
 use yazi_core::mgr::FindDoOpt;
-use yazi_macro::{input, succ};
+use yazi_macro::succ;
 use yazi_parser::mgr::FindForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Debounce, data::Data};
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, input};
 
 pub struct Find;
 

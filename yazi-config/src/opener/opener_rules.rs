@@ -54,7 +54,9 @@ impl DeserializeOverHook for OpenerRules {
 		let mut inner = self.unwrap_unchecked();
 
 		inner.retain(|r| r.r#for.matches());
-		inner.iter_mut().for_each(|r| Arc::get_mut(r).expect("unique opener rule arc").fill());
+		for r in &mut inner {
+			Arc::get_mut(r).expect("unique opener rule arc").fill();
+		}
 
 		Ok(Self(inner.into_pointee()))
 	}

@@ -1,12 +1,12 @@
 use anyhow::Result;
 use yazi_core::tab::Folder;
 use yazi_fs::FilesSorter;
-use yazi_macro::{act, render, render_and, succ};
+use yazi_macro::{render, render_and, succ};
 use yazi_parser::{mgr::SortForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 use yazi_shim::OptionExt;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Sort;
 

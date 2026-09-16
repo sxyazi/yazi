@@ -44,11 +44,13 @@ serde                 = { workspace = true }
 serde_with            = { workspace = true }
 strum                 = { workspace = true }
 tokio                 = { workspace = true }
-typed-path            = { workspace = true }
 unicode-normalization = { workspace = true }
 
 [target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
 percent-encoding = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+rustix = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows     = { version = "0.62.2", features = [ "Win32_Foundation", "Win32_Storage_EnhancedStorage", "Win32_System_Com_StructuredStorage", "Win32_System_SystemServices", "Win32_System_Variant", "Win32_UI_Shell_PropertiesSystem" ] }

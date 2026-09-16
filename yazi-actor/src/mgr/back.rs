@@ -1,10 +1,10 @@
 use anyhow::Result;
 use yazi_core::mgr::CdSource;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Back;
 

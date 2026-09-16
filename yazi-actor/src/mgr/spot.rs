@@ -1,9 +1,9 @@
 use anyhow::Result;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_parser::mgr::SpotOpt;
 use yazi_shared::{data::Data, pool::InternStr};
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Spot;
 

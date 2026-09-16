@@ -1,6 +1,6 @@
-use std::{env, error::Error};
+use std::env;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
 	let dir = env::var("OUT_DIR").unwrap();
 
 	// cargo build
@@ -23,6 +23,4 @@ fn main() -> Result<(), Box<dyn Error>> {
 			"Due to Cargo's limitations, Yazi on crates.io must be built with `cargo install --force yazi-build`"
 		);
 	}
-
-	Ok(())
 }

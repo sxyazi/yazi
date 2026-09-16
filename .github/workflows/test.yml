@@ -34,3 +34,21 @@ jobs:
 
       - name: Test
         run: cargo test --workspace --verbose
+
+  test-freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Test in FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "15.1"
+          copyback: false
+          prepare: |
+            pkg install -y ca_root_nss curl gmake
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          run: |
+            . "$HOME/.cargo/env"
+            cargo build --verbose
+            cargo test --workspace --verbose

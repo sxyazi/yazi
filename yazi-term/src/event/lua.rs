@@ -56,13 +56,21 @@ impl UserData for MouseEvent {
 			use MouseEventKind as K;
 			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Left))
 		});
+		fields.add_field_method_get("is_middle", |_, me| {
+			use MouseEventKind as K;
+			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Middle))
+		});
 		fields.add_field_method_get("is_right", |_, me| {
 			use MouseEventKind as K;
 			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Right))
 		});
-		fields.add_field_method_get("is_middle", |_, me| {
+		fields.add_field_method_get("is_back", |_, me| {
 			use MouseEventKind as K;
-			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Middle))
+			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Back))
+		});
+		fields.add_field_method_get("is_forward", |_, me| {
+			use MouseEventKind as K;
+			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Forward))
 		});
 	}
 }

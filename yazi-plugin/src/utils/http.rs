@@ -1,4 +1,4 @@
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use reqwest::Client;
@@ -26,15 +26,12 @@ impl Utils {
 	}
 
 	fn client() -> mlua::Result<&'static Client> {
-		static HTTP: OnceLock<Result<Client, reqwest::Error>> = OnceLock::new();
-
-		HTTP
-		.get_or_init(|| {
+		static HTTP: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
 			Client::builder()
 				.user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
 				.build()
-		})
-		.as_ref()
-		.map_err(|e| e.into_lua_err())
+		});
+
+		HTTP.as_ref().map_err(|e| e.into_lua_err())
 	}
 }

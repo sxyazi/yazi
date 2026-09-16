@@ -34,7 +34,9 @@ end
 
 -- Mouse events
 function Parent:click(event, up)
-	if up or event.is_middle then
+	if up then
+		return
+	elseif not event.is_left and not event.is_right then
 		return
 	end
 

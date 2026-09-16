@@ -4,14 +4,14 @@ use anyhow::{Result, bail};
 use tokio_stream::{Stream, StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_fs::{FilesOp, file::File};
-use yazi_macro::{input, ok_or_not_found, succ};
+use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
 use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, strand::{StrandBuf, StrandLike}, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, input};
 
 pub struct Create;
 

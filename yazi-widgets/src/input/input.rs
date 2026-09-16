@@ -2,7 +2,6 @@ use std::{borrow::Cow, ops::Range};
 
 use anyhow::Result;
 use ratatui_core::layout::{Rect, Size};
-use yazi_macro::act;
 use yazi_shared::id::Ids;
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_tty::sequence::SetCursorStyle;

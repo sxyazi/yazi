@@ -1,15 +1,15 @@
-mod actor;
 mod asset;
 mod capability;
-mod confirm;
 mod context;
 mod data;
 mod event;
 mod fmt;
 mod fs;
-mod input;
 mod log;
 mod module;
 mod platform;
 mod render;
 mod stdio;
+
+#[doc(hidden)]
+pub use inventory;

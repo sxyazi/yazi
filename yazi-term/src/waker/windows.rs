@@ -1,6 +1,7 @@
 use std::{io, ops::Deref, os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle}, ptr, sync::Arc};
 
 use windows_sys::Win32::System::Threading;
+use yazi_shim::bool_ok;
 
 #[derive(Debug)]
 pub(crate) struct Waker {
@@ -24,18 +25,10 @@ impl Waker {
 	}
 
 	pub fn wake(&self) -> io::Result<()> {
-		if unsafe { Threading::SetEvent(self.handle.as_raw_handle()) } == 0 {
-			Err(io::Error::last_os_error())
-		} else {
-			Ok(())
-		}
+		bool_ok(unsafe { Threading::SetEvent(self.handle.as_raw_handle()) })
 	}
 
 	pub(crate) fn drain(&self) -> io::Result<()> {
-		if unsafe { Threading::ResetEvent(self.handle.as_raw_handle()) } == 0 {
-			Err(io::Error::last_os_error())
-		} else {
-			Ok(())
-		}
+		bool_ok(unsafe { Threading::ResetEvent(self.handle.as_raw_handle()) })
 	}
 }

@@ -1,5 +1,4 @@
 use anyhow::Result;
-use yazi_macro::act;
 use yazi_shared::data::Data;
 
 use crate::input::{CharKind, Input, op::InputOp, parser::ForwardOpt};

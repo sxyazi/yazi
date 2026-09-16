@@ -1,4 +1,4 @@
-use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::{Arc, OnceLock}};
+use std::{io::{BufRead, BufReader, Cursor, Seek}, path::PathBuf, sync::{Arc, LazyLock}};
 
 use anyhow::{Result, anyhow, bail};
 use parking_lot::Mutex;
@@ -37,11 +37,10 @@ impl Highlighter {
 	where
 		P: Into<PathBuf>,
 	{
-		static SYNTAXES: OnceLock<SyntaxSet> = OnceLock::new();
+		static SYNTAXES: LazyLock<SyntaxSet> =
+			LazyLock::new(|| dumps::from_uncompressed_data(yazi_prebuilt::syntaxes()).unwrap());
 
 		let path = path.into();
-		let syntaxes =
-			SYNTAXES.get_or_init(|| dumps::from_uncompressed_data(yazi_prebuilt::syntaxes()).unwrap());
 
 		Ok(Self {
 			reader: BufReader::new(std::fs::File::open(&path)?),
@@ -52,7 +51,7 @@ impl Highlighter {
 			ticket: INCR.current(),
 
 			theme: Self::load_theme(),
-			syntaxes,
+			syntaxes: &SYNTAXES,
 			syntax: None,
 		})
 	}
@@ -145,7 +144,7 @@ impl Highlighter {
 
 	#[inline]
 	fn ensure_not_cancelled(&self) -> Result<(), PeekError> {
-		if self.ticket != INCR.current() { Err(anyhow!("Highlighting cancelled"))? } else { Ok(()) }
+		if self.ticket == INCR.current() { Ok(()) } else { Err(anyhow!("Highlighting cancelled"))? }
 	}
 
 	fn load_theme() -> Arc<Theme> {

@@ -42,8 +42,10 @@ impl Command {
 		if let Some(max) = self.memory {
 			unsafe {
 				self.inner.pre_exec(move || {
-					let rlp = libc::rlimit { rlim_cur: max as _, rlim_max: max as _ };
-					libc::setrlimit(libc::RLIMIT_AS, &rlp);
+					_ = rustix::process::setrlimit(rustix::process::Resource::As, rustix::process::Rlimit {
+						current: Some(max as u64),
+						maximum: Some(max as u64),
+					});
 					Ok(())
 				});
 			}
@@ -56,6 +58,7 @@ impl Command {
 		use std::{mem, os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle}};
 
 		use windows_sys::Win32::System::JobObjects::{AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation, SetInformationJobObject};
+		use yazi_shim::bool_ok;
 
 		fn create_job(handle: RawHandle, memory: Option<usize>) -> io::Result<OwnedHandle> {
 			unsafe {
@@ -72,19 +75,14 @@ impl Command {
 					info.ProcessMemoryLimit = m;
 				}
 
-				if SetInformationJobObject(
+				bool_ok(SetInformationJobObject(
 					job.as_raw_handle(),
 					JobObjectExtendedLimitInformation,
 					&mut info as *mut _ as *mut _,
 					mem::size_of_val(&info) as u32,
-				) == 0
-				{
-					return Err(io::Error::last_os_error());
-				}
+				))?;
 
-				if AssignProcessToJobObject(job.as_raw_handle(), handle) == 0 {
-					return Err(io::Error::last_os_error());
-				}
+				bool_ok(AssignProcessToJobObject(job.as_raw_handle(), handle))?;
 
 				Ok(job)
 			}

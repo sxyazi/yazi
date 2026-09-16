@@ -1,7 +1,7 @@
 use std::{ops::Deref, ptr};
 
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
-use yazi_binding::{Range, style::Style};
+use yazi_binding::Range;
 use yazi_config::THEME;
 use yazi_fs::file::FileInventory;
 use yazi_shared::{path::DynPath, url::UrlLike};
@@ -83,7 +83,7 @@ impl UserData for File {
 		methods.add_method("style", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;
 			let mime = core.mgr.mimetype.get(&me.url).unwrap_or_default();
-			Ok(THEME.filetype.match_style(me, mime).map(Style::from))
+			Ok(THEME.filetype.match_style(me, mime))
 		});
 		methods.add_method("is_yanked", |lua, me, ()| {
 			let core: CoreRef = lua.named_registry_value("cx")?;

@@ -1,12 +1,12 @@
 use std::mem;
 
 use anyhow::Result;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::cmp::CloseForm;
 use yazi_shared::data::Data;
 use yazi_widgets::input::parser::CompleteOpt;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Close;
 

@@ -8,7 +8,7 @@ use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shared::auth::{Auth, AuthInventory, Scheme};
 use yazi_shim::toml::DeserializeOverWith;
 
-use super::{Authorities, DomainSeed, Service, VfsMatcher};
+use super::{Authorities, DomainSeed, DomainsArc, Service, VfsMatcher};
 use crate::VFS;
 
 #[derive(Deserialize, DeserializeOver)]
@@ -63,6 +63,13 @@ impl UserData for &'static Vfs {
 				t @ Value::Table(_) => {
 					let domains = DomainSeed(&scheme).deserialize(mlua::serde::Deserializer::new(t))?;
 					me.authorities.insert(&scheme, &domains.into());
+				}
+				Value::UserData(ud) if let Ok(domains) = ud.borrow::<DomainsArc>() => {
+					if domains.scheme == scheme {
+						me.authorities.insert(&scheme, &domains);
+					} else {
+						return Err("scheme does not match".into_lua_err());
+					}
 				}
 				Value::Nil => me.authorities.remove(&scheme),
 				_ => return Err("expected a table or nil".into_lua_err()),
