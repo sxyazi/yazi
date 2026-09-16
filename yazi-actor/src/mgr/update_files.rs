@@ -3,12 +3,12 @@ use std::iter;
 use anyhow::Result;
 use yazi_core::{Invalidator, Reconciler};
 use yazi_fs::FilesOp;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::{mgr::UpdateFilesForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data, url::UrlLike};
 use yazi_watcher::local::LINKED;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct UpdateFiles;
 

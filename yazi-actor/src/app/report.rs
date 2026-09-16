@@ -1,11 +1,11 @@
 use anyhow::Result;
 use yazi_emulator::{EMULATOR, Mux};
-use yazi_macro::{act, log_if_err, succ};
+use yazi_macro::{log_if_err, succ};
 use yazi_proxy::AppProxy;
 use yazi_shared::data::Data;
 use yazi_term::event::Report as TermReport;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Report;
 

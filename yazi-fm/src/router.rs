@@ -1,8 +1,7 @@
 use anyhow::Result;
-use yazi_actor::Ctx;
+use yazi_actor::{Ctx, act};
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
 use yazi_core::which::WhichOpt;
-use yazi_macro::act;
 use yazi_shared::Layer;
 use yazi_term::event::KeyEvent;
 

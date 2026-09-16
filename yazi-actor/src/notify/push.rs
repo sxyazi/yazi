@@ -2,11 +2,11 @@ use std::time::Instant;
 
 use anyhow::Result;
 use yazi_core::notify::Message;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_parser::{notify::PushForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Push;
 

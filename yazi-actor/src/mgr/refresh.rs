@@ -1,11 +1,11 @@
 use anyhow::Result;
 use yazi_fs::CWD;
-use yazi_macro::{act, succ, tab};
+use yazi_macro::{succ, tab};
 use yazi_parser::VoidForm;
 use yazi_shared::{data::Data, url::UrlLike};
 use yazi_watcher::MgrProxy;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Refresh;
 

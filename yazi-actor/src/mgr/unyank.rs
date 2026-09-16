@@ -1,9 +1,9 @@
 use anyhow::Result;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Unyank;
 

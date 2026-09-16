@@ -1,9 +1,9 @@
 use anyhow::Result;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_shared::data::Data;
 use yazi_widgets::input::parser::CompleteOpt;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Complete;
 

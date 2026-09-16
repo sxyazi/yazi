@@ -27,7 +27,6 @@ yazi-dds       = { path = "../yazi-dds", version = "26.9.1" }
 yazi-emulator  = { path = "../yazi-emulator", version = "26.9.1" }
 yazi-fs        = { path = "../yazi-fs", version = "26.9.1" }
 yazi-macro     = { path = "../yazi-macro", version = "26.9.1" }
-yazi-parser    = { path = "../yazi-parser", version = "26.9.1" }
 yazi-plugin    = { path = "../yazi-plugin", version = "26.9.1" }
 yazi-proxy     = { path = "../yazi-proxy", version = "26.9.1" }
 yazi-runner    = { path = "../yazi-runner", version = "26.9.1" }
@@ -46,7 +45,6 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.9.1" }
 anyhow             = { workspace = true }
 log                = { workspace = true }
 mlua               = { workspace = true }
-paste              = { workspace = true }
 ratatui-core       = { workspace = true }
 ratatui-widgets    = { workspace = true }
 tokio              = { workspace = true }

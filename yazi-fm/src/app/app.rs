@@ -2,9 +2,9 @@ use std::{sync::atomic::Ordering, time::{Duration, Instant}};
 
 use anyhow::Result;
 use tokio::{select, time::sleep};
-use yazi_actor::Ctx;
+use yazi_actor::{Ctx, act};
 use yazi_core::Core;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_shared::{data::Data, event::{Event, EventRx, NEED_RENDER}};
 use yazi_tui::Raterm;
 

@@ -1,9 +1,8 @@
 use anyhow::Result;
-use yazi_macro::act;
 use yazi_parser::{mgr::CloseForm, spark::SparkKind};
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Close;
 

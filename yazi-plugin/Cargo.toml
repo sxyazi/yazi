@@ -42,7 +42,6 @@ ansi-to-tui      = { workspace = true }
 anyhow           = { workspace = true }
 base64           = { workspace = true }
 futures          = { workspace = true }
-inventory        = { workspace = true }
 mlua             = { workspace = true }
 parking_lot      = { workspace = true }
 percent-encoding = { workspace = true }

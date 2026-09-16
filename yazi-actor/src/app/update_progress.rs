@@ -1,10 +1,10 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
-use yazi_macro::{act, render, render_partial, succ};
+use yazi_macro::{render, render_partial, succ};
 use yazi_parser::app::UpdateProgressForm;
 use yazi_shared::data::Data;
 
-use crate::Actor;
+use crate::{Actor, act};
 
 pub struct UpdateProgress;
 

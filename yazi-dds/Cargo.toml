@@ -29,7 +29,6 @@ yazi-version = { path = "../yazi-version", version = "26.9.1" }
 anyhow       = { workspace = true }
 hashbrown    = { workspace = true }
 indexmap     = { workspace = true }
-inventory    = { workspace = true }
 mlua         = { workspace = true }
 parking_lot  = { workspace = true }
 paste        = { workspace = true }

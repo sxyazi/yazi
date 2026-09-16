@@ -1,11 +1,11 @@
 use anyhow::Result;
 use yazi_core::input::InputMutGuard;
-use yazi_macro::{act, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::{input::CloseForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Close;
 

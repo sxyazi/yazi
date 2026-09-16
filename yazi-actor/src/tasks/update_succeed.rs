@@ -1,9 +1,9 @@
 use anyhow::Result;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_parser::tasks::UpdateSucceedForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct UpdateSucceed;
 

@@ -2,13 +2,13 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use yazi_config::YAZI;
-use yazi_macro::{act, input, render, succ};
+use yazi_macro::{render, succ};
 use yazi_parser::mgr::TabRenameForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act, input};
 
 pub struct TabRename;
 

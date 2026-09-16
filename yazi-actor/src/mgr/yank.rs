@@ -1,10 +1,10 @@
 use anyhow::Result;
 use yazi_core::mgr::Yanked;
-use yazi_macro::{act, render};
+use yazi_macro::render;
 use yazi_parser::mgr::YankForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::{Actor, Ctx, act};
 
 pub struct Yank;
 

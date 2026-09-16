@@ -156,34 +156,34 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	}
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
+#[cfg(target_os = "macos")]
 fn final_path(path: &Path) -> io::Result<PathBuf> {
 	use std::{ffi::OsString, fs::OpenOptions, os::unix::{ffi::OsStringExt, fs::OpenOptionsExt}};
 
 	use libc::O_SYMLINK;
 
 	let file = OpenOptions::new().read(true).custom_flags(O_SYMLINK).open(path)?;
+	let path = rustix::fs::getpath(&file)?;
 
-	#[cfg(target_os = "macos")]
-	{
-		let path = rustix::fs::getpath(&file)?;
-		Ok(OsString::from_vec(path.into_bytes()).into())
+	Ok(OsString::from_vec(path.into_bytes()).into())
+}
+
+#[cfg(target_os = "freebsd")]
+fn final_path(path: &Path) -> io::Result<PathBuf> {
+	use std::{ffi::{CStr, OsString}, fs::OpenOptions, mem, os::{fd::AsRawFd, unix::{ffi::OsStringExt, fs::OpenOptionsExt}}};
+
+	use libc::{F_KINFO, O_NOFOLLOW, O_PATH, fcntl, kinfo_file};
+
+	let file = OpenOptions::new().read(true).custom_flags(O_PATH | O_NOFOLLOW).open(path)?;
+
+	let mut info = unsafe { mem::zeroed::<kinfo_file>() };
+	info.kf_structsize = mem::size_of::<kinfo_file>() as _;
+	if unsafe { fcntl(file.as_raw_fd(), F_KINFO, &mut info) } < 0 {
+		return Err(io::Error::last_os_error());
 	}
 
-	#[cfg(target_os = "freebsd")]
-	{
-		use std::{ffi::CStr, os::fd::AsRawFd};
-
-		use libc::{F_GETPATH, PATH_MAX};
-
-		let mut buf = [0u8; PATH_MAX as usize];
-		if unsafe { libc::fcntl(file.as_raw_fd(), F_GETPATH, buf.as_mut_ptr()) } < 0 {
-			return Err(io::Error::last_os_error());
-		}
-
-		let cstr = unsafe { CStr::from_ptr(buf.as_ptr().cast()) };
-		Ok(OsString::from_vec(cstr.to_bytes().to_vec()).into())
-	}
+	let cstr = unsafe { CStr::from_ptr(info.kf_path.as_ptr()) };
+	Ok(OsString::from_vec(cstr.to_bytes().to_vec()).into())
 }
 
 #[cfg(target_os = "windows")]

@@ -107,7 +107,7 @@ macro_rules! impl_data_any {
 		}
 	};
 	(@from_lua_register $ty:ty) => {
-		::inventory::submit! {
+		$crate::inventory::submit! {
 			::yazi_shared::data::DataInventory {
 				from_lua: <$ty as ::yazi_shared::data::DataAny>::from_lua,
 			}

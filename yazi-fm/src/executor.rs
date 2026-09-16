@@ -1,6 +1,6 @@
 use anyhow::Result;
-use yazi_actor::Ctx;
-use yazi_macro::{act, succ};
+use yazi_actor::{Ctx, act};
+use yazi_macro::succ;
 use yazi_shared::{Layer, data::Data, event::ActionCow};
 use yazi_widgets::input::InputMode;
 

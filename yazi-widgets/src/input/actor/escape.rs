@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_macro::{act, succ};
+use yazi_macro::succ;
 use yazi_shared::data::Data;
 
 use crate::input::{Input, InputMode, op::InputOp};

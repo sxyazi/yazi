@@ -3,13 +3,13 @@ use yazi_actor::Ctx;
 use yazi_config::{THEME, build_flavor};
 use yazi_dds::Pubsub;
 use yazi_emulator::EMULATOR;
-use yazi_macro::{act, log_if_err, render, succ};
+use yazi_macro::{log_if_err, render, succ};
 use yazi_parser::VoidForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 use yazi_shim::serde::Overlay;
 
-use crate::Actor;
+use crate::{Actor, act};
 
 pub struct Theme;
 
