@@ -1,6 +1,7 @@
-use std::{ffi::{OsStr, OsString, c_void}, io, os::windows::ffi::{OsStrExt, OsStringExt}, path::{Path, PathBuf}};
+use std::{ffi::{OsStr, OsString, c_void}, io, os::windows::ffi::OsStringExt, path::{Path, PathBuf}};
 
 use windows::{Win32::{Foundation::*, Storage::EnhancedStorage::*, System::{Com::{StructuredStorage::PropVariantToBSTR, *}, SystemServices::*}, UI::Shell::*}, core::{Interface, PCWSTR}};
+use yazi_shim::ToWide;
 
 use super::{super::{TrashCha, TrashEntry, TrashId}, trash::{error, operate, system_time}};
 use crate::cha::Cha;
@@ -9,7 +10,7 @@ pub(super) struct ShellItem(pub(super) IShellItem);
 
 impl ShellItem {
 	pub(super) fn new(name: impl AsRef<OsStr>) -> io::Result<Self> {
-		let name: Vec<u16> = name.as_ref().encode_wide().chain([0]).collect();
+		let name = name.as_ref().to_wide();
 		unsafe { SHCreateItemFromParsingName(PCWSTR(name.as_ptr()), None) }.map(Self).map_err(error)
 	}
 
@@ -22,7 +23,7 @@ impl ShellItem {
 	pub(super) fn top(name: &Path) -> io::Result<Self> { Self::root()?.resolve(name) }
 
 	pub(super) fn resolve(self, path: &Path) -> io::Result<Self> {
-		let name: Vec<u16> = path.as_os_str().encode_wide().chain([0]).collect();
+		let name = path.to_wide();
 		unsafe { SHCreateItemFromRelativeName(&self.0, PCWSTR(name.as_ptr()), None) }
 			.map(Self)
 			.map_err(error)

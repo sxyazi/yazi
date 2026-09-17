@@ -1,7 +1,8 @@
-use std::{fs, io, os::windows::ffi::OsStrExt, path::{Path, PathBuf}, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{fs, io, path::{Path, PathBuf}, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use windows::{Win32::{Foundation::*, System::Com::*, UI::Shell::*}, core::PCWSTR};
 use yazi_ffi::Com;
+use yazi_shim::ToWide;
 
 use super::{super::{TrashEntries, TrashEntry, TrashId}, shell_item::ShellItem, trash_sig::TrashSig};
 use crate::{cha::Cha, file::File};
@@ -128,12 +129,10 @@ impl Trash {
 		fs::create_dir_all(parent)?;
 
 		let parent = ShellItem::new(parent)?;
-		let name: Vec<u16> = to
+		let name = to
 			.file_name()
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid restore target"))?
-			.encode_wide()
-			.chain([0])
-			.collect();
+			.to_wide();
 
 		operate(FOF_NO_UI | FOFX_EARLYFAILURE, |operation| unsafe {
 			operation.MoveItem(&item.0, &parent.0, PCWSTR(name.as_ptr()), None)

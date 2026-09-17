@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
-use crate::{cha::{Cha, ChaMode}, engine::{Attrs, Capabilities, Engine, Transmit}};
+use crate::{casefold::Casefold, cha::{Cha, ChaMode}, engine::{Attrs, Capabilities, Engine, Transmit}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -33,7 +33,7 @@ impl<'a> Engine for Local<'a> {
 	}
 
 	async fn casefold(&self) -> io::Result<UrlBuf> {
-		super::casefold(self.path).await.map(Into::into)
+		Casefold::casefold(self.path).await.map(Into::into)
 	}
 
 	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
@@ -248,9 +248,9 @@ impl<'a> Local<'a> {
 
 		#[cfg(windows)]
 		{
-			use std::os::windows::ffi::OsStrExt;
+			use yazi_shim::ToWide;
 
-			let path: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+			let path = path.to_wide();
 			let perm = if mode.contains(ChaMode::U_WRITE) { libc::S_IWRITE } else { libc::S_IREAD };
 
 			let result = unsafe { libc::wchmod(path.as_ptr(), perm) };

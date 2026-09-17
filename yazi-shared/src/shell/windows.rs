@@ -67,10 +67,9 @@ fn needs_quotes(arg: &[u8]) -> bool {
 
 #[cfg(windows)]
 pub fn split(s: &str) -> std::io::Result<Vec<String>> {
-	use std::os::windows::ffi::OsStrExt;
+	use yazi_shim::ToWide;
 
-	let s: Vec<_> = std::ffi::OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect();
-	split_wide(&s)
+	split_wide(&s.to_wide())
 }
 
 #[cfg(windows)]
