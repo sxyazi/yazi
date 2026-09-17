@@ -88,6 +88,7 @@ impl Default for Loader {
 			("none".to_owned(), [][..].into()),
 			("null".to_owned(), [][..].into()),
 			("sftp".to_owned(), [][..].into()),
+			("undo".to_owned(), [][..].into()),
 		]);
 		Self { cache: RwLock::new(cache) }
 	}

@@ -1,12 +1,13 @@
-use std::{io, path::Path, time::Duration};
+use std::{io::ErrorKind, path::Path, time::Duration};
 
 use hashbrown::HashSet;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::{FilesOp, engine::{self, Engine}, mounts::PARTITIONS};
+use yazi_fs::{FilesOp, casefold::Casefold, engine::{self, Engine}, mounts::PARTITIONS};
 use yazi_macro::error;
 use yazi_shared::url::{UrlBuf, UrlLike};
+use yazi_vfs::maybe_exists;
 
 use crate::{Reporter, WATCHER, Watchee};
 
@@ -101,22 +102,30 @@ impl Local {
 
 				let file = match engine::local::Local::regular(path).file().await {
 					Ok(file) => file,
-					Err(e) if e.kind() == io::ErrorKind::NotFound => {
+					Err(e) if e.kind() == ErrorKind::NotFound => {
 						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
 						continue;
 					}
 					Err(e) => {
-						yazi_macro::error!("Failed to update {url}: {e:?}");
+						error!("Failed to update {url}: {e:?}");
 						continue;
 					}
 				};
 
-				if !engine::local::match_name_case(path).await {
-					ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
-					continue;
-				}
-
-				ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
+				match Casefold::match_name_case(path).await {
+					Ok(true) => {
+						ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
+					}
+					Ok(false) => {
+						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
+					}
+					Err(e) if e.kind() == ErrorKind::NotFound && !maybe_exists(&url).await => {
+						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
+					}
+					Err(e) => {
+						error!("Failed to match filename case for {url}: {e:?}");
+					}
+				};
 			}
 
 			FilesOp::mutate(ops);
