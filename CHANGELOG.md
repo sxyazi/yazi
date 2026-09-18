@@ -22,6 +22,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Rename `Spec::is_search` property and `escape --search` action to `Spec::is_view` and `escape --view`, respectively ([#4335])
 - Move `search_title`, `search_origin`, and `search_offset` from `[input]` in `yazi.toml` to `[rg]`/`[fd]` in `theme.toml` as `title` and `position` ([#4335])
 
+### Deprecated
+
+- Deprecate `fs.cha()` and `File.cha` in favor of `fs.stat()` and `File.stat` to align with OS terminology ([#4359])
+
 ### Fixed
 
 - Compatibility with legacy Git symlinks in package cache ([#4319])
@@ -1877,3 +1881,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4343]: https://github.com/sxyazi/yazi/pull/4343
 [#4346]: https://github.com/sxyazi/yazi/pull/4346
 [#4352]: https://github.com/sxyazi/yazi/pull/4352
+[#4359]: https://github.com/sxyazi/yazi/pull/4359
