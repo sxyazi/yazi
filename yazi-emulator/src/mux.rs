@@ -15,39 +15,60 @@ pub struct Mux {
 }
 
 impl Mux {
-	pub async fn tmux_setup() {
+	pub async fn tmux_setup() -> bool {
+		let pane = std::env::var("TMUX_PANE").ok();
+		let mut args = vec!["set", "-p"];
+		if let Some(pane) = pane.as_deref() {
+			args.extend(["-t", pane]);
+		}
+		args.extend([
+			"allow-passthrough",
+			"all",
+			";",
+			"set",
+			"-s",
+			"input-buffer-size",
+			"104857600",
+			";",
+			"display",
+			"-p",
+		]);
+		if let Some(pane) = pane.as_deref() {
+			args.extend(["-t", pane]);
+		}
+		args.push("#{pane_active} #{window_active_clients}");
+
 		let output = Command::new("tmux")
-			.args([
-				"set",
-				"-p",
-				"allow-passthrough",
-				"all",
-				";",
-				"set",
-				"-s",
-				"input-buffer-size",
-				"104857600",
-			])
+			.args(args)
 			.kill_on_drop(true)
 			.stdin(Stdio::null())
-			.stdout(Stdio::null())
+			.stdout(Stdio::piped())
 			.stderr(Stdio::piped())
 			.output();
 
 		match timeout(Duration::from_secs(5), output).await {
-			Ok(Ok(o)) if o.status.success() => {}
+			Ok(Ok(o)) if o.status.success() => {
+				let stdout = String::from_utf8_lossy(&o.stdout);
+				let mut fields = stdout.split_whitespace();
+				let active = fields.next() == Some("1");
+				let clients = fields.next().and_then(|n| n.parse::<u32>().ok()).unwrap_or(0);
+				active && clients > 0
+			}
 			Ok(Ok(o)) => {
 				error!(
 					"Failed to configure tmux passthrough and input buffer: status {:?}, stderr: {}",
 					o.status,
 					String::from_utf8_lossy(&o.stderr)
 				);
+				false
 			}
 			Ok(Err(e)) => {
-				error!("Failed to start tmux while configuring passthrough and input buffer: {e}")
+				error!("Failed to start tmux while configuring passthrough and input buffer: {e}");
+				false
 			}
 			Err(_) => {
-				error!("Timed out after 5 seconds while configuring tmux passthrough and input buffer")
+				error!("Timed out after 5 seconds while configuring tmux passthrough and input buffer");
+				false
 			}
 		}
 	}

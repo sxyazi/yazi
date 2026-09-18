@@ -13,7 +13,7 @@ impl Actor for Passthrough {
 
 	const NAME: &str = "passthrough";
 
-	fn act(cx: &mut Ctx, PassthroughForm { id }: Self::Form) -> Result<Data> {
+	fn act(cx: &mut Ctx, PassthroughForm { id, passthrough }: Self::Form) -> Result<Data> {
 		if cx.term.is_none() {
 			succ!();
 		}
@@ -22,7 +22,7 @@ impl Actor for Passthrough {
 			succ!();
 		}
 
-		if let Err(e) = EMULATOR.restart() {
+		if let Err(e) = EMULATOR.restart(passthrough) {
 			error!("Failed to request terminal capabilities through tmux: {e}");
 		} else {
 			render_force!();

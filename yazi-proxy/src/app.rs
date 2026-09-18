@@ -5,8 +5,8 @@ use yazi_shared::id::Id;
 pub struct AppProxy;
 
 impl AppProxy {
-	pub fn passthrough(id: Id) {
-		emit!(Call(relay!(app:passthrough).with("id", id)));
+	pub fn passthrough(id: Id, passthrough: bool) {
+		emit!(Call(relay!(app:passthrough).with("id", id).with("passthrough", passthrough)));
 	}
 
 	pub fn plugin_do(opt: PluginOpt) {

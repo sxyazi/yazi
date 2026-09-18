@@ -45,8 +45,8 @@ impl Report {
 	fn reprobe() {
 		let id = EMULATOR.probe.id.get();
 		tokio::spawn(async move {
-			Mux::tmux_setup().await;
-			AppProxy::passthrough(id);
+			let passthrough = Mux::tmux_setup().await;
+			AppProxy::passthrough(id, passthrough);
 		});
 	}
 }

@@ -4,7 +4,8 @@ use yazi_shared::{event::ActionCow, id::Id};
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub struct PassthroughForm {
-	pub id: Id,
+	pub id:          Id,
+	pub passthrough: bool,
 }
 
 impl TryFrom<ActionCow> for PassthroughForm {

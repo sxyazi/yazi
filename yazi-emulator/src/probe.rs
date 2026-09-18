@@ -96,9 +96,11 @@ impl Emulator {
 					return Ok(emulator);
 				}
 
-				Mux::tmux_setup().await;
-				if let Err(e) = emulator.restart() {
+				let passthrough = Mux::tmux_setup().await;
+				if let Err(e) = emulator.restart(passthrough) {
 					error!("Failed to request terminal capabilities through tmux: {e}");
+					return Ok(emulator);
+				} else if !passthrough {
 					return Ok(emulator);
 				}
 			}

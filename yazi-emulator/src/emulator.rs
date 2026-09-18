@@ -59,8 +59,13 @@ impl Emulator {
 		TERM.restorer.restore(&TTY);
 	}
 
-	pub fn restart(&self) -> Result<()> {
+	pub fn restart(&self, passthrough: bool) -> Result<()> {
 		self.mux.set(Some(Mux { sixel: self.sixel.get() }));
+
+		if !passthrough {
+			self.probe.complete();
+			return Ok(());
+		}
 
 		// Only these requests are passed through tmux after restarting.
 		self.brand.set(Brand::Unknown);
