@@ -2,9 +2,9 @@ use std::time::{Duration, SystemTime};
 
 use mlua::{ExternalError, Lua, Table, UserData, UserDataFields, UserDataMethods};
 
-use crate::{FsHash128, cha::{Cha, ChaKind, ChaMode}};
+use crate::{FsHash128, stat::{Stat, StatKind, StatMode}};
 
-impl Cha {
+impl Stat {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		fn parse_time(f: Option<f64>) -> mlua::Result<Option<SystemTime>> {
 			Ok(match f {
@@ -15,12 +15,12 @@ impl Cha {
 		}
 
 		lua.globals().raw_set(
-			"Cha",
+			"Stat",
 			lua.create_function(|_, t: Table| {
-				let kind = ChaKind::from_bits(t.raw_get("kind").unwrap_or_default())
+				let kind = StatKind::from_bits(t.raw_get("kind").unwrap_or_default())
 					.ok_or_else(|| "Invalid kind".into_lua_err())?;
 
-				let mode = ChaMode::try_from(t.raw_get::<u16>("mode")?)?;
+				let mode = StatMode::try_from(t.raw_get::<u16>("mode")?)?;
 
 				Ok(Self {
 					kind,
@@ -40,7 +40,7 @@ impl Cha {
 	}
 }
 
-impl UserData for Cha {
+impl UserData for Stat {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("mode", |_, me| Ok(me.mode.bits()));
 		fields.add_field_method_get("is_dir", |_, me| Ok(me.is_dir()));

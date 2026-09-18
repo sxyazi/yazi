@@ -80,7 +80,7 @@ impl Local {
 		}
 
 		match engine::local::Local::regular(path).metadata().await {
-			Ok(cha) => PARTITIONS.read().soundless(cha),
+			Ok(stat) => PARTITIONS.read().soundless(stat),
 			Err(_) => true,
 		}
 	}

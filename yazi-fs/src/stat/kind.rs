@@ -6,7 +6,7 @@ use yazi_shared::strand::AsStrand;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
-	pub struct ChaKind: u8 {
+	pub struct StatKind: u8 {
 		const FOLLOW  = 0b0000_0001;
 		const HIDDEN  = 0b0000_0010;
 		const SYSTEM  = 0b0000_0100;
@@ -15,7 +15,7 @@ bitflags! {
 	}
 }
 
-impl ChaKind {
+impl StatKind {
 	#[inline]
 	pub(super) fn hidden<T>(_name: T, _meta: &Metadata) -> Self
 	where

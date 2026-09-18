@@ -2,7 +2,7 @@ use std::{borrow::Cow, mem, path::PathBuf};
 
 use mlua::{FromLua, Lua, Table, Value};
 use tokio::sync::mpsc;
-use yazi_fs::cha::Cha;
+use yazi_fs::stat::Stat;
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{TaskIn, custom::CustomIn, file::{FileProgCopy, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgMove, FileProgTrash, FileProgUpload}};
@@ -142,7 +142,7 @@ pub struct FileInCopy {
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
 	pub(crate) force:  bool,
-	pub(crate) cha:    Option<Cha>,
+	pub(crate) stat:   Option<Stat>,
 	pub(crate) follow: bool,
 	pub(crate) retry:  u8,
 }
@@ -170,7 +170,7 @@ impl FileInCopy {
 			from,
 			to,
 			force,
-			cha: None,
+			stat: None,
 			retry: 0,
 		}
 	}
@@ -184,7 +184,7 @@ impl FileInCopy {
 			force:    true,
 			follow:   true,
 			delete:   false,
-			cha:      self.cha,
+			stat:     self.stat,
 		}
 	}
 }
@@ -202,7 +202,7 @@ pub struct FileInMove {
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
 	pub(crate) force:  bool,
-	pub(crate) cha:    Option<Cha>,
+	pub(crate) stat:   Option<Stat>,
 	pub(crate) follow: bool,
 	pub(crate) retry:  u8,
 	pub(crate) drop:   Option<mpsc::Sender<()>>,
@@ -235,7 +235,7 @@ impl FileInMove {
 			from,
 			to,
 			force,
-			cha: None,
+			stat: None,
 			retry: 0,
 			drop: None,
 		}
@@ -250,7 +250,7 @@ impl FileInMove {
 			force:    true,
 			follow:   true,
 			delete:   true,
-			cha:      self.cha,
+			stat:     self.stat,
 		}
 	}
 
@@ -277,12 +277,12 @@ pub struct FileInLink {
 	pub(crate) force:    bool,
 	pub(crate) follow:   bool,
 	pub(crate) delete:   bool,
-	pub(crate) cha:      Option<Cha>,
+	pub(crate) stat:     Option<Stat>,
 }
 
 impl FileInLink {
 	pub fn new(from: UrlBuf, to: UrlBuf, relative: bool, force: bool, follow: bool) -> Self {
-		Self { id: Id::ZERO, from, to, relative, force, follow, delete: false, cha: None }
+		Self { id: Id::ZERO, from, to, relative, force, follow, delete: false, stat: None }
 	}
 }
 
@@ -308,7 +308,7 @@ pub(crate) struct FileInHardlink {
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
 	pub(crate) force:  bool,
-	pub(crate) cha:    Option<Cha>,
+	pub(crate) stat:   Option<Stat>,
 	pub(crate) follow: bool,
 }
 
@@ -332,7 +332,7 @@ impl TaskIn for FileInHardlink {
 pub(crate) struct FileInDelete {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
-	pub(crate) cha:    Option<Cha>,
+	pub(crate) stat:   Option<Stat>,
 }
 
 impl TaskIn for FileInDelete {
@@ -373,7 +373,7 @@ impl TaskIn for FileInTrash {
 pub(crate) struct FileInDownload {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
-	pub(crate) cha:    Option<Cha>,
+	pub(crate) stat:   Option<Stat>,
 	pub(crate) retry:  u8,
 }
 
@@ -395,7 +395,7 @@ impl TaskIn for FileInDownload {
 pub(crate) struct FileInUpload {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
-	pub(crate) cha:    Option<Cha>,
+	pub(crate) stat:   Option<Stat>,
 	pub(crate) cache:  Option<PathBuf>,
 }
 

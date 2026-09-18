@@ -4,8 +4,8 @@ use trash::os_limited;
 use yazi_macro::ok_or_not_found;
 use yazi_shim::Twox128;
 
-use super::{super::{TrashCha, TrashEntries, TrashEntry, TrashId, restore_item}, TrashInfo};
-use crate::{cha::{Cha, ChaSig}, file::File};
+use super::{super::{TrashEntries, TrashEntry, TrashId, TrashStat, restore_item}, TrashInfo};
+use crate::{file::File, stat::{Stat, StatSig}};
 
 pub struct Trash;
 
@@ -17,7 +17,7 @@ impl Trash {
 			return self.tops();
 		};
 
-		if !entry.lcha.is_dir() {
+		if !entry.lstat.is_dir() {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"));
 		}
 
@@ -51,8 +51,8 @@ impl Trash {
 		TrashEntry::new(id.clone(), backing, Some(original))
 	}
 
-	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Cha> {
-		Ok(if follow { entry.cha } else { entry.lcha })
+	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Stat> {
+		Ok(if follow { entry.stat } else { entry.lstat })
 	}
 
 	pub(crate) fn revalidate(
@@ -69,20 +69,20 @@ impl Trash {
 			let mut h = Twox128::default();
 			for root in roots {
 				let meta = ok_or_not_found!(fs::metadata(root.join("info")), continue);
-				let cha = Cha::new(root.file_name().unwrap_or_default(), meta);
+				let stat = Stat::new(root.file_name().unwrap_or_default(), meta);
 
 				root.hash(&mut h);
-				ChaSig(cha).hash(&mut h);
+				StatSig(stat).hash(&mut h);
 			}
 
 			let hash = h.finish_128();
 			File {
-				cha: Cha { len: hash as u64 ^ (hash >> 64) as u64, ..Cha::from_mold(true) },
+				stat: Stat { len: hash as u64 ^ (hash >> 64) as u64, ..Stat::from_mold(true) },
 				..current.clone()
 			}
 		};
 
-		let changed = !latest.cha.hits(current.cha)
+		let changed = !latest.hits(current)
 			|| latest.extra.link_to() != current.extra.link_to()
 			|| latest.extra.backing() != current.extra.backing();
 
@@ -127,7 +127,7 @@ impl Trash {
 
 	pub(crate) fn empty(&self) -> io::Result<()> {
 		for entry in self.tops()? {
-			if entry.lcha.is_dir() {
+			if entry.lstat.is_dir() {
 				fs::remove_dir_all(&entry.backing)?;
 			} else {
 				fs::remove_file(&entry.backing)?;

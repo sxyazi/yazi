@@ -49,7 +49,7 @@ end
 
 function Status:length()
 	local h = self._current.hovered
-	local len = h and h.cha.len or 0
+	local len = h and h.stat.len or 0
 
 	local style = self:style()
 	return ui.Line {
@@ -73,7 +73,7 @@ function Status:perm()
 		return ""
 	end
 
-	local perm = h.cha:perm()
+	local perm = h.stat:perm()
 	if not perm then
 		return ""
 	end

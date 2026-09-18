@@ -74,7 +74,7 @@ impl VfsEntries for Entries {
 			}
 			Some(new) if !new.is_dir() => Err(io::ErrorKind::NotADirectory.into()),
 			Some(new) => Ok(Some(new)),
-			None if PARTITIONS.read().timeless(old.cha) => Ok(Some(old.clone())),
+			None if PARTITIONS.read().timeless(old.stat) => Ok(Some(old.clone())),
 			None => Ok(None),
 		}
 	}

@@ -4,7 +4,7 @@ use parking_lot::RwLock;
 use yazi_shim::cell::RoCell;
 
 use super::Partition;
-use crate::cha::Cha;
+use crate::stat::Stat;
 
 pub(super) type Locked = RwLock<Partitions>;
 
@@ -31,10 +31,10 @@ impl Partitions {
 		self.inner.iter().find(|p| p.rdev == Some(dev))
 	}
 
-	pub fn timeless(&self, _cha: Cha) -> bool {
+	pub fn timeless(&self, _stat: Stat) -> bool {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		{
-			self.by_dev(_cha.dev).is_some_and(|p| p.timeless())
+			self.by_dev(_stat.dev).is_some_and(|p| p.timeless())
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{
@@ -43,10 +43,10 @@ impl Partitions {
 		}
 	}
 
-	pub fn soundless(&self, _cha: Cha) -> bool {
+	pub fn soundless(&self, _stat: Stat) -> bool {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		{
-			self.by_dev(_cha.dev).is_some_and(|p| p.soundless())
+			self.by_dev(_stat.dev).is_some_and(|p| p.soundless())
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{

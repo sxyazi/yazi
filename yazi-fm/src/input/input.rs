@@ -4,7 +4,7 @@ use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, text::Line, widgets::
 use ratatui_widgets::{block::Block, borders::BorderType};
 use yazi_config::{Icon, THEME};
 use yazi_core::Core;
-use yazi_fs::{cha::{Cha, ChaKind}, file::File};
+use yazi_fs::{file::File, stat::{Stat, StatKind}};
 use yazi_shim::path::CROSS_SEPARATOR;
 
 pub(crate) struct Input<'a> {
@@ -33,7 +33,7 @@ impl<'a> Input<'a> {
 		THEME.icon.matches(
 			&File {
 				url:   Path::new(path).into(),
-				cha:   Cha { kind: ChaKind::empty(), mode: mode.try_into().ok()?, ..Default::default() },
+				stat:  Stat { kind: StatKind::empty(), mode: mode.try_into().ok()?, ..Default::default() },
 				extra: Default::default(),
 			},
 			is_hovered,

@@ -27,14 +27,14 @@ impl From<super::lua::File> for RwFile {
 }
 
 impl RwFile {
-	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
 		Ok(match self {
 			Self::Tokio(f, url) => {
-				yazi_fs::cha::Cha::new(url.name().unwrap_or_default(), f.metadata().await?)
+				yazi_fs::stat::Stat::new(url.name().unwrap_or_default(), f.metadata().await?)
 			}
 			Self::Sftp(f, url) => {
 				let name = url.name().unwrap_or_default().encoded_bytes();
-				super::sftp::Cha::try_from((name, &f.fstat().await?))?.0
+				super::sftp::Stat::try_from((name, &f.fstat().await?))?.0
 			}
 			Self::Lua(f) => f.metadata().await?,
 		})
@@ -43,8 +43,8 @@ impl RwFile {
 	pub async fn file(&self) -> io::Result<File> {
 		Ok(match self {
 			Self::Tokio(_, url) | Self::Sftp(_, url) => {
-				let cha = self.metadata().await?;
-				File::from_follow(url.clone(), cha).await
+				let stat = self.metadata().await?;
+				File::from_follow(url.clone(), stat).await
 			}
 			Self::Lua(f) => f.file().await?,
 		})
@@ -55,9 +55,9 @@ impl RwFile {
 			return f.into_file().await;
 		}
 
-		let cha = self.metadata().await?;
+		let stat = self.metadata().await?;
 		Ok(match self {
-			Self::Tokio(_, url) | Self::Sftp(_, url) => File { url, cha, extra: Default::default() },
+			Self::Tokio(_, url) | Self::Sftp(_, url) => File { url, stat, extra: Default::default() },
 			Self::Lua(_) => unreachable!(),
 		})
 	}

@@ -3,7 +3,7 @@ use std::{io, sync::Arc};
 use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_config::vfs::{ServiceLua, Vfs};
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, Transmit}, file::File};
+use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
 use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideResult}};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
@@ -109,7 +109,7 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideJob::HardLink { from, to }).await.ok()?)
 	}
 
-	async fn metadata(&self) -> io::Result<Cha> {
+	async fn metadata(&self) -> io::Result<Stat> {
 		let url = self.url.to_owned();
 
 		Ok(self.call(ProvideJob::Metadata { url }).await.0?)
@@ -196,7 +196,7 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideJob::Symlink { original, url, is_dir: is_dir().await? }).await.ok()?)
 	}
 
-	async fn symlink_metadata(&self) -> io::Result<Cha> {
+	async fn symlink_metadata(&self) -> io::Result<Stat> {
 		let url = self.url.to_owned();
 
 		Ok(self.call(ProvideJob::SymlinkMetadata { url }).await.0?)

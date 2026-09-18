@@ -100,7 +100,7 @@ function M:tidy(tmp)
 	end
 
 	local only = #outs == 1 and outs[1]
-	if only and not only.cha.is_dir and require("archive").is_tar(only.url) then
+	if only and not only.stat.is_dir and require("archive").is_tar(only.url) then
 		self:entry { id = self.job.id, args = { tostring(only.url), tostring(to) } }
 		fs.remove("file", only.url)
 		fs.remove("dir", tmp)
@@ -108,7 +108,7 @@ function M:tidy(tmp)
 	end
 
 	local target = to:join(only and only.name or self.trim_ext(from.name))
-	target = fs.unique(only and not only.cha.is_dir and "file" or "dir", target)
+	target = fs.unique(only and not only.stat.is_dir and "file" or "dir", target)
 	if not target then
 		fail("Failed to determine a target for '%s'", from)
 	end

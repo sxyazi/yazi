@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, Transmit}, file::File};
+use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
 use super::{Engines, ReadDir, RwFile};
@@ -133,7 +133,7 @@ where
 	}
 }
 
-pub async fn metadata<U>(url: U) -> io::Result<Cha>
+pub async fn metadata<U>(url: U) -> io::Result<Stat>
 where
 	U: AsUrl,
 {
@@ -230,7 +230,7 @@ where
 	Engines::new(link.as_url()).await?.symlink(original, is_dir).await
 }
 
-pub async fn symlink_metadata<U>(url: U) -> io::Result<Cha>
+pub async fn symlink_metadata<U>(url: U) -> io::Result<Stat>
 where
 	U: AsUrl,
 {

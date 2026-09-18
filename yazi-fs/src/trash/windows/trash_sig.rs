@@ -4,7 +4,7 @@ use windows::{Win32::UI::Shell::*, core::PCWSTR};
 use yazi_shim::Twox128;
 
 use super::shell_item::ShellItem;
-use crate::cha::Cha;
+use crate::stat::Stat;
 
 pub(super) struct TrashSig {
 	names:      Option<Vec<OsString>>,
@@ -12,33 +12,33 @@ pub(super) struct TrashSig {
 }
 
 impl TrashSig {
-	pub(super) fn root() -> io::Result<Cha> {
+	pub(super) fn root() -> io::Result<Stat> {
 		let root = ShellItem::root()?;
-		let cha = root.cha()?;
+		let stat = root.stat()?;
 
 		let mut info =
 			SHQUERYRBINFO { cbSize: mem::size_of::<SHQUERYRBINFO>() as u32, ..Default::default() };
 
 		let sig = if unsafe { SHQueryRecycleBinW(PCWSTR::null(), &mut info) }.is_ok() {
 			Self { names: None, count_size: Some((info.i64NumItems, info.i64Size)) }
-		} else if cha.mtime.is_some() {
+		} else if stat.mtime.is_some() {
 			Self { names: None, count_size: None }
 		} else {
 			Self { names: Some(Self::names(&root)?), count_size: None }
 		};
 
-		Ok(sig.into_cha(cha))
+		Ok(sig.into_stat(stat))
 	}
 
-	pub(super) fn item(item: &ShellItem) -> io::Result<Cha> {
-		let cha = item.cha()?;
-		let sig = if cha.mtime.is_none() && cha.is_dir() {
+	pub(super) fn item(item: &ShellItem) -> io::Result<Stat> {
+		let stat = item.stat()?;
+		let sig = if stat.mtime.is_none() && stat.is_dir() {
 			Self { names: Some(Self::names(item)?), count_size: None }
 		} else {
 			Self { names: None, count_size: None }
 		};
 
-		Ok(sig.into_cha(cha))
+		Ok(sig.into_stat(stat))
 	}
 
 	fn names(item: &ShellItem) -> io::Result<Vec<OsString>> {
@@ -51,18 +51,18 @@ impl TrashSig {
 		Ok(names)
 	}
 
-	fn into_cha(self, mut cha: Cha) -> Cha {
+	fn into_stat(self, mut stat: Stat) -> Stat {
 		let mut h = Twox128::default();
 		if let Some((count, size)) = self.count_size {
 			(size, count).hash(&mut h);
 		} else if let Some(names) = self.names {
 			names.hash(&mut h);
 		} else {
-			return cha;
+			return stat;
 		}
 
 		let hash = h.finish_128();
-		cha.ctime = UNIX_EPOCH.checked_add(Duration::from_nanos(hash as u64 ^ (hash >> 64) as u64));
-		cha
+		stat.ctime = UNIX_EPOCH.checked_add(Duration::from_nanos(hash as u64 ^ (hash >> 64) as u64));
+		stat
 	}
 }

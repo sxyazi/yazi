@@ -1,6 +1,6 @@
 use std::{io, time::{Duration, UNIX_EPOCH}};
 
-use yazi_fs::cha::ChaKind;
+use yazi_fs::stat::StatKind;
 
 // --- Attrs
 pub(crate) struct Attrs(pub(crate) yazi_fs::engine::Attrs);
@@ -23,28 +23,28 @@ impl TryFrom<Attrs> for yazi_sftp::fs::Attrs {
 	}
 }
 
-// --- Cha
-pub(crate) struct Cha(pub(crate) yazi_fs::cha::Cha);
+// --- Stat
+pub(crate) struct Stat(pub(crate) yazi_fs::stat::Stat);
 
-impl TryFrom<&yazi_sftp::fs::DirEntry> for Cha {
+impl TryFrom<&yazi_sftp::fs::DirEntry> for Stat {
 	type Error = io::Error;
 
 	fn try_from(dent: &yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
-		let mut cha = Self::try_from((dent.name(), dent.attrs()))?;
-		cha.0.nlink = dent.nlink().unwrap_or_default();
-		Ok(cha)
+		let mut stat = Self::try_from((dent.name(), dent.attrs()))?;
+		stat.0.nlink = dent.nlink().unwrap_or_default();
+		Ok(stat)
 	}
 }
 
-impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Cha {
+impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Stat {
 	type Error = io::Error;
 
 	fn try_from((name, attrs): (&[u8], &yazi_sftp::fs::Attrs)) -> Result<Self, Self::Error> {
-		let kind = if name.starts_with(b".") { ChaKind::HIDDEN } else { ChaKind::empty() };
+		let kind = if name.starts_with(b".") { StatKind::HIDDEN } else { StatKind::empty() };
 
-		Ok(Self(yazi_fs::cha::Cha {
+		Ok(Self(yazi_fs::stat::Stat {
 			kind,
-			mode: ChaMode::try_from(attrs)?.0,
+			mode: StatMode::try_from(attrs)?.0,
 			len: attrs.size.unwrap_or(0),
 			atime: attrs.atime.and_then(|t| UNIX_EPOCH.checked_add(Duration::from_secs(t as u64))),
 			btime: None,
@@ -58,14 +58,14 @@ impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Cha {
 	}
 }
 
-// --- ChaMode
-pub(super) struct ChaMode(pub(super) yazi_fs::cha::ChaMode);
+// --- StatMode
+pub(super) struct StatMode(pub(super) yazi_fs::stat::StatMode);
 
-impl TryFrom<&yazi_sftp::fs::Attrs> for ChaMode {
+impl TryFrom<&yazi_sftp::fs::Attrs> for StatMode {
 	type Error = io::Error;
 
 	fn try_from(attrs: &yazi_sftp::fs::Attrs) -> Result<Self, Self::Error> {
-		yazi_fs::cha::ChaMode::try_from(attrs.perm.unwrap_or_default() as u16)
+		yazi_fs::stat::StatMode::try_from(attrs.perm.unwrap_or_default() as u16)
 			.map(Self)
 			.map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 	}

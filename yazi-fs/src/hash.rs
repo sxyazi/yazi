@@ -5,7 +5,7 @@ use mlua::UserDataMethods;
 use yazi_shared::{domain::Domain, id::Id, url::{AsUrl, Url, UrlBuf, UrlBufInventory}};
 use yazi_shim::Twox128;
 
-use crate::{cha::Cha, file::FileSig};
+use crate::{file::FileSig, stat::Stat};
 
 pub trait FsHash64: Hash {
 	fn hash_id(&self) -> Id { self.hash_u64().into() }
@@ -55,7 +55,7 @@ impl FsHash128 for Domain<'_> {
 	}
 }
 
-impl FsHash128 for Cha {
+impl FsHash128 for Stat {
 	fn hash_u128(&self) -> u128 {
 		let mut h = Twox128::default();
 

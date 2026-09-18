@@ -157,7 +157,7 @@ impl Entries {
 				let mut b = true;
 				for i in 0..$dist.len() {
 					if let Some(f) = $src.remove(&$dist[i].key()) {
-						b = b && $dist[i].cha.hits(f.cha);
+						b = b && $dist[i].hits(&f);
 						b = b && $dist[i].key() == f.key();
 
 						$dist[i] = f;

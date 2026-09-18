@@ -1,7 +1,7 @@
 use std::{io, path::Path};
 
 use super::super::{TrashEntries, TrashEntry, TrashId};
-use crate::{cha::Cha, file::File};
+use crate::{file::File, stat::Stat};
 
 pub struct Trash;
 
@@ -16,7 +16,7 @@ impl Trash {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 
-	pub fn metadata(&self, _entry: &TrashEntry, _: bool) -> io::Result<Cha> {
+	pub fn metadata(&self, _entry: &TrashEntry, _: bool) -> io::Result<Stat> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 

@@ -4,7 +4,7 @@ use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
-use crate::{cha::{Cha, ChaType}, engine::{Attrs, Capabilities, Transmit}, file::{File, FileExtra}};
+use crate::{engine::{Attrs, Capabilities, Transmit}, file::{File, FileExtra}, stat::{Stat, StatType}};
 
 pub trait Engine: Sized {
 	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
@@ -79,18 +79,18 @@ pub trait Engine: Sized {
 
 	fn file(&self) -> impl Future<Output = io::Result<File>> {
 		async move {
-			let cha = self.symlink_metadata().await?;
+			let lstat = self.symlink_metadata().await?;
 
 			let (mut followed, mut link_to) = (None, None);
-			if cha.is_link() {
+			if lstat.is_link() {
 				followed = self.metadata().await.ok();
 				link_to = self.read_link().await.ok();
 			}
 
 			Ok(File {
 				url:   self.url().to_owned(),
-				cha:   cha.follow(followed),
-				extra: FileExtra::new(link_to, None),
+				stat:  lstat.follow(followed),
+				extra: FileExtra::new(lstat, link_to, None),
 			})
 		}
 	}
@@ -99,7 +99,7 @@ pub trait Engine: Sized {
 	where
 		P: DynPath;
 
-	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
+	fn metadata(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	fn new<'a>(url: Url<'a>) -> impl Future<Output = io::Result<Self::Me<'a>>>;
 
@@ -118,7 +118,7 @@ pub trait Engine: Sized {
 	fn revalidate(&self, file: File) -> impl Future<Output = io::Result<Option<File>>> {
 		async move {
 			let new = self.file().await?;
-			if new.cha.hits(file.cha) { Ok(None) } else { Ok(Some(new)) }
+			if new.hits(&file) { Ok(None) } else { Ok(Some(new)) }
 		}
 	}
 
@@ -133,10 +133,10 @@ pub trait Engine: Sized {
 		{
 			let mut it = ok_or_not_found!(P::new(url).await?.read_dir().await, return Ok(()));
 			while let Some(dent) = it.next().await? {
-				let cha = ok_or_not_found!(dent.metadata().await, continue);
-				let result = if cha.is_dir() && !cha.is_indirect() {
+				let stat = ok_or_not_found!(dent.metadata().await, continue);
+				let result = if stat.is_dir() && !stat.is_indirect() {
 					Box::pin(remove_dir_all_impl::<P>(dent.url().as_url())).await
-				} else if cha.is_dir() {
+				} else if stat.is_dir() {
 					P::new(dent.url().as_url()).await?.remove_dir().await
 				} else {
 					P::new(dent.url().as_url()).await?.remove_file().await
@@ -149,10 +149,10 @@ pub trait Engine: Sized {
 		}
 
 		async move {
-			let cha = ok_or_not_found!(self.symlink_metadata().await, return Ok(()));
-			if !cha.is_indirect() {
+			let stat = ok_or_not_found!(self.symlink_metadata().await, return Ok(()));
+			if !stat.is_indirect() {
 				remove_dir_all_impl::<Self>(self.url()).await
-			} else if cha.is_dir() {
+			} else if stat.is_dir() {
 				self.remove_dir().await
 			} else {
 				self.remove_file().await
@@ -219,7 +219,7 @@ pub trait Engine: Sized {
 		self.symlink(original, async || Ok(false))
 	}
 
-	fn symlink_metadata(&self) -> impl Future<Output = io::Result<Cha>>;
+	fn symlink_metadata(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	fn trash(&self) -> impl Future<Output = io::Result<()>>;
 
@@ -247,10 +247,10 @@ pub trait FileHolder {
 	fn file(&self) -> impl Future<Output = io::Result<File>>;
 
 	#[must_use]
-	fn file_type(&self) -> impl Future<Output = io::Result<ChaType>>;
+	fn file_type(&self) -> impl Future<Output = io::Result<StatType>>;
 
 	#[must_use]
-	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
+	fn metadata(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	#[must_use]
 	fn name(&self) -> StrandCow<'_>;

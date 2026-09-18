@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{cha::Cha, engine::{Attrs, Capabilities, Engine, Transmit}, file::File};
+use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
 pub(super) enum Engines<'a> {
@@ -51,7 +51,7 @@ impl<'a> Engine for Engines<'a> {
 		dispatch!(self, hard_link, to)
 	}
 
-	async fn metadata(&self) -> io::Result<Cha> { dispatch!(self, metadata) }
+	async fn metadata(&self) -> io::Result<Stat> { dispatch!(self, metadata) }
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
 		use yazi_shared::auth::AuthKind as K;
@@ -124,7 +124,7 @@ impl<'a> Engine for Engines<'a> {
 		dispatch!(self, symlink_file, original)
 	}
 
-	async fn symlink_metadata(&self) -> io::Result<Cha> { dispatch!(self, symlink_metadata) }
+	async fn symlink_metadata(&self) -> io::Result<Stat> { dispatch!(self, symlink_metadata) }
 
 	async fn trash(&self) -> io::Result<()> { dispatch!(self, trash) }
 

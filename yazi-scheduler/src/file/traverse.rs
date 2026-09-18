@@ -1,44 +1,44 @@
 use std::{collections::VecDeque, fmt::Debug};
 
-use yazi_fs::{FsUrl, cha::Cha, engine::{DirReader, FileHolder}, path::skip_url};
+use yazi_fs::{FsUrl, engine::{DirReader, FileHolder}, path::skip_url, stat::Stat};
 use yazi_shared::{strand::StrandLike, url::{AsUrl, Url, UrlBuf, UrlLike}};
 use yazi_vfs::engine::{self};
 
 use crate::{ctx, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInMove, FileInUpload}};
 
 pub(super) trait Traverse {
-	fn cha(&mut self) -> &mut Option<Cha>;
+	fn stat(&mut self) -> &mut Option<Stat>;
 
 	fn follow(&self) -> bool;
 
 	fn from(&self) -> Url<'_>;
 
-	async fn init(&mut self) -> anyhow::Result<Cha> {
-		if self.cha().is_none() {
-			*self.cha() = Some(super::File::cha(self.from(), self.follow(), None).await?)
+	async fn init(&mut self) -> anyhow::Result<Stat> {
+		if self.stat().is_none() {
+			*self.stat() = Some(super::File::stat(self.from(), self.follow(), None).await?)
 		}
-		Ok(self.cha().unwrap())
+		Ok(self.stat().unwrap())
 	}
 
-	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, cha: Cha) -> Self;
+	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, stat: Stat) -> Self;
 
 	fn to(&self) -> Option<Url<'_>>;
 }
 
 impl Traverse for FileInCopy {
-	fn cha(&mut self) -> &mut Option<Cha> { &mut self.cha }
+	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
 
 	fn follow(&self) -> bool { self.follow }
 
 	fn from(&self) -> Url<'_> { self.from.as_url() }
 
-	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, cha: Cha) -> Self {
+	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, stat: Stat) -> Self {
 		Self {
 			id: self.id,
 			from,
 			to: to.unwrap(),
 			force: self.force,
-			cha: Some(cha),
+			stat: Some(stat),
 			follow: self.follow,
 			retry: self.retry,
 		}
@@ -48,19 +48,19 @@ impl Traverse for FileInCopy {
 }
 
 impl Traverse for FileInMove {
-	fn cha(&mut self) -> &mut Option<Cha> { &mut self.cha }
+	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
 
 	fn follow(&self) -> bool { self.follow }
 
 	fn from(&self) -> Url<'_> { self.from.as_url() }
 
-	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, cha: Cha) -> Self {
+	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, stat: Stat) -> Self {
 		Self {
 			id: self.id,
 			from,
 			to: to.unwrap(),
 			force: self.force,
-			cha: Some(cha),
+			stat: Some(stat),
 			follow: self.follow,
 			retry: self.retry,
 			drop: self.drop.clone(),
@@ -71,19 +71,19 @@ impl Traverse for FileInMove {
 }
 
 impl Traverse for FileInHardlink {
-	fn cha(&mut self) -> &mut Option<Cha> { &mut self.cha }
+	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
 
 	fn follow(&self) -> bool { self.follow }
 
 	fn from(&self) -> Url<'_> { self.from.as_url() }
 
-	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, cha: Cha) -> Self {
+	fn spawn(&self, from: UrlBuf, to: Option<UrlBuf>, stat: Stat) -> Self {
 		Self {
 			id: self.id,
 			from,
 			to: to.unwrap(),
 			force: self.force,
-			cha: Some(cha),
+			stat: Some(stat),
 			follow: self.follow,
 		}
 	}
@@ -92,52 +92,52 @@ impl Traverse for FileInHardlink {
 }
 
 impl Traverse for FileInDelete {
-	fn cha(&mut self) -> &mut Option<Cha> { &mut self.cha }
+	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
 
 	fn follow(&self) -> bool { false }
 
 	fn from(&self) -> Url<'_> { self.target.as_url() }
 
-	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
-		Self { id: self.id, target: from, cha: Some(cha) }
+	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, stat: Stat) -> Self {
+		Self { id: self.id, target: from, stat: Some(stat) }
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }
 }
 
 impl Traverse for FileInDownload {
-	fn cha(&mut self) -> &mut Option<Cha> { &mut self.cha }
+	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
 
 	fn follow(&self) -> bool { true }
 
 	fn from(&self) -> Url<'_> { self.target.as_url() }
 
-	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
-		Self { id: self.id, target: from, cha: Some(cha), retry: self.retry }
+	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, stat: Stat) -> Self {
+		Self { id: self.id, target: from, stat: Some(stat), retry: self.retry }
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }
 }
 
 impl Traverse for FileInUpload {
-	fn cha(&mut self) -> &mut Option<Cha> { &mut self.cha }
+	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
 
 	fn follow(&self) -> bool { true }
 
 	fn from(&self) -> Url<'_> { self.target.as_url() }
 
-	async fn init(&mut self) -> anyhow::Result<Cha> {
-		if self.cha.is_none() {
-			self.cha = Some(super::File::cha(self.from(), self.follow(), None).await?)
+	async fn init(&mut self) -> anyhow::Result<Stat> {
+		if self.stat.is_none() {
+			self.stat = Some(super::File::stat(self.from(), self.follow(), None).await?)
 		}
 		if self.cache.is_none() {
 			self.cache = self.target.cache_entry();
 		}
-		Ok(self.cha.unwrap())
+		Ok(self.stat.unwrap())
 	}
 
-	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, cha: Cha) -> Self {
-		Self { id: self.id, cha: Some(cha), cache: from.cache_entry(), target: from }
+	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, stat: Stat) -> Self {
+		Self { id: self.id, stat: Some(stat), cache: from.cache_entry(), target: from }
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }
@@ -154,14 +154,14 @@ where
 	O: Debug + From<anyhow::Error>,
 	I: Debug + Traverse,
 	D: AsyncFn(Url) -> Result<(), O>,
-	FC: FnMut(I, Cha) -> FR,
+	FC: FnMut(I, Stat) -> FR,
 	FR: Future<Output = Result<(), O>>,
 	E: Fn(String),
 {
-	let cha = ctx!(task, task.init().await)?;
-	let follow_symlink = cha.is_link() && task.follow();
-	if !cha.is_dir() || (!follow_symlink && cha.is_indirect()) {
-		return on_file(task, cha).await;
+	let stat = ctx!(task, task.init().await)?;
+	let follow_symlink = stat.is_link() && task.follow();
+	if !stat.is_dir() || (!follow_symlink && stat.is_indirect()) {
+		return on_file(task, stat).await;
 	}
 
 	let root = task.to();
@@ -194,13 +194,13 @@ where
 
 		while let Ok(Some(dent)) = it.next().await {
 			let from = dent.url();
-			let cha = err!(
-				super::File::cha(&from, task.follow(), Some(dent)).await,
+			let stat = err!(
+				super::File::stat(&from, task.follow(), Some(dent)).await,
 				"Cannot get metadata for {from}"
 			);
 
-			let follow_symlink = cha.is_link() && task.follow();
-			if cha.is_dir() && (follow_symlink || !cha.is_indirect()) {
+			let follow_symlink = stat.is_link() && task.follow();
+			if stat.is_dir() && (follow_symlink || !stat.is_indirect()) {
 				dirs.push_back(from);
 				continue;
 			}
@@ -212,7 +212,7 @@ where
 				None
 			};
 
-			err!(on_file(task.spawn(from, to, cha), cha).await, "Cannot process file");
+			err!(on_file(task.spawn(from, to, stat), stat).await, "Cannot process file");
 		}
 	}
 

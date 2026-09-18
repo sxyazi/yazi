@@ -1,9 +1,11 @@
 use std::{path::{Path, PathBuf}, sync::Arc};
 
-use mlua::{FromLua, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, Lua, Table, Value};
 use serde::{Deserialize, Serialize};
 use serde_with::{TryFromInto, serde_as};
 use yazi_shared::path::PathBufDyn;
+
+use crate::stat::{Stat, StatKind};
 
 #[repr(transparent)]
 #[derive(Clone, Debug, Default)]
@@ -11,52 +13,56 @@ pub struct FileExtra(Option<Arc<FileExtraInner>>);
 
 #[serde_as]
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct FileExtraInner {
-	link_to: Option<PathBufDyn>,
+pub(super) struct FileExtraInner {
+	pub(super) lstat:   Stat,
+	pub(super) link_to: Option<PathBufDyn>,
 	#[serde_as(as = "Option<TryFromInto<PathBufDyn>>")]
-	backing: Option<PathBuf>,
+	pub(super) backing: Option<PathBuf>,
 }
 
 impl FileExtra {
 	#[inline]
-	pub fn new(link_to: Option<PathBufDyn>, backing: Option<PathBuf>) -> Self {
+	pub fn new(lstat: Stat, link_to: Option<PathBufDyn>, backing: Option<PathBuf>) -> Self {
 		Self(
-			(link_to.is_some() || backing.is_some())
-				.then(|| Arc::new(FileExtraInner { link_to, backing })),
+			(lstat.is_link() || link_to.is_some() || backing.is_some())
+				.then(|| Arc::new(FileExtraInner { lstat, link_to, backing })),
 		)
 	}
 
 	#[inline]
-	pub fn link_to(&self) -> Option<&PathBufDyn> { self.0.as_ref()?.link_to.as_ref() }
+	pub(super) fn as_ref(&self) -> Option<&FileExtraInner> { self.0.as_deref() }
 
 	#[inline]
-	pub(crate) fn backing(&self) -> Option<&Path> { self.0.as_ref()?.backing.as_deref() }
+	pub(super) fn lstat(&self) -> Option<Stat> { Some(self.as_ref()?.lstat) }
+
+	#[inline]
+	pub fn link_to(&self) -> Option<&PathBufDyn> { self.as_ref()?.link_to.as_ref() }
+
+	#[inline]
+	pub(crate) fn backing(&self) -> Option<&Path> { self.as_ref()?.backing.as_deref() }
 }
 
 impl TryFrom<Table> for FileExtra {
 	type Error = mlua::Error;
 
 	fn try_from(value: Table) -> Result<Self, Self::Error> {
+		let lstat: Stat = value.raw_get("lstat")?;
+		if lstat.kind.contains(StatKind::FOLLOW) {
+			return Err("File requires unfollowed metadata in `lstat`".into_lua_err());
+		}
+
 		Ok(Self::new(
+			lstat,
 			value.raw_get("link_to")?,
 			value.raw_get::<Option<PathBufDyn>>("backing")?.map(PathBufDyn::into_os).transpose()?,
 		))
 	}
 }
 
-impl Serialize for FileExtra {
-	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		match &self.0 {
-			Some(inner) => inner.serialize(serializer),
-			None => FileExtraInner::default().serialize(serializer),
-		}
-	}
-}
-
 impl<'de> Deserialize<'de> for FileExtra {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
 		let inner = FileExtraInner::deserialize(deserializer)?;
-		Ok(Self::new(inner.link_to, inner.backing))
+		Ok(Self::new(inner.lstat, inner.link_to, inner.backing))
 	}
 }
 

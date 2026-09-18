@@ -84,7 +84,7 @@ function M:provide(job)
 			if path then
 				local file = search.file(path)
 				if file then
-					coroutine.yield { file = file, cha = file.cha }
+					coroutine.yield(file)
 				end
 			end
 		end

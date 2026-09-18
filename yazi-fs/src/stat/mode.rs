@@ -5,11 +5,11 @@ use bitflags::bitflags;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 
-use crate::cha::ChaType;
+use crate::stat::StatType;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
-	pub struct ChaMode: u16 {
+	pub struct StatMode: u16 {
 		// File type
 		const T_MASK   = 0b1111_0000_0000_0000;
 		const T_SOCK   = 0b1100_0000_0000_0000;
@@ -41,25 +41,25 @@ bitflags! {
 	}
 }
 
-impl Deref for ChaMode {
-	type Target = ChaType;
+impl Deref for StatMode {
+	type Target = StatType;
 
 	#[inline]
 	fn deref(&self) -> &Self::Target {
 		match *self & Self::T_MASK {
-			Self::T_FILE => &ChaType::File,
-			Self::T_DIR => &ChaType::Dir,
-			Self::T_LINK => &ChaType::Link,
-			Self::T_BLOCK => &ChaType::Block,
-			Self::T_CHAR => &ChaType::Char,
-			Self::T_SOCK => &ChaType::Sock,
-			Self::T_FIFO => &ChaType::FIFO,
-			_ => &ChaType::Unknown,
+			Self::T_FILE => &StatType::File,
+			Self::T_DIR => &StatType::Dir,
+			Self::T_LINK => &StatType::Link,
+			Self::T_BLOCK => &StatType::Block,
+			Self::T_CHAR => &StatType::Char,
+			Self::T_SOCK => &StatType::Sock,
+			Self::T_FIFO => &StatType::FIFO,
+			_ => &StatType::Unknown,
 		}
 	}
 }
 
-impl TryFrom<u16> for ChaMode {
+impl TryFrom<u16> for StatMode {
 	type Error = anyhow::Error;
 
 	fn try_from(value: u16) -> Result<Self, Self::Error> {
@@ -78,15 +78,15 @@ impl TryFrom<u16> for ChaMode {
 }
 
 #[cfg(unix)]
-impl From<ChaMode> for std::fs::Permissions {
-	fn from(value: ChaMode) -> Self {
+impl From<StatMode> for std::fs::Permissions {
+	fn from(value: StatMode) -> Self {
 		use std::os::unix::fs::PermissionsExt;
 
 		Self::from_mode(value.bits() as _)
 	}
 }
 
-impl ChaMode {
+impl StatMode {
 	// Convert a file mode to a string representation
 	#[cfg(unix)]
 	#[allow(clippy::collapsible_else_if)]
@@ -95,12 +95,12 @@ impl ChaMode {
 
 		// File type
 		s[0] = match *self {
-			ChaType::Dir => b'd',
-			ChaType::Link => b'l',
-			ChaType::Block => b'b',
-			ChaType::Char => b'c',
-			ChaType::Sock => b's',
-			ChaType::FIFO => b'p',
+			StatType::Dir => b'd',
+			StatType::Link => b'l',
+			StatType::Block => b'b',
+			StatType::Char => b'c',
+			StatType::Sock => b's',
+			StatType::FIFO => b'p',
 			_ => b'-',
 		};
 		if dummy {
@@ -137,21 +137,21 @@ impl ChaMode {
 		s
 	}
 
-	pub(super) fn from_bare(r#type: ChaType) -> Self {
+	pub(super) fn from_bare(r#type: StatType) -> Self {
 		match r#type {
-			ChaType::File => Self::T_FILE,
-			ChaType::Dir => Self::T_DIR,
-			ChaType::Link => Self::T_LINK,
-			ChaType::Block => Self::T_BLOCK,
-			ChaType::Char => Self::T_CHAR,
-			ChaType::Sock => Self::T_SOCK,
-			ChaType::FIFO => Self::T_FIFO,
-			ChaType::Unknown => Self::empty(),
+			StatType::File => Self::T_FILE,
+			StatType::Dir => Self::T_DIR,
+			StatType::Link => Self::T_LINK,
+			StatType::Block => Self::T_BLOCK,
+			StatType::Char => Self::T_CHAR,
+			StatType::Sock => Self::T_SOCK,
+			StatType::FIFO => Self::T_FIFO,
+			StatType::Unknown => Self::empty(),
 		}
 	}
 }
 
-impl ChaMode {
+impl StatMode {
 	// TODO: deprecate
 	#[inline]
 	pub const fn is_exec(self) -> bool { self.contains(Self::U_EXEC) }
@@ -160,6 +160,6 @@ impl ChaMode {
 	pub const fn is_sticky(self) -> bool { self.contains(Self::S_STICKY) }
 }
 
-impl IntoLua for ChaMode {
+impl IntoLua for StatMode {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.bits().into_lua(lua) }
 }

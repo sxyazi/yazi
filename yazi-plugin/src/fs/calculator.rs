@@ -8,10 +8,10 @@ pub enum SizeCalculator {
 
 impl UserData for SizeCalculator {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("cha", |_, me| {
+		fields.add_field_method_get("stat", |_, me| {
 			Ok(match me {
-				Self::Local(c) => c.cha(),
-				Self::Virtual(c) => c.cha(),
+				Self::Local(c) => c.stat(),
+				Self::Virtual(c) => c.stat(),
 			})
 		});
 	}

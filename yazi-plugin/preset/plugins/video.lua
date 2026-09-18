@@ -33,8 +33,8 @@ function M:preload(job)
 		return true
 	end
 
-	local cha = fs.cha(cache)
-	if cha and cha.len > 0 then
+	local stat = fs.stat(cache)
+	if stat and stat.len > 0 then
 		return true
 	end
 

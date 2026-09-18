@@ -15,7 +15,8 @@ pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 		match key {
 			b"access" => access(lua)?,
 			b"calc_size" => calc_size(lua)?,
-			b"cha" => cha(lua)?,
+			b"cha" => stat(lua)?, // TODO: remove
+			b"stat" => stat(lua)?,
 			b"clean_url" => clean_url(lua)?,
 			b"copy" => copy(lua)?,
 			b"create" => create(lua)?,
@@ -61,12 +62,12 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
-fn cha(lua: &Lua) -> mlua::Result<Function> {
+fn stat(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, follow): (UrlRef, bool)| async move {
-		let cha =
+		let stat =
 			if follow { engine::metadata(&*url).await } else { engine::symlink_metadata(&*url).await };
 
-		match cha {
+		match stat {
 			Ok(c) => c.into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 		}

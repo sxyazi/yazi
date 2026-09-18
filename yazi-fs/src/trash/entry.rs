@@ -7,13 +7,13 @@ use yazi_shared::path::PathBufDyn;
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::TrashId;
-use crate::cha::Cha;
+use crate::stat::Stat;
 
 #[derive(Clone, Debug)]
 pub(crate) struct TrashEntry {
 	pub(super) id:       TrashId,
-	pub(super) cha:      Cha,
-	pub(super) lcha:     Cha,
+	pub(super) stat:     Stat,
+	pub(super) lstat:    Stat,
 	pub(super) original: Option<PathBuf>,
 	pub(super) link_to:  Option<PathBuf>,
 	pub(super) backing:  PathBuf,
@@ -31,7 +31,7 @@ impl TrashEntry {
 	where
 		B: Into<PathBuf>,
 	{
-		use super::TrashCha;
+		use super::TrashStat;
 		let backing = backing.into();
 
 		let name = id
@@ -42,10 +42,10 @@ impl TrashEntry {
 			.filter(|name| !name.is_empty())
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid trash item path"))?;
 
-		let (lcha, cha) = Cha::from_trash(&backing, name)?;
-		let link_to = if lcha.is_link() { std::fs::read_link(&backing).ok() } else { None };
+		let (lstat, stat) = Stat::from_trash(&backing, name)?;
+		let link_to = if lstat.is_link() { std::fs::read_link(&backing).ok() } else { None };
 
-		Ok(Self { id, cha, lcha, original, link_to, backing })
+		Ok(Self { id, stat, lstat, original, link_to, backing })
 	}
 
 	#[cfg(trash_unix)]
@@ -74,14 +74,14 @@ impl TrashEntry {
 			.expect("trash entry must have a name")
 	}
 
-	#[cfg(trash_unix)]
+	#[cfg(any(trash_unix, windows))]
 	pub(super) fn into_file(self, url: impl Into<yazi_shared::url::UrlBuf>) -> crate::file::File {
 		use crate::file::{File, FileExtra};
 
 		File {
 			url:   url.into(),
-			cha:   self.cha,
-			extra: FileExtra::new(self.link_to.map(Into::into), Some(self.backing)),
+			stat:  self.stat,
+			extra: FileExtra::new(self.lstat, self.link_to.map(Into::into), Some(self.backing)),
 		}
 	}
 }
@@ -100,8 +100,8 @@ impl UserData for TrashEntry {
 		});
 		fields.add_cached_field("rel", |_, me| Ok(PathBufDyn::from(me.rel())));
 		fields.add_cached_field("name", |lua, me| lua.create_string(me.name().as_encoded_bytes()));
-		fields.add_cached_field("cha", |_, me| Ok(me.cha));
-		fields.add_cached_field("lcha", |_, me| Ok(me.lcha));
+		fields.add_cached_field("stat", |_, me| Ok(me.stat));
+		fields.add_cached_field("lstat", |_, me| Ok(me.lstat));
 		fields.add_cached_field("original", |_, me| Ok(me.original.clone().map(PathBufDyn::Os)));
 		fields.add_cached_field("link_to", |_, me| Ok(me.link_to.clone().map(PathBufDyn::Os)));
 		fields.add_cached_field("backing", |_, me| Ok(PathBufDyn::Os(me.backing.clone())));

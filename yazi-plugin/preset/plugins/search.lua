@@ -8,7 +8,7 @@ end
 
 function M.file(url)
 	local file, err = fs.file(url.physical)
-	return file and File { url = url, cha = file.cha, link_to = file.link_to }, err
+	return file and File { url = url, stat = file.stat, lstat = file.lstat, link_to = file.link_to }, err
 end
 
 return M

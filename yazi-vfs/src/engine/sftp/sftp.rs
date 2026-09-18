@@ -6,7 +6,7 @@ use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileHolder, Transmit}, f
 use yazi_sftp::fs::Attrs;
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use super::Cha;
+use super::Stat;
 use crate::engine::sftp::Conn;
 
 pub struct Sftp<'a> {
@@ -114,9 +114,9 @@ impl<'a> Engine for Sftp<'a> {
 		Ok(self.op().await?.hardlink(self.path, to).await?)
 	}
 
-	async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+	async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
 		let attrs = self.op().await?.stat(self.path).await?;
-		Ok(Cha::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
+		Ok(Stat::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
 	}
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
@@ -193,9 +193,9 @@ impl<'a> Engine for Sftp<'a> {
 		Ok(self.op().await?.symlink(original, self.path).await?)
 	}
 
-	async fn symlink_metadata(&self) -> io::Result<yazi_fs::cha::Cha> {
+	async fn symlink_metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
 		let attrs = self.op().await?.lstat(self.path).await?;
-		Ok(Cha::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
+		Ok(Stat::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
 	}
 
 	async fn trash(&self) -> io::Result<()> {

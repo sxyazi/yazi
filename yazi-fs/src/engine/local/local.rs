@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
 
-use crate::{casefold::Casefold, cha::{Cha, ChaMode}, engine::{Attrs, Capabilities, Engine, Transmit}};
+use crate::{casefold::Casefold, engine::{Attrs, Capabilities, Engine, Transmit}, stat::{Stat, StatMode}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -65,8 +65,8 @@ impl<'a> Engine for Local<'a> {
 	}
 
 	#[inline]
-	async fn metadata(&self) -> io::Result<Cha> {
-		Ok(Cha::new(self.path.file_name().unwrap_or_default(), tokio::fs::metadata(self.path).await?))
+	async fn metadata(&self) -> io::Result<Stat> {
+		Ok(Stat::new(self.path.file_name().unwrap_or_default(), tokio::fs::metadata(self.path).await?))
 	}
 
 	#[inline]
@@ -182,8 +182,8 @@ impl<'a> Engine for Local<'a> {
 	}
 
 	#[inline]
-	async fn symlink_metadata(&self) -> io::Result<Cha> {
-		Ok(Cha::new(
+	async fn symlink_metadata(&self) -> io::Result<Stat> {
+		Ok(Stat::new(
 			self.path.file_name().unwrap_or_default(),
 			tokio::fs::symlink_metadata(self.path).await?,
 		))
@@ -240,7 +240,7 @@ impl<'a> Local<'a> {
 		Self { url: Url::regular(path), path: path.as_ref() }
 	}
 
-	fn set_mode(path: &Path, mode: ChaMode) -> io::Result<()> {
+	fn set_mode(path: &Path, mode: StatMode) -> io::Result<()> {
 		#[cfg(unix)]
 		{
 			std::fs::set_permissions(path, mode.into())
@@ -251,7 +251,7 @@ impl<'a> Local<'a> {
 			use yazi_shim::ToWide;
 
 			let path = path.to_wide();
-			let perm = if mode.contains(ChaMode::U_WRITE) { libc::S_IWRITE } else { libc::S_IREAD };
+			let perm = if mode.contains(StatMode::U_WRITE) { libc::S_IWRITE } else { libc::S_IREAD };
 
 			let result = unsafe { libc::wchmod(path.as_ptr(), perm) };
 			if result == 0 { Ok(()) } else { Err(io::Error::last_os_error()) }

@@ -38,7 +38,7 @@ impl UserData for Trash {
 
 		methods.add_async_function("metadata", |lua, (entry, follow): (TrashEntry, bool)| async move {
 			match spawn_blocking(move || Self::new()?.metadata(&entry, follow)).await.into_lua_err()? {
-				Ok(cha) => cha.into_lua_multi(&lua),
+				Ok(stat) => stat.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
