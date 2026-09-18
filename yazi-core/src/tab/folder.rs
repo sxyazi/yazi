@@ -2,7 +2,7 @@ use std::{mem, ops::Deref};
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{Entries, FilesOp, FolderStage, cha::{ChaKind, ChaType}, file::File};
+use yazi_fs::{Entries, FilesOp, FolderStage, file::File, stat::{StatKind, StatType}};
 use yazi_macro::log_if_err;
 use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_watcher::RefreshRequest;
@@ -47,7 +47,7 @@ impl Default for Folder {
 
 impl<T: Into<UrlBuf>> From<T> for Folder {
 	fn from(value: T) -> Self {
-		Self { file: File::from_dummy(value, Some(ChaType::Dir)), ..Default::default() }
+		Self { file: File::from_dummy(value, Some(StatType::Dir)), ..Default::default() }
 	}
 }
 
@@ -74,7 +74,7 @@ impl Folder {
 				(self.file, self.stage) = (file.clone(), FolderStage::Loaded);
 			}
 			FilesOp::IOErr(_, ref err) => {
-				self.file.cha.kind.insert(ChaKind::DUMMY);
+				self.file.stat.kind.insert(StatKind::DUMMY);
 				self.stage = FolderStage::Failed(err.clone());
 			}
 			_ => {}

@@ -2,7 +2,7 @@ use std::{hash::{Hash, Hasher}, ops::Deref};
 
 use yazi_shared::url::Url;
 
-use crate::{cha::ChaSig, file::File};
+use crate::{file::File, stat::StatSig};
 
 #[derive(Clone, Copy, Debug)]
 pub struct FileSig<'a>(pub &'a File);
@@ -21,6 +21,9 @@ impl Hash for FileSig<'_> {
 			self.url.hash(state);
 		}
 
-		ChaSig(self.cha).hash(state);
+		StatSig(self.stat).hash(state);
+		if self.is_link() {
+			StatSig(self.lstat()).hash(state);
+		}
 	}
 }

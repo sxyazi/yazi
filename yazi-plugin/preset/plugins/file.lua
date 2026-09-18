@@ -31,7 +31,7 @@ function M:spot(job)
 end
 
 function M:spot_base(job)
-	local cha, pair = job.file.cha, { file = job.file, mime = job.mime }
+	local stat, pair = job.file.stat, { file = job.file, mime = job.mime }
 	local spotter, previewer, fetchers, preloaders = nil, nil, {}, {}
 
 	for _, v in pairs(rt.plugin.spotters:match(pair)) do
@@ -56,8 +56,8 @@ function M:spot_base(job)
 
 	return {
 		ui.Row({ "Base" }):style(ui.Style():fg("green")),
-		ui.Row { "  Created:", cha.btime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.btime)) or "-" },
-		ui.Row { "  Modified:", cha.mtime and os.date("%Y-%m-%d %H:%M:%S", math.floor(cha.mtime)) or "-" },
+		ui.Row { "  Created:", stat.btime and os.date("%Y-%m-%d %H:%M:%S", math.floor(stat.btime)) or "-" },
+		ui.Row { "  Modified:", stat.mtime and os.date("%Y-%m-%d %H:%M:%S", math.floor(stat.mtime)) or "-" },
 		ui.Row { "  Mimetype:", job.mime },
 		ui.Row {},
 

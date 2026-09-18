@@ -1,6 +1,6 @@
 use std::{io, path::Path, str};
 
-use yazi_fs::{FsAuth, FsHash128, FsUrl, cha::Cha, engine::{Engine, local::Local}};
+use yazi_fs::{FsAuth, FsHash128, FsUrl, engine::{Engine, local::Local}, stat::Stat};
 use yazi_shared::{strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
 pub struct Stamp(Vec<u8>);
@@ -51,9 +51,9 @@ impl Stamp {
 		Ok(url)
 	}
 
-	pub async fn write(cha: Cha, url: Url<'_>) -> io::Result<()> {
+	pub async fn write(stat: Stat, url: Url<'_>) -> io::Result<()> {
 		let path = url.stamp_entry().ok_or_else(|| io::Error::other("Cannot determine cache stamp"))?;
-		let data = Self::encode(cha, url)?;
+		let data = Self::encode(stat, url)?;
 
 		Local::regular(&path)
 			.write(data)
@@ -61,23 +61,23 @@ impl Stamp {
 			.map_err(|e| io::Error::new(e.kind(), format!("Cannot write cache stamp: {e}")))
 	}
 
-	fn encode(cha: Cha, url: Url) -> io::Result<Vec<u8>> {
+	fn encode(stat: Stat, url: Url) -> io::Result<Vec<u8>> {
 		let name = url.name().ok_or_else(|| io::Error::other("URL has no filename"))?;
 
 		let mut buf = Vec::with_capacity(Self::SIG_LEN + name.len());
-		buf.extend_from_slice(cha.hash_u128_str(&mut [0; Self::SIG_LEN]).as_bytes());
+		buf.extend_from_slice(stat.hash_u128_str(&mut [0; Self::SIG_LEN]).as_bytes());
 		buf.extend_from_slice(name.encoded_bytes());
 
 		Ok(buf)
 	}
 
-	pub fn validate(&self, cha: Cha, url: Url) -> io::Result<()> {
+	pub fn validate(&self, stat: Stat, url: Url) -> io::Result<()> {
 		let name = url.name().ok_or_else(|| io::Error::other("URL has no filename"))?;
 		if self.name() != name.encoded_bytes() {
 			return Err(io::Error::new(io::ErrorKind::InvalidData, "Cache stamp does not match target"));
 		}
 
-		if self.sig() != cha.hash_u128_str(&mut [0; Self::SIG_LEN]) {
+		if self.sig() != stat.hash_u128_str(&mut [0; Self::SIG_LEN]) {
 			return Err(io::Error::new(
 				io::ErrorKind::InvalidData,
 				"Remote file has changed since last download",

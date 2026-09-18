@@ -12,7 +12,7 @@ pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	globals.raw_set("km", crate::keymap::compose())?;
 	globals.raw_set("th", crate::theme::compose().into_lua(lua)?)?;
 
-	yazi_fs::cha::Cha::install(lua)?;
+	yazi_fs::stat::Stat::install(lua)?;
 	yazi_fs::file::File::install(lua)?;
 	yazi_shared::url::UrlBuf::install(lua)?;
 	yazi_shared::path::PathBufDyn::install(lua)?;

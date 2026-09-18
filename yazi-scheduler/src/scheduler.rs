@@ -95,7 +95,7 @@ impl Scheduler {
 	}
 
 	pub fn file_hardlink(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, force, cha: None, follow };
+		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, force, stat: None, follow };
 		self.add(&mut r#in, |_| ());
 
 		if !r#in.from.auth().same_service(r#in.to.auth()) {
@@ -114,7 +114,7 @@ impl Scheduler {
 	}
 
 	pub fn file_delete(&self, target: UrlBuf) {
-		let mut r#in = FileInDelete { id: Id::ZERO, target, cha: None };
+		let mut r#in = FileInDelete { id: Id::ZERO, target, stat: None };
 		let hook = HookInDelete::new(&r#in.target);
 
 		self.add_hooked(&mut r#in, hook, |_| ());
@@ -130,7 +130,7 @@ impl Scheduler {
 	}
 
 	pub fn file_download(&self, target: UrlBuf) -> TaskHandle {
-		let mut r#in = FileInDownload { id: Id::ZERO, target, cha: None, retry: 0 };
+		let mut r#in = FileInDownload { id: Id::ZERO, target, stat: None, retry: 0 };
 		let hook = HookInDownload::new(&r#in.target);
 		let handle = self.add_hooked(&mut r#in, hook, |t| t.handle.clone());
 
@@ -143,7 +143,7 @@ impl Scheduler {
 	}
 
 	pub fn file_upload(&self, target: UrlBuf) {
-		let mut r#in = FileInUpload { id: Id::ZERO, target, cha: None, cache: None };
+		let mut r#in = FileInUpload { id: Id::ZERO, target, stat: None, cache: None };
 		let hook = HookInUpload::new(&r#in.target);
 		self.add_hooked(&mut r#in, hook, |_| ());
 

@@ -11,18 +11,18 @@ local function stale_cache(file)
 
 	local sig = fd:read(26)
 	ya.drop(fd)
-	return sig ~= file.cha:hash(true)
+	return sig ~= file.stat:hash(true)
 end
 
 function M:fetch(job)
 	return ya.co(function()
 		local updates, unknown = {}, {}
 		for _, file in ipairs(job.files) do
-			if file.cha.is_dummy then
+			if file.stat.is_dummy then
 				coroutine.yield(file, {})
 			elseif not file.cache then
 				unknown[#unknown + 1] = file
-			elseif not fs.cha(Url(file.cache)) then
+			elseif not fs.stat(Url(file.cache)) then
 				updates[file.url] = coroutine.yield(file, { "vfs/absent" }) and "vfs/absent" or nil
 			elseif stale_cache(file) then
 				updates[file.url] = coroutine.yield(file, { "vfs/stale" }) and "vfs/stale" or nil

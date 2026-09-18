@@ -2,7 +2,7 @@ use std::{io::{self, SeekFrom}, sync::{Arc, atomic::{AtomicU64, Ordering}}};
 
 use futures::{StreamExt, TryStreamExt};
 use tokio::{io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt, BufReader, BufWriter}, select, sync::{mpsc, oneshot}};
-use yazi_fs::{cha::Cha, engine::{Attrs, FileBuilder, Transmit}};
+use yazi_fs::{engine::{Attrs, FileBuilder, Transmit}, stat::Stat};
 use yazi_shared::url::UrlBuf;
 
 use crate::engine::{self, Demand, RwFile};
@@ -46,22 +46,22 @@ impl ProgressiveCopier {
 		});
 	}
 
-	async fn init(&self) -> io::Result<(Cha, RwFile, RwFile)> {
+	async fn init(&self) -> io::Result<(Stat, RwFile, RwFile)> {
 		let src = engine::open(&self.from).await?;
-		let cha = src.metadata().await?;
+		let stat = src.metadata().await?;
 
 		let dist = engine::create(&self.to).await?;
-		dist.set_len(cha.len).await?;
-		Ok((cha, src, dist))
+		dist.set_len(stat.len).await?;
+		Ok((stat, src, dist))
 	}
 
 	async fn work(&self) -> io::Result<()> {
-		let (cha, src, dist) = self.init().await?;
+		let (stat, src, dist) = self.init().await?;
 		let (mut src, mut dist) = (Some(src), Some(dist));
 
-		let chunks = cha.len.div_ceil(PER_CHUNK);
+		let chunks = stat.len.div_ceil(PER_CHUNK);
 		let it = futures::stream::iter(0..chunks)
-			.map(|i| self.map(i, cha, chunks, src.take(), dist.take()))
+			.map(|i| self.map(i, stat, chunks, src.take(), dist.take()))
 			.buffer_unordered(4)
 			.try_fold(None, |first, file| async { Ok(first.or(file)) });
 
@@ -94,13 +94,13 @@ impl ProgressiveCopier {
 	async fn map(
 		&self,
 		i: u64,
-		cha: Cha,
+		stat: Stat,
 		chunks: u64,
 		src: Option<RwFile>,
 		dist: Option<RwFile>,
 	) -> io::Result<Option<RwFile>> {
 		let offset = i * PER_CHUNK;
-		let take = cha.len.saturating_sub(offset).min(PER_CHUNK);
+		let take = stat.len.saturating_sub(offset).min(PER_CHUNK);
 
 		let mut src = BufReader::with_capacity(BUF_SIZE, match src {
 			Some(f) => f,

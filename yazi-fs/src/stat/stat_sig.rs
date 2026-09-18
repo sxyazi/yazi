@@ -1,17 +1,17 @@
 use std::{hash::{Hash, Hasher}, ops::Deref};
 
-use crate::cha::Cha;
+use crate::stat::Stat;
 
 #[derive(Clone, Copy, Debug)]
-pub struct ChaSig(pub(crate) Cha);
+pub struct StatSig(pub(crate) Stat);
 
-impl Deref for ChaSig {
-	type Target = Cha;
+impl Deref for StatSig {
+	type Target = Stat;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl Hash for ChaSig {
+impl Hash for StatSig {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.len.hash(state);
 		self.btime.hash(state);

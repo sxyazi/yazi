@@ -1,14 +1,14 @@
 use std::{collections::VecDeque, io, time::{Duration, Instant}};
 
 use either::Either;
-use yazi_fs::{cha::Cha, engine::{DirReader, FileHolder}};
+use yazi_fs::{engine::{DirReader, FileHolder}, stat::Stat};
 use yazi_shared::url::{AsUrl, UrlBuf};
 
 use super::ReadDir;
 
 pub enum SizeCalculator {
-	File(Option<u64>, Cha),
-	Dir(VecDeque<Either<UrlBuf, ReadDir>>, Cha),
+	File(Option<u64>, Stat),
+	Dir(VecDeque<Either<UrlBuf, ReadDir>>, Stat),
 }
 
 impl SizeCalculator {
@@ -17,17 +17,17 @@ impl SizeCalculator {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		let cha = super::symlink_metadata(url).await?;
-		Ok(if cha.is_dir() && !cha.is_indirect() {
-			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]), cha)
+		let stat = super::symlink_metadata(url).await?;
+		Ok(if stat.is_dir() && !stat.is_indirect() {
+			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]), stat)
 		} else {
-			Self::File(Some(cha.len), cha)
+			Self::File(Some(stat.len), stat)
 		})
 	}
 
-	pub fn cha(&self) -> Cha {
+	pub fn stat(&self) -> Stat {
 		match *self {
-			Self::File(_, cha) | Self::Dir(_, cha) => cha,
+			Self::File(_, stat) | Self::Dir(_, stat) => stat,
 		}
 	}
 
@@ -77,11 +77,11 @@ impl SizeCalculator {
 				pop_and_continue!();
 			};
 
-			let Ok(cha) = dent.metadata().await else { continue };
-			if cha.is_dir() && !cha.is_indirect() {
+			let Ok(stat) = dent.metadata().await else { continue };
+			if stat.is_dir() && !stat.is_indirect() {
 				buf.push_back(Either::Left(dent.url()));
 			} else {
-				size += cha.len;
+				size += stat.len;
 			}
 		}
 		Some(size)

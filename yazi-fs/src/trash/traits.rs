@@ -1,29 +1,29 @@
 use std::fs;
 
-use crate::cha::{Cha, ChaKind, ChaMode};
+use crate::stat::{Stat, StatKind, StatMode};
 
-pub(super) trait TrashCha: Sized {
+pub(super) trait TrashStat: Sized {
 	fn from_mold(is_dir: bool) -> Self;
 
 	fn from_trash(path: &std::path::Path, name: &std::ffi::OsStr) -> std::io::Result<(Self, Self)>;
 }
 
-impl TrashCha for Cha {
+impl TrashStat for Stat {
 	fn from_mold(is_dir: bool) -> Self {
-		let mut cha = Self::default();
-		cha.kind.remove(ChaKind::DUMMY);
-		cha.mode = if is_dir { ChaMode::T_DIR | ChaMode::U_EXEC } else { ChaMode::T_FILE };
-		cha.mode |= ChaMode::U_READ | ChaMode::U_WRITE;
-		cha
+		let mut stat = Self::default();
+		stat.kind.remove(StatKind::DUMMY);
+		stat.mode = if is_dir { StatMode::T_DIR | StatMode::U_EXEC } else { StatMode::T_FILE };
+		stat.mode |= StatMode::U_READ | StatMode::U_WRITE;
+		stat
 	}
 
 	fn from_trash(path: &std::path::Path, name: &std::ffi::OsStr) -> std::io::Result<(Self, Self)> {
-		let lcha = Self::new(name, fs::symlink_metadata(path)?);
-		let cha = if lcha.is_link() {
-			lcha.follow(fs::metadata(path).ok().map(|meta| Self::new(name, meta)))
+		let lstat = Self::new(name, fs::symlink_metadata(path)?);
+		let stat = if lstat.is_link() {
+			lstat.follow(fs::metadata(path).ok().map(|meta| Self::new(name, meta)))
 		} else {
-			lcha
+			lstat
 		};
-		Ok((lcha, cha))
+		Ok((lstat, stat))
 	}
 }

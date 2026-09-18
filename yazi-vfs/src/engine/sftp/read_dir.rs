@@ -3,7 +3,7 @@ use std::{io, sync::Arc};
 use yazi_fs::{engine::{DirReader, FileHolder}, file::File};
 use yazi_shared::{path::PathBufDyn, strand::StrandCow, url::{UrlBuf, UrlLike}};
 
-use super::{Cha, ChaMode};
+use super::{Stat, StatMode};
 use crate::VfsFile;
 
 pub struct ReadDir {
@@ -27,15 +27,15 @@ pub struct DirEntry {
 
 impl FileHolder for DirEntry {
 	async fn file(&self) -> io::Result<File> {
-		let cha = self.metadata().await?;
-		Ok(File::from_follow(self.url(), cha).await)
+		let stat = self.metadata().await?;
+		Ok(File::from_follow(self.url(), stat).await)
 	}
 
-	async fn file_type(&self) -> io::Result<yazi_fs::cha::ChaType> {
-		Ok(ChaMode::try_from(self.dent.attrs())?.0.into())
+	async fn file_type(&self) -> io::Result<yazi_fs::stat::StatType> {
+		Ok(StatMode::try_from(self.dent.attrs())?.0.into())
 	}
 
-	async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> { Ok(Cha::try_from(&self.dent)?.0) }
+	async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> { Ok(Stat::try_from(&self.dent)?.0) }
 
 	fn name(&self) -> StrandCow<'_> { self.dent.name().into() }
 

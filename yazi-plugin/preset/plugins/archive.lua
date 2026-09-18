@@ -20,9 +20,11 @@ function M:peek(job)
 	local left, right = {}, {}
 	for i = job.skip + 1, #items do
 		local f = items[i]
+		local stat = Stat { mode = tonumber(f.is_dir and "40700" or "100644", 8) }
 		local icon = th.icon:match(File {
 			url = Url(ya.clone(f.path)),
-			cha = Cha { mode = tonumber(f.is_dir and "40700" or "100644", 8) },
+			stat = stat,
+			lstat = stat,
 		})
 
 		if f.size > 0 then
@@ -238,7 +240,7 @@ function M.should_decompress_tar(file, item)
 	elseif item.packed_size > 0 then
 		return item.packed_size <= 1024 * 1024 * 1024
 	else
-		return file.cha.len <= 100 * 1024 * 1024
+		return file.stat.len <= 100 * 1024 * 1024
 	end
 end
 

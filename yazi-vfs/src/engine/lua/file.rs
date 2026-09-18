@@ -3,7 +3,7 @@ use std::{io::{self, SeekFrom}, pin::Pin, sync::Arc, task::{Context, Poll, ready
 use mlua::BString;
 use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf};
 use yazi_config::vfs::ServiceLua;
-use yazi_fs::{cha::Cha, engine::Demand};
+use yazi_fs::{engine::Demand, stat::Stat};
 use yazi_runner::{RUNNER, provider::ProvideJob};
 use yazi_shared::url::UrlBuf;
 
@@ -52,7 +52,7 @@ impl File {
 		Ok(RUNNER.provide(self.service.clone(), ProvideJob::SetAttrs { url, attrs }).await.ok()?)
 	}
 
-	pub(crate) async fn metadata(&self) -> io::Result<Cha> {
+	pub(crate) async fn metadata(&self) -> io::Result<Stat> {
 		let url = self.url.clone();
 		Ok(RUNNER.provide(self.service.clone(), ProvideJob::Metadata { url }).await.0?)
 	}
@@ -150,7 +150,7 @@ impl AsyncSeek for File {
 				let job = ProvideJob::Metadata { url: me.url.clone() };
 				SeekState::Blocking(
 					n,
-					Box::pin(async move { Ok(RUNNER.provide::<Cha>(service, job).await.0?.len) }),
+					Box::pin(async move { Ok(RUNNER.provide::<Stat>(service, job).await.0?.len) }),
 				)
 			}
 		});

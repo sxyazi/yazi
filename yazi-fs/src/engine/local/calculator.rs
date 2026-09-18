@@ -3,34 +3,34 @@ use std::{collections::VecDeque, future::poll_fn, io, mem, path::{Path, PathBuf}
 use either::Either;
 use tokio::task::JoinHandle;
 
-use crate::cha::Cha;
+use crate::stat::Stat;
 
 type Task = Either<PathBuf, std::fs::ReadDir>;
 
 pub enum SizeCalculator {
-	Idle((VecDeque<Task>, Option<u64>), Cha),
-	Pending(JoinHandle<(VecDeque<Task>, Option<u64>)>, Cha),
+	Idle((VecDeque<Task>, Option<u64>), Stat),
+	Pending(JoinHandle<(VecDeque<Task>, Option<u64>)>, Stat),
 }
 
 impl SizeCalculator {
 	pub async fn new(path: &Path) -> io::Result<Self> {
 		let p = path.to_owned();
 		tokio::task::spawn_blocking(move || {
-			let cha = Cha::new(p.file_name().unwrap_or_default(), std::fs::symlink_metadata(&p)?);
-			if !cha.is_dir() || cha.is_indirect() {
-				return Ok(Self::Idle((VecDeque::new(), Some(cha.len)), cha));
+			let stat = Stat::new(p.file_name().unwrap_or_default(), std::fs::symlink_metadata(&p)?);
+			if !stat.is_dir() || stat.is_indirect() {
+				return Ok(Self::Idle((VecDeque::new(), Some(stat.len)), stat));
 			}
 
 			let mut buf = VecDeque::from([Either::Right(std::fs::read_dir(&p)?)]);
 			let size = Self::next_chunk(&mut buf);
-			Ok(Self::Idle((buf, size), cha))
+			Ok(Self::Idle((buf, size), stat))
 		})
 		.await?
 	}
 
-	pub fn cha(&self) -> Cha {
+	pub fn stat(&self) -> Stat {
 		match *self {
-			Self::Idle(_, cha) | Self::Pending(_, cha) => cha,
+			Self::Idle(_, stat) | Self::Pending(_, stat) => stat,
 		}
 	}
 
@@ -47,7 +47,7 @@ impl SizeCalculator {
 		poll_fn(|cx| {
 			loop {
 				match self {
-					Self::Idle((buf, size), cha) => {
+					Self::Idle((buf, size), stat) => {
 						if let Some(s) = size.take() {
 							return Poll::Ready(Ok(Some(s)));
 						} else if buf.is_empty() {
@@ -60,11 +60,11 @@ impl SizeCalculator {
 								let size = Self::next_chunk(&mut buf);
 								(buf, size)
 							}),
-							*cha,
+							*stat,
 						);
 					}
-					Self::Pending(handle, cha) => {
-						*self = Self::Idle(ready!(Pin::new(handle).poll(cx))?, *cha);
+					Self::Pending(handle, stat) => {
+						*self = Self::Idle(ready!(Pin::new(handle).poll(cx))?, *stat);
 					}
 				}
 			}
@@ -111,11 +111,11 @@ impl SizeCalculator {
 			// The entry is a directory, but it may be a reparse point
 			#[cfg(windows)]
 			{
-				let Ok(cha) = dent.metadata().map(|meta| Cha::new(dent.file_name(), meta)) else {
+				let Ok(stat) = dent.metadata().map(|meta| Stat::new(dent.file_name(), meta)) else {
 					continue;
 				};
-				if !cha.is_dir() || cha.is_indirect() {
-					size += cha.len;
+				if !stat.is_dir() || stat.is_indirect() {
+					size += stat.len;
 					continue;
 				}
 			}

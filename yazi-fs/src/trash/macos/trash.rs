@@ -2,8 +2,8 @@ use std::{fs, io, path::{Path, PathBuf}};
 
 use yazi_macro::ok_or_not_found;
 
-use super::{super::{TrashCha, TrashEntries, TrashEntry, TrashId, restore_item}, DsStore};
-use crate::{cha::Cha, file::File};
+use super::{super::{TrashEntries, TrashEntry, TrashId, TrashStat, restore_item}, DsStore};
+use crate::{file::File, stat::Stat};
 
 pub struct Trash;
 
@@ -11,7 +11,7 @@ impl Trash {
 	pub(crate) fn new() -> io::Result<Self> { Ok(Self) }
 
 	pub(crate) fn list(&self, entry: Option<&TrashEntry>) -> io::Result<Vec<TrashEntry>> {
-		if entry.is_some_and(|entry| !entry.lcha.is_dir()) {
+		if entry.is_some_and(|entry| !entry.lstat.is_dir()) {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"));
 		}
 
@@ -60,8 +60,8 @@ impl Trash {
 		TrashEntry::new(id.clone(), id.path(), original)
 	}
 
-	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Cha> {
-		Ok(if follow { entry.cha } else { entry.lcha })
+	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Stat> {
+		Ok(if follow { entry.stat } else { entry.lstat })
 	}
 
 	pub(crate) fn revalidate(
@@ -73,15 +73,15 @@ impl Trash {
 			entry.clone().into_file(&current.url)
 		} else {
 			let path = self.root()?;
-			let cha = match fs::symlink_metadata(&path) {
-				Ok(meta) => Cha::new(path.file_name().unwrap_or_default(), meta),
-				Err(e) if e.kind() == io::ErrorKind::NotFound => Cha::from_mold(true),
+			let stat = match fs::symlink_metadata(&path) {
+				Ok(meta) => Stat::new(path.file_name().unwrap_or_default(), meta),
+				Err(e) if e.kind() == io::ErrorKind::NotFound => Stat::from_mold(true),
 				Err(e) => return Err(e),
 			};
-			File { cha, ..current.clone() }
+			File { stat, ..current.clone() }
 		};
 
-		let changed = !latest.cha.hits(current.cha)
+		let changed = !latest.hits(current)
 			|| latest.extra.link_to() != current.extra.link_to()
 			|| latest.extra.backing() != current.extra.backing();
 

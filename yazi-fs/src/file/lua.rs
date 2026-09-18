@@ -17,7 +17,7 @@ impl TryFrom<Table> for File {
 	fn try_from(value: Table) -> Result<Self, Self::Error> {
 		Ok(Self {
 			url:   value.raw_get("url")?,
-			cha:   value.raw_get("cha")?,
+			stat:  value.raw_get("stat")?,
 			extra: value.try_into()?,
 		})
 	}

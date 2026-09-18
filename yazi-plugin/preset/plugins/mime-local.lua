@@ -34,7 +34,7 @@ function M:fetch(job)
 
 			f, match, ignore = job.files[i], M.match_mimetype(line)
 			if match then
-				if coroutine.yield(f, { match }) and not f.cha.is_dummy then
+				if coroutine.yield(f, { match }) and not f.stat.is_dummy then
 					updates[f.url] = match
 					flush()
 				end
@@ -106,7 +106,7 @@ function M.placeholder(err, files)
 	for _, file in ipairs(files) do
 		if err.kind ~= "NotFound" then
 			coroutine.yield(file, { error = Error(err), retry = true })
-		elseif coroutine.yield(file, { mime }) and not file.cha.is_dummy then
+		elseif coroutine.yield(file, { mime }) and not file.stat.is_dummy then
 			updates[file.url] = mime
 		end
 	end

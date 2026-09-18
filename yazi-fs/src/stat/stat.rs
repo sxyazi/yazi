@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::{strand::AsStrand, url::AsUrl};
 
-use super::ChaKind;
-use crate::cha::{ChaMode, ChaType};
+use super::StatKind;
+use crate::stat::{StatMode, StatType};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, FromLua, PartialEq, Serialize)]
-pub struct Cha {
-	pub kind:  ChaKind,
-	pub mode:  ChaMode,
+pub struct Stat {
+	pub kind:  StatKind,
+	pub mode:  StatMode,
 	pub len:   u64,
 	pub atime: Option<SystemTime>,
 	pub btime: Option<SystemTime>,
@@ -24,17 +24,17 @@ pub struct Cha {
 	pub nlink: u64,
 }
 
-impl Deref for Cha {
-	type Target = ChaMode;
+impl Deref for Stat {
+	type Target = StatMode;
 
 	fn deref(&self) -> &Self::Target { &self.mode }
 }
 
-impl Default for Cha {
+impl Default for Stat {
 	fn default() -> Self {
 		Self {
-			kind:  ChaKind::DUMMY,
-			mode:  ChaMode::empty(),
+			kind:  StatKind::DUMMY,
+			mode:  StatMode::empty(),
 			len:   0,
 			atime: None,
 			btime: None,
@@ -48,26 +48,26 @@ impl Default for Cha {
 	}
 }
 
-impl Cha {
+impl Stat {
 	#[inline]
 	pub fn new<T>(name: T, meta: Metadata) -> Self
 	where
 		T: AsStrand,
 	{
-		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta) | ChaKind::reparse(&meta))
+		Self::from_bare(&meta).attach(StatKind::hidden(name, &meta) | StatKind::reparse(&meta))
 	}
 
-	pub(crate) fn from_dummy<U>(_url: U, r#type: Option<ChaType>) -> Self
+	pub(crate) fn from_dummy<U>(_url: U, r#type: Option<StatType>) -> Self
 	where
 		U: AsUrl,
 	{
 		#[allow(unused_mut)]
-		let mut kind = ChaKind::DUMMY;
-		let mode = r#type.map(ChaMode::from_bare).unwrap_or_default();
+		let mut kind = StatKind::DUMMY;
+		let mode = r#type.map(StatMode::from_bare).unwrap_or_default();
 
 		#[cfg(unix)]
 		if _url.as_url().urn().is_hidden() {
-			kind |= ChaKind::HIDDEN;
+			kind |= StatKind::HIDDEN;
 		}
 
 		Self { kind, mode, ..Default::default() }
@@ -80,26 +80,26 @@ impl Cha {
 		#[cfg(unix)]
 		let mode = {
 			use std::os::unix::fs::PermissionsExt;
-			ChaMode::from_bits_retain(m.permissions().mode() as u16)
+			StatMode::from_bits_retain(m.permissions().mode() as u16)
 		};
 
 		#[cfg(windows)]
 		let mut mode = if m.is_file() {
-			ChaMode::T_FILE
+			StatMode::T_FILE
 		} else if m.is_dir() {
-			ChaMode::T_DIR
+			StatMode::T_DIR
 		} else if m.is_symlink() {
-			ChaMode::T_LINK
+			StatMode::T_LINK
 		} else {
-			ChaMode::empty()
+			StatMode::empty()
 		};
 		#[cfg(windows)]
 		if !m.permissions().readonly() {
-			mode |= ChaMode::U_WRITE;
+			mode |= StatMode::U_WRITE;
 		}
 
 		Self {
-			kind: ChaKind::empty(),
+			kind: StatKind::empty(),
 			mode,
 			len: m.len(),
 			atime: m.accessed().ok(),
@@ -127,7 +127,7 @@ impl Cha {
 	}
 
 	#[inline]
-	fn attach(mut self, kind: ChaKind) -> Self {
+	fn attach(mut self, kind: StatKind) -> Self {
 		self.kind |= kind;
 		self
 	}
@@ -138,35 +138,35 @@ impl Cha {
 			return self;
 		}
 
-		let retain = self.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::REPARSE);
-		followed.unwrap_or(self).attach(retain | ChaKind::FOLLOW)
+		let retain = self.kind & (StatKind::HIDDEN | StatKind::SYSTEM | StatKind::REPARSE);
+		followed.unwrap_or(self).attach(retain | StatKind::FOLLOW)
 	}
 }
 
-impl Cha {
+impl Stat {
 	#[inline]
 	pub fn is_link(self) -> bool {
-		self.kind.contains(ChaKind::FOLLOW) || *self.mode == ChaType::Link
+		self.kind.contains(StatKind::FOLLOW) || *self.mode == StatType::Link
 	}
 
 	#[inline]
 	pub fn is_orphan(self) -> bool {
-		*self.mode == ChaType::Link && self.kind.contains(ChaKind::FOLLOW)
+		*self.mode == StatType::Link && self.kind.contains(StatKind::FOLLOW)
 	}
 
 	#[inline]
 	pub const fn is_hidden(self) -> bool {
 		win_either!(
-			self.kind.contains(ChaKind::HIDDEN) || self.kind.contains(ChaKind::SYSTEM),
-			self.kind.contains(ChaKind::HIDDEN)
+			self.kind.contains(StatKind::HIDDEN) || self.kind.contains(StatKind::SYSTEM),
+			self.kind.contains(StatKind::HIDDEN)
 		)
 	}
 
 	#[inline]
-	pub const fn is_dummy(self) -> bool { self.kind.contains(ChaKind::DUMMY) }
+	pub const fn is_dummy(self) -> bool { self.kind.contains(StatKind::DUMMY) }
 
 	#[inline]
-	const fn is_reparse(self) -> bool { self.kind.contains(ChaKind::REPARSE) }
+	const fn is_reparse(self) -> bool { self.kind.contains(StatKind::REPARSE) }
 
 	#[inline]
 	pub fn is_indirect(self) -> bool { self.is_link() || self.is_reparse() }

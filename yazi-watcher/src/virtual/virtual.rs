@@ -69,7 +69,7 @@ impl Virtual {
 				};
 
 				if upload && file.is_file() {
-					file.cha.ctime = Some(SystemTime::now());
+					file.stat.ctime = Some(SystemTime::now());
 					ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
 					ups.push(url);
 					continue;

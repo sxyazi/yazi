@@ -4,7 +4,7 @@ use anyhow::Result;
 use indexmap::IndexSet;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::{cha::ChaType, file::File};
+use yazi_fs::{file::File, stat::StatType};
 use yazi_shared::url::AsUrl;
 use yazi_shim::toml::DeserializeOverHook;
 
@@ -59,7 +59,7 @@ impl Open {
 
 		let file = File::from_dummy(
 			url.as_url().to_owned(),
-			Some(if is_dir { ChaType::Dir } else { ChaType::File }),
+			Some(if is_dir { StatType::Dir } else { StatType::File }),
 		);
 
 		self.matches(&file, mime)

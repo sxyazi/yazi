@@ -1,9 +1,9 @@
 use std::fs::FileType;
 
-use crate::cha::ChaMode;
+use crate::stat::StatMode;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ChaType {
+pub enum StatType {
 	File,
 	Dir,
 	Link,
@@ -14,11 +14,11 @@ pub enum ChaType {
 	Unknown,
 }
 
-impl From<ChaMode> for ChaType {
-	fn from(value: ChaMode) -> Self { *value }
+impl From<StatMode> for StatType {
+	fn from(value: StatMode) -> Self { *value }
 }
 
-impl From<FileType> for ChaType {
+impl From<FileType> for StatType {
 	fn from(value: FileType) -> Self {
 		#[cfg(unix)]
 		{
@@ -56,7 +56,7 @@ impl From<FileType> for ChaType {
 	}
 }
 
-impl ChaType {
+impl StatType {
 	#[inline]
 	pub fn is_file(self) -> bool { self == Self::File }
 

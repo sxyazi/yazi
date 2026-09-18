@@ -44,7 +44,10 @@ impl Spot {
 
 	fn same_file(&self, file: &File, mime: &str) -> bool {
 		self.same_url(&file.url)
-			&& self.lock.as_ref().is_some_and(|l| file.cha.hits(l.cha) && mime == l.mime)
+			&& self
+				.lock
+				.as_ref()
+				.is_some_and(|l| file.stat.hits(l.stat) && file.lstat().hits(l.lstat) && mime == l.mime)
 	}
 
 	fn same_lock(&self, file: &File, mime: &str) -> bool {

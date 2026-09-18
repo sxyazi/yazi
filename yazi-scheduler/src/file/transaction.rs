@@ -1,6 +1,6 @@
 use std::{hash::{BuildHasher, Hash, Hasher}, io};
 
-use yazi_fs::{cha::ChaMode, engine::Attrs};
+use yazi_fs::{engine::Attrs, stat::StatMode};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlBuf}};
 use yazi_vfs::{engine, unique_file};
@@ -33,11 +33,11 @@ impl Transaction {
 	{
 		let url = url.as_url();
 
-		let cha = ok_or_not_found!(engine::symlink_metadata(url).await, return Ok(()));
-		if cha.is_indirect() {
+		let stat = ok_or_not_found!(engine::symlink_metadata(url).await, return Ok(()));
+		if stat.is_indirect() {
 			engine::rename(Self::tmp(url).await?, url).await?;
-		} else if !cha.contains(ChaMode::U_WRITE) {
-			engine::set_attrs(url, Attrs::mode(cha.mode | ChaMode::U_WRITE)).await?;
+		} else if !stat.contains(StatMode::U_WRITE) {
+			engine::set_attrs(url, Attrs::mode(stat.mode | StatMode::U_WRITE)).await?;
 		}
 
 		Ok(())

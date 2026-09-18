@@ -336,8 +336,8 @@ mod tests {
 
 		let file = File {
 			url:   Path::new("/logical/file").into(),
-			cha:   Default::default(),
-			extra: FileExtra::new(None, Some("/real/file".into())),
+			stat:  Default::default(),
+			extra: FileExtra::new(Default::default(), None, Some("/real/file".into())),
 		};
 
 		let s = Splatter::new(&[file]).splat(OsStr::new("%s %S %d %D"));
