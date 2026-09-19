@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- Custom sorting ([#4363])
 - Dynamic virtual filesystem Lua API ([#4338])
 
 ### Changed
@@ -1882,3 +1883,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4346]: https://github.com/sxyazi/yazi/pull/4346
 [#4352]: https://github.com/sxyazi/yazi/pull/4352
 [#4359]: https://github.com/sxyazi/yazi/pull/4359
+[#4363]: https://github.com/sxyazi/yazi/pull/4363
