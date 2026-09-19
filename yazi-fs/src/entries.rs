@@ -15,6 +15,7 @@ pub struct Entries {
 	pub revision: u64,
 
 	pub sizes: HashMap<PathBufDyn, u64>,
+	pub ranks: HashMap<PathBufDyn, i64>,
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
@@ -80,6 +81,31 @@ impl Entries {
 		}
 
 		if changed && self.sorter.by == SortBy::Size {
+			self.revision += 1;
+		}
+	}
+
+	pub fn update_rank(&mut self, mut ranks: HashMap<PathBufDyn, i64>) {
+		let mut changed = false;
+
+		if self.ranks.is_empty() {
+			ranks.retain(|key, rank| *rank != 0 && !key.is_empty());
+			(changed, self.ranks) = (!ranks.is_empty(), mem::take(&mut ranks));
+		}
+
+		for (key, rank) in ranks {
+			if key.is_empty() {
+				continue;
+			}
+
+			changed |= if rank == 0 {
+				self.ranks.remove(&key).is_some()
+			} else {
+				self.ranks.insert(key, rank) != Some(rank)
+			};
+		}
+
+		if changed && self.sorter.by == SortBy::Custom {
 			self.revision += 1;
 		}
 	}
@@ -219,7 +245,7 @@ impl Entries {
 		}
 
 		self.version = self.revision;
-		self.sorter.sort(&mut self.items, &self.sizes);
+		self.sorter.sort(&mut self.items, &self.sizes, &self.ranks);
 		true
 	}
 
@@ -277,14 +303,14 @@ impl Entries {
 			self.hidden = hidden;
 			if !items.is_empty() {
 				self.items.extend(items);
-				self.sorter.sort(&mut self.items, &self.sizes);
+				self.sorter.sort(&mut self.items, &self.sizes, &self.ranks);
 			}
 			return true;
 		}
 
 		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
 		(self.hidden, self.items) = self.split_files(it);
-		self.sorter.sort(&mut self.items, &self.sizes);
+		self.sorter.sort(&mut self.items, &self.sizes, &self.ranks);
 		true
 	}
 

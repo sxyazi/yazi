@@ -17,6 +17,7 @@ pub enum SortBy {
 	Natural,
 	Size,
 	Random,
+	Custom,
 }
 
 // --- fallback
