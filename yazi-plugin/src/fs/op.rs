@@ -38,10 +38,17 @@ impl FilesOp {
 	}
 
 	pub(super) fn size(_: &Lua, t: Table) -> mlua::Result<Self> {
-		let url: UrlBuf = t.raw_get("url")?;
-		let sizes: Table = t.raw_get("sizes")?;
+		let url = t.raw_get("url")?;
+		let sizes: mlua::Result<_> = t.raw_get::<Table>("sizes")?.pairs().collect();
 
-		Ok(Self(yazi_fs::FilesOp::Size(url, sizes.pairs().collect::<mlua::Result<_>>()?)))
+		Ok(Self(yazi_fs::FilesOp::Size(url, sizes?)))
+	}
+
+	pub(super) fn rank(_: &Lua, t: Table) -> mlua::Result<Self> {
+		let url = t.raw_get("url")?;
+		let ranks: mlua::Result<_> = t.raw_get::<Table>("ranks")?.pairs().collect();
+
+		Ok(Self(yazi_fs::FilesOp::Rank(url, ranks?)))
 	}
 
 	pub(super) fn upsert(_: &Lua, t: Table) -> mlua::Result<Self> {

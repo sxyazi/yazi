@@ -93,7 +93,7 @@ impl UpdateFiles {
 	}
 
 	fn update_current(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
-		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Deleting(..));
+		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Rank(..) | FilesOp::Deleting(..));
 
 		let id = cx.tab().id;
 		if !cx.current_mut().update_pub(id, op) {

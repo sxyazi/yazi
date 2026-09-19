@@ -9,6 +9,7 @@ pub enum FolderStage {
 	Loaded,
 	Failed(yazi_shim::fs::Error),
 }
+
 impl UserData for FolderStage {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Call, |lua, me, ()| {
