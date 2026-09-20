@@ -2,7 +2,7 @@ use std::iter;
 
 use anyhow::Result;
 use yazi_core::{Invalidator, Reconciler};
-use yazi_fs::FilesOp;
+use yazi_fs::op::FilesOp;
 use yazi_macro::{render, succ};
 use yazi_parser::{mgr::UpdateFilesForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data, url::UrlLike};
@@ -79,7 +79,7 @@ impl UpdateFiles {
 		let tab = cx.tab_mut();
 
 		let key = tab.current.url.key();
-		let leave = matches!(op, FilesOp::Deleting(_, ref keys) if keys.contains(&key));
+		let leave = matches!(op, FilesOp::Delete(_, ref keys) if keys.contains(&key));
 
 		if let Some(f) = tab.parent.as_mut() {
 			render!(f.update_pub(tab.id, op));
@@ -93,7 +93,7 @@ impl UpdateFiles {
 	}
 
 	fn update_current(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
-		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Rank(..) | FilesOp::Deleting(..));
+		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Rank(..) | FilesOp::Delete(..));
 
 		let id = cx.tab().id;
 		if !cx.current_mut().update_pub(id, op) {
@@ -119,7 +119,7 @@ impl UpdateFiles {
 	fn update_history(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let tab = cx.tab_mut();
 		let leave = tab.parent.as_ref().and_then(|f| f.url.pair()).is_some_and(
-			|(t, key)| matches!(&op, FilesOp::Deleting(trail, keys) if trail == t && keys.contains(&key)),
+			|(t, key)| matches!(&op, FilesOp::Delete(trail, keys) if trail == t && keys.contains(&key)),
 		);
 
 		let (folder, evicted) = tab.history.ensure(op.cwd());

@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Custom sorting ([#4363])
 - Dynamic virtual filesystem Lua API ([#4338])
+- New `patch` DDS event for reporting incremental changes to files ([#4365])
 
 ### Changed
 
@@ -1884,3 +1885,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4352]: https://github.com/sxyazi/yazi/pull/4352
 [#4359]: https://github.com/sxyazi/yazi/pull/4359
 [#4363]: https://github.com/sxyazi/yazi/pull/4363
+[#4365]: https://github.com/sxyazi/yazi/pull/4365

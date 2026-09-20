@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
-use yazi_fs::{FilesOp, Splatter, engine::{Engine, local::Local}};
+use yazi_fs::{Splatter, engine::{Engine, local::Local}, op::FilesOp};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;

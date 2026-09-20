@@ -3,7 +3,7 @@ use std::pin::Pin;
 use anyhow::{Result, bail};
 use tokio_stream::{Stream, StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::{YAZI, popup::ConfirmCfg};
-use yazi_fs::{FilesOp, file::File};
+use yazi_fs::{file::File, op::FilesOp};
 use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
@@ -64,7 +64,7 @@ impl Create {
 			&& let Some((trail, key)) = real.pair()
 		{
 			ok_or_not_found!(engine::remove_file(&new).await);
-			FilesOp::Deleting(trail.into(), [key.into()].into()).emit();
+			FilesOp::Delete(trail.into(), [key.into()].into()).emit();
 			engine::create(&new).await?;
 		} else if let Some(parent) = new.parent() {
 			engine::create_dir_all(parent).await.ok();
@@ -78,7 +78,7 @@ impl Create {
 			&& let Some((trail, key)) = real.pair()
 		{
 			let file = engine::file(&real).await?;
-			FilesOp::Upserting(trail.into(), [(key.into(), file)].into()).emit();
+			FilesOp::Upsert(trail.into(), [(key.into(), file)].into()).emit();
 			MgrProxy::reveal(&real);
 		}
 

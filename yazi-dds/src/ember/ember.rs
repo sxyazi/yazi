@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{IntoLua, Lua, Value};
 use yazi_shared::id::Id;
 
-use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
+use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberPatch, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
 use crate::Payload;
 
 #[derive(Clone, Debug)]
@@ -13,6 +13,7 @@ pub enum Ember<'a> {
 	Tab(EmberTab),
 	Cd(EmberCd<'a>),
 	Load(EmberLoad<'a>),
+	Patch(EmberPatch<'a>),
 	Hover(EmberHover<'a>),
 	Rename(EmberRename<'a>),
 	BulkRename(EmberBulkRename<'a>),
@@ -37,6 +38,7 @@ impl Ember<'static> {
 			"tab" => Self::Tab(serde_json::from_str(body)?),
 			"cd" => Self::Cd(serde_json::from_str(body)?),
 			"load" => Self::Load(serde_json::from_str(body)?),
+			"patch" => Self::Patch(serde_json::from_str(body)?),
 			"hover" => Self::Hover(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk-rename" => Self::BulkRename(serde_json::from_str(body)?),
@@ -67,6 +69,7 @@ impl Ember<'static> {
 				| "tab"
 				| "cd"
 				| "load"
+				| "patch"
 				| "hover"
 				| "rename"
 				| "bulk-rename"
@@ -108,6 +111,7 @@ impl<'a> Ember<'a> {
 			Self::Tab(_) => "tab",
 			Self::Cd(_) => "cd",
 			Self::Load(_) => "load",
+			Self::Patch(_) => "patch",
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
 			Self::BulkRename(_) => "bulk-rename",
@@ -137,6 +141,7 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Bye(b) => b.into_lua(lua),
 			Self::Cd(b) => b.into_lua(lua),
 			Self::Load(b) => b.into_lua(lua),
+			Self::Patch(b) => b.into_lua(lua),
 			Self::Hover(b) => b.into_lua(lua),
 			Self::Tab(b) => b.into_lua(lua),
 			Self::Rename(b) => b.into_lua(lua),

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_core::mgr::CdSource;
-use yazi_fs::FilesOp;
+use yazi_fs::op::FilesOp;
 use yazi_macro::succ;
 use yazi_parser::mgr::DisplaceDoForm;
 use yazi_shared::{data::Data, url::UrlLike};
@@ -21,7 +21,7 @@ impl Actor for DisplaceDo {
 
 		let file = match opt.to {
 			Ok(file) => file,
-			Err(e) => return act!(mgr:update_files, cx, FilesOp::IOErr(opt.from, e)),
+			Err(e) => return act!(mgr:update_files, cx, FilesOp::Fail(opt.from, e)),
 		};
 
 		if file.is_dir() {

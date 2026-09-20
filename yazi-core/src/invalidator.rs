@@ -1,5 +1,5 @@
 use hashbrown::HashSet;
-use yazi_fs::FilesOp;
+use yazi_fs::op::FilesOp;
 use yazi_shared::{path::PathBufDyn, url::{UrlBuf, UrlLike}};
 
 use crate::{mgr::Mgr, tab::Tab};
@@ -13,10 +13,10 @@ impl<'a> Invalidator<'a> {
 
 	pub fn apply(&mut self, op: &FilesOp) {
 		match op {
-			FilesOp::Deleting(trail, keys) => {
+			FilesOp::Delete(trail, keys) => {
 				self.invalidate_keys(trail, keys);
 			}
-			FilesOp::Upserting(_, files) => {
+			FilesOp::Upsert(_, files) => {
 				for file in files.values() {
 					self.invalidate(&file.url);
 				}

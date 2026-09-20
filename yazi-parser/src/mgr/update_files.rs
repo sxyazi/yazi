@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{FromLua, IntoLua, Lua, Table, Value};
-use yazi_fs::FilesOp;
+use yazi_fs::op::FilesOp;
 use yazi_shared::{event::ActionCow, id::Id};
 
 #[derive(Debug)]

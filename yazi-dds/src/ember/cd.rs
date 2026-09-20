@@ -34,7 +34,7 @@ impl IntoLua for EmberCd<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("tab", self.tab.get().into_lua(lua)?),
+				("tab", self.tab.into_lua(lua)?),
 				("url", (!self.dummy).then_some(self.url).map(|u| u.into_owned()).into_lua(lua)?),
 			])?
 			.into_lua(lua)

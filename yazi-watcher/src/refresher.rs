@@ -4,7 +4,7 @@ use hashbrown::{HashMap, hash_map::RawEntryMut};
 use indexmap::{IndexSet, set::MutableValues};
 use tokio::{pin, sync::mpsc, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::{Entries, FILES_TICKET, FilesOp, file::File};
+use yazi_fs::{Entries, file::File, op::{FILES_TICKET, FilesOp}};
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike, UrlMapExt}};
 use yazi_vfs::VfsEntries;
 
@@ -93,13 +93,13 @@ impl Refresher {
 					Ok(RefreshResponse::Skip) => {}
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
 						if let Some((t, n)) = prev.url.pair() {
-							FilesOp::Deleting(t.into(), [n.into()].into()).emit();
+							FilesOp::Delete(t.into(), [n.into()].into()).emit();
 						} else if prev.report {
-							FilesOp::IOErr(mem::take(&mut prev.file.url), e.into()).emit();
+							FilesOp::Fail(mem::take(&mut prev.file.url), e.into()).emit();
 						}
 					}
 					Err(e) if prev.report => {
-						FilesOp::IOErr(mem::take(&mut prev.file.url), e.into()).emit();
+						FilesOp::Fail(mem::take(&mut prev.file.url), e.into()).emit();
 					}
 					Err(e) => yazi_macro::debug!("Failed to refresh {}: {e:?}", prev.url),
 				}

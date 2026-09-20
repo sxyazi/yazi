@@ -6,7 +6,7 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::YAZI;
 use yazi_core::mgr::CdSource;
 use yazi_dds::Pubsub;
-use yazi_fs::{FilesOp, path::{clean_url, expand_url}};
+use yazi_fs::{op::FilesOp, path::{clean_url, expand_url}};
 use yazi_macro::{log_if_err, render, succ};
 use yazi_parser::mgr::CdForm;
 use yazi_proxy::{CmpProxy, MgrProxy};
@@ -82,7 +82,7 @@ impl Cd {
 						}
 
 						if let Some((t, k)) = url.pair() {
-							FilesOp::Upserting(t.into(), [(k.into(), file)].into()).emit();
+							FilesOp::Upsert(t.into(), [(k.into(), file)].into()).emit();
 						}
 						MgrProxy::reveal(url);
 					}

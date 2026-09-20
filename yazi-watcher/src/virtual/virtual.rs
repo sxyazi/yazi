@@ -4,7 +4,7 @@ use hashbrown::{HashMap, HashSet};
 use notify::Result;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::FilesOp;
+use yazi_fs::op::FilesOp;
 use yazi_shared::{strand::StrandBuf, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{Stamp, engine};
 
@@ -59,7 +59,7 @@ impl Virtual {
 				let mut file = match engine::file(&url).await {
 					Ok(file) => file,
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
-						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
+						ops.push(FilesOp::Delete(trail.into(), [key.into()].into()));
 						continue;
 					}
 					Err(e) => {
@@ -70,12 +70,12 @@ impl Virtual {
 
 				if upload && file.is_file() {
 					file.stat.ctime = Some(SystemTime::now());
-					ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
+					ops.push(FilesOp::Upsert(trail.into(), [(key.into(), file)].into()));
 					ups.push(url);
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
+				ops.push(FilesOp::Upsert(trail.into(), [(key.into(), file)].into()));
 			}
 
 			FilesOp::mutate(ops);

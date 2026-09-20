@@ -1,28 +1,31 @@
-use std::path::Path;
+use std::{mem, path::Path};
 
 use hashbrown::{HashMap, HashSet};
 use mlua::{UserData, UserDataFields};
+use strum::IntoStaticStr;
 use yazi_codegen::FromLuaOwned;
 use yazi_macro::{impl_data_any, relay};
 use yazi_shared::{id::{Id, Ids}, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike, UrlMapExt}};
+use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 
 use crate::file::File;
 
 pub static FILES_TICKET: Ids = Ids::new();
 
-#[derive(Clone, Debug, FromLuaOwned)]
+#[derive(Clone, Debug, FromLuaOwned, IntoStaticStr)]
+#[strum(serialize_all = "lowercase")]
 pub enum FilesOp {
 	Full(File, Vec<File>),
 	Part(UrlBuf, Vec<File>, Id),
 	Done(File, Id),
 	Size(UrlBuf, HashMap<PathBufDyn, u64>),
 	Rank(UrlBuf, HashMap<PathBufDyn, i64>),
-	IOErr(UrlBuf, yazi_shim::fs::Error),
+	Fail(UrlBuf, yazi_shim::fs::Error),
 
-	Creating(UrlBuf, Vec<File>),
-	Deleting(UrlBuf, HashSet<PathBufDyn>),
-	Updating(UrlBuf, HashMap<PathBufDyn, File>),
-	Upserting(UrlBuf, HashMap<PathBufDyn, File>),
+	Create(UrlBuf, Vec<File>),
+	Delete(UrlBuf, HashSet<PathBufDyn>),
+	Update(UrlBuf, HashMap<PathBufDyn, File>),
+	Upsert(UrlBuf, HashMap<PathBufDyn, File>),
 }
 
 impl_data_any!(FilesOp, from_into_lua = inherit);
@@ -35,12 +38,12 @@ impl FilesOp {
 			Self::Done(f, ..) => &f.url,
 			Self::Size(u, _) => u,
 			Self::Rank(u, _) => u,
-			Self::IOErr(u, _) => u,
+			Self::Fail(u, _) => u,
 
-			Self::Creating(u, _) => u,
-			Self::Deleting(u, _) => u,
-			Self::Updating(u, _) => u,
-			Self::Upserting(u, _) => u,
+			Self::Create(u, _) => u,
+			Self::Delete(u, _) => u,
+			Self::Update(u, _) => u,
+			Self::Upsert(u, _) => u,
 		}
 	}
 
@@ -51,12 +54,11 @@ impl FilesOp {
 	pub fn create(files: Vec<File>) {
 		let mut trails: HashMap<UrlBuf, Vec<_>> = Default::default();
 		for file in files {
-			if let Some((t, _)) = file.url.pair() {
-				trails.get_or_insert_default(t).push(file);
-			}
+			let Some((t, _)) = file.url.pair() else { continue };
+			trails.get_or_insert_default(t).push(file);
 		}
 		for (t, files) in trails {
-			Self::Creating(t, files).emit();
+			Self::Create(t, files).emit();
 		}
 	}
 
@@ -75,11 +77,11 @@ impl FilesOp {
 		for (t, (o, n)) in trails {
 			match (o.is_empty(), n.is_empty()) {
 				(true, true) => {}
-				(true, false) => Self::Upserting(t, n).emit(),
-				(false, true) => Self::Deleting(t, o).emit(),
+				(true, false) => Self::Upsert(t, n).emit(),
+				(false, true) => Self::Delete(t, o).emit(),
 				(false, false) => {
-					Self::Deleting(t.clone(), o).emit();
-					Self::Upserting(t, n).emit();
+					Self::Delete(t.clone(), o).emit();
+					Self::Upsert(t, n).emit();
 				}
 			}
 		}
@@ -89,12 +91,12 @@ impl FilesOp {
 		let mut trails: HashMap<_, (HashMap<_, _>, HashSet<_>)> = Default::default();
 		for op in ops {
 			match op {
-				Self::Upserting(t, map) => trails
+				Self::Upsert(t, map) => trails
 					.entry(t)
 					.or_default()
 					.0
 					.extend(map.into_iter().filter(|(k, f)| !k.is_empty() && !f.key().is_empty())),
-				Self::Deleting(t, keys) => {
+				Self::Delete(t, keys) => {
 					trails.entry(t).or_default().1.extend(keys.into_iter().filter(|k| !k.is_empty()))
 				}
 				_ => unreachable!(),
@@ -103,11 +105,11 @@ impl FilesOp {
 		for (t, (u, d)) in trails {
 			match (u.is_empty(), d.is_empty()) {
 				(true, true) => {}
-				(true, false) => Self::Deleting(t, d).emit(),
-				(false, true) => Self::Upserting(t, u).emit(),
+				(true, false) => Self::Delete(t, d).emit(),
+				(false, true) => Self::Upsert(t, u).emit(),
 				(false, false) => {
-					Self::Deleting(t.clone(), d).emit();
-					Self::Upserting(t, u).emit();
+					Self::Delete(t.clone(), d).emit();
+					Self::Upsert(t, u).emit();
 				}
 			}
 		}
@@ -128,18 +130,52 @@ impl FilesOp {
 			Self::Done(file, ticket) => Self::Done(file.chdir(wd), *ticket),
 			Self::Size(_, map) => Self::Size(w, map.clone()),
 			Self::Rank(_, map) => Self::Rank(w, map.clone()),
-			Self::IOErr(_, err) => Self::IOErr(w, err.clone()),
+			Self::Fail(_, err) => Self::Fail(w, err.clone()),
 
-			Self::Creating(_, files) => Self::Creating(w, files!(files)),
-			Self::Deleting(_, urns) => Self::Deleting(w, urns.clone()),
-			Self::Updating(_, map) => Self::Updating(w, map!(map)),
-			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
+			Self::Create(_, files) => Self::Create(w, files!(files)),
+			Self::Delete(_, urns) => Self::Delete(w, urns.clone()),
+			Self::Update(_, map) => Self::Update(w, map!(map)),
+			Self::Upsert(_, map) => Self::Upsert(w, map!(map)),
 		}
 	}
 }
 
 impl UserData for FilesOp {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("cwd", |_, me| Ok(me.cwd().clone()));
+		fields.add_field_function_get("tab", |_, ud| ud.named_user_value::<Option<Id>>("tab"));
+		fields.add_field_method_get("kind", |_, me| Ok(me.into_str()));
+		fields.add_cached_field_mut("url", |_, me| {
+			Ok(match me {
+				Self::Part(url, ..)
+				| Self::Size(url, ..)
+				| Self::Rank(url, ..)
+				| Self::Fail(url, ..)
+				| Self::Create(url, ..)
+				| Self::Delete(url, ..)
+				| Self::Update(url, ..)
+				| Self::Upsert(url, ..) => Some(mem::take(url)),
+				_ => None,
+			})
+		});
+		fields.add_cached_field_mut("file", |_, me| {
+			Ok(match me {
+				Self::Full(file, ..) | Self::Done(file, ..) => Some(mem::take(file)),
+				_ => None,
+			})
+		});
+		fields.add_cached_field_mut("entries", |lua, me| {
+			Ok(match me {
+				Self::Full(_, entries) | Self::Part(_, entries, _) | Self::Create(_, entries) => {
+					Some(lua.create_sequence_from(mem::take(entries))?)
+				}
+				Self::Update(_, entries) | Self::Upsert(_, entries) => {
+					Some(lua.create_table_from(mem::take(entries))?)
+				}
+				Self::Delete(_, keys) => Some(lua.create_sequence_from(mem::take(keys))?),
+				Self::Size(_, sizes) => Some(lua.create_table_from(mem::take(sizes))?),
+				Self::Rank(_, ranks) => Some(lua.create_table_from(mem::take(ranks))?),
+				_ => None,
+			})
+		});
 	}
 }

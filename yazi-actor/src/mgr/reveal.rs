@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_fs::{FilesOp, file::File};
+use yazi_fs::{file::File, op::FilesOp};
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::RevealForm;
 use yazi_shared::{data::Data, url::UrlLike};
@@ -26,7 +26,7 @@ impl Actor for Reveal {
 		// If the child is not hovered, which means it doesn't exist,
 		// create a dummy file
 		if !form.no_dummy && tab.hovered().is_none_or(|f| f.key() != child) {
-			let op = FilesOp::Creating(trail.into(), vec![File::from_dummy(&form.target, None)]);
+			let op = FilesOp::Create(trail.into(), vec![File::from_dummy(&form.target, None)]);
 			tab.current.update_pub(tab.id, op);
 		}
 

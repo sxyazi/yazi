@@ -1,7 +1,7 @@
 use std::iter;
 
 use hashbrown::{HashMap, HashSet};
-use yazi_fs::{FilesOp, file::File};
+use yazi_fs::{file::File, op::FilesOp};
 use yazi_shared::{path::{PathBufDyn, PathDyn}, url::{UrlBuf, UrlLike}};
 
 use crate::{mgr::{Mgr, Yanked}, tab::{Folder, History, Selected, Tab}};
@@ -32,9 +32,9 @@ impl<'a> Reconciler<'a> {
 					self.scan(cwd, f.entries.all(), true);
 				}
 			}
-			FilesOp::Creating(_, files) => self.scan(cwd, files, false),
-			FilesOp::Deleting(_, keys) => self.delete(cwd, keys),
-			FilesOp::Updating(_, files) | FilesOp::Upserting(_, files) => {
+			FilesOp::Create(_, files) => self.scan(cwd, files, false),
+			FilesOp::Delete(_, keys) => self.delete(cwd, keys),
+			FilesOp::Update(_, files) | FilesOp::Upsert(_, files) => {
 				self.update(cwd, files);
 			}
 			_ => {}
@@ -70,16 +70,16 @@ impl<'a> Reconciler<'a> {
 	}
 
 	fn delete(&mut self, cwd: &UrlBuf, keys: &HashSet<PathBufDyn>) {
-		let selected = Patch::from_deleting(self.selected.urls(), cwd, keys);
-		let yanked = Patch::from_deleting(self.yanked.urls(), cwd, keys);
+		let selected = Patch::from_delete(self.selected.urls(), cwd, keys);
+		let yanked = Patch::from_delete(self.yanked.urls(), cwd, keys);
 
 		selected.apply_selected(self.selected);
 		yanked.apply_yanked(self.yanked);
 	}
 
 	fn update(&mut self, cwd: &UrlBuf, files: &HashMap<PathBufDyn, File>) {
-		let selected = Patch::from_updating(self.selected.urls(), cwd, files);
-		let yanked = Patch::from_updating(self.yanked.urls(), cwd, files);
+		let selected = Patch::from_update(self.selected.urls(), cwd, files);
+		let yanked = Patch::from_update(self.yanked.urls(), cwd, files);
 
 		selected.apply_selected(self.selected);
 		yanked.apply_yanked(self.yanked);
@@ -122,7 +122,7 @@ impl<'a> Patch<'a> {
 		me
 	}
 
-	fn from_deleting<'u>(
+	fn from_delete<'u>(
 		urls: impl Iterator<Item = &'u UrlBuf>,
 		cwd: &UrlBuf,
 		keys: &HashSet<PathBufDyn>,
@@ -137,7 +137,7 @@ impl<'a> Patch<'a> {
 		}
 	}
 
-	fn from_updating<'u>(
+	fn from_update<'u>(
 		urls: impl Iterator<Item = &'u UrlBuf>,
 		cwd: &UrlBuf,
 		files: &'a HashMap<PathBufDyn, File>,
