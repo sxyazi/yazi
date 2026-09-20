@@ -2,7 +2,7 @@ use anyhow::Result;
 use hashbrown::{HashMap, HashSet};
 use parking_lot::RwLock;
 use tokio::sync::mpsc;
-use yazi_fs::FilesOp;
+use yazi_fs::op::FilesOp;
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::engine;
 

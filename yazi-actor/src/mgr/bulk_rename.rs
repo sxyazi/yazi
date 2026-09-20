@@ -7,7 +7,7 @@ use tokio::io::AsyncWriteExt;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_dds::Pubsub;
-use yazi_fs::{FilesOp, Splatter, engine::{Engine, FileBuilder, local::Local}, max_common_root, path::skip_url};
+use yazi_fs::{Splatter, engine::{Engine, FileBuilder, local::Local}, max_common_root, op::FilesOp, path::skip_url};
 use yazi_macro::{log_if_err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;

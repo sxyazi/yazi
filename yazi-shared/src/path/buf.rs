@@ -1,7 +1,6 @@
 use std::{borrow::Cow, hash::{Hash, Hasher}};
 
 use hashbrown::Equivalent;
-use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::wtf8::FromWtf8Vec;
 
@@ -79,10 +78,10 @@ impl PathBufDyn {
 		K: Into<PathKind>,
 		I: IntoIterator<Item = Component<'a>>,
 	{
-		Ok(match kind.into() {
-			PathKind::Os => Self::Os(iter.into_iter().collect::<Result<_, PathDynError>>()?),
-			PathKind::Unix => Self::Unix(iter.into_iter().collect::<Result<_, PathDynError>>()?),
-		})
+		match kind.into() {
+			PathKind::Os => iter.into_iter().collect::<Result<_, _>>().map(Self::Os),
+			PathKind::Unix => iter.into_iter().collect::<Result<_, _>>().map(Self::Unix),
+		}
 	}
 
 	pub(crate) fn into_encoded_bytes(self) -> Vec<u8> {
@@ -94,18 +93,18 @@ impl PathBufDyn {
 
 	#[inline]
 	pub fn into_os(self) -> Result<std::path::PathBuf, PathDynError> {
-		Ok(match self {
-			Self::Os(p) => p,
-			Self::Unix(_) => Err(PathDynError::AsOs)?,
-		})
+		match self {
+			Self::Os(p) => Ok(p),
+			Self::Unix(_) => Err(PathDynError::AsOs),
+		}
 	}
 
 	#[inline]
 	pub fn into_unix(self) -> Result<typed_path::UnixPathBuf, PathDynError> {
-		Ok(match self {
-			Self::Os(_) => Err(PathDynError::AsUnix)?,
-			Self::Unix(p) => p,
-		})
+		match self {
+			Self::Os(_) => Err(PathDynError::AsUnix),
+			Self::Unix(p) => Ok(p),
+		}
 	}
 
 	pub fn try_push<T>(&mut self, path: T) -> Result<(), PathDynError>
@@ -151,31 +150,5 @@ impl PathBufDyn {
 			PathKind::Os => Self::Os(s.into()),
 			PathKind::Unix => Self::Unix(s.into()),
 		}
-	}
-}
-
-impl Serialize for PathBufDyn {
-	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		#[derive(Serialize)]
-		struct Shadow<'a> {
-			kind: PathKind,
-			path: &'a [u8],
-		}
-
-		let path = self.dyn_path();
-		Shadow { kind: path.kind(), path: path.encoded_bytes() }.serialize(serializer)
-	}
-}
-
-impl<'de> Deserialize<'de> for PathBufDyn {
-	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-		#[derive(Deserialize)]
-		struct Shadow {
-			kind: PathKind,
-			path: Vec<u8>,
-		}
-
-		let Shadow { kind, path } = Shadow::deserialize(deserializer)?;
-		Self::with(kind, path).map_err(de::Error::custom)
 	}
 }

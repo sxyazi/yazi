@@ -33,7 +33,7 @@ impl IntoLua for EmberRename<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("tab", self.tab.get().into_lua(lua)?),
+				("tab", self.tab.into_lua(lua)?),
 				("from", self.from.into_owned().into_lua(lua)?),
 				("to", self.to.into_owned().into_lua(lua)?),
 			])?

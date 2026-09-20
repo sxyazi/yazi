@@ -2,7 +2,7 @@ use std::{mem, ops::Deref};
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{Entries, FilesOp, FolderStage, file::File, stat::{StatKind, StatType}};
+use yazi_fs::{Entries, FolderStage, file::File, op::FilesOp, stat::{StatKind, StatType}};
 use yazi_macro::log_if_err;
 use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
 use yazi_watcher::RefreshRequest;
@@ -73,7 +73,7 @@ impl Folder {
 			FilesOp::Done(ref file, ticket) if ticket == self.entries.ticket() => {
 				(self.file, self.stage) = (file.clone(), FolderStage::Loaded);
 			}
-			FilesOp::IOErr(_, ref err) => {
+			FilesOp::Fail(_, ref err) => {
 				self.file.stat.kind.insert(StatKind::DUMMY);
 				self.stage = FolderStage::Failed(err.clone());
 			}
@@ -87,12 +87,12 @@ impl Folder {
 			FilesOp::Done(..) => {}
 			FilesOp::Size(_, sizes) => self.entries.update_size(sizes),
 			FilesOp::Rank(_, ranks) => self.entries.update_rank(ranks),
-			FilesOp::IOErr(..) => self.entries.update_ioerr(),
+			FilesOp::Fail(..) => self.entries.update_fail(),
 
-			FilesOp::Creating(_, files) => self.entries.update_creating(files),
-			FilesOp::Deleting(_, urns) => deleted = self.entries.update_deleting(urns),
-			FilesOp::Updating(_, files) => _ = self.entries.update_updating(files),
-			FilesOp::Upserting(_, files) => self.entries.update_upserting(files),
+			FilesOp::Create(_, files) => self.entries.update_create(files),
+			FilesOp::Delete(_, urns) => deleted = self.entries.update_delete(urns),
+			FilesOp::Update(_, files) => _ = self.entries.update_existing(files),
+			FilesOp::Upsert(_, files) => self.entries.update_upsert(files),
 		};
 
 		self.trace.take_if(|_| self.entries.is_empty() && !self.stage.is_loading());
@@ -103,12 +103,20 @@ impl Folder {
 	}
 
 	pub fn update_pub(&mut self, tab: Id, op: FilesOp) -> bool {
-		let load = !matches!(op, FilesOp::Rank(..));
+		use FilesOp::*;
+		let load = matches!(op, Full(..) | Part(..) | Done(..) | Fail(..));
+		let patch = matches!(op, Create(..) | Delete(..) | Update(..) | Upsert(..));
+
+		if patch {
+			log_if_err!(Pubsub::pub_after_patch(tab, &op));
+		}
+
 		if !self.update(op) {
 			return false;
 		} else if load {
 			log_if_err!(Pubsub::pub_after_load(tab, &self.url, &self.stage));
 		}
+
 		true
 	}
 
@@ -211,8 +219,8 @@ impl Folder {
 		let len = self.entries.len();
 		let limit = LAYOUT.get().folder_limit();
 
-		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
-		let end = ((page + 2) * limit).min(len);
+		let start = page.saturating_sub(1).saturating_mul(limit).min(len);
+		let end = page.saturating_add(2).saturating_mul(limit).min(len);
 		&self.entries[start..end]
 	}
 }

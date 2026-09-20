@@ -93,6 +93,7 @@ impl Display for Payload<'_> {
 			Ember::Bye(b) => serde_json::to_string(b),
 			Ember::Cd(b) => serde_json::to_string(b),
 			Ember::Load(b) => serde_json::to_string(b),
+			Ember::Patch(b) => serde_json::to_string(b),
 			Ember::Hover(b) => serde_json::to_string(b),
 			Ember::Tab(b) => serde_json::to_string(b),
 			Ember::Rename(b) => serde_json::to_string(b),

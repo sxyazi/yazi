@@ -4,7 +4,7 @@ use indexmap::IndexSet;
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::{ARGS, ID};
-use yazi_fs::{FolderStage, file::FileCov};
+use yazi_fs::{FolderStage, file::FileCov, op::FilesOp};
 use yazi_shared::{id::Id, url::{Url, UrlBuf}};
 use yazi_shim::cell::RoCell;
 
@@ -158,6 +158,8 @@ impl Pubsub {
 	pub_after!(cd(tab: Id, url: &UrlBuf), (tab, url));
 
 	pub_after!(load(tab: Id, url: &UrlBuf, stage: &FolderStage), (tab, url, stage));
+
+	pub_after!(patch(tab: Id, op: &FilesOp), (tab, op));
 
 	pub_after!(hover(tab: Id, url: Option<&UrlBuf>), (tab, url));
 

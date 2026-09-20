@@ -37,7 +37,7 @@ impl Utils {
 		lua.create_function(|_, r#type: LuaString| {
 			Ok(match &*r#type.as_bytes() {
 				b"app" => *yazi_boot::ID,
-				b"ft" => yazi_fs::FILES_TICKET.next(),
+				b"ft" => yazi_fs::op::FILES_TICKET.next(),
 				_ => Err("Invalid id type".into_lua_err())?,
 			})
 		})

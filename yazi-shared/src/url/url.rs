@@ -24,7 +24,7 @@ impl Serialize for Url<'_> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		match (self.is_regular(), self.loc().to_str()) {
 			(true, Ok(s)) => serializer.serialize_str(s),
-			(false, Ok(s)) => serializer.serialize_str(&format!("{}{s}", EncodeSpec(*self))),
+			(false, Ok(s)) => serializer.collect_str(&format_args!("{}{s}", EncodeSpec(*self))),
 			(_, Err(_)) => serializer.collect_str(&self.encode()),
 		}
 	}

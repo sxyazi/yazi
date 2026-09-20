@@ -41,7 +41,7 @@ regex                 = { workspace = true }
 regex-syntax          = { workspace = true }
 scopeguard            = { workspace = true }
 serde                 = { workspace = true }
-serde_with            = { workspace = true }
+serde_with            = { workspace = true, features = [ "hashbrown_0_17" ] }
 strum                 = { workspace = true }
 tokio                 = { workspace = true }
 unicode-normalization = { workspace = true }

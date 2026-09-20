@@ -34,7 +34,7 @@ impl IntoLua for EmberLoad<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("tab", self.tab.get().into_lua(lua)?),
+				("tab", self.tab.into_lua(lua)?),
 				("url", self.url.into_owned().into_lua(lua)?),
 				("stage", self.stage.into_owned().into_lua(lua)?),
 			])?

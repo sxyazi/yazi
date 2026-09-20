@@ -4,7 +4,7 @@ use hashbrown::HashSet;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::{FilesOp, casefold::Casefold, engine::{self, Engine}, mounts::PARTITIONS};
+use yazi_fs::{casefold::Casefold, engine::{self, Engine}, mounts::PARTITIONS, op::FilesOp};
 use yazi_macro::error;
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::maybe_exists;
@@ -103,7 +103,7 @@ impl Local {
 				let file = match engine::local::Local::regular(path).file().await {
 					Ok(file) => file,
 					Err(e) if e.kind() == ErrorKind::NotFound => {
-						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
+						ops.push(FilesOp::Delete(trail.into(), [key.into()].into()));
 						continue;
 					}
 					Err(e) => {
@@ -114,13 +114,13 @@ impl Local {
 
 				match Casefold::match_name_case(path).await {
 					Ok(true) => {
-						ops.push(FilesOp::Upserting(trail.into(), [(key.into(), file)].into()));
+						ops.push(FilesOp::Upsert(trail.into(), [(key.into(), file)].into()));
 					}
 					Ok(false) => {
-						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
+						ops.push(FilesOp::Delete(trail.into(), [key.into()].into()));
 					}
 					Err(e) if e.kind() == ErrorKind::NotFound && !maybe_exists(&url).await => {
-						ops.push(FilesOp::Deleting(trail.into(), [key.into()].into()));
+						ops.push(FilesOp::Delete(trail.into(), [key.into()].into()));
 					}
 					Err(e) => {
 						error!("Failed to match filename case for {url}: {e:?}");

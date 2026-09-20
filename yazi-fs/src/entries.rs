@@ -4,7 +4,7 @@ use hashbrown::{HashMap, HashSet};
 use yazi_shared::{id::Id, path::{PathBufDyn, PathDyn, PathLike}};
 
 use super::{FilesSorter, Filter};
-use crate::{FILES_TICKET, SortBy, file::File};
+use crate::{SortBy, file::File, op::FILES_TICKET};
 
 #[derive(Default)]
 pub struct Entries {
@@ -110,13 +110,13 @@ impl Entries {
 		}
 	}
 
-	pub fn update_ioerr(&mut self) {
+	pub fn update_fail(&mut self) {
 		self.ticket = FILES_TICKET.next();
 		self.hidden.clear();
 		self.items.clear();
 	}
 
-	pub fn update_creating(&mut self, files: Vec<File>) {
+	pub fn update_create(&mut self, files: Vec<File>) {
 		if files.is_empty() {
 			return;
 		}
@@ -145,7 +145,7 @@ impl Entries {
 		}
 	}
 
-	pub fn update_deleting(&mut self, mut keys: HashSet<PathBufDyn>) -> Vec<usize> {
+	pub fn update_delete(&mut self, mut keys: HashSet<PathBufDyn>) -> Vec<usize> {
 		keys.retain(|k| !k.is_empty());
 		let mut deleted = Vec::with_capacity(keys.len());
 
@@ -169,7 +169,7 @@ impl Entries {
 		deleted
 	}
 
-	pub fn update_updating(
+	pub fn update_existing(
 		&mut self,
 		mut files: HashMap<PathBufDyn, File>,
 	) -> (HashMap<PathBufDyn, File>, HashMap<PathBufDyn, File>) {
@@ -215,17 +215,17 @@ impl Entries {
 		(hidden, items)
 	}
 
-	pub fn update_upserting(&mut self, mut files: HashMap<PathBufDyn, File>) {
+	pub fn update_upsert(&mut self, mut files: HashMap<PathBufDyn, File>) {
 		files.retain(|k, f| !k.is_empty() && !f.key().is_empty());
 		if files.is_empty() {
 			return;
 		}
 
-		self.update_deleting(
+		self.update_delete(
 			files.iter().filter(|&(k, f)| k != f.key()).map(|(_, f)| f.key().into()).collect(),
 		);
 
-		let (hidden, items) = self.update_updating(files);
+		let (hidden, items) = self.update_existing(files);
 		if hidden.is_empty() && items.is_empty() {
 			return;
 		}
