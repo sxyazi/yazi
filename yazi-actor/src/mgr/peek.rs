@@ -1,8 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{succ, tab};
 use yazi_parser::mgr::PeekForm;
-use yazi_shared::data::Data;
-use yazi_watcher::RefreshRequest;
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 
@@ -45,15 +44,16 @@ impl Actor for Peek {
 			}
 		}
 
+		let unlocked = cx.tab().preview.folder_lock.is_none();
 		if let Some(folder) = tab!(cx).hovered_folder_mut() {
-			let req = folder.take_request();
-			if req.force || cx.tab().preview.folder_lock.is_none() {
-				cx.tab_mut().preview.folder_lock = Some(req.url.clone());
-				cx.core.mgr.watcher.refresher.refresh([req]);
+			let op = folder.take_refresh();
+			if unlocked || op.is_force() {
+				cx.tab_mut().preview.folder_lock = Some(folder.to_url());
+				cx.core.mgr.watcher.refresher.request([op]);
 			}
-		} else if hovered.is_dir() {
-			cx.tab_mut().preview.folder_lock = Some(hovered.url.clone());
-			cx.core.mgr.watcher.refresher.refresh([RefreshRequest::force(&hovered)]);
+		} else if hovered.is_dir() && unlocked {
+			cx.tab_mut().preview.folder_lock = Some(hovered.to_url());
+			cx.core.mgr.watcher.refresher.load(&hovered);
 		}
 
 		cx.tab_mut().preview.go(hovered, mime, form.force);

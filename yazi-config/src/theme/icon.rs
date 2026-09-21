@@ -52,7 +52,7 @@ impl Icon {
 		match file.is_dir() {
 			true if let Some(i) = self.dirs.matches(name) => Some(i),
 			false if let Some(i) = self.files.matches(name) => Some(i),
-			false if let Some(i) = self.exts.matches(file.url.ext().unwrap_or_default()) => Some(i),
+			false if let Some(i) = self.exts.matches(file.ext().unwrap_or_default()) => Some(i),
 			_ => self.conds.matches(file, hovered),
 		}
 	}

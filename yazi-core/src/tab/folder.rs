@@ -4,8 +4,8 @@ use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
 use yazi_fs::{Entries, FolderStage, file::File, op::FilesOp, stat::{StatKind, StatType}};
 use yazi_macro::log_if_err;
-use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::UrlBuf};
-use yazi_watcher::RefreshRequest;
+use yazi_shared::{id::Id, path::{DynPath, PathBufDyn, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlLike}};
+use yazi_watcher::Op;
 use yazi_widgets::{Scrollable, Step};
 
 use crate::MgrProxy;
@@ -50,6 +50,16 @@ impl<T: Into<UrlBuf>> From<T> for Folder {
 		Self { file: File::from_dummy(value, Some(StatType::Dir)), ..Default::default() }
 	}
 }
+
+impl AsUrl for Folder {
+	fn as_url(&self) -> Url<'_> { self.file.as_url() }
+}
+
+impl AsUrl for &Folder {
+	fn as_url(&self) -> Url<'_> { self.file.as_url() }
+}
+
+impl UrlLike for Folder {}
 
 impl Folder {
 	fn update(&mut self, op: FilesOp) -> bool {
@@ -165,13 +175,21 @@ impl Folder {
 	#[inline]
 	pub(crate) fn invalidate(&mut self) { self.stale = true; }
 
-	#[inline]
-	pub fn take_request(&mut self) -> RefreshRequest {
-		RefreshRequest {
-			file:   self.file.clone(),
-			force:  mem::take(&mut self.stale),
-			stream: !self.stage.is_loaded(),
-			ticket: self.entries.ticket(),
+	pub fn take_refresh(&mut self) -> Op {
+		let file = self.file.clone();
+
+		if mem::take(&mut self.stale) {
+			// The directory changed while loading: rebuild it completely.
+			Op::Refresh { file, force: true }
+		} else if self.stage.is_loaded() {
+			// The directory is already loaded: check whether it changed.
+			Op::Refresh { file, force: false }
+		} else if self.entries.ticket() != Id::ZERO {
+			// Loading has already started: do not start another partial load.
+			Op::Refresh { file, force: false }
+		} else {
+			// This is the first load: read the directory in parts.
+			Op::Load(file)
 		}
 	}
 

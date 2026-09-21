@@ -10,6 +10,8 @@ where
 {
 	fn as_local(&self) -> Option<&Path> { self.as_url().as_local() }
 
+	fn to_url(&self) -> UrlBuf { self.as_url().into() }
+
 	fn auth(&self) -> &AuthArc { self.as_url().auth() }
 
 	fn base(&self) -> Url<'_> { self.as_url().base() }

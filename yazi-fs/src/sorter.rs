@@ -50,8 +50,8 @@ impl FilesSorter {
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {
 				promote!(a, b);
-				let aa = a.url.ext().filter(|_| a.is_file());
-				let bb = b.url.ext().filter(|_| b.is_file());
+				let aa = a.ext().filter(|_| a.is_file());
+				let bb = b.ext().filter(|_| b.is_file());
 				let ord = if self.sensitive {
 					self.cmp(aa, bb)
 				} else {

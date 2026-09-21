@@ -38,7 +38,7 @@ impl Actor for Copy {
 					}
 				}
 				"dirurl" => {
-					if let Some(p) = f.url.parent() {
+					if let Some(p) = f.parent() {
 						s.extend_from_slice(&form.separator.transform(&p.to_strand()));
 					}
 				}

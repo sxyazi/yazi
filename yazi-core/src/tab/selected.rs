@@ -67,7 +67,7 @@ impl Selected {
 
 		// Update the parent counts
 		if let Some((first, _)) = self.inner.get_index(il) {
-			let mut parent = first.url.parent();
+			let mut parent = first.parent();
 			while let Some(u) = parent {
 				*self.parents.get_or_insert_default(UrlCov::new(u)) += self.inner.len() - il;
 				parent = u.parent();

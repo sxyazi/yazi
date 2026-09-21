@@ -1,7 +1,7 @@
-use std::{hash::{Hash, Hasher}, io, mem, ops::Deref, time::Duration};
+use std::{io, mem, ops::Deref, time::Duration};
 
 use hashbrown::{HashMap, hash_map::RawEntryMut};
-use indexmap::{IndexSet, set::MutableValues};
+use indexmap::IndexSet;
 use tokio::{pin, sync::mpsc, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{Entries, file::File, op::{FILES_TICKET, FilesOp}};
@@ -11,12 +11,6 @@ use yazi_vfs::VfsEntries;
 #[derive(Clone)]
 pub struct Refresher {
 	tx: mpsc::UnboundedSender<Op>,
-}
-
-enum Op {
-	Sync(IndexSet<File>),
-	Refresh(IndexSet<RefreshRequest>),
-	Done(Entry, io::Result<RefreshResponse>),
 }
 
 impl Refresher {
@@ -53,24 +47,38 @@ impl Refresher {
 					entries.get_or_insert_with(file, Entry::new);
 				}
 			}
-			Op::Refresh(requests) => {
-				for r @ RefreshRequest { force, stream, .. } in requests {
-					let entry = match entries.raw_entry_mut().from_key(&r.url) {
-						RawEntryMut::Occupied(oe) if oe.get().skip(&r) => {
-							oe.into_mut().file = r.file;
-							continue;
-						}
-						RawEntryMut::Occupied(mut oe) => {
-							oe.get_mut().file = r.file;
-							oe.into_mut()
-						}
-						RawEntryMut::Vacant(ve) => ve.insert(r.url.clone(), Entry::new(r.file)).1,
-					};
+			Op::Load(file) => {
+				let entry = match entries.raw_entry_mut().from_key(&file.url) {
+					RawEntryMut::Occupied(oe) if oe.get().busy != Id::ZERO => {
+						oe.into_mut().file = file;
+						return;
+					}
+					RawEntryMut::Occupied(mut oe) => {
+						oe.get_mut().file = file;
+						oe.into_mut()
+					}
+					RawEntryMut::Vacant(ve) => ve.insert(file.to_url(), Entry::new(file)).1,
+				};
 
-					(entry.dirty, entry.report, entry.force, entry.stream) =
-						(true, true, entry.force || force, entry.stream || stream);
-					self.spawn(entry);
-				}
+				(entry.dirty, entry.report, entry.force, entry.stream) = (true, true, true, true);
+				self.spawn(entry);
+			}
+			Op::Refresh { file, force } => {
+				let entry = match entries.raw_entry_mut().from_key(&file.url) {
+					RawEntryMut::Occupied(oe) if !force && oe.get().busy != Id::ZERO => {
+						oe.into_mut().file = file;
+						return;
+					}
+					RawEntryMut::Occupied(mut oe) => {
+						oe.get_mut().file = file;
+						oe.into_mut()
+					}
+					RawEntryMut::Vacant(ve) => ve.insert(file.to_url(), Entry::new(file)).1,
+				};
+
+				(entry.dirty, entry.report, entry.force, entry.stream) =
+					(true, true, entry.force || force, false);
+				self.spawn(entry);
 			}
 			Op::Done(mut prev, result) => {
 				let Some(entry) = entries.get_mut(&prev.url) else { return };
@@ -92,7 +100,7 @@ impl Refresher {
 					}
 					Ok(RefreshResponse::Skip) => {}
 					Err(e) if e.kind() == io::ErrorKind::NotFound => {
-						if let Some((t, n)) = prev.url.pair() {
+						if let Some((t, n)) = prev.pair() {
 							FilesOp::Delete(t.into(), [n.into()].into()).emit();
 						} else if prev.report {
 							FilesOp::Fail(mem::take(&mut prev.file.url), e.into()).emit();
@@ -111,7 +119,7 @@ impl Refresher {
 	}
 
 	fn spawn(&self, entry: &mut Entry) {
-		if entry.busy != Id::ZERO || !entry.dirty {
+		if !entry.dirty || entry.busy != Id::ZERO {
 			return;
 		}
 
@@ -140,14 +148,14 @@ impl Refresher {
 	}
 
 	async fn spawn_part(prev: &mut Entry) -> io::Result<RefreshResponse> {
-		FilesOp::Part(prev.url.clone(), vec![], prev.busy).emit();
+		FilesOp::Part(prev.to_url(), vec![], prev.busy).emit();
 
 		let rx = UnboundedReceiverStream::new(Entries::from_dir(&prev.url).await?)
 			.chunks_timeout(5000, Duration::from_millis(500));
 		pin!(rx);
 
 		while let Some(chunk) = rx.next().await {
-			FilesOp::Part(prev.url.clone(), chunk, prev.busy).emit();
+			FilesOp::Part(prev.to_url(), chunk, prev.busy).emit();
 		}
 		Ok(RefreshResponse::Part)
 	}
@@ -156,64 +164,34 @@ impl Refresher {
 impl Refresher {
 	pub(super) fn sync(&self, files: IndexSet<File>) { self.tx.send(Op::Sync(files)).ok(); }
 
-	pub fn refresh<I>(&self, requests: I)
+	pub fn load(&self, file: impl Into<File>) { self.tx.send(Op::Load(file.into())).ok(); }
+
+	pub fn request<I>(&self, ops: I)
 	where
 		I: IntoIterator,
-		I::Item: Into<RefreshRequest>,
+		I::Item: Into<Op>,
 	{
-		let mut pending = IndexSet::<RefreshRequest>::new();
-		for request in requests.into_iter().map(Into::into) {
-			if let Some((_, entry)) = pending.get_full_mut2(&request) {
-				entry.merge(request);
-			} else {
-				pending.insert(request);
-			}
+		for op in ops {
+			self.tx.send(op.into()).ok();
 		}
-		self.tx.send(Op::Refresh(pending)).ok();
 	}
 
 	pub fn shutdown(&self) { self.sync(IndexSet::new()); }
 }
 
-// --- RefreshRequest
-pub struct RefreshRequest {
-	pub file:   File,
-	pub force:  bool,
-	pub stream: bool,
-	pub ticket: Id,
+pub enum Op {
+	Sync(IndexSet<File>),
+	Load(File),
+	Refresh { file: File, force: bool },
+	Done(Entry, io::Result<RefreshResponse>),
 }
 
-impl Deref for RefreshRequest {
-	type Target = File;
-
-	fn deref(&self) -> &Self::Target { &self.file }
-}
-
-impl PartialEq for RefreshRequest {
-	fn eq(&self, other: &Self) -> bool { self.file.url == other.file.url }
-}
-
-impl Eq for RefreshRequest {}
-
-impl Hash for RefreshRequest {
-	fn hash<H: Hasher>(&self, state: &mut H) { self.file.url.hash(state); }
-}
-
-impl RefreshRequest {
-	pub fn force(file: impl Into<File>) -> Self {
-		Self { file: file.into(), force: true, stream: true, ticket: Id::ZERO }
-	}
-
-	fn merge(&mut self, other: Self) {
-		self.file = other.file;
-		self.force |= other.force;
-		self.stream |= other.stream;
-		self.ticket = if other.stream { other.ticket } else { self.ticket };
-	}
+impl Op {
+	pub fn is_force(&self) -> bool { matches!(self, Self::Refresh { force: true, .. }) }
 }
 
 // --- Response
-enum RefreshResponse {
+pub enum RefreshResponse {
 	Full(Vec<File>),
 	Part,
 	Skip,
@@ -221,7 +199,7 @@ enum RefreshResponse {
 
 // --- Entry
 #[derive(Default)]
-struct Entry {
+pub struct Entry {
 	file:   File,
 	busy:   Id,
 	dirty:  bool,
@@ -260,13 +238,5 @@ impl Entry {
 			stream: mem::take(&mut self.stream),
 			handle: None,
 		}
-	}
-
-	fn skip(&self, request: &RefreshRequest) -> bool {
-		if self.busy == Id::ZERO || request.force {
-			return false;
-		}
-
-		!request.stream || self.busy == request.ticket
 	}
 }

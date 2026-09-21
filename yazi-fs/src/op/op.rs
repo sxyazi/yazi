@@ -54,7 +54,7 @@ impl FilesOp {
 	pub fn create(files: Vec<File>) {
 		let mut trails: HashMap<UrlBuf, Vec<_>> = Default::default();
 		for file in files {
-			let Some((t, _)) = file.url.pair() else { continue };
+			let Some((t, _)) = file.pair() else { continue };
 			trails.get_or_insert_default(t).push(file);
 		}
 		for (t, files) in trails {
@@ -66,7 +66,7 @@ impl FilesOp {
 		let mut trails: HashMap<UrlBuf, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
 			let Some((o_t, o_k)) = o.pair() else { continue };
-			let Some((n_t, n_k)) = n.url.pair() else { continue };
+			let Some((n_t, n_k)) = n.pair() else { continue };
 			if o_t == n_t {
 				trails.get_or_insert_default(o_t).1.insert(o_k.into(), n);
 			} else {

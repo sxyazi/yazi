@@ -61,10 +61,10 @@ impl Yanked {
 
 	pub fn contains_in(&self, dir: &UrlBuf) -> bool {
 		self.files.iter().any(|f| {
-			let mut it = f.url.components();
+			let mut it = f.components();
 			it.next_back().is_some()
 				&& it.covariant(&dir.components())
-				&& f.url.parent().is_some_and(|p| p == *dir)
+				&& f.parent().is_some_and(|p| p == *dir)
 		})
 	}
 

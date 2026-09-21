@@ -41,7 +41,7 @@ impl Actor for Rename {
 			_ => None,
 		};
 
-		let (tab, old) = (cx.tab().id, hovered.url_owned());
+		let (tab, old) = (cx.tab().id, hovered.to_url());
 		let mut input =
 			input!(cx, YAZI.input.rename(hovered.is_dir()).with_value(name).with_cursor(cursor))?;
 

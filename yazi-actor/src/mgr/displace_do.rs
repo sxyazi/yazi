@@ -26,14 +26,14 @@ impl Actor for DisplaceDo {
 
 		if file.is_dir() {
 			cx.tab_mut().backstack.replace(&file.url);
-		} else if let Some((trail, _)) = file.url.pair() {
+		} else if let Some((trail, _)) = file.pair() {
 			cx.tab_mut().backstack.replace(trail);
 		}
 
 		if file.is_file() {
 			act!(mgr:reveal, cx, (file.url, CdSource::Displace))
 		} else if let Some(hovered) = cx.hovered()
-			&& let Ok(url) = file.url.try_join(hovered.urn())
+			&& let Ok(url) = file.try_join(hovered.urn())
 		{
 			act!(mgr:reveal, cx, (url, CdSource::Displace))
 		} else {

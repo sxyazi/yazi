@@ -2,7 +2,7 @@ use mlua::Table;
 use yazi_binding::elements::Rect;
 use yazi_fs::file::FileRef;
 use yazi_macro::impl_data_any;
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug, Default)]
@@ -24,7 +24,7 @@ impl TryFrom<Table> for PreviewLock {
 		let file: FileRef = t.raw_get("file")?;
 		file.borrow(|f| {
 			Ok(Self {
-				url: f.url_owned(),
+				url: f.to_url(),
 				sig: t.raw_get("sig")?,
 
 				skip: t.raw_get("skip")?,

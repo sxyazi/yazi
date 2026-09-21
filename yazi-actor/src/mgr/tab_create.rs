@@ -29,7 +29,7 @@ impl Actor for TabCreate {
 			(true, target)
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();
-			(false, h.url.clone())
+			(false, h.to_url())
 		} else if !cx.cwd().is_view() {
 			tab.pref = cx.tab().pref.clone();
 			(true, cx.cwd().clone())
