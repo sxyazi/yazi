@@ -34,12 +34,12 @@ impl Watcher {
 		let mut files = IndexSet::with_capacity(it.size_hint().0);
 
 		for file in it.map(Into::into) {
-			if !file.url.is_absolute() && file.url.auth().is_local() {
+			if !file.is_absolute() && file.auth().is_local() {
 				continue;
 			} else if let Some(cache) = file.url.cache_bucket() {
 				urls.insert(cache.into());
 			}
-			urls.insert(file.url.clone());
+			urls.insert(file.to_url());
 			files.insert(file);
 		}
 

@@ -72,11 +72,11 @@ impl UserData for File {
 			core.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
 		});
 		methods.add_method("prefix", |lua, me, ()| {
-			if !me.url.has_trail() {
+			if !me.has_trail() {
 				return Ok(None);
 			}
 
-			let mut comp = me.url.try_strip_prefix(me.url.trail()).unwrap_or(me.url.loc()).components();
+			let mut comp = me.try_strip_prefix(me.trail()).unwrap_or(me.loc()).components();
 			comp.next_back();
 			Some(lua.create_string(comp.dyn_path().encoded_bytes())).transpose()
 		});
@@ -128,7 +128,7 @@ impl UserData for File {
 			if me.folder.url != me.tab.current.url {
 				return Ok(None);
 			}
-			let Some(Some(h)) = me.url.name().map(|s| finder.filter.highlighted(s)) else {
+			let Some(Some(h)) = me.name().map(|s| finder.filter.highlighted(s)) else {
 				return Ok(None);
 			};
 

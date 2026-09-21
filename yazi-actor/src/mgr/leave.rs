@@ -14,11 +14,8 @@ impl Actor for Leave {
 	const NAME: &str = "leave";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		let url = cx
-			.hovered()
-			.and_then(|h| h.url.parent())
-			.filter(|u| u != cx.cwd())
-			.or_else(|| cx.cwd().parent());
+		let url =
+			cx.hovered().and_then(|h| h.parent()).filter(|u| u != cx.cwd()).or_else(|| cx.cwd().parent());
 
 		let Some(url) = url else { succ!() };
 		let url = url.physical().to_owned();

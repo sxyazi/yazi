@@ -97,7 +97,7 @@ where
 			}
 
 			if c == Some('S') {
-				cue(buf, file.url.os_str());
+				cue(buf, file.os_str());
 			} else {
 				cue(buf, &*file.content_path());
 			}
@@ -113,7 +113,7 @@ where
 				cue(buf, &*self.src.hovered(self.tab).map(|f| f.content_path()).unwrap_or_default());
 			}
 			Some('H') => {
-				cue(buf, self.src.hovered(self.tab).map(|f| f.url.os_str()).unwrap_or_default());
+				cue(buf, self.src.hovered(self.tab).map(|f| f.os_str()).unwrap_or_default());
 			}
 			_ => unreachable!(),
 		}
@@ -130,7 +130,7 @@ where
 			}
 
 			if c == Some('D') {
-				cue(buf, file.url.parent().map(|p| p.os_str()).unwrap_or_default());
+				cue(buf, file.parent().map(|p| p.os_str()).unwrap_or_default());
 			} else {
 				cue(buf, file.content_path().parent().unwrap_or(Path::new("")));
 			}
@@ -163,7 +163,7 @@ where
 			}
 
 			if c == Some('Y') {
-				cue(buf, file.url.os_str());
+				cue(buf, file.os_str());
 			} else {
 				cue(buf, &*file.content_path());
 			}

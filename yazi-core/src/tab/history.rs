@@ -26,14 +26,14 @@ impl History {
 	}
 
 	pub fn insert(&mut self, folder: Folder) -> Option<Folder> {
-		self.remove(&folder.url);
+		self.remove(&folder);
 
-		if let Some((trail, key)) = folder.url.pair() {
-			self.indices.get_or_insert_default(trail).get_or_insert_default(key).push(folder.url.clone());
+		if let Some((trail, key)) = folder.pair() {
+			self.indices.get_or_insert_default(trail).get_or_insert_default(key).push(folder.to_url());
 		}
 
-		self.queue.push_back(folder.url.clone());
-		self.entries.insert(folder.url.clone(), folder);
+		self.queue.push_back(folder.to_url());
+		self.entries.insert(folder.to_url(), folder);
 
 		(self.queue.len() > 100).then(|| {
 			let url = self.queue.pop_front().unwrap();

@@ -2,6 +2,7 @@ use std::ops::{Deref, Range};
 
 use mlua::{AnyUserData, UserData, UserDataFields};
 use yazi_config::LAYOUT;
+use yazi_shared::url::UrlLike;
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use super::{Entries, File, Lives, PtrCell};
@@ -38,7 +39,7 @@ impl Folder {
 
 impl UserData for Folder {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_cached_field("cwd", |_, me| Ok(me.url.clone()));
+		fields.add_cached_field("cwd", |_, me| Ok(me.to_url()));
 		fields.add_cached_field("file", |_, me| Ok(me.file.clone()));
 		fields.add_static_field("files", |_, me| Entries::make(0..me.entries.len(), me, &me.tab));
 		fields.add_cached_field("stage", |_, me| Ok(me.stage.clone()));

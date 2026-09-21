@@ -6,7 +6,7 @@ use yazi_core::mgr::OpenDoOpt;
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenForm;
 use yazi_proxy::MgrProxy;
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::UrlLike};
 use yazi_vfs::engine;
 
 use crate::{Actor, Ctx, act, mgr::Quit};
@@ -32,7 +32,7 @@ impl Actor for Open {
 
 		if opt.targets.is_empty() {
 			opt.targets = if opt.hovered {
-				cx.hovered().map(|h| vec![h.url.clone()]).unwrap_or_default()
+				cx.hovered().map(|h| vec![h.to_url()]).unwrap_or_default()
 			} else {
 				act!(mgr:escape_visual, cx)?;
 				cx.tab().selected_or_hovered_urls().cloned().collect()

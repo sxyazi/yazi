@@ -24,7 +24,7 @@ impl Utils {
 		lua.create_function(|_, t: Table| {
 			let file: FileRef = t.raw_get("file")?;
 			file.borrow(|f| {
-				if f.url.parent() == Some(Url::regular(&YAZI.preview.cache_dir)) {
+				if f.parent() == Some(Url::regular(&YAZI.preview.cache_dir)) {
 					return Ok(None);
 				}
 

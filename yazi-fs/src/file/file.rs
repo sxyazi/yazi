@@ -50,6 +50,8 @@ impl AsUrl for &File {
 	fn as_url(&self) -> Url<'_> { self.url.as_url() }
 }
 
+impl UrlLike for File {}
+
 impl Equivalent<File> for Url<'_> {
 	fn equivalent(&self, key: &File) -> bool { *self == key.url }
 }
@@ -88,7 +90,7 @@ impl File {
 	pub fn content_path(&self) -> Cow<'_, Path> {
 		if let Some(backing) = self.extra.backing() {
 			backing.into()
-		} else if let Some(local) = self.url.as_local() {
+		} else if let Some(local) = self.as_local() {
 			local.into()
 		} else {
 			self.cache().expect("non-local URL should have a cache path").into()
@@ -98,9 +100,6 @@ impl File {
 
 impl File {
 	// --- Url
-	#[inline]
-	pub fn url_owned(&self) -> UrlBuf { self.url.clone() }
-
 	#[inline]
 	pub fn urn(&self) -> PathDyn<'_> { self.url.urn() }
 

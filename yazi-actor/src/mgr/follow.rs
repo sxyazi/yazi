@@ -17,7 +17,7 @@ impl Actor for Follow {
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
 		let Some(file) = cx.hovered() else { succ!() };
 		let Some(link_to) = file.extra.link_to() else { succ!() };
-		let Some(parent) = file.url.parent() else { succ!() };
+		let Some(parent) = file.parent() else { succ!() };
 		let Ok(joined) = parent.try_join(link_to) else { succ!() };
 		act!(mgr:reveal, cx, (clean_url(joined), CdSource::Follow))
 	}

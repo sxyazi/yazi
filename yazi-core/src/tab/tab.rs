@@ -58,7 +58,7 @@ impl Tab {
 	pub fn cwd(&self) -> &UrlBuf { &self.current.url }
 
 	pub fn name(&self) -> Cow<'_, str> {
-		let url = &self.current.url;
+		let url = &self.current;
 		if !self.pref.name.is_empty() {
 			Cow::Borrowed(&self.pref.name)
 		} else if let Some(s) = url.name() {

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_fs::{Entries, Filter, FilterCase};
-use yazi_shared::{path::{DynPath, PathBufDyn}, url::UrlBuf};
+use yazi_shared::{path::{DynPath, PathBufDyn}, url::{UrlBuf, UrlLike}};
 
 use crate::tab::Folder;
 
@@ -86,9 +86,7 @@ impl Finder {
 
 // --- Lock
 impl From<&Folder> for FinderLock {
-	fn from(value: &Folder) -> Self {
-		Self { cwd: value.url.clone(), revision: value.entries.revision }
-	}
+	fn from(value: &Folder) -> Self { Self { cwd: value.to_url(), revision: value.entries.revision } }
 }
 
 impl PartialEq<Folder> for FinderLock {

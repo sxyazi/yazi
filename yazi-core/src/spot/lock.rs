@@ -1,7 +1,7 @@
 use mlua::Table;
 use yazi_fs::{file::FileRef, stat::Stat};
 use yazi_macro::impl_data_any;
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug)]
@@ -25,7 +25,7 @@ impl TryFrom<Table> for SpotLock {
 		let file: FileRef = t.raw_get("file")?;
 		file.borrow(|f| {
 			Ok(Self {
-				url:   f.url_owned(),
+				url:   f.to_url(),
 				stat:  f.stat,
 				lstat: f.lstat(),
 				mime:  t.raw_get("mime")?,

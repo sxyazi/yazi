@@ -18,12 +18,12 @@ impl Actor for Refresh {
 		CWD.set(cx.active().cwd(), Self::cwd_changed);
 
 		let tab = tab!(cx);
-		cx.core.mgr.watcher.refresher.refresh(
+		cx.core.mgr.watcher.refresher.request(
 			[Some(&mut tab.current), tab.parent.as_mut()]
 				.into_iter()
 				.flatten()
-				.filter(|f| f.url.is_absolute() || !f.url.auth().is_local())
-				.map(|f| f.take_request()),
+				.filter(|f| f.is_absolute() || !f.auth().is_local())
+				.map(|f| f.take_refresh()),
 		);
 
 		act!(mgr:peek, cx)?;

@@ -78,7 +78,7 @@ impl UpdateFiles {
 	fn update_parent(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let tab = cx.tab_mut();
 
-		let key = tab.current.url.key();
+		let key = tab.current.key();
 		let leave = matches!(op, FilesOp::Delete(_, ref keys) if keys.contains(&key));
 
 		if let Some(f) = tab.parent.as_mut() {
@@ -118,7 +118,7 @@ impl UpdateFiles {
 
 	fn update_history(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let tab = cx.tab_mut();
-		let leave = tab.parent.as_ref().and_then(|f| f.url.pair()).is_some_and(
+		let leave = tab.parent.as_ref().and_then(|f| f.pair()).is_some_and(
 			|(t, key)| matches!(&op, FilesOp::Delete(trail, keys) if trail == t && keys.contains(&key)),
 		);
 
