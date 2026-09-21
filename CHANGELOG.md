@@ -30,8 +30,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
-- Compatibility with legacy Git symlinks in package cache ([#4319])
 - Tolerate non-conforming orphaned trash items on Linux ([#4343])
+- Compatibility with legacy Git symlinks in package cache ([#4319])
+- Workaround Konsole kitty graphics and keyboard protocol bugs ([#4370])
 - Correct diacritic input for <kbd>Option</kbd> key combos in kitty keyboard protocol ([#4346])
 
 ### Improved
@@ -1886,3 +1887,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4359]: https://github.com/sxyazi/yazi/pull/4359
 [#4363]: https://github.com/sxyazi/yazi/pull/4363
 [#4365]: https://github.com/sxyazi/yazi/pull/4365
+[#4370]: https://github.com/sxyazi/yazi/pull/4370
