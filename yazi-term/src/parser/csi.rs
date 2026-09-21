@@ -89,7 +89,7 @@ impl Parser {
 		let basis = parse_char(codepoints.next())?;
 
 		let (modifiers, kind, state_from_modifiers) = parse_mks(it.next().unwrap_or_default())?;
-		let text = parse_text(it.next().unwrap_or_default())?;
+		let text = parse_text(it.next().unwrap_or_default());
 
 		Ok(Event::Key(KeyEvent {
 			code,
@@ -274,14 +274,14 @@ fn parse_char(s: Option<&str>) -> Result<Option<char>> {
 	}
 }
 
-fn parse_text(s: &str) -> Result<CompactString> {
-	if s.is_empty() {
-		return Ok(CompactString::default());
-	}
-
+fn parse_text(s: &str) -> CompactString {
+	// Konsole v26.08.1 encodes Enter as `ESC[13;1;13u`.
+	// The final `13` is associated carriage-return text, a control character
+	// that the Kitty keyboard protocol explicitly forbids. But, whelp,
+	// we tolerate the bug here by ignoring invalid or control codepoints while
+	// preserving any valid text.
 	s.split(':')
-		.map(|codepoint| {
-			char::from_u32(codepoint.parse()?).filter(|c| !c.is_control()).ok_or(ParseError::Invalid)
-		})
+		.filter_map(|codepoint| codepoint.parse().ok().and_then(char::from_u32))
+		.filter(|c| !c.is_control())
 		.collect()
 }
