@@ -165,13 +165,19 @@ mod tests {
 	use std::time::{Duration, UNIX_EPOCH};
 
 	use super::*;
-	use crate::stat::StatType;
+	use crate::stat::{StatKind, StatType};
 
 	fn file(name: &str, dir: bool) -> File {
-		File::from_dummy(
+		let mut f = File::from_dummy(
 			std::path::PathBuf::from(format!("/tmp/{name}")),
 			Some(if dir { StatType::Dir } else { StatType::File }),
-		)
+		);
+		// Set the hidden bit explicitly: from_dummy only derives it on Unix, but the
+		// sorter consumes the same `is_hidden` predicate on every platform.
+		if name.starts_with('.') {
+			f.stat.kind |= StatKind::HIDDEN;
+		}
+		f
 	}
 
 	fn fixture_t1() -> Vec<File> {
