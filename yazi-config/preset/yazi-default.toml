@@ -9,6 +9,7 @@ sort_by        = "alphabetical"
 sort_sensitive = false
 sort_reverse 	 = false
 sort_dir_first = true
+sort_hidden_last = false
 sort_translit  = false
 sort_fallback  = "alphabetical"
 linemode       = "none"

@@ -11,12 +11,13 @@ pub struct Preference {
 	pub show_hidden: bool,
 
 	// Sorting
-	pub sort_by:        SortBy,
-	pub sort_sensitive: bool,
-	pub sort_reverse:   bool,
-	pub sort_dir_first: bool,
-	pub sort_translit:  bool,
-	pub sort_fallback:  SortFallback,
+	pub sort_by:          SortBy,
+	pub sort_sensitive:   bool,
+	pub sort_reverse:     bool,
+	pub sort_dir_first:   bool,
+	pub sort_hidden_last: bool,
+	pub sort_translit:    bool,
+	pub sort_fallback:    SortFallback,
 }
 
 impl Default for Preference {
@@ -28,12 +29,13 @@ impl Default for Preference {
 			show_hidden: YAZI.mgr.show_hidden.get(),
 
 			// Sorting
-			sort_by:        YAZI.mgr.sort_by.get(),
-			sort_sensitive: YAZI.mgr.sort_sensitive.get(),
-			sort_reverse:   YAZI.mgr.sort_reverse.get(),
-			sort_dir_first: YAZI.mgr.sort_dir_first.get(),
-			sort_translit:  YAZI.mgr.sort_translit.get(),
-			sort_fallback:  YAZI.mgr.sort_fallback.get(),
+			sort_by:          YAZI.mgr.sort_by.get(),
+			sort_sensitive:   YAZI.mgr.sort_sensitive.get(),
+			sort_reverse:     YAZI.mgr.sort_reverse.get(),
+			sort_dir_first:   YAZI.mgr.sort_dir_first.get(),
+			sort_hidden_last: YAZI.mgr.sort_hidden_last.get(),
+			sort_translit:    YAZI.mgr.sort_translit.get(),
+			sort_fallback:    YAZI.mgr.sort_fallback.get(),
 		}
 	}
 }
@@ -41,12 +43,13 @@ impl Default for Preference {
 impl From<&Preference> for FilesSorter {
 	fn from(value: &Preference) -> Self {
 		Self {
-			by:        value.sort_by,
-			sensitive: value.sort_sensitive,
-			reverse:   value.sort_reverse,
-			dir_first: value.sort_dir_first,
-			translit:  value.sort_translit,
-			fallback:  value.sort_fallback,
+			by:          value.sort_by,
+			sensitive:   value.sort_sensitive,
+			reverse:     value.sort_reverse,
+			dir_first:   value.sort_dir_first,
+			hidden_last: value.sort_hidden_last,
+			translit:    value.sort_translit,
+			fallback:    value.sort_fallback,
 		}
 	}
 }

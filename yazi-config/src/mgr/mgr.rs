@@ -12,12 +12,13 @@ pub struct Mgr {
 	pub ratio: SyncCell<MgrRatio>,
 
 	// Sorting
-	pub sort_by:        SyncCell<SortBy>,
-	pub sort_sensitive: SyncCell<bool>,
-	pub sort_reverse:   SyncCell<bool>,
-	pub sort_dir_first: SyncCell<bool>,
-	pub sort_translit:  SyncCell<bool>,
-	pub sort_fallback:  SyncCell<SortFallback>,
+	pub sort_by:          SyncCell<SortBy>,
+	pub sort_sensitive:   SyncCell<bool>,
+	pub sort_reverse:     SyncCell<bool>,
+	pub sort_dir_first:   SyncCell<bool>,
+	pub sort_hidden_last: SyncCell<bool>,
+	pub sort_translit:    SyncCell<bool>,
+	pub sort_fallback:    SyncCell<SortFallback>,
 
 	// Display
 	#[serde(deserialize_with = "deserialize_linemode")]

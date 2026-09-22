@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- New `sort_hidden_last` option in `[mgr]`: render hidden entries after visible ones, Nautilus/Dolphin-style (visible dirs → visible files → hidden dirs → hidden files). `sort_reverse` flips within groups only, and `sort_by = "random"` ignores the grouping. Ref sxyazi/yazi#2482
 - Custom sorting ([#4363])
 - Dynamic virtual filesystem Lua API ([#4338])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
