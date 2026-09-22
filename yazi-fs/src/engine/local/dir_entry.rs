@@ -15,7 +15,7 @@ impl FileHolder for DirEntry {
 		if lstat.is_link() {
 			let path = url.as_local().expect("local entry path");
 			let name = path.file_name().unwrap_or_default();
-			followed = tokio::fs::metadata(path).await.ok().map(|m| Stat::new(name, m));
+			followed = tokio::fs::metadata(path).await.ok().map(|m| Stat::new(name, path, m));
 			link_to = tokio::fs::read_link(path).await.ok().map(Into::into);
 		}
 
@@ -26,8 +26,9 @@ impl FileHolder for DirEntry {
 
 	async fn metadata(&self) -> io::Result<Stat> {
 		let meta = self.0.metadata().await?;
+		let path = self.0.path();
 
-		Ok(Stat::new(self.name(), meta)) // TODO: use `file_name_os_str` when stabilized
+		Ok(Stat::new(self.name(), &path, meta)) // TODO: use `file_name_os_str` when stabilized
 	}
 
 	fn name(&self) -> StrandCow<'_> { self.0.file_name().into() }

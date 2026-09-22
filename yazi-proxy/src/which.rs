@@ -14,7 +14,7 @@ impl WhichProxy {
 			layer: Layer::Null,
 			cands,
 			times: 0,
-			silent,
+			silent
 		})));
 		rx.recv().await?
 	}

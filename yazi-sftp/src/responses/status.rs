@@ -20,8 +20,10 @@ impl Status {
 	pub(crate) fn len(&self) -> usize {
 		size_of_val(&self.id)
 			+ size_of_val(&(self.code as u32))
-			+ 4 + self.message.len()
-			+ 4 + self.language.len()
+			+ 4
+			+ self.message.len()
+			+ 4
+			+ self.language.len()
 	}
 
 	pub(crate) fn is_ok(&self) -> bool { self.code == StatusCode::Ok }

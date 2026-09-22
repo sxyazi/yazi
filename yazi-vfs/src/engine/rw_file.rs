@@ -29,9 +29,11 @@ impl From<super::lua::File> for RwFile {
 impl RwFile {
 	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
 		Ok(match self {
-			Self::Tokio(f, url) => {
-				yazi_fs::stat::Stat::new(url.name().unwrap_or_default(), f.metadata().await?)
-			}
+			Self::Tokio(f, url) => yazi_fs::stat::Stat::new(
+				url.name().unwrap_or_default(),
+				url.as_local().unwrap(),
+				f.metadata().await?,
+			),
 			Self::Sftp(f, url) => {
 				let name = url.name().unwrap_or_default().encoded_bytes();
 				super::sftp::Stat::try_from((name, &f.fstat().await?))?.0

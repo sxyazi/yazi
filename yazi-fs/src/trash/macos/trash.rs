@@ -74,7 +74,7 @@ impl Trash {
 		} else {
 			let path = self.root()?;
 			let stat = match fs::symlink_metadata(&path) {
-				Ok(meta) => Stat::new(path.file_name().unwrap_or_default(), meta),
+				Ok(meta) => Stat::new(path.file_name().unwrap_or_default(), &path, meta),
 				Err(e) if e.kind() == io::ErrorKind::NotFound => Stat::from_mold(true),
 				Err(e) => return Err(e),
 			};

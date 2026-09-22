@@ -1,4 +1,4 @@
-use std::fs::Metadata;
+use std::{fs::Metadata, path::Path};
 
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ bitflags! {
 
 impl StatKind {
 	#[inline]
-	pub(super) fn hidden<T>(_name: T, _meta: &Metadata) -> Self
+	pub(super) fn hidden<T>(_name: T, _path: &Path, _meta: &Metadata) -> Self
 	where
 		T: AsStrand,
 	{
@@ -39,6 +39,21 @@ impl StatKind {
 			}
 			if _meta.file_attributes() & FILE_ATTRIBUTE_SYSTEM != 0 {
 				me |= Self::SYSTEM;
+			}
+		}
+
+		if let Some(parent) = _path.parent() {
+			use std::fs;
+
+			let hidden_file = match fs::read_to_string(parent.join(".hidden")) {
+				Ok(c) => Some(c),
+				Err(_) => None,
+			};
+
+			if let Some(contents) = hidden_file {
+				if contents.lines().any(|line| _name.as_strand() == line) {
+					me |= Self::HIDDEN
+				}
 			}
 		}
 

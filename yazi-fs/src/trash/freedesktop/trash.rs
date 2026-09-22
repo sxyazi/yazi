@@ -69,7 +69,7 @@ impl Trash {
 			let mut h = Twox128::default();
 			for root in roots {
 				let meta = ok_or_not_found!(fs::metadata(root.join("info")), continue);
-				let stat = Stat::new(root.file_name().unwrap_or_default(), meta);
+				let stat = Stat::new(root.file_name().unwrap_or_default(), root.as_path(), meta);
 
 				root.hash(&mut h);
 				StatSig(stat).hash(&mut h);
