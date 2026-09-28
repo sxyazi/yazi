@@ -34,6 +34,10 @@ impl PartialEq<&String> for Scheme {
 	fn eq(&self, other: &&String) -> bool { self == other.as_str() }
 }
 
+impl PartialEq<&KebabCasedKey> for Scheme {
+	fn eq(&self, other: &&KebabCasedKey) -> bool { self.as_str() == other.as_str() }
+}
+
 impl PartialEq<&Self> for Scheme {
 	fn eq(&self, other: &&Self) -> bool { self == *other }
 }

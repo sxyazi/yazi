@@ -26,8 +26,8 @@ macro_rules! poll_rw {
 		use std::pin::Pin;
 
 		match &mut *$me {
-			$crate::engine::RwFile::Tokio(f, _) => Pin::new(f).$method($($arg),*),
-			$crate::engine::RwFile::Sftp(f, _) => Pin::new(f).$method($($arg),*),
+			$crate::engine::RwFile::Local(f) => Pin::new(f).$method($($arg),*),
+			$crate::engine::RwFile::Sftp(f) => Pin::new(f).$method($($arg),*),
 			$crate::engine::RwFile::Lua(f) => Pin::new(f).$method($($arg),*),
 		}}
 	};

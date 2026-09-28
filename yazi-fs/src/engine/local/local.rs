@@ -1,8 +1,8 @@
 use std::{io, path::Path};
 
-use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use crate::{casefold::Casefold, engine::{Attrs, Capabilities, Engine, Transmit}, stat::{Stat, StatMode}};
+use crate::{casefold::Casefold, engine::{Attrs, Capabilities, Engine, RwFile, Transmit}, stat::{Stat, StatMode}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -10,9 +10,15 @@ pub struct Local<'a> {
 	path: &'a Path,
 }
 
+impl AsUrl for Local<'_> {
+	fn as_url(&self) -> Url<'_> { self.url }
+}
+
+impl UrlLike for Local<'_> {}
+
 impl<'a> Engine for Local<'a> {
 	type Demand = super::Demand;
-	type File = tokio::fs::File;
+	type File = RwFile;
 	type Me<'b> = Local<'b>;
 	type ReadDir = super::ReadDir;
 	type UrlCow = UrlCow<'a>;
@@ -53,6 +59,14 @@ impl<'a> Engine for Local<'a> {
 
 	#[inline]
 	async fn create_dir_all(&self) -> io::Result<()> { tokio::fs::create_dir_all(self.path).await }
+
+	#[inline]
+	async fn create_file(&self) -> io::Result<()> { RwFile::create(self.path).await.map(|_| ()) }
+
+	#[inline]
+	async fn create_file_new(&self) -> io::Result<()> {
+		RwFile::create_new(self.path).await.map(|_| ())
+	}
 
 	#[inline]
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
@@ -210,9 +224,6 @@ impl<'a> Engine for Local<'a> {
 		})
 		.await?
 	}
-
-	#[inline]
-	fn url(&self) -> Url<'_> { self.url }
 
 	#[inline]
 	async fn write<C>(&self, contents: C) -> io::Result<()>

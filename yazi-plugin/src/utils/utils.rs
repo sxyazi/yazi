@@ -81,6 +81,7 @@ pub(crate) fn compose(
 
 			// Time
 			b"time" => Utils::time(lua)?,
+			b"date" => Utils::date(lua)?,
 			b"sleep" => Utils::sleep(lua)?,
 			b"throttle" => Utils::throttle(lua)?,
 

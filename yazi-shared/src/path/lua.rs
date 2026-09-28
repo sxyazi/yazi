@@ -84,8 +84,18 @@ impl UserData for PathBufDyn {
 		methods.add_method("starts_with", |_, me, base: Value| me.starts_with(base));
 		methods.add_method("strip_prefix", |_, me, base: Value| me.strip_prefix(base));
 
-		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: LuaString| {
-			lua.create_external_string([lhs.encoded_bytes(), &rhs.as_bytes()].concat())
+		methods.add_meta_function(MetaMethod::Concat, |lua, (lhs, rhs): (Value, Value)| {
+			match (lhs, rhs) {
+				(Value::String(lhs), Value::UserData(rhs)) => {
+					let rhs = rhs.borrow::<Self>()?;
+					lua.create_external_string([&lhs.as_bytes(), rhs.encoded_bytes()].concat())
+				}
+				(Value::UserData(lhs), Value::String(rhs)) => {
+					let lhs = lhs.borrow::<Self>()?;
+					lua.create_external_string([lhs.encoded_bytes(), &rhs.as_bytes()].concat())
+				}
+				_ => Err("only string can be concatenated with Path".into_lua_err()),
+			}
 		});
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: PathRef| Ok(*me == *other));

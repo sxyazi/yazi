@@ -2,6 +2,7 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, Function, IntoLua, Lua, LuaString};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
+use yazi_binding::HttpPartTx;
 use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 use yazi_vfs::engine::RwFile;
 
@@ -26,6 +27,7 @@ impl Utils {
 				Some(t) if t == TypeId::of::<ChildStdin>() => {}
 				Some(t) if t == TypeId::of::<ChildStdout>() => {}
 				Some(t) if t == TypeId::of::<ChildStderr>() => {}
+				Some(t) if t == TypeId::of::<HttpPartTx>() => {}
 				Some(t) => Err(format!("Cannot drop userdata of type {t:?}").into_lua_err())?,
 				None => Err("Cannot drop scoped userdata".into_lua_err())?,
 			};

@@ -14,7 +14,7 @@ pub async fn maybe_exists(url: impl AsUrl) -> bool {
 
 pub async fn unique_file(u: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 	let result =
-		if is_dir { engine::create_dir(&u).await } else { engine::create_new(&u).await.map(|_| ()) };
+		if is_dir { engine::create_dir(&u).await } else { engine::create_file_new(&u).await };
 
 	match result {
 		Ok(()) => Ok(u),
@@ -52,11 +52,8 @@ async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
 		}
 
 		url.try_set_name(&name)?;
-		let result = if is_dir {
-			engine::create_dir(&url).await
-		} else {
-			engine::create_new(&url).await.map(|_| ())
-		};
+		let result =
+			if is_dir { engine::create_dir(&url).await } else { engine::create_file_new(&url).await };
 
 		match result {
 			Ok(()) => break,

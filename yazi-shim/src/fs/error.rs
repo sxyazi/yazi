@@ -15,8 +15,8 @@ pub enum Error {
 
 impl std::error::Error for Error {}
 
-impl From<io::Error> for Error {
-	fn from(err: io::Error) -> Self {
+impl From<&io::Error> for Error {
+	fn from(err: &io::Error) -> Self {
 		if err.get_ref().is_some() {
 			Self::Custom {
 				kind:    err.kind(),
@@ -31,18 +31,30 @@ impl From<io::Error> for Error {
 	}
 }
 
+impl From<io::Error> for Error {
+	fn from(err: io::Error) -> Self { Self::from(&err) }
+}
+
 impl From<io::ErrorKind> for Error {
 	fn from(kind: io::ErrorKind) -> Self { Self::Kind(kind) }
 }
 
-impl From<Error> for io::Error {
-	fn from(value: Error) -> Self {
+impl From<&Error> for io::Error {
+	fn from(value: &Error) -> Self {
 		match value {
-			Error::Kind(kind) => Self::from(kind),
-			Error::Raw(code) => Self::from_raw_os_error(code),
-			Error::Custom { kind, message, .. } => Self::new(kind, message.to_string()),
+			Error::Kind(kind) => Self::from(*kind),
+			Error::Raw(code) => Self::from_raw_os_error(*code),
+			Error::Custom { kind, message, .. } => Self::new(*kind, message.to_string()),
 		}
 	}
+}
+
+impl From<Error> for io::Error {
+	fn from(value: Error) -> Self { Self::from(&value) }
+}
+
+impl From<Error> for mlua::Error {
+	fn from(value: Error) -> Self { Self::external(value) }
 }
 
 impl TryFrom<mlua::Error> for Error {

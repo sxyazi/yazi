@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(
 	Clone, Copy, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize,
 )]
-pub struct Id(pub(super) u64);
+pub struct Id(pub u64);
 
 impl Id {
 	pub const ZERO: Self = Self(0);
