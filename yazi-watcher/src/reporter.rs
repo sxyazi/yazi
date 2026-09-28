@@ -38,7 +38,7 @@ impl Reporter {
 				self.local_tx.send(trail.to_owned()).ok();
 			}
 
-			if url.urn().ext().is_some_and(|e| e == "%tmp") {
+			if url.urn().ext().is_some_and(|e| e == "yazitmp") {
 				continue;
 			}
 

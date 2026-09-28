@@ -2,7 +2,7 @@ use std::{io, sync::Arc};
 
 use deadpool::managed::PoolError;
 use yazi_config::vfs::{ServiceSftp, Vfs};
-use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileHolder, Transmit}, file::File};
+use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileBuilder, FileHolder, Transmit}, file::File};
 use yazi_sftp::fs::Attrs;
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -17,9 +17,15 @@ pub struct Sftp<'a> {
 	pool:   deadpool::managed::Pool<Conn>,
 }
 
+impl AsUrl for Sftp<'_> {
+	fn as_url(&self) -> Url<'_> { self.url }
+}
+
+impl UrlLike for Sftp<'_> {}
+
 impl<'a> Engine for Sftp<'a> {
 	type Demand = super::Demand;
-	type File = yazi_sftp::fs::File;
+	type File = super::RwFile;
 	type Me<'b> = Sftp<'b>;
 	type ReadDir = super::ReadDir;
 	type UrlCow = UrlCow<'a>;
@@ -44,8 +50,8 @@ impl<'a> Engine for Sftp<'a> {
 	}
 
 	async fn casefold(&self) -> io::Result<UrlBuf> {
-		let Some((parent, name)) = self.url.parent().zip(self.url.name()) else {
-			return Ok(self.url.to_owned());
+		let Some((parent, name)) = self.parent().zip(self.name()) else {
+			return Ok(self.to_url());
 		};
 
 		if !self.symlink_metadata().await?.is_link() {
@@ -75,20 +81,20 @@ impl<'a> Engine for Sftp<'a> {
 
 	async fn copy_to(&self, to: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
 		let to = to.physical();
-		if self.url.auth() != to.auth() {
+		if self.auth() != to.auth() {
 			return Ok(Transmit::unsupported());
 		}
 
-		Ok(crate::engine::copy_progressive_impl(self.url.into(), to.into(), attrs))
+		Ok(crate::engine::copy_progressive_impl(self.to_url(), to.into(), attrs))
 	}
 
 	async fn copy_from(&self, from: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
 		let from = from.physical();
-		if self.url.auth() != from.auth() {
+		if self.auth() != from.auth() {
 			return Ok(Transmit::unsupported());
 		}
 
-		Ok(crate::engine::copy_progressive_impl(from.into(), self.url.into(), attrs))
+		Ok(crate::engine::copy_progressive_impl(from.into(), self.to_url(), attrs))
 	}
 
 	async fn create_dir(&self) -> io::Result<()> {
@@ -103,6 +109,14 @@ impl<'a> Engine for Sftp<'a> {
 		}
 
 		Ok(result?)
+	}
+
+	async fn create_file(&self) -> io::Result<()> {
+		self.demand().write(true).create(true).truncate(true).open(self.as_url()).await.map(|_| ())
+	}
+
+	async fn create_file_new(&self) -> io::Result<()> {
+		self.demand().write(true).create_new(true).open(self.as_url()).await.map(|_| ())
 	}
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
@@ -131,7 +145,7 @@ impl<'a> Engine for Sftp<'a> {
 
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
 		Ok(Self::ReadDir {
-			dir:    Arc::new(self.url.to_owned()),
+			dir:    Arc::new(self.to_url()),
 			reader: self.op().await?.read_dir(self.path).await?,
 		})
 	}
@@ -141,7 +155,7 @@ impl<'a> Engine for Sftp<'a> {
 	}
 
 	async fn reroute(&self) -> io::Result<File> {
-		if self.url.is_absolute() {
+		if self.is_absolute() {
 			return Err(io::ErrorKind::Unsupported.into());
 		}
 
@@ -201,9 +215,6 @@ impl<'a> Engine for Sftp<'a> {
 	async fn trash(&self) -> io::Result<()> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Trash not supported"))
 	}
-
-	#[inline]
-	fn url(&self) -> Url<'_> { self.url }
 }
 
 impl<'a> Sftp<'a> {

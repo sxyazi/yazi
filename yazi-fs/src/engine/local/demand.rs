@@ -2,13 +2,13 @@ use std::io;
 
 use yazi_shared::url::AsUrl;
 
-use crate::engine::{Attrs, FileBuilder};
+use crate::engine::{Attrs, FileBuilder, RwFile};
 
 #[derive(Default)]
 pub struct Demand(tokio::fs::OpenOptions);
 
 impl FileBuilder for Demand {
-	type File = tokio::fs::File;
+	type File = RwFile;
 
 	fn append(&mut self, append: bool) -> &mut Self {
 		self.0.append(append);
@@ -39,7 +39,7 @@ impl FileBuilder for Demand {
 	{
 		let url = url.as_url();
 		if let Some(path) = url.as_local() {
-			self.0.open(path).await
+			Ok(RwFile::new(self.0.open(path).await?, path))
 		} else {
 			Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a local URL: {url}")))
 		}

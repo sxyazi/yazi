@@ -3,7 +3,7 @@ use std::{io, time::{Duration, UNIX_EPOCH}};
 use yazi_fs::stat::StatKind;
 
 // --- Attrs
-pub(crate) struct Attrs(pub(crate) yazi_fs::engine::Attrs);
+pub(super) struct Attrs(pub(super) yazi_fs::engine::Attrs);
 
 impl TryFrom<Attrs> for yazi_sftp::fs::Attrs {
 	type Error = ();
@@ -24,7 +24,7 @@ impl TryFrom<Attrs> for yazi_sftp::fs::Attrs {
 }
 
 // --- Stat
-pub(crate) struct Stat(pub(crate) yazi_fs::stat::Stat);
+pub(super) struct Stat(pub(super) yazi_fs::stat::Stat);
 
 impl TryFrom<&yazi_sftp::fs::DirEntry> for Stat {
 	type Error = io::Error;

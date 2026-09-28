@@ -2,100 +2,104 @@ use std::{io, pin::Pin};
 
 use mlua::{IntoLuaMulti, LuaString, UserData, UserDataMethods, Value};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncWrite, AsyncWriteExt};
-use yazi_fs::{engine::Attrs, file::File};
-use yazi_shared::url::{UrlBuf, UrlLike};
+use yazi_fs::{engine::{Attrs, FileBuilder}, file::File};
+use yazi_shared::url::{AsUrl, Url, UrlLike};
 use yazi_shim::fs::Error;
 
+use super::Demand;
 use crate::VfsFile;
 
 pub enum RwFile {
-	Tokio(tokio::fs::File, UrlBuf),
-	Sftp(Box<yazi_sftp::fs::File>, UrlBuf),
+	Local(yazi_fs::engine::RwFile),
+	Sftp(Box<super::sftp::RwFile>),
 	Lua(super::lua::File),
 }
 
-impl From<(tokio::fs::File, UrlBuf)> for RwFile {
-	fn from((f, url): (tokio::fs::File, UrlBuf)) -> Self { Self::Tokio(f, url) }
+impl From<yazi_fs::engine::RwFile> for RwFile {
+	fn from(f: yazi_fs::engine::RwFile) -> Self { Self::Local(f) }
 }
 
-impl From<(yazi_sftp::fs::File, UrlBuf)> for RwFile {
-	fn from((f, url): (yazi_sftp::fs::File, UrlBuf)) -> Self { Self::Sftp(Box::new(f), url) }
+impl From<super::sftp::RwFile> for RwFile {
+	fn from(f: super::sftp::RwFile) -> Self { Self::Sftp(Box::new(f)) }
 }
 
 impl From<super::lua::File> for RwFile {
 	fn from(f: super::lua::File) -> Self { Self::Lua(f) }
 }
 
+impl AsUrl for RwFile {
+	fn as_url(&self) -> Url<'_> {
+		match self {
+			Self::Local(f) => f.as_url(),
+			Self::Sftp(f) => f.as_url(),
+			Self::Lua(f) => f.as_url(),
+		}
+	}
+}
+
+impl UrlLike for RwFile {}
+
 impl RwFile {
+	pub async fn create<U>(url: U) -> io::Result<Self>
+	where
+		U: AsUrl,
+	{
+		Demand::default().write(true).create(true).truncate(true).open(url).await
+	}
+
+	pub async fn create_new<U>(url: U) -> io::Result<Self>
+	where
+		U: AsUrl,
+	{
+		Demand::default().write(true).create_new(true).open(url).await
+	}
+
 	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
-		Ok(match self {
-			Self::Tokio(f, url) => {
-				yazi_fs::stat::Stat::new(url.name().unwrap_or_default(), f.metadata().await?)
-			}
-			Self::Sftp(f, url) => {
-				let name = url.name().unwrap_or_default().encoded_bytes();
-				super::sftp::Stat::try_from((name, &f.fstat().await?))?.0
-			}
-			Self::Lua(f) => f.metadata().await?,
-		})
+		match self {
+			Self::Local(f) => f.metadata().await,
+			Self::Sftp(f) => f.metadata().await,
+			Self::Lua(f) => f.metadata().await,
+		}
 	}
 
 	pub async fn file(&self) -> io::Result<File> {
-		Ok(match self {
-			Self::Tokio(_, url) | Self::Sftp(_, url) => {
-				let stat = self.metadata().await?;
-				File::from_follow(url.clone(), stat).await
+		match self {
+			Self::Local(_) | Self::Sftp(..) => {
+				Ok(File::from_follow(self.to_url(), self.metadata().await?).await)
 			}
-			Self::Lua(f) => f.file().await?,
-		})
+			Self::Lua(f) => f.file().await,
+		}
 	}
 
 	pub async fn into_file(self) -> io::Result<File> {
-		if let Self::Lua(f) = self {
-			return f.into_file().await;
+		match self {
+			Self::Local(f) => f.into_file().await,
+			Self::Sftp(f) => f.into_file().await,
+			Self::Lua(f) => f.into_file().await,
 		}
+	}
 
-		let stat = self.metadata().await?;
-		Ok(match self {
-			Self::Tokio(_, url) | Self::Sftp(_, url) => File { url, stat, extra: Default::default() },
-			Self::Lua(_) => unreachable!(),
-		})
+	pub(crate) fn seekless(&self) -> bool {
+		match self {
+			Self::Local(_) | Self::Sftp(_) => false,
+			Self::Lua(f) => f.seekless,
+		}
 	}
 
 	pub(crate) async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
 		match self {
-			Self::Tokio(f, _) => {
-				let (perm, times) = (attrs.try_into(), attrs.try_into());
-				if perm.is_err() && times.is_err() {
-					return Ok(());
-				}
-
-				let std = f.try_clone().await?.into_std().await;
-				tokio::task::spawn_blocking(move || {
-					perm.map(|p| std.set_permissions(p)).ok();
-					times.map(|t| std.set_times(t)).ok();
-				})
-				.await?;
-			}
-			Self::Sftp(f, _) => {
-				if let Ok(attrs) = super::sftp::Attrs(attrs).try_into() {
-					f.fsetstat(&attrs).await?;
-				}
-			}
-			Self::Lua(f) => f.set_attrs(attrs).await?,
+			Self::Local(f) => f.set_attrs(attrs).await,
+			Self::Sftp(f) => f.set_attrs(attrs).await,
+			Self::Lua(f) => f.set_attrs(attrs).await,
 		}
-
-		Ok(())
 	}
 
 	pub(crate) async fn set_len(&self, size: u64) -> io::Result<()> {
-		Ok(match self {
-			Self::Tokio(f, _) => f.set_len(size).await?,
-			Self::Sftp(f, _) => {
-				f.fsetstat(&yazi_sftp::fs::Attrs { size: Some(size), ..Default::default() }).await?
-			}
-			Self::Lua(f) => f.set_len(size).await?,
-		})
+		match self {
+			Self::Local(f) => f.set_len(size).await,
+			Self::Sftp(f) => f.set_len(size).await,
+			Self::Lua(f) => f.set_len(size).await,
+		}
 	}
 }
 
@@ -163,8 +167,8 @@ impl AsyncWrite for RwFile {
 	#[inline]
 	fn is_write_vectored(&self) -> bool {
 		match self {
-			Self::Tokio(f, _) => f.is_write_vectored(),
-			Self::Sftp(f, _) => f.is_write_vectored(),
+			Self::Local(f) => f.is_write_vectored(),
+			Self::Sftp(f) => f.is_write_vectored(),
 			Self::Lua(f) => f.is_write_vectored(),
 		}
 	}
@@ -190,6 +194,12 @@ impl UserData for RwFile {
 		});
 		methods.add_async_method_mut("write_all", |lua, mut me, src: LuaString| async move {
 			match me.write_all(&src.as_bytes()).await {
+				Ok(()) => true.into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+			}
+		});
+		methods.add_async_method_mut("shutdown", |lua, mut me, ()| async move {
+			match me.shutdown().await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}

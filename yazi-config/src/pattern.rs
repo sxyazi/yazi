@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use globset::{Candidate, GlobBuilder};
 use serde_with::DeserializeFromStr;
 use strum::EnumIs;
-use yazi_shared::{auth::Auth, url::AsUrl};
+use yazi_shared::{KebabCasedKey, auth::Auth, url::AsUrl};
 
 use crate::Mixable;
 
@@ -111,7 +111,7 @@ enum PatternScheme {
 	Local,
 	Remote,
 
-	Custom(String),
+	Custom(KebabCasedKey),
 }
 
 impl PatternScheme {
@@ -126,7 +126,8 @@ impl PatternScheme {
 			"remote" => Self::Remote,
 
 			"" => bail!("Invalid URL pattern: scheme is empty"),
-			other => Self::Custom(other.to_owned()),
+			other if let Some(k) = KebabCasedKey::new(other) => Self::Custom(k),
+			other => bail!("scheme must be 1-20 characters in kebab-case, got: {other}"),
 		};
 
 		Ok((scheme, s.len() + 3))

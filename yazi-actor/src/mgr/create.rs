@@ -65,11 +65,11 @@ impl Create {
 		{
 			ok_or_not_found!(engine::remove_file(&new).await);
 			FilesOp::Delete(trail.into(), [key.into()].into()).emit();
-			engine::create(&new).await?;
+			engine::create_file(&new).await?;
 		} else if let Some(parent) = new.parent() {
 			engine::create_dir_all(parent).await.ok();
 			ok_or_not_found!(engine::remove_file(&new).await);
-			engine::create(&new).await?;
+			engine::create_file(&new).await?;
 		} else {
 			bail!("Cannot create file at root");
 		}

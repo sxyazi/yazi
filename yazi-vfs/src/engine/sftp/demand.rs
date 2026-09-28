@@ -35,7 +35,7 @@ impl From<Demand> for Flags {
 }
 
 impl FileBuilder for Demand {
-	type File = yazi_sftp::fs::File;
+	type File = super::RwFile;
 
 	fn append(&mut self, append: bool) -> &mut Self {
 		self.0.append = append;
@@ -76,7 +76,7 @@ impl FileBuilder for Demand {
 			return Err(io::ErrorKind::AlreadyExists.into());
 		}
 
-		Ok(result?)
+		Ok(super::RwFile::new(result?, url.as_url()))
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

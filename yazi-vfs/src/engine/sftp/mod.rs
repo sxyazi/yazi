@@ -1,4 +1,4 @@
-yazi_macro::mod_flat!(conn demand metadata read_dir sftp);
+yazi_macro::mod_flat!(conn demand metadata read_dir rw_file sftp);
 
 static CONN: yazi_shim::cell::RoCell<
 	parking_lot::Mutex<hashbrown::HashMap<yazi_shared::auth::AuthArc, deadpool::managed::Pool<Conn>>>,

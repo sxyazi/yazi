@@ -95,7 +95,9 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 		let result = match &*r#type.as_bytes() {
 			b"dir" => engine::create_dir(&*url).await,
 			b"dir_all" => engine::create_dir_all(&*url).await,
-			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
+			b"file" => engine::create_file(&*url).await,
+			b"file_new" => engine::create_file_new(&*url).await,
+			_ => Err("Creation type must be 'dir', 'dir_all', 'file', or 'file_new'".into_lua_err())?,
 		};
 
 		match result {
