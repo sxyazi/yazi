@@ -20,7 +20,8 @@ impl<'a> Read<'a> {
 
 	pub(crate) fn len(&self) -> usize {
 		size_of_val(&self.id)
-			+ 4 + self.handle.len()
+			+ 4
+			+ self.handle.len()
 			+ size_of_val(&self.offset)
 			+ size_of_val(&self.len)
 	}
