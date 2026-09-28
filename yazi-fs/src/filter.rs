@@ -16,7 +16,10 @@ impl Filter {
 		let pat = Normalizer::normalize(s)?;
 		let regex = match case {
 			FilterCase::Smart => {
-				let uppercase = pat.chars().any(|c| c.is_uppercase());
+				// Check the raw input: the normalized pattern can introduce
+				// uppercase of its own (e.g. `\p{M}` for `.`), which would
+				// wrongly flip smart case to case-sensitive.
+				let uppercase = s.chars().any(|c| c.is_uppercase());
 				RegexBuilder::new(&pat).case_insensitive(!uppercase).build()?
 			}
 			FilterCase::Sensitive => Regex::new(&pat)?,
@@ -63,5 +66,21 @@ impl From<&Action> for FilterCase {
 			(_, false) => Self::Sensitive,
 			(_, true) => Self::Insensitive,
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn smart_case_looks_at_raw_input() {
+		// https://github.com/sxyazi/yazi/issues/4373
+		let f = Filter::new("te.*", FilterCase::Smart).unwrap();
+		assert!(f.matches("Test1"));
+
+		let f = Filter::new("Te.*", FilterCase::Smart).unwrap();
+		assert!(f.matches("Test1"));
+		assert!(!f.matches("test1"));
 	}
 }
