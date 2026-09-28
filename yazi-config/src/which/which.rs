@@ -10,4 +10,7 @@ pub struct Which {
 	pub sort_sensitive: bool,
 	pub sort_reverse:   bool,
 	pub sort_translit:  bool,
+
+	// Grouping
+	pub fold: bool,
 }

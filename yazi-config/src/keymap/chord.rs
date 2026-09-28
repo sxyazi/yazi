@@ -19,7 +19,7 @@ pub struct Chord {
 	pub id:    Id,
 	#[serde(deserialize_with = "deserialize_on")]
 	pub on:    Vec<Key>,
-	#[serde(deserialize_with = "deserialize_actions")]
+	#[serde(deserialize_with = "deserialize_actions", default)]
 	pub run:   Actions,
 	#[serde(default)]
 	pub desc:  String,
@@ -66,6 +66,11 @@ impl Chord {
 	}
 
 	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }
+
+	/// A chord without `run` labels the group of chords its keys start, for the which
+	/// component, and is never run itself.
+	#[inline]
+	pub fn is_label(&self) -> bool { self.run.is_empty() }
 
 	#[inline]
 	fn noop(&self) -> bool {

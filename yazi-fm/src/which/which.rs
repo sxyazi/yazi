@@ -1,6 +1,6 @@
 use ratatui_core::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::Widget};
 use ratatui_widgets::{block::Block, borders::BorderType};
-use yazi_config::THEME;
+use yazi_config::{THEME, YAZI};
 use yazi_core::Core;
 use yazi_widgets::clear::Clear;
 
@@ -24,8 +24,9 @@ impl Widget for Which<'_> {
 			return;
 		}
 
+		let rows = Cand::rows(&which.cands, which.times, YAZI.which.fold);
 		let cols = THEME.which.cols.get() as usize;
-		let height = area.height.min(which.cands.len().div_ceil(cols) as u16 + PADDING_Y * 2);
+		let height = area.height.min(rows.len().div_ceil(cols) as u16 + PADDING_Y * 2);
 		let area = Rect {
 			x: PADDING_X.min(area.width),
 			y: area.height.saturating_sub(height + PADDING_Y * 2),
@@ -56,13 +57,14 @@ impl Widget for Which<'_> {
 			.split(inner)
 		};
 
-		for y in 0..inner.height {
-			for (x, chunk) in chunks.iter().enumerate() {
-				let Some(cand) = which.cands.get(y as usize * cols + x) else {
-					break;
+		let mut rows = rows.into_iter();
+		'fill: for y in 0..inner.height {
+			for chunk in chunks.iter() {
+				let Some(row) = rows.next() else {
+					break 'fill;
 				};
 
-				Cand::new(cand, which.times).render(Rect { y: chunk.y + y, height: 1, ..*chunk }, buf);
+				row.render(Rect { y: chunk.y + y, height: 1, ..*chunk }, buf);
 			}
 		}
 	}

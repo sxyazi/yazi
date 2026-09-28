@@ -44,7 +44,7 @@ impl<'a> Router<'a> {
 	fn matches(&mut self, src: Layer, dist: Layer, key: Key) -> bool {
 		for chord in &*KEYMAP.chords(src) {
 			let Chord { on, .. } = chord.as_ref();
-			if on.is_empty() || on[0] != key {
+			if on.is_empty() || on[0] != key || (on.len() == 1 && chord.is_label()) {
 				continue;
 			}
 

@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Dynamic virtual filesystem Lua API ([#4338])
 - Update methods to dynamic Lua APIs ([#4389])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
+- Group labels for keymap chords, and a new `[which] fold` option to fold chords into their groups in the which component ([#4380])
 
 ### Changed
 
@@ -1890,5 +1891,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4363]: https://github.com/sxyazi/yazi/pull/4363
 [#4365]: https://github.com/sxyazi/yazi/pull/4365
 [#4370]: https://github.com/sxyazi/yazi/pull/4370
+[#4380]: https://github.com/sxyazi/yazi/pull/4380
 [#4383]: https://github.com/sxyazi/yazi/pull/4383
 [#4389]: https://github.com/sxyazi/yazi/pull/4389
