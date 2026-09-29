@@ -8,12 +8,3 @@ updates:
       default-days: 7
     commit-message:
       prefix: "ci"
-
-  - package-ecosystem: "npm"
-    directory: "/scripts/validate-form"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    commit-message:
-      prefix: "ci"

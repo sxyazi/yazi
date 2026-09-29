@@ -4,33 +4,9 @@ on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
-permissions:
-  contents: read
-  pull-requests: read
-
 jobs:
   check-list:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 20
-
-      - name: Install Dependencies
-        run: |
-          cd scripts/validate-form
-          npm ci
-
-      - name: Validate PR
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const script = require('./scripts/validate-form/main.js')
-            await script({github, context, core})
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: yazi-rs/.github/.github/workflows/validate-pr.yml@main

@@ -8,27 +8,7 @@ on:
 
 jobs:
   check-version:
-    runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 20
-
-      - name: Install Dependencies
-        run: |
-          cd scripts/validate-form
-          npm ci
-
-      - name: Validate Issue
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const script = require('./scripts/validate-form/main.js')
-            await script({github, context, core})
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: yazi-rs/.github/.github/workflows/validate-issue.yml@main
