@@ -19,6 +19,27 @@ impl UserData for Id {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_function(MetaMethod::Lt, |lua, (lhs, rhs): (Value, Value)| {
+			Ok(Self::from_lua(lhs, lua)? < Self::from_lua(rhs, lua)?)
+		});
+		methods.add_meta_function(MetaMethod::Le, |lua, (lhs, rhs): (Value, Value)| {
+			Ok(Self::from_lua(lhs, lua)? <= Self::from_lua(rhs, lua)?)
+		});
+		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_string()));
+		methods.add_meta_function(MetaMethod::Concat, |lua, (lhs, rhs): (Value, Value)| {
+			match (lhs, rhs) {
+				(Value::String(lhs), Value::UserData(rhs)) => {
+					let rhs = rhs.borrow::<Self>()?;
+					lua.create_external_string([&lhs.as_bytes(), rhs.to_string().as_bytes()].concat())
+				}
+				(Value::UserData(lhs), Value::String(rhs)) => {
+					let lhs = lhs.borrow::<Self>()?;
+					lua.create_external_string([lhs.to_string().as_bytes(), &rhs.as_bytes()].concat())
+				}
+				_ => Err("only string can be concatenated with Id".into_lua_err()),
+			}
+		});
+
 		if !LOG_LEVEL.get().is_none() {
 			methods.add_meta_function(MetaMethod::ToDebugString, |_, ud: AnyUserData| {
 				Ok(format!("Id({:?}): {}", ud.to_pointer(), *ud.borrow::<Self>()?))

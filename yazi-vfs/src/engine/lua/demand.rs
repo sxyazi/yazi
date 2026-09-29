@@ -2,7 +2,7 @@ use std::io;
 
 use yazi_fs::engine::{Attrs, Engine, FileBuilder};
 use yazi_runner::provider::ProvideJob;
-use yazi_shared::url::AsUrl;
+use yazi_shared::url::{AsUrl, UrlLike};
 
 use crate::engine::lua::{File, Lua};
 
@@ -37,11 +37,10 @@ impl FileBuilder for Demand {
 		U: AsUrl,
 	{
 		let engine = Lua::new(url.as_url()).await?;
-		let job =
-			ProvideJob::Open { url: engine.url.to_owned(), attrs: self.0.attrs, demand: self.0 };
+		let job = ProvideJob::Open { url: engine.to_url(), attrs: self.0.attrs, demand: self.0 };
 
-		let pos = engine.call(job).await.0?;
-		Ok(File::new(engine.url, engine.service, pos, self.0))
+		let handle = engine.call(job).await.0?;
+		Ok(File::new(engine.url, engine.service, handle, self.0))
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

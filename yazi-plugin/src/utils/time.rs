@@ -1,6 +1,7 @@
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
-use mlua::{ExternalError, Function, Lua};
+use mlua::{ExternalError, FromLua, Function, IntoLuaMulti, Lua, Value};
+use yazi_binding::Date;
 
 use super::Utils;
 
@@ -8,6 +9,19 @@ impl Utils {
 	pub(super) fn time(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, ()| {
 			Ok(SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok())
+		})
+	}
+
+	pub(super) fn date(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, value: Option<Value>| {
+			let Some(value) = value else {
+				return Date::now().into_lua_multi(lua);
+			};
+
+			match Date::from_lua(value, lua) {
+				Ok(date) => date.into_lua_multi(lua),
+				Err(e) => (Value::Nil, e).into_lua_multi(lua),
+			}
 		})
 	}
 

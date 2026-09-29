@@ -45,21 +45,27 @@ impl HttpResponse {
 
 	pub async fn write<W: AsyncWrite + Unpin>(mut self, output: &mut W) -> io::Result<()> {
 		while let Some(frame) = self.inner.body_mut().frame().await {
-			if let Ok(data) = frame?.into_data() {
-				output.write_all(&data).await?;
-			}
+			let Ok(data) = frame?.into_data() else { continue };
+			output.write_all(&data).await?;
 		}
-		Ok(())
+		output.flush().await
 	}
 
 	async fn bytes(mut self) -> io::Result<Vec<u8>> {
 		let mut bytes = Vec::new();
 		while let Some(frame) = self.inner.body_mut().frame().await {
-			if let Ok(data) = frame?.into_data() {
-				bytes.extend_from_slice(&data);
-			}
+			let Ok(data) = frame?.into_data() else { continue };
+			bytes.extend_from_slice(&data);
 		}
 		Ok(bytes)
+	}
+
+	async fn chunk(&mut self) -> io::Result<Option<Bytes>> {
+		while let Some(frame) = self.inner.body_mut().frame().await {
+			let Ok(data) = frame?.into_data() else { continue };
+			return Ok(Some(data));
+		}
+		Ok(None)
 	}
 }
 
@@ -88,6 +94,13 @@ impl UserData for HttpResponse {
 		methods.add_async_method_once("bytes", |lua, me, ()| async move {
 			match me.bytes().await {
 				Ok(bytes) => BString::from(bytes).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
+			}
+		});
+		methods.add_async_method_mut("chunk", |lua, mut me, ()| async move {
+			match me.chunk().await {
+				Ok(Some(chunk)) => lua.create_string(chunk)?.into_lua_multi(&lua),
+				Ok(None) => Value::Nil.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});

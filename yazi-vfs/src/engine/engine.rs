@@ -74,13 +74,6 @@ where
 	Ok(super::copy_progressive_impl(from.into(), to.into(), attrs))
 }
 
-pub async fn create<U>(url: U) -> io::Result<RwFile>
-where
-	U: AsUrl,
-{
-	Engines::new(url.as_url()).await?.create().await
-}
-
 pub async fn create_dir<U>(url: U) -> io::Result<()>
 where
 	U: AsUrl,
@@ -95,11 +88,18 @@ where
 	Engines::new(url.as_url()).await?.create_dir_all().await
 }
 
-pub async fn create_new<U>(url: U) -> io::Result<RwFile>
+pub async fn create_file<U>(url: U) -> io::Result<()>
 where
 	U: AsUrl,
 {
-	Engines::new(url.as_url()).await?.create_new().await
+	Engines::new(url.as_url()).await?.create_file().await
+}
+
+pub async fn create_file_new<U>(url: U) -> io::Result<()>
+where
+	U: AsUrl,
+{
+	Engines::new(url.as_url()).await?.create_file_new().await
 }
 
 pub async fn file<U>(url: U) -> io::Result<File>

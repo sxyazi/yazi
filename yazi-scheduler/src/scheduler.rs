@@ -134,10 +134,10 @@ impl Scheduler {
 		let hook = HookInDownload::new(&r#in.target);
 		let handle = self.add_hooked(&mut r#in, hook, |t| t.handle.clone());
 
-		if r#in.target.auth().is_remote() {
-			self.file.submit(r#in, LOW);
-		} else {
+		if r#in.target.auth().is_local() {
 			self.ops.out(r#in.id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
+		} else {
+			self.file.submit(r#in, LOW);
 		}
 		handle
 	}
@@ -147,10 +147,10 @@ impl Scheduler {
 		let hook = HookInUpload::new(&r#in.target);
 		self.add_hooked(&mut r#in, hook, |_| ());
 
-		if r#in.target.auth().is_remote() {
-			self.file.submit(r#in, LOW);
-		} else {
+		if r#in.target.auth().is_local() {
 			self.ops.out(r#in.id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
+		} else {
+			self.file.submit(r#in, LOW);
 		}
 	}
 

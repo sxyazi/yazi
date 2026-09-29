@@ -1,12 +1,22 @@
 use std::io;
 
 use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
-use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 pub(super) enum Engines<'a> {
 	Local(yazi_fs::engine::local::Local<'a>),
 	Lua(super::lua::Lua<'a>),
 	Sftp(super::sftp::Sftp<'a>),
+}
+
+impl AsUrl for Engines<'_> {
+	fn as_url(&self) -> Url<'_> {
+		match self {
+			Self::Local(p) => p.as_url(),
+			Self::Lua(p) => p.as_url(),
+			Self::Sftp(p) => p.as_url(),
+		}
+	}
 }
 
 impl<'a> Engine for Engines<'a> {
@@ -41,6 +51,10 @@ impl<'a> Engine for Engines<'a> {
 	async fn create_dir(&self) -> io::Result<()> { dispatch!(self, create_dir) }
 
 	async fn create_dir_all(&self) -> io::Result<()> { dispatch!(self, create_dir_all) }
+
+	async fn create_file(&self) -> io::Result<()> { dispatch!(self, create_file) }
+
+	async fn create_file_new(&self) -> io::Result<()> { dispatch!(self, create_file_new) }
 
 	async fn file(&self) -> io::Result<File> { dispatch!(self, file) }
 
@@ -127,14 +141,6 @@ impl<'a> Engine for Engines<'a> {
 	async fn symlink_metadata(&self) -> io::Result<Stat> { dispatch!(self, symlink_metadata) }
 
 	async fn trash(&self) -> io::Result<()> { dispatch!(self, trash) }
-
-	fn url(&self) -> Url<'_> {
-		match self {
-			Self::Local(p) => p.url(),
-			Self::Lua(p) => p.url(),
-			Self::Sftp(p) => p.url(),
-		}
-	}
 
 	async fn write<B>(&self, contents: B) -> io::Result<()>
 	where

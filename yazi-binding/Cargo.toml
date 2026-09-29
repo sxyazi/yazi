@@ -25,21 +25,26 @@ yazi-shim    = { path = "../yazi-shim", version = "26.9.1" }
 # External dependencies
 ansi-to-tui     = { workspace = true }
 anyhow          = { workspace = true }
+chrono          = { workspace = true }
 compact_str     = { workspace = true }
 futures         = { workspace = true }
 hashbrown       = { workspace = true }
 http-body-util  = "0.1.5"
 hyper           = { version = "1.11.1", features = [ "client", "http1" ] }
-hyper-util      = { version = "0.1.20", features = [ "tokio" ] }
+hyper-util      = { version = "0.1.21", features = [ "tokio" ] }
 image           = { workspace = true }
 inventory       = { workspace = true }
 mlua            = { workspace = true }
+parking_lot     = { workspace = true }
+percent-encoding = { workspace = true }
 ratatui-core    = { workspace = true }
 ratatui-widgets = { workspace = true }
 reqwest         = { workspace = true }
 serde           = { workspace = true }
 strum           = { workspace = true }
+thiserror       = { workspace = true }
 tokio    	      = { workspace = true }
+tokio-stream     = { workspace = true }
 tokio-util      = { workspace = true }
 unicode-width   = { workspace = true }
 

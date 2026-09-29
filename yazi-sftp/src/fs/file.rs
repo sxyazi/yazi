@@ -9,9 +9,7 @@ pub struct File {
 
 	handle: String,
 	cursor: u64,
-	closed: bool,
 
-	close_rx: Option<Timeout<Receiver>>,
 	read_rx:  Option<Receiver>,
 	seek_rx:  Option<SeekState>,
 	write_rx: Option<(Receiver, usize)>,
@@ -26,11 +24,7 @@ enum SeekState {
 impl Unpin for File {}
 
 impl Drop for File {
-	fn drop(&mut self) {
-		if !self.closed {
-			Operator::from(&self.session).close(&self.handle).ok();
-		}
-	}
+	fn drop(&mut self) { Operator::from(&self.session).close(&self.handle).ok(); }
 }
 
 impl File {
@@ -39,10 +33,8 @@ impl File {
 			session: session.clone(),
 
 			handle: handle.into(),
-			closed: false,
 			cursor: 0,
 
-			close_rx: None,
 			read_rx:  None,
 			seek_rx:  None,
 			write_rx: None,
@@ -193,9 +185,12 @@ impl AsyncWrite for File {
 		})
 	}
 
-	fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
-		let me = unsafe { self.get_unchecked_mut() };
+	fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
+		if self.write_rx.is_some() {
+			ready!(self.as_mut().poll_write(cx, &[]))?;
+		}
 
+		let me = unsafe { self.get_unchecked_mut() };
 		if me.flush_rx.is_none() {
 			match Operator::from(&me.session).fsync(&me.handle) {
 				Ok(rx) => me.flush_rx = Some(timeout(Duration::from_secs(45), rx)),
@@ -221,29 +216,6 @@ impl AsyncWrite for File {
 	}
 
 	fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
-		let me = unsafe { self.get_unchecked_mut() };
-
-		if me.close_rx.is_none() {
-			me.close_rx =
-				Some(timeout(Duration::from_secs(10), Operator::from(&me.session).close(&me.handle)?));
-		}
-
-		let rx = unsafe { Pin::new_unchecked(me.close_rx.as_mut().unwrap()) };
-		let result = ready!(rx.poll(cx));
-		me.close_rx = None;
-
-		let Ok(result) = result else {
-			return Poll::Ready(Err(Error::Timeout.into()));
-		};
-
-		Poll::Ready(match result {
-			Ok(Packet::Status(status)) if status.is_ok() => {
-				me.closed = true;
-				Ok(())
-			}
-			Ok(Packet::Status(status)) => Err(Error::Status(status).into()),
-			Ok(_) => Err(Error::Packet("not a Status").into()),
-			Err(e) => Err(Error::from(e).into()),
-		})
+		self.poll_flush(cx)
 	}
 }

@@ -66,7 +66,7 @@ function M.drop_http_url(url)
 			return
 		end
 
-		local resp, err = ya.http.request { url = url }
+		local resp, err = ya.http("GET", url):start():finish()
 		if not resp then
 			return task:fail(tostring(err))
 		elseif resp.status < 200 or resp.status >= 300 then

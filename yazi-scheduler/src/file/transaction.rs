@@ -24,7 +24,7 @@ impl Transaction {
 		url.hash(&mut h);
 		timestamp_us().hash(&mut h);
 
-		unique_file(parent.try_join(format!(".{:x}.%tmp", h.finish()))?, false).await
+		unique_file(parent.try_join(format!(".{:x}.yazitmp", h.finish()))?, false).await
 	}
 
 	pub(super) async fn unlink<U>(url: U) -> io::Result<()>

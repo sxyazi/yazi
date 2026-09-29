@@ -16,7 +16,7 @@ impl Filter {
 		let pat = Normalizer::normalize(s)?;
 		let regex = match case {
 			FilterCase::Smart => {
-				let uppercase = pat.chars().any(|c| c.is_uppercase());
+				let uppercase = s.chars().any(|c| c.is_uppercase());
 				RegexBuilder::new(&pat).case_insensitive(!uppercase).build()?
 			}
 			FilterCase::Sensitive => Regex::new(&pat)?,

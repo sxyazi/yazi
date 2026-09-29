@@ -1,5 +1,6 @@
 use std::{env, ops::Deref, path::PathBuf};
 
+use mlua::UserData;
 use serde::{Deserialize, Deserializer, Serialize, de};
 use yazi_fs::path::sanitize_path;
 use yazi_shared::auth::{Auth, AuthArc};
@@ -28,6 +29,8 @@ impl Deref for ServiceSftp {
 
 	fn deref(&self) -> &Self::Target { &self.auth }
 }
+
+impl UserData for ServiceSftp {}
 
 fn deserialize_path<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
 where

@@ -31,7 +31,7 @@ impl FileHolder for DirEntry {
 
 	fn name(&self) -> StrandCow<'_> { self.0.name().unwrap_or_default().into() }
 
-	fn path(&self) -> PathBufDyn { self.0.url.loc().into() }
+	fn path(&self) -> PathBufDyn { self.0.loc().into() }
 
-	fn url(&self) -> UrlBuf { self.0.url.clone() }
+	fn url(&self) -> UrlBuf { self.0.to_url() }
 }

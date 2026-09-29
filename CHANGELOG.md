@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- Rclone integration ([#4383])
 - Custom sorting ([#4363])
 - Dynamic virtual filesystem Lua API ([#4338])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
@@ -1888,3 +1889,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4363]: https://github.com/sxyazi/yazi/pull/4363
 [#4365]: https://github.com/sxyazi/yazi/pull/4365
 [#4370]: https://github.com/sxyazi/yazi/pull/4370
+[#4383]: https://github.com/sxyazi/yazi/pull/4383

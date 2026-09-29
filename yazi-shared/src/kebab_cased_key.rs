@@ -10,10 +10,12 @@ use crate::{BytesExt, SnakeCasedKey};
 pub struct KebabCasedKey(CompactString);
 
 impl KebabCasedKey {
-	pub(crate) fn new(s: impl Into<CompactString>) -> Option<Self> {
+	pub fn new(s: impl Into<CompactString>) -> Option<Self> {
 		let s = s.into();
 		(!s.is_empty() && s.len() <= 20 && s.as_bytes().kebab_cased()).then_some(Self(s))
 	}
+
+	pub fn as_str(&self) -> &str { &self.0 }
 
 	pub fn into_snake_cased(self) -> SnakeCasedKey {
 		SnakeCasedKey(self.0.chars().map(|c| if c == '-' { '_' } else { c }).collect())
@@ -24,17 +26,17 @@ impl Deref for KebabCasedKey {
 	type Target = str;
 
 	#[inline]
-	fn deref(&self) -> &Self::Target { &self.0 }
+	fn deref(&self) -> &Self::Target { self.as_str() }
 }
 
 impl Borrow<str> for KebabCasedKey {
 	#[inline]
-	fn borrow(&self) -> &str { &self.0 }
+	fn borrow(&self) -> &str { self.as_str() }
 }
 
 impl AsRef<str> for KebabCasedKey {
 	#[inline]
-	fn as_ref(&self) -> &str { &self.0 }
+	fn as_ref(&self) -> &str { self.as_str() }
 }
 
 impl AsRef<OsStr> for KebabCasedKey {

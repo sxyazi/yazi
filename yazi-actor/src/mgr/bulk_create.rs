@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
-use yazi_fs::{Splatter, engine::{Engine, local::Local}, op::FilesOp};
+use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, op::FilesOp};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
@@ -31,7 +31,7 @@ impl Actor for BulkCreate {
 		let cwd = cx.cwd().clone();
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk-create");
-			let file = engine::create_new(&tmp).await?.file().await?;
+			let file = RwFile::create_new(&tmp).await?.into_file().await?;
 
 			defer! {
 				let tmp = tmp.clone();
@@ -79,7 +79,7 @@ impl BulkCreate {
 				engine::create_dir_all(&dist).await
 			} else if let Some(parent) = dist.parent() {
 				engine::create_dir_all(parent).await.ok();
-				engine::create_new(&dist).await.map(|_| ())
+				engine::create_file_new(&dist).await
 			} else {
 				Err(io::Error::other("No parent directory"))
 			};

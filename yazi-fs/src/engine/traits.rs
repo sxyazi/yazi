@@ -6,7 +6,7 @@ use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, ur
 
 use crate::{engine::{Attrs, Capabilities, Transmit}, file::{File, FileExtra}, stat::{Stat, StatType}};
 
-pub trait Engine: Sized {
+pub trait Engine: Sized + AsUrl {
 	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
 	type Demand: FileBuilder<File = Self::File>;
 	type ReadDir: DirReader + 'static;
@@ -27,17 +27,13 @@ pub trait Engine: Sized {
 		async { Ok(Transmit::unsupported()) }
 	}
 
-	fn create(&self) -> impl Future<Output = io::Result<Self::File>> {
-		async move { self.demand().write(true).create(true).truncate(true).open(self.url()).await }
-	}
-
 	fn create_dir(&self) -> impl Future<Output = io::Result<()>>;
 
 	fn create_dir_all(&self) -> impl Future<Output = io::Result<()>> { self.create_dir_all_default() }
 
 	fn create_dir_all_default(&self) -> impl Future<Output = io::Result<()>> {
 		async move {
-			let mut url = self.url();
+			let mut url = self.as_url();
 			if url.loc().is_empty() {
 				return Ok(());
 			}
@@ -71,9 +67,9 @@ pub trait Engine: Sized {
 		}
 	}
 
-	fn create_new(&self) -> impl Future<Output = io::Result<Self::File>> {
-		async move { self.demand().write(true).create_new(true).open(self.url()).await }
-	}
+	fn create_file(&self) -> impl Future<Output = io::Result<()>>;
+
+	fn create_file_new(&self) -> impl Future<Output = io::Result<()>>;
 
 	fn demand(&self) -> Self::Demand { Self::Demand::default() }
 
@@ -88,7 +84,7 @@ pub trait Engine: Sized {
 			}
 
 			Ok(File {
-				url:   self.url().to_owned(),
+				url:   self.as_url().to_owned(),
 				stat:  lstat.follow(followed),
 				extra: FileExtra::new(lstat, link_to, None),
 			})
@@ -104,7 +100,7 @@ pub trait Engine: Sized {
 	fn new<'a>(url: Url<'a>) -> impl Future<Output = io::Result<Self::Me<'a>>>;
 
 	fn open(&self) -> impl Future<Output = io::Result<Self::File>> {
-		async move { self.demand().read(true).open(self.url()).await }
+		async move { self.demand().read(true).open(self.as_url()).await }
 	}
 
 	fn read_dir(self) -> impl Future<Output = io::Result<Self::ReadDir>>;
@@ -151,7 +147,7 @@ pub trait Engine: Sized {
 		async move {
 			let stat = ok_or_not_found!(self.symlink_metadata().await, return Ok(()));
 			if !stat.is_indirect() {
-				remove_dir_all_impl::<Self>(self.url()).await
+				remove_dir_all_impl::<Self>(self.as_url()).await
 			} else if stat.is_dir() {
 				self.remove_dir().await
 			} else {
@@ -161,7 +157,7 @@ pub trait Engine: Sized {
 	}
 
 	fn remove_dir_clean(&self) -> impl Future<Output = io::Result<()>> {
-		let root = self.url().to_owned();
+		let root = self.as_url().to_owned();
 
 		async move {
 			let mut stack = vec![(root, false)];
@@ -223,13 +219,16 @@ pub trait Engine: Sized {
 
 	fn trash(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn url(&self) -> Url<'_>;
-
 	fn write<C>(&self, contents: C) -> impl Future<Output = io::Result<()>>
 	where
 		C: AsRef<[u8]>,
 	{
-		async move { self.create().await?.write_all(contents.as_ref()).await }
+		async move {
+			let mut file =
+				self.demand().write(true).create(true).truncate(true).open(self.as_url()).await?;
+			let written = file.write_all(contents.as_ref()).await;
+			written.and(file.shutdown().await)
+		}
 	}
 }
 
