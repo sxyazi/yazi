@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use base64::{Engine, engine::general_purpose::STANDARD_PAD_INDIFFERENT};
 use mlua::{BorrowedBytes, ExternalError, Function, IntoLuaMulti, Lua, LuaString, Value};
 use twox_hash::XxHash3_128;
-use yazi_shim::RFC_3986;
+use yazi_binding::PercentMode;
 use yazi_widgets::CLIPBOARD;
 
 use super::Utils;
@@ -56,11 +56,10 @@ impl Utils {
 	}
 
 	pub(super) fn percent_encode(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, s: LuaString| {
-			let b = s.as_bytes();
-			match percent_encoding::percent_encode(&b, RFC_3986).into() {
+		lua.create_function(|lua, (s, mode): (LuaString, PercentMode)| {
+			match mode.encode(&s.as_bytes()) {
 				Cow::Borrowed(_) => Ok(s),
-				Cow::Owned(s) => lua.create_external_string(s),
+				Cow::Owned(b) => lua.create_external_string(b),
 			}
 		})
 	}
