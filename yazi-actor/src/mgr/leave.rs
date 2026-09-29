@@ -38,8 +38,7 @@ impl Leave {
 
 		tokio::spawn(async move {
 			// Enumerating drives can block on stalled network drives
-			let drives =
-				tokio::task::spawn_blocking(yazi_fs::mounts::drives).await.unwrap_or_default();
+			let drives = tokio::task::spawn_blocking(yazi_fs::mounts::drives).await.unwrap_or_default();
 			if drives.is_empty() {
 				return;
 			}

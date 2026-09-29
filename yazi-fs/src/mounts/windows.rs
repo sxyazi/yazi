@@ -1,8 +1,6 @@
 use std::{ffi::OsString, os::windows::ffi::{OsStrExt, OsStringExt}, path::PathBuf};
 
-use windows_sys::Win32::Storage::FileSystem::{
-	GetDiskFreeSpaceExW, GetDriveTypeW, GetLogicalDriveStringsW, GetVolumeInformationW,
-};
+use windows_sys::Win32::Storage::FileSystem::{GetDiskFreeSpaceExW, GetDriveTypeW, GetLogicalDriveStringsW, GetVolumeInformationW};
 
 use super::Partition;
 
@@ -51,12 +49,7 @@ fn drive(root: OsString) -> Partition {
 
 	let mut capacity = 0u64;
 	unsafe {
-		GetDiskFreeSpaceExW(
-			root_w.as_ptr(),
-			std::ptr::null_mut(),
-			&mut capacity,
-			std::ptr::null_mut(),
-		)
+		GetDiskFreeSpaceExW(root_w.as_ptr(), std::ptr::null_mut(), &mut capacity, std::ptr::null_mut())
 	};
 
 	Partition {
