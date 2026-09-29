@@ -1,18 +1,28 @@
-use std::{fs::Permissions, io, path::{Path, PathBuf}, pin::Pin};
+use std::{
+	fs::Permissions,
+	io,
+	path::{Path, PathBuf},
+	pin::Pin,
+};
 
-use tokio::{fs, io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf}};
+use tokio::{
+	fs,
+	io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf},
+};
 use yazi_shared::url::{AsUrl, Url, UrlLike};
 
 use super::Attrs;
 use crate::{file::File, stat::Stat};
 
 pub struct RwFile {
-	inner:    fs::File,
+	inner: fs::File,
 	pub path: PathBuf,
 }
 
 impl AsUrl for RwFile {
-	fn as_url(&self) -> Url<'_> { self.path.as_url() }
+	fn as_url(&self) -> Url<'_> {
+		self.path.as_url()
+	}
 }
 
 impl UrlLike for RwFile {}
@@ -47,14 +57,16 @@ impl RwFile {
 	}
 
 	pub async fn metadata(&self) -> io::Result<Stat> {
-		Ok(Stat::new(self.name().unwrap_or_default(), self.inner.metadata().await?))
+		Ok(Stat::new(self.name().unwrap_or_default(), &self.path, self.inner.metadata().await?))
 	}
 
 	pub async fn permissions(&self) -> io::Result<Permissions> {
 		self.inner.metadata().await.map(|meta| meta.permissions())
 	}
 
-	pub async fn set_len(&self, size: u64) -> io::Result<()> { self.inner.set_len(size).await }
+	pub async fn set_len(&self, size: u64) -> io::Result<()> {
+		self.inner.set_len(size).await
+	}
 
 	pub async fn set_permissions(&self, permissions: Permissions) -> io::Result<()> {
 		self.inner.set_permissions(permissions).await
@@ -131,5 +143,7 @@ impl AsyncWrite for RwFile {
 		Pin::new(&mut self.inner).poll_write_vectored(cx, bufs)
 	}
 
-	fn is_write_vectored(&self) -> bool { self.inner.is_write_vectored() }
+	fn is_write_vectored(&self) -> bool {
+		self.inner.is_write_vectored()
+	}
 }
