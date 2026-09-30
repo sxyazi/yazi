@@ -172,15 +172,15 @@ function M:peek(job)
 		return
 	end
 
-	job.mime, job.args = mime, rule.args
+	job.mime, job.args = mime, rule.run.args
 	ya.async(function()
-		local chunk, err = ya.chunk(rule.name)
+		local chunk, err = ya.chunk(rule.run.name)
 		if not chunk then
 			ya.err(err)
 		elseif chunk.sync_peek then
-			ya.emit("plugin", { rule.name, job, method = "peek", scope = rt.scope() })
+			ya.emit("plugin", { rule.run.name, job, method = "peek", scope = rt.scope() })
 		else
-			ya.async_blocking(function(cx) require(cx.name):peek(cx.job) end, { name = rule.name, job = job }):wait()
+			ya.async_blocking(function(cx) require(cx.name):peek(cx.job) end, { name = rule.run.name, job = job }):wait()
 		end
 	end)
 end
@@ -191,8 +191,8 @@ function M:seek(job)
 		return
 	end
 
-	job.mime, job.args = mime, rule.args
-	ya.emit("plugin", { rule.name, job, method = "seek", scope = rt.scope() })
+	job.mime, job.args = mime, rule.run.args
+	ya.emit("plugin", { rule.run.name, job, method = "seek", scope = rt.scope() })
 end
 
 function M:preload(job)
@@ -201,8 +201,8 @@ function M:preload(job)
 		return true
 	end
 
-	job.mime, job.args = mime, rule.args
-	return require(rule.name):preload(job)
+	job.mime, job.args = mime, rule.run.args
+	return require(rule.run.name):preload(job)
 end
 
 function M:spot(job)
@@ -246,12 +246,12 @@ function M:spot_base(job)
 	end
 
 	for _, v in pairs(rt.plugin.fetchers:match(pair)) do
-		fetchers[#fetchers + 1] = v.name
+		fetchers[#fetchers + 1] = v.run.name
 	end
 	fetchers = #fetchers ~= 0 and fetchers or { "-" }
 
 	for _, v in pairs(rt.plugin.preloaders:match(proxy)) do
-		preloaders[#preloaders + 1] = string.format("%s (via trash)", v.name)
+		preloaders[#preloaders + 1] = string.format("%s (via trash)", v.run.name)
 	end
 	preloaders = #preloaders ~= 0 and preloaders or { "-" }
 
@@ -263,8 +263,8 @@ function M:spot_base(job)
 		ui.Row {},
 
 		ui.Row({ "Plugins" }):style(ui.Style():fg("green")),
-		ui.Row { "  Spotter:", spotter and spotter.name or "-" },
-		ui.Row { "  Previewer:", previewer and string.format("%s (via trash)", previewer.name) or "-" },
+		ui.Row { "  Spotter:", spotter and spotter.run.name or "-" },
+		ui.Row { "  Previewer:", previewer and string.format("%s (via trash)", previewer.run.name) or "-" },
 		ui.Row({ "  Fetchers:", fetchers }):height(#fetchers),
 		ui.Row({ "  Preloaders:", preloaders }):height(#preloaders),
 	}

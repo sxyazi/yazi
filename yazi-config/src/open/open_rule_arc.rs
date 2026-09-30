@@ -4,7 +4,7 @@ use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, Value};
 use serde::Deserialize;
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{Mixable, open::OpenRule};
+use crate::{Mixable, Selectable, open::OpenRule};
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq)]
 pub struct OpenRuleArc(Arc<OpenRule>);
@@ -36,6 +36,8 @@ impl FromLua for OpenRuleArc {
 impl UserData for OpenRuleArc {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(me.id));
+		fields.add_cached_field("url", |_, me| Ok(me.url_pat().cloned()));
+		fields.add_cached_field("mime", |_, me| Ok(me.mime_pat().cloned()));
 		fields.add_cached_field("use", |lua, me| {
 			lua.create_sequence_from(me.r#use.iter().map(|s| s.as_str()))
 		});

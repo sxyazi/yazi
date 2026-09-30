@@ -3,12 +3,13 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use serde::Deserialize;
 use yazi_binding::Iter;
+use yazi_codegen::DeserializeOver2;
 use yazi_fs::file::{File, FileRef};
 use yazi_shared::{event::Cmd, id::Id};
 
 use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{PreloaderArc, Preloaders, preloader_id}};
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, DeserializeOver2)]
 pub struct Preloader {
 	#[serde(skip, default = "preloader_id")]
 	pub(crate) id: Id,

@@ -1,10 +1,10 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
-use mlua::{ExternalError, ExternalResult, MetaMethod, UserData, UserDataMethods};
+use mlua::{ExternalError, ExternalResult, MetaMethod, Table, UserData, UserDataMethods};
 use serde::Deserialize;
 use yazi_fs::file::File;
-use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, vec::{IndexAtError, VecExt}};
+use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::{IndexAtError, VecExt}};
 
 use super::Previewer;
 use crate::{mix, plugin::{PreviewerArc, PreviewerMatcher}};
@@ -66,6 +66,24 @@ impl Previewers {
 		});
 	}
 
+	fn update<E>(
+		&self,
+		matcher: PreviewerMatcher,
+		f: impl Fn(Previewer) -> Result<Previewer, E>,
+	) -> Result<(), E> {
+		self.0.try_rcu(|previewers| {
+			let mut next = Vec::clone(previewers);
+			for previewer in &mut next {
+				if matcher.matches(previewer) {
+					*previewer = f(Previewer::clone(previewer))?.into();
+				}
+			}
+			Ok(Arc::new(next))
+		})?;
+
+		Ok(())
+	}
+
 	pub(crate) fn unwrap_unchecked(self) -> Vec<PreviewerArc> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique previewers arc")
 	}
@@ -93,6 +111,11 @@ impl UserData for &'static Previewers {
 
 		methods.add_method("remove", |_, &me, matcher: PreviewerMatcher| {
 			me.remove(matcher);
+			Ok(())
+		});
+
+		methods.add_method("update", |_, &me, (matcher, table): (PreviewerMatcher, Table)| {
+			me.update(matcher, |previewer| previewer.deserialize_over_lua(&table))?;
 			Ok(())
 		});
 

@@ -2,9 +2,10 @@ use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields, Value};
 use serde::Deserialize;
+use yazi_shared::event::Cmd;
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use crate::{Mixable, plugin::Fetcher};
+use crate::{Mixable, Selectable, plugin::Fetcher};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(from = "Fetcher")]
@@ -40,6 +41,8 @@ impl UserData for FetcherArc {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(me.id));
 
-		fields.add_cached_field("name", |lua, me| lua.create_string(&*me.name));
+		fields.add_cached_field("run", |_, me| Ok(Cmd::clone(me)));
+		fields.add_cached_field("url", |_, me| Ok(me.url_pat().cloned()));
+		fields.add_cached_field("mime", |_, me| Ok(me.mime_pat().cloned()));
 	}
 }

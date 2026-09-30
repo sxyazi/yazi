@@ -2,9 +2,11 @@ use std::{fmt::Debug, str::FromStr};
 
 use anyhow::{Result, bail};
 use globset::{Candidate, GlobBuilder};
+use mlua::{IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 use serde_with::DeserializeFromStr;
 use strum::EnumIs;
 use yazi_shared::{KebabCasedKey, auth::Auth, url::AsUrl};
+use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::Mixable;
 
@@ -104,6 +106,18 @@ impl Mixable for Pattern {
 	fn any_dir(&self) -> bool { self.is_star && self.is_dir && self.scheme.is_any() }
 }
 
+impl UserData for Pattern {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_cached_field("scheme", |lua, me| me.scheme.into_lua(lua));
+	}
+
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
+			lua.create_string(me.inner.glob().glob())
+		});
+	}
+}
+
 // --- Scheme
 #[derive(Clone, Debug, EnumIs)]
 enum PatternScheme {
@@ -141,6 +155,18 @@ impl PatternScheme {
 			Self::Remote => auth.is_remote(),
 			Self::Custom(name) => auth.scheme == name,
 		}
+	}
+}
+
+impl IntoLua for &PatternScheme {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		match self {
+			PatternScheme::Any => "*",
+			PatternScheme::Local => "local",
+			PatternScheme::Remote => "remote",
+			PatternScheme::Custom(name) => name,
+		}
+		.into_lua(lua)
 	}
 }
 
