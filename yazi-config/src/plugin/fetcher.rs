@@ -4,12 +4,13 @@ use hashbrown::HashSet;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use serde::Deserialize;
 use yazi_binding::Iter;
+use yazi_codegen::DeserializeOver2;
 use yazi_fs::file::{File, FileRef};
 use yazi_shared::{event::Cmd, id::Id};
 
 use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{FetcherArc, Fetchers, fetcher_id}};
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, DeserializeOver2)]
 pub struct Fetcher {
 	#[serde(skip, default = "fetcher_id")]
 	pub(crate) id:    Id,

@@ -1,11 +1,11 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
-use mlua::{ExternalError, ExternalResult, MetaMethod, UserData, UserDataMethods};
+use mlua::{ExternalError, ExternalResult, MetaMethod, Table, UserData, UserDataMethods};
 use serde::Deserialize;
 use yazi_fs::file::File;
 use yazi_shared::id::Id;
-use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, vec::{IndexAtError, VecExt}};
+use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::{IndexAtError, VecExt}};
 
 use super::Spotter;
 use crate::{mix, plugin::{SpotterArc, SpotterMatcher}};
@@ -68,6 +68,24 @@ impl Spotters {
 		});
 	}
 
+	fn update<E>(
+		&self,
+		matcher: SpotterMatcher,
+		f: impl Fn(Spotter) -> Result<Spotter, E>,
+	) -> Result<(), E> {
+		self.0.try_rcu(|spotters| {
+			let mut next = Vec::clone(spotters);
+			for spotter in &mut next {
+				if matcher.matches(spotter) {
+					*spotter = f(Spotter::clone(spotter))?.into();
+				}
+			}
+			Ok(Arc::new(next))
+		})?;
+
+		Ok(())
+	}
+
 	pub(crate) fn unwrap_unchecked(self) -> Vec<SpotterArc> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique spotters arc")
 	}
@@ -95,6 +113,11 @@ impl UserData for &'static Spotters {
 
 		methods.add_method("remove", |_, &me, matcher: SpotterMatcher| {
 			me.remove(matcher);
+			Ok(())
+		});
+
+		methods.add_method("update", |_, &me, (matcher, table): (SpotterMatcher, Table)| {
+			me.update(matcher, |spotter| spotter.deserialize_over_lua(&table))?;
 			Ok(())
 		});
 

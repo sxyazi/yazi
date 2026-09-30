@@ -2,10 +2,10 @@ use std::{borrow::Cow, ops::Deref, sync::Arc};
 
 use anyhow::{Result, ensure};
 use arc_swap::ArcSwap;
-use mlua::{ExternalError, ExternalResult, MetaMethod, UserData, UserDataMethods};
+use mlua::{ExternalError, ExternalResult, MetaMethod, Table, UserData, UserDataMethods};
 use serde::Deserialize;
 use yazi_fs::file::File;
-use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, vec::VecExt};
+use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::VecExt};
 
 use super::{MAX_PRELOADERS, Preloader};
 use crate::{mix, plugin::{PreloaderArc, PreloaderMatcher, preloader_rev}};
@@ -82,6 +82,24 @@ impl Preloaders {
 		});
 	}
 
+	fn update<E>(
+		&self,
+		matcher: PreloaderMatcher,
+		f: impl Fn(Preloader) -> Result<Preloader, E>,
+	) -> Result<(), E> {
+		self.0.try_rcu(|preloaders| {
+			let mut next = Vec::clone(preloaders);
+			for preloader in &mut next {
+				if matcher.matches(preloader) {
+					*preloader = f(Preloader::clone(preloader))?.into();
+				}
+			}
+			Ok(Self::reindex(next))
+		})?;
+
+		Ok(())
+	}
+
 	fn reindex(mut preloaders: Vec<PreloaderArc>) -> Vec<PreloaderArc> {
 		let rev = preloader_rev();
 		for (i, preloader) in preloaders.iter_mut().enumerate() {
@@ -118,6 +136,11 @@ impl UserData for &'static Preloaders {
 
 		methods.add_method("remove", |_, &me, matcher: PreloaderMatcher| {
 			me.remove(matcher);
+			Ok(())
+		});
+
+		methods.add_method("update", |_, &me, (matcher, table): (PreloaderMatcher, Table)| {
+			me.update(matcher, |preloader| preloader.deserialize_over_lua(&table))?;
 			Ok(())
 		});
 

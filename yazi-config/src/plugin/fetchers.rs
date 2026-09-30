@@ -2,11 +2,11 @@ use std::{ops::Deref, sync::Arc};
 
 use anyhow::{Result, ensure};
 use arc_swap::ArcSwap;
-use mlua::{ExternalError, ExternalResult, MetaMethod, UserData, UserDataMethods};
+use mlua::{ExternalError, ExternalResult, MetaMethod, Table, UserData, UserDataMethods};
 use serde::Deserialize;
 use yazi_fs::file::File;
 use yazi_macro::warn;
-use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, vec::VecExt};
+use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::VecExt};
 
 use super::{Fetcher, MAX_FETCHERS};
 use crate::{mix, plugin::{FetcherArc, FetcherMatcher, fetcher_rev}};
@@ -78,6 +78,24 @@ impl Fetchers {
 		});
 	}
 
+	fn update<E>(
+		&self,
+		matcher: FetcherMatcher,
+		f: impl Fn(Fetcher) -> Result<Fetcher, E>,
+	) -> Result<(), E> {
+		self.0.try_rcu(|fetchers| {
+			let mut next = Vec::clone(fetchers);
+			for fetcher in &mut next {
+				if matcher.matches(fetcher) {
+					*fetcher = f(Fetcher::clone(fetcher))?.into();
+				}
+			}
+			Ok(Self::reindex(next))
+		})?;
+
+		Ok(())
+	}
+
 	fn reindex(mut fetchers: Vec<FetcherArc>) -> Vec<FetcherArc> {
 		let rev = fetcher_rev();
 		for (i, fetcher) in fetchers.iter_mut().enumerate() {
@@ -114,6 +132,11 @@ impl UserData for &'static Fetchers {
 
 		methods.add_method("remove", |_, &me, matcher: FetcherMatcher| {
 			me.remove(matcher);
+			Ok(())
+		});
+
+		methods.add_method("update", |_, &me, (matcher, table): (FetcherMatcher, Table)| {
+			me.update(matcher, |fetcher| fetcher.deserialize_over_lua(&table))?;
 			Ok(())
 		});
 
