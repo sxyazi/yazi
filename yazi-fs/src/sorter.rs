@@ -84,7 +84,7 @@ impl FilesSorter {
 				})
 			}
 			SortBy::Dtime => items.sort_unstable_by(|a, b| {
-			    promote!(a,b);
+				promote!(a, b);
 				self.fallback(a, b, self.cmp(a.dtime, b.dtime))
 			}),
 			SortBy::Custom => items.sort_unstable_by(|a, b| {
