@@ -18,6 +18,7 @@ pub struct Stat {
 	pub btime: Option<SystemTime>,
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
+	pub dtime: Option<SystemTime>,
 	pub dev:   u64,
 	pub uid:   u32,
 	pub gid:   u32,
@@ -40,6 +41,7 @@ impl Default for Stat {
 			btime: None,
 			ctime: None,
 			mtime: None,
+			dtime: None,
 			dev:   0,
 			uid:   0,
 			gid:   0,
@@ -109,6 +111,7 @@ impl Stat {
 				None
 			),
 			mtime: m.modified().ok(),
+			dtime: None,
 			dev: unix_either!(m.dev(), 0) as _,
 			uid: unix_either!(m.uid(), 0) as _,
 			gid: unix_either!(m.gid(), 0) as _,
@@ -192,6 +195,14 @@ impl Stat {
 			Ok(ctime.duration_since(UNIX_EPOCH)?)
 		} else {
 			bail!("ctime not available");
+		}
+	}
+
+	pub(crate) fn dtime_dur(self) -> anyhow::Result<Duration> {
+	    if let Some(dtime) = self.dtime {
+					Ok(dtime.duration_since(UNIX_EPOCH)?)
+		} else {
+		    bail!("dtime not available");
 		}
 	}
 

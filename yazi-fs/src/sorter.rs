@@ -83,6 +83,10 @@ impl FilesSorter {
 					self.cmp(rng.next_u64(), rng.next_u64())
 				})
 			}
+			SortBy::Dtime => items.sort_unstable_by(|a,b| {
+			    promote!(a,b);
+				self.fallback(a, b, self.cmp(a.dtime, b.dtime))
+			}),
 			SortBy::Custom => items.sort_unstable_by(|a, b| {
 				promote!(a, b);
 				let aa = ranks.get(&a.key()).copied().unwrap_or_default();

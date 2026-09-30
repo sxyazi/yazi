@@ -30,6 +30,7 @@ impl Stat {
 					btime: parse_time(t.raw_get("btime").ok())?,
 					ctime: parse_time(t.raw_get("ctime").ok())?,
 					mtime: parse_time(t.raw_get("mtime").ok())?,
+					dtime: parse_time(t.raw_get("dtime").ok())?,
 					dev: t.raw_get("dev").unwrap_or_default(),
 					uid: t.raw_get("uid").unwrap_or_default(),
 					gid: t.raw_get("gid").unwrap_or_default(),
@@ -55,11 +56,12 @@ impl UserData for Stat {
 		fields.add_field_method_get("is_sock", |_, me| Ok(me.is_sock()));
 		fields.add_field_method_get("is_exec", |_, me| Ok(me.is_exec()));
 		fields.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
-
+		
 		fields.add_field_method_get("len", |_, me| Ok(me.len));
 		fields.add_field_method_get("atime", |_, me| Ok(me.atime_dur().ok().map(|d| d.as_secs_f64())));
 		fields.add_field_method_get("btime", |_, me| Ok(me.btime_dur().ok().map(|d| d.as_secs_f64())));
 		fields.add_field_method_get("ctime", |_, me| Ok(me.ctime_dur().ok().map(|d| d.as_secs_f64())));
+		fields.add_field_method_get("dtime", |_, me| Ok(me.dtime_dur().ok().map(|d| d.as_secs_f64())));
 		fields.add_field_method_get("mtime", |_, me| Ok(me.mtime_dur().ok().map(|d| d.as_secs_f64())));
 		fields.add_field_method_get("dev", |_, me| Ok(me.dev));
 		fields.add_field_method_get("uid", |_, me| Ok(me.uid));

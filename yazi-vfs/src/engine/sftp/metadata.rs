@@ -49,6 +49,7 @@ impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Stat {
 			atime: attrs.atime.and_then(|t| UNIX_EPOCH.checked_add(Duration::from_secs(t as u64))),
 			btime: None,
 			ctime: None,
+			dtime: None,
 			mtime: attrs.mtime.and_then(|t| UNIX_EPOCH.checked_add(Duration::from_secs(t as u64))),
 			dev: 0,
 			uid: attrs.uid.unwrap_or(0),

@@ -144,10 +144,15 @@ impl Trash {
 				let dent = dent?;
 				let info = dent.path();
 				if let Ok(parsed) = TrashInfo::parse(&info) {
-					tops.push(ok_or_not_found!(
+					let mut entry = ok_or_not_found!(
 						TrashEntry::top(info, parsed.backing, Some(parsed.original)),
 						continue
-					));
+					);
+					entry.stat.dtime = parsed.dtime;
+					entry.lstat.dtime = parsed.dtime;
+
+					tops.push(entry);
+					
 				}
 			}
 		}

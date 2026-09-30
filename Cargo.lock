@@ -5372,6 +5372,7 @@ dependencies = [
  "arc-swap",
  "bitflags 2.13.2",
  "cfg_aliases",
+ "chrono",
  "core-foundation-sys",
  "data-encoding",
  "dirs",

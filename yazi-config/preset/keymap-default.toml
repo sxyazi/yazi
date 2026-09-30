@@ -127,6 +127,8 @@ keymap = [
 	{ on = [ ",", "s" ], run = [ "sort size --reverse=no", "linemode size" ],    desc = "Sort by size" },
 	{ on = [ ",", "S" ], run = [ "sort size --reverse=yes", "linemode size" ],   desc = "Sort by size (reverse)" },
 	{ on = [ ",", "r" ], run = "sort random --reverse=no",                       desc = "Sort randomly" },
+	{ on = [ ",", "d" ], run = "sort dtime --reverse=no",                        desc = "Sort by deletion time" },
+	{ on = [ ",", "D" ], run = "sort dtime --reverse=yes",                       desc = "Sort by deletion time (reverse)" },
 
 	# Goto
 	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },

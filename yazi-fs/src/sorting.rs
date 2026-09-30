@@ -12,6 +12,7 @@ pub enum SortBy {
 	None,
 	Mtime,
 	Btime,
+	Dtime,
 	Extension,
 	Alphabetical,
 	Natural,
