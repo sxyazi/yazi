@@ -27,6 +27,7 @@ impl UserData for Which {
 		fields.add_cached_field("cands", |lua, me| {
 			lua.create_sequence_from(me.inner.cands.iter().cloned())
 		});
+		fields.add_field_method_get("layer", |_, me| Ok(me.inner.layer));
 		fields.add_field_method_get("times", |_, me| Ok(me.inner.times));
 
 		fields.add_field_method_get("active", |_, me| Ok(me.inner.active));
