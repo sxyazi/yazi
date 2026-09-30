@@ -31,7 +31,7 @@ impl TrashInfo {
 			.filter(|&stem| stem != OsStr::new(".") && stem != OsStr::new(".."))
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid trash info path"))?;
 
-		let (original,dtime) = Self::parse_original(info, root)?;
+		let (original, dtime) = Self::parse_original(info, root)?;
 		if original.file_name().is_none() {
 			return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid original trash path"));
 		}
@@ -39,7 +39,7 @@ impl TrashInfo {
 		Ok(Self { root: root.to_owned(), backing: root.join("files").join(stem), original, dtime, })
 	}
 
-	fn parse_original(info: &Path, root: &Path) -> io::Result<(PathBuf,Option<SystemTime>)> {
+	fn parse_original(info: &Path, root: &Path) -> io::Result<(PathBuf, Option<SystemTime>)> {
 		let mut reader = BufReader::new(File::open(info)?);
 		let mut line = Vec::new();
 
@@ -80,7 +80,7 @@ impl TrashInfo {
 			}
 		}
 		let final_path = parsed_path.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "trash info has no Path"))?;
-		Ok((final_path,parsed_dtime))
+		Ok((final_path, parsed_dtime))
 	}
 
 	fn parse_deletion_date(bytes: &[u8]) -> Option<SystemTime> {

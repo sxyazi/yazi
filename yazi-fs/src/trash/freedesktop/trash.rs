@@ -150,7 +150,6 @@ impl Trash {
 					);
 					entry.stat.dtime = parsed.dtime;
 					entry.lstat.dtime = parsed.dtime;
-
 					tops.push(entry);
 					
 				}

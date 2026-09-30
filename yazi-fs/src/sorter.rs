@@ -83,7 +83,7 @@ impl FilesSorter {
 					self.cmp(rng.next_u64(), rng.next_u64())
 				})
 			}
-			SortBy::Dtime => items.sort_unstable_by(|a,b| {
+			SortBy::Dtime => items.sort_unstable_by(|a, b| {
 			    promote!(a,b);
 				self.fallback(a, b, self.cmp(a.dtime, b.dtime))
 			}),

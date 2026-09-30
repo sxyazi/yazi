@@ -56,7 +56,6 @@ impl UserData for Stat {
 		fields.add_field_method_get("is_sock", |_, me| Ok(me.is_sock()));
 		fields.add_field_method_get("is_exec", |_, me| Ok(me.is_exec()));
 		fields.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
-		
 		fields.add_field_method_get("len", |_, me| Ok(me.len));
 		fields.add_field_method_get("atime", |_, me| Ok(me.atime_dur().ok().map(|d| d.as_secs_f64())));
 		fields.add_field_method_get("btime", |_, me| Ok(me.btime_dur().ok().map(|d| d.as_secs_f64())));

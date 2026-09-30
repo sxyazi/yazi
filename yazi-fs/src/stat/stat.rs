@@ -200,7 +200,7 @@ impl Stat {
 
 	pub(crate) fn dtime_dur(self) -> anyhow::Result<Duration> {
 	    if let Some(dtime) = self.dtime {
-					Ok(dtime.duration_since(UNIX_EPOCH)?)
+			Ok(dtime.duration_since(UNIX_EPOCH)?)
 		} else {
 		    bail!("dtime not available");
 		}
