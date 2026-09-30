@@ -1,7 +1,7 @@
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use mlua::{ExternalError, FromLua, Function, IntoLuaMulti, Lua, Value};
-use yazi_binding::Date;
+use yazi_binding::date::Date;
 
 use super::Utils;
 
