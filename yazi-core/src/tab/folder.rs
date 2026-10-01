@@ -21,7 +21,8 @@ pub struct Folder {
 	pub page:  usize,
 	pub trace: Option<PathBufDyn>,
 
-	stale: bool,
+	stale:            bool,
+	exclude_patterns: Vec<String>,
 }
 
 impl Deref for Folder {
@@ -41,13 +42,18 @@ impl Default for Folder {
 			page:    Default::default(),
 			trace:   Default::default(),
 			stale:   Default::default(),
+
+			exclude_patterns: Default::default(),
 		}
 	}
 }
 
 impl<T: Into<UrlBuf>> From<T> for Folder {
 	fn from(value: T) -> Self {
-		Self { file: File::from_dummy(value, Some(StatType::Dir)), ..Default::default() }
+		let mut folder =
+			Self { file: File::from_dummy(value, Some(StatType::Dir)), ..Default::default() };
+		folder.entries.set_ignore_filter(YAZI.files.ignore_filter(folder.url.as_url(), &[]));
+		folder
 	}
 }
 
@@ -127,6 +133,18 @@ impl Folder {
 			log_if_err!(Pubsub::pub_after_load(tab, &self.url, &self.stage));
 		}
 
+		true
+	}
+
+	pub fn set_exclude_patterns(&mut self, mut patterns: Vec<String>) -> bool {
+		patterns.sort_unstable();
+		patterns.dedup();
+		if self.exclude_patterns == patterns {
+			return false;
+		}
+
+		self.entries.set_ignore_filter(YAZI.files.ignore_filter(self.url.as_url(), &patterns));
+		self.exclude_patterns = patterns;
 		true
 	}
 

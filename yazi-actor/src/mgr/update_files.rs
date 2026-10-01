@@ -50,6 +50,7 @@ impl UpdateFiles {
 		}
 
 		act!(mgr:hidden, cx).ok();
+		act!(mgr:excluded, cx).ok();
 		act!(mgr:sort, cx).ok();
 
 		if revision != cx.current().entries.revision {

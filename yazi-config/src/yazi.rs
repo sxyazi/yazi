@@ -3,11 +3,12 @@ use serde::Deserialize;
 use yazi_codegen::{DeserializeOver, DeserializeOver1};
 use yazi_fs::{Xdg, ok_or_not_found};
 
-use crate::{mgr, open, opener, plugin, popup, preview, tasks, which};
+use crate::{files, mgr, open, opener, plugin, popup, preview, tasks, which};
 
 #[derive(Deserialize, DeserializeOver, DeserializeOver1)]
 pub struct Yazi {
 	pub mgr:            mgr::Mgr,
+	pub files:          files::Files,
 	pub preview:        preview::Preview,
 	pub opener:         opener::Opener,
 	pub open:           open::Open,
