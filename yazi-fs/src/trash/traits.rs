@@ -18,9 +18,9 @@ impl TrashStat for Stat {
 	}
 
 	fn from_trash(path: &std::path::Path, name: &std::ffi::OsStr) -> std::io::Result<(Self, Self)> {
-		let lstat = Self::new(name, fs::symlink_metadata(path)?);
+		let lstat = Self::new(name, path, fs::symlink_metadata(path)?);
 		let stat = if lstat.is_link() {
-			lstat.follow(fs::metadata(path).ok().map(|meta| Self::new(name, meta)))
+			lstat.follow(fs::metadata(path).ok().map(|meta| Self::new(name, path, meta)))
 		} else {
 			lstat
 		};

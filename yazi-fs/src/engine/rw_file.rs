@@ -47,7 +47,7 @@ impl RwFile {
 	}
 
 	pub async fn metadata(&self) -> io::Result<Stat> {
-		Ok(Stat::new(self.name().unwrap_or_default(), self.inner.metadata().await?))
+		Ok(Stat::new(self.name().unwrap_or_default(), &self.path, self.inner.metadata().await?))
 	}
 
 	pub async fn permissions(&self) -> io::Result<Permissions> {

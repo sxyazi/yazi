@@ -1,4 +1,4 @@
-use std::{fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{fs::Metadata, ops::Deref, path::Path, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use anyhow::bail;
 use mlua::FromLua;
@@ -50,11 +50,11 @@ impl Default for Stat {
 
 impl Stat {
 	#[inline]
-	pub fn new<T>(name: T, meta: Metadata) -> Self
+	pub fn new<T>(name: T, path: &Path, meta: Metadata) -> Self
 	where
 		T: AsStrand,
 	{
-		Self::from_bare(&meta).attach(StatKind::hidden(name, &meta) | StatKind::reparse(&meta))
+		Self::from_bare(&meta).attach(StatKind::hidden(name, path, &meta) | StatKind::reparse(&meta))
 	}
 
 	pub(crate) fn from_dummy<U>(_url: U, r#type: Option<StatType>) -> Self

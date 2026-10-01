@@ -80,7 +80,11 @@ impl<'a> Engine for Local<'a> {
 
 	#[inline]
 	async fn metadata(&self) -> io::Result<Stat> {
-		Ok(Stat::new(self.path.file_name().unwrap_or_default(), tokio::fs::metadata(self.path).await?))
+		Ok(Stat::new(
+			self.path.file_name().unwrap_or_default(),
+			self.path,
+			tokio::fs::metadata(self.path).await?,
+		))
 	}
 
 	#[inline]
@@ -199,6 +203,7 @@ impl<'a> Engine for Local<'a> {
 	async fn symlink_metadata(&self) -> io::Result<Stat> {
 		Ok(Stat::new(
 			self.path.file_name().unwrap_or_default(),
+			self.path,
 			tokio::fs::symlink_metadata(self.path).await?,
 		))
 	}

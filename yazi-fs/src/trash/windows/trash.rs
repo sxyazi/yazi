@@ -54,7 +54,8 @@ impl Trash {
 		let original = original.join(id.rel());
 		let backing: PathBuf = top.display_name(SIGDN_FILESYSPATH)?.into();
 
-		let stat = Stat::new(backing.file_name().unwrap_or_default(), fs::symlink_metadata(&backing)?);
+		let stat =
+			Stat::new(backing.file_name().unwrap_or_default(), &backing, fs::symlink_metadata(&backing)?);
 		if stat.is_dir() && !stat.is_indirect() {
 			top.resolve(id.rel())?.entry(id.clone(), Some(original))
 		} else {

@@ -16,7 +16,8 @@ impl SizeCalculator {
 	pub async fn new(path: &Path) -> io::Result<Self> {
 		let p = path.to_owned();
 		tokio::task::spawn_blocking(move || {
-			let stat = Stat::new(p.file_name().unwrap_or_default(), std::fs::symlink_metadata(&p)?);
+			let stat =
+				Stat::new(p.file_name().unwrap_or_default(), p.as_path(), std::fs::symlink_metadata(&p)?);
 			if !stat.is_dir() || stat.is_indirect() {
 				return Ok(Self::Idle((VecDeque::new(), Some(stat.len)), stat));
 			}
@@ -111,7 +112,8 @@ impl SizeCalculator {
 			// The entry is a directory, but it may be a reparse point
 			#[cfg(windows)]
 			{
-				let Ok(stat) = dent.metadata().map(|meta| Stat::new(dent.file_name(), meta)) else {
+				let Ok(stat) = dent.metadata().map(|meta| Stat::new(dent.file_name(), &dent.path(), meta))
+				else {
 					continue;
 				};
 				if !stat.is_dir() || stat.is_indirect() {
