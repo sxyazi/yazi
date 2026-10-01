@@ -1,7 +1,11 @@
+use anyhow::anyhow;
 use mlua::{ExternalError, ExternalResult, FromLua, Lua, MetaMethod, UserData, UserDataMethods, Value};
 use serde::Deserialize;
 use strum::{Display, EnumString, FromRepr, IntoStaticStr};
+use yazi_macro::impl_data_any;
 use yazi_shim::strum::IntoStr;
+
+use crate::data::Data;
 
 #[derive(
 	Clone,
@@ -34,6 +38,19 @@ pub enum Layer {
 	Cmp,
 	Which,
 	Notify,
+}
+
+impl_data_any!(Layer, from_into_lua = inherit);
+
+impl TryFrom<&Data> for Layer {
+	type Error = anyhow::Error;
+
+	fn try_from(value: &Data) -> Result<Self, Self::Error> {
+		match value {
+			Data::String(s) => Ok(s.parse()?),
+			_ => value.as_any().copied().ok_or_else(|| anyhow!("expected a Layer")),
+		}
+	}
 }
 
 impl Layer {

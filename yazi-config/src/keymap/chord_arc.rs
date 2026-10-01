@@ -2,6 +2,7 @@ use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 use serde::Deserialize;
+use yazi_macro::impl_data_any;
 use yazi_shared::{Layer, event::ActionCow};
 use yazi_shim::mlua::UserDataFieldsExt;
 
@@ -10,6 +11,8 @@ use crate::{Mixable, keymap::Chord};
 #[repr(transparent)]
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct ChordArc(Arc<Chord>);
+
+impl_data_any!(ChordArc, from_into_lua = inherit);
 
 impl Deref for ChordArc {
 	type Target = Arc<Chord>;

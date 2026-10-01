@@ -24,6 +24,7 @@ impl Which {
 impl UserData for Which {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_cached_field("tx", |_, me| Ok(me.tx.clone().map(yazi_binding::MpscUnboundedTx)));
+		fields.add_field_method_get("layer", |_, me| Ok(me.inner.layer));
 		fields.add_cached_field("cands", |lua, me| {
 			lua.create_sequence_from(me.inner.cands.iter().cloned())
 		});

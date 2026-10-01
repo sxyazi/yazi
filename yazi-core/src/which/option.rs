@@ -25,7 +25,7 @@ impl TryFrom<ActionCow> for WhichOpt {
 
 		Ok(Self {
 			tx:     a.take_any2("tx").transpose()?,
-			layer:  a.str("layer").parse()?,
+			layer:  a.get("layer")?,
 			cands:  a.take_any_iter().collect(),
 			times:  a.get("times").unwrap_or(0),
 			silent: a.bool("silent"),
