@@ -18,10 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Custom sorting ([#4363])
 - Dynamic virtual filesystem Lua API ([#4338])
 - Update methods to dynamic Lua APIs ([#4389])
+- Respect user locale date format ([#4395])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 
 ### Changed
 
+- Return `Time` instead of number from `ya.time()`, `Stat.atime`, `Stat.btime`, `Stat.ctime`, `Stat.mtime` ([#4395])
 - Supersede `search` action with `plugin rg` and `plugin fd` ([#4335])
 - Rename `Spec::is_search` property and `escape --search` action to `Spec::is_view` and `escape --view`, respectively ([#4335])
 - Move `search_title`, `search_origin`, and `search_offset` from `[input]` in `yazi.toml` to `[rg]`/`[fd]` in `theme.toml` as `title` and `position` ([#4335])
@@ -1892,3 +1894,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4370]: https://github.com/sxyazi/yazi/pull/4370
 [#4383]: https://github.com/sxyazi/yazi/pull/4383
 [#4389]: https://github.com/sxyazi/yazi/pull/4389
+[#4395]: https://github.com/sxyazi/yazi/pull/4395
