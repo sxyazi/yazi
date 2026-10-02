@@ -35,24 +35,24 @@ function Linemode:size()
 end
 
 function Linemode:btime()
-	local time = math.floor(self._file.stat.btime or 0)
-	if time == 0 then
+	local btime = self._file.stat.btime
+	if not btime then
 		return ""
-	elseif os.date("%Y", time) == os.date("%Y") then
-		return os.date("%m/%d %H:%M", time)
+	elseif btime.year == ya.time().year then
+		return btime:format { month = "2-digit", day = "2-digit", hour24 = "2-digit", minute = "2-digit" }
 	else
-		return os.date("%m/%d  %Y", time)
+		return btime:format { month = "2-digit", day = "2-digit" } .. "  " .. btime.year
 	end
 end
 
 function Linemode:mtime()
-	local time = math.floor(self._file.stat.mtime or 0)
-	if time == 0 then
+	local mtime = self._file.stat.mtime
+	if not mtime then
 		return ""
-	elseif os.date("%Y", time) == os.date("%Y") then
-		return os.date("%m/%d %H:%M", time)
+	elseif mtime.year == ya.time().year then
+		return mtime:format { month = "2-digit", day = "2-digit", hour24 = "2-digit", minute = "2-digit" }
 	else
-		return os.date("%m/%d  %Y", time)
+		return mtime:format { month = "2-digit", day = "2-digit" } .. "  " .. mtime.year
 	end
 end
 

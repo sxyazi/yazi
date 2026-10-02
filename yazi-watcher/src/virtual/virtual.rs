@@ -1,9 +1,10 @@
-use std::{io, time::{Duration, SystemTime}};
+use std::{io, time::Duration};
 
 use hashbrown::{HashMap, HashSet};
 use notify::Result;
 use tokio::{pin, sync::mpsc::UnboundedReceiver};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
+use yazi_binding::time::Time;
 use yazi_fs::op::FilesOp;
 use yazi_shared::{strand::StrandBuf, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{Stamp, engine};
@@ -69,7 +70,7 @@ impl Virtual {
 				};
 
 				if upload && file.is_file() {
-					file.stat.ctime = Some(SystemTime::now());
+					file.stat.ctime = Some(Time::now());
 					ops.push(FilesOp::Upsert(trail.into(), [(key.into(), file)].into()));
 					ups.push(url);
 					continue;

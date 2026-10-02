@@ -1,8 +1,9 @@
-use std::{fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{fs::Metadata, ops::Deref, time::Duration};
 
 use anyhow::bail;
 use mlua::FromLua;
 use serde::{Deserialize, Serialize};
+use yazi_binding::time::Time;
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::{strand::AsStrand, url::AsUrl};
 
@@ -14,10 +15,10 @@ pub struct Stat {
 	pub kind:  StatKind,
 	pub mode:  StatMode,
 	pub len:   u64,
-	pub atime: Option<SystemTime>,
-	pub btime: Option<SystemTime>,
-	pub ctime: Option<SystemTime>,
-	pub mtime: Option<SystemTime>,
+	pub atime: Option<Time>,
+	pub btime: Option<Time>,
+	pub ctime: Option<Time>,
+	pub mtime: Option<Time>,
 	pub dev:   u64,
 	pub uid:   u32,
 	pub gid:   u32,
@@ -102,13 +103,13 @@ impl Stat {
 			kind: StatKind::empty(),
 			mode,
 			len: m.len(),
-			atime: m.accessed().ok(),
-			btime: m.created().ok(),
+			atime: m.accessed().ok().map(Time::from),
+			btime: m.created().ok().map(Time::from),
 			ctime: unix_either!(
-				UNIX_EPOCH.checked_add(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32)),
+				Time::try_from(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32)).ok(),
 				None
 			),
-			mtime: m.modified().ok(),
+			mtime: m.modified().ok().map(Time::from),
 			dev: unix_either!(m.dev(), 0) as _,
 			uid: unix_either!(m.uid(), 0) as _,
 			gid: unix_either!(m.gid(), 0) as _,
@@ -171,33 +172,17 @@ impl Stat {
 	#[inline]
 	pub fn is_indirect(self) -> bool { self.is_link() || self.is_reparse() }
 
-	pub(crate) fn atime_dur(self) -> anyhow::Result<Duration> {
-		if let Some(atime) = self.atime {
-			Ok(atime.duration_since(UNIX_EPOCH)?)
-		} else {
-			bail!("atime not available");
-		}
-	}
-
 	pub(crate) fn btime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(btime) = self.btime {
-			Ok(btime.duration_since(UNIX_EPOCH)?)
+			Ok(btime.try_into()?)
 		} else {
 			bail!("btime not available");
 		}
 	}
 
-	pub(crate) fn ctime_dur(self) -> anyhow::Result<Duration> {
-		if let Some(ctime) = self.ctime {
-			Ok(ctime.duration_since(UNIX_EPOCH)?)
-		} else {
-			bail!("ctime not available");
-		}
-	}
-
 	pub fn mtime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(mtime) = self.mtime {
-			Ok(mtime.duration_since(UNIX_EPOCH)?)
+			Ok(mtime.try_into()?)
 		} else {
 			bail!("mtime not available");
 		}

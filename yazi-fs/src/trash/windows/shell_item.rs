@@ -3,7 +3,7 @@ use std::{ffi::{OsStr, OsString, c_void}, io, os::windows::ffi::OsStringExt, pat
 use windows::{Win32::{Foundation::*, Storage::EnhancedStorage::*, System::{Com::{StructuredStorage::PropVariantToBSTR, *}, SystemServices::*}, UI::Shell::*}, core::{Interface, PCWSTR}};
 use yazi_shim::ToWide;
 
-use super::{super::{TrashEntry, TrashId, TrashStat}, trash::{error, operate, system_time}};
+use super::{super::{TrashEntry, TrashId, TrashStat}, trash::{error, operate, time}};
 use crate::stat::Stat;
 
 pub(super) struct ShellItem(pub(super) IShellItem);
@@ -73,7 +73,7 @@ impl ShellItem {
 
 		let mut stat = Stat::from_mold(is_dir);
 		stat.len = unsafe { item.GetUInt64(&PKEY_Size) }.unwrap_or_default();
-		stat.mtime = unsafe { item.GetFileTime(&PKEY_DateModified) }.ok().and_then(system_time);
+		stat.mtime = unsafe { item.GetFileTime(&PKEY_DateModified) }.ok().and_then(time);
 		Ok(stat)
 	}
 

@@ -1,15 +1,16 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use mlua::{IntoLua, Lua, Value};
+use yazi_binding::time::Time;
 
 use crate::stat::{Stat, StatMode};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Attrs {
 	pub mode:  Option<StatMode>,
-	pub atime: Option<SystemTime>,
-	pub btime: Option<SystemTime>,
-	pub mtime: Option<SystemTime>,
+	pub atime: Option<Time>,
+	pub btime: Option<Time>,
+	pub mtime: Option<Time>,
 }
 
 impl From<Stat> for Attrs {
@@ -28,23 +29,23 @@ impl TryFrom<Attrs> for std::fs::FileTimes {
 
 		let mut t = Self::new();
 		if let Some(atime) = value.atime {
-			t = t.set_accessed(atime);
+			t = t.set_accessed(atime.into());
 		}
 
 		#[cfg(target_os = "macos")]
 		if let Some(btime) = value.btime {
 			use std::os::macos::fs::FileTimesExt;
-			t = t.set_created(btime);
+			t = t.set_created(btime.into());
 		}
 
 		#[cfg(windows)]
 		if let Some(btime) = value.btime {
 			use std::os::windows::fs::FileTimesExt;
-			t = t.set_created(btime);
+			t = t.set_created(btime.into());
 		}
 
 		if let Some(mtime) = value.mtime {
-			t = t.set_modified(mtime);
+			t = t.set_modified(mtime.into());
 		}
 
 		Ok(t)
@@ -73,11 +74,9 @@ impl Attrs {
 			|| (self.btime.is_some() && cfg!(any(target_os = "macos", target_os = "windows")))
 	}
 
-	pub fn atime_dur(self) -> Option<Duration> { self.atime?.duration_since(UNIX_EPOCH).ok() }
+	pub fn atime_dur(self) -> Option<Duration> { self.atime?.try_into().ok() }
 
-	fn btime_dur(self) -> Option<Duration> { self.btime?.duration_since(UNIX_EPOCH).ok() }
-
-	pub fn mtime_dur(self) -> Option<Duration> { self.mtime?.duration_since(UNIX_EPOCH).ok() }
+	pub fn mtime_dur(self) -> Option<Duration> { self.mtime?.try_into().ok() }
 }
 
 impl IntoLua for Attrs {
@@ -85,9 +84,9 @@ impl IntoLua for Attrs {
 		lua
 			.create_table_from([
 				("mode", self.mode.map(|m| m.bits()).into_lua(lua)?),
-				("atime", self.atime_dur().map(|d| d.as_secs_f64()).into_lua(lua)?),
-				("btime", self.btime_dur().map(|d| d.as_secs_f64()).into_lua(lua)?),
-				("mtime", self.mtime_dur().map(|d| d.as_secs_f64()).into_lua(lua)?),
+				("atime", self.atime.into_lua(lua)?),
+				("btime", self.btime.into_lua(lua)?),
+				("mtime", self.mtime.into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

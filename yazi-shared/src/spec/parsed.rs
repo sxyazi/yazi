@@ -1,8 +1,9 @@
 use std::fmt;
 
 use anyhow::Result;
+use yazi_shim::bytes::BytesExt;
 
-use crate::{BytesExt, auth::Scheme};
+use crate::auth::Scheme;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ParsedSpec<'a> {

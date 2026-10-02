@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-use crate::BytePredictor;
+use super::BytePredictor;
 
 pub trait BytesExt {
 	fn display(&self) -> impl Display;

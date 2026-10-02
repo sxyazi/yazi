@@ -140,7 +140,7 @@ Contributions related to the icon should be made upstream to facilitate easier a
 
 ## Pull Requests
 
-If you have an idea, before raising a pull request, we encourage you to file an issue to propose it, ensuring that we are aligned and reducing the risk of re-work.
+If you have an idea, before raising a pull request, we encourage you to propose it in an issue, ensuring that we are aligned and reducing the risk of re-work.
 
 We want you to succeed, and it can be discouraging to find that a lot of re-work is needed.
 

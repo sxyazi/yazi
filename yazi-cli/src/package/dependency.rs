@@ -4,7 +4,7 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash3_128;
 use yazi_fs::Xdg;
-use yazi_shared::BytesExt;
+use yazi_shim::bytes::BytesExt;
 
 #[derive(Clone, Default)]
 pub(crate) struct Dependency {

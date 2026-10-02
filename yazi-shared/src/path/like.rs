@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
+use yazi_shim::bytes::Utf8BytePredictor;
 
-use crate::{Utf8BytePredictor, path::{Component, Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand}};
+use crate::{path::{Component, Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathCow, PathDyn, PathDynError, PathKind, RsplitOnceError, StartsWithError, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand}};
 
 pub trait PathLike: DynPath {
 	fn as_os(&self) -> Result<&std::path::Path, PathDynError> { self.dyn_path().as_os() }

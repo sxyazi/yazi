@@ -14,19 +14,27 @@ workspace = true
 
 [dependencies]
 yazi-macro = { path = "../yazi-macro", version = "26.9.1" }
+yazi-shim  = { path = "../yazi-shim", version = "26.9.1" }
 
 # External dependencies
-anyhow        = { workspace = true }
+chrono        = { workspace = true }
 data-encoding = { workspace = true }
+mlua          = { workspace = true }
 rand          = { workspace = true }
+strum         = { workspace = true }
+thiserror     = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 rustix = { workspace = true }
 
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+libc = { workspace = true }
+
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation-sys = { workspace = true }
-objc2               = { workspace = true }
+objc2                 = { workspace = true }
+objc2-core-foundation = { workspace = true }
+objc2-foundation      = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows     = { version = "0.62.2", features = [ "Win32_System_Com" ] }
-windows-sys = { version = "0.61.2", features = [ "Win32_Foundation", "Win32_System_Memory" ] }
+windows-sys = { version = "0.61.2", features = [ "Win32_Foundation", "Win32_Globalization", "Win32_Security", "Win32_System_Memory" ] }

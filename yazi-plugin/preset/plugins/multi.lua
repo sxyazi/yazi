@@ -39,7 +39,7 @@ function M:spot_base(_, selected)
 	return ya.co(function()
 		yield("0B (?)")
 
-		local sum, last = 0, 0
+		local sum, last = 0, ya.time(0)
 		for _, url in ipairs(selected) do
 			local it, size = fs.calc_size(url), 0
 			while it do

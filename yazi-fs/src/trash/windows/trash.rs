@@ -1,6 +1,7 @@
-use std::{fs, io, path::{Path, PathBuf}, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{fs, io, path::{Path, PathBuf}, time::Duration};
 
 use windows::{Win32::{Foundation::*, System::Com::*, UI::Shell::*}, core::PCWSTR};
+use yazi_binding::time::Time;
 use yazi_ffi::Com;
 use yazi_shim::ToWide;
 
@@ -194,8 +195,8 @@ pub(super) fn error(error: windows::core::Error) -> io::Error {
 	}
 }
 
-pub(super) fn system_time(time: FILETIME) -> Option<SystemTime> {
+pub(super) fn time(time: FILETIME) -> Option<Time> {
 	let ticks = (u64::from(time.dwHighDateTime) << 32) | u64::from(time.dwLowDateTime);
 	let ticks = ticks.checked_sub(116_444_736_000_000_000)?;
-	Some(UNIX_EPOCH + Duration::new(ticks / 10_000_000, (ticks % 10_000_000) as u32 * 100))
+	Time::try_from(Duration::new(ticks / 10_000_000, (ticks % 10_000_000) as u32 * 100)).ok()
 }

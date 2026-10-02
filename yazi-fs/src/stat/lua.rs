@@ -1,19 +1,9 @@
-use std::time::{Duration, SystemTime};
-
 use mlua::{ExternalError, Lua, Table, UserData, UserDataFields, UserDataMethods};
 
 use crate::{FsHash128, stat::{Stat, StatKind, StatMode}};
 
 impl Stat {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		fn parse_time(f: Option<f64>) -> mlua::Result<Option<SystemTime>> {
-			Ok(match f {
-				Some(n) if n >= 0.0 => Some(SystemTime::UNIX_EPOCH + Duration::from_secs_f64(n)),
-				Some(n) => Err(format!("Invalid timestamp: {n}").into_lua_err())?,
-				None => None,
-			})
-		}
-
 		lua.globals().raw_set(
 			"Stat",
 			lua.create_function(|_, t: Table| {
@@ -26,10 +16,10 @@ impl Stat {
 					kind,
 					mode,
 					len: t.raw_get("len").unwrap_or_default(),
-					atime: parse_time(t.raw_get("atime").ok())?,
-					btime: parse_time(t.raw_get("btime").ok())?,
-					ctime: parse_time(t.raw_get("ctime").ok())?,
-					mtime: parse_time(t.raw_get("mtime").ok())?,
+					atime: t.raw_get("atime")?,
+					btime: t.raw_get("btime")?,
+					ctime: t.raw_get("ctime")?,
+					mtime: t.raw_get("mtime")?,
 					dev: t.raw_get("dev").unwrap_or_default(),
 					uid: t.raw_get("uid").unwrap_or_default(),
 					gid: t.raw_get("gid").unwrap_or_default(),
@@ -57,10 +47,10 @@ impl UserData for Stat {
 		fields.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
 
 		fields.add_field_method_get("len", |_, me| Ok(me.len));
-		fields.add_field_method_get("atime", |_, me| Ok(me.atime_dur().ok().map(|d| d.as_secs_f64())));
-		fields.add_field_method_get("btime", |_, me| Ok(me.btime_dur().ok().map(|d| d.as_secs_f64())));
-		fields.add_field_method_get("ctime", |_, me| Ok(me.ctime_dur().ok().map(|d| d.as_secs_f64())));
-		fields.add_field_method_get("mtime", |_, me| Ok(me.mtime_dur().ok().map(|d| d.as_secs_f64())));
+		fields.add_field_method_get("atime", |_, me| Ok(me.atime));
+		fields.add_field_method_get("btime", |_, me| Ok(me.btime));
+		fields.add_field_method_get("ctime", |_, me| Ok(me.ctime));
+		fields.add_field_method_get("mtime", |_, me| Ok(me.mtime));
 		fields.add_field_method_get("dev", |_, me| Ok(me.dev));
 		fields.add_field_method_get("uid", |_, me| Ok(me.uid));
 		fields.add_field_method_get("gid", |_, me| Ok(me.gid));

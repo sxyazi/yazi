@@ -2,8 +2,7 @@ use std::{borrow::Borrow, ffi::OsStr, fmt::{Display, Formatter}, ops::Deref};
 
 use compact_str::CompactString;
 use serde::{Deserialize, Deserializer, Serialize};
-
-use crate::BytesExt;
+use yazi_shim::bytes::BytesExt;
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(transparent)]

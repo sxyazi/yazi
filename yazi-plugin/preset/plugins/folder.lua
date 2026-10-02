@@ -82,7 +82,7 @@ function M:spot_base(job)
 	return ya.co(function()
 		yield("0B (?)")
 
-		local it, size, last = fs.calc_size(job.file.url), 0, 0
+		local it, size, last = fs.calc_size(job.file.url), 0, ya.time(0)
 		if not it then
 			return yield("Error")
 		end
