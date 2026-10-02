@@ -2,10 +2,10 @@ use std::{borrow::Cow, ffi::OsStr};
 
 use anyhow::Result;
 use hashbrown::Equivalent;
-use yazi_shim::OptionExt;
+use yazi_shim::{OptionExt, bytes::{BytesExt, Utf8BytePredictor}};
 
 use super::{RsplitOnceError, StartsWithError};
-use crate::{BytesExt, Utf8BytePredictor, path::{Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand, StrandError}};
+use crate::{path::{Components, Display, DynPath, EndsWithError, JoinError, PathBufDyn, PathDynError, PathKind, StripPrefixError, StripSuffixError}, strand::{AsStrand, Strand, StrandError}};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PathDyn<'p> {

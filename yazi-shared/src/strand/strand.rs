@@ -1,9 +1,9 @@
 use std::{borrow::Cow, ffi::OsStr, fmt::{self, Display}};
 
 use anyhow::Result;
-use yazi_shim::{OptionExt, wtf8::FromWtf8};
+use yazi_shim::{OptionExt, bytes::BytesExt, wtf8::FromWtf8};
 
-use crate::{BytesExt, strand::{AsStrand, StrandBuf, StrandError, StrandKind}};
+use crate::strand::{AsStrand, StrandBuf, StrandError, StrandKind};
 
 // --- Strand
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialOrd)]

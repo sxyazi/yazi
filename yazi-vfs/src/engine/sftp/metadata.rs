@@ -1,5 +1,6 @@
-use std::{io, time::{Duration, UNIX_EPOCH}};
+use std::io;
 
+use yazi_binding::time::Time;
 use yazi_fs::stat::StatKind;
 
 // --- Attrs
@@ -46,10 +47,10 @@ impl TryFrom<(&[u8], &yazi_sftp::fs::Attrs)> for Stat {
 			kind,
 			mode: StatMode::try_from(attrs)?.0,
 			len: attrs.size.unwrap_or(0),
-			atime: attrs.atime.and_then(|t| UNIX_EPOCH.checked_add(Duration::from_secs(t as u64))),
+			atime: attrs.atime.map(Time::from),
 			btime: None,
 			ctime: None,
-			mtime: attrs.mtime.and_then(|t| UNIX_EPOCH.checked_add(Duration::from_secs(t as u64))),
+			mtime: attrs.mtime.map(Time::from),
 			dev: 0,
 			uid: attrs.uid.unwrap_or(0),
 			gid: attrs.gid.unwrap_or(0),

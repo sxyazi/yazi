@@ -37,62 +37,65 @@ strip         = false
 debug = false
 
 [workspace.dependencies]
-ansi-to-tui           = "8.0.1"
-anyhow                = "1.0.104"
-arc-swap              = { version = "1.9.2", features = [ "serde" ] }
-base64                = "0.23.1"
-bitflags              = { version = "2.13.2", features = [ "serde" ] }
-chrono                = "0.4.45"
-clap                  = { version = "4.6.7", features = [ "derive" ] }
-compact_str           = { version = "0.10.0", features = [ "serde" ] }
-core-foundation-sys   = "0.8.7"
-data-encoding         = "2.11.1"
-dirs                  = "7.0.0"
-dyn-clone             = "1.0.20"
-either                = { version = "1.18.0" }
-foldhash              = "0.2.0"
-futures               = "0.3.34"
-globset               = "0.4.20"
-hashbrown             = { version = "0.17.1", features = [ "serde" ] }
-image                 = { version = "0.25.10", default-features = false, features = [ "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
-indexmap              = { version = "2.14.2", features = [ "serde" ] }
-inventory             = "0.3.24"
-libc                  = "0.2.189"
-log                   = { version = "0.4.34", features = [ "release_max_level_off" ] }
-lru                   = "0.18.5"
-mlua                  = { version = "0.12.1", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
-objc2                 = "0.6.4"
-ordered-float         = { version = "5.5.0", features = [ "serde" ] }
-parking_lot           = "0.12.5"
-paste                 = "1.0.15"
-percent-encoding      = "2.3.2"
-rand                  = { version = "0.10.3", default-features = false, features = [ "std", "sys_rng" ] }
-ratatui-core          = { version = "0.1.2", default-features = false, features = [ "std", "layout-cache", "serde", "underline-color" ] }
-ratatui-widgets       = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
-regex                 = "1.13.1"
-regex-syntax          = "0.8.11"
-reqwest               = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream", "multipart" ] }
-rustls                = { version = "0.23.45", default-features = false, features = [ "ring", "std" ] }
-rustix                = { version = "1.1.5", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event", "process", "system" ] }
-russh                 = { version = "0.63.3", default-features = false, features = [ "ring", "rsa" ] }
-scopeguard            = "1.2.0"
-serde                 = { version = "1.0.229", features = [ "derive" ] }
-serde_json            = "1.0.151"
-serde_with            = "3.24.0"
-strum                 = { version = "0.28.0", features = [ "derive" ] }
-syntect               = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-thiserror             = "2.0.21"
-tokio                 = { version = "1.53.1", features = [ "full" ] }
-tokio-stream          = "0.1.19"
-tokio-util            = "0.7.19"
-toml                  = { version = "1.1.6" }
-tracing               = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_off" ] }
-tracing-core          = "0.1.36"
-twox-hash             = { version = "2.1.4", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
-typed-path            = "0.12.3"
-unicode-normalization = "0.1.25"
-unicode-width         = { version = "0.2.2", default-features = false }
-uzers                 = "0.12.2"
+ansi-to-tui            = "8.0.1"
+anyhow                 = "1.0.104"
+arc-swap               = { version = "1.9.2", features = [ "serde" ] }
+base64                 = "0.23.1"
+bitflags               = { version = "2.13.2", features = [ "serde" ] }
+chrono                 = { version = "0.4.45", features = [ "serde" ] }
+clap                   = { version = "4.6.7", features = [ "derive" ] }
+compact_str            = { version = "0.10.0", features = [ "serde" ] }
+data-encoding          = "2.11.1"
+dirs                   = "7.0.0"
+dispatch2              = { version = "0.3.1", default-features = false, features = [ "std" ] }
+dyn-clone              = "1.0.20"
+either                 = { version = "1.18.0" }
+foldhash               = "0.2.0"
+futures                = "0.3.34"
+globset                = "0.4.20"
+hashbrown              = { version = "0.17.1", features = [ "serde" ] }
+image                  = { version = "0.25.10", default-features = false, features = [ "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
+indexmap               = { version = "2.14.2", features = [ "serde" ] }
+inventory              = "0.3.24"
+libc                   = "0.2.189"
+log                    = { version = "0.4.34", features = [ "release_max_level_off" ] }
+lru                    = "0.18.5"
+mlua                   = { version = "0.12.1", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
+objc2                  = "0.6.4"
+objc2-core-foundation  = { version = "0.3.2", default-features = false, features = [ "std", "CFDictionary", "CFNumber", "CFString", "CFURL" ] }
+objc2-disk-arbitration = { version = "0.3.2", default-features = false, features = [ "std", "DADisk", "DASession", "dispatch2" ] }
+objc2-foundation       = { version = "0.3.2", default-features = false, features = [ "std", "NSDateFormatter", "NSFormatter", "NSLocale", "NSString" ] }
+ordered-float          = { version = "5.5.0", features = [ "serde" ] }
+parking_lot            = "0.12.5"
+paste                  = "1.0.15"
+percent-encoding       = "2.3.2"
+rand                   = { version = "0.10.3", default-features = false, features = [ "std", "sys_rng" ] }
+ratatui-core           = { version = "0.1.2", default-features = false, features = [ "std", "layout-cache", "serde", "underline-color" ] }
+ratatui-widgets        = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
+regex                  = "1.13.1"
+regex-syntax           = "0.8.11"
+reqwest                = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream", "multipart" ] }
+rustls                 = { version = "0.23.45", default-features = false, features = [ "ring", "std" ] }
+rustix                 = { version = "1.1.5", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event", "process", "system" ] }
+russh                  = { version = "0.63.3", default-features = false, features = [ "ring", "rsa" ] }
+scopeguard             = "1.2.0"
+serde                  = { version = "1.0.229", features = [ "derive" ] }
+serde_json             = "1.0.151"
+serde_with             = "3.24.0"
+strum                  = { version = "0.28.0", features = [ "derive" ] }
+syntect                = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
+thiserror              = "2.0.21"
+tokio                  = { version = "1.53.1", features = [ "full" ] }
+tokio-stream           = "0.1.19"
+tokio-util             = "0.7.19"
+toml                   = { version = "1.1.6" }
+tracing                = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_off" ] }
+tracing-core           = "0.1.36"
+twox-hash              = { version = "2.1.4", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
+typed-path             = "0.12.3"
+unicode-normalization  = "0.1.25"
+unicode-width          = { version = "0.2.2", default-features = false }
+uzers                  = "0.12.2"
 
 [workspace.lints.clippy]
 format_push_string   = "warn"

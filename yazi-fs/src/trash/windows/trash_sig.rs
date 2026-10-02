@@ -1,6 +1,7 @@
-use std::{ffi::OsString, hash::Hash, io, mem, time::{Duration, UNIX_EPOCH}};
+use std::{ffi::OsString, hash::Hash, io, mem, time::Duration};
 
 use windows::{Win32::UI::Shell::*, core::PCWSTR};
+use yazi_binding::time::Time;
 use yazi_shim::Twox128;
 
 use super::shell_item::ShellItem;
@@ -62,7 +63,7 @@ impl TrashSig {
 		}
 
 		let hash = h.finish_128();
-		stat.ctime = UNIX_EPOCH.checked_add(Duration::from_nanos(hash as u64 ^ (hash >> 64) as u64));
+		stat.ctime = Time::try_from(Duration::from_nanos(hash as u64 ^ (hash >> 64) as u64)).ok();
 		stat
 	}
 }

@@ -6,8 +6,7 @@ use mlua::{ExternalError, Lua, Table, chunk::ChunkMode};
 use parking_lot::RwLock;
 use yazi_fs::{Xdg, engine::local::Local};
 use yazi_macro::plugin_preset as preset;
-use yazi_shared::BytesExt;
-use yazi_shim::{cell::RoCell, log::LOG_LEVEL};
+use yazi_shim::{bytes::BytesExt, cell::RoCell, log::LOG_LEVEL};
 
 use super::Chunk;
 

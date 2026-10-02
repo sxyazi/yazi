@@ -1,7 +1,8 @@
 use std::ops::RangeInclusive;
 
 use mlua::{BorrowedBytes, ExternalError, FromLua, Lua, Table, Value};
-use yazi_shared::{BytesExt, auth::AuthKind};
+use yazi_shared::auth::AuthKind;
+use yazi_shim::bytes::BytesExt;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Capabilities {

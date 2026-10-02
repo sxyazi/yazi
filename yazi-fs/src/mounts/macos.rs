@@ -1,10 +1,11 @@
-use std::{ffi::{CStr, CString, OsString, c_char, c_void}, mem, os::unix::{ffi::OsStringExt, fs::MetadataExt}};
+use std::{ffi::{CString, OsStr, c_void}, mem, os::unix::{ffi::OsStrExt, fs::MetadataExt}, ptr::NonNull};
 
-use anyhow::{Result, bail};
-use core_foundation_sys::{array::CFArrayRef, base::{CFRelease, kCFAllocatorDefault, mach_port_t}, runloop::{CFRunLoopGetCurrent, CFRunLoopRun, kCFRunLoopDefaultMode}};
-use objc2::{msg_send, runtime::AnyObject};
+use anyhow::{Context, Result, bail};
+use dispatch2::{DispatchObject, DispatchQueue};
+use objc2_core_foundation::{CFArray, CFBoolean, CFDictionary, CFNumber, CFRetained, CFString, CFType, CFURL, ConcreteType};
+use objc2_disk_arbitration::{DADisk, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASession, kDADiskDescriptionDeviceInternalKey, kDADiskDescriptionMediaRemovableKey, kDADiskDescriptionMediaSizeKey, kDADiskDescriptionVolumeKindKey, kDADiskDescriptionVolumeNameKey, kDADiskDescriptionVolumePathKey};
 use scopeguard::defer;
-use yazi_ffi::{CFDict, CFString, DADiskCopyDescription, DADiskCreateFromBSDName, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASessionCreate, DASessionScheduleWithRunLoop, IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};
+use yazi_ffi::{IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};
 use yazi_macro::error;
 use yazi_shared::natsort;
 
@@ -16,64 +17,48 @@ impl Partitions {
 		F: Fn() + Copy + Send + 'static,
 	{
 		let rt = tokio::runtime::Handle::current();
-		std::thread::spawn(move || {
-			let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
-			if session.is_null() {
-				return error!("Cannot create a disk arbitration session");
-			}
-			defer! { unsafe { CFRelease(session) } };
+		let Some(session) = (unsafe { DASession::new(None) }) else {
+			return error!("Cannot create a disk arbitration session");
+		};
 
-			extern "C" fn on_appeared(_disk: *const c_void, context: *mut c_void) {
-				let boxed = context as *mut Box<dyn Fn()>;
-				unsafe { (*boxed)() }
-			}
+		extern "C-unwind" fn on_event(_disk: NonNull<DADisk>, context: *mut c_void) {
+			let boxed = context as *mut Box<dyn Fn() + Send>;
+			unsafe { (*boxed)() }
+		}
 
-			extern "C" fn on_changed(_disk: *const c_void, _keys: CFArrayRef, context: *mut c_void) {
-				let boxed = context as *mut Box<dyn Fn()>;
-				unsafe { (*boxed)() }
-			}
+		extern "C-unwind" fn on_changed(
+			disk: NonNull<DADisk>,
+			_keys: NonNull<CFArray>,
+			context: *mut c_void,
+		) {
+			on_event(disk, context);
+		}
 
-			extern "C" fn on_disappeared(_disk: *const c_void, context: *mut c_void) {
-				let boxed = context as *mut Box<dyn Fn()>;
-				unsafe { (*boxed)() }
-			}
+		let callback: Box<dyn Fn() + Send> = Box::new(move || Self::update(me, cb, &rt));
+		let mut callback = Box::new(callback);
 
-			let create_context = || {
-				let rt = rt.clone();
-				let boxed: Box<dyn Fn()> = Box::new(move || {
-					if mem::replace(&mut me.write().need_update, true) {
-						return;
-					}
-					Self::update(me, cb, &rt);
-				});
-				Box::into_raw(Box::new(boxed)) as *mut c_void
-			};
+		let context = (&raw mut *callback).cast();
 
-			unsafe {
-				DARegisterDiskAppearedCallback(session, std::ptr::null(), on_appeared, create_context());
-				DARegisterDiskDescriptionChangedCallback(
-					session,
-					std::ptr::null(),
-					std::ptr::null(),
-					on_changed,
-					create_context(),
-				);
-				DARegisterDiskDisappearedCallback(
-					session,
-					std::ptr::null(),
-					on_disappeared,
-					create_context(),
-				);
-				DASessionScheduleWithRunLoop(session, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-				CFRunLoopRun();
-			}
-		});
+		let queue = DispatchQueue::new("yazi.mounts", None);
+		queue.set_finalizer(move || drop(callback));
+
+		unsafe {
+			DARegisterDiskAppearedCallback(&session, None, Some(on_event), context);
+			DARegisterDiskDescriptionChangedCallback(&session, None, None, Some(on_changed), context);
+			DARegisterDiskDisappearedCallback(&session, None, Some(on_event), context);
+			// The dispatch source retains the session and queue, which owns the callback.
+			session.set_dispatch_queue(Some(&queue));
+		}
 	}
 
 	fn update<F>(me: &'static Locked, cb: F, rt: &tokio::runtime::Handle)
 	where
 		F: Fn() + Send + 'static,
 	{
+		if mem::replace(&mut me.write().need_update, true) {
+			return;
+		}
+
 		_ = rt.spawn_blocking(move || {
 			let result = Self::all_names().and_then(Self::all_partitions);
 			if let Err(ref e) = result {
@@ -92,45 +77,58 @@ impl Partitions {
 	}
 
 	fn all_partitions(names: Vec<CString>) -> Result<Vec<Partition>> {
-		let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
-		if session.is_null() {
-			bail!("Cannot create a disk arbitration session");
+		fn value<T: ConcreteType>(
+			dict: &CFDictionary<CFString, CFType>,
+			key: &CFString,
+		) -> Option<CFRetained<T>> {
+			dict.get(key)?.downcast().ok()
 		}
-		defer! { unsafe { CFRelease(session) } };
+
+		let session =
+			unsafe { DASession::new(None) }.context("Cannot create a disk arbitration session")?;
 
 		let mut disks = Vec::with_capacity(names.len());
 		for name in names {
-			let disk = unsafe { DADiskCreateFromBSDName(kCFAllocatorDefault, session, name.as_ptr()) };
-			if disk.is_null() {
-				continue;
-			}
-
-			defer! { unsafe { CFRelease(disk) } };
-			let Ok(dict) = CFDict::take(unsafe { DADiskCopyDescription(disk) }) else {
+			let Some(disk) =
+				(unsafe { DADisk::from_bsd_name(None, &session, NonNull::from(&*name).cast()) })
+			else {
 				continue;
 			};
 
-			let partition = Partition::new(&OsString::from_vec(name.into_bytes()));
+			// Disk descriptions have `CFString` keys and `CFType` values.
+			let Some(dict) = (unsafe { disk.description() }) else { continue };
+			let dict = unsafe { CFRetained::cast_unchecked(dict) };
+
+			let partition = Partition::new(OsStr::from_bytes(name.as_bytes()));
 			let rdev = std::fs::metadata(&partition.src).map(|m| m.rdev() as _).ok();
-			disks.push(Partition {
-				dist: dict.path_buf("DAVolumePath").ok(),
-				rdev,
-				fstype: dict.os_string("DAVolumeKind").ok(),
-				label: dict.os_string("DAVolumeName").ok(),
-				capacity: dict.integer("DAMediaSize").unwrap_or_default() as u64,
-				external: dict.bool("DADeviceInternal").ok().map(|b| !b),
-				removable: dict.bool("DAMediaRemovable").ok(),
-				..partition
-			});
+			unsafe {
+				disks.push(Partition {
+					dist: value::<CFURL>(&dict, kDADiskDescriptionVolumePathKey)
+						.and_then(|v| v.to_file_path()),
+					rdev,
+					fstype: value::<CFString>(&dict, kDADiskDescriptionVolumeKindKey)
+						.map(|v| v.to_string().into()),
+					label: value::<CFString>(&dict, kDADiskDescriptionVolumeNameKey)
+						.map(|v| v.to_string().into()),
+					capacity: value::<CFNumber>(&dict, kDADiskDescriptionMediaSizeKey)
+						.and_then(|v| v.as_i64())
+						.unwrap_or_default() as u64,
+					external: value::<CFBoolean>(&dict, kDADiskDescriptionDeviceInternalKey)
+						.map(|v| !v.as_bool()),
+					removable: value::<CFBoolean>(&dict, kDADiskDescriptionMediaRemovableKey)
+						.map(|v| v.as_bool()),
+					..partition
+				});
+			}
 		}
 
 		Ok(disks)
 	}
 
 	fn all_names() -> Result<Vec<CString>> {
-		let mut iterator: mach_port_t = 0;
+		let mut iterator = 0;
 		let result = unsafe {
-			IOServiceGetMatchingServices(0, IOServiceMatching(c"IOService".as_ptr()), &mut iterator)
+			IOServiceGetMatchingServices(0, IOServiceMatching(c"IOMedia".as_ptr()), &mut iterator)
 		};
 
 		if result != 0 {
@@ -155,21 +153,15 @@ impl Partitions {
 		Ok(names)
 	}
 
-	fn bsd_name(service: mach_port_t) -> Result<CString> {
-		let key = CFString::new("BSD Name")?;
-		let property =
-			unsafe { IORegistryEntryCreateCFProperty(service, *key, kCFAllocatorDefault, 1) };
-		if property.is_null() {
-			bail!("Cannot get the name property");
-		}
-		defer! { unsafe { CFRelease(property) } };
+	fn bsd_name(service: u32) -> Result<CString> {
+		let key = CFString::from_static_str("BSD Name");
 
-		#[allow(unexpected_cfgs)]
-		let cstr: *const c_char = unsafe { msg_send![property as *const AnyObject, UTF8String] };
-		Ok(if cstr.is_null() {
-			bail!("Invalid value for the name property");
-		} else {
-			CString::from(unsafe { CStr::from_ptr(cstr) })
-		})
+		let prop = unsafe { IORegistryEntryCreateCFProperty(service, &key, None, 1) }
+			.context("Cannot get the name property")?;
+		let prop = unsafe { CFRetained::from_raw(prop) };
+		let prop: CFRetained<CFString> =
+			prop.downcast().ok().context("Invalid value for the name property")?;
+
+		Ok(CString::new(prop.to_string())?)
 	}
 }

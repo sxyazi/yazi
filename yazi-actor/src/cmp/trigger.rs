@@ -6,7 +6,8 @@ use yazi_fs::{engine::{DirReader, FileHolder}, path::clean_url};
 use yazi_macro::{render, succ};
 use yazi_parser::cmp::TriggerForm;
 use yazi_proxy::CmpProxy;
-use yazi_shared::{AnyAsciiChar, BytePredictor, data::Data, natsort, path::{DynPath, PathBufDyn, PathLike}, spec::Spec, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{data::Data, natsort, path::{DynPath, PathBufDyn, PathLike}, spec::Spec, strand::{AsStrand, StrandLike}, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shim::bytes::{AnyAsciiChar, BytePredictor};
 use yazi_vfs::engine;
 
 use crate::{Actor, Ctx, act};

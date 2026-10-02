@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(arc_swap cell fs log mlua path ratatui rustls serde strum tokio toml vec utf8 wtf8);
+yazi_macro::mod_pub!(arc_swap bytes cell fs log mlua path ratatui rustls serde strum tokio toml vec utf8 wtf8);
 
 yazi_macro::mod_flat!(option percent_encoding result sstr tests twox uzers);
 

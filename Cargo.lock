@@ -963,6 +963,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dispatch2"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38"
+dependencies = [
+ "bitflags 2.13.2",
+]
+
+[[package]]
 name = "displaydoc"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2436,6 +2445,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f"
 dependencies = [
  "objc2-encode",
+]
+
+[[package]]
+name = "objc2-core-foundation"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536"
+dependencies = [
+ "bitflags 2.13.2",
+]
+
+[[package]]
+name = "objc2-disk-arbitration"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee6933800935dccff2b811f1c5b804eb9b3d3347face044712188624bf547b45"
+dependencies = [
+ "dispatch2",
+ "objc2-core-foundation",
 ]
 
 [[package]]
@@ -5135,6 +5163,7 @@ dependencies = [
  "unicode-width",
  "windows-sys 0.61.2",
  "yazi-codegen",
+ "yazi-ffi",
  "yazi-macro",
  "yazi-shared",
  "yazi-shim",
@@ -5311,15 +5340,21 @@ dependencies = [
 name = "yazi-ffi"
 version = "26.9.1"
 dependencies = [
- "anyhow",
- "core-foundation-sys",
+ "chrono",
  "data-encoding",
+ "libc",
+ "mlua",
  "objc2",
+ "objc2-core-foundation",
+ "objc2-foundation",
  "rand 0.10.3",
  "rustix",
+ "strum 0.28.0",
+ "thiserror 2.0.21",
  "windows",
  "windows-sys 0.61.2",
  "yazi-macro",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -5372,9 +5407,9 @@ dependencies = [
  "arc-swap",
  "bitflags 2.13.2",
  "cfg_aliases",
- "core-foundation-sys",
  "data-encoding",
  "dirs",
+ "dispatch2",
  "ds_parser",
  "either",
  "foldhash",
@@ -5382,7 +5417,8 @@ dependencies = [
  "inventory",
  "libc",
  "mlua",
- "objc2",
+ "objc2-core-foundation",
+ "objc2-disk-arbitration",
  "parking_lot",
  "percent-encoding",
  "rand 0.10.3",
@@ -5613,6 +5649,7 @@ dependencies = [
  "arc-swap",
  "fdlimit",
  "hashbrown 0.17.1",
+ "memchr",
  "mlua",
  "percent-encoding",
  "ratatui-core",
@@ -5734,6 +5771,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "yazi-adapter",
+ "yazi-binding",
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",

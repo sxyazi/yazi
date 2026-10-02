@@ -1,7 +1,7 @@
-yazi_macro::mod_pub!(shm);
+yazi_macro::mod_pub!(locale shm);
 
 #[cfg(target_os = "macos")]
-yazi_macro::mod_flat!(cf_dict cf_string disk_arbitration io_kit);
+yazi_macro::mod_flat!(io_kit);
 
 #[cfg(windows)]
 yazi_macro::mod_flat!(com);

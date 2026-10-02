@@ -2,8 +2,9 @@ use std::{borrow::{Borrow, Cow}, fmt::{self, Display, Formatter}, ops::Deref, st
 
 use mlua::{BorrowedBytes, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::{self, IntoDeserializer, Visitor}};
+use yazi_shim::bytes::BytesExt;
 
-use crate::{BytesExt, data::BytesDeserializer};
+use crate::data::BytesDeserializer;
 
 #[derive(Default, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Domain<'a>(Cow<'a, [u8]>);
