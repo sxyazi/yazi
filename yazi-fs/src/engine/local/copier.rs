@@ -70,7 +70,7 @@ fn primary_imp(from: &Path, to: &Path, attrs: Attrs) -> io::Result<u64> {
 	};
 
 	if let Ok(times) = attrs.try_into() {
-		yazi_shim::fs::set_times(to, times).ok();
+		fs::set_times(to, times).ok();
 	}
 	Ok(written)
 }

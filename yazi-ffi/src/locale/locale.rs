@@ -2,7 +2,7 @@ use chrono::{DateTime, Local, Utc};
 use mlua::{BorrowedBytes, ExternalError, FromLua, Lua, Table, Value};
 use yazi_shim::bytes::BytesExt;
 
-use super::{LocaleError, TimeField, Width};
+use super::{TimeField, Width};
 
 #[derive(Clone, Copy, Default)]
 pub struct Locale {
@@ -17,30 +17,39 @@ pub struct Locale {
 }
 
 impl Locale {
-	pub fn format(&self, date: DateTime<Utc>) -> Result<String, LocaleError> {
-		let mut pat = self.format_date()?;
-		self.format_time(&mut pat)?;
+	pub fn format(&self, date: DateTime<Utc>) -> String {
+		let mut pat = self.format_date();
+		self.format_time(&mut pat);
 
-		let mut output = String::new();
-		date.with_timezone(&Local).format(&pat).write_to(&mut output)?;
-		Ok(output)
+		date.with_timezone(&Local).format(&pat).to_string()
 	}
 
-	fn format_date(&self) -> Result<String, LocaleError> {
-		let mut it = [(self.year, 'Y'), (self.month, 'm'), (self.day, 'd')]
-			.into_iter()
-			.filter(|(width, _)| !width.is_none());
+	fn format_date(&self) -> String {
+		let fields = [
+			(self.year, 'Y', Width::Numeric),
+			(self.month, 'm', Width::TwoDigit),
+			(self.day, 'd', Width::TwoDigit),
+		];
 
-		let mut pat = String::new();
+		let mut it = fields.into_iter().filter(|(width, ..)| !width.is_none());
 		match (it.next(), it.next()) {
-			(None, _) => (),
-			(Some((width, field)), None) if !width.is_system() => width.push(field, &mut pat),
-			_ => pat = self.date_pattern()?,
+			(None, None) => return String::new(),
+			(Some((width, ..)), None) if !width.is_system() => {}
+			_ if let Ok(pat) = self.date_pattern() => return pat,
+			_ => {}
 		}
-		Ok(pat)
+
+		let mut pat = String::with_capacity(11);
+		for (width, c, default) in fields.into_iter().filter(|(w, ..)| !w.is_none()) {
+			width.resolve(default).push(c, &mut pat);
+			pat.push('-');
+		}
+
+		pat.pop();
+		pat
 	}
 
-	fn format_time(&self, pat: &mut String) -> Result<(), LocaleError> {
+	fn format_time(&self, pat: &mut String) {
 		let fields = [
 			(self.hour12, 'I', TimeField::Hour),
 			(self.hour24, 'H', TimeField::Hour),
@@ -50,7 +59,7 @@ impl Locale {
 		];
 
 		let system = if fields.iter().any(|(width, ..)| width.is_system()) {
-			self.time_widths()?
+			self.time_widths().unwrap_or([Width::TwoDigit; 3])
 		} else {
 			[Width::Numeric; 3]
 		};
@@ -71,8 +80,6 @@ impl Locale {
 		if !self.hour_am_pm.is_none() {
 			pat.push_str(" %p");
 		}
-
-		Ok(())
 	}
 }
 

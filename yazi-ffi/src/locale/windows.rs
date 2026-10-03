@@ -1,4 +1,4 @@
-use std::ptr;
+use std::{ptr, sync::LazyLock};
 
 use windows_sys::Win32::Globalization::{GetLocaleInfoEx, LOCALE_SSHORTDATE, LOCALE_STIMEFORMAT};
 
@@ -6,11 +6,17 @@ use super::{DateField, DateParser, Locale, LocaleError, State, TimeField, TimePa
 
 impl Locale {
 	pub(super) fn date_pattern(&self) -> Result<String, LocaleError> {
-		DateParser::new(self).parse(&Self::pattern(LOCALE_SSHORTDATE)?)
+		static PATTERN: LazyLock<Result<String, LocaleError>> =
+			LazyLock::new(|| Locale::pattern(LOCALE_SSHORTDATE));
+
+		DateParser::new(self).parse(PATTERN.as_ref()?)
 	}
 
 	pub(super) fn time_widths(&self) -> Result<[Width; 3], LocaleError> {
-		Ok(TimeParser::new().parse(&Self::pattern(LOCALE_STIMEFORMAT)?))
+		static WIDTHS: LazyLock<Result<[Width; 3], LocaleError>> =
+			LazyLock::new(|| Ok(TimeParser::new().parse(&Locale::pattern(LOCALE_STIMEFORMAT)?)));
+
+		Ok(*WIDTHS.as_ref()?)
 	}
 
 	fn pattern(kind: u32) -> Result<String, LocaleError> {

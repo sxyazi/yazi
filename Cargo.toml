@@ -10,7 +10,7 @@ license      = "MIT"
 authors      = [ "sxyazi <sxyazi@gmail.com>" ]
 homepage     = "https://yazi-rs.github.io"
 repository   = "https://github.com/sxyazi/yazi"
-rust-version = "1.98.0"
+rust-version = "1.99.0"
 
 [profile.dev]
 debug = "line-tables-only"
@@ -60,7 +60,7 @@ inventory              = "0.3.24"
 libc                   = "0.2.189"
 log                    = { version = "0.4.34", features = [ "release_max_level_off" ] }
 lru                    = "0.18.5"
-mlua                   = { version = "0.12.1", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
+mlua                   = { version = "0.12.2", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
 objc2                  = "0.6.4"
 objc2-core-foundation  = { version = "0.3.2", default-features = false, features = [ "std", "CFDictionary", "CFNumber", "CFString", "CFURL" ] }
 objc2-disk-arbitration = { version = "0.3.2", default-features = false, features = [ "std", "DADisk", "DASession", "dispatch2" ] }
@@ -85,7 +85,7 @@ serde_with             = "3.24.0"
 strum                  = { version = "0.28.0", features = [ "derive" ] }
 syntect                = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror              = "2.0.21"
-tokio                  = { version = "1.53.1", features = [ "full" ] }
+tokio                  = { version = "1.53.2", features = [ "full" ] }
 tokio-stream           = "0.1.19"
 tokio-util             = "0.7.19"
 toml                   = { version = "1.1.6" }

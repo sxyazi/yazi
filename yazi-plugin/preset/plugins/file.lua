@@ -56,8 +56,8 @@ function M:spot_base(job)
 
 	return {
 		ui.Row({ "Base" }):style(ui.Style():fg("green")),
-		ui.Row { "  Created:", stat.btime and stat.btime:format("%c") or "-" },
-		ui.Row { "  Modified:", stat.mtime and stat.mtime:format("%c") or "-" },
+		ui.Row { "  Created:", stat.btime and tostring(stat.btime) or "-" },
+		ui.Row { "  Modified:", stat.mtime and tostring(stat.mtime) or "-" },
 		ui.Row { "  Mimetype:", job.mime },
 		ui.Row {},
 

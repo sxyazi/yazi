@@ -35,7 +35,7 @@ impl<T: ?Sized> Drop for Symbol<T> {
 
 				if *count == 0 {
 					oe.remove();
-					drop(unsafe { Box::from_raw(self.ptr.as_ptr()) });
+					drop(unsafe { Box::from_non_null(*self.ptr) });
 				}
 			}
 			RawEntryMut::Vacant(_) => unreachable!(),

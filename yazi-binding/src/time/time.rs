@@ -154,12 +154,11 @@ impl UserData for Time {
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("format", |lua, me, value: Value| {
-			let output = match value {
+			Ok(match value {
 				Value::String(s) => me.format(&s.to_str()?)?,
-				v @ Value::Table(_) => Locale::from_lua(v, lua)?.format(me.0)?,
-				_ => return Err("expected a format string or options table".into_lua_err()),
-			};
-			lua.create_string(output)
+				v @ Value::Table(_) => Locale::from_lua(v, lua)?.format(me.0),
+				_ => Err("expected a format string or options table".into_lua_err())?,
+			})
 		});
 
 		methods.add_meta_method(MetaMethod::Add, |_, me, secs: f64| Ok((*me + secs)?));
@@ -173,7 +172,7 @@ impl UserData for Time {
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UserDataRef<Self>| Ok(*me == *other));
 		methods.add_meta_method(MetaMethod::Lt, |_, me, other: UserDataRef<Self>| Ok(*me < *other));
 		methods.add_meta_method(MetaMethod::Le, |_, me, other: UserDataRef<Self>| Ok(*me <= *other));
-		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_rfc3339()));
+		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(Locale::strftime(me.0)));
 
 		if !LOG_LEVEL.get().is_none() {
 			methods.add_meta_function(MetaMethod::ToDebugString, |_, ud: AnyUserData| {
