@@ -32,6 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Deprecate `fs.cha()` and `File.cha` in favor of `fs.stat()` and `File.stat` to align with OS terminology ([#4359])
 
+### Improved
+
+- Switch Lua to generational GC ([#4397])
+
 ### Fixed
 
 - Tolerate non-conforming orphaned trash items on Linux ([#4343])
@@ -1895,3 +1899,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4383]: https://github.com/sxyazi/yazi/pull/4383
 [#4389]: https://github.com/sxyazi/yazi/pull/4389
 [#4395]: https://github.com/sxyazi/yazi/pull/4395
+[#4397]: https://github.com/sxyazi/yazi/pull/4397

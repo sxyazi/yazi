@@ -57,7 +57,7 @@ hashbrown              = { version = "0.17.1", features = [ "serde" ] }
 image                  = { version = "0.25.10", default-features = false, features = [ "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
 indexmap               = { version = "2.14.2", features = [ "serde" ] }
 inventory              = "0.3.24"
-libc                   = "0.2.189"
+libc                   = "0.2.190"
 log                    = { version = "0.4.34", features = [ "release_max_level_off" ] }
 lru                    = "0.18.5"
 mlua                   = { version = "0.12.1", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
