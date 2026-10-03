@@ -28,8 +28,12 @@ impl From<&Emulator> for Drivers {
 				(false, false) => vec![],
 			}),
 			Brand::Zellij => Self(match (value.kgp.get(), value.sixel.get()) {
-				(true, true) => vec![D::KgpDirect, D::Sixel],
-				(true, false) => vec![D::KgpDirect],
+				// Zellij reports Kitty graphics support even when the outer terminal lacks it,
+				// so direct placement is only used when the outer terminal is Kitty.
+				(true, true) if env_exists("KITTY_WINDOW_ID") => vec![D::KgpDirect, D::Sixel],
+				(true, false) if env_exists("KITTY_WINDOW_ID") => vec![D::KgpDirect],
+				(true, true) => vec![D::Sixel, D::KgpOld],
+				(true, false) => vec![D::KgpOld],
 				(false, true) => vec![D::Sixel],
 				(false, false) => vec![],
 			}),
