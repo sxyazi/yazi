@@ -31,7 +31,7 @@ impl InputSnaps {
 		}
 
 		// Sync *current* cursor position to the *last* version:
-		// 		Save offset/cursor/ect. of the *current* as the last version,
+		// 		Save offset/cursor/etc. of the *current* as the last version,
 		// 		while keeping the *last* value unchanged.
 		let value = mem::take(&mut self.versions[self.idx].value);
 		self.versions[self.idx] = self.current.clone();
