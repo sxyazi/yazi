@@ -114,7 +114,8 @@ impl Raterm {
 		let last = self.inner.draw(f)?;
 
 		self.last_area = last.area;
-		self.last_buffer = last.buffer.clone();
+		self.last_buffer.area = last.buffer.area;
+		self.last_buffer.content.clone_from(&last.buffer.content);
 		Ok(last)
 	}
 

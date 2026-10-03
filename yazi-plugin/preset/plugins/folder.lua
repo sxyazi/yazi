@@ -32,7 +32,7 @@ function M:peek(job)
 
 	local marker_area = job.area { x = math.max(0, job.area.x - 1) }
 	ya.preview_widget(job, {
-		ui.List(left):area(job.area),
+		ui.Text(left):area(job.area),
 		ui.Text(right):area(job.area):align(ui.Align.RIGHT),
 		table.unpack(Marker:new(marker_area, folder):redraw()),
 	})

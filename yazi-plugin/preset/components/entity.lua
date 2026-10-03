@@ -32,7 +32,7 @@ function Entity:icon()
 	elseif self._file.is_hovered then
 		return icon.text .. " "
 	else
-		return ui.Line(icon.text .. " "):style(icon.style)
+		return ui.Span(icon.text .. " "):style(icon.style)
 	end
 end
 

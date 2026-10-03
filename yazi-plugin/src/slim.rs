@@ -1,5 +1,8 @@
+use std::sync::OnceLock;
+
 use mlua::{IntoLua, Lua};
 use yazi_macro::plugin_preset as preset;
+use yazi_shim::log::LOG_LEVEL;
 
 pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	// Base

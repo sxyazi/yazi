@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use futures::executor::block_on;
-use mlua::Lua;
+use mlua::{Lua, state::GcMode};
 use yazi_binding::{Runtime, runtime_scope};
 use yazi_fs::Xdg;
 use yazi_macro::plugin_preset as preset;
@@ -10,6 +10,7 @@ pub static LUA: RoCell<Lua> = RoCell::new();
 
 pub(super) fn standard_lua() -> Result<Lua> {
 	let lua = Lua::new();
+	lua.gc_set_mode(GcMode::Generational(Default::default()));
 
 	stage_1(&lua).context("Lua setup failed")?;
 	stage_2(&lua).context("Lua runtime failed")?;
