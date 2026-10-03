@@ -136,7 +136,7 @@ impl<'a> Engine for Local<'a> {
 		let path = self.path.to_owned();
 		tokio::task::spawn_blocking(move || {
 			let a = mode.map_or(Ok(()), |mode| Self::set_mode(&path, mode));
-			let b = times.map_or(Ok(()), |times| yazi_shim::fs::set_times(&path, times));
+			let b = times.map_or(Ok(()), |times| std::fs::set_times(&path, times));
 			a.and(b)
 		})
 		.await?

@@ -20,8 +20,7 @@ impl Pool<[u8]> {
 				Symbol::new(ptr.clone())
 			}
 			RawEntryMut::Vacant(ve) => {
-				let boxed = value.to_vec().into_boxed_slice();
-				let ptr = SymbolPtr::leaked(Box::leak(boxed));
+				let ptr = SymbolPtr::new(value.to_vec().into_boxed_slice());
 
 				ve.insert_hashed_nocheck(hash, ptr.clone(), 1);
 				Symbol::new(ptr)

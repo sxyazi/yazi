@@ -2249,9 +2249,9 @@ dependencies = [
 
 [[package]]
 name = "mlua"
-version = "0.12.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d96e5d00f19d8c46c71ceaced99593b90c31c57aa1fe2cb3e93a8b1698eedba9"
+checksum = "7a7ae6b65bf54b7fdd4cf5b6f44f60862350ebf3fe3779b3a9cc005e7fa14f81"
 dependencies = [
  "anyhow",
  "bstr",
@@ -2271,9 +2271,9 @@ dependencies = [
 
 [[package]]
 name = "mlua-sys"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b806d7ade031f5d6607eae3e283fb034cb795a76247dd0d1ba753c8c42debccf"
+checksum = "1631cda17bd6486410ab751d91f5fd4484f441589278cdad879eb3afc721a285"
 dependencies = [
  "cc",
  "cfg-if",
@@ -2285,9 +2285,9 @@ dependencies = [
 
 [[package]]
 name = "mlua_derive"
-version = "0.12.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87de1e4bdfaa4bb99d8c1449d8a34b0f19e649ef68eb5d4e8dbf1e9ec6f4a084"
+checksum = "9c4070bd35dad9477c94311c4668145bae8991b8accacf7201a77b14cab8a9e3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4169,9 +4169,9 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 
 [[package]]
 name = "tokio"
-version = "1.53.1"
+version = "1.53.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+checksum = "e95f91fcc7a621e8b030f6aa23c71fe9838ae2fb4d8118b75602a328f5144044"
 dependencies = [
  "bytes",
  "libc",
@@ -5665,7 +5665,6 @@ dependencies = [
  "unicode-segmentation",
  "unicode-width",
  "uzers",
- "windows-sys 0.61.2",
  "yazi-codegen",
  "yazi-macro",
 ]

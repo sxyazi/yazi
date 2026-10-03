@@ -19,6 +19,7 @@ yazi-shim  = { path = "../yazi-shim", version = "26.9.1" }
 # External dependencies
 chrono        = { workspace = true }
 data-encoding = { workspace = true }
+libc          = { workspace = true }
 mlua          = { workspace = true }
 rand          = { workspace = true }
 strum         = { workspace = true }
@@ -26,9 +27,6 @@ thiserror     = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 rustix = { workspace = true }
-
-[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
-libc = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2                 = { workspace = true }

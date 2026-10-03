@@ -1,20 +1,25 @@
-use std::ffi::CStr;
+use std::{ffi::CStr, sync::LazyLock};
 
 use super::{DateField, DateParser, Locale, LocaleError, State, TimeField, TimeParser, Width};
 
 impl Locale {
 	pub(super) fn date_pattern(&self) -> Result<String, LocaleError> {
-		let pat = unsafe { CStr::from_ptr(libc::nl_langinfo(libc::D_FMT)) }.to_string_lossy();
-		let pat = pat.replace("%D", "%m/%d/%y").replace("%F", "%Y-%m-%d");
+		static PATTERN: LazyLock<String> = LazyLock::new(|| {
+			let pat = unsafe { CStr::from_ptr(libc::nl_langinfo(libc::D_FMT)) }.to_string_lossy();
+			pat.replace("%D", "%m/%d/%y").replace("%F", "%Y-%m-%d")
+		});
 
-		DateParser::new(self).parse(&pat)
+		DateParser::new(self).parse(&PATTERN)
 	}
 
 	pub(super) fn time_widths(&self) -> Result<[Width; 3], LocaleError> {
-		let pat = unsafe { CStr::from_ptr(libc::nl_langinfo(libc::T_FMT)) }.to_string_lossy();
-		let am_pm = unsafe { CStr::from_ptr(libc::nl_langinfo(libc::T_FMT_AMPM)) }.to_string_lossy();
+		static WIDTHS: LazyLock<[Width; 3]> = LazyLock::new(|| {
+			let pat = unsafe { CStr::from_ptr(libc::nl_langinfo(libc::T_FMT)) }.to_string_lossy();
+			let am_pm = unsafe { CStr::from_ptr(libc::nl_langinfo(libc::T_FMT_AMPM)) }.to_string_lossy();
+			TimeParser::new().parse(&pat, &am_pm)
+		});
 
-		Ok(TimeParser::new().parse(&pat, &am_pm))
+		Ok(*WIDTHS)
 	}
 }
 

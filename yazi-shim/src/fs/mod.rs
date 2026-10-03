@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(error serde times);
+yazi_macro::mod_flat!(error serde);

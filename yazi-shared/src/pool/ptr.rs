@@ -29,7 +29,7 @@ impl Equivalent<[u8]> for SymbolPtr {
 
 impl SymbolPtr {
 	#[inline]
-	pub(super) fn leaked(leaked: &'static mut [u8]) -> Self { Self(NonNull::from(leaked)) }
+	pub(super) fn new(value: Box<[u8]>) -> Self { Self(Box::into_non_null(value)) }
 
 	#[inline]
 	pub(super) fn bytes(&self) -> &[u8] { unsafe { self.0.as_ref() } }

@@ -88,10 +88,7 @@ impl StrandBuf {
 				Cow::Owned(s) => s,
 			},
 			Self::Utf8(s) => s,
-			Self::Bytes(b) => match String::from_utf8_lossy(&b) {
-				Cow::Borrowed(_) => unsafe { String::from_utf8_unchecked(b) },
-				Cow::Owned(s) => s,
-			},
+			Self::Bytes(b) => String::from_utf8_lossy_owned(b),
 		}
 	}
 
