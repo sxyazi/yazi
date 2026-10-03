@@ -1,20 +1,28 @@
+use std::sync::LazyLock;
+
 use objc2_foundation::{NSDateFormatter, NSDateFormatterStyle};
 
 use super::{DateField, DateParser, Locale, LocaleError, State, TimeField, TimeParser, Width};
 
 impl Locale {
 	pub(super) fn date_pattern(&self) -> Result<String, LocaleError> {
-		let formatter = NSDateFormatter::new();
-		formatter.setDateStyle(NSDateFormatterStyle::ShortStyle);
+		static PATTERN: LazyLock<String> = LazyLock::new(|| {
+			let formatter = NSDateFormatter::new();
+			formatter.setDateStyle(NSDateFormatterStyle::ShortStyle);
+			formatter.dateFormat().to_string()
+		});
 
-		DateParser::new(self).parse(&formatter.dateFormat().to_string())
+		DateParser::new(self).parse(&PATTERN)
 	}
 
 	pub(super) fn time_widths(&self) -> Result<[Width; 3], LocaleError> {
-		let formatter = NSDateFormatter::new();
-		formatter.setTimeStyle(NSDateFormatterStyle::MediumStyle);
+		static WIDTHS: LazyLock<[Width; 3]> = LazyLock::new(|| {
+			let formatter = NSDateFormatter::new();
+			formatter.setTimeStyle(NSDateFormatterStyle::MediumStyle);
+			TimeParser::new().parse(&formatter.dateFormat().to_string())
+		});
 
-		Ok(TimeParser::new().parse(&formatter.dateFormat().to_string()))
+		Ok(*WIDTHS)
 	}
 }
 

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
+use std::{any::TypeId, borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
@@ -57,17 +57,23 @@ impl From<ratatui_core::text::Line<'static>> for Line {
 	}
 }
 
+impl From<Span> for Line {
+	fn from(value: Span) -> Self { Self { inner: value.0.into(), ..Default::default() } }
+}
+
+impl From<Line> for ratatui_core::text::Line<'static> {
+	fn from(value: Line) -> Self { value.inner }
+}
+
 impl TryFrom<&AnyUserData> for Line {
 	type Error = mlua::Error;
 
 	fn try_from(value: &AnyUserData) -> Result<Self, Self::Error> {
-		Ok(if let Ok(line) = value.take() {
-			line
-		} else if let Ok(Span(span)) = value.take() {
-			Self { inner: span.into(), ..Default::default() }
-		} else {
-			Err(EXPECTED.into_lua_err())?
-		})
+		match value.type_id() {
+			Some(t) if t == TypeId::of::<Self>() => value.take(),
+			Some(t) if t == TypeId::of::<Span>() => Ok(value.take::<Span>()?.into()),
+			_ => Err(EXPECTED.into_lua_err()),
+		}
 	}
 }
 
@@ -79,25 +85,20 @@ impl TryFrom<Table> for Line {
 		for v in tb.sequence_values() {
 			match v? {
 				Value::String(s) => spans.push(s.to_string_lossy().into()),
-				Value::UserData(ud) => {
-					if let Ok(Span(span)) = ud.take() {
-						spans.push(span);
-					} else if let Ok(Self { inner: mut line, .. }) = ud.take() {
-						line.spans.iter_mut().for_each(|s| s.style = line.style.patch(s.style));
-						spans.extend(line.spans);
-					} else {
-						return Err(EXPECTED.into_lua_err());
+				Value::UserData(ud) => match ud.type_id() {
+					Some(t) if t == TypeId::of::<Span>() => spans.push(ud.take::<Span>()?.0),
+					Some(t) if t == TypeId::of::<Self>() => {
+						let mut inner = ud.take::<Self>()?.inner;
+						inner.spans.iter_mut().for_each(|s| s.style = inner.style.patch(s.style));
+						spans.extend(inner.spans);
 					}
-				}
+					_ => Err(EXPECTED.into_lua_err())?,
+				},
 				_ => Err(EXPECTED.into_lua_err())?,
 			}
 		}
 		Ok(Self { inner: spans.into(), ..Default::default() })
 	}
-}
-
-impl From<Line> for ratatui_core::text::Line<'static> {
-	fn from(value: Line) -> Self { value.inner }
 }
 
 impl Spatial for Line {
@@ -163,6 +164,11 @@ impl UserData for Line {
 					(span.truncate(max), span.0)
 				}
 			};
+
+			let bytes: usize = me.iter().map(|s| s.content.len()).sum();
+			if bytes > 0 && bytes <= max - ellipsis.0 {
+				return Ok(ud);
+			}
 
 			fn traverse(
 				max: usize,

@@ -20,6 +20,10 @@ impl Debug for TtyWriter<'_> {
 impl io::Write for TtyWriter<'_> {
 	fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.0.lock().write(buf) }
 
+	fn write_fmt(&mut self, args: fmt::Arguments<'_>) -> io::Result<()> {
+		self.0.lock().write_fmt(args)
+	}
+
 	fn flush(&mut self) -> io::Result<()> { self.0.lock().flush() }
 }
 

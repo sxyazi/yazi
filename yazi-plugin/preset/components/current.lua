@@ -43,7 +43,7 @@ function Current:redraw()
 	end
 
 	return {
-		ui.List(left):area(self._area),
+		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Align.RIGHT),
 		table.unpack(Dnd:new(self._area):redraw()),
 	}
