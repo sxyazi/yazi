@@ -53,6 +53,7 @@ impl Actor for Cd {
 		log_if_err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
 		act!(mgr:displace, cx)?;
 		act!(mgr:hidden, cx).ok();
+		act!(mgr:excluded, cx).ok();
 		act!(mgr:sort, cx).ok();
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;

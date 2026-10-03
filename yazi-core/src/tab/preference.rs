@@ -6,9 +6,10 @@ use yazi_fs::{FilesSorter, SortBy, SortFallback};
 #[derive(Clone, PartialEq)]
 pub struct Preference {
 	// Display
-	pub name:        String,
-	pub linemode:    Arc<String>,
-	pub show_hidden: bool,
+	pub name:          String,
+	pub linemode:      Arc<String>,
+	pub show_hidden:   bool,
+	pub show_excluded: bool,
 
 	// Sorting
 	pub sort_by:        SortBy,
@@ -23,9 +24,10 @@ impl Default for Preference {
 	fn default() -> Self {
 		Self {
 			// Display
-			name:        String::new(),
-			linemode:    YAZI.mgr.linemode.load_full(),
-			show_hidden: YAZI.mgr.show_hidden.get(),
+			name:          String::new(),
+			linemode:      YAZI.mgr.linemode.load_full(),
+			show_hidden:   YAZI.mgr.show_hidden.get(),
+			show_excluded: false,
 
 			// Sorting
 			sort_by:        YAZI.mgr.sort_by.get(),
