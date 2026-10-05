@@ -65,10 +65,10 @@ pub fn partition_id(src: &OsStr) -> Option<(u32, u32, u32)> {
 	})
 	.ok()?;
 
-	match () {
+	match number.PartitionNumber {
 		_ if len as usize != size_of_val(&number) => None,
 		_ if number.DeviceNumber == u32::MAX => None,
-		_ if let 0 | u32::MAX = number.PartitionNumber => None,
-		() => Some((number.DeviceType, number.DeviceNumber, n)),
+		n if n == 0 || n == u32::MAX => None,
+		n => Some((number.DeviceType, number.DeviceNumber, n)),
 	}
 }
