@@ -31,7 +31,7 @@ thiserror   = { workspace = true }
 tokio       = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
-signal-hook = "0.4.4"
+signal-hook = "0.4.5"
 rustix      = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]

@@ -17,7 +17,12 @@ impl Icc {
 
 			let transformer = profile
 				// TODO: Use `create_transform_in_place_nbit` in the next minor version of moxcms.
-				.create_transform_8bit(layout, &ColorProfile::new_srgb(), layout, TransformOptions::default())
+				.create_transform_8bit(
+					layout,
+					&ColorProfile::new_srgb(),
+					layout,
+					TransformOptions::default(),
+				)
 				.context("cannot make a profile transformer")?;
 
 			let mut converted = vec![0u8; buf.len()];

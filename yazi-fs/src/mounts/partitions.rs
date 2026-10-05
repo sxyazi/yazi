@@ -15,8 +15,6 @@ pub struct Partitions {
 	pub(super) inner:       Vec<Partition>,
 	#[cfg(target_os = "linux")]
 	pub(super) linux_cache: hashbrown::HashSet<String>,
-	#[cfg(target_os = "macos")]
-	pub(super) need_update: bool,
 }
 
 impl Deref for Partitions {

@@ -6,4 +6,7 @@ yazi_macro::mod_flat!(linux);
 #[cfg(target_os = "macos")]
 yazi_macro::mod_flat!(macos);
 
+#[cfg(windows)]
+yazi_macro::mod_flat!(windows);
+
 pub(super) fn init() { PARTITIONS.init(<_>::default()); }

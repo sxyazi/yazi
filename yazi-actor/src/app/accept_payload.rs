@@ -3,7 +3,7 @@ use mlua::IntoLua;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
 use yazi_dds::{LOCAL, Payload, REMOTE};
-use yazi_macro::{error, succ};
+use yazi_macro::{log_if_err, succ};
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
 
@@ -31,9 +31,10 @@ impl Actor for AcceptPayload {
 		succ!(Lives::scope(cx.core, |_| {
 			let body = payload.body.into_lua(&LUA)?;
 			for (name, cb) in handlers {
-				if let Err(e) = runtime_scope!(LUA, &name, cb.call::<()>(body.clone())) {
-					error!("Failed to run `{kind}` event handler in your `{name}` plugin: {e}");
-				}
+				log_if_err!(
+					runtime_scope!(LUA, &name, cb.call::<()>(body.clone())),
+					"`{kind}` event handler in `{name}` plugin",
+				);
 			}
 			Ok(())
 		})?);

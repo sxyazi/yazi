@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use hashbrown::HashMap;
 use mlua::{AnyUserData, UserData};
 use scopeguard::defer;
-use yazi_macro::error;
+use yazi_macro::log_if_err;
 use yazi_plugin::LUA;
 
 use super::{Core, PtrCell};
@@ -34,9 +34,7 @@ impl Lives {
 		LUA.globals().raw_set("cx", Core::make(core)?)?;
 		let result = f(core);
 
-		if let Err(ref e) = result {
-			error!("{e}");
-		}
+		log_if_err!("Scoped Lua execution", &result);
 		result
 	}
 

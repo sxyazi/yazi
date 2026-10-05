@@ -1,6 +1,6 @@
 use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_core::Core;
-use yazi_macro::error;
+use yazi_macro::log_if_err;
 
 use crate::Renderer;
 
@@ -15,8 +15,6 @@ impl<'a> List<'a> {
 
 impl Widget for List<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		if let Err(e) = Renderer::new(self.core, "Tasks").render(area, buf) {
-			error!("Failed to redraw the `Tasks` component:\n{e}");
-		}
+		log_if_err!("Redrawing `Tasks`", Renderer::new(self.core, "Tasks").render(area, buf));
 	}
 }

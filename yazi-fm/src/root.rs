@@ -1,7 +1,7 @@
 use mlua::{ObjectLike, Table};
 use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_core::Core;
-use yazi_macro::error;
+use yazi_macro::log_if_err;
 use yazi_plugin::LUA;
 
 use super::{cmp, confirm, help, input, mgr, pick, spot, tasks, which};
@@ -23,9 +23,7 @@ impl<'a> Root<'a> {
 
 impl Widget for Root<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		if let Err(e) = Renderer::new(self.core, "Root").render(area, buf) {
-			error!("Failed to redraw the `Root` component:\n{e}");
-		}
+		log_if_err!("Redrawing `Root`", Renderer::new(self.core, "Root").render(area, buf));
 
 		mgr::Preview::new(self.core).render(area, buf);
 		mgr::Modal::new(self.core).render(area, buf);

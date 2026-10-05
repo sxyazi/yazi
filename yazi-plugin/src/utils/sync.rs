@@ -4,6 +4,7 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString
 use tokio::{select, sync::mpsc};
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
+use yazi_macro::log_if_err;
 use yazi_runner::{CoHandle, RUNNER, loader::LOADER};
 use yazi_shared::{LOCAL_SET, data::Data, sendable::Sendable};
 use yazi_shim::{ResultExt, fs::Error, log::LOG_LEVEL};
@@ -59,11 +60,9 @@ impl Utils {
 					};
 
 					runtime_mut!(lua)?.leave()?;
-					if let Err(ref e) = result {
-						match name.as_str() {
-							"init" => yazi_macro::error!("Failed to execute async block in `init.lua`: {e}"),
-							s => yazi_macro::error!("Failed to execute async block in `{s}` plugin: {e}"),
-						}
+					match name.as_str() {
+						"init" => log_if_err!("Async block in `init.lua`", &result),
+						s => log_if_err!(&result, "Async block in `{s}` plugin",),
 					}
 
 					result

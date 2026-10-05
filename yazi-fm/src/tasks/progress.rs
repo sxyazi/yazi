@@ -1,7 +1,7 @@
 use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_config::LAYOUT;
 use yazi_core::Core;
-use yazi_macro::error;
+use yazi_macro::log_if_err;
 
 use crate::Renderer;
 
@@ -16,10 +16,9 @@ impl<'a> Progress<'a> {
 impl Widget for Progress<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let area = LAYOUT.get().progress;
-		let result = Renderer::new(self.core, "Progress").with_constructor("use").render(area, buf);
-
-		if let Err(e) = result {
-			error!("Failed to redraw the `Progress` component:\n{e}");
-		}
+		log_if_err!(
+			"Redrawing `Progress`",
+			Renderer::new(self.core, "Progress").with_constructor("use").render(area, buf)
+		);
 	}
 }

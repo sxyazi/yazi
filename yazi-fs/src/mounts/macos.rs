@@ -1,10 +1,11 @@
-use std::{ffi::{CString, OsStr, c_void}, mem, os::unix::{ffi::OsStrExt, fs::MetadataExt}, ptr::NonNull};
+use std::{ffi::{CString, OsStr, c_void}, os::unix::{ffi::OsStrExt, fs::MetadataExt}, ptr::NonNull, sync::Arc};
 
 use anyhow::{Context, Result, bail};
 use dispatch2::{DispatchObject, DispatchQueue};
 use objc2_core_foundation::{CFArray, CFBoolean, CFDictionary, CFNumber, CFRetained, CFString, CFType, CFURL, ConcreteType};
 use objc2_disk_arbitration::{DADisk, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASession, kDADiskDescriptionDeviceInternalKey, kDADiskDescriptionMediaRemovableKey, kDADiskDescriptionMediaSizeKey, kDADiskDescriptionVolumeKindKey, kDADiskDescriptionVolumeNameKey, kDADiskDescriptionVolumePathKey};
 use scopeguard::defer;
+use tokio::sync::Notify;
 use yazi_ffi::{IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};
 use yazi_macro::error;
 use yazi_shared::natsort;
@@ -16,14 +17,12 @@ impl Partitions {
 	where
 		F: Fn() + Copy + Send + 'static,
 	{
-		let rt = tokio::runtime::Handle::current();
 		let Some(session) = (unsafe { DASession::new(None) }) else {
 			return error!("Cannot create a disk arbitration session");
 		};
 
 		extern "C-unwind" fn on_event(_disk: NonNull<DADisk>, context: *mut c_void) {
-			let boxed = context as *mut Box<dyn Fn() + Send>;
-			unsafe { (*boxed)() }
+			unsafe { &*context.cast::<Notify>() }.notify_one();
 		}
 
 		extern "C-unwind" fn on_changed(
@@ -34,45 +33,33 @@ impl Partitions {
 			on_event(disk, context);
 		}
 
-		let callback: Box<dyn Fn() + Send> = Box::new(move || Self::update(me, cb, &rt));
-		let mut callback = Box::new(callback);
-
-		let context = (&raw mut *callback).cast();
+		let notify = Arc::new(Notify::new());
+		let context = Arc::as_ptr(&notify).cast_mut().cast();
 
 		let queue = DispatchQueue::new("yazi.mounts", None);
-		queue.set_finalizer(move || drop(callback));
+		let context_notify = notify.clone();
+		queue.set_finalizer(move || drop(context_notify));
 
 		unsafe {
 			DARegisterDiskAppearedCallback(&session, None, Some(on_event), context);
 			DARegisterDiskDescriptionChangedCallback(&session, None, None, Some(on_changed), context);
 			DARegisterDiskDisappearedCallback(&session, None, Some(on_event), context);
-			// The dispatch source retains the session and queue, which owns the callback.
+			// The dispatch source retains the session and queue, which owns the callback context.
 			session.set_dispatch_queue(Some(&queue));
 		}
-	}
 
-	fn update<F>(me: &'static Locked, cb: F, rt: &tokio::runtime::Handle)
-	where
-		F: Fn() + Send + 'static,
-	{
-		if mem::replace(&mut me.write().need_update, true) {
-			return;
-		}
-
-		_ = rt.spawn_blocking(move || {
-			let result = Self::all_names().and_then(Self::all_partitions);
-			if let Err(ref e) = result {
-				error!("Error encountered while updating mount points: {e:?}");
+		tokio::spawn(async move {
+			loop {
+				notify.notified().await;
+				_ = tokio::task::spawn_blocking(move || {
+					match Self::all_names().and_then(Self::all_partitions) {
+						Ok(new) => me.write().inner = new,
+						Err(e) => error!("Error encountered while updating mount points: {e:?}"),
+					}
+					cb();
+				})
+				.await;
 			}
-
-			let mut guard = me.write();
-			if let Ok(new) = result {
-				guard.inner = new;
-			}
-			guard.need_update = false;
-
-			drop(guard);
-			cb();
 		});
 	}
 

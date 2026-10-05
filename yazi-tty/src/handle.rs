@@ -157,12 +157,13 @@ impl Handle {
 #[cfg(windows)]
 impl Handle {
 	pub fn new(out: bool) -> Self {
-		use std::{io::{Error, stdin, stdout}, os::windows::io::AsRawHandle, ptr};
+		use std::{io::{stdin, stdout}, os::windows::io::AsRawHandle, ptr};
 
-		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
+		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
+		use yazi_shim::handle_ok;
 
 		let name: Vec<u16> = if out { "CONOUT$\0" } else { "CONIN$\0" }.encode_utf16().collect();
-		let result = unsafe {
+		let result = handle_ok(unsafe {
 			CreateFileW(
 				name.as_ptr(),
 				GENERIC_READ | GENERIC_WRITE,
@@ -172,17 +173,16 @@ impl Handle {
 				0,
 				ptr::null_mut(),
 			)
-		};
+		});
 
-		if result != INVALID_HANDLE_VALUE {
-			return Self { inner: result, close: true };
+		match result {
+			Ok(inner) => return Self { inner, close: true },
+			Err(e) => error!(
+				"Failed to open {}, falling back to stdin/stdout: {e}",
+				if out { "CONOUT$" } else { "CONIN$" },
+			),
 		}
 
-		error!(
-			"Failed to open {}, falling back to stdin/stdout: {}",
-			if out { "CONOUT$" } else { "CONIN$" },
-			Error::last_os_error()
-		);
 		Self {
 			inner: if out { stdout().as_raw_handle() } else { stdin().as_raw_handle() },
 			close: false,

@@ -162,10 +162,10 @@ fn partitions(lua: &Lua) -> mlua::Result<Function> {
 			.filter(|&p| !p.systemic())
 			.map(|p| {
 				lua.create_table_from([
-					("src", p.src.clone().into_lua(&lua)?),
-					("dist", p.dist.clone().into_lua(&lua)?),
-					("label", p.label.clone().into_lua(&lua)?),
-					("fstype", p.fstype.clone().into_lua(&lua)?),
+					("src", p.src.as_os_str().into_lua(&lua)?),
+					("dist", p.dist.as_deref().into_lua(&lua)?),
+					("label", p.label.as_deref().into_lua(&lua)?),
+					("fstype", p.fstype.as_deref().into_lua(&lua)?),
 					("capacity", p.capacity.into_lua(&lua)?),
 					("external", p.external.into_lua(&lua)?),
 					("removable", p.removable.into_lua(&lua)?),
