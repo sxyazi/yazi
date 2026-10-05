@@ -3,7 +3,7 @@ use mlua::ObjectLike;
 use scopeguard::defer;
 use yazi_binding::runtime_mut;
 use yazi_core::app::{PluginMethod, PluginMode};
-use yazi_macro::{error, succ, warn};
+use yazi_macro::{log_if_err, succ, warn};
 use yazi_parser::app::PluginForm;
 use yazi_plugin::LUA;
 use yazi_runner::{entry::EntryJob, loader::{LOADER, Loader}};
@@ -55,9 +55,8 @@ impl Actor for PluginDo {
 				plugin.call_method(opt.method.into(), Sendable::args_to_table(&LUA, opt.args)?)
 			}
 		});
-		if let Err(ref e) = result {
-			error!("Sync plugin `{}` failed: {e}", opt.name);
-		}
+
+		log_if_err!(&result, "Sync plugin `{}`", opt.name);
 		succ!(result?);
 	}
 }

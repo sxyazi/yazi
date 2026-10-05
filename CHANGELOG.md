@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Rclone integration ([#4383])
 - Custom sorting ([#4363])
 - Dynamic virtual filesystem Lua API ([#4338])
-- Update methods to dynamic Lua APIs ([#4389])
+- `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 

@@ -88,8 +88,7 @@ impl Partitions {
 	fn all(&self) -> Result<Vec<Partition>> {
 		let mut mounts = Self::mounts().context("Parsing /proc/mounts")?;
 		{
-			let set = &self.linux_cache;
-			let mut set: HashSet<&OsStr> = set.iter().map(AsRef::as_ref).collect();
+			let mut set: HashSet<&OsStr> = self.linux_cache.iter().map(AsRef::as_ref).collect();
 			mounts.iter().filter_map(|p| p.dev_name(true)).for_each(|s| _ = set.remove(s));
 			mounts.extend(set.into_iter().map(Partition::new));
 			mounts.sort_unstable_by(|a, b| natsort(a.src.as_bytes(), b.src.as_bytes(), false));

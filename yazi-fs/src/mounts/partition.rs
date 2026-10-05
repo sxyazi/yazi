@@ -1,6 +1,6 @@
 use std::{ffi::OsString, path::PathBuf};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Partition {
 	pub src:         OsString,
 	pub dist:        Option<PathBuf>,
@@ -39,7 +39,11 @@ impl Partition {
 		{
 			_b.is_empty()
 		}
-		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+		#[cfg(windows)]
+		{
+			_b.is_empty() || _b.eq_ignore_ascii_case(b"raw")
+		}
+		#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
 		{
 			false
 		}

@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::{ObjectLike, Table};
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
-use yazi_macro::{error, succ};
+use yazi_macro::{log_if_err, succ};
 use yazi_parser::app::MouseForm;
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
@@ -43,9 +43,7 @@ impl Actor for Mouse {
 			})
 		});
 
-		if let Err(ref e) = result {
-			error!("{e}");
-		}
+		log_if_err!("Mouse event handler", &result);
 		succ!(result?);
 	}
 }

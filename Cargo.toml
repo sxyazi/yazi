@@ -57,11 +57,11 @@ hashbrown              = { version = "0.17.1", features = [ "serde" ] }
 image                  = { version = "0.25.10", default-features = false, features = [ "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
 indexmap               = { version = "2.14.2", features = [ "serde" ] }
 inventory              = "0.3.24"
-libc                   = "0.2.189"
+libc                   = "0.2.190"
 log                    = { version = "0.4.34", features = [ "release_max_level_off" ] }
 lru                    = "0.18.5"
 mlua                   = { version = "0.12.2", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
-objc2                  = "0.6.4"
+objc2                  = "0.6.5"
 objc2-core-foundation  = { version = "0.3.2", default-features = false, features = [ "std", "CFDictionary", "CFNumber", "CFString", "CFURL" ] }
 objc2-disk-arbitration = { version = "0.3.2", default-features = false, features = [ "std", "DADisk", "DASession", "dispatch2" ] }
 objc2-foundation       = { version = "0.3.2", default-features = false, features = [ "std", "NSDateFormatter", "NSFormatter", "NSLocale", "NSString" ] }
@@ -77,7 +77,7 @@ regex-syntax           = "0.8.11"
 reqwest                = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream", "multipart" ] }
 rustls                 = { version = "0.23.45", default-features = false, features = [ "ring", "std" ] }
 rustix                 = { version = "1.1.5", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event", "process", "system" ] }
-russh                  = { version = "0.63.3", default-features = false, features = [ "ring", "rsa" ] }
+russh                  = { version = "0.64.1", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard             = "1.2.0"
 serde                  = { version = "1.0.229", features = [ "derive" ] }
 serde_json             = "1.0.151"
@@ -91,7 +91,7 @@ tokio-util             = "0.7.19"
 toml                   = { version = "1.1.6" }
 tracing                = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_off" ] }
 tracing-core           = "0.1.36"
-twox-hash              = { version = "2.1.4", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
+twox-hash              = { version = "2.1.5", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 typed-path             = "0.12.3"
 unicode-normalization  = "0.1.25"
 unicode-width          = { version = "0.2.2", default-features = false }

@@ -2,8 +2,8 @@ use std::{ffi::OsString, fs::{File, OpenOptions}, io, mem, os::windows::{ffi::Os
 
 use either::Either;
 use io::ErrorKind;
-use windows_sys::Win32::{Foundation::{HANDLE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FindClose, FindExInfoBasic, FindExSearchNameMatch, FindFirstFileExW, GetFinalPathNameByHandleW, VOLUME_NAME_DOS, WIN32_FIND_DATAW}};
-use yazi_shim::ToWide;
+use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FindClose, FindExInfoBasic, FindExSearchNameMatch, FindFirstFileExW, GetFinalPathNameByHandleW, VOLUME_NAME_DOS, WIN32_FIND_DATAW}};
+use yazi_shim::{ToWide, handle_ok, nz_ok};
 
 use super::Casefold;
 
@@ -32,7 +32,7 @@ impl Casefold {
 		let wide = path.to_wide();
 
 		let mut data = unsafe { mem::zeroed::<WIN32_FIND_DATAW>() };
-		let handle = unsafe {
+		let handle = handle_ok(unsafe {
 			FindFirstFileExW(
 				wide.as_ptr(),
 				FindExInfoBasic,
@@ -41,29 +41,23 @@ impl Casefold {
 				ptr::null(),
 				0,
 			)
-		};
+		})?;
 
-		match handle {
-			INVALID_HANDLE_VALUE => return Err(io::Error::last_os_error()),
-			h => _ = unsafe { FindClose(h) },
-		}
-
+		unsafe { FindClose(handle) };
 		Ok(OsString::from_wide(data.cFileName.split(|&c| c == 0).next().unwrap()))
 	}
 
 	fn by_handle(file: &File, buf: &mut [u16]) -> io::Result<Either<OsString, u32>> {
-		let len = unsafe {
+		let len = nz_ok(unsafe {
 			GetFinalPathNameByHandleW(
 				file.as_raw_handle() as HANDLE,
 				buf.as_mut_ptr(),
 				buf.len() as u32,
 				VOLUME_NAME_DOS,
 			)
-		};
+		})?;
 
-		Ok(if len == 0 {
-			Err(io::Error::last_os_error())?
-		} else if len as usize >= buf.len() {
+		Ok(if len as usize >= buf.len() {
 			Either::Right(len)
 		} else {
 			Either::Left(OsString::from_wide(
