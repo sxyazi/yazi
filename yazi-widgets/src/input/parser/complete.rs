@@ -1,7 +1,7 @@
 use std::path::MAIN_SEPARATOR_STR;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, id::Id, strand::{StrandBuf, StrandLike}};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id, strand::{StrandBuf, StrandLike}};
 
 #[derive(Debug)]
 pub struct CompleteOpt {
@@ -10,10 +10,8 @@ pub struct CompleteOpt {
 	pub ticket: Id,
 }
 
-impl TryFrom<ActionCow> for CompleteOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for CompleteOpt {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self {
 			name:   a.take("name")?,
 			is_dir: a.bool("is_dir"),

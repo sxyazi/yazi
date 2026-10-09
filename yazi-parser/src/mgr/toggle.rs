@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::file::File;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct ToggleForm {
@@ -8,16 +8,16 @@ pub struct ToggleForm {
 	pub state: Option<bool>,
 }
 
-impl From<ActionCow> for ToggleForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self {
+impl<C> FromAction<C> for ToggleForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self {
 			file:  a.take_first().ok(),
 			state: match a.get("state") {
 				Ok("on") => Some(true),
 				Ok("off") => Some(false),
 				_ => None,
 			},
-		}
+		})
 	}
 }
 

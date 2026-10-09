@@ -2,8 +2,8 @@ use yazi_binding::Scope;
 use yazi_config::YAZI;
 use yazi_fs::file::File;
 use yazi_macro::render;
-use yazi_runner::RUNNER;
-use yazi_shared::{pool::Symbol, url::UrlBuf};
+use yazi_runner::{RUNNER, spot::SpotJob};
+use yazi_shared::{id::Id, pool::Symbol, url::UrlBuf};
 
 use crate::spot::SpotLock;
 
@@ -16,7 +16,7 @@ pub struct Spot {
 }
 
 impl Spot {
-	pub fn go(&mut self, file: File, mime: Symbol<str>, force: bool) {
+	pub fn go(&mut self, tab: Id, file: File, mime: Symbol<str>, force: bool) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
 		} else if !force && self.same_lock(&file, &mime) {
@@ -28,7 +28,7 @@ impl Spot {
 		};
 
 		self.abort();
-		self.scope = RUNNER.spot(spotter, file, mime, self.skip);
+		self.scope = RUNNER.spot(SpotJob { tab, spotter, file, mime, skip: self.skip });
 	}
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }

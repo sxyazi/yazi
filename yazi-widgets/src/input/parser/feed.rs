@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug, Default)]
 pub struct FeedOpt<'a> {
@@ -12,8 +12,10 @@ impl<'a> AsRef<str> for FeedOpt<'a> {
 	fn as_ref(&self) -> &str { &self.text }
 }
 
-impl<'a> From<ActionCow> for FeedOpt<'a> {
-	fn from(mut a: ActionCow) -> Self { Self { text: a.take_first().unwrap_or_default() } }
+impl<C> FromAction<C> for FeedOpt<'_> {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { text: a.take_first().unwrap_or_default() })
+	}
 }
 
 impl<'a> From<String> for FeedOpt<'a> {

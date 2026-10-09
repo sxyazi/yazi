@@ -1,17 +1,15 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_scheduler::TaskSummary;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct UpdateProgressForm {
 	pub summary: TaskSummary,
 }
 
-impl TryFrom<ActionCow> for UpdateProgressForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for UpdateProgressForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let Some(summary) = a.take_any("summary") else {
 			bail!("Invalid 'summary' in UpdateProgressForm");
 		};

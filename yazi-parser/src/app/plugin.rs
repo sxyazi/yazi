@@ -1,10 +1,10 @@
 use std::fmt::Debug;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_core::app::PluginOpt;
-use yazi_shared::event::ActionCow;
+use yazi_core::{Ctx, app::PluginOpt};
+use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct PluginForm {
 	pub opt: PluginOpt,
 }
@@ -13,11 +13,13 @@ impl From<PluginOpt> for PluginForm {
 	fn from(opt: PluginOpt) -> Self { Self { opt } }
 }
 
-impl TryFrom<ActionCow> for PluginForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
+impl FromAction<Ctx<'_>> for PluginForm {
+	fn from_action(mut a: ActionCow, cx: &Ctx) -> anyhow::Result<Self> {
+		if let Some(opt) = a.take_any("opt") {
+			Ok(Self { opt })
+		} else {
+			Ok(Self { opt: PluginOpt::from_action(a, cx)? })
+		}
 	}
 }
 

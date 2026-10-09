@@ -1,9 +1,10 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::{succ, tab};
 use yazi_parser::mgr::PeekForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Peek;
 
@@ -56,7 +57,9 @@ impl Actor for Peek {
 			cx.core.mgr.watcher.refresher.load(&hovered);
 		}
 
-		cx.tab_mut().preview.go(hovered, mime, form.force);
+		let tab = cx.tab_mut();
+		tab.preview.go(tab.id, hovered, mime, form.force);
+
 		succ!();
 	}
 }

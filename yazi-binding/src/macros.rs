@@ -2,7 +2,9 @@
 macro_rules! runtime {
 	($lua:ident) => {{
 		use mlua::ExternalError;
-		$lua.app_data_ref::<$crate::Runtime>().ok_or_else(|| "Runtime not found".into_lua_err())
+		$lua
+			.app_data_ref::<$crate::runtime::Runtime>()
+			.ok_or_else(|| "Runtime not found".into_lua_err())
 	}};
 }
 
@@ -10,20 +12,21 @@ macro_rules! runtime {
 macro_rules! runtime_mut {
 	($lua:ident) => {{
 		use mlua::ExternalError;
-		$lua.app_data_mut::<$crate::Runtime>().ok_or_else(|| "Runtime not found".into_lua_err())
+		$lua
+			.app_data_mut::<$crate::runtime::Runtime>()
+			.ok_or_else(|| "Runtime not found".into_lua_err())
 	}};
 }
 
 #[macro_export]
 macro_rules! runtime_scope {
-	($lua:ident, $name:expr, $block:expr) => {{
-		let mut f = || {
-			$crate::runtime_mut!($lua)?.enter_inherited($name, true);
+	($cx:expr, $name:expr, $block:expr) => {{
+		(|| {
+			$crate::runtime_mut!(LUA)?.enter_blocking($name, $cx.tab().id);
 			let result = (|| $block)();
-			$crate::runtime_mut!($lua)?.leave()?;
+			$crate::runtime_mut!(LUA)?.leave()?;
 			result
-		};
-		f()
+		})()
 	}};
 }
 

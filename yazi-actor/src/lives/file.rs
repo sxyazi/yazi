@@ -7,7 +7,7 @@ use yazi_fs::file::FileInventory;
 use yazi_shared::{path::DynPath, url::UrlLike};
 
 use super::{FILE_CACHE, Lives};
-use crate::lives::{CoreRef, PtrCell};
+use crate::lives::{CtxRef, PtrCell};
 
 pub(super) struct File {
 	idx:    usize,
@@ -68,8 +68,8 @@ impl UserData for File {
 			Ok(if me.is_dir() { me.folder.entries.sizes.get(&me.key()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
-			let core: CoreRef = lua.named_registry_value("cx")?;
-			core.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
+			let cx: CtxRef = lua.named_registry_value("cx")?;
+			cx.mgr.mimetype.get(&me.url).map(|s| lua.create_string(s)).transpose()
 		});
 		methods.add_method("prefix", |lua, me, ()| {
 			if !me.has_trail() {
@@ -81,15 +81,15 @@ impl UserData for File {
 			Some(lua.create_string(comp.dyn_path().encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
-			let core: CoreRef = lua.named_registry_value("cx")?;
-			let mime = core.mgr.mimetype.get(&me.url).unwrap_or_default();
+			let cx: CtxRef = lua.named_registry_value("cx")?;
+			let mime = cx.mgr.mimetype.get(&me.url).unwrap_or_default();
 			Ok(THEME.filetype.match_style(me, mime))
 		});
 		methods.add_method("is_yanked", |lua, me, ()| {
-			let core: CoreRef = lua.named_registry_value("cx")?;
-			Ok(if !core.mgr.yanked.contains(&me.url) {
+			let cx: CtxRef = lua.named_registry_value("cx")?;
+			Ok(if !cx.mgr.yanked.contains(&me.url) {
 				0u8
-			} else if core.mgr.yanked.cut {
+			} else if cx.mgr.yanked.cut {
 				2u8
 			} else {
 				1u8
@@ -109,8 +109,7 @@ impl UserData for File {
 		});
 		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains(&me.url)));
 		methods.add_method("found", |lua, me, ()| {
-			let core: CoreRef = lua.named_registry_value("cx")?;
-			let Some(finder) = &core.active().finder else {
+			let Some(finder) = &me.tab.finder else {
 				return Ok(None);
 			};
 
@@ -121,8 +120,7 @@ impl UserData for File {
 			lua.create_sequence_from([idx.into_lua(lua)?, finder.matched.len().into_lua(lua)?]).map(Some)
 		});
 		methods.add_method("highlights", |lua, me, ()| {
-			let core: CoreRef = lua.named_registry_value("cx")?;
-			let Some(finder) = &core.active().finder else {
+			let Some(finder) = &me.tab.finder else {
 				return Ok(None);
 			};
 			if me.folder.url != me.tab.current.url {

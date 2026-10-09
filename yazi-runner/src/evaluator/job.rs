@@ -1,24 +1,24 @@
-use compact_str::CompactString;
 use mlua::{ExternalError, HookTriggers, VmState};
 use tokio::{runtime::Handle, select};
-use yazi_binding::Scope;
+use yazi_binding::runtime::RuntimeSeed;
 use yazi_shared::{data::Data, sendable::Sendable};
 
 use crate::Runner;
 
 pub(super) struct EvaluateJob {
 	pub(super) runner: &'static Runner,
-	pub(super) scope:  Scope,
-	pub(super) name:   CompactString,
+	pub(super) seed:   RuntimeSeed,
 	pub(super) bytes:  Vec<u8>,
 	pub(super) arg:    Data,
 }
 
 impl EvaluateJob {
 	pub(super) fn eval(self) {
-		let Self { runner, scope, name, bytes, arg } = self;
+		let Self { runner, seed, bytes, arg } = self;
+		let RuntimeSeed { name, scope, .. } = &seed;
+
 		let result = (|| -> mlua::Result<()> {
-			let lua = runner.spawn_with(&scope, &name)?;
+			let lua = runner.spawn_with(seed.clone())?;
 
 			let scope_ = scope.clone();
 			lua.set_hook(

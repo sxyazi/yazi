@@ -14,14 +14,13 @@ pub struct AppProxy;
 
 impl AppProxy {
 	pub fn plugin(opt: PluginOpt) {
-		emit!(Call(relay!(app:plugin).with_any("opt", opt)));
+		emit!(Call(relay!(app:plugin).with_opt("tab", opt.tab.nz()).with_any("opt", opt)));
 	}
 
 	pub(crate) fn plugin_peek(job: PeekJob, scope: Scope) {
-		let name = job.previewer.name.clone();
 		Self::plugin(PluginOpt {
 			scope,
-			..PluginOpt::new_callback(name, move |_, plugin| plugin.call_method("peek", job))
+			..PluginOpt::new_callback(job, |_, plugin, job| plugin.call_method("peek", job))
 		});
 	}
 

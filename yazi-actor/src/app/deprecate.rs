@@ -1,9 +1,9 @@
 use anyhow::Result;
-use yazi_core::notify::{MessageLevel, MessageOpt};
+use yazi_core::{Ctx, notify::{MessageLevel, MessageOpt}};
 use yazi_parser::app::DeprecateForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Deprecate;
 

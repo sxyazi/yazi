@@ -3,7 +3,7 @@ use std::ops::Deref;
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UpdateYankedForm<'a>(pub yazi_dds::ember::EmberYank<'a>);
@@ -14,10 +14,8 @@ impl<'a> Deref for UpdateYankedForm<'a> {
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl TryFrom<ActionCow> for UpdateYankedForm<'_> {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for UpdateYankedForm<'_> {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		a.take_any(0).map(Self).ok_or_else(|| anyhow!("Invalid payload in UpdateYankedForm"))
 	}
 }

@@ -14,9 +14,8 @@ impl Ids {
 	#[inline]
 	pub fn next(&self) -> Id {
 		loop {
-			let old = self.next.fetch_add(1, Ordering::Relaxed);
-			if old != 0 {
-				return Id(old);
+			if let Some(id) = Id(self.next.fetch_add(1, Ordering::Relaxed)).nz() {
+				return id;
 			}
 		}
 	}

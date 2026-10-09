@@ -1,12 +1,13 @@
 use anyhow::Result;
 use yazi_config::popup::ConfirmCfg;
+use yazi_core::Ctx;
 use yazi_fs::file::Files;
 use yazi_macro::succ;
 use yazi_parser::mgr::{RemoveDoForm, RemoveForm};
 use yazi_proxy::MgrProxy;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx, act, confirm};
+use crate::{Actor, act, confirm};
 
 pub struct Remove;
 

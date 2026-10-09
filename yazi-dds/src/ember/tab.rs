@@ -6,7 +6,7 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberTab {
-	id: Id,
+	pub(super) id: Id,
 }
 
 impl EmberTab {
@@ -21,6 +21,6 @@ impl From<EmberTab> for Ember<'_> {
 
 impl IntoLua for EmberTab {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_table_from([("idx", self.id.get())])?.into_lua(lua)
+		lua.create_table_from([("id", self.id)])?.into_lua(lua)
 	}
 }

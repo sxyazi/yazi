@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug, Deserialize)]
 pub struct LinemodeForm {
@@ -9,10 +9,8 @@ pub struct LinemodeForm {
 	pub new: String,
 }
 
-impl TryFrom<ActionCow> for LinemodeForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for LinemodeForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let me: Self = a.deserialize()?;
 
 		if me.new.is_empty() || me.new.len() > 20 {

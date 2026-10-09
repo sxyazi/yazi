@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use hashbrown::HashMap;
 use mlua::{FromLua, Lua, Table, Value};
+use yazi_binding::runtime;
 use yazi_runner::entry::EntryJob;
 use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
 use yazi_shim::SStr;
@@ -46,6 +47,7 @@ impl_from_in!(Entry(PluginInEntry), Custom(CustomIn));
 #[derive(Clone, Debug, Default)]
 pub struct PluginInEntry {
 	pub id:     Id,
+	pub tab:    Id,
 	pub plugin: SStr,
 	pub args:   HashMap<DataKey, Data>,
 	pub title:  SStr,
@@ -78,7 +80,7 @@ impl TaskIn for PluginInEntry {
 
 impl From<PluginInEntry> for EntryJob {
 	fn from(value: PluginInEntry) -> Self {
-		Self { id: value.id, args: value.args, plugin: value.plugin }
+		Self { id: value.id, tab: value.tab, args: value.args, plugin: value.plugin }
 	}
 }
 
@@ -87,6 +89,7 @@ impl FromLua for PluginInEntry {
 		let t = Table::from_lua(value, lua)?;
 
 		Ok(Self {
+			tab: t.raw_get::<Id>("tab").unwrap_or_default().nz().unwrap_or(runtime!(lua)?.tab()),
 			plugin: t.raw_get::<String>(1)?.into(),
 			args: Sendable::table_to_args(lua, t.raw_get("args")?)?,
 			track: t.raw_get("track")?,

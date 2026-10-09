@@ -1,10 +1,10 @@
 use anyhow::Result;
-use yazi_core::which::WhichSorter;
+use yazi_core::{Ctx, which::WhichSorter};
 use yazi_macro::{render, succ};
 use yazi_parser::{spark::SparkKind, which::ActivateForm};
 use yazi_shared::{Source, data::Data};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Activate;
 

@@ -2,8 +2,8 @@ use std::{sync::atomic::Ordering, time::{Duration, Instant}};
 
 use anyhow::Result;
 use tokio::{select, time::sleep};
-use yazi_actor::{Ctx, act};
-use yazi_core::Core;
+use yazi_actor::act;
+use yazi_core::{Core, Ctx};
 use yazi_macro::{render, succ};
 use yazi_shared::{data::Data, event::{Event, EventRx, NEED_RENDER}};
 use yazi_tui::Raterm;
@@ -12,7 +12,6 @@ use crate::Dispatcher;
 
 pub(crate) struct App {
 	pub(crate) core: Core,
-	pub(crate) term: Option<Raterm>,
 
 	pub(super) need_render: u8,
 	pub(crate) last_render: Instant,
@@ -22,8 +21,7 @@ pub(crate) struct App {
 impl App {
 	fn make(term: Raterm) -> Self {
 		Self {
-			core: Core::make(),
-			term: Some(term),
+			core: Core::make(term),
 
 			need_render: 0,
 			last_render: Instant::now(),
@@ -56,7 +54,7 @@ impl App {
 	}
 
 	fn bootstrap(&mut self) -> Result<Data> {
-		let cx = &mut Ctx::active(&mut self.core, &mut self.term);
+		let cx = &mut Ctx::active(&mut self.core);
 		act!(app:bootstrap, cx)?;
 		act!(app:reflow, cx, crate::Root::reflow as fn(_) -> _)?;
 		succ!(render!())

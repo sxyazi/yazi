@@ -6,7 +6,7 @@ use scopeguard::defer;
 use yazi_macro::log_if_err;
 use yazi_plugin::LUA;
 
-use super::{Core, PtrCell};
+use super::{Ctx, PtrCell};
 use crate::lives::MutCell;
 
 static TO_DESTROY: MutCell<Vec<AnyUserData>> = MutCell::new(Vec::new());
@@ -17,9 +17,9 @@ pub(super) static FILE_CACHE: MutCell<
 pub struct Lives;
 
 impl Lives {
-	pub fn scope<T, F>(core: &mut yazi_core::Core, f: F) -> mlua::Result<T>
+	pub fn scope<T, F>(cx: &mut yazi_core::Ctx, f: F) -> mlua::Result<T>
 	where
-		F: FnOnce(&mut yazi_core::Core) -> mlua::Result<T>,
+		F: FnOnce(&mut yazi_core::Ctx) -> mlua::Result<T>,
 	{
 		defer! {
 			unsafe {
@@ -30,9 +30,10 @@ impl Lives {
 			}
 		}
 
-		LUA.set_named_registry_value("cx", Core::make(core)?)?;
-		LUA.globals().raw_set("cx", Core::make(core)?)?;
-		let result = f(core);
+		let ud = Ctx::make(cx)?;
+		LUA.globals().raw_set("cx", ud.clone())?;
+		LUA.set_named_registry_value("cx", ud)?;
+		let result = f(cx);
 
 		log_if_err!("Scoped Lua execution", &result);
 		result

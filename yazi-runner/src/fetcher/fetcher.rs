@@ -23,7 +23,7 @@ impl Runner {
 		let mut pending: HashSet<_> = job.files.hashes().collect();
 		let mut statuses = Vec::with_capacity(pending.len());
 
-		let lua = self.spawn(&fetcher.name)?;
+		let lua = self.spawn(&job)?;
 		let plugin = LOADER.load(&lua, &fetcher.name).await?;
 
 		let mut co: CoIter = plugin.call_async_method("fetch", job).await?;

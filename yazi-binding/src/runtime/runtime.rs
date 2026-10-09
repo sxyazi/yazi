@@ -1,8 +1,12 @@
+use std::mem;
+
 use anyhow::{Context, Result};
 use compact_str::CompactString;
 use hashbrown::HashMap;
 use mlua::Function;
+use yazi_shared::id::Id;
 
+use super::{RuntimeFrame, RuntimeSeed};
 use crate::Scope;
 
 #[derive(Debug, Default)]
@@ -11,38 +15,34 @@ pub struct Runtime {
 	blocks: HashMap<CompactString, Vec<Function>>,
 }
 
-#[derive(Clone, Debug, Default)]
-struct RuntimeFrame {
-	name:     CompactString,
-	blocking: bool,
-	scope:    Scope,
+impl From<&RuntimeSeed> for Runtime {
+	fn from(value: &RuntimeSeed) -> Self { Self::new(value.clone()) }
 }
 
 impl Runtime {
-	pub fn new(name: &str, scope: Scope) -> Self {
-		Self {
-			frames: vec![RuntimeFrame { name: name.into(), scope, ..Default::default() }],
-			..Default::default()
-		}
+	pub fn new(seed: RuntimeSeed) -> Self {
+		Self { frames: vec![RuntimeFrame { seed, blocking: false }], ..Default::default() }
 	}
 
-	pub fn enter(&mut self, name: &str, blocking: bool, scope: Scope) {
-		self.frames.push(RuntimeFrame { name: name.into(), blocking, scope });
+	pub fn swap(&mut self, other: &mut Self) { mem::swap(&mut self.frames, &mut other.frames); }
+
+	pub fn enter(&mut self, seed: RuntimeSeed, blocking: bool) {
+		self.frames.push(RuntimeFrame { seed, blocking });
+	}
+
+	pub fn enter_blocking(&mut self, name: impl Into<CompactString>, tab: Id) {
+		self.enter(RuntimeSeed::new(tab, name, self.scope()), true);
 	}
 
 	pub fn enter_nested(&mut self, name: &str) {
-		let frame =
-			RuntimeFrame { name: name.into(), ..self.frames.last().cloned().unwrap_or_default() };
-		self.frames.push(frame);
-	}
-
-	pub fn enter_inherited(&mut self, name: &str, blocking: bool) {
-		self.enter(name, blocking, self.scope());
+		self.enter(RuntimeSeed::new(self.tab(), name, self.scope()), self.is_blocking());
 	}
 
 	pub fn leave(&mut self) -> Result<()> {
 		self.frames.pop().map(|_| ()).context("Runtime stack underflow")
 	}
+
+	pub fn tab(&self) -> Id { self.frames.last().map_or(Id::ZERO, |f| f.tab) }
 
 	pub fn is_blocking(&self) -> bool { self.frames.last().is_some_and(|f| f.blocking) }
 
@@ -52,12 +52,9 @@ impl Runtime {
 		self.frames.last().map(|f| f.name.as_str()).context("No current runtime frame")
 	}
 
-	pub fn name_child_scope(&self) -> Result<(CompactString, Scope)> {
-		self
-			.frames
-			.last()
-			.map(|f| (f.name.clone(), f.scope.child()))
-			.context("No current runtime frame")
+	pub fn child_seed(&self) -> Result<RuntimeSeed> {
+		let f = self.frames.last().context("No current runtime frame")?;
+		Ok(RuntimeSeed::new(f.tab, f.name.clone(), f.scope.child()))
 	}
 
 	pub fn module(&self) -> Result<&str> {

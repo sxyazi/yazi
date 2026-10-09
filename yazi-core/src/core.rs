@@ -2,6 +2,7 @@ use ratatui_core::layout::{Position, Rect};
 use yazi_shared::Layer;
 use yazi_shim::ratatui::Padable;
 use yazi_tty::sequence::SetCursorStyle;
+use yazi_tui::Raterm;
 
 use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::{Input, InputGuard}, mgr::Mgr, notify::Notify, pick::Pick, tab::Tab, tasks::Tasks, which::Which};
 
@@ -15,10 +16,11 @@ pub struct Core {
 	pub cmp:     Cmp,
 	pub which:   Which,
 	pub notify:  Notify,
+	pub term:    Option<Raterm>,
 }
 
 impl Core {
-	pub fn make() -> Self {
+	pub fn make(term: Raterm) -> Self {
 		Self {
 			mgr:     Mgr::make(),
 			tasks:   Tasks::serve(),
@@ -29,6 +31,7 @@ impl Core {
 			cmp:     Default::default(),
 			which:   Default::default(),
 			notify:  Default::default(),
+			term:    Some(term),
 		}
 	}
 

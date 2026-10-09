@@ -176,6 +176,8 @@ impl<'a> Spark<'a> {
 			// mgr:hidden
 			KeyHidden => Self::Hidden(<_>::from_lua(value, lua)?),
 			IndHidden => Self::Hidden(<_>::from_lua(value, lua)?),
+			// mgr:leave
+			KeyLeave | IndLeave | EmitLeave | RelayLeave => Self::Leave(<_>::from_lua(value, lua)?),
 			// mgr:sort
 			KeySort => Self::Sort(<_>::from_lua(value, lua)?),
 			IndSort => Self::Sort(<_>::from_lua(value, lua)?),

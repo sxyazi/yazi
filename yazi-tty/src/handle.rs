@@ -159,13 +159,13 @@ impl Handle {
 	pub fn new(out: bool) -> Self {
 		use std::{io::{stdin, stdout}, os::windows::io::AsRawHandle, ptr};
 
-		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
+		use windows_sys::{Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}}, w};
 		use yazi_shim::handle_ok;
 
-		let name: Vec<u16> = if out { "CONOUT$\0" } else { "CONIN$\0" }.encode_utf16().collect();
+		let name = if out { w!("CONOUT$") } else { w!("CONIN$") };
 		let result = handle_ok(unsafe {
 			CreateFileW(
-				name.as_ptr(),
+				name,
 				GENERIC_READ | GENERIC_WRITE,
 				FILE_SHARE_READ | FILE_SHARE_WRITE,
 				ptr::null_mut(),

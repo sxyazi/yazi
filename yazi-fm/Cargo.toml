@@ -25,6 +25,7 @@ yazi-config    = { path = "../yazi-config", version = "26.9.1" }
 yazi-core      = { path = "../yazi-core", version = "26.9.1" }
 yazi-dds       = { path = "../yazi-dds", version = "26.9.1" }
 yazi-emulator  = { path = "../yazi-emulator", version = "26.9.1" }
+yazi-ffi       = { path = "../yazi-ffi", version = "26.9.1" }
 yazi-fs        = { path = "../yazi-fs", version = "26.9.1" }
 yazi-macro     = { path = "../yazi-macro", version = "26.9.1" }
 yazi-plugin    = { path = "../yazi-plugin", version = "26.9.1" }
@@ -47,6 +48,7 @@ log                = { workspace = true }
 mlua               = { workspace = true }
 ratatui-core       = { workspace = true }
 ratatui-widgets    = { workspace = true }
+scopeguard         = { workspace = true }
 tokio              = { workspace = true }
 tokio-stream       = { workspace = true }
 tracing            = { workspace = true }

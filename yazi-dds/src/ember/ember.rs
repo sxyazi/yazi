@@ -128,6 +128,18 @@ impl<'a> Ember<'a> {
 		}
 	}
 
+	pub(crate) fn tab(&self) -> Id {
+		match self {
+			Self::Tab(b) => b.id,
+			Self::Cd(b) => b.tab,
+			Self::Load(b) => b.tab,
+			Self::Patch(b) => b.tab,
+			Self::Hover(b) => b.tab,
+			Self::Rename(b) => b.tab,
+			_ => Id::ZERO,
+		}
+	}
+
 	pub(crate) fn with_receiver(self, receiver: Id) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}

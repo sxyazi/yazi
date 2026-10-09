@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::{render, succ};
 use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputOp;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Escape;
 

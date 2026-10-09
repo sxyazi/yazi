@@ -1,12 +1,13 @@
 use anyhow::Result;
 use ratatui_core::layout::Margin;
 use yazi_config::popup::Help;
+use yazi_core::Ctx;
 use yazi_macro::{render, succ};
 use yazi_parser::help::ToggleForm;
 use yazi_shared::data::Data;
 use yazi_widgets::input::Input;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Toggle;
 

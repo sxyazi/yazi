@@ -2,7 +2,7 @@ use mlua::{FromLua, IntoLua, Lua, Table, Value};
 use tokio::sync::mpsc;
 use yazi_config::{KEYMAP, keymap::{ChordArc, Key}};
 use yazi_macro::impl_data_any;
-use yazi_shared::{Layer, event::ActionCow};
+use yazi_shared::{Layer, event::{ActionCow, FromAction}};
 
 #[derive(Clone, Debug)]
 pub struct WhichOpt {
@@ -15,10 +15,8 @@ pub struct WhichOpt {
 
 impl_data_any!(WhichOpt);
 
-impl TryFrom<ActionCow> for WhichOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for WhichOpt {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		if let Some(opt) = a.take_any2("opt") {
 			return opt;
 		}

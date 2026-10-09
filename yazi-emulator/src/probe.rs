@@ -37,10 +37,7 @@ impl Probe {
 		}
 	}
 
-	pub fn pending(&self) -> Option<Id> {
-		let id = self.id.get();
-		(id != Id::ZERO && !self.completed.get()).then_some(id)
-	}
+	pub fn pending(&self) -> Option<Id> { self.id.get().nz().filter(|_| !self.completed.get()) }
 
 	pub async fn wait(&self, id: Id) {
 		loop {

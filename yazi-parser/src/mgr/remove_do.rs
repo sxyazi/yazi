@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct RemoveDoForm {
@@ -7,12 +7,12 @@ pub struct RemoveDoForm {
 	pub targets:     Vec<UrlBuf>,
 }
 
-impl From<ActionCow> for RemoveDoForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self {
+impl<C> FromAction<C> for RemoveDoForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self {
 			permanently: a.bool("permanently"),
 			targets:     a.take_any("targets").unwrap_or_default(),
-		}
+		})
 	}
 }
 

@@ -5,12 +5,13 @@ use paste::paste;
 
 use super::{Lives, PtrCell};
 
-pub(super) type CoreRef = UserDataRef<Core>;
+pub(super) type CtxRef = UserDataRef<Ctx>;
 
-pub(super) struct Core {
-	inner: PtrCell<yazi_core::Core>,
+pub(super) struct Ctx {
+	inner: PtrCell<yazi_core::Ctx<'static>>,
 
 	c_active: Option<Value>,
+	c_tab:    Option<Value>,
 	c_tabs:   Option<Value>,
 	c_tasks:  Option<Value>,
 	c_yanked: Option<Value>,
@@ -19,18 +20,19 @@ pub(super) struct Core {
 	c_layer:  Option<Value>,
 }
 
-impl Deref for Core {
-	type Target = yazi_core::Core;
+impl Deref for Ctx {
+	type Target = yazi_core::Ctx<'static>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl Core {
-	pub(super) fn make(inner: &yazi_core::Core) -> mlua::Result<AnyUserData> {
+impl Ctx {
+	pub(super) fn make(cx: &yazi_core::Ctx) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self {
-			inner: inner.into(),
+			inner: PtrCell::from(cx).cast(),
 
 			c_active: None,
+			c_tab:    None,
 			c_tabs:   None,
 			c_tasks:  None,
 			c_yanked: None,
@@ -41,7 +43,7 @@ impl Core {
 	}
 }
 
-impl UserData for Core {
+impl UserData for Ctx {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: LuaString| {
 			macro_rules! reuse {
@@ -56,8 +58,10 @@ impl UserData for Core {
 					}
 				};
 			}
+
 			Ok(match &*key.as_bytes() {
 				b"active" => reuse!(active, super::Tab::make(me.active())),
+				b"tab" => reuse!(tab, super::Tab::make(me.tab())),
 				b"tabs" => reuse!(tabs, super::Tabs::make(&me.mgr.tabs)),
 				b"tasks" => reuse!(tasks, super::Tasks::make(&me.tasks)),
 				b"yanked" => reuse!(yanked, super::Yanked::make(&me.mgr.yanked)),

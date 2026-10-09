@@ -13,6 +13,9 @@ impl Id {
 	#[inline]
 	pub const fn get(self) -> u64 { self.0 }
 
+	#[inline]
+	pub fn nz(self) -> Option<Self> { (self != Self::ZERO).then_some(self) }
+
 	pub fn unique() -> Self { Self(crate::timestamp_us()) }
 }
 

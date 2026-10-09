@@ -25,8 +25,7 @@ macro_rules! act {
 	}};
 
 	($layer:ident : $name:ident, $cx:ident, $action:expr) => {
-		<$crate::act!($layer:$name) as $crate::Actor>::Form::try_from($action)
-			.map_err($crate::anyhow::Error::from)
+		<<$crate::act!($layer:$name) as $crate::Actor>::Form as yazi_shared::event::FromAction<_, _>>::from_action($action, &*$cx)
 			.and_then(|opt| $crate::act!(@impl $layer:$name, $cx, opt))
 	};
 	($layer:ident : $name:ident, $cx:ident) => {
@@ -37,7 +36,7 @@ macro_rules! act {
 	};
 
 	($name:ident, $cx:expr, $action:expr) => {
-		$action.try_into().map_err($crate::anyhow::Error::from).and_then(|opt| $cx.$name(opt))
+		yazi_shared::event::FromAction::from_action($action, &*$cx).and_then(|opt| $cx.$name(opt))
 	};
 	($name:ident, $cx:expr) => {
 		$cx.$name(Default::default())

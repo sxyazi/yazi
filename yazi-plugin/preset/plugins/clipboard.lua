@@ -25,7 +25,7 @@ function M.copy_uri_list(list)
 
 		local from = Url(ya.percent_decode(line:sub(8)))
 		if from.name then
-			local to = cx.active.current.cwd:join(from.name)
+			local to = cx.tab.current.cwd:join(from.name)
 			ya.async(function() ya.task("copy", { from = from, to = to }):spawn() end)
 		end
 

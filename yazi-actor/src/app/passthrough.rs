@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_emulator::EMULATOR;
 use yazi_macro::{error, render_force, succ};
 use yazi_parser::app::PassthroughForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Passthrough;
 

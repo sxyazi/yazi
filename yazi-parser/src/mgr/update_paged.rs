@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct UpdatePagedForm {
@@ -7,9 +7,9 @@ pub struct UpdatePagedForm {
 	pub only_if: Option<UrlBuf>,
 }
 
-impl From<ActionCow> for UpdatePagedForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self { page: a.first().ok(), only_if: a.take("only-if").ok() }
+impl<C> FromAction<C> for UpdatePagedForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { page: a.first().ok(), only_if: a.take("only-if").ok() })
 	}
 }
 

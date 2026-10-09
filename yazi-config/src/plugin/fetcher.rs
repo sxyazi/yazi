@@ -71,8 +71,8 @@ impl<'a> FetcherMatcher<'a> {
 	pub(crate) fn matches(&self, fetcher: &Fetcher) -> bool {
 		if self.all {
 			true
-		} else if self.id != Id::ZERO {
-			fetcher.id == self.id
+		} else if let Some(id) = self.id.nz() {
+			fetcher.id == id
 		} else {
 			fetcher.match_with(self.file.as_deref(), self.mime.as_deref())
 		}

@@ -58,8 +58,8 @@ impl PreviewerMatcher<'_> {
 	pub(crate) fn matches(&self, previewer: &Previewer) -> bool {
 		if self.all {
 			true
-		} else if self.id != Id::ZERO {
-			previewer.id == self.id
+		} else if let Some(id) = self.id.nz() {
+			previewer.id == id
 		} else {
 			previewer.match_with(self.file.as_deref(), self.mime.as_deref())
 		}

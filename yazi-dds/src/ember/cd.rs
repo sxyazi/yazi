@@ -8,10 +8,10 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberCd<'a> {
-	tab:   Id,
-	url:   Cow<'a, UrlBuf>,
+	pub(super) tab: Id,
+	url:            Cow<'a, UrlBuf>,
 	#[serde(skip)]
-	dummy: bool,
+	dummy:          bool,
 }
 
 impl<'a> EmberCd<'a> {
@@ -32,10 +32,14 @@ impl<'a> From<EmberCd<'a>> for Ember<'a> {
 
 impl IntoLua for EmberCd<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		if self.dummy {
+			return lua.create_table()?.into_lua(lua);
+		}
+
 		lua
 			.create_table_from([
 				("tab", self.tab.into_lua(lua)?),
-				("url", (!self.dummy).then_some(self.url).map(|u| u.into_owned()).into_lua(lua)?),
+				("url", self.url.into_owned().into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{FromLua, IntoLua, Lua, Table, Value};
 use yazi_fs::op::FilesOp;
-use yazi_shared::{event::ActionCow, id::Id};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 
 #[derive(Debug)]
 pub struct UpdateFilesForm {
@@ -9,10 +9,8 @@ pub struct UpdateFilesForm {
 	pub tabs: Vec<Id>,
 }
 
-impl TryFrom<ActionCow> for UpdateFilesForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for UpdateFilesForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let Some(op) = a.take_any("op") else {
 			bail!("Invalid 'op' in UpdateFilesForm");
 		};

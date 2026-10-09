@@ -2,7 +2,7 @@ local M = {}
 
 local selected = ya.sync(function()
 	local urls = {}
-	for _, f in pairs(cx.active.selected) do
+	for _, f in pairs(cx.tab.selected) do
 		urls[#urls + 1] = f.url
 	end
 	return urls

@@ -1,13 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct CasefyOpt {
 	upper: bool,
 }
 
-impl From<ActionCow> for CasefyOpt {
-	fn from(a: ActionCow) -> Self { Self { upper: a.str(0) == "upper" } }
+impl<C> FromAction<C> for CasefyOpt {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { upper: a.str(0) == "upper" })
+	}
 }
 
 impl FromLua for CasefyOpt {

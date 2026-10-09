@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_core::mgr::OpenOpt;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Clone, Debug)]
 pub struct OpenForm {
@@ -11,11 +11,11 @@ impl From<OpenOpt> for OpenForm {
 	fn from(opt: OpenOpt) -> Self { Self { opt } }
 }
 
-impl TryFrom<ActionCow> for OpenForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
-		Ok(Self { opt: if let Some(opt) = a.take_any("opt") { opt } else { a.try_into()? } })
+impl<C> FromAction<C> for OpenForm {
+	fn from_action(mut a: ActionCow, cx: &C) -> anyhow::Result<Self> {
+		Ok(Self {
+			opt: if let Some(opt) = a.take_any("opt") { opt } else { FromAction::from_action(a, cx)? },
+		})
 	}
 }
 

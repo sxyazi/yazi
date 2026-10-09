@@ -42,6 +42,7 @@ impl_from_in!(Preload(PreloadInPreload), Custom(CustomIn));
 #[derive(Clone, Debug)]
 pub(crate) struct PreloadInPreload {
 	pub(crate) id:        Id,
+	pub(crate) tab:       Id,
 	pub(crate) preloader: PreloaderArc,
 	pub(crate) file:      yazi_fs::file::File,
 	pub(crate) mime:      Symbol<str>,

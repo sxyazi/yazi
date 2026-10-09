@@ -1,11 +1,12 @@
 use std::iter;
 
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::{succ, tab};
 use yazi_parser::{mgr::WatchForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Watch;
 

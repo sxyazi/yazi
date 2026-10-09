@@ -1,31 +1,20 @@
-use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
+use mlua::{ExternalError, HookTriggers, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use yazi_binding::Scope;
-use yazi_config::plugin::SpotterArc;
-use yazi_fs::file::File;
 use yazi_macro::error;
-use yazi_shared::{id::Ids, pool::Symbol, sendable::Sendable};
 
-use crate::{Runner, loader::LOADER};
-
-static IDS: Ids = Ids::new();
+use crate::{Runner, loader::LOADER, spot::SpotJob};
 
 impl Runner {
-	pub fn spot(
-		&'static self,
-		spotter: SpotterArc,
-		file: File,
-		mime: Symbol<str>,
-		skip: usize,
-	) -> Scope {
+	pub fn spot(&'static self, job: SpotJob) -> Scope {
 		let scope = Scope::new();
 		let (scope1, scope2) = (scope.clone(), scope.clone());
 
 		tokio::task::spawn_blocking(move || {
 			let future = async {
-				LOADER.ensure(&spotter.name, |_| ()).await?;
+				LOADER.ensure(&job.spotter.name, |_| ()).await?;
 
-				let lua = self.spawn(&spotter.name)?;
+				let lua = self.spawn(&job)?;
 				lua.set_hook(
 					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 					move |_, dbg| {
@@ -37,15 +26,7 @@ impl Runner {
 					},
 				)?;
 
-				let plugin = LOADER.load(&lua, &spotter.name).await?;
-				let job = lua.create_table_from([
-					("id", IDS.next().into_lua(&lua)?),
-					("args", Sendable::args_to_table_ref(&lua, &spotter.args)?.into_lua(&lua)?),
-					("file", file.into_lua(&lua)?),
-					("mime", mime.into_lua(&lua)?),
-					("skip", skip.into_lua(&lua)?),
-				])?;
-
+				let plugin = LOADER.load(&lua, &job.spotter.name).await?;
 				if scope2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
 			};
 

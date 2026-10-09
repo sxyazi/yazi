@@ -1,14 +1,14 @@
 use std::io;
 
 use anyhow::Result;
-use yazi_core::mgr::DisplaceOpt;
+use yazi_core::{Ctx, mgr::DisplaceOpt};
 use yazi_macro::succ;
 use yazi_parser::VoidForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 use yazi_vfs::engine;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Displace;
 

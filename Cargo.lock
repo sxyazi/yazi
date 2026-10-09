@@ -5294,6 +5294,7 @@ dependencies = [
  "yazi-shim",
  "yazi-term",
  "yazi-tty",
+ "yazi-tui",
  "yazi-watcher",
  "yazi-widgets",
 ]
@@ -5340,6 +5341,7 @@ dependencies = [
 name = "yazi-ffi"
 version = "26.9.1"
 dependencies = [
+ "anyhow",
  "chrono",
  "data-encoding",
  "libc",
@@ -5347,9 +5349,9 @@ dependencies = [
  "objc2",
  "objc2-core-foundation",
  "objc2-foundation",
- "parking_lot",
  "rand 0.10.3",
  "rustix",
+ "scopeguard",
  "strum 0.28.0",
  "thiserror 2.0.21",
  "tokio",
@@ -5369,6 +5371,7 @@ dependencies = [
  "ratatui-core",
  "ratatui-widgets",
  "rustix",
+ "scopeguard",
  "signal-hook-tokio",
  "tikv-jemallocator",
  "tokio",
@@ -5384,6 +5387,7 @@ dependencies = [
  "yazi-core",
  "yazi-dds",
  "yazi-emulator",
+ "yazi-ffi",
  "yazi-fs",
  "yazi-macro",
  "yazi-plugin",
@@ -5499,6 +5503,7 @@ dependencies = [
  "ratatui-core",
  "ratatui-widgets",
  "reqwest",
+ "scopeguard",
  "serde_json",
  "tokio",
  "tokio-stream",
@@ -5721,7 +5726,6 @@ dependencies = [
  "yazi-config",
  "yazi-emulator",
  "yazi-macro",
- "yazi-proxy",
  "yazi-shared",
  "yazi-shim",
  "yazi-term",

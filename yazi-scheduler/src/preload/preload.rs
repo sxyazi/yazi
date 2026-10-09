@@ -38,6 +38,7 @@ impl Preload {
 		let hash = FileSig(&task.file).hash_u64();
 		let mut rx = RUNNER
 			.preload(PreloadJob {
+				tab:       task.tab,
 				preloader: task.preloader.clone(),
 				file:      task.file,
 				mime:      task.mime,

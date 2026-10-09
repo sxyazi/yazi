@@ -1,6 +1,6 @@
 use mlua::{ExternalError, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_widgets::Step;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
@@ -9,10 +9,8 @@ pub struct ArrowForm {
 	pub step: Step,
 }
 
-impl TryFrom<ActionCow> for ArrowForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for ArrowForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl From<isize> for ArrowForm {

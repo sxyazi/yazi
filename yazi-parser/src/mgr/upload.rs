@@ -1,13 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct UploadForm {
 	pub urls: Vec<UrlBuf>,
 }
 
-impl From<ActionCow> for UploadForm {
-	fn from(mut a: ActionCow) -> Self { Self { urls: a.take_seq() } }
+impl<C> FromAction<C> for UploadForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { urls: a.take_seq() })
+	}
 }
 
 impl FromLua for UploadForm {

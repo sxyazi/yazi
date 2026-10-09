@@ -20,7 +20,7 @@ pub struct Preview {
 }
 
 impl Preview {
-	pub fn go(&mut self, file: File, mime: Symbol<str>, force: bool) {
+	pub fn go(&mut self, tab: Id, file: File, mime: Symbol<str>, force: bool) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
 		}
@@ -37,7 +37,7 @@ impl Preview {
 		self.abort();
 		self.scope = Scope::new();
 
-		let job = PeekJob { previewer, file, mime, sig, skip: self.skip };
+		let job = PeekJob { tab, previewer, file, mime, sig, skip: self.skip };
 		let scope = self.scope.clone();
 
 		self.handle = Some(tokio::spawn(async move {

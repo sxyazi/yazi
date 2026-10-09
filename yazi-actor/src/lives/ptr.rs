@@ -30,5 +30,8 @@ impl<T> Hash for PtrCell<T> {
 
 impl<T> PtrCell<T> {
 	#[inline]
+	pub(super) fn cast<U>(self) -> PtrCell<U> { PtrCell(self.0.cast()) }
+
+	#[inline]
 	pub(super) fn as_static(&self) -> &'static T { unsafe { &*self.0 } }
 }

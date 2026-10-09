@@ -52,6 +52,7 @@ impl Default for Loader {
 			("multi".to_owned(), preset!("plugins/multi").into()),
 			("noop".to_owned(), preset!("plugins/noop").into()),
 			("pdf".to_owned(), preset!("plugins/pdf").into()),
+			("place".to_owned(), preset!("plugins/place").into()),
 			("rg".to_owned(), preset!("plugins/rg").into()),
 			("search".to_owned(), preset!("plugins/search").into()),
 			("session".to_owned(), preset!("plugins/session").into()),

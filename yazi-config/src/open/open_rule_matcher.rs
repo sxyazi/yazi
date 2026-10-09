@@ -27,8 +27,8 @@ impl OpenRuleMatcher<'_> {
 	pub(crate) fn matches(&self, rule: &OpenRule) -> bool {
 		if self.all {
 			true
-		} else if self.id != Id::ZERO {
-			rule.id == self.id
+		} else if let Some(id) = self.id.nz() {
+			rule.id == id
 		} else {
 			rule.match_with(self.file.as_deref(), self.mime.as_deref())
 		}

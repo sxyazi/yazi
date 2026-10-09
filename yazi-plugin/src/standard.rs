@@ -1,9 +1,10 @@
 use anyhow::{Context, Result};
 use futures::executor::block_on;
 use mlua::{Lua, state::GcMode};
-use yazi_binding::{Runtime, runtime_scope};
+use yazi_binding::{runtime::Runtime, runtime_mut};
 use yazi_fs::Xdg;
 use yazi_macro::plugin_preset as preset;
+use yazi_shared::id::Id;
 use yazi_shim::cell::RoCell;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
@@ -73,7 +74,11 @@ fn stage_2(lua: &Lua) -> mlua::Result<()> {
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
 	if let Ok(b) = std::fs::read(Xdg::config_dir().join("init.lua")) {
-		runtime_scope!(lua, "init", block_on(lua.load(b).set_name("init.lua").exec_async()))?;
+		runtime_mut!(lua)?.enter_blocking("init", Id::ZERO);
+		let result = block_on(lua.load(b).set_name("init.lua").exec_async());
+
+		runtime_mut!(lua)?.leave()?;
+		result?;
 	}
 
 	Ok(())

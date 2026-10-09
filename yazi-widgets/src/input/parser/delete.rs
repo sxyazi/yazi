@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct DeleteOpt {
@@ -7,8 +7,10 @@ pub struct DeleteOpt {
 	pub(crate) insert: bool,
 }
 
-impl From<ActionCow> for DeleteOpt {
-	fn from(a: ActionCow) -> Self { Self { cut: a.bool("cut"), insert: a.bool("insert") } }
+impl<C> FromAction<C> for DeleteOpt {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { cut: a.bool("cut"), insert: a.bool("insert") })
+	}
 }
 
 impl FromLua for DeleteOpt {

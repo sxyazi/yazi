@@ -97,13 +97,7 @@ pub struct ChordMatcher {
 
 impl ChordMatcher {
 	pub(crate) fn matches(&self, chord: &Chord) -> bool {
-		if self.all {
-			true
-		} else if self.id != Id::ZERO {
-			chord.id == self.id
-		} else {
-			false
-		}
+		self.all || self.id.nz().is_some_and(|id| chord.id == id)
 	}
 }
 

@@ -1,16 +1,14 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{event::ActionCow, id::Id};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub struct PassthroughForm {
 	pub id: Id,
 }
 
-impl TryFrom<ActionCow> for PassthroughForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for PassthroughForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for PassthroughForm {

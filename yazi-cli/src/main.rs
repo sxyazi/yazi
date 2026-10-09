@@ -4,7 +4,6 @@ yazi_macro::mod_flat!(args);
 
 use clap::Parser;
 use yazi_macro::{errln, outln};
-use yazi_shared::LOCAL_SET;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -12,7 +11,7 @@ async fn main() -> anyhow::Result<()> {
 	yazi_shared::init();
 	yazi_fs::init();
 
-	match LOCAL_SET.run_until(run()).await {
+	match run().await {
 		Ok(()) => Ok(()),
 		Err(e) => {
 			for cause in e.chain() {

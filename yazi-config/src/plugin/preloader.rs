@@ -58,8 +58,8 @@ impl PreloaderMatcher<'_> {
 	pub(crate) fn matches(&self, preloader: &Preloader) -> bool {
 		if self.all {
 			true
-		} else if self.id != Id::ZERO {
-			preloader.id == self.id
+		} else if let Some(id) = self.id.nz() {
+			preloader.id == id
 		} else {
 			preloader.match_with(self.file.as_deref(), self.mime.as_deref())
 		}

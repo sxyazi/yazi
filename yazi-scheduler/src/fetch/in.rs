@@ -43,6 +43,7 @@ impl_from_in!(Fetch(FetchInFetch), Custom(CustomIn));
 #[derive(Debug)]
 pub(crate) struct FetchInFetch {
 	pub(crate) id:      Id,
+	pub(crate) tab:     Id,
 	pub(crate) fetcher: FetcherArc,
 	pub(crate) targets: Vec<yazi_fs::file::File>,
 }
@@ -64,6 +65,6 @@ impl TaskIn for FetchInFetch {
 
 impl From<FetchInFetch> for FetchJob {
 	fn from(value: FetchInFetch) -> Self {
-		Self { fetcher: value.fetcher, files: value.targets.into() }
+		Self { tab: value.tab, fetcher: value.fetcher, files: value.targets.into() }
 	}
 }

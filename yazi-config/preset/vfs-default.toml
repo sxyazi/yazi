@@ -14,6 +14,10 @@ run  = "trash"
 kind = "scope"
 run  = "go"
 
+[place.default]
+kind = "scope"
+run  = "place"
+
 [error.boot]
 kind = "scope"
 run  = "error"

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_actor::Ctx;
+use yazi_core::Ctx;
 use yazi_parser::app::ReflowForm;
 use yazi_shared::data::Data;
 

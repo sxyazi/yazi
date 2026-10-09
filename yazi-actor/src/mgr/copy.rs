@@ -1,10 +1,11 @@
 use anyhow::{Result, bail};
+use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::mgr::CopyForm;
 use yazi_shared::{data::Data, strand::ToStrand, url::UrlLike};
 use yazi_widgets::CLIPBOARD;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Copy;
 

@@ -48,6 +48,7 @@ percent-encoding = { workspace = true }
 ratatui-core     = { workspace = true }
 ratatui-widgets  = { workspace = true }
 reqwest          = { workspace = true }
+scopeguard       = { workspace = true }
 serde_json       = { workspace = true }
 tokio            = { workspace = true }
 tokio-stream     = { workspace = true }

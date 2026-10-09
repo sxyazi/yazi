@@ -1,11 +1,12 @@
 use anyhow::Result;
 use mlua::{ErrorContext, ExternalError, IntoLua, Value};
 use yazi_binding::runtime_scope;
+use yazi_core::Ctx;
 use yazi_dds::LOCAL;
 use yazi_parser::spark::{Spark, SparkKind};
 use yazi_plugin::LUA;
 
-use crate::{Ctx, lives::Lives};
+use crate::lives::Lives;
 
 pub struct Preflight;
 
@@ -16,10 +17,10 @@ impl Preflight {
 			return Ok(opt.1);
 		};
 
-		Ok(Lives::scope(cx.core, |_| {
+		Ok(Lives::scope(cx, |cx| {
 			let mut body = opt.1.into_lua(&LUA)?;
 			for (name, cb) in handlers {
-				match runtime_scope!(LUA, &name, cb.call::<Value>(&body)) {
+				match runtime_scope!(cx, &name, cb.call::<Value>(&body)) {
 					Ok(Value::Nil) => {
 						Err(format!("`{kind}` event cancelled by `{name}` plugin on preflight").into_lua_err())?
 					}

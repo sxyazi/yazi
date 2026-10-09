@@ -1,14 +1,16 @@
 use mlua::{FromLua, IntoLua, Lua, Table, Value};
 use yazi_fs::file::Files;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug, Default)]
 pub struct WatchForm {
 	pub files: Files,
 }
 
-impl From<ActionCow> for WatchForm {
-	fn from(mut a: ActionCow) -> Self { Self { files: a.take("files").unwrap_or_default() } }
+impl<C> FromAction<C> for WatchForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { files: a.take("files").unwrap_or_default() })
+	}
 }
 
 impl From<Files> for WatchForm {

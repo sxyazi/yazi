@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::spot::CopyForm;
 use yazi_shared::data::Data;
 use yazi_widgets::CLIPBOARD;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Copy;
 

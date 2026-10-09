@@ -1,48 +1,32 @@
-use std::{io, sync::Arc};
+use std::io;
 
-use mlua::{ExternalError, FromLua, FromLuaMulti, IntoLua, ObjectLike, Value};
+use mlua::{FromLua, FromLuaMulti, ObjectLike};
 use tokio::{runtime::Handle, select, sync::mpsc};
-use yazi_config::vfs::ServiceLua;
-use yazi_shared::sendable::Sendable;
 use yazi_shim::fs::Error as FsError;
 
 use crate::{CoIter, Runner, loader::LOADER, provider::{ProvideJob, ProvideResult}};
 
 impl Runner {
-	pub async fn provide<T>(
-		&'static self,
-		service: Arc<ServiceLua>,
-		job: ProvideJob,
-	) -> ProvideResult<T>
+	pub async fn provide<T>(&'static self, job: ProvideJob) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
-		match LOADER.ensure(&service.name, |_| ()).await {
-			Ok(()) => self.provide_do(service, job).await,
+		match LOADER.ensure(&job.service.name, |_| ()).await {
+			Ok(()) => self.provide_do(job).await,
 			Err(e) => FsError::other(e.to_string()).into(),
 		}
 	}
 
-	async fn provide_do<T>(
-		&'static self,
-		service: Arc<ServiceLua>,
-		job: ProvideJob,
-	) -> ProvideResult<T>
+	async fn provide_do<T>(&'static self, job: ProvideJob) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
 		match tokio::task::spawn_blocking(move || {
-			let lua = self.spawn(&service.name)?;
+			let lua = self.spawn(&job)?;
 
 			Handle::current().block_on(async {
-				let Value::Table(job) = job.into_lua(&lua)? else {
-					return Err("ProvideJob should be a table".into_lua_err());
-				};
-				job.raw_set("args", Sendable::args_to_table_ref(&lua, &service.args)?)?;
-				job.raw_set("opts", Sendable::args_to_table_ref(&lua, &service.opts)?)?;
-
-				let values =
-					LOADER.load(&lua, &service.name).await?.call_async_method("provide", job).await?;
+				let plugin = LOADER.load(&lua, &job.service.name).await?;
+				let values = plugin.call_async_method("provide", job).await?;
 				ProvideResult::from_lua_multi(values, &lua)
 			})
 		})
@@ -54,42 +38,31 @@ impl Runner {
 		}
 	}
 
-	pub async fn provide_stream<T>(
-		&'static self,
-		service: Arc<ServiceLua>,
-		job: ProvideJob,
-		tx: mpsc::Sender<io::Result<T>>,
-	) where
+	pub async fn provide_stream<T>(&'static self, job: ProvideJob, tx: mpsc::Sender<io::Result<T>>)
+	where
 		T: FromLua + Send + 'static,
 	{
-		if let Err(e) = self.provide_stream_do(service, job, tx.clone()).await {
+		if let Err(e) = self.provide_stream_do(job, tx.clone()).await {
 			tx.send(Err(e)).await.ok();
 		}
 	}
 
 	async fn provide_stream_do<T>(
 		&'static self,
-		service: Arc<ServiceLua>,
 		job: ProvideJob,
 		tx: mpsc::Sender<io::Result<T>>,
 	) -> io::Result<()>
 	where
 		T: FromLua + Send + 'static,
 	{
-		LOADER.ensure(&service.name, |_| ()).await.map_err(io::Error::other)?;
+		LOADER.ensure(&job.service.name, |_| ()).await.map_err(io::Error::other)?;
 
 		tokio::task::spawn_blocking(move || {
-			let lua = self.spawn(&service.name)?;
+			let lua = self.spawn(&job)?;
 
 			let future = async {
-				let Value::Table(job) = job.into_lua(&lua)? else {
-					return Err("ProvideJob should be a table".into_lua_err());
-				};
-				job.raw_set("args", Sendable::args_to_table_ref(&lua, &service.args)?)?;
-				job.raw_set("opts", Sendable::args_to_table_ref(&lua, &service.opts)?)?;
-
-				let mut co: CoIter =
-					LOADER.load(&lua, &service.name).await?.call_async_method("provide", job).await?;
+				let plugin = LOADER.load(&lua, &job.service.name).await?;
+				let mut co: CoIter = plugin.call_async_method("provide", job).await?;
 				while let Some(value) = co.next(&lua).await? {
 					if tx.send(Ok(value)).await.is_err() {
 						break;
@@ -106,7 +79,7 @@ impl Runner {
 			})
 		})
 		.await
-		.map_err(io::Error::other)?
-		.map_err(|e| FsError::try_from(e).map_or_else(io::Error::other, Into::into))
+		.map_err(io::Error::from)?
+		.map_err(|e: mlua::Error| FsError::try_from(e).map_or_else(io::Error::other, Into::into))
 	}
 }

@@ -3,18 +3,28 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
 use yazi_shim::SStr;
 
+use crate::PluginJob;
+
 #[derive(Clone, Debug, Default)]
 pub struct EntryJob {
 	pub id:     Id,
+	pub tab:    Id,
 	pub args:   HashMap<DataKey, Data>,
 	pub plugin: SStr,
+}
+
+impl PluginJob for EntryJob {
+	fn tab(&self) -> Id { self.tab }
+
+	fn name(&self) -> &SStr { &self.plugin }
 }
 
 impl IntoLua for EntryJob {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("id", self.id.get().into_lua(lua)?),
+				("id", self.id.into_lua(lua)?),
+				("tab", self.tab.into_lua(lua)?),
 				("args", Sendable::args_to_table(lua, self.args)?.into_lua(lua)?),
 			])?
 			.into_lua(lua)
