@@ -8,9 +8,9 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberRename<'a> {
-	tab:  Id,
-	from: Cow<'a, UrlBuf>,
-	to:   Cow<'a, UrlBuf>,
+	pub(super) tab: Id,
+	from:           Cow<'a, UrlBuf>,
+	to:             Cow<'a, UrlBuf>,
 }
 
 impl<'a> EmberRename<'a> {

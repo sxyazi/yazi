@@ -2,12 +2,13 @@ use anyhow::Result;
 use mlua::IntoLua;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
+use yazi_core::Ctx;
 use yazi_dds::{LOCAL, Payload, REMOTE};
 use yazi_macro::{log_if_err, succ};
 use yazi_plugin::LUA;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct AcceptPayload;
 
@@ -28,11 +29,11 @@ impl Actor for AcceptPayload {
 		drop(lock);
 
 		let kind = kind.to_owned();
-		succ!(Lives::scope(cx.core, |_| {
+		succ!(Lives::scope(cx, |cx| {
 			let body = payload.body.into_lua(&LUA)?;
 			for (name, cb) in handlers {
 				log_if_err!(
-					runtime_scope!(LUA, &name, cb.call::<()>(body.clone())),
+					runtime_scope!(cx, &name, cb.call::<()>(body.clone())),
 					"`{kind}` event handler in `{name}` plugin",
 				);
 			}

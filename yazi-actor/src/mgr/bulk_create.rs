@@ -4,6 +4,7 @@ use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
+use yazi_core::Ctx;
 use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, op::FilesOp};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
@@ -16,7 +17,7 @@ use yazi_tty::{TTY, sequence::EraseDisplay};
 use yazi_vfs::engine;
 use yazi_watcher::WATCHER;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 pub struct BulkCreate;
 impl Actor for BulkCreate {
 	type Form = VoidForm;

@@ -2,7 +2,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
 use yazi_core::mgr::CdSource;
 use yazi_fs::path::{clean_url, expand_url};
-use yazi_shared::{event::ActionCow, url::{Url, UrlBuf}};
+use yazi_shared::{event::{ActionCow, FromAction}, url::{Url, UrlBuf}};
 use yazi_vfs::engine;
 
 #[derive(Debug, Deserialize)]
@@ -17,10 +17,8 @@ pub struct CdForm {
 	pub(crate) source: CdSource,
 }
 
-impl TryFrom<ActionCow> for CdForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for CdForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let mut me: Self = a.deserialize()?;
 
 		if !me.raw {

@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug, Deserialize)]
 pub struct VisualModeForm {
@@ -8,10 +8,8 @@ pub struct VisualModeForm {
 	pub unset: bool,
 }
 
-impl TryFrom<ActionCow> for VisualModeForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for VisualModeForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for VisualModeForm {

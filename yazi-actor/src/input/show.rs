@@ -2,12 +2,13 @@ use std::ops::DerefMut;
 
 use anyhow::Result;
 use yazi_config::{THEME, YAZI};
+use yazi_core::Ctx;
 use yazi_macro::{render, succ};
 use yazi_parser::input::ShowForm;
 use yazi_shared::data::Data;
 use yazi_shim::ratatui::Padable;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Show;
 

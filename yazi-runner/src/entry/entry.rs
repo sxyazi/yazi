@@ -8,7 +8,7 @@ impl Runner {
 		LOADER.ensure(&job.plugin, |_| ()).await?;
 
 		tokio::task::spawn_blocking(move || {
-			let lua = self.spawn(&job.plugin)?;
+			let lua = self.spawn(&job)?;
 			Handle::current().block_on(async {
 				LOADER.load(&lua, &job.plugin).await?.call_async_method("entry", job).await
 			})

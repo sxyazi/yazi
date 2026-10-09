@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_dds::Pubsub;
 use yazi_macro::{log_if_err, render, succ, tab};
 use yazi_parser::mgr::HoverForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Hover;
 

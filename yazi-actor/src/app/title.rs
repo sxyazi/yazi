@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_actor::Ctx;
+use yazi_core::Ctx;
 use yazi_macro::{succ, writef};
 use yazi_parser::{app::TitleForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data};

@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::{render_and, succ};
 use yazi_parser::mgr::ToggleForm;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Toggle;
 

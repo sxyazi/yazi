@@ -2,14 +2,14 @@ local M = {}
 
 local state = ya.sync(function()
 	local selected = {}
-	for _, f in pairs(cx.active.selected) do
+	for _, f in pairs(cx.tab.selected) do
 		selected[#selected + 1] = f.url
 	end
-	return cx.active.current.cwd, selected
+	return cx.tab.current.cwd, selected
 end)
 
-function M:entry()
-	ya.emit("escape", { visual = true })
+function M:entry(job)
+	ya.emit("escape", { visual = true, tab = job.tab })
 
 	local cwd, selected = state()
 	if not cwd.spec.is_regular then
@@ -29,7 +29,7 @@ function M:entry()
 		return
 	elseif #urls == 1 then
 		local stat = #selected == 0 and fs.stat(urls[1])
-		return ya.emit(stat and stat.is_dir and "cd" or "reveal", { urls[1], raw = true })
+		return ya.emit(stat and stat.is_dir and "cd" or "reveal", { urls[1], raw = true, tab = job.tab })
 	end
 
 	local files = {}
@@ -38,6 +38,7 @@ function M:entry()
 	end
 	if #files > 0 then
 		files.state = #selected > 0 and "off" or "on"
+		files.tab = job.tab
 		ya.emit("toggle_all", files)
 	end
 end

@@ -5,7 +5,7 @@ use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt, ReadBuf}, sync
 use tokio_util::sync::PollSender;
 use yazi_config::vfs::ServiceLua;
 use yazi_fs::{engine::Demand, stat::Stat};
-use yazi_runner::{RUNNER, provider::{Handle, ProvideChunk, ProvideJob}};
+use yazi_runner::{RUNNER, provider::{Handle, ProvideChunk, ProvideJob, ProvideOp}};
 use yazi_shared::{id::Id, url::{AsUrl, Url, UrlBuf, UrlLike}};
 use yazi_shim::fs;
 
@@ -42,7 +42,9 @@ impl Drop for File {
 
 		tokio::spawn(async move {
 			handle.offset = shutdown.await.0;
-			let _ = RUNNER.provide(service, ProvideJob::Close { url, handle }).await.ok();
+
+			let job = ProvideJob { service, op: ProvideOp::Close { url, handle } };
+			let _ = RUNNER.provide(job).await.ok();
 		});
 	}
 }
@@ -81,8 +83,8 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let job = ProvideJob::SetLen { url: self.to_url(), size, handle: self.handle.clone() };
-		Ok(RUNNER.provide(self.service.clone(), job).await.ok()?)
+		let op = ProvideOp::SetLen { url: self.to_url(), size, handle: self.handle.clone() };
+		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.ok()?)
 	}
 
 	pub(crate) async fn set_attrs(&self, attrs: yazi_fs::engine::Attrs) -> io::Result<()> {
@@ -90,8 +92,8 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let job = ProvideJob::SetAttrs { url: self.to_url(), attrs, handle: Some(self.handle.clone()) };
-		Ok(RUNNER.provide(self.service.clone(), job).await.ok()?)
+		let op = ProvideOp::SetAttrs { url: self.to_url(), attrs, handle: Some(self.handle.clone()) };
+		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.ok()?)
 	}
 
 	pub(crate) async fn metadata(&self) -> io::Result<Stat> {
@@ -99,8 +101,8 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let job = ProvideJob::Metadata { url: self.to_url(), handle: Some(self.handle.clone()) };
-		Ok(RUNNER.provide(self.service.clone(), job).await.0?)
+		let op = ProvideOp::Metadata { url: self.to_url(), handle: Some(self.handle.clone()) };
+		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.0?)
 	}
 
 	pub(crate) async fn file(&self) -> io::Result<yazi_fs::file::File> {
@@ -108,8 +110,8 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let job = ProvideJob::File { url: self.to_url(), handle: Some(self.handle.clone()) };
-		Ok(RUNNER.provide(self.service.clone(), job).await.0?)
+		let op = ProvideOp::File { url: self.to_url(), handle: Some(self.handle.clone()) };
+		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.0?)
 	}
 
 	pub(crate) async fn into_file(mut self) -> io::Result<yazi_fs::file::File> {
@@ -359,10 +361,10 @@ struct ReadState {
 impl ReadState {
 	fn new(file: &File) -> Self {
 		let service = file.service.clone();
-		let job = ProvideJob::Read { url: file.to_url(), handle: file.handle.clone() };
+		let op = ProvideOp::Read { url: file.to_url(), handle: file.handle.clone() };
 
 		let (tx, rx) = mpsc::channel(1);
-		tokio::spawn(RUNNER.provide_stream(service, job, tx));
+		tokio::spawn(RUNNER.provide_stream(ProvideJob { service, op }, tx));
 
 		Self { rx, buf: vec![], pos: 0, done: false }
 	}
@@ -399,9 +401,12 @@ impl SeekState {
 
 	fn end(file: &File, n: i64) -> Self {
 		let service = file.service.clone();
-		let job = ProvideJob::Metadata { url: file.to_url(), handle: Some(file.handle.clone()) };
+		let op = ProvideOp::Metadata { url: file.to_url(), handle: Some(file.handle.clone()) };
 
-		Self::End(n, Box::pin(async move { Ok(RUNNER.provide::<Stat>(service, job).await.0?.len) }))
+		Self::End(
+			n,
+			Box::pin(async move { Ok(RUNNER.provide::<Stat>(ProvideJob { service, op }).await.0?.len) }),
+		)
 	}
 }
 
@@ -421,8 +426,7 @@ impl WriteState {
 		let (ack_tx, ack_rx) = mpsc::channel(1);
 		let (data_tx, data_rx) = mpsc::channel(1);
 		let worker = tokio::spawn(RUNNER.provide_stream(
-			service,
-			ProvideJob::Write { url, handle, stream: data_rx },
+			ProvideJob { service, op: ProvideOp::Write { url, handle, stream: data_rx } },
 			ack_tx,
 		));
 

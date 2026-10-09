@@ -3,13 +3,13 @@ use std::time::Duration;
 use anyhow::Result;
 use tokio::{select, time};
 use yazi_config::popup::ConfirmCfg;
-use yazi_core::app::QuitOpt;
+use yazi_core::{Ctx, app::QuitOpt};
 use yazi_macro::succ;
 use yazi_parser::{app::QuitForm, spark::SparkKind};
 use yazi_proxy::{AppProxy, ConfirmProxy};
 use yazi_shared::{data::Data, strand::{Strand, StrandLike, ToStrandJoin}, url::AsUrl};
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Quit;
 

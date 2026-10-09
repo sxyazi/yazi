@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
 use strum::EnumString;
-use yazi_shared::{event::ActionCow, strand::AsStrand};
+use yazi_shared::{event::{ActionCow, FromAction}, strand::AsStrand};
 use yazi_shim::SStr;
 
 #[derive(Debug, Deserialize)]
@@ -16,10 +16,8 @@ pub struct CopyForm {
 	pub hovered:   bool,
 }
 
-impl TryFrom<ActionCow> for CopyForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for CopyForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for CopyForm {

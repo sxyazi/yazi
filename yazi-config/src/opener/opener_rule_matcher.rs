@@ -22,13 +22,7 @@ impl From<&OpenerRulesArc> for OpenerRuleMatcher {
 
 impl OpenerRuleMatcher {
 	pub(crate) fn matches(&self, rule: &OpenerRule) -> bool {
-		if self.all {
-			true
-		} else if self.id != Id::ZERO {
-			rule.id == self.id
-		} else {
-			false
-		}
+		self.all || self.id.nz().is_some_and(|id| rule.id == id)
 	}
 }
 

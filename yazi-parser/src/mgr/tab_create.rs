@@ -2,7 +2,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
 use yazi_boot::BOOT;
 use yazi_fs::path::{clean_url, expand_url};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 use yazi_vfs::engine;
 
 #[derive(Debug, Deserialize)]
@@ -15,10 +15,8 @@ pub struct TabCreateForm {
 	raw:        bool,
 }
 
-impl TryFrom<ActionCow> for TabCreateForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for TabCreateForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let mut me: Self = a.deserialize()?;
 
 		if me.current {

@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_dds::Pubsub;
 use yazi_macro::{log_if_err, render, succ};
 use yazi_parser::ArrowForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct TabSwap;
 

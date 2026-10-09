@@ -1,11 +1,11 @@
 use mlua::{FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct VoidForm;
 
-impl From<ActionCow> for VoidForm {
-	fn from(_: ActionCow) -> Self { Self }
+impl<C> FromAction<C> for VoidForm {
+	fn from_action(_: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(Self) }
 }
 
 impl From<()> for VoidForm {

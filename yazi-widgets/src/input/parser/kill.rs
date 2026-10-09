@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
 #[derive(Debug)]
@@ -7,8 +7,10 @@ pub struct KillOpt {
 	pub(crate) kind: SStr,
 }
 
-impl From<ActionCow> for KillOpt {
-	fn from(mut a: ActionCow) -> Self { Self { kind: a.take_first().unwrap_or_default() } }
+impl<C> FromAction<C> for KillOpt {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { kind: a.take_first().unwrap_or_default() })
+	}
 }
 
 impl FromLua for KillOpt {

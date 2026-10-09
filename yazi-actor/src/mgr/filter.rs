@@ -4,14 +4,14 @@ use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::YAZI;
-use yazi_core::mgr::FilterOpt;
+use yazi_core::{Ctx, mgr::FilterOpt};
 use yazi_macro::succ;
 use yazi_parser::mgr::FilterForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Debounce, data::Data};
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx, input};
+use crate::{Actor, input};
 
 pub struct Filter;
 

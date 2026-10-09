@@ -1,10 +1,10 @@
 use anyhow::Result;
-use yazi_core::input::InputMutGuard;
+use yazi_core::{Ctx, input::InputMutGuard};
 use yazi_macro::succ;
 use yazi_parser::VoidForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Remember;
 

@@ -13,11 +13,11 @@ use super::{Locked, Partition, Partitions};
 impl Partitions {
 	pub fn monitor<F>(me: &'static Locked, cb: F)
 	where
-		F: Fn() + Send + 'static,
+		F: Fn() + 'static,
 	{
-		tokio::spawn(async move {
+		tokio::task::spawn_local(async move {
 			let notify = Arc::new(Notify::new());
-			let monitor = Monitor::new(notify.clone()).await;
+			let monitor = Monitor::new(notify.clone());
 			log_if_err!("Monitoring partitions", &monitor);
 
 			loop {

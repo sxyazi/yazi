@@ -11,6 +11,11 @@ pub enum SparkKind {
 	// mgr:hidden
 	KeyHidden,
 	IndHidden,
+	// mgr:leave
+	KeyLeave,
+	IndLeave,
+	EmitLeave,
+	RelayLeave,
 	// mgr:sort
 	KeySort,
 	IndSort,

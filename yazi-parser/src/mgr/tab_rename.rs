@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
 #[derive(Debug, Deserialize)]
@@ -12,10 +12,8 @@ pub struct TabRenameForm {
 	pub interactive: bool,
 }
 
-impl TryFrom<ActionCow> for TabRenameForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for TabRenameForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let me: Self = a.deserialize()?;
 
 		if me.name.is_none() && !me.interactive {

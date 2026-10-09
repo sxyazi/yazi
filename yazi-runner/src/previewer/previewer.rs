@@ -18,7 +18,7 @@ impl Runner {
 		let (tx_, job) = (tx.clone(), job.clone());
 		tokio::task::spawn_blocking(move || {
 			let future = async {
-				let lua = self.spawn(&job.previewer.name)?;
+				let lua = self.spawn(&job)?;
 				lua.set_hook(
 					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 					move |_, dbg| {

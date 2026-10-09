@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, id::Id};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 use yazi_shim::SStr;
 
 #[derive(Debug)]
@@ -12,9 +12,9 @@ impl From<String> for TriggerForm {
 	fn from(word: String) -> Self { Self { word: word.into(), ticket: None } }
 }
 
-impl From<ActionCow> for TriggerForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self { word: a.take_first().unwrap_or_default(), ticket: a.get("ticket").ok() }
+impl<C> FromAction<C> for TriggerForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { word: a.take_first().unwrap_or_default(), ticket: a.get("ticket").ok() })
 	}
 }
 

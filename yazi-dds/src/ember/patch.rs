@@ -9,9 +9,9 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberPatch<'a> {
-	tab: Id,
+	pub(super) tab: Id,
 	#[serde(flatten)]
-	op:  Cow<'a, FilesOp>,
+	op:             Cow<'a, FilesOp>,
 }
 
 impl<'a> EmberPatch<'a> {

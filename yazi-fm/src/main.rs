@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_actor::init();
 
-	yazi_fm::serve().await
+	yazi_ffi::run(yazi_fm::serve()).await
 }
 
 async fn serve() -> anyhow::Result<()> {
@@ -54,5 +54,5 @@ async fn serve() -> anyhow::Result<()> {
 
 	yazi_plugin::setup()?;
 
-	yazi_shared::LOCAL_SET.run_until(app::App::serve()).await
+	app::App::serve().await
 }

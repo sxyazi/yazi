@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::{render, succ};
 use yazi_parser::app::ReflowForm;
 use yazi_shared::data::Data;
 use yazi_tui::Raterm;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Resume;
 
@@ -17,7 +18,7 @@ impl Actor for Resume {
 		cx.active_mut().preview.reset();
 
 		drop(cx.term.take());
-		*cx.term = Some(Raterm::start()?);
+		cx.term = Some(Raterm::start()?);
 
 		// While the app resumes, it's possible that the terminal size has changed.
 		// We need to trigger a resize, and render the UI based on the resized area.

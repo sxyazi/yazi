@@ -1,9 +1,8 @@
 use std::fmt::Debug;
 
-use anyhow::Result;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -12,10 +11,8 @@ pub struct LuaForm {
 	pub code: SStr,
 }
 
-impl TryFrom<ActionCow> for LuaForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for LuaForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for LuaForm {

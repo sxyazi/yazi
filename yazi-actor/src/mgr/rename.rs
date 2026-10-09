@@ -1,5 +1,6 @@
 use anyhow::{Result, bail};
 use yazi_config::{YAZI, popup::ConfirmCfg};
+use yazi_core::Ctx;
 use yazi_dds::Pubsub;
 use yazi_fs::{file::File, op::FilesOp};
 use yazi_macro::{log_if_err, ok_or_not_found, succ};
@@ -10,7 +11,7 @@ use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx, act, input};
+use crate::{Actor, act, input};
 
 pub struct Rename;
 

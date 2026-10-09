@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
 #[derive(Debug)]
@@ -7,8 +7,10 @@ pub struct CopyForm {
 	pub r#type: SStr,
 }
 
-impl From<ActionCow> for CopyForm {
-	fn from(mut a: ActionCow) -> Self { Self { r#type: a.take_first().unwrap_or_default() } }
+impl<C> FromAction<C> for CopyForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { r#type: a.take_first().unwrap_or_default() })
+	}
 }
 
 impl FromLua for CopyForm {

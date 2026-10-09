@@ -1,10 +1,11 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_fs::{file::File, op::FilesOp};
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::RevealForm;
 use yazi_shared::{data::Data, url::UrlLike};
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Reveal;
 

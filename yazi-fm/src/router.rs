@@ -1,7 +1,7 @@
 use anyhow::Result;
-use yazi_actor::{Ctx, act};
+use yazi_actor::act;
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
-use yazi_core::which::WhichOpt;
+use yazi_core::{Ctx, which::WhichOpt};
 use yazi_shared::Layer;
 use yazi_term::event::KeyEvent;
 
@@ -49,7 +49,7 @@ impl<'a> Router<'a> {
 			}
 
 			if on.len() > 1 {
-				let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+				let cx = &mut Ctx::active(&mut self.app.core);
 				act!(which:activate, cx, WhichOpt::new(src, dist, key)).ok();
 			} else {
 				Dispatcher::new(self.app).dispatch_seq(chord.to_seq(dist));

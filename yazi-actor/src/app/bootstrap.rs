@@ -1,9 +1,8 @@
 use std::ffi::OsString;
 
 use anyhow::Result;
-use yazi_actor::Ctx;
 use yazi_boot::{ARGS, BOOT};
-use yazi_core::mgr::CdSource;
+use yazi_core::{Ctx, mgr::CdSource};
 use yazi_fs::path::clean_url;
 use yazi_macro::succ;
 use yazi_parser::VoidForm;

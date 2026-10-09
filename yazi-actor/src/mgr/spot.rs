@@ -1,9 +1,10 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::mgr::SpotOpt;
 use yazi_shared::{data::Data, pool::InternStr};
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Spot;
 
@@ -32,7 +33,9 @@ impl Actor for Spot {
 			cx.tab_mut().spot.skip = 0;
 		}
 
-		cx.tab_mut().spot.go(hovered, mime, form.force);
+		let tab = cx.tab_mut();
+		tab.spot.go(tab.id, hovered, mime, form.force);
+
 		succ!();
 	}
 }

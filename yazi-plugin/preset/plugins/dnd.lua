@@ -4,11 +4,11 @@ local function date() return os.date("%Y-%m-%d %H-%M-%S") end
 
 function M.selected_uri_list()
 	local paths = {}
-	for _, f in pairs(cx.active.selected) do
+	for _, f in pairs(cx.tab.selected) do
 		paths[#paths + 1] = "file://" .. ya.percent_encode(tostring(f.path))
 	end
-	if #paths == 0 and cx.active.current.hovered then
-		paths[1] = "file://" .. ya.percent_encode(tostring(cx.active.current.hovered.path))
+	if #paths == 0 and cx.tab.current.hovered then
+		paths[1] = "file://" .. ya.percent_encode(tostring(cx.tab.current.hovered.path))
 	end
 	return paths
 end
@@ -51,14 +51,14 @@ end
 function M.drop_file_uri(op, path)
 	local from = Url(path)
 	if from.name then
-		local to = cx.active.current.cwd:join(from.name)
+		local to = cx.tab.current.cwd:join(from.name)
 		ya.async(function() ya.task(op, { from = from, to = to }):spawn() end)
 	end
 end
 
 function M.drop_http_url(url)
 	local name = fs.safename(ya.percent_decode(url:match(".*/([^/?#]+)") or "")) or date()
-	local to = cx.active.current.cwd:join(name)
+	local to = cx.tab.current.cwd:join(name)
 
 	ya.async(function()
 		local task = ya.task("custom", { pool = "plugin", scope = rt.scope() }):name("Drop " .. name):spawn()
@@ -95,7 +95,7 @@ function M.drop_data_uri(uri)
 
 	meta = meta:lower()
 	local ext = require("clipboard").mime_ext(meta:match("^[^;]*"))
-	local to = cx.active.current.cwd:join(date() .. "." .. ext)
+	local to = cx.tab.current.cwd:join(date() .. "." .. ext)
 
 	ya.async(function()
 		local task = ya.task("custom", { pool = "plugin", scope = rt.scope() }):name("Drop data"):spawn()
@@ -127,7 +127,7 @@ function M.drop_data_uri(uri)
 end
 
 function M.drop_png(data)
-	local to = cx.active.current.cwd:join(date() .. ".png")
+	local to = cx.tab.current.cwd:join(date() .. ".png")
 	ya.async(function()
 		local task = ya.task("custom", { pool = "plugin", scope = rt.scope() }):name("Drop image"):spawn()
 		if not task:acquire() then

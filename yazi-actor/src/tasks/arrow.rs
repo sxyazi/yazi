@@ -1,10 +1,10 @@
 use anyhow::Result;
-use yazi_core::tasks::Tasks;
+use yazi_core::{Ctx, tasks::Tasks};
 use yazi_macro::{render, succ};
 use yazi_parser::ArrowForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Arrow;
 

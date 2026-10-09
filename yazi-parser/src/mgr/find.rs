@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct FindForm {
@@ -8,10 +8,8 @@ pub struct FindForm {
 	pub case: FilterCase,
 }
 
-impl TryFrom<ActionCow> for FindForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for FindForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self { prev: a.bool("previous"), case: FilterCase::from(&*a) })
 	}
 }

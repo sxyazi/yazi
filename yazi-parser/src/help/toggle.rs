@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{Layer, event::ActionCow};
+use yazi_shared::{Layer, event::{ActionCow, FromAction}};
 
 #[derive(Debug, Deserialize)]
 pub struct ToggleForm {
@@ -8,10 +8,8 @@ pub struct ToggleForm {
 	pub layer: Layer,
 }
 
-impl TryFrom<ActionCow> for ToggleForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for ToggleForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl From<Layer> for ToggleForm {

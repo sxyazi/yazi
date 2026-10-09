@@ -1,13 +1,13 @@
 use yazi_config::{YAZI, plugin::{FetcherMatcher, MAX_FETCHERS}};
 use yazi_fs::{Entries, FsHash64, SortBy, file::{File, FileSig}};
 use yazi_scheduler::Loaded;
-use yazi_shared::pool::InternStr;
+use yazi_shared::{id::Id, pool::InternStr};
 
 use super::Tasks;
 use crate::mgr::Mimetype;
 
 impl Tasks {
-	pub fn fetch_paged(&self, paged: &[File], mimetype: &Mimetype) {
+	pub fn fetch_paged(&self, tab: Id, paged: &[File], mimetype: &Mimetype) {
 		let fetchers = YAZI.plugin.fetchers.load_full();
 		let mut loaded = self.scheduler.fetch.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
@@ -28,12 +28,12 @@ impl Tasks {
 		drop(loaded);
 		for (i, tasks) in tasks.into_iter().enumerate() {
 			if !tasks.is_empty() {
-				self.scheduler.fetch_paged(fetchers[i].clone(), tasks);
+				self.scheduler.fetch_paged(tab, fetchers[i].clone(), tasks);
 			}
 		}
 	}
 
-	pub fn preload_paged(&self, paged: &[File], mimetype: &Mimetype) {
+	pub fn preload_paged(&self, tab: Id, paged: &[File], mimetype: &Mimetype) {
 		let mut loaded = self.scheduler.preload.loaded.lock();
 		for f in paged {
 			let hash = FileSig(f).hash_u64();
@@ -44,7 +44,7 @@ impl Tasks {
 					None => loaded.put(hash, Loaded::new(p.idx, p.rev)).is_none(),
 				};
 				if fresh {
-					self.scheduler.preload_paged(p, f, mime.intern());
+					self.scheduler.preload_paged(tab, p, f, mime.intern());
 				}
 			}
 		}

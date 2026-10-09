@@ -1,5 +1,6 @@
 use anyhow::Result;
-use yazi_actor::{Ctx, act};
+use yazi_actor::act;
+use yazi_core::Ctx;
 use yazi_macro::{emit, warn};
 use yazi_shared::event::{ActionCow, Event};
 use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
@@ -60,17 +61,17 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_mouse(&mut self, mouse: MouseEvent) -> Result<()> {
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		let cx = &mut Ctx::active(&mut self.app.core);
 		act!(app:mouse, cx, mouse).map(|_| ())
 	}
 
 	fn dispatch_resize(&mut self) -> Result<()> {
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		let cx = &mut Ctx::active(&mut self.app.core);
 		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _).map(|_| ())
 	}
 
 	fn dispatch_focus(&mut self) -> Result<()> {
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		let cx = &mut Ctx::active(&mut self.app.core);
 		act!(app:focus, cx).map(|_| ())
 	}
 
@@ -82,17 +83,17 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	fn dispatch_dnd(&mut self, dnd: DndEvent) -> Result<()> {
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		let cx = &mut Ctx::active(&mut self.app.core);
 		act!(app:dnd, cx, dnd).map(|_| ())
 	}
 
 	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		let cx = &mut Ctx::active(&mut self.app.core);
 		act!(app:clipboard, cx, clip).map(|_| ())
 	}
 
 	fn dispatch_report(&mut self, report: yazi_term::event::Report) -> Result<()> {
-		let cx = &mut Ctx::active(&mut self.app.core, &mut self.app.term);
+		let cx = &mut Ctx::active(&mut self.app.core);
 		act!(app:report, cx, report).map(|_| ())
 	}
 }

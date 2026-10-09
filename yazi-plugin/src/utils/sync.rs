@@ -1,13 +1,15 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 use futures::future::join_all;
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, MultiValue, Table, Value, Variadic};
-use tokio::{select, sync::mpsc};
-use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime_mut};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, MultiValue, Value, Variadic};
+use tokio::{select, sync::mpsc, task};
+use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime::RuntimeCo, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
 use yazi_macro::log_if_err;
-use yazi_runner::{CoHandle, RUNNER, loader::LOADER};
-use yazi_shared::{LOCAL_SET, data::Data, sendable::Sendable};
-use yazi_shim::{ResultExt, fs::Error, log::LOG_LEVEL};
+use yazi_runner::{CoHandle, RUNNER, loader::LOADER, sync::SyncJob};
+use yazi_shared::sendable::Sendable;
+use yazi_shim::{fs::Error, log::LOG_LEVEL};
 
 use super::Utils;
 
@@ -21,7 +23,7 @@ impl Utils {
 				return Err("`ya.sync()` must be called in a plugin").into_lua_err();
 			};
 
-			let current = rt.name().owned()?;
+			let current: Arc<str> = rt.name()?.into();
 			lua.create_async_function(move |lua, mut args: MultiValue| {
 				let (f, current) = (f.clone(), current.clone());
 				async move {
@@ -31,7 +33,6 @@ impl Utils {
 					} else {
 						Self::retrieve(&lua, &current, block, args)
 							.await
-							.and_then(|data| Sendable::list_to_values(&lua, data))
 							.with_context(|| {
 								format!("Failed to execute sync block-{block} in `{current}` plugin")
 							})
@@ -43,32 +44,30 @@ impl Utils {
 	}
 
 	pub(super) fn r#async(lua: &Lua, isolate: bool) -> mlua::Result<Function> {
-		if isolate {
-			lua.create_function(|_, _: Function| {
-				Err::<(), _>("`ya.async()` can only be used in sync context at the moment".into_lua_err())
-			})
-		} else {
-			lua.create_function(|lua, (f, args): (Function, MultiValue)| {
-				let (name, scope) = runtime!(lua)?.name_child_scope()?;
-				let lua = lua.clone();
+		lua.create_function(move |lua, (f, args): (Function, MultiValue)| {
+			if isolate {
+				return Err("`ya.async()` can only be used in sync context at the moment".into_lua_err());
+			}
 
-				Ok(Handle::AsyncFn(LOCAL_SET.spawn_local(async move {
-					runtime_mut!(lua)?.enter(&name, false, scope.clone());
-					let result = select! {
-						_ = scope.cancelled() => Ok(Default::default()),
-						result = f.call_async(args) => result,
-					};
+			let lua = lua.clone();
+			let seed = runtime!(lua)?.child_seed()?;
 
-					runtime_mut!(lua)?.leave()?;
-					match name.as_str() {
-						"init" => log_if_err!("Async block in `init.lua`", &result),
-						s => log_if_err!(&result, "Async block in `{s}` plugin",),
-					}
+			Ok(Handle::AsyncFn(task::spawn_local(async move {
+				let mut fut = RuntimeCo::new(&seed, lua, f, args);
 
-					result
-				})))
-			})
-		}
+				let result = select! {
+					_ = seed.scope.cancelled() => Ok(Default::default()),
+					r = &mut fut => r,
+				};
+
+				match seed.name.as_str() {
+					"init" => log_if_err!("Async block in `init.lua`", &result),
+					s => log_if_err!(&result, "Async block in `{s}` plugin",),
+				}
+
+				result
+			})))
+		})
 	}
 
 	pub(super) fn async_blocking(lua: &Lua) -> mlua::Result<Function> {
@@ -81,19 +80,17 @@ impl Utils {
 				return Err("`ya.async_blocking()` callback cannot capture local values".into_lua_err());
 			}
 
-			let (name, scope) = runtime!(lua)?.name_child_scope()?;
+			let seed = runtime!(lua)?.child_seed()?;
 			let bytes = f.dump(LOG_LEVEL.get().is_none());
 			let arg = Sendable::value_to_data(lua, arg)?;
-			Ok(RUNNER.evaluate(name, scope, bytes, arg))
+			Ok(RUNNER.evaluate(seed, bytes, arg))
 		})
 	}
 
 	pub(super) fn chan(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (r#type, buffer): (LuaString, Option<usize>)| {
 			match (&*r#type.as_bytes(), buffer) {
-				(b"mpsc", Some(buffer)) if buffer < 1 => {
-					Err("Buffer size must be greater than 0".into_lua_err())
-				}
+				(b"mpsc", Some(0)) => Err("Buffer size must be greater than 0".into_lua_err()),
 				(b"mpsc", Some(buffer)) => {
 					let (tx, rx) = tokio::sync::mpsc::channel::<Value>(buffer);
 					(MpscTx::new(tx), MpscRx(rx)).into_lua_multi(lua)
@@ -130,37 +127,31 @@ impl Utils {
 		})
 	}
 
-	// TODO
-	pub(super) fn select(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(|_lua, _futs: MultiValue| async move { Ok(()) })
-	}
-
 	async fn retrieve(
 		lua: &Lua,
 		name: &str,
-		calls: usize,
+		block: usize,
 		args: MultiValue,
-	) -> mlua::Result<Vec<Data>> {
+	) -> mlua::Result<MultiValue> {
+		let (tx, mut rx) = mpsc::channel(1);
 		let args = Sendable::values_to_list(lua, args)?;
-		let (tx, mut rx) = mpsc::channel::<Vec<Data>>(1);
 
-		let name_ = name.to_owned();
-		let callback = move |lua: &Lua, plugin: Table| {
-			let Some(block) = runtime!(lua)?.get_block(&name_, calls) else {
+		let job = SyncJob { tab: runtime!(lua)?.tab(), name: name.to_owned().into(), block, args };
+		let opt = PluginOpt::new_callback(job, move |lua, plugin, job| {
+			let Some(block) = runtime!(lua)?.get_block(&job.name, job.block) else {
 				return Err("sync block not found".into_lua_err());
 			};
 
-			let args = [Ok(Value::Table(plugin))]
-				.into_iter()
-				.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
-				.collect::<mlua::Result<MultiValue>>()?;
+			let mut args = Sendable::list_to_values(lua, job.args)?;
+			args.push_front(Value::Table(plugin));
 
 			let values = Sendable::values_to_list(lua, block.call(args)?)?;
 			tx.try_send(values).map_err(|_| "send failed".into_lua_err())
-		};
+		});
 
-		AppProxy::plugin(PluginOpt::new_callback(name.to_owned(), callback));
+		AppProxy::plugin(opt);
 
-		rx.recv().await.ok_or("recv failed").into_lua_err()
+		let values = rx.recv().await.ok_or("recv failed").into_lua_err()?;
+		Sendable::list_to_values(lua, values)
 	}
 }

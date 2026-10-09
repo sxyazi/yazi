@@ -1,10 +1,10 @@
 use anyhow::Result;
-use yazi_core::tasks::TaskOpt;
+use yazi_core::{Ctx, tasks::TaskOpt};
 use yazi_macro::succ;
 use yazi_parser::tasks::SpawnForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Spawn;
 

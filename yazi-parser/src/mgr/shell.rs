@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 use yazi_shim::SStr;
 
 #[derive(Debug, Deserialize)]
@@ -20,10 +20,8 @@ pub struct ShellForm {
 	pub cursor: Option<usize>,
 }
 
-impl TryFrom<ActionCow> for ShellForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for ShellForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let me: Self = a.deserialize()?;
 
 		if me.cursor.is_some_and(|c| c > me.run.chars().count()) {

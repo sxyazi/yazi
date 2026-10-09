@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use yazi_config::YAZI;
-use yazi_core::mgr::MgrSnap;
+use yazi_core::{Ctx, mgr::MgrSnap};
 use yazi_fs::Splatter;
 use yazi_macro::succ;
 use yazi_parser::mgr::ShellForm;
@@ -11,7 +11,7 @@ use yazi_scheduler::process::ShellOpt;
 use yazi_shared::data::Data;
 use yazi_widgets::input::InputEvent;
 
-use crate::{Actor, Ctx, act, input};
+use crate::{Actor, act, input};
 
 pub struct Shell;
 

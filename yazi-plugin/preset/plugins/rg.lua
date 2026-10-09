@@ -3,7 +3,7 @@ local search = require("search")
 
 local function warn(content) ya.notify { title = "Rg", content = tostring(content), timeout = 5, level = "warn" } end
 
-local state = ya.sync(function() return cx.active.current.cwd, cx.active.pref.show_hidden end)
+local state = ya.sync(function() return cx.tab.current.cwd, cx.tab.pref.show_hidden end)
 
 function M:entry(job)
 	local root, hidden = state()
@@ -48,6 +48,7 @@ function M:entry(job)
 			data = { subject, a = args, h = hidden },
 		},
 		raw = true,
+		tab = job.tab,
 	})
 end
 

@@ -4,7 +4,7 @@ use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_config::vfs::{ServiceLua, Vfs};
 use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
-use yazi_runner::{RUNNER, provider::{ProvideJob, ProvidePeer, ProvideResult}};
+use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideOp, ProvidePeer, ProvideResult}};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::engine::lua::ReadDir;
@@ -30,20 +30,20 @@ impl<'a> Engine for Lua<'a> {
 	async fn absolute(&self) -> io::Result<Self::UrlCow> {
 		let url = self.to_url();
 
-		Ok(self.call::<UrlBuf>(ProvideJob::Absolute { url }).await.0?.into())
+		Ok(self.call::<UrlBuf>(ProvideOp::Absolute { url }).await.0?.into())
 	}
 
 	async fn canonicalize(&self) -> io::Result<UrlBuf> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::Canonicalize { url }).await.0?)
+		Ok(self.call(ProvideOp::Canonicalize { url }).await.0?)
 	}
 
 	async fn capabilities(&self) -> io::Result<Capabilities> {
 		self
 			.service
 			.caps
-			.get_or_try_init(|| async { Ok(self.call(ProvideJob::Capabilities).await.0?) })
+			.get_or_try_init(|| async { Ok(self.call(ProvideOp::Capabilities).await.0?) })
 			.await
 			.copied()
 	}
@@ -51,7 +51,7 @@ impl<'a> Engine for Lua<'a> {
 	async fn casefold(&self) -> io::Result<UrlBuf> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::Casefold { url }).await.0?)
+		Ok(self.call(ProvideOp::Casefold { url }).await.0?)
 	}
 
 	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
@@ -62,8 +62,12 @@ impl<'a> Engine for Lua<'a> {
 		let peer = ProvidePeer::new(to)?;
 		let (tx, rx) = mpsc::channel(20);
 		tokio::spawn(RUNNER.provide_stream(
-			self.service.clone(),
-			ProvideJob::CopyTo { from: self.to_url(), to: to.into(), peer, attrs },
+			ProvideJob::new(&self.service, ProvideOp::CopyTo {
+				from: self.to_url(),
+				to: to.into(),
+				peer,
+				attrs,
+			}),
 			tx,
 		));
 
@@ -78,8 +82,12 @@ impl<'a> Engine for Lua<'a> {
 		let peer = ProvidePeer::new(from)?;
 		let (tx, rx) = mpsc::channel(20);
 		tokio::spawn(RUNNER.provide_stream(
-			self.service.clone(),
-			ProvideJob::CopyFrom { from: from.into(), to: self.to_url(), peer, attrs },
+			ProvideJob::new(&self.service, ProvideOp::CopyFrom {
+				from: from.into(),
+				to: self.to_url(),
+				peer,
+				attrs,
+			}),
 			tx,
 		));
 
@@ -89,13 +97,13 @@ impl<'a> Engine for Lua<'a> {
 	async fn create_dir(&self) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::CreateDir { url }).await.ok()?)
+		Ok(self.call(ProvideOp::CreateDir { url }).await.ok()?)
 	}
 
 	async fn create_dir_all(&self) -> io::Result<()> {
 		if self.capabilities().await?.create_dir_all {
 			let url = self.to_url();
-			Ok(self.call(ProvideJob::CreateDirAll { url }).await.ok()?)
+			Ok(self.call(ProvideOp::CreateDirAll { url }).await.ok()?)
 		} else {
 			self.create_dir_all_default().await
 		}
@@ -104,19 +112,19 @@ impl<'a> Engine for Lua<'a> {
 	async fn create_file(&self) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::CreateFile { url }).await.ok()?)
+		Ok(self.call(ProvideOp::CreateFile { url }).await.ok()?)
 	}
 
 	async fn create_file_new(&self) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::CreateFileNew { url }).await.ok()?)
+		Ok(self.call(ProvideOp::CreateFileNew { url }).await.ok()?)
 	}
 
 	async fn file(&self) -> io::Result<File> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::File { url, handle: None }).await.0?)
+		Ok(self.call(ProvideOp::File { url, handle: None }).await.0?)
 	}
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
@@ -126,13 +134,13 @@ impl<'a> Engine for Lua<'a> {
 		let from = self.to_url();
 		let to = to.dyn_path().to_owned();
 
-		Ok(self.call(ProvideJob::HardLink { from, to }).await.ok()?)
+		Ok(self.call(ProvideOp::HardLink { from, to }).await.ok()?)
 	}
 
 	async fn metadata(&self) -> io::Result<Stat> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::Metadata { url, handle: None }).await.0?)
+		Ok(self.call(ProvideOp::Metadata { url, handle: None }).await.0?)
 	}
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
@@ -143,14 +151,16 @@ impl<'a> Engine for Lua<'a> {
 		let url = self.to_url();
 		let (tx, rx) = mpsc::channel(200);
 
-		tokio::spawn(RUNNER.provide_stream(self.service, ProvideJob::ReadDir { url }, tx));
+		let job = ProvideJob { service: self.service, op: ProvideOp::ReadDir { url } };
+		tokio::spawn(RUNNER.provide_stream(job, tx));
+
 		Ok(ReadDir(rx))
 	}
 
 	async fn read_link(&self) -> io::Result<PathBufDyn> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::ReadLink { url }).await.0?)
+		Ok(self.call(ProvideOp::ReadLink { url }).await.0?)
 	}
 
 	async fn reroute(&self) -> io::Result<File> {
@@ -161,23 +171,23 @@ impl<'a> Engine for Lua<'a> {
 		}
 
 		let url = self.to_url();
-		Ok(self.call(ProvideJob::Reroute { url }).await.0?)
+		Ok(self.call(ProvideOp::Reroute { url }).await.0?)
 	}
 
 	async fn revalidate(&self, file: File) -> io::Result<Option<File>> {
-		Ok(self.call(ProvideJob::Revalidate { file }).await.0?)
+		Ok(self.call(ProvideOp::Revalidate { file }).await.0?)
 	}
 
 	async fn remove_dir(&self) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::RemoveDir { url }).await.ok()?)
+		Ok(self.call(ProvideOp::RemoveDir { url }).await.ok()?)
 	}
 
 	async fn remove_dir_all(&self) -> io::Result<()> {
 		if self.capabilities().await?.remove_dir_all {
 			let url = self.to_url();
-			Ok(self.call(ProvideJob::RemoveDirAll { url }).await.ok()?)
+			Ok(self.call(ProvideOp::RemoveDirAll { url }).await.ok()?)
 		} else {
 			self.remove_dir_all_default().await
 		}
@@ -186,7 +196,7 @@ impl<'a> Engine for Lua<'a> {
 	async fn remove_file(&self) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::RemoveFile { url }).await.ok()?)
+		Ok(self.call(ProvideOp::RemoveFile { url }).await.ok()?)
 	}
 
 	async fn rename<P>(&self, to: P) -> io::Result<()>
@@ -196,13 +206,13 @@ impl<'a> Engine for Lua<'a> {
 		let from = self.to_url();
 		let to = to.dyn_path().to_owned();
 
-		Ok(self.call(ProvideJob::Rename { from, to }).await.ok()?)
+		Ok(self.call(ProvideOp::Rename { from, to }).await.ok()?)
 	}
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::SetAttrs { url, attrs, handle: None }).await.ok()?)
+		Ok(self.call(ProvideOp::SetAttrs { url, attrs, handle: None }).await.ok()?)
 	}
 
 	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
@@ -213,28 +223,28 @@ impl<'a> Engine for Lua<'a> {
 		let original = original.as_strand().encoded_bytes().to_vec();
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::Symlink { original, url, is_dir: is_dir().await? }).await.ok()?)
+		Ok(self.call(ProvideOp::Symlink { original, url, is_dir: is_dir().await? }).await.ok()?)
 	}
 
 	async fn symlink_metadata(&self) -> io::Result<Stat> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::SymlinkMetadata { url }).await.0?)
+		Ok(self.call(ProvideOp::SymlinkMetadata { url }).await.0?)
 	}
 
 	async fn trash(&self) -> io::Result<()> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideJob::Trash { url }).await.ok()?)
+		Ok(self.call(ProvideOp::Trash { url }).await.ok()?)
 	}
 }
 
 impl<'a> Lua<'a> {
-	pub(super) async fn call<T>(&self, job: ProvideJob) -> ProvideResult<T>
+	pub(super) async fn call<T>(&self, op: ProvideOp) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
-		RUNNER.provide(self.service.clone(), job).await
+		RUNNER.provide(ProvideJob::new(&self.service, op)).await
 	}
 
 	pub(crate) async fn handles(&self, check: fn(Capabilities) -> bool) -> io::Result<bool> {

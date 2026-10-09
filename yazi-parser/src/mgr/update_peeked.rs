@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_binding::Scope;
 use yazi_core::tab::PreviewLock;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Clone, Debug)]
 pub struct UpdatePeekedForm {
@@ -10,10 +10,8 @@ pub struct UpdatePeekedForm {
 	pub scope: Scope,
 }
 
-impl TryFrom<ActionCow> for UpdatePeekedForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for UpdatePeekedForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self {
 			lock:  a.take_any("lock").ok_or_else(|| anyhow!("Invalid 'lock' in UpdatePeekedForm"))?,
 			scope: a.take_any("scope").unwrap_or_default(),

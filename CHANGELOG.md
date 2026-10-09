@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rclone integration ([#4383])
 - Custom sorting ([#4363])
+- Windows drives view ([#4412])
 - Dynamic virtual filesystem Lua API ([#4338])
 - `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
@@ -1899,3 +1900,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4395]: https://github.com/sxyazi/yazi/pull/4395
 [#4397]: https://github.com/sxyazi/yazi/pull/4397
 [#4402]: https://github.com/sxyazi/yazi/pull/4402
+[#4412]: https://github.com/sxyazi/yazi/pull/4412

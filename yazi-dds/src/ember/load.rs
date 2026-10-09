@@ -9,9 +9,9 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberLoad<'a> {
-	tab:   Id,
-	url:   Cow<'a, UrlBuf>,
-	stage: Cow<'a, FolderStage>,
+	pub(super) tab: Id,
+	url:            Cow<'a, UrlBuf>,
+	stage:          Cow<'a, FolderStage>,
 }
 
 impl<'a> EmberLoad<'a> {

@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct RemoveForm {
@@ -8,13 +8,13 @@ pub struct RemoveForm {
 	pub hovered:     bool,
 }
 
-impl From<ActionCow> for RemoveForm {
-	fn from(a: ActionCow) -> Self {
-		Self {
+impl<C> FromAction<C> for RemoveForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self {
 			force:       a.bool("force"),
 			permanently: a.bool("permanently"),
 			hovered:     a.bool("hovered"),
-		}
+		})
 	}
 }
 

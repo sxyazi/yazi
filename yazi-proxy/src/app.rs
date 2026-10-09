@@ -10,7 +10,7 @@ impl AppProxy {
 	}
 
 	pub fn plugin_do(opt: PluginOpt) {
-		emit!(Call(relay!(app:plugin_do).with_any("opt", opt)));
+		emit!(Call(relay!(app:plugin_do).with_opt("tab", opt.tab.nz()).with_any("opt", opt)));
 	}
 
 	pub fn quit(opt: QuitOpt) {

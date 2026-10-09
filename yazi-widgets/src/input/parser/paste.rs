@@ -1,13 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct PasteOpt {
 	pub(crate) before: bool,
 }
 
-impl From<ActionCow> for PasteOpt {
-	fn from(a: ActionCow) -> Self { Self { before: a.bool("before") } }
+impl<C> FromAction<C> for PasteOpt {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { before: a.bool("before") })
+	}
 }
 
 impl FromLua for PasteOpt {

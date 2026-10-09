@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::{event::ActionCow, id::Id, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id, url::UrlBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateSucceedForm {
@@ -11,10 +11,8 @@ pub struct UpdateSucceedForm {
 	pub track: bool,
 }
 
-impl TryFrom<ActionCow> for UpdateSucceedForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for UpdateSucceedForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for UpdateSucceedForm {

@@ -2,14 +2,14 @@ use anyhow::Result;
 use futures::StreamExt;
 use hashbrown::HashSet;
 use yazi_boot::ARGS;
-use yazi_core::mgr::OpenDoOpt;
+use yazi_core::{Ctx, mgr::OpenDoOpt};
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenForm;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::UrlLike};
 use yazi_vfs::engine;
 
-use crate::{Actor, Ctx, act, mgr::Quit};
+use crate::{Actor, act, mgr::Quit};
 
 pub struct Open;
 
@@ -50,6 +50,7 @@ impl Actor for Open {
 			.map(|(i, _)| i)
 			.collect();
 
+		let tab = cx.tab().id;
 		let cwd = opt.cwd.unwrap_or_else(|| cx.cwd().clone());
 		let scheduler = cx.tasks.scheduler.clone();
 		tokio::spawn(async move {
@@ -70,7 +71,7 @@ impl Actor for Open {
 				all.push(file);
 			}
 
-			if !all.is_empty() && scheduler.fetch_mimetype(part).await {
+			if !all.is_empty() && scheduler.fetch_mimetype(tab, part).await {
 				MgrProxy::open_do(OpenDoOpt { cwd, targets: all, interactive: opt.interactive });
 			}
 		});

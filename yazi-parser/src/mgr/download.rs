@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct DownloadForm {
@@ -7,8 +7,10 @@ pub struct DownloadForm {
 	pub open: bool,
 }
 
-impl From<ActionCow> for DownloadForm {
-	fn from(mut a: ActionCow) -> Self { Self { urls: a.take_seq(), open: a.bool("open") } }
+impl<C> FromAction<C> for DownloadForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { urls: a.take_seq(), open: a.bool("open") })
+	}
 }
 
 impl FromLua for DownloadForm {

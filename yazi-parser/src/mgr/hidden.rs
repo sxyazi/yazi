@@ -1,6 +1,6 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::mlua::SER_OPT;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -9,10 +9,8 @@ pub struct HiddenForm {
 	pub state: HiddenFormState,
 }
 
-impl TryFrom<ActionCow> for HiddenForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for HiddenForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for HiddenForm {

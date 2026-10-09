@@ -1,15 +1,13 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::{ActionCow, Replier};
+use yazi_shared::event::{ActionCow, FromAction, Replier};
 
 #[derive(Clone, Debug, Default)]
 pub struct StopForm {
 	pub replier: Option<Replier>,
 }
 
-impl TryFrom<ActionCow> for StopForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for StopForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self { replier: a.take_replier() })
 	}
 }

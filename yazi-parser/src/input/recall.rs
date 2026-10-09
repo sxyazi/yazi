@@ -1,6 +1,6 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use serde::Deserialize;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_widgets::Step;
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -9,10 +9,8 @@ pub struct RecallForm {
 	pub step: Step,
 }
 
-impl TryFrom<ActionCow> for RecallForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for RecallForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for RecallForm {

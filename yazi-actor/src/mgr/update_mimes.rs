@@ -1,11 +1,12 @@
 use anyhow::Result;
 use hashbrown::HashMap;
+use yazi_core::Ctx;
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::UpdateMimesForm;
 use yazi_shared::{data::Data, pool::InternStr, url::{AsUrl, UrlCov}};
 use yazi_watcher::local::LINKED;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct UpdateMimes;
 
@@ -47,8 +48,8 @@ impl Actor for UpdateMimes {
 		if repeek {
 			act!(mgr:peek, cx)?;
 		}
-		cx.tasks.fetch_paged(&affected, &cx.mgr.mimetype);
-		cx.tasks.preload_paged(&affected, &cx.mgr.mimetype);
+		cx.tasks.fetch_paged(cx.tab().id, &affected, &cx.mgr.mimetype);
+		cx.tasks.preload_paged(cx.tab().id, &affected, &cx.mgr.mimetype);
 
 		succ!(render!());
 	}

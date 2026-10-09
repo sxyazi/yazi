@@ -1,21 +1,20 @@
 use mlua::Lua;
-use yazi_binding::{Runtime, Scope};
+use yazi_binding::runtime::{Runtime, RuntimeSeed};
+
+use crate::PluginJob;
 
 pub struct Runner {
 	pub(super) setter: fn(&Lua) -> mlua::Result<()>,
 }
 
 impl Runner {
-	pub(crate) fn spawn(&self, name: &str) -> mlua::Result<Lua> {
-		self.spawn_with(Scope::default(), name)
+	pub(crate) fn spawn(&self, job: &impl PluginJob) -> mlua::Result<Lua> {
+		self.spawn_with(RuntimeSeed::new(job.tab(), job.name().as_ref(), Default::default()))
 	}
 
-	pub(crate) fn spawn_with<S>(&self, scope: S, name: &str) -> mlua::Result<Lua>
-	where
-		S: Into<Scope>,
-	{
+	pub(crate) fn spawn_with(&self, seed: RuntimeSeed) -> mlua::Result<Lua> {
 		let lua = Lua::new();
-		lua.set_app_data(Runtime::new(name, scope.into()));
+		lua.set_app_data(Runtime::new(seed));
 
 		(self.setter)(&lua)?;
 		Ok(lua)

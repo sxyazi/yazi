@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_scheduler::custom::CustomOut;
-use yazi_shared::{event::ActionCow, id::Id};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 
 #[derive(Debug)]
 pub struct OutputForm {
@@ -9,10 +9,8 @@ pub struct OutputForm {
 	pub out: CustomOut,
 }
 
-impl TryFrom<ActionCow> for OutputForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for OutputForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self {
 			id:  a.get("id")?,
 			out: a.take_any("out").ok_or_else(|| anyhow!("Invalid 'out' in OutputForm"))?,

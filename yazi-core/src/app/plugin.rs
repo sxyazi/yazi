@@ -8,13 +8,16 @@ use serde::Deserialize;
 use strum::{EnumString, IntoStaticStr};
 use yazi_binding::Scope;
 use yazi_macro::impl_data_any;
-use yazi_runner::loader::Chunk;
+use yazi_runner::{PluginJob, loader::Chunk};
 use yazi_scheduler::plugin::PluginInEntry;
-use yazi_shared::{data::{Data, DataKey}, event::{ActionCow, Cmd}};
+use yazi_shared::{data::{Data, DataKey}, event::{ActionCow, Cmd, FromAction}, id::Id};
 use yazi_shim::SStr;
+
+use crate::Ctx;
 
 #[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
+	pub tab:      Id,
 	pub name:     SStr,
 	pub args:     HashMap<DataKey, Data>,
 	pub mode:     PluginMode,
@@ -25,10 +28,8 @@ pub struct PluginOpt {
 
 impl_data_any!(PluginOpt);
 
-impl TryFrom<ActionCow> for PluginOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl FromAction<Ctx<'_>> for PluginOpt {
+	fn from_action(mut a: ActionCow, cx: &Ctx) -> anyhow::Result<Self> {
 		let Some(name) = a.take_first::<SStr>().ok().filter(|s| !s.is_empty()) else {
 			bail!("plugin name cannot be empty");
 		};
@@ -41,6 +42,7 @@ impl TryFrom<ActionCow> for PluginOpt {
 		};
 
 		Ok(Self {
+			tab: cx.tab().id,
 			name: Self::normalize_name(name),
 			args,
 			mode: a.str("mode").parse().unwrap_or_default(),
@@ -53,16 +55,21 @@ impl TryFrom<ActionCow> for PluginOpt {
 
 impl From<PluginOpt> for PluginInEntry {
 	fn from(value: PluginOpt) -> Self {
-		Self { plugin: value.name, args: value.args, ..Default::default() }
+		Self { tab: value.tab, plugin: value.name, args: value.args, ..Default::default() }
 	}
 }
 
 impl PluginOpt {
-	pub fn new_callback(name: impl Into<SStr>, f: impl PluginCallback) -> Self {
+	pub fn new_callback<J, F>(job: J, f: F) -> Self
+	where
+		J: PluginJob + Clone + Send + Sync + 'static,
+		F: FnOnce(&Lua, Table, J) -> mlua::Result<()> + Clone + Send + Sync + 'static,
+	{
 		Self {
-			name: Self::normalize_name(name.into()),
+			tab: job.tab(),
+			name: Self::normalize_name(job.name().clone()),
 			mode: PluginMode::Sync,
-			callback: Some(Box::new(f)),
+			callback: Some(Box::new(move |lua, plugin| f(lua, plugin, job))),
 			..Default::default()
 		}
 	}

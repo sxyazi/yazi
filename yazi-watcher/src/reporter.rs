@@ -27,11 +27,13 @@ impl Reporter {
 	fn report_local(&self, url: UrlCow) {
 		let Some((trail, _)) = url.pair() else { return };
 
+		// Match `Linked::sync`'s lock order to avoid deadlocks.
+		let watched = WATCHED.read();
+
 		// FIXME: LINKED should return Url instead of Path
 		let linked = LINKED.read();
 		let linked = linked.from_dir(trail).map(Url::regular);
 
-		let watched = WATCHED.read();
 		for trail in [trail].into_iter().chain(linked) {
 			if watched.contains_url(trail) {
 				self.local_tx.send(url.to_owned()).ok();

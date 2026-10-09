@@ -3,6 +3,7 @@ use std::process;
 use anyhow::Result;
 use tokio::{join, task};
 use yazi_boot::ARGS;
+use yazi_core::Ctx;
 use yazi_emulator::EMULATOR;
 use yazi_fs::engine::{Engine, local::Local};
 use yazi_macro::succ;
@@ -10,7 +11,7 @@ use yazi_parser::app::QuitForm;
 use yazi_shared::{data::Data, strand::{StrandBuf, StrandLike, ToStrand}, url::UrlBuf};
 use yazi_tui::Raterm;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Quit;
 

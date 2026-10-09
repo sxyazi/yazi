@@ -1,14 +1,14 @@
 use std::iter;
 
 use anyhow::Result;
-use yazi_core::{Invalidator, Reconciler};
+use yazi_core::{Ctx, Invalidator, Reconciler};
 use yazi_fs::op::FilesOp;
 use yazi_macro::{render, succ};
 use yazi_parser::{mgr::UpdateFilesForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data, url::UrlLike};
 use yazi_watcher::local::LINKED;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct UpdateFiles;
 

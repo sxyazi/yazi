@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct PeekForm {
@@ -9,14 +9,14 @@ pub struct PeekForm {
 	pub upper_bound: bool,
 }
 
-impl From<ActionCow> for PeekForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self {
+impl<C> FromAction<C> for PeekForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self {
 			skip:        a.first().ok(),
 			force:       a.bool("force"),
 			only_if:     a.take("only-if").ok(),
 			upper_bound: a.bool("upper-bound"),
-		}
+		})
 	}
 }
 

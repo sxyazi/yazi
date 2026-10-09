@@ -1,9 +1,10 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::{emit, render, succ};
 use yazi_parser::help::CloseForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Close;
 

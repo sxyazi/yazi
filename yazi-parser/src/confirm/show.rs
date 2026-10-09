@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_config::popup::ConfirmCfg;
-use yazi_shared::{CompletionToken, event::ActionCow};
+use yazi_shared::{CompletionToken, event::{ActionCow, FromAction}};
 
 #[derive(Debug)]
 pub struct ShowForm {
@@ -9,10 +9,8 @@ pub struct ShowForm {
 	pub token: CompletionToken,
 }
 
-impl TryFrom<ActionCow> for ShowForm {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for ShowForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		let Some(cfg) = a.take_any("cfg") else {
 			bail!("Invalid 'cfg' in ShowForm");
 		};

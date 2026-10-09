@@ -58,8 +58,8 @@ impl SpotterMatcher<'_> {
 	pub(crate) fn matches(&self, spotter: &Spotter) -> bool {
 		if self.all {
 			true
-		} else if self.id != Id::ZERO {
-			spotter.id == self.id
+		} else if let Some(id) = self.id.nz() {
+			spotter.id == id
 		} else {
 			spotter.match_with(self.file.as_deref(), self.mime.as_deref())
 		}

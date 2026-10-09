@@ -3,7 +3,7 @@ use std::{mem, time::{Duration, Instant}};
 use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
 use hashbrown::HashSet;
-use yazi_core::mgr::OpenOpt;
+use yazi_core::{Ctx, mgr::OpenOpt};
 use yazi_fs::{FsAuth, FsUrl, engine::{Engine, local::Local}};
 use yazi_macro::succ;
 use yazi_parser::mgr::DownloadForm;
@@ -11,7 +11,7 @@ use yazi_proxy::MgrProxy;
 use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::engine;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Download;
 
@@ -21,6 +21,7 @@ impl Actor for Download {
 	const NAME: &str = "download";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		let tab = cx.tab().id;
 		let cwd = cx.cwd().clone();
 		let scheduler = cx.tasks.scheduler.clone();
 
@@ -47,13 +48,13 @@ impl Actor for Download {
 				files.push(f);
 
 				if instant.elapsed() >= Duration::from_secs(1) {
-					wg2.push(scheduler.fetch_mimetype(mem::take(&mut files)));
+					wg2.push(scheduler.fetch_mimetype(tab, mem::take(&mut files)));
 					instant = Instant::now();
 				}
 			}
 
 			if !files.is_empty() {
-				wg2.push(scheduler.fetch_mimetype(files));
+				wg2.push(scheduler.fetch_mimetype(tab, files));
 			}
 			if futures::future::join_all(wg2).await.into_iter().any(|b| !b) {
 				return;

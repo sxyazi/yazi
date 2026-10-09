@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use mlua::{IntoLua, Lua, Value};
 use yazi_boot::{ARGS, ID};
 use yazi_macro::{emit, impl_data_any, relay};
-use yazi_shared::{event::ActionCow, id::Id};
+use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 
 use crate::ember::Ember;
 
@@ -49,7 +49,9 @@ impl<'a> Payload<'a> {
 
 impl Payload<'static> {
 	pub(super) fn emit(self) {
-		emit!(Call(relay!(app:accept_payload).with_any("payload", self)));
+		let tab = self.body.tab().nz().filter(|_| self.receiver != 0 && self.receiver == self.sender);
+
+		emit!(Call(relay!(app:accept_payload).with_opt("tab", tab).with_any("payload", self)));
 	}
 }
 
@@ -77,10 +79,8 @@ impl<'a> From<Ember<'a>> for Payload<'a> {
 	fn from(value: Ember<'a>) -> Self { Self::new(value) }
 }
 
-impl TryFrom<ActionCow> for Payload<'_> {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for Payload<'_> {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		a.take_any2("payload").ok_or_else(|| anyhow!("Missing 'payload' in Payload"))?
 	}
 }

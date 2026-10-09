@@ -3,7 +3,7 @@ use std::{iter, ops::Deref};
 use anyhow::Result;
 use serde::de::DeserializeOwned;
 
-use super::Action;
+use super::{Action, FromAction};
 use crate::{data::{Data, DataKey}, event::Replier};
 
 #[derive(Debug)]
@@ -23,8 +23,8 @@ impl Deref for ActionCow {
 	}
 }
 
-impl From<ActionCow> for () {
-	fn from(_: ActionCow) -> Self {}
+impl<C> FromAction<C> for () {
+	fn from_action(_: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(()) }
 }
 
 impl From<Action> for ActionCow {

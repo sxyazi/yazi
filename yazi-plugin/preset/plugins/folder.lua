@@ -3,7 +3,7 @@
 local M = {}
 
 function M:peek(job)
-	local folder = cx.active.preview.folder
+	local folder = cx.tab.preview.folder
 	if not folder then
 		return ya.preview_widget(job, ui.Line("Loading..."):area(job.area):align(ui.Align.CENTER))
 	elseif folder.cwd ~= job.file.url then
@@ -12,7 +12,7 @@ function M:peek(job)
 
 	local bound = math.max(0, #folder.files - job.area.h)
 	if job.skip > bound then
-		return ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true })
+		return ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true, tab = job.tab })
 	end
 
 	if #folder.files == 0 then
@@ -39,13 +39,14 @@ function M:peek(job)
 end
 
 function M:seek(job)
-	local folder = cx.active.preview.folder
+	local folder = cx.tab.preview.folder
 	if folder and folder.cwd == job.file.url then
 		local step = math.floor(job.units * job.area.h / 10)
 		local bound = math.max(0, #folder.files - job.area.h)
 		ya.emit("peek", {
-			ya.clamp(0, cx.active.preview.skip + step, bound),
+			ya.clamp(0, cx.tab.preview.skip + step, bound),
 			only_if = job.file.url,
+			tab = job.tab,
 		})
 	end
 end

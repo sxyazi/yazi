@@ -1,12 +1,12 @@
 use std::{mem, ops::ControlFlow};
 
 use anyhow::Result;
-use yazi_core::cmp::CmpItem;
+use yazi_core::{Ctx, cmp::CmpItem};
 use yazi_macro::{render, succ};
 use yazi_parser::cmp::ShowForm;
 use yazi_shared::{data::Data, path::{DynPath, PathDyn}, strand::StrandLike};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 const LIMIT: usize = 30;
 

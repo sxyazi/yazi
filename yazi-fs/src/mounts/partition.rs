@@ -16,6 +16,7 @@ pub struct Partition {
 impl Partition {
 	// Match mount types that do not update directory mtime on changes,
 	// and should be refreshed frequently.
+	#[cfg(any(target_os = "linux", target_os = "macos"))]
 	pub(crate) fn timeless(&self) -> bool {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
 		matches!(b, b"exfat")
@@ -23,6 +24,7 @@ impl Partition {
 
 	// Match mount types that do not reliably emit change notifications,
 	// and should be polled for changes.
+	#[cfg(any(target_os = "linux", target_os = "macos"))]
 	pub(crate) fn soundless(&self) -> bool {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
 		matches!(b, b"fuse.rclone" | b"nfs4")

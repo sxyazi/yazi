@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_core::app::PluginMode;
+use yazi_core::{Ctx, app::PluginMode};
 use yazi_macro::succ;
 use yazi_parser::app::PluginForm;
 use yazi_proxy::AppProxy;
@@ -7,7 +7,7 @@ use yazi_runner::loader::LOADER;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx, act};
+use crate::{Actor, act};
 
 pub struct Plugin;
 

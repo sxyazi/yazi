@@ -1,12 +1,11 @@
 use std::{io, ops::Deref};
 
 use anyhow::Result;
-use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{CompletedFrame, Frame, Terminal}};
+use ratatui_core::{buffer::Buffer, layout::Rect, terminal::{Frame, Terminal}};
 use tokio::task::JoinHandle;
 use yazi_config::YAZI;
 use yazi_emulator::EMULATOR;
-use yazi_macro::writef;
-use yazi_proxy::AppProxy;
+use yazi_macro::{emit, relay, writef};
 use yazi_shim::cell::SyncCell;
 use yazi_term::{TERM, event::{Event, KeyEventKind}, stream::EventStream};
 use yazi_tty::{TTY, TtyWriter, sequence::{DisableBracketedPaste, DisableClipboard, DisableColorSchemeUpdates, DisableDrag, DisableDrop, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste, EnableClipboard, EnableColorSchemeUpdates, EnableDrag, EnableDrop, EnableFocusChange, EnableMouseCapture, EnterAlternateScreen, If, LeaveAlternateScreen, PopKeyboardFlags, PushKeyboardFlags, RestoreCursorStyle, SetTitle, ShowCursor}};
@@ -101,7 +100,7 @@ impl Raterm {
 						_ => yazi_shared::event::Event::Term(event).emit(),
 					},
 					Some(Err(_)) => {
-						AppProxy::quit(Default::default());
+						emit!(Call(relay!(app:quit)));
 						break;
 					}
 					None => break,
@@ -110,16 +109,16 @@ impl Raterm {
 		})
 	}
 
-	pub fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {
+	pub fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<()> {
 		let last = self.inner.draw(f)?;
 
 		self.last_area = last.area;
 		self.last_buffer.area = last.buffer.area;
 		self.last_buffer.content.clone_from(&last.buffer.content);
-		Ok(last)
+		Ok(())
 	}
 
-	pub fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {
+	pub fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<()> {
 		self.inner.draw(|frame| {
 			let buffer = frame.buffer_mut();
 			for y in self.last_area.top()..self.last_area.bottom() {
@@ -129,7 +128,8 @@ impl Raterm {
 			}
 
 			f(frame);
-		})
+		})?;
+		Ok(())
 	}
 
 	pub fn can_partial(&mut self) -> bool {

@@ -8,8 +8,8 @@ use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberHover<'a> {
-	tab: Id,
-	url: Option<Cow<'a, UrlBuf>>,
+	pub(super) tab: Id,
+	url:            Option<Cow<'a, UrlBuf>>,
 }
 
 impl<'a> EmberHover<'a> {

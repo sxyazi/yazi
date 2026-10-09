@@ -1,8 +1,7 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_parser::spark::SparkKind;
 use yazi_shared::data::Data;
-
-use crate::Ctx;
 
 pub trait Actor {
 	type Form;

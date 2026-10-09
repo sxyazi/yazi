@@ -1,7 +1,7 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Table, Value};
 use serde::{Deserialize, Serialize};
 use yazi_core::mgr::CdSource;
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 use yazi_shim::mlua::SER_OPT;
 
 use crate::mgr::CdForm;
@@ -13,10 +13,8 @@ pub struct StashForm {
 	source:     CdSource,
 }
 
-impl TryFrom<ActionCow> for StashForm {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for StashForm {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl From<&CdForm> for StashForm {

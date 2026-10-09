@@ -2,12 +2,15 @@ use anyhow::Result;
 use mlua::{LuaString, Value};
 use ratatui_core::layout::Position;
 use yazi_actor::lives::Lives;
+use yazi_binding::runtime_scope;
 use yazi_config::LAYOUT;
+use yazi_core::Ctx;
 use yazi_macro::{error, log_if_err, render, succ};
 use yazi_parser::app::ReflowForm;
+use yazi_plugin::LUA;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Reflow;
 
@@ -20,24 +23,26 @@ impl Actor for Reflow {
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
 
-		let result = Lives::scope(cx.core, |_| {
-			let comps = (form.reflow)((Position::ORIGIN, size).into())?;
+		let result = Lives::scope(cx, |cx| {
+			runtime_scope!(cx, "root", {
+				let comps = (form.reflow)((Position::ORIGIN, size).into())?;
 
-			for v in comps.sequence_values::<Value>() {
-				let Value::Table(t) = v? else {
-					error!("`reflow()` must return a table of components");
-					continue;
-				};
+				for v in comps.sequence_values::<Value>() {
+					let Value::Table(t) = v? else {
+						error!("`reflow()` must return a table of components");
+						continue;
+					};
 
-				let id: LuaString = t.get("_id")?;
-				match &*id.as_bytes() {
-					b"current" => layout.current = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
-					b"preview" => layout.preview = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
-					b"progress" => layout.progress = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
-					_ => {}
+					let id: LuaString = t.get("_id")?;
+					match &*id.as_bytes() {
+						b"current" => layout.current = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
+						b"preview" => layout.preview = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
+						b"progress" => layout.progress = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
+						_ => {}
+					}
 				}
-			}
-			Ok(())
+				Ok(())
+			})
 		});
 
 		if layout != LAYOUT.get() {

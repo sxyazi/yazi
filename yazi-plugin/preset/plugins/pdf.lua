@@ -20,10 +20,10 @@ function M:peek(job)
 end
 
 function M:seek(job)
-	local h = cx.active.current.hovered
+	local h = cx.tab.current.hovered
 	if h and h.url == job.file.url then
 		local step = ya.clamp(-1, job.units, 1)
-		ya.emit("peek", { math.max(0, cx.active.preview.skip + step), only_if = job.file.url })
+		ya.emit("peek", { math.max(0, cx.tab.preview.skip + step), only_if = job.file.url, tab = job.tab })
 	end
 end
 

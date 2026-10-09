@@ -8,12 +8,12 @@ use super::Status;
 use crate::process::Output;
 
 pub struct Child {
-	inner:      tokio::process::Child,
-	stdin:      Option<BufWriter<ChildStdin>>,
-	stdout:     Option<BufReader<ChildStdout>>,
-	stderr:     Option<BufReader<ChildStderr>>,
+	inner:       tokio::process::Child,
+	stdin:       Option<BufWriter<ChildStdin>>,
+	stdout:      Option<BufReader<ChildStdout>>,
+	stderr:      Option<BufReader<ChildStderr>>,
 	#[cfg(windows)]
-	job_handle: Option<std::os::windows::io::OwnedHandle>,
+	_job_handle: Option<std::os::windows::io::OwnedHandle>,
 }
 
 impl Child {
@@ -30,7 +30,7 @@ impl Child {
 			stdout,
 			stderr,
 			#[cfg(windows)]
-			job_handle,
+			_job_handle: job_handle,
 		}
 	}
 

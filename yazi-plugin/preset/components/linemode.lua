@@ -13,7 +13,7 @@ function Linemode:solo()
 		return ""
 	end
 
-	local mode = cx.active.pref.linemode
+	local mode = cx.tab.pref.linemode
 	if mode == "none" or mode == "solo" then
 		return ""
 	elseif not self[mode] then
@@ -29,7 +29,7 @@ function Linemode:size()
 	if size then
 		return ya.readable_size(size)
 	else
-		local folder = cx.active:history(self._file.url)
+		local folder = cx.tab:history(self._file.url)
 		return folder and tostring(#folder.files) or ""
 	end
 end

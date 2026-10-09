@@ -2,6 +2,7 @@ use anyhow::Result;
 use hashbrown::HashMap;
 use indexmap::IndexSet;
 use yazi_config::{YAZI, opener::OpenerRule};
+use yazi_core::Ctx;
 use yazi_fs::{Splatter, file::File};
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenDoForm;
@@ -9,7 +10,7 @@ use yazi_proxy::{PickProxy, TasksProxy};
 use yazi_scheduler::process::ShellOpt;
 use yazi_shared::{data::Data, url::UrlBuf};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct OpenDo;
 

@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
 #[derive(Debug)]
@@ -10,14 +10,14 @@ pub struct RenameForm {
 	pub cursor:  SStr,
 }
 
-impl From<ActionCow> for RenameForm {
-	fn from(mut a: ActionCow) -> Self {
-		Self {
+impl<C> FromAction<C> for RenameForm {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self {
 			hovered: a.bool("hovered"),
 			force:   a.bool("force"),
 			empty:   a.take("empty").unwrap_or_default(),
 			cursor:  a.take("cursor").unwrap_or_default(),
-		}
+		})
 	}
 }
 

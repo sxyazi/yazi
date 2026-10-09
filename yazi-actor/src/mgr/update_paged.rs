@@ -1,9 +1,10 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::mgr::UpdatePagedForm;
 use yazi_shared::data::Data;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct UpdatePaged;
 
@@ -19,8 +20,8 @@ impl Actor for UpdatePaged {
 
 		let targets = cx.current().paginate(form.page.unwrap_or(cx.current().page));
 		if !targets.is_empty() {
-			cx.tasks.fetch_paged(targets, &cx.mgr.mimetype);
-			cx.tasks.preload_paged(targets, &cx.mgr.mimetype);
+			cx.tasks.fetch_paged(cx.tab().id, targets, &cx.mgr.mimetype);
+			cx.tasks.preload_paged(cx.tab().id, targets, &cx.mgr.mimetype);
 		}
 		succ!();
 	}

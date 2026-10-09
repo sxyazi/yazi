@@ -6,6 +6,7 @@ use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
+use yazi_core::Ctx;
 use yazi_dds::Pubsub;
 use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, max_common_root, op::FilesOp, path::skip_url};
 use yazi_macro::{log_if_err, succ, writef};
@@ -18,7 +19,7 @@ use yazi_tty::{TTY, sequence::EraseDisplay};
 use yazi_vfs::{engine, maybe_exists};
 use yazi_watcher::WATCHER;
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct BulkRename;
 

@@ -1,11 +1,6 @@
 local M = {}
 
-local state = ya.sync(function(st)
-	return {
-		cwd = tostring(cx.active.current.cwd),
-		empty = st.empty,
-	}
-end)
+local state = ya.sync(function(st) return tostring(cx.tab.current.cwd), st.empty end)
 
 local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
@@ -14,20 +9,20 @@ function M:setup(opts)
 
 	if opts.update_db then
 		ps.sub("cd", function()
-			local cwd = cx.active.current.cwd
+			local cwd = cx.tab.current.cwd
 			ya.async(function() Command("zoxide"):arg({ "add", tostring(cwd) }):status() end)
 		end)
 	end
 end
 
-function M:entry()
-	local st = state()
-	if st.empty == nil then
-		st.empty = M.is_empty(st.cwd)
-		set_state(st.empty)
+function M:entry(job)
+	local cwd, empty = state()
+	if empty == nil then
+		empty = M.is_empty(cwd)
+		set_state(empty)
 	end
 
-	if st.empty then
+	if empty then
 		return ya.notify {
 			title = "Zoxide",
 			content = "No directory history found, check Zoxide's doc to set it up and restart Yazi.",
@@ -37,13 +32,13 @@ function M:entry()
 	end
 
 	local permit = ui.hide()
-	local target, err = M.run_with(st.cwd)
+	local target, err = M.run_with(cwd)
 	permit:drop()
 
 	if not target then
 		ya.notify { title = "Zoxide", content = tostring(err), timeout = 5, level = "error" }
 	elseif target ~= "" then
-		ya.emit("cd", { target, raw = true })
+		ya.emit("cd", { target, raw = true, tab = job.tab })
 	end
 end
 

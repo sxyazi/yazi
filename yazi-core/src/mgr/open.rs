@@ -1,6 +1,6 @@
 use yazi_fs::file::File;
 use yazi_macro::impl_data_any;
-use yazi_shared::{event::ActionCow, url::UrlBuf};
+use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
 // --- OpenOpt
 #[derive(Clone, Debug)]
@@ -13,10 +13,8 @@ pub struct OpenOpt {
 
 impl_data_any!(OpenOpt);
 
-impl TryFrom<ActionCow> for OpenOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for OpenOpt {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self {
 			cwd:         a.take("cwd").ok(),
 			targets:     a.take_seq(),

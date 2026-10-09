@@ -3,6 +3,7 @@ use std::pin::Pin;
 use anyhow::{Result, bail};
 use tokio_stream::{Stream, StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::{YAZI, popup::ConfirmCfg};
+use yazi_core::Ctx;
 use yazi_fs::{file::File, op::FilesOp};
 use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
@@ -12,7 +13,7 @@ use yazi_shim::bytes::{AnyAsciiChar, BytePredictor};
 use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
 
-use crate::{Actor, Ctx, input};
+use crate::{Actor, input};
 
 pub struct Create;
 

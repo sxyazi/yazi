@@ -1,9 +1,10 @@
 use anyhow::Result;
+use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::{mgr::StashForm, spark::SparkKind};
 use yazi_shared::{Source, data::Data, url::{AsUrl, UrlLike}};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Stash;
 

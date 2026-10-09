@@ -2,14 +2,14 @@ use std::time::Duration;
 
 use anyhow::Result;
 use ratatui_core::layout::Rect;
-use yazi_core::notify::Notify;
+use yazi_core::{Ctx, notify::Notify};
 use yazi_macro::{render, render_partial, succ};
 use yazi_parser::notify::TickForm;
 use yazi_proxy::NotifyProxy;
 use yazi_shared::data::Data;
 use yazi_term::{Dimension, TERM};
 
-use crate::{Actor, Ctx};
+use crate::Actor;
 
 pub struct Tick;
 

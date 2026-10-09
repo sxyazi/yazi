@@ -4,7 +4,7 @@ use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationSecondsWithFrac, serde_as};
 use yazi_macro::impl_data_any;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::mlua::SER_OPT;
 
 use crate::notify::MessageLevel;
@@ -24,10 +24,8 @@ pub struct MessageOpt {
 
 impl_data_any!(MessageOpt);
 
-impl TryFrom<ActionCow> for MessageOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(a: ActionCow) -> Result<Self, Self::Error> { Ok(a.deserialize()?) }
+impl<C> FromAction<C> for MessageOpt {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for MessageOpt {

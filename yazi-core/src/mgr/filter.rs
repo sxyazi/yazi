@@ -1,6 +1,6 @@
 use yazi_fs::FilterCase;
 use yazi_macro::impl_data_any;
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
 #[derive(Clone, Debug, Default)]
@@ -12,10 +12,8 @@ pub struct FilterOpt {
 
 impl_data_any!(FilterOpt);
 
-impl TryFrom<ActionCow> for FilterOpt {
-	type Error = anyhow::Error;
-
-	fn try_from(mut a: ActionCow) -> Result<Self, Self::Error> {
+impl<C> FromAction<C> for FilterOpt {
+	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
 		Ok(Self {
 			query: a.take_first().unwrap_or_default(),
 			case:  FilterCase::from(&*a),

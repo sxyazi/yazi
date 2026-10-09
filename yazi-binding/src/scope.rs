@@ -25,10 +25,7 @@ impl Scope {
 	pub fn new() -> Self { Self(Some(CancellationToken::new())) }
 
 	pub fn child(&self) -> Self {
-		Self(Some(match &self.0 {
-			Some(token) => token.child_token(),
-			None => CancellationToken::new(),
-		}))
+		Self(Some(self.0.as_ref().map_or_else(CancellationToken::new, CancellationToken::child_token)))
 	}
 
 	pub fn cancel(&self) {

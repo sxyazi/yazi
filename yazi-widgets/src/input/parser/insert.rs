@@ -1,13 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::ActionCow;
+use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct InsertOpt {
 	pub(crate) append: bool,
 }
 
-impl From<ActionCow> for InsertOpt {
-	fn from(a: ActionCow) -> Self { Self { append: a.bool("append") } }
+impl<C> FromAction<C> for InsertOpt {
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
+		Ok(Self { append: a.bool("append") })
+	}
 }
 
 impl From<bool> for InsertOpt {
