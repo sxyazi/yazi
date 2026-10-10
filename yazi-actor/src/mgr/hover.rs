@@ -31,7 +31,7 @@ impl Actor for Hover {
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the entry regardless.
-			tab.current.trace = Some(key.clone());
+			tab.current.trace = Some(key);
 			cx.tasks.scheduler.behavior.reset();
 		}
 

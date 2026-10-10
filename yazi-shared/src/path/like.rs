@@ -46,6 +46,10 @@ pub trait PathLike: DynPath {
 
 	fn stem(&self) -> Option<Strand<'_>> { self.dyn_path().stem() }
 
+	fn to_kind(&self, kind: impl Into<PathKind>) -> Result<PathBufDyn, PathDynError> {
+		PathBufDyn::with(kind, self.dyn_path())
+	}
+
 	fn to_os_owned(&self) -> Result<std::path::PathBuf, PathDynError> {
 		self.dyn_path().to_os_owned()
 	}

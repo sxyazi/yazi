@@ -4,7 +4,7 @@ use hashbrown::Equivalent;
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::wtf8::FromWtf8Vec;
 
-use crate::path::{Component, DynPath, PathDyn, PathDynError, PathKind};
+use crate::{path::{Component, DynPath, PathDyn, PathDynError, PathKind}, strand::StrandBuf};
 
 // --- PathBufDyn
 #[derive(Clone, Debug, Eq, FromLuaOwned)]
@@ -118,15 +118,18 @@ impl PathBufDyn {
 		})
 	}
 
-	pub(crate) fn with<K>(kind: K, bytes: Vec<u8>) -> Result<Self, PathDynError>
+	pub fn with<K, S>(kind: K, strand: S) -> Result<Self, PathDynError>
 	where
 		K: Into<PathKind>,
+		S: Into<StrandBuf>,
 	{
-		Ok(match kind.into() {
-			PathKind::Os => {
+		Ok(match (kind.into(), strand.into()) {
+			(PathKind::Os, StrandBuf::Os(s)) => Self::Os(s.into()),
+			(PathKind::Os, StrandBuf::Utf8(s)) => Self::Os(s.into()),
+			(PathKind::Os, StrandBuf::Bytes(bytes)) => {
 				Self::Os(std::path::PathBuf::from_wtf8_vec(bytes).map_err(|_| PathDynError::AsOs)?)
 			}
-			PathKind::Unix => Self::Unix(bytes.into()),
+			(PathKind::Unix, s) => Self::Unix(s.into_encoded_bytes().into()),
 		})
 	}
 

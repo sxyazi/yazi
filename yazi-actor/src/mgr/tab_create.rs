@@ -7,7 +7,7 @@ use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, act};
 
-const MAX_TABS: usize = 9;
+pub(crate) const MAX_TABS: usize = 9;
 
 pub struct TabCreate;
 

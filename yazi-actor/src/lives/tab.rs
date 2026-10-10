@@ -4,10 +4,12 @@ use mlua::{AnyUserData, UserData, UserDataFields, UserDataMethods};
 use yazi_shared::url::UrlRef;
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use super::{Finder, Folder, Lives, Mode, Preference, Preview, PtrCell, Selected};
+use super::{Finder, Folder, Mode, Preference, Preview, PtrCell, Selected, TabCache};
 
+#[derive(Clone, Copy)]
 pub(super) struct Tab {
-	inner: PtrCell<yazi_core::tab::Tab>,
+	pub(super) idx: usize,
+	inner:          PtrCell<yazi_core::tab::Tab>,
 }
 
 impl Deref for Tab {
@@ -17,8 +19,8 @@ impl Deref for Tab {
 }
 
 impl Tab {
-	pub(super) fn make(inner: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { inner: inner.into() })
+	pub(super) fn make(idx: usize, inner: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
+		TabCache::get(idx).tab(Self { idx, inner: inner.into() })
 	}
 }
 
@@ -32,20 +34,20 @@ impl UserData for Tab {
 
 		fields.add_static_field("mode", |_, me| Mode::make(&me.mode));
 		fields.add_static_field("pref", |_, me| Preference::make(&me.pref));
-		fields.add_static_field("current", |_, me| Folder::make(None, &me.current, me));
+		fields.add_static_field("current", |_, me| Folder::make(me.current.offset, &me.current, *me));
 		fields.add_static_field("parent", |_, me| {
-			me.parent.as_ref().map(|f| Folder::make(None, f, me)).transpose()
+			me.parent.as_ref().map(|f| Folder::make(f.offset, f, *me)).transpose()
 		});
 
 		fields.add_static_field("selected", |_, me| Selected::make(&me.selected));
 
-		fields.add_static_field("preview", |_, me| Preview::make(me));
+		fields.add_static_field("preview", |_, me| Preview::make(*me));
 		fields.add_static_field("finder", |_, me| me.finder.as_ref().map(Finder::make).transpose());
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("history", |_, me, url: UrlRef| {
-			me.history.get(url.as_ref()).map(|f| Folder::make(None, f, me)).transpose()
+			me.history.get(url.as_ref()).map(|f| Folder::make(f.offset, f, *me)).transpose()
 		});
 	}
 }

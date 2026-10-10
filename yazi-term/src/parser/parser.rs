@@ -27,6 +27,7 @@ impl Default for Parser {
 }
 
 impl Parser {
+	#[cfg(unix)]
 	pub(crate) fn parse(&mut self, bytes: &[u8]) {
 		for &b in bytes {
 			self.step(b);

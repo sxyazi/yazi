@@ -10,8 +10,6 @@ pub(super) type CtxRef = UserDataRef<Ctx>;
 pub(super) struct Ctx {
 	inner: PtrCell<yazi_core::Ctx<'static>>,
 
-	c_active: Option<Value>,
-	c_tab:    Option<Value>,
 	c_tabs:   Option<Value>,
 	c_tasks:  Option<Value>,
 	c_yanked: Option<Value>,
@@ -31,8 +29,6 @@ impl Ctx {
 		Lives::scoped_userdata(Self {
 			inner: PtrCell::from(cx).cast(),
 
-			c_active: None,
-			c_tab:    None,
 			c_tabs:   None,
 			c_tasks:  None,
 			c_yanked: None,
@@ -60,8 +56,8 @@ impl UserData for Ctx {
 			}
 
 			Ok(match &*key.as_bytes() {
-				b"active" => reuse!(active, super::Tab::make(me.active())),
-				b"tab" => reuse!(tab, super::Tab::make(me.tab())),
+				b"active" => super::Tab::make(me.mgr.tabs.cursor, me.active())?.into_lua(lua)?,
+				b"tab" => super::Tab::make(me.tab, me.tab())?.into_lua(lua)?,
 				b"tabs" => reuse!(tabs, super::Tabs::make(&me.mgr.tabs)),
 				b"tasks" => reuse!(tasks, super::Tasks::make(&me.tasks)),
 				b"yanked" => reuse!(yanked, super::Yanked::make(&me.mgr.yanked)),

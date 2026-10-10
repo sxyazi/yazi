@@ -173,17 +173,16 @@ impl<'a> Spark<'a> {
 
 			// mgr:close
 			KeyClose => Self::Close(<_>::from_lua(value, lua)?),
+			// mgr:enter
+			KeyEnter | IndEnter | EmitEnter | RelayEnter => Self::Enter(<_>::from_lua(value, lua)?),
 			// mgr:hidden
-			KeyHidden => Self::Hidden(<_>::from_lua(value, lua)?),
-			IndHidden => Self::Hidden(<_>::from_lua(value, lua)?),
+			KeyHidden | IndHidden => Self::Hidden(<_>::from_lua(value, lua)?),
 			// mgr:leave
 			KeyLeave | IndLeave | EmitLeave | RelayLeave => Self::Leave(<_>::from_lua(value, lua)?),
 			// mgr:sort
-			KeySort => Self::Sort(<_>::from_lua(value, lua)?),
-			IndSort => Self::Sort(<_>::from_lua(value, lua)?),
+			KeySort | IndSort => Self::Sort(<_>::from_lua(value, lua)?),
 			// mgr:stash
-			IndStash => Self::Stash(<_>::from_lua(value, lua)?),
-			RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
+			IndStash | RelayStash => Self::Stash(<_>::from_lua(value, lua)?),
 			// mgr:update_files
 			RelayUpdateFiles => Self::UpdateFiles(<_>::from_lua(value, lua)?),
 			// mgr:watch
@@ -192,8 +191,7 @@ impl<'a> Spark<'a> {
 			KeyQuit => Self::Quit(<_>::from_lua(value, lua)?),
 
 			// input:close
-			KeyInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
-			IndInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
+			KeyInputClose | IndInputClose => Self::InputClose(<_>::from_lua(value, lua)?),
 
 			// which:activate
 			IndWhichActivate => Self::WhichActivate(<_>::from_lua(value, lua)?),

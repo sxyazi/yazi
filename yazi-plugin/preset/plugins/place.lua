@@ -44,23 +44,39 @@ function M:setup()
 		return
 	end
 
-	local function handler(event)
+	local function enter(args)
+		local h = cx.tab.current.hovered
+		if not h or not h.stat.is_dir or h.url.spec.scheme ~= "place" then
+			return args
+		end
+
+		local url = target(h.url)
+		if not url then
+			return args
+		end
+
+		ya.emit("cd", { url, raw = true, tab = cx.tab.id })
+	end
+
+	local function leave(args)
 		local cwd = cx.tab.current.cwd
 		local drive = tostring(cwd.physical):match("^([A-Za-z]:)[/\\]$")
 		if not drive then
-			return event
+			return args
 		end
 
 		local hovered = cx.tab.current.hovered
 		local parent = hovered and hovered.url.parent
 		if parent and parent ~= cwd then
-			return event
+			return args
 		end
 
-		ya.emit("reveal", { Url("place://default//"):join(drive:upper()), raw = true, tab = cx.tab.id })
+		ya.emit("reveal", { Url("place://host//"):join(drive:upper()), raw = true, tab = cx.tab.id })
 	end
-	for _, event in ipairs { "key-leave", "ind-leave", "emit-leave", "relay-leave" } do
-		ps.sub(event, handler)
+
+	for _, source in ipairs { "key", "ind", "emit", "relay" } do
+		ps.sub(source .. "-enter", enter)
+		ps.sub(source .. "-leave", leave)
 	end
 end
 
