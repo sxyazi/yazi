@@ -14,7 +14,7 @@ run  = "trash"
 kind = "scope"
 run  = "go"
 
-[place.default]
+[place.host]
 kind = "scope"
 run  = "place"
 

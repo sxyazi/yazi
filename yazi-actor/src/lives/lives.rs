@@ -1,18 +1,11 @@
-use std::mem::MaybeUninit;
-
-use hashbrown::HashMap;
 use mlua::{AnyUserData, UserData};
 use scopeguard::defer;
 use yazi_macro::log_if_err;
 use yazi_plugin::LUA;
 
-use super::{Ctx, PtrCell};
-use crate::lives::MutCell;
+use super::{Ctx, MutCell, TABS};
 
 static TO_DESTROY: MutCell<Vec<AnyUserData>> = MutCell::new(Vec::new());
-pub(super) static FILE_CACHE: MutCell<
-	MaybeUninit<HashMap<PtrCell<yazi_fs::file::File>, AnyUserData>>,
-> = MutCell::new(MaybeUninit::uninit());
 
 pub struct Lives;
 
@@ -23,9 +16,11 @@ impl Lives {
 	{
 		defer! {
 			unsafe {
-				(*FILE_CACHE.get()).assume_init_mut().clear();
 				for ud in (*TO_DESTROY.get()).drain(..) {
 					ud.destroy().expect("failed to destruct scoped userdata");
+				}
+				for tab in (*TABS.get()).assume_init_mut() {
+					tab.clear();
 				}
 			}
 		}

@@ -173,6 +173,8 @@ impl<'a> Spark<'a> {
 
 			// mgr:close
 			KeyClose => Self::Close(<_>::from_lua(value, lua)?),
+			// mgr:enter
+			KeyEnter | IndEnter | EmitEnter | RelayEnter => Self::Enter(<_>::from_lua(value, lua)?),
 			// mgr:hidden
 			KeyHidden => Self::Hidden(<_>::from_lua(value, lua)?),
 			IndHidden => Self::Hidden(<_>::from_lua(value, lua)?),

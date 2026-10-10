@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
-use yazi_shared::{loc::LocBuf, path::{Component, PathBufDyn, PathCow, PathKind, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
-use yazi_shim::wtf8::FromWtf8Vec;
+use yazi_shared::{loc::LocBuf, path::{Component, PathBufDyn, PathCow, PathLike}, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 #[inline]
 pub fn expand_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlCow<'a> { expand_url_impl(url.into()) }
@@ -75,12 +74,9 @@ fn expand_variables(p: PathCow) -> PathCow {
 			.map_or_else(|| caps.get(0).unwrap().as_bytes().to_owned(), |s| s.into_encoded_bytes())
 	});
 
-	match (b, p.kind()) {
-		(Cow::Borrowed(_), _) => p,
-		(Cow::Owned(b), PathKind::Os) => {
-			PathBufDyn::Os(std::path::PathBuf::from_wtf8_vec(b).expect("valid WTF-8 path")).into()
-		}
-		(Cow::Owned(b), PathKind::Unix) => PathBufDyn::Unix(b.into()).into(),
+	match b {
+		Cow::Borrowed(_) => p,
+		Cow::Owned(b) => PathBufDyn::with(p.kind(), b).expect("valid WTF-8 path").into(),
 	}
 }
 

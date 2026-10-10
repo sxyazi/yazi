@@ -6,13 +6,13 @@ use yazi_config::THEME;
 use yazi_fs::file::FileInventory;
 use yazi_shared::{path::DynPath, url::UrlLike};
 
-use super::{FILE_CACHE, Lives};
+use super::{Tab, TabCache};
 use crate::lives::{CtxRef, PtrCell};
 
 pub(super) struct File {
-	idx:    usize,
-	folder: PtrCell<yazi_core::tab::Folder>,
-	tab:    PtrCell<yazi_core::tab::Tab>,
+	pub(super) idx:    usize,
+	pub(super) folder: PtrCell<yazi_core::tab::Folder>,
+	tab:               Tab,
 }
 
 impl Deref for File {
@@ -21,28 +21,13 @@ impl Deref for File {
 	fn deref(&self) -> &Self::Target { &self.folder.entries[self.idx] }
 }
 
-impl AsRef<yazi_fs::file::File> for File {
-	fn as_ref(&self) -> &yazi_fs::file::File { self }
-}
-
 impl File {
 	pub(super) fn make(
 		idx: usize,
 		folder: &yazi_core::tab::Folder,
-		tab: &yazi_core::tab::Tab,
+		tab: Tab,
 	) -> mlua::Result<AnyUserData> {
-		use hashbrown::hash_map::Entry;
-
-		Ok(
-			match unsafe { (*FILE_CACHE.get()).assume_init_mut() }.entry(PtrCell(&folder.entries[idx])) {
-				Entry::Occupied(oe) => oe.into_mut().clone(),
-				Entry::Vacant(ve) => {
-					let ud = Lives::scoped_userdata(Self { idx, folder: folder.into(), tab: tab.into() })?;
-					ve.insert(ud.clone());
-					ud
-				}
-			},
-		)
+		TabCache::get(tab.idx).file(Self { idx, folder: folder.into(), tab })
 	}
 
 	#[inline]
@@ -78,7 +63,7 @@ impl UserData for File {
 
 			let mut comp = me.try_strip_prefix(me.trail()).unwrap_or(me.loc()).components();
 			comp.next_back();
-			Some(lua.create_string(comp.dyn_path().encoded_bytes())).transpose()
+			lua.create_string(comp.dyn_path().encoded_bytes()).map(Some)
 		});
 		methods.add_method("style", |lua, me, ()| {
 			let cx: CtxRef = lua.named_registry_value("cx")?;

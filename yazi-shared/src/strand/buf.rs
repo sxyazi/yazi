@@ -30,6 +30,10 @@ impl From<String> for StrandBuf {
 	fn from(value: String) -> Self { Self::Utf8(value) }
 }
 
+impl From<Vec<u8>> for StrandBuf {
+	fn from(value: Vec<u8>) -> Self { Self::Bytes(value) }
+}
+
 impl From<PathDyn<'_>> for StrandBuf {
 	fn from(value: PathDyn) -> Self {
 		match value {

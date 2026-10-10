@@ -1,13 +1,12 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, UserData, UserDataFields};
-use yazi_config::LAYOUT;
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use super::{Folder, Lives, PtrCell};
+use super::{Folder, Lives, Tab};
 
 pub(super) struct Preview {
-	tab: PtrCell<yazi_core::tab::Tab>,
+	tab: Tab,
 }
 
 impl Deref for Preview {
@@ -17,22 +16,14 @@ impl Deref for Preview {
 }
 
 impl Preview {
-	pub(super) fn make(tab: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { tab: tab.into() })
-	}
+	pub(super) fn make(tab: Tab) -> mlua::Result<AnyUserData> { Lives::scoped_userdata(Self { tab }) }
 }
 
 impl UserData for Preview {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("skip", |_, me| Ok(me.skip));
 		fields.add_static_field("folder", |_, me| {
-			me.tab
-				.hovered_folder()
-				.map(|f| {
-					let limit = LAYOUT.get().preview.height as usize;
-					Folder::make(Some(me.skip..f.entries.len().min(me.skip + limit)), f, &me.tab)
-				})
-				.transpose()
+			me.tab.hovered_folder().map(|f| Folder::make(me.skip, f, me.tab)).transpose()
 		});
 	}
 }

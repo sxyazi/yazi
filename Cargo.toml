@@ -49,14 +49,14 @@ data-encoding          = "2.11.1"
 dirs                   = "7.0.0"
 dispatch2              = { version = "0.3.1", default-features = false, features = [ "std" ] }
 dyn-clone              = "1.0.20"
-either                 = { version = "1.18.0" }
+either                 = { version = "1.19.0" }
 foldhash               = "0.2.0"
 futures                = "0.3.34"
 globset                = "0.4.20"
 hashbrown              = { version = "0.17.1", features = [ "serde" ] }
 image                  = { version = "0.25.10", default-features = false, features = [ "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
 indexmap               = { version = "2.14.2", features = [ "serde" ] }
-inventory              = "0.3.24"
+inventory              = "0.3.25"
 libc                   = "0.2.190"
 log                    = { version = "0.4.34", features = [ "release_max_level_off" ] }
 lru                    = "0.18.5"
@@ -87,8 +87,8 @@ syntect                = { version = "5.3.0", default-features = false, features
 thiserror              = "2.0.21"
 tokio                  = { version = "1.53.2", features = [ "full" ] }
 tokio-stream           = "0.1.19"
-tokio-util             = "0.7.19"
-toml                   = { version = "1.1.6" }
+tokio-util             = "0.7.20"
+toml                   = { version = "1.1.8" }
 tracing                = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_off" ] }
 tracing-core           = "0.1.36"
 twox-hash              = { version = "2.1.5", default-features = false, features = [ "std", "random", "xxhash3_128" ] }

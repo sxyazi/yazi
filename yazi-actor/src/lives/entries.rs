@@ -3,12 +3,12 @@ use std::ops::{Deref, Range};
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
 use yazi_shim::mlua::UserDataFieldsExt;
 
-use super::{File, Filter, Lives, PtrCell};
+use super::{File, Filter, Lives, PtrCell, Tab};
 
 pub(super) struct Entries {
 	window: Range<usize>,
 	folder: PtrCell<yazi_core::tab::Folder>,
-	tab:    PtrCell<yazi_core::tab::Tab>,
+	tab:    Tab,
 }
 
 impl Deref for Entries {
@@ -21,9 +21,9 @@ impl Entries {
 	pub(super) fn make(
 		window: Range<usize>,
 		folder: &yazi_core::tab::Folder,
-		tab: &yazi_core::tab::Tab,
+		tab: Tab,
 	) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { window, folder: folder.into(), tab: tab.into() })
+		Lives::scoped_userdata(Self { window, folder: folder.into(), tab })
 	}
 }
 
@@ -33,14 +33,13 @@ impl UserData for Entries {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.window.end - me.window.start));
+		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.window.len()));
 
-		methods.add_meta_method(MetaMethod::Index, |_, me, mut idx: usize| {
-			idx += me.window.start;
-			if idx > me.window.end || idx == 0 {
+		methods.add_meta_method(MetaMethod::Index, |_, me, idx: usize| {
+			if idx == 0 || idx > me.window.len() {
 				Ok(None)
 			} else {
-				Some(File::make(idx - 1, &me.folder, &me.tab)).transpose()
+				File::make(me.window.start + idx - 1, &me.folder, me.tab).map(Some)
 			}
 		});
 	}
