@@ -17,6 +17,10 @@ show_symlink   = true
 scrolloff      = 5
 mouse_events   = [ "click", "scroll", "drag" ]
 
+[files]
+# e.g. [ { urn = [ ".DS_Store", "Icon?" ], in = "*" }, { urn = "!target", in = "/code/**" } ]
+excludes = []
+
 [preview]
 wrap            = "no"
 tab_size        = 2

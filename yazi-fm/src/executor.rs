@@ -123,6 +123,8 @@ impl<'a> Executor<'a> {
 		on!(copy);
 		on!(shell);
 		on!(hidden);
+		on!(excluded);
+		on!(exclude_add);
 		on!(linemode);
 		on!(bulk_exit);
 		on!(bulk_rename);
