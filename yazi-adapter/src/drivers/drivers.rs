@@ -51,6 +51,7 @@ impl From<Brand> for Drivers {
 			B::Foot => vec![D::Sixel],
 			B::Ghostty => vec![D::Kgp],
 			B::Microsoft => vec![D::Sixel],
+			B::StGraphics => vec![D::Kgp],
 			B::Warp => vec![D::Iip, D::KgpOld],
 			B::Rio => vec![D::Kgp],
 			B::BlackBox => vec![D::Sixel],
