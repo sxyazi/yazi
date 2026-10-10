@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Respect user locale date format ([#4395])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 - Windows support for `fs.partitions()` ([#4402])
+- Image preview adaptation for `st-graphics` terminal ([#4414])
 
 ### Changed
 
@@ -1901,3 +1902,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4397]: https://github.com/sxyazi/yazi/pull/4397
 [#4402]: https://github.com/sxyazi/yazi/pull/4402
 [#4412]: https://github.com/sxyazi/yazi/pull/4412
+[#4414]: https://github.com/sxyazi/yazi/pull/4414
