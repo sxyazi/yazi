@@ -82,11 +82,11 @@ impl TaskIn for PluginInEntry {
 impl From<PluginInEntry> for EntryJob {
 	fn from(value: PluginInEntry) -> Self {
 		Self {
-			id: value.id,
-			tab: value.tab,
-			args: value.args,
+			id:     value.id,
+			tab:    value.tab,
+			args:   value.args,
 			plugin: value.plugin,
-			scope: value.scope,
+			scope:  value.scope,
 		}
 	}
 }
@@ -150,7 +150,8 @@ mod tests {
 		let caller = Scope::new();
 		lua.set_app_data(Runtime::new(RuntimeSeed::new(Default::default(), "extract", caller.clone())));
 
-		let t = lua.load(r#"return { "extract", args = {}, track = true }"#).eval::<mlua::Table>().unwrap();
+		let t =
+			lua.load(r#"return { "extract", args = {}, track = true }"#).eval::<mlua::Table>().unwrap();
 		let job = PluginInEntry::from_lua(mlua::Value::Table(t), &lua).unwrap();
 
 		// A `Scope::from_lua(nil)` would have handed back an empty, permanently

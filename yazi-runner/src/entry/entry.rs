@@ -72,7 +72,8 @@ mod tests {
 	#[test]
 	fn entry_job_scope_is_live_and_reaches_the_runtime_frame() {
 		let scope = Scope::new();
-		let job = EntryJob { plugin: SStr::from("extract"), scope: scope.clone(), ..Default::default() };
+		let job =
+			EntryJob { plugin: SStr::from("extract"), scope: scope.clone(), ..Default::default() };
 
 		// The job must hand a scope to the runner instead of `None` -- `None`
 		// is what made `Runner::spawn` fall back to a detached default scope.
