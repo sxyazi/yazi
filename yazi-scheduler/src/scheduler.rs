@@ -160,6 +160,24 @@ impl Scheduler {
 		}
 
 		let handle = self.add(&mut r#in, |t| t.handle.clone());
+
+		// Bridge the task handle and the plugin's runtime scope, so that
+		// cancelling the task from the UI also cancels whatever the plugin is
+		// doing -- including any child process it spawned (e.g. `7zz`).
+		let ongoing = self.ongoing.clone();
+		let scope = r#in.scope.clone();
+		let handle_ = handle.clone();
+		tokio::spawn(async move {
+			select! {
+				_ = scope.cancelled() => {
+					ongoing.lock().cancel(handle_.id);
+				}
+				status = handle_.finished() => if status.is_canceled() {
+					scope.cancel();
+				}
+			}
+		});
+
 		self.plugin.submit(r#in, NORMAL);
 
 		handle

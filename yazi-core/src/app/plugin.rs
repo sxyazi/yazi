@@ -55,7 +55,13 @@ impl FromAction<Ctx<'_>> for PluginOpt {
 
 impl From<PluginOpt> for PluginInEntry {
 	fn from(value: PluginOpt) -> Self {
-		Self { tab: value.tab, plugin: value.name, args: value.args, ..Default::default() }
+		Self {
+			tab: value.tab,
+			plugin: value.name,
+			args: value.args,
+			scope: value.scope,
+			..Default::default()
+		}
 	}
 }
 
@@ -65,11 +71,14 @@ impl PluginOpt {
 		J: PluginJob + Clone + Send + Sync + 'static,
 		F: FnOnce(&Lua, Table, J) -> mlua::Result<()> + Clone + Send + Sync + 'static,
 	{
+		let scope = job.scope().unwrap_or_default();
+
 		Self {
 			tab: job.tab(),
 			name: Self::normalize_name(job.name().clone()),
 			mode: PluginMode::Sync,
 			callback: Some(Box::new(move |lua, plugin| f(lua, plugin, job))),
+			scope,
 			..Default::default()
 		}
 	}
