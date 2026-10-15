@@ -40,7 +40,7 @@ impl FileBuilder for Demand {
 		let op = ProvideOp::Open { url: engine.to_url(), attrs: self.0.attrs, demand: self.0 };
 
 		let handle = engine.call(op).await.0?;
-		Ok(File::new(engine.url, engine.service, handle, self.0))
+		Ok(File::new(handle, engine.url, engine.service, self.0))
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

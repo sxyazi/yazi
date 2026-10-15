@@ -3,7 +3,7 @@ use std::io;
 use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
-use super::{Engines, ReadDir, RwFile};
+use super::{Engines, ProgressiveCopier, ReadDir, RwFile};
 
 pub async fn absolute<'a, U>(url: &'a U) -> io::Result<UrlCow<'a>>
 where
@@ -71,7 +71,7 @@ where
 		return Ok(rx);
 	}
 
-	Ok(super::copy_progressive_impl(from.into(), to.into(), attrs))
+	Ok(ProgressiveCopier::spawn(from.into(), to.into(), attrs))
 }
 
 pub async fn create_dir<U>(url: U) -> io::Result<()>

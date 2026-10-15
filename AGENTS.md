@@ -11,6 +11,7 @@
 ## Style
 
 - Follow nearby code and use idiomatic Rust and Lua. In Rust, treat directories as modules and files as types: always prefer `mod_pub!` for directory exports and `mod_flat!` for file exports. Keep `mod.rs` and `lib.rs` limited to exports; put module-wide implementation in a same-named file (for example, `core/core.rs`). Rust uses `snake_case` for modules, functions, and fields and `PascalCase` for types, traits, and variants. Lua uses PascalCase component tables, `local M` plugin modules, `snake_case` methods/locals, and `_name` private fields.
+- Separate distinct responsibilities and processing stages with a single blank line, following nearby code. Group related statements together; use blank lines between preparation, validation, I/O, fallback, progress reporting, cleanup, and return values when they mark a distinct step. Keep this spacing when writing or simplifying code; the smallest implementation must still be readable.
 - Preserve established terms and type families: `Url`/`UrlBuf`/`UrlCow`, `PathDyn`/`PathBufDyn`/`PathCow`, `*Ref`, `*Arc`, `*Opt`, `*State`, `*Job`, `*Prog`, `File`, `Folder`, `Tab`, `Mgr`, and `Task`. Use `Url` for logical locations and `Path` for filesystem paths.
 - `key()` identifies a file-list entry; `urn()` is the raw URL path tail. Use `key()` for list state and `urn()` for filesystem-path semantics; do not substitute them mechanically.
 - Reuse established plugin and event names (`fetch`, `preload`, `peek`, `seek`, `spot`, `entry`, `setup`, `yank`, `hover`, and `select`) across Rust, Lua, and configuration.
@@ -42,7 +43,7 @@
 - For a review or simplification pass, inspect the whole target module, its callers, and its surrounding lifecycle before drawing conclusions. Use two passes: first establish ownership, cancellation, error, and state invariants; then compare each custom mechanism with the standard library, existing dependencies, and nearby code.
 - Check every task and channel for a simpler native primitive (for example, a `JoinHandle` that can replace a result-only `oneshot`), and check wrappers, helpers, flags, `Option` values, defaults, conversions, clones, and manual cleanup for the same opportunity. Include `Drop`, async boundaries, and cancellation in the comparison.
 - Before concluding a simplification review, enumerate every credible candidate. Report which candidates were applied and which were retained, with the behavioral reason and approximate diff impact; do not report only the changes that were ultimately made.
-- Keep only changes with a clear semantic advantage or a measurable reduction in maintained code. Preserve behavior, error propagation, ownership, cancellation, and platform semantics when a shorter form would weaken them.
+- Keep only changes with a clear semantic or readability advantage, or a measurable reduction in maintained code. Include blank lines in source line counts, but do not remove useful spacing merely to reduce that count. Preserve behavior, error propagation, ownership, cancellation, and platform semantics when a shorter form would weaken them.
 
 ## Validation
 

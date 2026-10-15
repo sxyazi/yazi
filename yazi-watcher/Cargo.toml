@@ -30,3 +30,4 @@ notify       = { version = "8.2.0", default-features = false, features = [ "maco
 parking_lot  = { workspace = true }
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }
+tokio-util   = { workspace = true, features = [ "rt" ] }

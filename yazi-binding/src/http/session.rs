@@ -1,22 +1,15 @@
 use std::io;
 
 use mlua::{IntoLuaMulti, MetaMethod, UserData, UserDataMethods, Value};
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::sync::mpsc;
+use tokio_util::task::AbortOnDropHandle;
 use yazi_shim::fs::Error;
 
 use super::HttpResponse;
 
 pub(crate) struct HttpSession {
+	pub(super) handle: Option<AbortOnDropHandle<io::Result<HttpResponse>>>,
 	pub(super) tx:     Option<mpsc::Sender<Vec<u8>>>,
-	pub(super) handle: Option<JoinHandle<io::Result<HttpResponse>>>,
-}
-
-impl Drop for HttpSession {
-	fn drop(&mut self) {
-		if let Some(handle) = &self.handle {
-			handle.abort();
-		}
-	}
 }
 
 impl HttpSession {
@@ -67,7 +60,7 @@ impl UserData for HttpSession {
 			}
 		});
 		methods.add_method("finished", |_, me, ()| {
-			Ok(me.handle.as_ref().is_none_or(JoinHandle::is_finished))
+			Ok(me.handle.as_ref().is_none_or(AbortOnDropHandle::is_finished))
 		});
 		methods.add_meta_method(MetaMethod::Close, |_, me, _: Value| {
 			if let Some(handle) = &me.handle {

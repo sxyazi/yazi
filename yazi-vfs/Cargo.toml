@@ -31,6 +31,7 @@ hashbrown   = { workspace = true }
 inventory   = { workspace = true }
 mlua        = { workspace = true }
 parking_lot = { workspace = true }
+pin-project = { workspace = true }
 russh       = { workspace = true }
 tokio       = { workspace = true }
 tokio-util  = { workspace = true }

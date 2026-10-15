@@ -2,6 +2,8 @@ use std::io;
 
 use tokio::sync::mpsc;
 
+/// Copy producers send byte increments, then `Ok(0)` after all writes and cleanup succeed.
+/// Closing the channel without a terminal result is an error; dropping the receiver cancels copying.
 pub struct Transmit {
 	rx:      Option<mpsc::Receiver<io::Result<u64>>>,
 	pending: Option<io::Result<u64>>,
@@ -17,17 +19,15 @@ impl Transmit {
 	pub fn unsupported() -> Self { Self { rx: None, pending: None } }
 
 	pub async fn is_supported(&mut self) -> bool {
-		let Some(rx) = self.rx.as_mut() else { return false };
-
 		if self.pending.is_none() {
-			self.pending = rx.recv().await;
+			self.pending = self.recv().await;
 		}
 
 		if matches!(&self.pending, Some(Err(e)) if e.kind() == io::ErrorKind::CrossesDevices) {
 			(self.rx, self.pending) = (None, None);
 			false
 		} else {
-			true
+			self.pending.is_some()
 		}
 	}
 
@@ -36,7 +36,15 @@ impl Transmit {
 			return Some(value);
 		}
 
-		self.rx.as_mut()?.recv().await
+		let result = self.rx.as_mut()?.recv().await.unwrap_or_else(|| {
+			Err(io::Error::new(io::ErrorKind::UnexpectedEof, "Copy ended without a completion message"))
+		});
+
+		if matches!(&result, Ok(0) | Err(_)) {
+			self.rx = None;
+		}
+
+		Some(result)
 	}
 
 	pub async fn total(mut self) -> io::Result<u64> {

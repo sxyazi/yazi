@@ -2,8 +2,9 @@ use std::{io, mem, ops::Deref, time::Duration};
 
 use hashbrown::{HashMap, hash_map::RawEntryMut};
 use indexmap::IndexSet;
-use tokio::{pin, sync::mpsc, task::JoinHandle};
+use tokio::{pin, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
+use tokio_util::task::AbortOnDropHandle;
 use yazi_fs::{Entries, file::File, op::{FILES_TICKET, FilesOp}};
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike, UrlMapExt}};
 use yazi_vfs::VfsEntries;
@@ -124,7 +125,7 @@ impl Refresher {
 		}
 
 		let (tx, mut prev) = (self.tx.clone(), entry.turn());
-		entry.handle = Some(tokio::spawn(async move {
+		entry.handle = Some(AbortOnDropHandle::new(tokio::spawn(async move {
 			let result = async {
 				if let Some(file) = Entries::revalidate(&prev.file).await? {
 					prev.file = file;
@@ -140,7 +141,7 @@ impl Refresher {
 			}
 			.await;
 			tx.send(Op::Done(prev, result)).ok();
-		}));
+		})));
 	}
 
 	async fn spawn_full(prev: &mut Entry) -> io::Result<RefreshResponse> {
@@ -206,7 +207,7 @@ pub struct Entry {
 	report: bool,
 	force:  bool,
 	stream: bool,
-	handle: Option<JoinHandle<()>>,
+	handle: Option<AbortOnDropHandle<()>>,
 }
 
 impl Deref for Entry {
@@ -215,16 +216,8 @@ impl Deref for Entry {
 	fn deref(&self) -> &Self::Target { &self.file }
 }
 
-impl Drop for Entry {
-	fn drop(&mut self) { self.handle.take().map(|h| h.abort()); }
-}
-
 impl Entry {
-	fn new(file: File) -> Self {
-		let mut me = Self::default();
-		me.file = file;
-		me
-	}
+	fn new(file: File) -> Self { Self { file, ..Default::default() } }
 
 	fn turn(&mut self) -> Self {
 		self.busy = FILES_TICKET.next();

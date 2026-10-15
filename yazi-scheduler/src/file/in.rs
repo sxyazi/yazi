@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem, path::PathBuf};
+use std::{borrow::Cow, path::PathBuf};
 
 use mlua::{FromLua, Lua, Table, Value};
 use tokio::sync::mpsc;
@@ -33,44 +33,28 @@ impl TaskIn for FileIn {
 
 	fn id(&self) -> Id {
 		match self {
-			Self::Copy(r#in) => r#in.id(),
-			Self::CopyDo(r#in) => r#in.id(),
-			Self::Move(r#in) => r#in.id(),
-			Self::MoveDo(r#in) => r#in.id(),
-			Self::Link(r#in) => r#in.id(),
-			Self::LinkDo(r#in) => r#in.id(),
-			Self::Hardlink(r#in) => r#in.id(),
-			Self::HardlinkDo(r#in) => r#in.id(),
-			Self::Delete(r#in) => r#in.id(),
-			Self::DeleteDo(r#in) => r#in.id(),
-			Self::Trash(r#in) => r#in.id(),
-			Self::TrashDo(r#in) => r#in.id(),
-			Self::Download(r#in) => r#in.id(),
-			Self::DownloadDo(r#in) => r#in.id(),
-			Self::Upload(r#in) => r#in.id(),
-			Self::UploadDo(r#in) => r#in.id(),
+			Self::Copy(r#in) | Self::CopyDo(r#in) => r#in.id(),
+			Self::Move(r#in) | Self::MoveDo(r#in) => r#in.id(),
+			Self::Link(r#in) | Self::LinkDo(r#in) => r#in.id(),
+			Self::Hardlink(r#in) | Self::HardlinkDo(r#in) => r#in.id(),
+			Self::Delete(r#in) | Self::DeleteDo(r#in) => r#in.id(),
+			Self::Trash(r#in) | Self::TrashDo(r#in) => r#in.id(),
+			Self::Download(r#in) | Self::DownloadDo(r#in) => r#in.id(),
+			Self::Upload(r#in) | Self::UploadDo(r#in) => r#in.id(),
 			Self::Custom(r#in) => r#in.id(),
 		}
 	}
 
 	fn set_id(&mut self, id: Id) -> &mut Self {
 		match self {
-			Self::Copy(r#in) => _ = r#in.set_id(id),
-			Self::CopyDo(r#in) => _ = r#in.set_id(id),
-			Self::Move(r#in) => _ = r#in.set_id(id),
-			Self::MoveDo(r#in) => _ = r#in.set_id(id),
-			Self::Link(r#in) => _ = r#in.set_id(id),
-			Self::LinkDo(r#in) => _ = r#in.set_id(id),
-			Self::Hardlink(r#in) => _ = r#in.set_id(id),
-			Self::HardlinkDo(r#in) => _ = r#in.set_id(id),
-			Self::Delete(r#in) => _ = r#in.set_id(id),
-			Self::DeleteDo(r#in) => _ = r#in.set_id(id),
-			Self::Trash(r#in) => _ = r#in.set_id(id),
-			Self::TrashDo(r#in) => _ = r#in.set_id(id),
-			Self::Download(r#in) => _ = r#in.set_id(id),
-			Self::DownloadDo(r#in) => _ = r#in.set_id(id),
-			Self::Upload(r#in) => _ = r#in.set_id(id),
-			Self::UploadDo(r#in) => _ = r#in.set_id(id),
+			Self::Copy(r#in) | Self::CopyDo(r#in) => _ = r#in.set_id(id),
+			Self::Move(r#in) | Self::MoveDo(r#in) => _ = r#in.set_id(id),
+			Self::Link(r#in) | Self::LinkDo(r#in) => _ = r#in.set_id(id),
+			Self::Hardlink(r#in) | Self::HardlinkDo(r#in) => _ = r#in.set_id(id),
+			Self::Delete(r#in) | Self::DeleteDo(r#in) => _ = r#in.set_id(id),
+			Self::Trash(r#in) | Self::TrashDo(r#in) => _ = r#in.set_id(id),
+			Self::Download(r#in) | Self::DownloadDo(r#in) => _ = r#in.set_id(id),
+			Self::Upload(r#in) | Self::UploadDo(r#in) => _ = r#in.set_id(id),
 			Self::Custom(r#in) => _ = r#in.set_id(id),
 		}
 		self
@@ -78,22 +62,14 @@ impl TaskIn for FileIn {
 
 	fn title(&self) -> Cow<'_, str> {
 		match self {
-			Self::Copy(r#in) => r#in.title(),
-			Self::CopyDo(r#in) => r#in.title(),
-			Self::Move(r#in) => r#in.title(),
-			Self::MoveDo(r#in) => r#in.title(),
-			Self::Link(r#in) => r#in.title(),
-			Self::LinkDo(r#in) => r#in.title(),
-			Self::Hardlink(r#in) => r#in.title(),
-			Self::HardlinkDo(r#in) => r#in.title(),
-			Self::Delete(r#in) => r#in.title(),
-			Self::DeleteDo(r#in) => r#in.title(),
-			Self::Trash(r#in) => r#in.title(),
-			Self::TrashDo(r#in) => r#in.title(),
-			Self::Download(r#in) => r#in.title(),
-			Self::DownloadDo(r#in) => r#in.title(),
-			Self::Upload(r#in) => r#in.title(),
-			Self::UploadDo(r#in) => r#in.title(),
+			Self::Copy(r#in) | Self::CopyDo(r#in) => r#in.title(),
+			Self::Move(r#in) | Self::MoveDo(r#in) => r#in.title(),
+			Self::Link(r#in) | Self::LinkDo(r#in) => r#in.title(),
+			Self::Hardlink(r#in) | Self::HardlinkDo(r#in) => r#in.title(),
+			Self::Delete(r#in) | Self::DeleteDo(r#in) => r#in.title(),
+			Self::Trash(r#in) | Self::TrashDo(r#in) => r#in.title(),
+			Self::Download(r#in) | Self::DownloadDo(r#in) => r#in.title(),
+			Self::Upload(r#in) | Self::UploadDo(r#in) => r#in.title(),
 			Self::Custom(r#in) => r#in.title(),
 		}
 	}
@@ -144,7 +120,6 @@ pub struct FileInCopy {
 	pub(crate) force:  bool,
 	pub(crate) stat:   Option<Stat>,
 	pub(crate) follow: bool,
-	pub(crate) retry:  u8,
 }
 
 impl TaskIn for FileInCopy {
@@ -171,7 +146,6 @@ impl FileInCopy {
 			to,
 			force,
 			stat: None,
-			retry: 0,
 		}
 	}
 
@@ -204,7 +178,6 @@ pub struct FileInMove {
 	pub(crate) force:  bool,
 	pub(crate) stat:   Option<Stat>,
 	pub(crate) follow: bool,
-	pub(crate) retry:  u8,
 	pub(crate) drop:   Option<mpsc::Sender<()>>,
 }
 
@@ -223,10 +196,6 @@ impl TaskIn for FileInMove {
 	}
 }
 
-impl Drop for FileInMove {
-	fn drop(&mut self) { _ = self.drop.take(); }
-}
-
 impl FileInMove {
 	pub fn new(from: UrlBuf, to: UrlBuf, force: bool) -> Self {
 		Self {
@@ -236,16 +205,15 @@ impl FileInMove {
 			to,
 			force,
 			stat: None,
-			retry: 0,
 			drop: None,
 		}
 	}
 
-	pub(super) fn into_link(mut self) -> FileInLink {
+	pub(super) fn into_link(self) -> FileInLink {
 		FileInLink {
 			id:       self.id,
-			from:     mem::take(&mut self.from),
-			to:       mem::take(&mut self.to),
+			from:     self.from,
+			to:       self.to,
 			relative: false,
 			force:    true,
 			follow:   true,
@@ -374,7 +342,6 @@ pub(crate) struct FileInDownload {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
 	pub(crate) stat:   Option<Stat>,
-	pub(crate) retry:  u8,
 }
 
 impl TaskIn for FileInDownload {

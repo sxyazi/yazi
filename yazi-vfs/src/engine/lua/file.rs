@@ -1,4 +1,4 @@
-use std::{io::{self, ErrorKind, SeekFrom}, ops::{Deref, DerefMut}, pin::Pin, sync::Arc, task::{Context, Poll, ready}};
+use std::{io::{self, BufRead, ErrorKind, SeekFrom}, ops::Deref, pin::Pin, sync::Arc, task::{Context, Poll, ready}};
 
 use mlua::BString;
 use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt, ReadBuf}, sync::mpsc, task::JoinHandle};
@@ -9,13 +9,14 @@ use yazi_runner::{RUNNER, provider::{Handle, ProvideChunk, ProvideJob, ProvideOp
 use yazi_shared::{id::Id, url::{AsUrl, Url, UrlBuf, UrlLike}};
 use yazi_shim::fs;
 
+use super::FileHandle;
+
 type Fut<T> = Pin<Box<dyn Future<Output = T> + Send + Sync + 'static>>;
 
 pub struct File {
-	url:     UrlBuf,
-	handle:  Handle,
-	service: Arc<ServiceLua>,
-	demand:  Demand,
+	handle: Arc<FileHandle>,
+	offset: u64,
+	demand: Demand,
 
 	read:          Option<ReadState>,
 	seek:          Option<SeekState>,
@@ -25,27 +26,23 @@ pub struct File {
 }
 
 impl Deref for File {
-	type Target = Handle;
+	type Target = FileHandle;
 
 	fn deref(&self) -> &Self::Target { &self.handle }
 }
 
-impl DerefMut for File {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.handle }
-}
-
 impl Drop for File {
 	fn drop(&mut self) {
-		let (mut handle, service, url) = (self.handle.clone(), self.service.clone(), self.to_url());
 		let shutdown =
-			self.shutdown.take().unwrap_or_else(|| ShutdownState::new(self.write.take(), handle.offset));
+			self.shutdown.take().or_else(|| ShutdownState::new(self.write.take(), self.offset));
 
-		tokio::spawn(async move {
-			handle.offset = shutdown.await.0;
-
-			let job = ProvideJob { service, op: ProvideOp::Close { url, handle } };
-			let _ = RUNNER.provide(job).await.ok();
-		});
+		if let Some(fut) = shutdown {
+			let handle = self.handle.clone();
+			tokio::spawn(async move {
+				let _ = fut.await;
+				drop(handle); // Keep the handle alive until the shutdown completes
+			});
+		}
 	}
 }
 
@@ -57,16 +54,29 @@ impl UrlLike for File {}
 
 impl File {
 	pub(super) fn new(
+		inner: Handle,
 		url: impl Into<UrlBuf>,
 		service: Arc<ServiceLua>,
-		handle: Handle,
 		demand: Demand,
 	) -> Self {
 		Self {
-			url: url.into(),
-			handle,
-			service,
+			handle: Arc::new(FileHandle::new(inner, url, service)),
+			offset: 0,
 			demand,
+
+			read: None,
+			seek: None,
+			write: None,
+			shutdown: None,
+			shutdown_done: false,
+		}
+	}
+
+	pub(crate) fn cursor(&self, offset: u64) -> Self {
+		Self {
+			handle: self.handle.clone(),
+			offset,
+			demand: self.demand,
 
 			read: None,
 			seek: None,
@@ -83,7 +93,7 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let op = ProvideOp::SetLen { url: self.to_url(), size, handle: self.handle.clone() };
+		let op = ProvideOp::SetLen { url: self.to_url(), size, handle: self.inner.clone() };
 		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.ok()?)
 	}
 
@@ -92,7 +102,7 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let op = ProvideOp::SetAttrs { url: self.to_url(), attrs, handle: Some(self.handle.clone()) };
+		let op = ProvideOp::SetAttrs { url: self.to_url(), attrs, handle: Some(self.inner.clone()) };
 		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.ok()?)
 	}
 
@@ -101,7 +111,7 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let op = ProvideOp::Metadata { url: self.to_url(), handle: Some(self.handle.clone()) };
+		let op = ProvideOp::Metadata { url: self.to_url(), handle: Some(self.inner.clone()) };
 		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.0?)
 	}
 
@@ -110,7 +120,7 @@ impl File {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let op = ProvideOp::File { url: self.to_url(), handle: Some(self.handle.clone()) };
+		let op = ProvideOp::File { url: self.to_url(), handle: Some(self.inner.clone()) };
 		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.0?)
 	}
 
@@ -176,7 +186,7 @@ impl File {
 		match ready!(write.ack_rx.poll_recv(cx)).unwrap_or_else(|| Err(ErrorKind::BrokenPipe.into())) {
 			Ok(offset) => {
 				write.pending = false;
-				self.handle.offset = offset.get();
+				self.offset = offset.get();
 				Poll::Ready(Ok(()))
 			}
 			Err(e) => {
@@ -193,13 +203,17 @@ impl File {
 
 		if self.shutdown.is_none() {
 			self.read = None;
-			self.shutdown = Some(ShutdownState::new(self.write.take(), self.offset));
+			self.shutdown = ShutdownState::new(self.write.take(), self.offset);
 		}
 
-		let (offset, result) = ready!(Pin::new(self.shutdown.as_mut().unwrap()).poll(cx));
+		let (offset, result) = match self.shutdown.as_mut() {
+			Some(shutdown) => ready!(Pin::new(shutdown).poll(cx)),
+			None => (self.offset, Ok(())),
+		};
+
 		self.shutdown = None;
 		self.shutdown_done = true;
-		self.handle.offset = offset;
+		self.offset = offset;
 
 		Poll::Ready(result)
 	}
@@ -230,7 +244,7 @@ impl AsyncRead for File {
 
 		let read = me.read.as_mut().unwrap();
 		loop {
-			if read.fill(buf, &mut me.handle.offset)? {
+			if read.fill(buf, &mut me.offset)? {
 				return Poll::Ready(Ok(()));
 			} else if read.done {
 				return Poll::Ready(Ok(()));
@@ -247,8 +261,7 @@ impl AsyncRead for File {
 					return Poll::Ready(Err(e));
 				}
 				Ok(bytes) => {
-					read.buf = bytes.into();
-					read.pos = 0;
+					read.buf = io::Cursor::new(bytes.into());
 				}
 			}
 		}
@@ -293,7 +306,6 @@ impl AsyncSeek for File {
 		let result = match state {
 			SeekState::Absolute(n) => Ok(*n),
 			SeekState::Relative(n) => me
-				.handle
 				.offset
 				.checked_add_signed(*n)
 				.ok_or_else(|| io::Error::new(ErrorKind::InvalidInput, "seek overflow")),
@@ -353,33 +365,33 @@ impl AsyncWrite for File {
 // --- ReadState
 struct ReadState {
 	rx:   mpsc::Receiver<io::Result<BString>>,
-	buf:  Vec<u8>,
-	pos:  usize,
+	buf:  io::Cursor<Vec<u8>>,
 	done: bool,
 }
 
 impl ReadState {
 	fn new(file: &File) -> Self {
-		let service = file.service.clone();
-		let op = ProvideOp::Read { url: file.to_url(), handle: file.handle.clone() };
+		let url = file.to_url();
+		let handle = file.inner.clone();
 
 		let (tx, rx) = mpsc::channel(1);
-		tokio::spawn(RUNNER.provide_stream(ProvideJob { service, op }, tx));
+		file.handle.stream(ProvideOp::Read { url, handle, offset: file.offset }, tx);
 
-		Self { rx, buf: vec![], pos: 0, done: false }
+		Self { rx, buf: Default::default(), done: false }
 	}
 
 	fn fill(&mut self, buf: &mut ReadBuf<'_>, offset: &mut u64) -> io::Result<bool> {
-		if self.pos >= self.buf.len() {
+		let bytes = self.buf.fill_buf()?;
+		if bytes.is_empty() {
 			return Ok(false);
 		}
 
-		let len = buf.remaining().min(self.buf.len() - self.pos);
+		let len = buf.remaining().min(bytes.len());
 		let next = ProvideChunk::to(*offset, len)?;
-		buf.put_slice(&self.buf[self.pos..self.pos + len]);
+		buf.put_slice(&bytes[..len]);
 
 		*offset = next;
-		self.pos += len;
+		self.buf.consume(len);
 		Ok(true)
 	}
 }
@@ -401,7 +413,7 @@ impl SeekState {
 
 	fn end(file: &File, n: i64) -> Self {
 		let service = file.service.clone();
-		let op = ProvideOp::Metadata { url: file.to_url(), handle: Some(file.handle.clone()) };
+		let op = ProvideOp::Metadata { url: file.to_url(), handle: Some(file.inner.clone()) };
 
 		Self::End(
 			n,
@@ -421,14 +433,11 @@ struct WriteState {
 
 impl WriteState {
 	fn new(file: &File) -> Self {
-		let (service, url, handle) = (file.service.clone(), file.to_url(), file.handle.clone());
+		let (url, handle) = (file.to_url(), file.inner.clone());
 
 		let (ack_tx, ack_rx) = mpsc::channel(1);
 		let (data_tx, data_rx) = mpsc::channel(1);
-		let worker = tokio::spawn(RUNNER.provide_stream(
-			ProvideJob { service, op: ProvideOp::Write { url, handle, stream: data_rx } },
-			ack_tx,
-		));
+		let worker = file.handle.stream(ProvideOp::Write { url, handle, stream: data_rx }, ack_tx);
 
 		Self { ack_rx, data_tx: PollSender::new(data_tx), worker, pending: false, error: None }
 	}
@@ -438,11 +447,13 @@ impl WriteState {
 struct ShutdownState(Fut<(u64, io::Result<()>)>);
 
 impl ShutdownState {
-	fn new(write: Option<WriteState>, mut offset: u64) -> Self {
-		Self(Box::pin(async move {
-			let result = if let Some(w) = write { Self::finish(w, &mut offset).await } else { Ok(()) };
+	fn new(write: Option<WriteState>, mut offset: u64) -> Option<Self> {
+		let write = write?;
+
+		Some(Self(Box::pin(async move {
+			let result = Self::finish(write, &mut offset).await;
 			(offset, result)
-		}))
+		})))
 	}
 
 	async fn finish(write: WriteState, offset: &mut u64) -> io::Result<()> {

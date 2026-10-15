@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(absolute calculator clear copier dir_entry demand identical local read_dir);
+yazi_macro::mod_flat!(absolute calculator clear dir_entry demand identical local read_dir);

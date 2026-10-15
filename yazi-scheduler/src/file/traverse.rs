@@ -40,7 +40,6 @@ impl Traverse for FileInCopy {
 			force: self.force,
 			stat: Some(stat),
 			follow: self.follow,
-			retry: self.retry,
 		}
 	}
 
@@ -62,7 +61,6 @@ impl Traverse for FileInMove {
 			force: self.force,
 			stat: Some(stat),
 			follow: self.follow,
-			retry: self.retry,
 			drop: self.drop.clone(),
 		}
 	}
@@ -113,7 +111,7 @@ impl Traverse for FileInDownload {
 	fn from(&self) -> Url<'_> { self.target.as_url() }
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, stat: Stat) -> Self {
-		Self { id: self.id, target: from, stat: Some(stat), retry: self.retry }
+		Self { id: self.id, target: from, stat: Some(stat) }
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }

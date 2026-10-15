@@ -7,7 +7,7 @@ use yazi_sftp::fs::Attrs;
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use super::Stat;
-use crate::engine::sftp::Conn;
+use crate::engine::{ProgressiveCopier, sftp::Conn};
 
 pub struct Sftp<'a> {
 	url:             Url<'a>,
@@ -85,7 +85,7 @@ impl<'a> Engine for Sftp<'a> {
 			return Ok(Transmit::unsupported());
 		}
 
-		Ok(crate::engine::copy_progressive_impl(self.to_url(), to.into(), attrs))
+		Ok(ProgressiveCopier::spawn(self.to_url(), to.into(), attrs))
 	}
 
 	async fn copy_from(&self, from: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
@@ -94,7 +94,7 @@ impl<'a> Engine for Sftp<'a> {
 			return Ok(Transmit::unsupported());
 		}
 
-		Ok(crate::engine::copy_progressive_impl(from.into(), self.to_url(), attrs))
+		Ok(ProgressiveCopier::spawn(from.into(), self.to_url(), attrs))
 	}
 
 	async fn create_dir(&self) -> io::Result<()> {

@@ -2,6 +2,7 @@ use std::{io, path::PathBuf};
 
 use mlua::{AnyUserData, BorrowedBytes, ExternalResult, UserData, UserDataMethods};
 use reqwest::{Method, header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue}};
+use tokio_util::task::AbortOnDropHandle;
 use yazi_shared::path::PathBufDyn;
 
 use super::{HttpPart, HttpRequest, HttpSession, HttpSpec, send};
@@ -35,8 +36,8 @@ impl HttpBuilder {
 		let tx = spec.take_tx();
 		let request = HttpRequest { url, method, headers, spec, socket };
 
-		let handle = tokio::spawn(async move { send(request).await });
-		HttpSession { tx, handle: Some(handle) }
+		let handle = AbortOnDropHandle::new(tokio::spawn(async move { send(request).await }));
+		HttpSession { handle: Some(handle), tx }
 	}
 }
 

@@ -4,7 +4,8 @@ use futures::TryStreamExt;
 use http_body_util::{BodyExt, StreamBody, combinators::BoxBody};
 use hyper::{Response, body::{Body, Bytes, Frame, Incoming}};
 use mlua::{BString, IntoLuaMulti, UserData, UserDataFields, UserDataMethods, UserDataRegistry, Value};
-use tokio::io::{AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWrite};
+use tokio_util::io::StreamReader;
 use yazi_shim::{fs::Error, mlua::UserDataFieldsExt};
 
 use super::HttpInventory;
@@ -43,29 +44,21 @@ impl HttpResponse {
 		Self { inner: response.map(|body| body.map_err(io::Error::other).boxed()), url, len }
 	}
 
-	pub async fn write<W: AsyncWrite + Unpin>(mut self, output: &mut W) -> io::Result<()> {
-		while let Some(frame) = self.inner.body_mut().frame().await {
-			let Ok(data) = frame?.into_data() else { continue };
-			output.write_all(&data).await?;
-		}
-		output.flush().await
+	pub async fn write<W: AsyncWrite + Unpin>(self, output: &mut W) -> io::Result<()> {
+		let mut reader = StreamReader::new(self.inner.into_body().into_data_stream());
+
+		tokio::io::copy_buf(&mut reader, output).await.map(|_| ())
 	}
 
-	async fn bytes(mut self) -> io::Result<Vec<u8>> {
+	async fn bytes(self) -> io::Result<Vec<u8>> {
 		let mut bytes = Vec::new();
-		while let Some(frame) = self.inner.body_mut().frame().await {
-			let Ok(data) = frame?.into_data() else { continue };
-			bytes.extend_from_slice(&data);
-		}
+		StreamReader::new(self.inner.into_body().into_data_stream()).read_to_end(&mut bytes).await?;
+
 		Ok(bytes)
 	}
 
 	async fn chunk(&mut self) -> io::Result<Option<Bytes>> {
-		while let Some(frame) = self.inner.body_mut().frame().await {
-			let Ok(data) = frame?.into_data() else { continue };
-			return Ok(Some(data));
-		}
-		Ok(None)
+		self.inner.body_mut().into_data_stream().try_next().await
 	}
 }
 

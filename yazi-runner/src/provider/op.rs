@@ -33,9 +33,11 @@ pub enum ProvideOp {
 	Rename { from: UrlBuf, to: PathBufDyn },
 	Symlink { original: Vec<u8>, url: UrlBuf, is_dir: bool },
 	Trash { url: UrlBuf },
-	Read { url: UrlBuf, handle: Handle },
+	Read { url: UrlBuf, handle: Handle, offset: u64 },
+	// Write chunks carry requested positions, its ACKs carry actual end positions.
 	Write { url: UrlBuf, handle: Handle, stream: mpsc::Receiver<ProvideChunk> },
 	Close { url: UrlBuf, handle: Handle },
+	// CopyTo/CopyFrom streams must yield 0 only after all writes and cleanup succeed.
 	CopyTo { from: UrlBuf, to: UrlBuf, peer: ProvidePeer, attrs: Attrs },
 	CopyFrom { from: UrlBuf, to: UrlBuf, peer: ProvidePeer, attrs: Attrs },
 	SetLen { url: UrlBuf, size: u64, handle: Handle },
@@ -85,8 +87,9 @@ impl ProvideOp {
 				t.raw_set("url", url)?;
 				t.raw_set("is_dir", is_dir)?;
 			}
-			Self::Read { url, handle } => {
+			Self::Read { url, handle, offset } => {
 				t.raw_set("url", url)?;
+				t.raw_set("offset", Id(offset))?;
 				handle.into_table(lua, &t)?;
 			}
 			Self::Write { url, handle, stream } => {
