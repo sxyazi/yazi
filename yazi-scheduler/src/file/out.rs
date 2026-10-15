@@ -51,7 +51,6 @@ impl FileOutCopy {
 #[derive(Debug)]
 pub(crate) enum FileOutCopyDo {
 	Adv(u64),
-	Log(String),
 	Succ,
 	Fail(String),
 }
@@ -66,9 +65,6 @@ impl FileOutCopyDo {
 		match self {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
-			}
-			Self::Log(line) => {
-				task.log(line);
 			}
 			Self::Succ => {
 				prog.success_files += 1;
@@ -134,7 +130,6 @@ impl FileOutMove {
 #[derive(Debug)]
 pub(crate) enum FileOutMoveDo {
 	Adv(u64),
-	Log(String),
 	Succ,
 	Fail(String),
 }
@@ -149,9 +144,6 @@ impl FileOutMoveDo {
 		match self {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
-			}
-			Self::Log(line) => {
-				task.log(line);
 			}
 			Self::Succ => {
 				prog.success_files += 1;
@@ -428,7 +420,6 @@ impl FileOutDownload {
 #[derive(Debug)]
 pub(crate) enum FileOutDownloadDo {
 	Adv(u64),
-	Log(String),
 	Succ,
 	Fail(String),
 }
@@ -443,9 +434,6 @@ impl FileOutDownloadDo {
 		match self {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
-			}
-			Self::Log(line) => {
-				task.log(line);
 			}
 			Self::Succ => {
 				prog.success_files += 1;

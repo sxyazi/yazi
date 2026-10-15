@@ -69,23 +69,24 @@ ordered-float          = { version = "5.5.0", features = [ "serde" ] }
 parking_lot            = "0.12.5"
 paste                  = "1.0.15"
 percent-encoding       = "2.3.2"
+pin-project            = "1.1.13"
 rand                   = { version = "0.10.3", default-features = false, features = [ "std", "sys_rng" ] }
 ratatui-core           = { version = "0.1.2", default-features = false, features = [ "std", "layout-cache", "serde", "underline-color" ] }
 ratatui-widgets        = { version = "0.3.2", default-features = false, features = [ "std", "unstable-rendered-line-info" ] }
 regex                  = "1.13.1"
 regex-syntax           = "0.8.11"
 reqwest                = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream", "multipart" ] }
-rustls                 = { version = "0.23.45", default-features = false, features = [ "ring", "std" ] }
+rustls                 = { version = "0.23.46", default-features = false, features = [ "ring", "std" ] }
 rustix                 = { version = "1.1.5", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event", "process", "system" ] }
 russh                  = { version = "0.64.1", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard             = "1.2.0"
 serde                  = { version = "1.0.229", features = [ "derive" ] }
-serde_json             = "1.0.151"
+serde_json             = "1.0.154"
 serde_with             = "3.24.0"
 strum                  = { version = "0.28.0", features = [ "derive" ] }
 syntect                = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror              = "2.0.21"
-tokio                  = { version = "1.53.2", features = [ "full" ] }
+tokio                  = { version = "1.53.3", features = [ "full" ] }
 tokio-stream           = "0.1.19"
 tokio-util             = "0.7.20"
 toml                   = { version = "1.1.8" }

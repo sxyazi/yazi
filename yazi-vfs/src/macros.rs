@@ -22,13 +22,12 @@ macro_rules! dispatch {
 }
 
 macro_rules! poll_rw {
-	($me:expr, $method:ident $(, $arg:expr)*) => {{
-		use std::pin::Pin;
-
+	($me:expr, $method:ident $args:tt) => {
+		poll_rw!($me, $method$args; Local, Sftp, Lua)
+	};
+	($me:expr, $method:ident $args:tt; $($variant:ident),+ $(,)?) => {
 		match &mut *$me {
-			$crate::engine::RwFile::Local(f) => Pin::new(f).$method($($arg),*),
-			$crate::engine::RwFile::Sftp(f) => Pin::new(f).$method($($arg),*),
-			$crate::engine::RwFile::Lua(f) => Pin::new(f).$method($($arg),*),
-		}}
+			$(Self::$variant(f) => std::pin::Pin::new(f).$method$args,)+
+		}
 	};
 }

@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use crate::{casefold::Casefold, engine::{Attrs, Capabilities, Engine, RwFile, Transmit}, stat::{Stat, StatMode}};
+use crate::{casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transmit}, stat::{Stat, StatMode}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -45,13 +45,13 @@ impl<'a> Engine for Local<'a> {
 	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
 		let Some(to) = to.as_local() else { return Ok(Transmit::unsupported()) };
 
-		Ok(super::copy_progressive(self.path.to_owned(), to.to_owned(), attrs))
+		Ok(Copier::new(self.path, to, attrs)?.spawn())
 	}
 
 	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
 		let Some(from) = from.as_local() else { return Ok(Transmit::unsupported()) };
 
-		Ok(super::copy_progressive(from.to_owned(), self.path.to_owned(), attrs))
+		Ok(Copier::new(from, self.path, attrs)?.spawn())
 	}
 
 	#[inline]

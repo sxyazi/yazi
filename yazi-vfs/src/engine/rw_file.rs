@@ -11,7 +11,7 @@ use crate::VfsFile;
 
 pub enum RwFile {
 	Local(yazi_fs::engine::RwFile),
-	Sftp(Box<super::sftp::RwFile>),
+	Sftp(Pin<Box<super::sftp::RwFile>>),
 	Lua(super::lua::File),
 }
 
@@ -20,7 +20,7 @@ impl From<yazi_fs::engine::RwFile> for RwFile {
 }
 
 impl From<super::sftp::RwFile> for RwFile {
-	fn from(f: super::sftp::RwFile) -> Self { Self::Sftp(Box::new(f)) }
+	fn from(f: super::sftp::RwFile) -> Self { Self::Sftp(Box::pin(f)) }
 }
 
 impl From<super::lua::File> for RwFile {
@@ -110,14 +110,14 @@ impl AsyncRead for RwFile {
 		cx: &mut std::task::Context<'_>,
 		buf: &mut tokio::io::ReadBuf<'_>,
 	) -> std::task::Poll<io::Result<()>> {
-		poll_rw!(self, poll_read, cx, buf)
+		poll_rw!(self, poll_read(cx, buf))
 	}
 }
 
 impl AsyncSeek for RwFile {
 	#[inline]
 	fn start_seek(mut self: Pin<&mut Self>, position: io::SeekFrom) -> io::Result<()> {
-		poll_rw!(self, start_seek, position)
+		poll_rw!(self, start_seek(position))
 	}
 
 	#[inline]
@@ -125,7 +125,7 @@ impl AsyncSeek for RwFile {
 		mut self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<io::Result<u64>> {
-		poll_rw!(self, poll_complete, cx)
+		poll_rw!(self, poll_complete(cx))
 	}
 }
 
@@ -136,7 +136,7 @@ impl AsyncWrite for RwFile {
 		cx: &mut std::task::Context<'_>,
 		buf: &[u8],
 	) -> std::task::Poll<Result<usize, io::Error>> {
-		poll_rw!(self, poll_write, cx, buf)
+		poll_rw!(self, poll_write(cx, buf))
 	}
 
 	#[inline]
@@ -144,7 +144,7 @@ impl AsyncWrite for RwFile {
 		mut self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<Result<(), io::Error>> {
-		poll_rw!(self, poll_flush, cx)
+		poll_rw!(self, poll_flush(cx))
 	}
 
 	#[inline]
@@ -152,7 +152,7 @@ impl AsyncWrite for RwFile {
 		mut self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<Result<(), io::Error>> {
-		poll_rw!(self, poll_shutdown, cx)
+		poll_rw!(self, poll_shutdown(cx))
 	}
 
 	#[inline]
@@ -161,7 +161,7 @@ impl AsyncWrite for RwFile {
 		cx: &mut std::task::Context<'_>,
 		bufs: &[io::IoSlice<'_>],
 	) -> std::task::Poll<Result<usize, io::Error>> {
-		poll_rw!(self, poll_write_vectored, cx, bufs)
+		poll_rw!(self, poll_write_vectored(cx, bufs))
 	}
 
 	#[inline]

@@ -11,8 +11,6 @@ pub struct Tasks {
 	pub preload_workers: NonZeroU8,
 	pub process_workers: NonZeroU8,
 
-	pub bizarre_retry: NonZeroU8,
-
 	pub image_alloc: u32,
 	pub image_bound: [u16; 2],
 

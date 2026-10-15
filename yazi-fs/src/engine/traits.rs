@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, pin::pin};
 
 use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
@@ -7,7 +7,7 @@ use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, ur
 use crate::{engine::{Attrs, Capabilities, Transmit}, file::{File, FileExtra}, stat::{Stat, StatType}};
 
 pub trait Engine: Sized + AsUrl {
-	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
+	type File: AsyncRead + AsyncSeek + AsyncWrite;
 	type Demand: FileBuilder<File = Self::File>;
 	type ReadDir: DirReader + 'static;
 	type UrlCow;
@@ -225,7 +225,8 @@ pub trait Engine: Sized + AsUrl {
 	{
 		async move {
 			let mut file =
-				self.demand().write(true).create(true).truncate(true).open(self.as_url()).await?;
+				pin!(self.demand().write(true).create(true).truncate(true).open(self.as_url()).await?);
+
 			let written = file.write_all(contents.as_ref()).await;
 			written.and(file.shutdown().await)
 		}
@@ -263,7 +264,7 @@ pub trait FileHolder {
 
 // --- FileBuilder
 pub trait FileBuilder: Sized + Default {
-	type File: AsyncRead + AsyncSeek + AsyncWrite + Unpin;
+	type File: AsyncRead + AsyncSeek + AsyncWrite;
 
 	fn append(&mut self, append: bool) -> &mut Self;
 

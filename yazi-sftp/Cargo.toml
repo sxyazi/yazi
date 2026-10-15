@@ -16,6 +16,7 @@ workspace = true
 bitflags    = { workspace = true }
 hashbrown   = { workspace = true }
 parking_lot = { workspace = true }
+pin-project = { workspace = true }
 russh       = { workspace = true }
 serde       = { workspace = true }
 tokio       = { workspace = true }

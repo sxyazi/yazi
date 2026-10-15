@@ -150,7 +150,6 @@ fn tasks() -> Composer<ComposerGet, ComposerSet> {
 			b"fetch_workers" => t.fetch_workers.get().into_lua(lua)?,
 			b"preload_workers" => t.preload_workers.get().into_lua(lua)?,
 			b"process_workers" => t.process_workers.get().into_lua(lua)?,
-			b"bizarre_retry" => t.bizarre_retry.get().into_lua(lua)?,
 
 			b"image_alloc" => t.image_alloc.into_lua(lua)?,
 			b"image_bound" => lua.to_value_with(&t.image_bound, SER_OPT)?,

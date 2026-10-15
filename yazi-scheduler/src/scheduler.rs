@@ -130,7 +130,7 @@ impl Scheduler {
 	}
 
 	pub fn file_download(&self, target: UrlBuf) -> TaskHandle {
-		let mut r#in = FileInDownload { id: Id::ZERO, target, stat: None, retry: 0 };
+		let mut r#in = FileInDownload { id: Id::ZERO, target, stat: None };
 		let hook = HookInDownload::new(&r#in.target);
 		let handle = self.add_hooked(&mut r#in, hook, |t| t.handle.clone());
 

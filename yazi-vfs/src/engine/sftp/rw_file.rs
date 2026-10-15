@@ -1,12 +1,15 @@
-use std::{io, pin::Pin};
+use std::{io, mem, pin::Pin};
 
+use pin_project::pin_project;
 use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf};
 use yazi_fs::{engine::Attrs, file::File};
 use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 
 use super::Stat;
 
+#[pin_project]
 pub struct RwFile {
+	#[pin]
 	inner: yazi_sftp::fs::File,
 	url:   UrlBuf,
 }
@@ -22,16 +25,21 @@ impl RwFile {
 		Self { inner, url: url.into() }
 	}
 
+	pub(crate) fn cursor(&self, offset: u64) -> Self {
+		Self { inner: self.inner.cursor(offset), url: self.url.clone() }
+	}
+
 	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
 		let name = self.name().unwrap_or_default().encoded_bytes();
 
 		Ok(Stat::try_from((name, &self.inner.fstat().await?))?.0)
 	}
 
-	pub(crate) async fn into_file(self) -> io::Result<File> {
+	pub(crate) async fn into_file(mut self: Pin<Box<Self>>) -> io::Result<File> {
 		let stat = self.metadata().await?;
+		let url = mem::take(self.as_mut().project().url);
 
-		Ok(File { url: self.url, stat, extra: Default::default() })
+		Ok(File { url, stat, extra: Default::default() })
 	}
 
 	pub(crate) async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
@@ -49,56 +57,56 @@ impl RwFile {
 
 impl AsyncRead for RwFile {
 	fn poll_read(
-		mut self: Pin<&mut Self>,
+		self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 		buf: &mut ReadBuf<'_>,
 	) -> std::task::Poll<io::Result<()>> {
-		Pin::new(&mut self.inner).poll_read(cx, buf)
+		self.project().inner.poll_read(cx, buf)
 	}
 }
 
 impl AsyncSeek for RwFile {
-	fn start_seek(mut self: Pin<&mut Self>, position: io::SeekFrom) -> io::Result<()> {
-		Pin::new(&mut self.inner).start_seek(position)
+	fn start_seek(self: Pin<&mut Self>, position: io::SeekFrom) -> io::Result<()> {
+		self.project().inner.start_seek(position)
 	}
 
 	fn poll_complete(
-		mut self: Pin<&mut Self>,
+		self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<io::Result<u64>> {
-		Pin::new(&mut self.inner).poll_complete(cx)
+		self.project().inner.poll_complete(cx)
 	}
 }
 
 impl AsyncWrite for RwFile {
 	fn poll_write(
-		mut self: Pin<&mut Self>,
+		self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 		buf: &[u8],
 	) -> std::task::Poll<io::Result<usize>> {
-		Pin::new(&mut self.inner).poll_write(cx, buf)
+		self.project().inner.poll_write(cx, buf)
 	}
 
 	fn poll_flush(
-		mut self: Pin<&mut Self>,
+		self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<io::Result<()>> {
-		Pin::new(&mut self.inner).poll_flush(cx)
+		self.project().inner.poll_flush(cx)
 	}
 
 	fn poll_shutdown(
-		mut self: Pin<&mut Self>,
+		self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<io::Result<()>> {
-		Pin::new(&mut self.inner).poll_shutdown(cx)
+		self.project().inner.poll_shutdown(cx)
 	}
 
 	fn poll_write_vectored(
-		mut self: Pin<&mut Self>,
+		self: Pin<&mut Self>,
 		cx: &mut std::task::Context<'_>,
 		bufs: &[io::IoSlice<'_>],
 	) -> std::task::Poll<io::Result<usize>> {
-		Pin::new(&mut self.inner).poll_write_vectored(cx, bufs)
+		self.project().inner.poll_write_vectored(cx, bufs)
 	}
 
 	fn is_write_vectored(&self) -> bool { self.inner.is_write_vectored() }

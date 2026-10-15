@@ -2,7 +2,6 @@ use std::mem;
 
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
-use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to, stat::Stat};
 use yazi_macro::warn;
 use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
@@ -60,27 +59,17 @@ impl File {
 		Ok(self.ops.out(id, FileOutCopy::Succ))
 	}
 
-	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
+	pub(crate) async fn copy_do(&self, task: FileInCopy) -> Result<(), FileOutCopyDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
-		loop {
-			match rx.recv().await.unwrap_or(Ok(0)) {
+		while let Some(result) = rx.recv().await {
+			match result {
 				Ok(0) => break,
 				Ok(n) => self.ops.out(task.id, FileOutCopyDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
 					warn!("Copy task partially done: {task:?}");
 					break;
-				}
-				// Operation not permitted (os error 1)
-				// Attribute not found (os error 93)
-				Err(e)
-					if task.retry < YAZI.tasks.bizarre_retry.get()
-						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
-				{
-					task.retry += 1;
-					self.ops.out(task.id, FileOutCopyDo::Log(format!("Retrying due to error: {e}")));
-					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
@@ -141,7 +130,7 @@ impl File {
 				self.requeue(task.with_drop(&tx), LOW);
 			}
 			drop(tx);
-			while rx.recv().await.is_some() {}
+			_ = rx.recv().await;
 		}
 
 		for task in files {
@@ -151,12 +140,12 @@ impl File {
 		Ok(self.ops.out(id, FileOutMove::Succ))
 	}
 
-	pub(crate) async fn move_do(&self, mut task: FileInMove) -> Result<(), FileOutMoveDo> {
+	pub(crate) async fn move_do(&self, task: FileInMove) -> Result<(), FileOutMoveDo> {
 		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
-		loop {
-			match rx.recv().await.unwrap_or(Ok(0)) {
+		while let Some(result) = rx.recv().await {
+			match result {
 				Ok(0) => {
 					engine::remove_file(&task.from).await.ok();
 					break;
@@ -165,16 +154,6 @@ impl File {
 				Err(e) if e.kind() == NotFound => {
 					warn!("Move task partially done: {task:?}");
 					break;
-				}
-				// Operation not permitted (os error 1)
-				// Attribute not found (os error 93)
-				Err(e)
-					if task.retry < YAZI.tasks.bizarre_retry.get()
-						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
-				{
-					task.retry += 1;
-					self.ops.out(task.id, FileOutMoveDo::Log(format!("Retrying due to error: {e}")));
-					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
@@ -354,18 +333,15 @@ impl File {
 		Ok(self.ops.out(id, FileOutDownload::Succ))
 	}
 
-	pub(crate) async fn download_do(
-		&self,
-		mut task: FileInDownload,
-	) -> Result<(), FileOutDownloadDo> {
+	pub(crate) async fn download_do(&self, task: FileInDownload) -> Result<(), FileOutDownloadDo> {
 		let stat = task.stat.unwrap();
 
 		let cache = ctx!(task, task.target.cache_entry(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
 		let mut rx = ctx!(task, engine::copy(&task.target, &cache_tmp, stat).await)?;
-		loop {
-			match rx.recv().await.unwrap_or(Ok(0)) {
+		while let Some(result) = rx.recv().await {
+			match result {
 				Ok(0) => {
 					Local::regular(&cache).remove_dir_all().await.ok();
 					ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
@@ -376,16 +352,6 @@ impl File {
 				Err(e) if e.kind() == NotFound => {
 					warn!("Download task partially done: {task:?}");
 					break;
-				}
-				// Operation not permitted (os error 1)
-				// Attribute not found (os error 93)
-				Err(e)
-					if task.retry < YAZI.tasks.bizarre_retry.get()
-						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
-				{
-					task.retry += 1;
-					self.ops.out(task.id, FileOutDownloadDo::Log(format!("Retrying due to error: {e}")));
-					return Ok(self.requeue(task, LOW));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
@@ -430,19 +396,10 @@ impl File {
 
 		let tmp =
 			ctx!(task, Transaction::tmp(&task.target).await, "Cannot determine temporary upload path")?;
-		let mut rx = ctx!(
-			task,
-			engine::copy(cache, &tmp, Attrs {
-				mode:  Some(stat.mode),
-				atime: None,
-				btime: None,
-				mtime: None,
-			})
-			.await
-		)?;
+		let mut rx = ctx!(task, engine::copy(cache, &tmp, Attrs::mode(stat.mode)).await)?;
 
-		loop {
-			match rx.recv().await.unwrap_or(Ok(0)) {
+		while let Some(result) = rx.recv().await {
+			match result {
 				Ok(0) => {
 					let stat =
 						ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat original file")?;
