@@ -1,5 +1,7 @@
 Tasks = {
 	_id = "tasks",
+	_window = 2,
+	_samples = {},
 }
 
 function Tasks:new(area)
@@ -22,6 +24,8 @@ end
 function Tasks:reflow() return { self } end
 
 function Tasks:redraw()
+	self:sample()
+
 	local elements = {}
 	for i, snap in ipairs(cx.tasks.snaps) do
 		local y = self._area.y + (i - 1) * 3
@@ -56,6 +60,45 @@ function Tasks:redraw()
 	return elements
 end
 
+function Tasks:sample()
+	local now, samples = ya.time().unix, {}
+	for _, snap in ipairs(cx.tasks.snaps) do
+		local p = snap.prog
+		if p.processed_bytes then
+			local list = Tasks._samples[snap.title] or {}
+			if #list == 0 or list[#list].bytes ~= p.processed_bytes or now - list[#list].at >= 1 then
+				list[#list + 1] = { at = now, bytes = p.processed_bytes }
+			end
+			while #list > 2 and now - list[2].at > self._window do
+				table.remove(list, 1)
+			end
+			samples[snap.title] = list
+		end
+	end
+	Tasks._samples = samples
+end
+
+function Tasks:speed(snap)
+	local list = Tasks._samples[snap.title]
+	if not list or #list < 2 then
+		return 0
+	end
+
+	local first, last = list[1], list[#list]
+	return last.at > first.at and (last.bytes - first.bytes) / (last.at - first.at) or 0
+end
+
+function Tasks:eta(secs)
+	secs = math.ceil(secs)
+	if secs >= 3600 then
+		return string.format("%dh%02dm", secs // 3600, secs % 3600 // 60)
+	elseif secs >= 60 then
+		return string.format("%dm%02ds", secs // 60, secs % 60)
+	else
+		return string.format("%ds", secs)
+	end
+end
+
 function Tasks:icon(snap)
 	if snap.prog.kind == "FileCopy" then
 		return "  "
@@ -79,6 +122,13 @@ function Tasks:progress(snap)
 	if p.total_bytes then
 		local percent = snap.running and snap.cooked and "Cleaning…" or string.format("%3d%%", math.floor(snap.percent))
 		label = string.format("%s - %s / %s", percent, ya.readable_size(p.processed_bytes), ya.readable_size(p.total_bytes))
+
+		local speed = self:speed(snap)
+		if speed > 0 then
+			local left = math.max(0, p.total_bytes - p.processed_bytes) / speed
+			label = string.format("%s - %s/s, %s left", label, ya.readable_size(speed), self:eta(left))
+		end
+
 		count = string.format("%d/%d", p.success_files, p.total_files)
 		count = p.failed_files == 0 and count or string.format("%s, %d failed", count, p.failed_files)
 		failed = snap.failed or p.failed_files > 0
