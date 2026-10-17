@@ -28,6 +28,7 @@ overall = {}
 
 [mgr]
 cwd = { fg = "cyan" }
+filter_keyword = { fg = "red", bold = true }
 
 # Find
 find_keyword  = { fg = "yellow", bold = true, italic = true, underline = true }
