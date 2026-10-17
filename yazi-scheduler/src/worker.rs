@@ -70,14 +70,9 @@ impl Worker {
 
 		let scope = r#in.scope().clone();
 		let result = select! {
-			status = handle.finished() => {
-				if status.is_canceled() {
-					scope.cancel();
-				}
-				Ok(())
-			}
+			_ = handle.finished() => Ok(()),
 			_ = scope.cancelled() => {
-				self.cancel(handle.id);
+				self.cancel(handle.id, false);
 				Ok(())
 			}
 			r = f(self, r#in) => r,
@@ -88,8 +83,13 @@ impl Worker {
 		}
 	}
 
-	pub fn cancel(&self, id: Id) -> bool {
-		if let Some(hook) = self.ongoing.lock().cancel(id) {
+	pub fn cancel(&self, id: Id, force: bool) -> bool {
+		let mut ongoing = self.ongoing.lock();
+		if !force && ongoing.get_mut(id).is_some_and(|t| t.is_canceled()) {
+			return false;
+		}
+
+		if let Some(hook) = ongoing.cancel(id) {
 			self.hook.submit(hook, HIGH);
 			return false;
 		}
@@ -305,6 +305,8 @@ impl Worker {
 					continue; // Failed
 				} else if let Some(hook) = task.hook.take() {
 					me.hook.submit(hook, LOW);
+				} else if task.prog.cleaned().is_some_and(|s| s.is_pending()) {
+					continue; // Cleanup is still in progress
 				} else {
 					ongoing.fulfill(op.id);
 				}

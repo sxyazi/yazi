@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, HookTriggers, ObjectLike, VmState};
+use mlua::{ExternalResult, HookTriggers, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 
 use crate::{Runner, entry::{EntryError, EntryJob}, loader::LOADER};
@@ -8,14 +8,14 @@ impl Runner {
 		LOADER.ensure(&job.plugin, |_| ()).await?;
 
 		if job.scope.is_cancelled() {
-			return Ok(());
+			return Err(EntryError::Cancelled.into());
 		}
 
 		tokio::task::spawn_blocking(move || {
 			let scope = job.scope.clone();
 			Handle::current().block_on(async {
 				select! {
-					_ = scope.cancelled() => Ok(()),
+					_ = scope.cancelled() => Err(EntryError::Cancelled.into()),
 					r = self.entry_do(job) => r,
 				}
 			})
@@ -32,7 +32,7 @@ impl Runner {
 			HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 			move |_, dbg| {
 				if scope.is_cancelled() && dbg.source().what != "C" {
-					Err(EntryError::Cancelled.into_lua_err())
+					Err(EntryError::Cancelled.into())
 				} else {
 					Ok(VmState::Continue)
 				}
@@ -40,6 +40,10 @@ impl Runner {
 		)?;
 
 		let plugin = LOADER.load(&lua, &job.plugin).await?;
-		if job.scope.is_cancelled() { Ok(()) } else { plugin.call_async_method("entry", job).await }
+		if job.scope.is_cancelled() {
+			return Err(EntryError::Cancelled.into());
+		}
+
+		plugin.call_async_method("entry", job).await
 	}
 }

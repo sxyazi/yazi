@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use tokio::sync::mpsc;
+use yazi_binding::Scope;
 use yazi_shared::id::Id;
 
 use crate::{TaskHandle, TaskIn, TaskProg, hook::HookIn};
@@ -8,6 +9,7 @@ use crate::{TaskHandle, TaskIn, TaskProg, hook::HookIn};
 #[derive(Debug)]
 pub struct Task {
 	pub(crate) handle: TaskHandle,
+	scope:             Scope,
 	pub title:         String,
 	pub(crate) prog:   TaskProg,
 	pub(crate) hook:   Option<HookIn>,
@@ -23,9 +25,10 @@ impl Deref for Task {
 }
 
 impl Task {
-	pub(super) fn new(id: Id, title: String, prog: TaskProg) -> Self {
+	pub(super) fn new(id: Id, scope: Scope, title: String, prog: TaskProg) -> Self {
 		Self {
 			handle: TaskHandle::new(id),
+			scope,
 			title,
 			prog,
 			hook: None,
@@ -33,6 +36,11 @@ impl Task {
 			logs: Default::default(),
 			logger: Default::default(),
 		}
+	}
+
+	pub(crate) fn cancel(&self) {
+		self.handle.cancel();
+		self.scope.cancel();
 	}
 
 	pub(crate) fn log(&mut self, line: String) {

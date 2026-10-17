@@ -193,7 +193,7 @@ impl Scheduler {
 
 		self.add_hooked(&mut r#in, hook, |_| ());
 		if let Some(prev) = self.preload.loading.lock().put(file.url.hash_u64(), r#in.id) {
-			self.cancel(prev);
+			self.cancel(prev, false);
 		}
 
 		self.preload.submit(r#in);
