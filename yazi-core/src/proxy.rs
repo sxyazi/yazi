@@ -17,11 +17,8 @@ impl AppProxy {
 		emit!(Call(relay!(app:plugin).with_opt("tab", opt.tab.nz()).with_any("opt", opt)));
 	}
 
-	pub(crate) fn plugin_peek(job: PeekJob, scope: Scope) {
-		Self::plugin(PluginOpt {
-			scope,
-			..PluginOpt::new_callback(job, |_, plugin, job| plugin.call_method("peek", job))
-		});
+	pub(crate) fn plugin_peek(job: PeekJob) {
+		Self::plugin(PluginOpt::new_callback(job, |_, plugin, job| plugin.call_method("peek", job)));
 	}
 
 	pub(crate) fn update_progress(summary: TaskSummary) {
@@ -44,7 +41,7 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:update_peeked).with_any("lock", lock).with_any("scope", scope)));
 	}
 
-	pub(crate) fn update_peeked_error(job: PeekJob, error: String, scope: Scope) {
+	pub(crate) fn update_peeked_error(job: PeekJob, error: String) {
 		let area = LAYOUT.get().preview;
 		Self::update_peeked(
 			PreviewLock {
@@ -58,7 +55,7 @@ impl MgrProxy {
 					Renderable::from(Error::other(error)).with_area(area),
 				],
 			},
-			scope,
+			job.scope,
 		);
 	}
 }

@@ -8,13 +8,12 @@ function M:peek(job)
 		return self.msg(job, "Empty file")
 	end
 
-	local fd, err = fs.access():read(true):open(url)
+	local fd <close>, err = fs.access():read(true):open(url)
 	if not fd then
 		return self.msg(job, "Failed to open file: " .. err)
 	end
 
 	local lines, err = M.read_up_to(fd, job.skip, job.area.h)
-	ya.drop(fd)
 
 	if not lines then
 		self.msg(job, tostring(err))

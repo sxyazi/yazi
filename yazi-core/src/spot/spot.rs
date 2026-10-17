@@ -28,7 +28,9 @@ impl Spot {
 		};
 
 		self.abort();
-		self.scope = RUNNER.spot(SpotJob { tab, spotter, file, mime, skip: self.skip });
+		self.scope = Scope::new();
+
+		RUNNER.spot(SpotJob { tab, spotter, file, mime, skip: self.skip, scope: self.scope.clone() });
 	}
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }

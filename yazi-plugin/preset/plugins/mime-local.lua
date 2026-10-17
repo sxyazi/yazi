@@ -17,7 +17,7 @@ function M:fetch(job)
 			end
 		end)
 
-		local child, err = M.spawn_file1(paths)
+		local child <close>, err = M.spawn_file1(paths)
 		if not child then
 			return M.placeholder(err, job.files)
 		end

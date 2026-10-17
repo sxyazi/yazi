@@ -1,64 +1,47 @@
 use mlua::{ExternalError, HookTriggers, ObjectLike, VmState};
-use tokio::{runtime::Handle, select, sync::mpsc};
+use tokio::{runtime::Handle, select};
 
 use crate::{Runner, loader::LOADER, preloader::{PreloadError, PreloadJob, PreloadState}};
 
 impl Runner {
-	pub async fn preload(
-		&'static self,
-		job: PreloadJob,
-	) -> mpsc::Receiver<Result<PreloadState, PreloadError>> {
-		let (tx, rx) = mpsc::channel(1);
-		match LOADER.ensure(&job.preloader.name, |_| ()).await {
-			Ok(()) => self.preload_do(job, tx),
-			Err(e) => _ = tx.try_send(Err(e.into())),
-		};
-		rx
-	}
+	pub async fn preload(&'static self, job: PreloadJob) -> Result<PreloadState, PreloadError> {
+		LOADER.ensure(&job.preloader.name, |_| ()).await?;
 
-	fn preload_do(
-		&'static self,
-		job: PreloadJob,
-		tx: mpsc::Sender<Result<PreloadState, PreloadError>>,
-	) {
-		let tx_ = tx.clone();
 		tokio::task::spawn_blocking(move || {
-			let future = async {
-				let lua = self.spawn(&job)?;
-				lua.set_hook(
-					HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-					move |_, dbg| {
-						if tx.is_closed() && dbg.source().what != "C" {
-							Err(PreloadError::Cancelled.into_lua_err())
-						} else {
-							Ok(VmState::Continue)
-						}
-					},
-				)?;
-
-				let plugin = LOADER.load(&lua, &job.preloader.name).await?;
-				if tx_.is_closed() {
-					Err(PreloadError::Cancelled.into_lua_err())
-				} else {
-					plugin.call_async_method("preload", job).await
-				}
-			};
-
+			let scope = job.scope.clone();
 			Handle::current().block_on(async {
 				select! {
-					_ = tx_.closed() => {},
-					r = future => match r {
-						Ok(state) => _ = tx_.send(Ok(state)).await,
-						Err(err) => {
-							if let Some(e) = err.downcast_ref::<PreloadError>() {
-								tx_.send(Err(e.clone())).await.ok();
-							} else {
-								tx_.send(Err(err.into())).await.ok();
-							}
-						},
-					},
+					_ = scope.cancelled() => Err(PreloadError::Cancelled),
+					r = self.preload_do(job) => r.map_err(|e| {
+						e.downcast_ref::<PreloadError>().cloned().unwrap_or_else(|| e.into())
+					}),
 				}
 			})
-		});
+		})
+		.await
+		.unwrap_or(Err(PreloadError::Cancelled))
+	}
+
+	async fn preload_do(&self, job: PreloadJob) -> mlua::Result<PreloadState> {
+		let lua = self.spawn(&job)?;
+		let scope = job.scope.clone();
+
+		lua.set_hook(
+			HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
+			move |_, dbg| {
+				if scope.is_cancelled() && dbg.source().what != "C" {
+					Err(PreloadError::Cancelled.into_lua_err())
+				} else {
+					Ok(VmState::Continue)
+				}
+			},
+		)?;
+
+		let plugin = LOADER.load(&lua, &job.preloader.name).await?;
+		if job.scope.is_cancelled() {
+			Err(PreloadError::Cancelled.into_lua_err())
+		} else {
+			plugin.call_async_method("preload", job).await
+		}
 	}
 }

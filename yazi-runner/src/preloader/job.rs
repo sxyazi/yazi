@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::elements::Rect;
+use yazi_binding::{Scope, elements::Rect};
 use yazi_config::{LAYOUT, plugin::PreloaderArc};
 use yazi_fs::file::File;
 use yazi_shared::{id::Id, pool::Symbol, sendable::Sendable};
@@ -12,12 +12,15 @@ pub struct PreloadJob {
 	pub preloader: PreloaderArc,
 	pub file:      File,
 	pub mime:      Symbol<str>,
+	pub scope:     Scope,
 }
 
 impl PluginJob for PreloadJob {
 	fn tab(&self) -> Id { self.tab }
 
 	fn name(&self) -> &SStr { &self.preloader.name }
+
+	fn scope(&self) -> &Scope { &self.scope }
 }
 
 impl IntoLua for PreloadJob {

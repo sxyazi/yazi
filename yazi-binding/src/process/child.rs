@@ -1,6 +1,6 @@
 use std::{ops::DerefMut, process::ExitStatus, time::Duration};
 
-use mlua::{ExternalError, IntoLua, IntoLuaMulti, LuaString, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
 use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select, try_join};
 use yazi_shim::fs::Error;
 
@@ -88,23 +88,32 @@ impl UserData for Child {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("id", |_, me, ()| Ok(me.inner.id()));
 
-		methods.add_async_method_mut("read", |_, mut me, len: usize| async move {
-			async fn read(r: Option<impl AsyncBufReadExt + Unpin>, len: usize) -> Option<Vec<u8>> {
+		methods.add_async_method_mut("read", |lua, mut me, len: usize| async move {
+			async fn read(
+				r: Option<impl AsyncBufReadExt + Unpin>,
+				len: usize,
+			) -> Option<io::Result<Vec<u8>>> {
 				let mut r = r?;
 				let mut buf = vec![0; len];
 				match r.read(&mut buf).await {
-					Ok(0) | Err(_) => return None,
+					Ok(0) => return None,
 					Ok(n) => buf.truncate(n),
+					Err(e) => return Some(Err(e)),
 				}
-				Some(buf)
+				Some(Ok(buf))
 			}
 
 			let me = me.deref_mut();
-			Ok(select! {
+			let (result, event) = select! {
 				Some(r) = read(me.stdout.as_mut(), len) => (r, 0u8),
 				Some(r) = read(me.stderr.as_mut(), len) => (r, 1u8),
-				else => (vec![], 2u8)
-			})
+				else => (Ok(vec![]), 2u8)
+			};
+
+			match result {
+				Ok(r) => (lua.create_external_string(r)?, event).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, 2u8, Error::from(e)).into_lua_multi(&lua),
+			}
 		});
 		methods.add_async_method_mut("read_line", |lua, mut me, ()| async move {
 			match me.read_line().await {
@@ -179,5 +188,7 @@ impl UserData for Child {
 			Some(stderr) => lua.create_any_userdata(stderr.into_inner())?.into_lua(lua),
 			None => Ok(Value::Nil),
 		});
+
+		methods.add_meta_function(MetaMethod::Close, |_, ud: AnyUserData| ud.destroy());
 	}
 }

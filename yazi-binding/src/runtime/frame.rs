@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use super::RuntimeSeed;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) struct RuntimeFrame {
 	pub(super) seed:     RuntimeSeed,
 	pub(super) blocking: bool,

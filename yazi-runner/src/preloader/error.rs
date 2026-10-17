@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
+use strum::EnumIs;
 use thiserror::Error;
 
-#[derive(Clone, Debug, Error)]
+#[derive(Clone, Debug, EnumIs, Error)]
 pub enum PreloadError {
 	#[error("Preload task cancelled")]
 	Cancelled,

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use futures::future::join_all;
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, MultiValue, Value, Variadic};
+use futures::future::{join_all, select_all};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, MultiValue, ObjectLike, Value, Variadic};
 use tokio::{select, sync::mpsc, task};
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime::RuntimeCo, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
@@ -53,7 +53,7 @@ impl Utils {
 			let seed = runtime!(lua)?.child_seed()?;
 
 			Ok(Handle::AsyncFn(task::spawn_local(async move {
-				let mut fut = RuntimeCo::new(&seed, lua, f, args);
+				let mut fut = RuntimeCo::new(&seed, lua, f.call_async(args));
 
 				let result = select! {
 					_ = seed.scope.cancelled() => Ok(Default::default()),
@@ -127,6 +127,29 @@ impl Utils {
 		})
 	}
 
+	pub(super) fn select(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|lua, branches: Variadic<Value>| async move {
+			if branches.is_empty() {
+				return Err("`ya.select()` expects at least one callable value".into_lua_err());
+			}
+
+			let mut futures = Vec::with_capacity(branches.len());
+			for branch in branches {
+				let future = match branch {
+					Value::Table(t) => t.call_async(()),
+					Value::Function(f) => f.call_async(()),
+					Value::UserData(ud) => ud.call_async(()),
+					_ => return Err("`ya.select()` expects callable values".into_lua_err()),
+				};
+
+				futures.push(RuntimeCo::new(&*runtime!(lua)?, lua.clone(), future));
+			}
+
+			let (result, index, _) = select_all(futures).await;
+			Ok((index + 1, result?))
+		})
+	}
+
 	async fn retrieve(
 		lua: &Lua,
 		name: &str,
@@ -136,7 +159,13 @@ impl Utils {
 		let (tx, mut rx) = mpsc::channel(1);
 		let args = Sendable::values_to_list(lua, args)?;
 
-		let job = SyncJob { tab: runtime!(lua)?.tab(), name: name.to_owned().into(), block, args };
+		let job = SyncJob {
+			tab: runtime!(lua)?.tab(),
+			name: name.to_owned().into(),
+			block,
+			args,
+			scope: runtime!(lua)?.scope(),
+		};
 		let opt = PluginOpt::new_callback(job, move |lua, plugin, job| {
 			let Some(block) = runtime!(lua)?.get_block(&job.name, job.block) else {
 				return Err("sync block not found".into_lua_err());

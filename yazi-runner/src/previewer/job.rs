@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::elements::Rect;
+use yazi_binding::{Scope, elements::Rect};
 use yazi_config::{LAYOUT, plugin::PreviewerArc};
 use yazi_fs::file::File;
 use yazi_shared::{id::Id, pool::Symbol, sendable::Sendable};
@@ -15,12 +15,15 @@ pub struct PeekJob {
 	pub mime:      Symbol<str>,
 	pub sig:       Id,
 	pub skip:      usize,
+	pub scope:     Scope,
 }
 
 impl PluginJob for PeekJob {
 	fn tab(&self) -> Id { self.tab }
 
 	fn name(&self) -> &SStr { &self.previewer.name }
+
+	fn scope(&self) -> &Scope { &self.scope }
 }
 
 impl IntoLua for PeekJob {
@@ -47,12 +50,15 @@ pub struct SeekJob {
 	pub file:      File,
 	pub mime:      Symbol<str>,
 	pub units:     i16,
+	pub scope:     Scope,
 }
 
 impl PluginJob for SeekJob {
 	fn tab(&self) -> Id { self.tab }
 
 	fn name(&self) -> &SStr { &self.previewer.name }
+
+	fn scope(&self) -> &Scope { &self.scope }
 }
 
 impl IntoLua for SeekJob {

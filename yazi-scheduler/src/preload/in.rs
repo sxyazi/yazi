@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use yazi_binding::Scope;
 use yazi_config::plugin::PreloaderArc;
 use yazi_shared::{id::Id, pool::Symbol};
 
@@ -29,6 +30,13 @@ impl TaskIn for PreloadIn {
 		self
 	}
 
+	fn scope(&self) -> &Scope {
+		match self {
+			Self::Preload(r#in) => r#in.scope(),
+			Self::Custom(r#in) => r#in.scope(),
+		}
+	}
+
 	fn title(&self) -> Cow<'_, str> {
 		match self {
 			Self::Preload(r#in) => r#in.title(),
@@ -46,6 +54,7 @@ pub(crate) struct PreloadInPreload {
 	pub(crate) preloader: PreloaderArc,
 	pub(crate) file:      yazi_fs::file::File,
 	pub(crate) mime:      Symbol<str>,
+	pub(crate) scope:     Scope,
 }
 
 impl TaskIn for PreloadInPreload {
@@ -57,6 +66,8 @@ impl TaskIn for PreloadInPreload {
 		self.id = id;
 		self
 	}
+
+	fn scope(&self) -> &Scope { &self.scope }
 
 	fn title(&self) -> Cow<'_, str> { format!("Run preloader '{}'", self.preloader.name).into() }
 }

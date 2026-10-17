@@ -84,14 +84,12 @@ end
 ---@param cwd string
 ---@return boolean
 function M.is_empty(cwd)
-	local child = Command("zoxide"):arg({ "query", "-l", "--exclude", cwd }):stdout(Command.PIPED):spawn()
+	local child <close> = Command("zoxide"):arg({ "query", "-l", "--exclude", cwd }):stdout(Command.PIPED):spawn()
 	if not child then
 		return true
 	end
 
-	local first = child:read_line()
-	child:start_kill()
-	return not first
+	return not child:read_line()
 end
 
 ---@param cwd string

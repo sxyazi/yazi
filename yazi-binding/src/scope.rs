@@ -1,6 +1,6 @@
 use std::{future, mem};
 
-use mlua::{FromLua, Lua, UserData, UserDataMethods, UserDataOwned, Value};
+use mlua::{FromLua, Lua, MetaMethod, UserData, UserDataMethods, UserDataOwned, Value};
 use tokio_util::sync::CancellationToken;
 use yazi_macro::impl_data_any;
 
@@ -8,6 +8,13 @@ use yazi_macro::impl_data_any;
 pub struct Scope(Option<CancellationToken>);
 
 impl_data_any!(Scope, from_into_lua = inherit);
+
+impl Default for &Scope {
+	fn default() -> Self {
+		static SCOPE: Scope = Scope(None);
+		&SCOPE
+	}
+}
 
 impl From<&Scope> for Scope {
 	fn from(value: &Self) -> Self { value.clone() }
@@ -64,5 +71,8 @@ impl UserData for Scope {
 		methods.add_method("cancel", |_, me, ()| Ok(me.cancel()));
 		methods.add_method("cancelled", |_, me, ()| Ok(me.is_cancelled()));
 		methods.add_method("child", |_, me, ()| Ok(me.child()));
+
+		methods
+			.add_async_meta_method(MetaMethod::Call, |_, me, ()| async move { Ok(me.cancelled().await) });
 	}
 }

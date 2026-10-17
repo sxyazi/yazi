@@ -11,8 +11,8 @@ pub struct RuntimeSeed {
 }
 
 impl RuntimeSeed {
-	pub fn new(tab: Id, name: impl Into<CompactString>, scope: Scope) -> Self {
-		Self { tab, name: name.into(), scope }
+	pub fn new(tab: Id, name: impl Into<CompactString>, scope: impl Into<Scope>) -> Self {
+		Self { tab, name: name.into(), scope: scope.into() }
 	}
 
 	pub fn fork(&mut self) -> Scope {

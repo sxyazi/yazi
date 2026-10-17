@@ -65,6 +65,7 @@ pub(crate) fn compose(
 			b"chan" => Utils::chan(lua)?,
 			b"chunk" => Utils::chunk(lua)?,
 			b"join" => Utils::join(lua)?,
+			b"select" => Utils::select(lua)?,
 
 			// Target
 			b"target_os" => Utils::target_os(lua)?,

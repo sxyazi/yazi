@@ -4,13 +4,12 @@ local function stale_cache(file)
 	local url = file.url
 	local stamp = url.spec.stamp:join(url:hash(true))
 
-	local fd = fs.access():read(true):open(Url(stamp))
+	local fd <close> = fs.access():read(true):open(Url(stamp))
 	if not fd then
 		return true
 	end
 
 	local sig = fd:read(26)
-	ya.drop(fd)
 	return sig ~= file.stat:hash(true)
 end
 

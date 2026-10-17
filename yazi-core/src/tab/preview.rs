@@ -15,8 +15,8 @@ pub struct Preview {
 	pub skip:        usize,
 	pub folder_lock: Option<UrlBuf>,
 
-	handle: Option<JoinHandle<()>>,
-	scope:  Scope,
+	pub scope: Scope,
+	handle:    Option<JoinHandle<()>>,
 }
 
 impl Preview {
@@ -37,15 +37,14 @@ impl Preview {
 		self.abort();
 		self.scope = Scope::new();
 
-		let job = PeekJob { tab, previewer, file, mime, sig, skip: self.skip };
-		let scope = self.scope.clone();
+		let job =
+			PeekJob { tab, previewer, file, mime, sig, skip: self.skip, scope: self.scope.clone() };
 
 		self.handle = Some(tokio::spawn(async move {
-			let mut rx = RUNNER.peek(&job).await;
-			match rx.recv().await.unwrap_or(Err(PeekError::Cancelled)) {
+			match RUNNER.peek(&job).await {
 				Ok(()) | Err(PeekError::Cancelled) => {}
-				Err(PeekError::ShouldSync) => AppProxy::plugin_peek(job, scope),
-				Err(e) => MgrProxy::update_peeked_error(job, e.to_string(), scope),
+				Err(PeekError::ShouldSync) => AppProxy::plugin_peek(job),
+				Err(e) => MgrProxy::update_peeked_error(job, e.to_string()),
 			}
 		}));
 	}

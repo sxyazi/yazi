@@ -55,7 +55,13 @@ impl FromAction<Ctx<'_>> for PluginOpt {
 
 impl From<PluginOpt> for PluginInEntry {
 	fn from(value: PluginOpt) -> Self {
-		Self { tab: value.tab, plugin: value.name, args: value.args, ..Default::default() }
+		Self {
+			tab: value.tab,
+			plugin: value.name,
+			args: value.args,
+			scope: value.scope,
+			..Default::default()
+		}
 	}
 }
 
@@ -69,6 +75,7 @@ impl PluginOpt {
 			tab: job.tab(),
 			name: Self::normalize_name(job.name().clone()),
 			mode: PluginMode::Sync,
+			scope: job.scope().clone(),
 			callback: Some(Box::new(move |lua, plugin| f(lua, plugin, job))),
 			..Default::default()
 		}

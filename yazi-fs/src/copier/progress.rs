@@ -14,10 +14,12 @@ impl Default for Progress {
 }
 
 impl Progress {
+	#[cfg(any(target_os = "linux", target_os = "android"))]
 	pub(super) fn written(&self) -> u64 { self.written }
 
 	pub(super) fn remaining(&self) -> u64 { self.written.saturating_sub(self.reported) }
 
+	#[cfg(all(unix, not(target_os = "macos")))]
 	pub(super) fn advance(&mut self, bytes: usize, tx: &mpsc::Sender<io::Result<u64>>) {
 		self.written += bytes as u64;
 		self.report(tx);

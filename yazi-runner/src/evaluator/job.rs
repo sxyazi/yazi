@@ -3,7 +3,7 @@ use tokio::{runtime::Handle, select};
 use yazi_binding::runtime::RuntimeSeed;
 use yazi_shared::{data::Data, sendable::Sendable};
 
-use crate::Runner;
+use crate::{Runner, evaluator::EvaluateError};
 
 pub(super) struct EvaluateJob {
 	pub(super) runner: &'static Runner,
@@ -25,7 +25,7 @@ impl EvaluateJob {
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 				move |_, _| {
 					if scope_.is_cancelled() {
-						Err("async blocking task cancelled".into_lua_err())
+						Err(EvaluateError::Cancelled.into_lua_err())
 					} else {
 						Ok(VmState::Continue)
 					}

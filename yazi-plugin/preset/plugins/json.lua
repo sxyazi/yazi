@@ -1,7 +1,7 @@
 local M = {}
 
 function M:peek(job)
-	local child = Command("jq")
+	local child <close> = Command("jq")
 		:arg({ "-b", "-C", "--tab", ".", tostring(job.file.path) })
 		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)
@@ -17,6 +17,7 @@ function M:peek(job)
 	repeat
 		local next, event = child:read_line()
 		if event == 1 then
+			child:start_kill()
 			return require("code"):peek(job)
 		elseif event ~= 0 then
 			break
@@ -32,7 +33,6 @@ function M:peek(job)
 		end
 	until i >= job.skip + limit
 
-	child:start_kill()
 	if job.skip > 0 and i < job.skip + limit then
 		ya.emit("peek", { math.max(0, i - limit), only_if = job.file.url, upper_bound = true })
 	else
