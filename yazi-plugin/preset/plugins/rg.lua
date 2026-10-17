@@ -70,7 +70,7 @@ function M:provide(job)
 			return nil, Err("Only local filesystem searches are supported")
 		end
 
-		local child, err = M.spawn(source, job.url.spec.data)
+		local child <close>, err = M.spawn(source, job.url.spec.data)
 		if not child then
 			return nil, Err("Failed to start `rg`, error: %s", err)
 		end

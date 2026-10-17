@@ -1,4 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
+use yazi_binding::Scope;
 use yazi_config::plugin::SpotterArc;
 use yazi_fs::file::File;
 use yazi_shared::{id::{Id, Ids}, pool::Symbol, sendable::Sendable};
@@ -15,12 +16,15 @@ pub struct SpotJob {
 	pub file:    File,
 	pub mime:    Symbol<str>,
 	pub skip:    usize,
+	pub scope:   Scope,
 }
 
 impl PluginJob for SpotJob {
 	fn tab(&self) -> Id { self.tab }
 
 	fn name(&self) -> &SStr { &self.spotter.name }
+
+	fn scope(&self) -> &Scope { &self.scope }
 }
 
 impl IntoLua for SpotJob {

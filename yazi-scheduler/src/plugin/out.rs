@@ -1,3 +1,5 @@
+use yazi_runner::entry::EntryError;
+
 use crate::{Task, TaskProg};
 
 // --- Entry
@@ -5,10 +7,17 @@ use crate::{Task, TaskProg};
 pub(crate) enum PluginOutEntry {
 	Succ,
 	Fail(String),
+	Cancel,
 }
 
 impl From<mlua::Error> for PluginOutEntry {
-	fn from(value: mlua::Error) -> Self { Self::Fail(value.to_string()) }
+	fn from(value: mlua::Error) -> Self {
+		if value.downcast_ref().is_some_and(EntryError::is_cancelled) {
+			Self::Cancel
+		} else {
+			Self::Fail(value.to_string())
+		}
+	}
 }
 
 impl PluginOutEntry {
@@ -22,6 +31,7 @@ impl PluginOutEntry {
 				prog.state = Some(false);
 				task.log(reason);
 			}
+			Self::Cancel => task.cancel(),
 		}
 	}
 }

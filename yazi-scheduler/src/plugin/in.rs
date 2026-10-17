@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use hashbrown::HashMap;
 use mlua::{FromLua, Lua, Table, Value};
-use yazi_binding::runtime;
+use yazi_binding::{Scope, runtime};
 use yazi_runner::entry::EntryJob;
 use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
 use yazi_shim::SStr;
@@ -33,6 +33,13 @@ impl TaskIn for PluginIn {
 		self
 	}
 
+	fn scope(&self) -> &Scope {
+		match self {
+			Self::Entry(r#in) => r#in.scope(),
+			Self::Custom(r#in) => r#in.scope(),
+		}
+	}
+
 	fn title(&self) -> Cow<'_, str> {
 		match self {
 			Self::Entry(r#in) => r#in.title(),
@@ -50,6 +57,7 @@ pub struct PluginInEntry {
 	pub tab:    Id,
 	pub plugin: SStr,
 	pub args:   HashMap<DataKey, Data>,
+	pub scope:  Scope,
 	pub title:  SStr,
 	pub track:  bool,
 }
@@ -63,6 +71,8 @@ impl TaskIn for PluginInEntry {
 		self.id = id;
 		self
 	}
+
+	fn scope(&self) -> &Scope { &self.scope }
 
 	fn title(&self) -> Cow<'_, str> {
 		if self.title.is_empty() {
@@ -80,7 +90,13 @@ impl TaskIn for PluginInEntry {
 
 impl From<PluginInEntry> for EntryJob {
 	fn from(value: PluginInEntry) -> Self {
-		Self { id: value.id, tab: value.tab, args: value.args, plugin: value.plugin }
+		Self {
+			id:     value.id,
+			tab:    value.tab,
+			args:   value.args,
+			plugin: value.plugin,
+			scope:  value.scope,
+		}
 	}
 }
 
@@ -92,6 +108,7 @@ impl FromLua for PluginInEntry {
 			tab: t.raw_get::<Id>("tab").unwrap_or_default().nz().unwrap_or(runtime!(lua)?.tab()),
 			plugin: t.raw_get::<String>(1)?.into(),
 			args: Sendable::table_to_args(lua, t.raw_get("args")?)?,
+			scope: t.raw_get("scope")?,
 			track: t.raw_get("track")?,
 			..Default::default()
 		})

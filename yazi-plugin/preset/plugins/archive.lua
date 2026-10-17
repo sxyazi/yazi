@@ -60,8 +60,7 @@ function M:seek(job) require("code"):seek(job) end
 function M.spawn_7z(args)
 	local last_err = nil
 	local try = function(name)
-		local stdout = args[1] == "l" and Command.PIPED or Command.NULL
-		local child, err = Command(name):arg(args):stdout(stdout):stderr(Command.PIPED):spawn()
+		local child, err = Command(name):arg(args):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
 		if not child then
 			last_err = err
 		end
@@ -70,7 +69,7 @@ function M.spawn_7z(args)
 
 	local child = try("7zz") or try("7z")
 	if not child then
-		return ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
+		ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
 	end
 	return child, last_err
 end
@@ -98,7 +97,7 @@ function M.spawn_7z_piped(src_args, dst_args)
 		src, dst = try("7z")
 	end
 	if not dst then
-		return ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
+		ya.err("Failed to start either `7zz` or `7z`, error: " .. last_err)
 	end
 	return src, dst, last_err
 end
@@ -110,15 +109,12 @@ end
 ---@return table items
 ---@return Error? err
 function M.list_archive(args, skip, limit)
-	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", "-xr!__MACOSX", table.unpack(args) }
+	local child <close> = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", "-xr!__MACOSX", table.unpack(args) }
 	if not child then
 		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local items, err = M.parse_7z_slt(child, skip, limit)
-	child:start_kill()
-
-	return items, err
+	return M.parse_7z_slt(child, skip, limit)
 end
 
 ---List items in a compressed tarball
@@ -128,19 +124,17 @@ end
 ---@return table items
 ---@return Error? err
 function M.list_compressed_tar(args, skip, limit)
-	local src, dst = M.spawn_7z_piped(
+	local src <close>, dst = M.spawn_7z_piped(
 		{ "x", "-so", table.unpack(args) },
 		{ "l", "-ba", "-slt", "-ttar", "-sccUTF-8", "-xr!__MACOSX", "-si" }
 	)
+
+	local dst <close> = dst
 	if not dst then
 		return {}, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local items, err = M.parse_7z_slt(dst, skip, limit)
-	src:start_kill()
-	dst:start_kill()
-
-	return items, err
+	return M.parse_7z_slt(dst, skip, limit)
 end
 
 ---@param path Path
@@ -148,7 +142,7 @@ end
 function M.list_if_only_one(path)
 	-- For certain compressed tarballs (e.g. .tar.xz),
 	-- 7-zip doesn't print a .tar item if -slt is specified, so we are not doing that here
-	local child = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
+	local child <close> = M.spawn_7z { "l", "-ba", "-sccUTF-8", "-p", tostring(path) }
 	if not child then
 		return
 	end
@@ -169,7 +163,6 @@ function M.list_if_only_one(path)
 		end
 	end
 
-	child:start_kill()
 	if #items == 1 then
 		return items[1]
 	end
@@ -184,7 +177,7 @@ end
 ---  2: wrong password
 ---  3: partial success
 function M.list_meta(args)
-	local child = M.spawn_7z { "l", "-slt", "-sccUTF-8", table.unpack(args) }
+	local child <close> = M.spawn_7z { "l", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
 		return nil, 1
 	end
@@ -212,7 +205,6 @@ function M.list_meta(args)
 		end
 	end
 
-	child:start_kill()
 	return typ ~= "" and typ or nil, code
 end
 

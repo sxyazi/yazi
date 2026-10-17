@@ -1,11 +1,12 @@
 use std::{ops::Deref, sync::Arc, time::Duration};
 
-use tokio::{select, task::JoinHandle};
+use tokio::task::JoinHandle;
+use yazi_binding::Scope;
 use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
 use yazi_fs::{FsHash64, file::{File, FileSig}};
 use yazi_shared::{Throttle, id::Id, pool::Symbol, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, HIGH, LOW, NORMAL, Task, TaskHandle, TaskIn, TaskProg, Worker, custom::{CustomIn, CustomOut, CustomPool}, fetch::FetchInFetch, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInMove, FileInTrash, FileInUpload, FileOutCopy, FileOutDownload, FileOutHardlink, FileOutMove, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadInPreload, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
+use crate::{Behavior, LOW, NORMAL, Task, TaskHandle, TaskIn, TaskProg, Worker, custom::{CustomIn, CustomOut, CustomPool}, fetch::FetchInFetch, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInMove, FileInTrash, FileInUpload, FileOutCopy, FileOutDownload, FileOutHardlink, FileOutMove, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadInPreload, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
 pub struct Scheduler {
 	worker:       Worker,
@@ -48,15 +49,6 @@ impl Scheduler {
 		T::Prog: Into<TaskProg> + Default,
 	{
 		self.add(r#in, |t| map(t.with_hook(hook)))
-	}
-
-	pub fn cancel(&self, id: Id) -> bool {
-		if let Some(hook) = self.ongoing.lock().cancel(id) {
-			self.hook.submit(hook, HIGH);
-			return false;
-		}
-
-		true
 	}
 
 	pub fn shutdown(&self) {
@@ -166,7 +158,7 @@ impl Scheduler {
 	}
 
 	pub fn fetch_paged(&self, tab: Id, fetcher: FetcherArc, targets: Vec<File>) -> TaskHandle {
-		let mut r#in = FetchInFetch { id: Id::ZERO, tab, fetcher, targets };
+		let mut r#in = FetchInFetch { id: Id::ZERO, tab, fetcher, targets, scope: Scope::new() };
 
 		let handle = self.add(&mut r#in, |t| t.handle.clone());
 		self.fetch.submit(r#in);
@@ -190,11 +182,18 @@ impl Scheduler {
 
 	pub fn preload_paged(&self, tab: Id, preloader: PreloaderArc, file: &File, mime: Symbol<str>) {
 		let hook = HookInPreload::new(&preloader, FileSig(file).hash_u64());
-		let mut r#in = PreloadInPreload { id: Id::ZERO, tab, preloader, file: file.clone(), mime };
+		let mut r#in = PreloadInPreload {
+			id: Id::ZERO,
+			tab,
+			preloader,
+			file: file.clone(),
+			mime,
+			scope: Scope::new(),
+		};
 
 		self.add_hooked(&mut r#in, hook, |_| ());
 		if let Some(prev) = self.preload.loading.lock().put(file.url.hash_u64(), r#in.id) {
-			self.cancel(prev);
+			self.cancel(prev, false);
 		}
 
 		self.preload.submit(r#in);
@@ -242,20 +241,6 @@ impl Scheduler {
 			let TaskProg::Custom(prog) = &mut t.prog else { unreachable!() };
 			prog.progress = progress;
 			t.handle.clone()
-		});
-
-		let ongoing = self.ongoing.clone();
-		let scope = r#in.scope.clone();
-		let handle_ = handle.clone();
-		tokio::spawn(async move {
-			select! {
-				_ = scope.cancelled() => {
-					ongoing.lock().cancel(handle_.id);
-				}
-				status = handle_.finished() => if status.is_canceled() {
-					scope.cancel();
-				}
-			}
 		});
 
 		match r#in.pool {

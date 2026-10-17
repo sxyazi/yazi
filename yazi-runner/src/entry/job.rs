@@ -1,5 +1,6 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
+use yazi_binding::Scope;
 use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
 use yazi_shim::SStr;
 
@@ -11,12 +12,15 @@ pub struct EntryJob {
 	pub tab:    Id,
 	pub args:   HashMap<DataKey, Data>,
 	pub plugin: SStr,
+	pub scope:  Scope,
 }
 
 impl PluginJob for EntryJob {
 	fn tab(&self) -> Id { self.tab }
 
 	fn name(&self) -> &SStr { &self.plugin }
+
+	fn scope(&self) -> &Scope { &self.scope }
 }
 
 impl IntoLua for EntryJob {

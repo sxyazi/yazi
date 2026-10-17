@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use yazi_binding::Scope;
 use yazi_shared::id::Id;
 use yazi_shim::SStr;
 
@@ -9,6 +10,8 @@ pub trait TaskIn {
 	fn id(&self) -> Id;
 
 	fn set_id(&mut self, id: Id) -> &mut Self;
+
+	fn scope(&self) -> &Scope { Default::default() }
 
 	fn title(&self) -> Cow<'_, str>;
 

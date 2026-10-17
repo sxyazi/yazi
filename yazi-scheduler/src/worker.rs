@@ -3,8 +3,9 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use tokio::{select, sync::mpsc, task::JoinHandle};
 use yazi_config::YAZI;
+use yazi_shared::id::Id;
 
-use crate::{LOW, Ongoing, Progress, TaskIn, TaskOp, TaskOps, TaskOut, custom::Custom, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
+use crate::{HIGH, LOW, Ongoing, Progress, TaskHandle, TaskIn, TaskOp, TaskOps, TaskOut, custom::Custom, fetch::{Fetch, FetchIn}, file::{File, FileIn}, hook::{Hook, HookIn}, plugin::{Plugin, PluginIn}, preload::{Preload, PreloadIn}, process::{Process, ProcessIn}, size::{Size, SizeIn}};
 
 #[derive(Clone)]
 pub struct Worker {
@@ -60,6 +61,42 @@ impl Worker {
 		(me, handles)
 	}
 
+	async fn work<T, F>(&self, handle: TaskHandle, r#in: T, f: F)
+	where
+		T: TaskIn,
+		F: AsyncFnOnce(&Self, T) -> Result<(), TaskOut>,
+	{
+		handle.start();
+
+		let scope = r#in.scope().clone();
+		let result = select! {
+			_ = handle.finished() => Ok(()),
+			_ = scope.cancelled() => {
+				self.cancel(handle.id, false);
+				Ok(())
+			}
+			r = f(self, r#in) => r,
+		};
+
+		if let Err(out) = result {
+			self.ops.out(handle.id, out);
+		}
+	}
+
+	pub fn cancel(&self, id: Id, force: bool) -> bool {
+		let mut ongoing = self.ongoing.lock();
+		if !force && ongoing.get_mut(id).is_some_and(|t| t.is_canceled()) {
+			return false;
+		}
+
+		if let Some(hook) = ongoing.cancel(id) {
+			self.hook.submit(hook, HIGH);
+			return false;
+		}
+
+		true
+	}
+
 	fn file(&self, rx: async_priority_channel::Receiver<FileIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
@@ -70,15 +107,7 @@ impl Worker {
 						continue;
 					};
 
-					handle.start();
-					let result = select! {
-						r = me.file_do(r#in) => r,
-						_ = handle.finished() => Ok(())
-					};
-
-					if let Err(out) = result {
-						me.ops.out(id, out);
-					}
+					me.work(handle, r#in, Self::file_do).await;
 				}
 			}
 		})
@@ -116,15 +145,7 @@ impl Worker {
 						continue;
 					};
 
-					handle.start();
-					let result = select! {
-						r = me.plugin_do(r#in) => r,
-						_ = handle.finished() => Ok(())
-					};
-
-					if let Err(out) = result {
-						me.ops.out(id, out);
-					}
+					me.work(handle, r#in, Self::plugin_do).await;
 				}
 			}
 		})
@@ -147,15 +168,7 @@ impl Worker {
 						continue;
 					};
 
-					handle.start();
-					let result = select! {
-						r = me.fetch_do(r#in) => r,
-						_ = handle.finished() => Ok(())
-					};
-
-					if let Err(out) = result {
-						me.ops.out(id, out);
-					}
+					me.work(handle, r#in, Self::fetch_do).await;
 				}
 			}
 		})
@@ -178,15 +191,7 @@ impl Worker {
 						continue;
 					};
 
-					handle.start();
-					let result = select! {
-						r = me.preload_do(r#in) => r,
-						_ = handle.finished() => Ok(())
-					};
-
-					if let Err(out) = result {
-						me.ops.out(id, out);
-					}
+					me.work(handle, r#in, Self::preload_do).await;
 				}
 			}
 		})
@@ -237,15 +242,7 @@ impl Worker {
 						continue;
 					};
 
-					handle.start();
-					let result = select! {
-						r = me.process_do(r#in) => r,
-						_ = handle.finished() => Ok(())
-					};
-
-					if let Err(out) = result {
-						me.ops.out(id, out);
-					}
+					me.work(handle, r#in, Self::process_do).await;
 				}
 			}
 		})
@@ -308,6 +305,8 @@ impl Worker {
 					continue; // Failed
 				} else if let Some(hook) = task.hook.take() {
 					me.hook.submit(hook, LOW);
+				} else if task.prog.cleaned().is_some_and(|s| s.is_pending()) {
+					continue; // Cleanup is still in progress
 				} else {
 					ongoing.fulfill(op.id);
 				}

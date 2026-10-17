@@ -27,6 +27,8 @@ impl TaskIn for CustomIn {
 		self
 	}
 
+	fn scope(&self) -> &Scope { &self.scope }
+
 	fn title(&self) -> Cow<'_, str> {
 		if self.title.is_empty() { "Run custom task".into() } else { Cow::Borrowed(&self.title) }
 	}

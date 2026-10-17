@@ -7,6 +7,7 @@ use crate::{Task, TaskProg, TasksProxy};
 pub enum CustomOut {
 	Progress { total: u32, success: u32, failed: u32, workload: u64, processed: u64 },
 	Log(String),
+	Cancel,
 	Succ(Vec<UrlBuf>),
 	Fail(String),
 }
@@ -28,6 +29,7 @@ impl CustomOut {
 				prog.workload = prog.processed.max(prog.workload);
 			}
 			Self::Log(line) => task.log(line),
+			Self::Cancel => task.cancel(),
 			Self::Succ(urls) => {
 				let TaskProg::Custom(prog) = &mut task.prog else { return };
 				let None = prog.state else { return };

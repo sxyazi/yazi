@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use mlua::{IntoLua, Lua, Value};
+use strum::EnumIs;
 use thiserror::Error;
 
-#[derive(Clone, Debug, Error)]
+#[derive(Clone, Debug, EnumIs, Error)]
 pub enum PeekError {
 	#[error("Sync previewer")]
 	ShouldSync,

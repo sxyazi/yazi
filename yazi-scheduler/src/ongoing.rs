@@ -19,10 +19,11 @@ impl Ongoing {
 		static IDS: Ids = Ids::new();
 		let id = IDS.next();
 
+		let scope = r#in.scope().clone();
 		let title = r#in.set_id(id).title().into_owned();
 		let prog = T::Prog::default().into();
 
-		self.inner.entry(id).insert(Task::new(id, title, prog)).into_mut()
+		self.inner.entry(id).insert(Task::new(id, scope, title, prog)).into_mut()
 	}
 
 	pub(super) fn cancel(&mut self, id: Id) -> Option<HookIn> {

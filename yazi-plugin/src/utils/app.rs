@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, ExternalError, Function, IntoLua, Lua, LuaString};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use yazi_binding::HttpPartTx;
+use yazi_binding::{HttpPartTx, Scope};
 use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 use yazi_vfs::engine::RwFile;
 
@@ -15,6 +15,7 @@ impl Utils {
 			Some(t) if t == TypeId::of::<PathBufDyn>() => {
 				ud.borrow::<PathBufDyn>()?.clone().into_lua(lua)
 			}
+			Some(t) if t == TypeId::of::<Scope>() => ud.borrow::<Scope>()?.clone().into_lua(lua),
 			Some(t) => Err(format!("Cannot clone userdata of type {t:?}").into_lua_err()),
 			None => Err("Cannot clone scoped userdata".into_lua_err()),
 		})

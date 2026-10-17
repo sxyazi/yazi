@@ -2,125 +2,196 @@ local function fail(s, ...) error(string.format(s, ...)) end
 
 local M = {}
 
-function M:setup()
-	ps.sub_remote("extract", function(args)
-		ya.async(function()
-			for i, arg in ipairs(args) do
-				local in_ = {
-					self._id,
-					args = { arg, "", noisy = #args == 1 },
-					track = i == 1,
-				}
-				ya.task("plugin", in_):name("Extract " .. arg):spawn()
-			end
-		end)
-	end)
-end
-
-function M:init(job)
-	local from = job.args[1] and Url(job.args[1])
+function M:new(from, to, noisy)
 	if not from then
 		fail("No URL provided")
-	end
-
-	local to = job.args[2] ~= "" and Url(job.args[2]) or from.parent
-	if not to then
+	elseif not to then
 		fail("Failed to determine target directory for '%s'", from)
 	end
 
-	self.job = { id = job.id, from = from, to = to }
+	return setmetatable({
+		from = from,
+		to = to,
+		noisy = noisy,
+		shared = self.shared or { tmps = {} },
+	}, { __index = M })
 end
 
-function M:entry(job)
-	self:init(job)
+function M:setup()
+	ps.sub_remote("extract", function(args)
+		for i, arg in ipairs(args) do
+			ya.async(function()
+				local from = Url(arg)
 
-	local pwd, target, retry = "", nil, false
+				local me = self:new(from, from.parent, #args == 1)
+				local task = me:task(i == 1)
+
+				local ok, dest = pcall(me.run, me)
+				local cleaned, err = me:cleanup()
+				if not cleaned then
+					task:progress { failed = 1 }
+					task:fail(tostring(err))
+				elseif not ok then
+					task:progress { failed = 1 }
+					task:fail(tostring(dest))
+				elseif dest then
+					task:progress { success = 1 }
+					task:succeed { dest }
+				else
+					task:cancel()
+				end
+			end)
+		end
+	end)
+end
+
+function M:task(track)
+	local in_ = {
+		pool = "plugin",
+		scope = rt.scope():child(),
+		track = track,
+		progress = true,
+	}
+
+	self.shared.task = ya.task("custom", in_):name("Extract " .. tostring(self.from)):spawn()
+	self.shared.task:progress { total = 1 }
+	return self.shared.task
+end
+
+function M:run()
+	if not self.shared.task:acquire() then
+		return
+	end
+
+	local branch, tmp = ya.select(self.shared.task, function() return self:unpack() end)
+	if branch == 2 and tmp then
+		return self:place(tmp)
+	end
+end
+
+function M:unpack()
+	local pwd = ""
 	while true do
-		target, retry = self:try_with(pwd)
+		local tmp, retry = self:try_unpack(pwd)
 		if not retry then
-			break
-		elseif not job.args.noisy then
-			fail("'%s' is password-protected, please extract it individually and enter the password", self.job.from)
+			return tmp
+		elseif not self.noisy then
+			fail("'%s' is password-protected, please extract it individually and enter the password", self.from)
 		end
 
 		local value, event = ya.input {
 			pos = { "top-center", y = 2, w = 50 },
-			title = string.format('Password for "%s":', self.job.from.name),
+			title = string.format('Password for "%s":', self.from.name),
 			obscure = true,
 		}
 		if event == 1 then
 			pwd = value
 		else
-			break
+			return
 		end
-	end
-
-	if target then
-		ya.emit("tasks:update_succeed", { job.id, urls = { target }, track = true })
 	end
 end
 
-function M:try_with(pwd)
-	local from, to = self.job.from, self.job.to
-	local tmp = fs.unique("dir", to:join(self.tmp_name(from)))
+function M:try_unpack(pwd)
+	local tmp = fs.unique("dir", self.to:join(self.tmp_name(self.from)))
 	if not tmp then
-		fail("Failed to determine a temporary directory for %s", from)
+		fail("Failed to determine a temporary directory for %s", self.from)
 	end
+	self.shared.tmps[#self.shared.tmps + 1] = tmp
 
 	local archive = require("archive")
-	local child, err = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
+	local child, err = archive.spawn_7z {
+		"x",
+		"-aou",
+		"-sccUTF-8",
+		"-bso0",
+		"-bsp1",
+		"-p" .. pwd,
+		"-o" .. tostring(tmp),
+		tostring(self.from),
+	}
 	if not child then
 		fail("Failed to start either `7zz` or `7z`, error: " .. err)
 	end
+	self.shared.child = child
+	self.shared.task:progress { workload = 100 }
 
-	local output, err = child:wait_with_output()
-	if output and output.status.code == 2 and archive.is_encrypted(output.stderr) then
-		fs.remove("dir_all", tmp)
-		return nil, true -- Need to retry
+	local chunks, tail, cur, last = {}, "", 0, 0
+	while true do
+		local chunk, event, err = child:read(4096)
+		if not chunk then
+			fail("7zip failed to output when extracting '%s', error: %s", self.from, err)
+		elseif event == 2 then
+			break
+		elseif event == 1 then
+			chunks[#chunks + 1] = chunk
+		else
+			cur, tail = self.parse_progress(tail .. chunk)
+			if cur > last then
+				self.shared.task:progress { processed = cur - last }
+				last = cur
+			end
+		end
 	end
 
-	local target = self:tidy(tmp)
-	if not output then
-		fail("7zip failed to output when extracting '%s', error: %s", from, err)
-	elseif output.status.code ~= 0 then
-		fail("7zip exited with error code %s when extracting '%s':\n%s", output.status.code, from, output.stderr)
-	else
-		return target, false
+	local status, err = child:wait()
+	if not status then
+		fail("7zip failed to output when extracting '%s', error: %s", self.from, err)
 	end
+	self.shared.task:progress { processed = 100 - last }
+
+	local stderr = table.concat(chunks)
+	if status.code == 2 and archive.is_encrypted(stderr) then
+		return nil, true -- Needs a retry
+	elseif status.code ~= 0 then
+		fail("7zip exited with error code %s when extracting '%s':\n%s", status.code, self.from, stderr)
+	end
+
+	return tmp
 end
 
-function M:tidy(tmp)
-	local from, to = self.job.from, self.job.to
+function M:place(tmp)
 	local outs = fs.read_dir(tmp, { limit = 2 })
 	if not outs then
-		fail("Failed to read the temporary directory '%s' when extracting '%s'", tmp, from)
+		fail("Failed to read the temporary directory '%s' when extracting '%s'", tmp, self.from)
 	elseif #outs == 0 then
-		fs.remove("dir", tmp)
-		fail("No files extracted from '%s'", from)
+		fail("No files extracted from '%s'", self.from)
 	end
 
 	local only = #outs == 1 and outs[1]
 	if only and not only.stat.is_dir and require("archive").is_tar(only.url) then
-		self:entry { id = self.job.id, args = { tostring(only.url), tostring(to) } }
-		fs.remove("file", only.url)
-		fs.remove("dir", tmp)
-		return
+		return self:new(only.url, self.to):run()
 	end
 
-	local target = to:join(only and only.name or self.trim_ext(from.name))
-	target = fs.unique(only and not only.stat.is_dir and "file" or "dir", target)
-	if not target then
-		fail("Failed to determine a target for '%s'", from)
+	local kind = only and not only.stat.is_dir and "file" or "dir"
+	local dest = fs.unique(kind, self.to:join(only and only.name or self.trim_ext(self.from.name)))
+	if not dest then
+		fail("Failed to determine a target for '%s'", self.from)
 	end
 
-	if only and not fs.rename(only.url, target) then
-		fail('Failed to move "%s" to "%s"', only.url, target)
-	elseif not only and not fs.rename(tmp, target) then
-		fail('Failed to move "%s" to "%s"', tmp, target)
+	local src = only and only.url or tmp
+	if not fs.rename(src, dest) then
+		fs.remove(kind, dest)
+		fail('Failed to move "%s" to "%s"', src, dest)
 	end
 
-	fs.remove("dir", tmp)
-	return target
+	return dest
+end
+
+function M:cleanup()
+	local child = self.shared.child
+	if child then
+		child:start_kill()
+		local status, err = child:wait()
+		if not status then
+			return false, err
+		end
+	end
+
+	for _, tmp in ipairs(self.shared.tmps) do
+		fs.remove("dir_all", tmp)
+	end
+	return true
 end
 
 function M.tmp_name(url) return ".tmp_" .. ya.hash(string.format("extract//%s//%.10f", url, ya.time().unix)) end
@@ -130,14 +201,20 @@ function M.trim_ext(name)
 	local exts = { ["7z"] = true, apk = true, bz2 = true, bzip2 = true, cbr = true, cbz = true, exe = true, gz = true, gzip = true, iso = true, jar = true, rar = true, tar = true, tgz = true, xz = true, zip = true, zst = true }
 
 	while true do
-		local s = name:gsub("%.([a-zA-Z0-9]+)$", function(s) return (exts[s] or exts[s:lower()]) and "" end)
+		local s = name:gsub("%.([a-zA-Z0-9]+)$", function(s) return exts[s:lower()] and "" end)
 		if s == name or s == "" then
-			break
-		else
-			name = s
+			return name
 		end
+		name = s
 	end
-	return name
+end
+
+function M.parse_progress(chunk)
+	local percent = 0
+	for s in chunk:gmatch("[^\r\n\b]+") do
+		percent = tonumber(s:match("^%s*(%d+)%%")) or percent
+	end
+	return math.min(100, percent), chunk:match("[^\r\n\b]*$")
 end
 
 return M

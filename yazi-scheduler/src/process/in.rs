@@ -1,5 +1,6 @@
 use std::{borrow::Cow, ffi::OsString};
 
+use yazi_binding::Scope;
 use yazi_shared::{id::Id, url::UrlBuf};
 
 use super::ShellOpt;
@@ -35,6 +36,15 @@ impl TaskIn for ProcessIn {
 			Self::Custom(r#in) => _ = r#in.set_id(id),
 		};
 		self
+	}
+
+	fn scope(&self) -> &Scope {
+		match self {
+			Self::Block(r#in) => r#in.scope(),
+			Self::Orphan(r#in) => r#in.scope(),
+			Self::Bg(r#in) => r#in.scope(),
+			Self::Custom(r#in) => r#in.scope(),
+		}
 	}
 
 	fn title(&self) -> Cow<'_, str> {

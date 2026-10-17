@@ -35,6 +35,7 @@ impl Actor for Seek {
 			file: hovered.clone(),
 			mime: mime.intern(),
 			units: form.units,
+			scope: cx.tab().preview.scope.clone(),
 		};
 
 		let opt = PluginOpt::new_callback(job, |_, plugin, job| plugin.call_method("seek", job));

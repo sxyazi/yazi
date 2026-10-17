@@ -1,6 +1,6 @@
 use std::{future::Future, pin::Pin, task::{Context, Poll}};
 
-use mlua::{Function, Lua, MultiValue, function::AsyncCallFuture};
+use mlua::{Lua, MultiValue, function::AsyncCallFuture};
 
 use super::Runtime;
 use crate::runtime_mut;
@@ -12,11 +12,8 @@ pub struct RuntimeCo {
 }
 
 impl RuntimeCo {
-	pub fn new<R>(rt: R, lua: Lua, f: Function, args: MultiValue) -> Self
-	where
-		R: Into<Runtime>,
-	{
-		Self { rt: rt.into(), lua, future: Some(f.call_async(args)) }
+	pub fn new(rt: impl Into<Runtime>, lua: Lua, future: AsyncCallFuture<MultiValue>) -> Self {
+		Self { rt: rt.into(), lua, future: Some(future) }
 	}
 }
 

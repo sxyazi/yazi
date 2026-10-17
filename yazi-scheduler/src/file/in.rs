@@ -2,6 +2,7 @@ use std::{borrow::Cow, path::PathBuf};
 
 use mlua::{FromLua, Lua, Table, Value};
 use tokio::sync::mpsc;
+use yazi_binding::Scope;
 use yazi_fs::stat::Stat;
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
@@ -58,6 +59,20 @@ impl TaskIn for FileIn {
 			Self::Custom(r#in) => _ = r#in.set_id(id),
 		}
 		self
+	}
+
+	fn scope(&self) -> &Scope {
+		match self {
+			Self::Copy(r#in) | Self::CopyDo(r#in) => r#in.scope(),
+			Self::Move(r#in) | Self::MoveDo(r#in) => r#in.scope(),
+			Self::Link(r#in) | Self::LinkDo(r#in) => r#in.scope(),
+			Self::Hardlink(r#in) | Self::HardlinkDo(r#in) => r#in.scope(),
+			Self::Delete(r#in) | Self::DeleteDo(r#in) => r#in.scope(),
+			Self::Trash(r#in) | Self::TrashDo(r#in) => r#in.scope(),
+			Self::Download(r#in) | Self::DownloadDo(r#in) => r#in.scope(),
+			Self::Upload(r#in) | Self::UploadDo(r#in) => r#in.scope(),
+			Self::Custom(r#in) => r#in.scope(),
+		}
 	}
 
 	fn title(&self) -> Cow<'_, str> {

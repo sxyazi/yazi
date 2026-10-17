@@ -78,6 +78,7 @@ function M:provide(job)
 			return nil, Err("Failed to start `fd`, error: %s", err)
 		end
 
+		local child <close> = child
 		while true do
 			local line, event = child:read_line()
 			if event ~= 0 then

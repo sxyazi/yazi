@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(entry job);
+yazi_macro::mod_flat!(error entry job);

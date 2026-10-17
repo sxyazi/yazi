@@ -1,6 +1,6 @@
 use std::{io, pin::Pin};
 
-use mlua::{IntoLuaMulti, LuaString, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, IntoLuaMulti, LuaString, MetaMethod, UserData, UserDataMethods, Value};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncWrite, AsyncWriteExt};
 use yazi_fs::{engine::{Attrs, FileBuilder}, file::File};
 use yazi_shared::url::{AsUrl, Url, UrlLike};
@@ -204,5 +204,7 @@ impl UserData for RwFile {
 				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
+
+		methods.add_meta_function(MetaMethod::Close, |_, ud: AnyUserData| ud.destroy());
 	}
 }

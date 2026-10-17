@@ -15,6 +15,10 @@ pub struct Runtime {
 	blocks: HashMap<CompactString, Vec<Function>>,
 }
 
+impl From<&Runtime> for Runtime {
+	fn from(value: &Runtime) -> Self { Self { frames: value.frames.clone(), ..Self::default() } }
+}
+
 impl From<&RuntimeSeed> for Runtime {
 	fn from(value: &RuntimeSeed) -> Self { Self::new(value.clone()) }
 }

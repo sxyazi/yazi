@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use yazi_binding::Scope;
 use yazi_config::plugin::FetcherArc;
 use yazi_runner::fetcher::FetchJob;
 use yazi_shared::id::Id;
@@ -30,6 +31,13 @@ impl TaskIn for FetchIn {
 		self
 	}
 
+	fn scope(&self) -> &Scope {
+		match self {
+			Self::Fetch(r#in) => r#in.scope(),
+			Self::Custom(r#in) => r#in.scope(),
+		}
+	}
+
 	fn title(&self) -> Cow<'_, str> {
 		match self {
 			Self::Fetch(r#in) => r#in.title(),
@@ -46,6 +54,7 @@ pub(crate) struct FetchInFetch {
 	pub(crate) tab:     Id,
 	pub(crate) fetcher: FetcherArc,
 	pub(crate) targets: Vec<yazi_fs::file::File>,
+	pub(crate) scope:   Scope,
 }
 
 impl TaskIn for FetchInFetch {
@@ -58,6 +67,8 @@ impl TaskIn for FetchInFetch {
 		self
 	}
 
+	fn scope(&self) -> &Scope { &self.scope }
+
 	fn title(&self) -> Cow<'_, str> {
 		format!("Run fetcher '{}' with {} target(s)", self.fetcher.name, self.targets.len()).into()
 	}
@@ -65,6 +76,11 @@ impl TaskIn for FetchInFetch {
 
 impl From<FetchInFetch> for FetchJob {
 	fn from(value: FetchInFetch) -> Self {
-		Self { tab: value.tab, fetcher: value.fetcher, files: value.targets.into() }
+		Self {
+			tab:     value.tab,
+			fetcher: value.fetcher,
+			files:   value.targets.into(),
+			scope:   value.scope,
+		}
 	}
 }

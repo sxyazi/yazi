@@ -17,7 +17,7 @@ impl Actor for Cancel {
 		let tasks = &mut cx.tasks;
 
 		let id = tasks.scheduler.ongoing.lock().get_id(tasks.cursor);
-		if id.map(|id| tasks.scheduler.cancel(id)) != Some(true) {
+		if id.map(|id| tasks.scheduler.cancel(id, true)) != Some(true) {
 			succ!();
 		}
 

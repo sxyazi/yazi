@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{LuaString, Table, UserData, UserDataFields, UserDataMethods};
+use mlua::{LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods};
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{TaskHandle, custom::CustomOut};
 use yazi_shared::url::UrlBuf;
@@ -35,6 +35,10 @@ impl UserData for Task {
 			TasksProxy::output(me.id, CustomOut::Log(line.to_string_lossy()));
 			Ok(())
 		});
+		methods.add_method("cancel", |_, me, ()| {
+			TasksProxy::output(me.id, CustomOut::Cancel);
+			Ok(())
+		});
 		methods.add_method("succeed", |_, me, urls: Option<Vec<UrlBuf>>| {
 			TasksProxy::output(me.id, CustomOut::Succ(urls.unwrap_or_default()));
 			Ok(())
@@ -43,5 +47,8 @@ impl UserData for Task {
 			TasksProxy::output(me.id, CustomOut::Fail(reason.to_string_lossy()));
 			Ok(())
 		});
+
+		methods
+			.add_async_meta_method(MetaMethod::Call, |_, me, ()| async move { Ok(me.future().await) });
 	}
 }

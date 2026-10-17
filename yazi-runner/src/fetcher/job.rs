@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{IntoLua, Lua, Value};
+use yazi_binding::Scope;
 use yazi_config::plugin::FetcherArc;
 use yazi_fs::file::Files;
 use yazi_shared::{id::Id, sendable::Sendable};
@@ -12,12 +13,15 @@ pub struct FetchJob {
 	pub tab:     Id,
 	pub fetcher: FetcherArc,
 	pub files:   Files,
+	pub scope:   Scope,
 }
 
 impl PluginJob for FetchJob {
 	fn tab(&self) -> Id { self.tab }
 
 	fn name(&self) -> &SStr { &self.fetcher.name }
+
+	fn scope(&self) -> &Scope { &self.scope }
 }
 
 impl Deref for FetchJob {
