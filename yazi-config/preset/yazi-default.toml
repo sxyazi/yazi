@@ -79,7 +79,7 @@ rules = [
 	# Media
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
 	# Code
-	{ mime = "application/{json,ndjson,javascript,wine-extension-ini}", use = [ "edit", "reveal" ] },
+	{ mime = "application/{json,ndjson,javascript,subrip,wine-extension-ini}", use = [ "edit", "reveal" ] },
 	# Archive
 	{ mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", use = [ "extract", "reveal" ] },
 	# Empty file
@@ -117,7 +117,7 @@ spotters = [
 	{ mime = "folder/*", run = "folder" },
 	# Code
 	{ mime = "text/*", run = "code" },
-	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
+	{ mime = "application/{mbox,javascript,subrip,wine-extension-ini}", run = "code" },
 	# Image
 	{ mime = "image/{avif,hei?,jxl}", run = "magick" },
 	{ mime = "image/svg+xml", run = "svg" },
@@ -153,7 +153,7 @@ previewers = [
 	{ mime = "folder/*", run = "folder" },
 	# Code
 	{ mime = "text/*", run = "code" },
-	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
+	{ mime = "application/{mbox,javascript,subrip,wine-extension-ini}", run = "code" },
 	# JSON
 	{ mime = "application/{json,ndjson}", run = "json" },
 	# Image
