@@ -32,7 +32,7 @@ impl Actor for Quit {
 				yazi_dds::STATE.drain(),
 				Self::cwd_to_file(&cwd, opt.no_cwd_file),
 				Self::selected_to_file(opt.selected),
-				Self::wait_probe(),
+				EMULATOR.probe.wait(),
 			);
 
 			Raterm::stop();
@@ -53,12 +53,6 @@ impl Quit {
 	async fn selected_to_file(selected: Option<StrandBuf>) {
 		if let (Some(s), Some(p)) = (selected, &ARGS.chooser_file) {
 			Local::regular(p).write(s.encoded_bytes()).await.ok();
-		}
-	}
-
-	async fn wait_probe() {
-		if let Some(id) = EMULATOR.probe.pending() {
-			EMULATOR.probe.wait(id).await;
 		}
 	}
 }

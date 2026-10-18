@@ -5,12 +5,18 @@ function M:provide(job)
 		return { reroute = 3 }
 	elseif job.op == "Reroute" then
 		local target = fs.clean_url(Url(tostring(job.url.path)))
+
 		local file, err = fs.reroute(target)
 		if err and err.kind == "Unsupported" then
-			return fs.file(target)
-		else
-			return file, err
+			file, err = fs.file(target)
 		end
+
+		if err then
+			local stat = Stat { mode = tonumber("40555", 8) }
+			return { url = Url("error://boot//" .. tostring(err)), stat = stat, lstat = stat }
+		end
+
+		return file
 	elseif job.op == "Revalidate" then
 		return nil
 	elseif job.op == "ReadDir" then
