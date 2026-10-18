@@ -17,9 +17,9 @@ impl Actor for Stop {
 	const NAME: &str = "stop";
 
 	fn act(cx: &mut Ctx, Self::Form { replier }: Self::Form) -> Result<Data> {
-		if let Some(id) = EMULATOR.probe.pending() {
+		if EMULATOR.probe.pending().is_some() {
 			task::spawn_local(async move {
-				EMULATOR.probe.wait(id).await;
+				EMULATOR.probe.wait().await;
 				AppProxy::stop_with(replier);
 			});
 			succ!();

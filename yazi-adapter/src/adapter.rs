@@ -29,8 +29,7 @@ impl Adapter {
 	where
 		P: Into<PathBuf>,
 	{
-		let probe = &EMULATOR.probe;
-		probe.wait(probe.id.get()).await;
+		EMULATOR.probe.wait().await;
 
 		let driver = self.driver.get_or_init(|| {
 			let driver = Drivers::matches(&EMULATOR);

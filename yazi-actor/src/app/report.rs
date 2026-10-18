@@ -44,6 +44,8 @@ impl Actor for Report {
 
 impl Report {
 	fn reprobe() {
+		EMULATOR.probe.defer();
+
 		let id = EMULATOR.probe.id.get();
 		tokio::spawn(async move {
 			Mux::tmux_setup().await;

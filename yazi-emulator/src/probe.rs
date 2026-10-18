@@ -1,11 +1,11 @@
-use std::{fmt::{self, Display}, time::Duration};
+use std::{fmt, time::Duration};
 
 use anyhow::{Result, bail};
-use tokio::{sync::Notify, time::{self, timeout}};
+use tokio::{sync::Notify, time::{self, Instant, timeout_at}};
 use yazi_macro::{error, writef};
 use yazi_shared::id::{Id, Ids};
 use yazi_shim::cell::SyncCell;
-use yazi_term::{TERM, event::{Event, Report}, stream::EventStream};
+use yazi_term::{TERM, event::Event, stream::EventStream};
 use yazi_tty::{TTY, sequence::{EraseLine, ProbeClipboard, RequestBgColor, RequestCellPixelSize, RequestColorScheme, RequestCsiU, RequestCursorBlink, RequestCursorStyle, RequestDA1, RequestKgp, RequestKgpShm, RequestXtVersion, RestoreCursor, SaveCursor, TmuxPassthrough}};
 
 use crate::{Emulator, Mux};
@@ -14,49 +14,42 @@ static IDS: Ids = Ids::new();
 
 #[derive(Default)]
 pub struct Probe {
-	pub id:    SyncCell<Id>,
-	completed: SyncCell<bool>,
-	notifier:  Notify,
+	pub id:   SyncCell<Id>,
+	deadline: SyncCell<Option<Instant>>,
+	notifier: Notify,
 }
 
 impl fmt::Debug for Probe {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.debug_struct("Probe").field("id", &self.id).field("completed", &self.completed).finish()
+		f.debug_struct("Probe").field("id", &self.id).field("deadline", &self.deadline).finish()
 	}
 }
 
 impl Probe {
 	pub(crate) fn reset(&self) {
 		self.id.set(IDS.next());
-		self.completed.set(false);
+		self.deadline.set(Some(Instant::now() + Duration::from_secs(2)));
+		self.notifier.notify_waiters();
 	}
+
+	pub fn defer(&self) { self.deadline.set(Some(Instant::now() + Duration::from_secs(7))); }
 
 	pub fn complete(&self) {
-		if !self.completed.replace(true) {
-			self.notifier.notify_waiters();
-		}
+		self.deadline.set(None);
+		self.notifier.notify_waiters();
 	}
 
-	pub fn pending(&self) -> Option<Id> { self.id.get().nz().filter(|_| !self.completed.get()) }
+	pub fn pending(&self) -> Option<Instant> { self.deadline.get().filter(|&d| d > Instant::now()) }
 
-	pub async fn wait(&self, id: Id) {
+	pub fn remaining(&self) -> Option<Duration> {
+		self.deadline.get()?.checked_duration_since(Instant::now()).filter(|d| !d.is_zero())
+	}
+
+	pub async fn wait(&self) {
 		loop {
-			if self.completed.get() {
-				return;
-			}
-
 			let notified = self.notifier.notified();
-			if self.completed.get() {
-				return;
-			} else if timeout(Duration::from_secs(5), notified).await.is_err() {
-				self.cancel(id);
-			}
-		}
-	}
-
-	fn cancel(&self, id: Id) {
-		if self.id == id {
-			self.complete();
+			let Some(deadline) = self.pending() else { return };
+			_ = timeout_at(deadline, notified).await;
 		}
 	}
 }
@@ -77,7 +70,7 @@ impl Emulator {
 						let Event::Report(report) = event? else { continue };
 
 						emulator.apply(&report);
-						if matches!(report, Report::Da1(_)) {
+						if report.is_da_1() {
 							return Ok(());
 						}
 					}
@@ -109,16 +102,14 @@ impl Emulator {
 	}
 
 	pub(super) fn request(&self) -> Result<()> {
-		fn w<T: Display>(t: T, mux: bool) -> impl Display { TmuxPassthrough(t, mux) }
-
 		let mux = self.mux.get().is_some();
 		writef!(
 			TTY.writer(),
 			"{SaveCursor}{RequestColorScheme}{RequestBgColor}{RequestCursorBlink}{RequestCursorStyle}{}{}{}{RequestCellPixelSize}{ProbeClipboard}{RequestCsiU}{}{}{RestoreCursor}",
-			w(RequestXtVersion, mux),
-			w(RequestKgp, mux),
-			w(RequestKgpShm::new(), mux),
-			w(RequestDA1, mux),
+			TmuxPassthrough(RequestXtVersion, mux),
+			TmuxPassthrough(RequestKgp, mux),
+			TmuxPassthrough(RequestKgpShm::new(), mux),
+			TmuxPassthrough(RequestDA1, mux),
 			EraseLine::BeforeCursor
 		)?;
 
