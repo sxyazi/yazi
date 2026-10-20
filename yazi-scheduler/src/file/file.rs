@@ -3,12 +3,12 @@ use std::mem;
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to, stat::Stat};
-use yazi_macro::warn;
+use yazi_macro::{ok_or_not_found, warn};
 use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
-use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry}, maybe_exists, unique_file};
+use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry}, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}, ok_or_not_found};
+use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
 
 pub(crate) struct File {
 	ops: TaskOps,
@@ -60,12 +60,11 @@ impl File {
 	}
 
 	pub(crate) async fn copy_do(&self, task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
+		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
-				Ok(0) => break,
 				Ok(n) => self.ops.out(task.id, FileOutCopyDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
 					warn!("Copy task partially done: {task:?}");
@@ -141,23 +140,21 @@ impl File {
 	}
 
 	pub(crate) async fn move_do(&self, task: FileInMove) -> Result<(), FileOutMoveDo> {
-		ok_or_not_found!(task, Transaction::unlink(&task.to).await);
+		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
-				Ok(0) => {
-					engine::remove_file(&task.from).await.ok();
-					break;
-				}
 				Ok(n) => self.ops.out(task.id, FileOutMoveDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
 					warn!("Move task partially done: {task:?}");
-					break;
+					return Ok(self.ops.out(task.id, FileOutMoveDo::Succ));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
 		}
+
+		engine::remove_file(&task.from).await.ok();
 		Ok(self.ops.out(task.id, FileOutMoveDo::Succ))
 	}
 
@@ -193,7 +190,7 @@ impl File {
 			src = ctx!(task, path_relative_to(canon.loc(), src))?;
 		}
 
-		ok_or_not_found!(task, engine::remove_file(&task.to).await);
+		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
 		ctx!(
 			task,
 			engine::symlink(&task.to, src, async || {
@@ -257,44 +254,33 @@ impl File {
 			UrlCow::from(&task.from)
 		};
 
-		ok_or_not_found!(task, engine::remove_file(&task.to).await);
-		ok_or_not_found!(task, engine::hard_link(&src, &task.to).await);
+		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
+		ctx_or_not_found!(task, engine::hard_link(&src, &task.to).await);
 
 		Ok(self.ops.out(task.id, FileOutHardlinkDo::Succ))
 	}
 
 	pub(crate) async fn delete(&self, task: FileInDelete) -> Result<(), FileOutDelete> {
-		let id = task.id;
-
-		super::traverse::<FileOutDelete, _, _, _, _, _>(
-			task,
-			async |_dir| Ok(()),
-			async |task, stat| {
-				self.ops.out(id, FileOutDelete::New(stat.len));
-				Ok(self.requeue(task, NORMAL))
-			},
-			|_err| {},
-		)
-		.await?;
-
-		Ok(self.ops.out(id, FileOutDelete::Succ))
-	}
-
-	pub(crate) async fn delete_do(&self, task: FileInDelete) -> Result<(), FileOutDeleteDo> {
-		let stat = task.stat.unwrap();
-		let result = if stat.is_dir() && stat.is_indirect() {
-			engine::remove_dir(&task.target).await
-		} else {
-			engine::remove_file(&task.target).await
-		};
-
-		match result {
-			Ok(()) => {}
-			Err(e) if e.kind() == NotFound => {}
-			Err(_) if !maybe_exists(&task.target).await => {}
-			Err(e) => ctx!(task, Err(e))?,
+		let result: io::Result<()> = async {
+			let stat = ok_or_not_found!(engine::symlink_metadata(&task.target).await, return Ok(()));
+			if stat.is_dir() && !stat.is_indirect() {
+				let mut rx = engine::remove_dir_all(&task.target).await?;
+				while let Some(delta) = rx.recv().await {
+					self.ops.out(task.id, FileOutDelete::Adv(delta?));
+				}
+			} else if stat.is_dir() {
+				ok_or_not_found!(engine::remove_dir(&task.target).await, return Ok(()));
+				self.ops.out(task.id, FileOutDelete::Adv(1.into()));
+			} else {
+				ok_or_not_found!(engine::remove_file(&task.target).await, return Ok(()));
+				self.ops.out(task.id, FileOutDelete::Adv(1.into()));
+			}
+			Ok(())
 		}
-		Ok(self.ops.out(task.id, FileOutDeleteDo::Succ(stat.len)))
+		.await;
+
+		ctx!(task, result)?;
+		Ok(self.ops.out(task.id, FileOutDelete::Succ))
 	}
 
 	pub(crate) async fn trash(&self, task: FileInTrash) -> Result<(), FileOutTrash> {
@@ -342,20 +328,21 @@ impl File {
 		let mut rx = ctx!(task, engine::copy(&task.target, &cache_tmp, stat).await)?;
 		while let Some(result) = rx.recv().await {
 			match result {
-				Ok(0) => {
-					Local::regular(&cache).remove_dir_all().await.ok();
-					ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
-					ctx!(task, engine::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
-					break;
-				}
 				Ok(n) => self.ops.out(task.id, FileOutDownloadDo::Adv(n)),
 				Err(e) if e.kind() == NotFound => {
 					warn!("Download task partially done: {task:?}");
-					break;
+					return Ok(self.ops.out(task.id, FileOutDownloadDo::Succ));
 				}
 				Err(e) => ctx!(task, Err(e))?,
 			}
 		}
+
+		if let Ok(rx) = Local::regular(&cache).remove_dir_all().await {
+			rx.finish().await.ok();
+		}
+
+		ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
+		ctx!(task, engine::rename(cache_tmp, cache).await, "Cannot persist downloaded file")?;
 		Ok(self.ops.out(task.id, FileOutDownloadDo::Succ))
 	}
 
@@ -400,25 +387,21 @@ impl File {
 
 		while let Some(result) = rx.recv().await {
 			match result {
-				Ok(0) => {
-					let stat =
-						ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat original file")?;
-					if stamp.sig() != stat.hash_u128_str(&mut [0; 26]) {
-						Err(anyhow!("Failed to work on: {task:?}: remote file has changed during upload"))?;
-					}
-
-					ctx!(task, engine::rename(&tmp, &task.target).await, "Cannot persist uploaded file")?;
-
-					let stat =
-						ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat uploaded file")?;
-					ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
-
-					break;
-				}
 				Ok(n) => self.ops.out(task.id, FileOutUploadDo::Adv(n)),
 				Err(e) => ctx!(task, Err(e))?,
 			}
 		}
+
+		let stat = ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat original file")?;
+		if stamp.sig() != stat.hash_u128_str(&mut [0; 26]) {
+			Err(anyhow!("Failed to work on: {task:?}: remote file has changed during upload"))?;
+		}
+
+		ctx!(task, engine::rename(&tmp, &task.target).await, "Cannot persist uploaded file")?;
+
+		let stat = ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat uploaded file")?;
+		ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
+
 		Ok(self.ops.out(task.id, FileOutUploadDo::Succ))
 	}
 

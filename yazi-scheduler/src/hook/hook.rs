@@ -26,7 +26,6 @@ impl Hook {
 	}
 
 	// --- File
-
 	pub(crate) async fn copy(&self, task: HookInOutCopy) {
 		if self.ongoing.lock().intact(task.id) {
 			TasksProxy::update_succeed(task.id, [&task.to], true);
@@ -49,20 +48,16 @@ impl Hook {
 	}
 
 	pub(crate) async fn delete(&self, task: HookInDelete) {
-		if !self.ongoing.lock().intact(task.id) {
-			return self.ops.out(task.id, FileOutDelete::Clean(Ok(())));
+		if self.ongoing.lock().intact(task.id) {
+			TasksProxy::update_succeed(task.id, [&task.target], false);
+			Pump::push_delete(task.target);
 		}
 
-		let result = ok_or_not_found(engine::remove_dir_all(&task.target).await);
-		TasksProxy::update_succeed(task.id, [&task.target], false);
-		Pump::push_delete(task.target);
-
-		self.ops.out(task.id, FileOutDelete::Clean(result));
+		self.ops.out(task.id, FileOutDelete::Clean);
 	}
 
 	pub(crate) async fn trash(&self, task: HookInTrash) {
-		let intact = self.ongoing.lock().intact(task.id);
-		if intact {
+		if self.ongoing.lock().intact(task.id) {
 			TasksProxy::update_succeed(task.id, [&task.target], false);
 			Pump::push_trash(task.target);
 		}
@@ -86,8 +81,7 @@ impl Hook {
 	}
 
 	pub(crate) async fn download(&self, task: HookInDownload) {
-		let intact = self.ongoing.lock().intact(task.id);
-		if intact {
+		if self.ongoing.lock().intact(task.id) {
 			TasksProxy::update_succeed(task.id, [&task.target], false);
 			Pump::push_download(task.target);
 		}
@@ -95,8 +89,7 @@ impl Hook {
 	}
 
 	pub(crate) async fn upload(&self, task: HookInUpload) {
-		let intact = self.ongoing.lock().intact(task.id);
-		if intact {
+		if self.ongoing.lock().intact(task.id) {
 			TasksProxy::update_succeed(task.id, [task.target], false);
 		}
 		self.ops.out(task.id, FileOutUpload::Clean);

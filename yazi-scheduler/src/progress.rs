@@ -38,7 +38,7 @@ pub trait Progress: Copy {
 	}
 
 	// Helper for workload-based progress calculations.
-	fn work_percent(self, processed: u64, workload: u64, total: u32) -> f32 {
+	fn work_percent(self, processed: u64, workload: u64, total: u64) -> f32 {
 		if self.success() {
 			return 100.0;
 		}

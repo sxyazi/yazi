@@ -66,9 +66,10 @@ pub(super) fn remove_dir_clean_impl(path: &Path) -> io::Result<()> {
 
 #[cfg(windows)]
 fn clear_no_reparse(path: &Path) -> io::Result<()> {
-	use std::{fs::OpenOptions, os::windows::fs::{MetadataExt, OpenOptionsExt}};
+	use std::{fs::OpenOptions, os::windows::fs::OpenOptionsExt};
 
 	use windows_sys::Win32::Storage::FileSystem::{DELETE, FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FILE_READ_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE};
+	use yazi_shim::fs::FileExt;
 
 	let dir = OpenOptions::new()
 		.access_mode(DELETE | FILE_READ_ATTRIBUTES)
@@ -76,7 +77,7 @@ fn clear_no_reparse(path: &Path) -> io::Result<()> {
 		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
 		.open(path)?;
 
-	let attrs = dir.metadata()?.file_attributes();
+	let attrs = dir.basic_info()?.FileAttributes;
 	if attrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT) != FILE_ATTRIBUTE_DIRECTORY {
 		return Ok(());
 	}
@@ -89,23 +90,5 @@ fn clear_no_reparse(path: &Path) -> io::Result<()> {
 		}
 	}
 
-	remove_dir(&dir)
-}
-
-#[cfg(windows)]
-fn remove_dir(dir: &std::fs::File) -> io::Result<()> {
-	use std::{mem, os::windows::io::AsRawHandle};
-
-	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_DISPOSITION_INFO, FileDispositionInfo, SetFileInformationByHandle}};
-	use yazi_shim::bool_ok;
-
-	let info = FILE_DISPOSITION_INFO { DeleteFile: true };
-	bool_ok(unsafe {
-		SetFileInformationByHandle(
-			dir.as_raw_handle() as HANDLE,
-			FileDispositionInfo,
-			&info as *const FILE_DISPOSITION_INFO as _,
-			mem::size_of::<FILE_DISPOSITION_INFO>() as u32,
-		)
-	})
+	dir.delete()
 }

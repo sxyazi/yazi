@@ -3,7 +3,7 @@ use std::{io, sync::Arc};
 use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_config::vfs::{ServiceLua, Vfs};
-use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
+use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transit}, file::File, remover, stat::Stat};
 use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideOp, ProvidePeer, ProvideResult}};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -54,14 +54,14 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::Casefold { url }).await.0?)
 	}
 
-	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
+	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
 		if !self.capabilities().await?.copy_to {
-			return Ok(Transmit::unsupported());
+			return Ok(Transit::unsupported());
 		}
 
 		let peer = ProvidePeer::new(to)?;
 		let (tx, rx) = mpsc::channel(20);
-		tokio::spawn(RUNNER.provide_stream(
+		let handle = tokio::spawn(RUNNER.provide_stream(
 			ProvideJob::new(&self.service, ProvideOp::CopyTo {
 				from: self.to_url(),
 				to: to.into(),
@@ -71,17 +71,17 @@ impl<'a> Engine for Lua<'a> {
 			tx,
 		));
 
-		Ok(rx.into())
+		Ok(Transit::new(rx, handle))
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
+	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
 		if !self.capabilities().await?.copy_from {
-			return Ok(Transmit::unsupported());
+			return Ok(Transit::unsupported());
 		}
 
 		let peer = ProvidePeer::new(from)?;
 		let (tx, rx) = mpsc::channel(20);
-		tokio::spawn(RUNNER.provide_stream(
+		let handle = tokio::spawn(RUNNER.provide_stream(
 			ProvideJob::new(&self.service, ProvideOp::CopyFrom {
 				from: from.into(),
 				to: self.to_url(),
@@ -91,7 +91,7 @@ impl<'a> Engine for Lua<'a> {
 			tx,
 		));
 
-		Ok(rx.into())
+		Ok(Transit::new(rx, handle))
 	}
 
 	async fn create_dir(&self) -> io::Result<()> {
@@ -184,13 +184,18 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::RemoveDir { url }).await.ok()?)
 	}
 
-	async fn remove_dir_all(&self) -> io::Result<()> {
-		if self.capabilities().await?.remove_dir_all {
-			let url = self.to_url();
-			Ok(self.call(ProvideOp::RemoveDirAll { url }).await.ok()?)
-		} else {
-			self.remove_dir_all_default().await
+	async fn remove_dir_all(&self) -> io::Result<remover::Removal> {
+		if !self.capabilities().await?.remove_dir_all {
+			return Ok(crate::remover::Remover::new(self.to_url()).spawn());
 		}
+
+		let (tx, rx) = mpsc::channel(20);
+		let handle = tokio::spawn(RUNNER.provide_stream(
+			ProvideJob::new(&self.service, ProvideOp::RemoveDirAll { url: self.to_url() }),
+			tx,
+		));
+
+		Ok(yazi_fs::remover::Removal::new(rx, handle))
 	}
 
 	async fn remove_file(&self) -> io::Result<()> {

@@ -39,7 +39,7 @@ debug = false
 [workspace.dependencies]
 ansi-to-tui            = "8.0.1"
 anyhow                 = "1.0.104"
-arc-swap               = { version = "1.9.2", features = [ "serde" ] }
+arc-swap               = { version = "1.9.3", features = [ "serde" ] }
 base64                 = "0.23.1"
 bitflags               = { version = "2.13.2", features = [ "serde" ] }
 chrono                 = { version = "0.4.45", features = [ "serde" ] }
@@ -59,7 +59,7 @@ indexmap               = { version = "2.14.2", features = [ "serde" ] }
 inventory              = "0.3.25"
 libc                   = "0.2.191"
 log                    = { version = "0.4.34", features = [ "release_max_level_off" ] }
-lru                    = "0.18.5"
+lru                    = "0.19.0"
 mlua                   = { version = "0.12.2", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde", "userdata-wrappers" ] }
 objc2                  = "0.6.5"
 objc2-core-foundation  = { version = "0.3.2", default-features = false, features = [ "std", "CFDictionary", "CFNumber", "CFString", "CFURL" ] }
@@ -86,14 +86,14 @@ serde_with             = "3.24.0"
 strum                  = { version = "0.28.0", features = [ "derive" ] }
 syntect                = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror              = "2.0.21"
-tokio                  = { version = "1.53.3", features = [ "full" ] }
+tokio                  = { version = "1.54.0", features = [ "full" ] }
 tokio-stream           = "0.1.19"
 tokio-util             = "0.7.20"
 toml                   = { version = "1.1.8" }
 tracing                = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_off" ] }
 tracing-core           = "0.1.36"
 twox-hash              = { version = "2.1.5", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
-typed-path             = "0.12.3"
+typed-path             = "0.13.0"
 unicode-normalization  = "0.1.26"
 unicode-width          = { version = "0.2.2", default-features = false }
 uzers                  = "0.12.2"

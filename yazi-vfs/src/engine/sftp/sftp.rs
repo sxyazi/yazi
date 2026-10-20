@@ -2,7 +2,7 @@ use std::{io, sync::Arc};
 
 use deadpool::managed::PoolError;
 use yazi_config::vfs::{ServiceSftp, Vfs};
-use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileBuilder, FileHolder, Transmit}, file::File};
+use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileBuilder, FileHolder, Transit}, file::File, remover::Removal};
 use yazi_sftp::fs::Attrs;
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -79,19 +79,19 @@ impl<'a> Engine for Sftp<'a> {
 		similar.map(|n| parent.try_join(n)).transpose()?.ok_or(io::ErrorKind::NotFound.into())
 	}
 
-	async fn copy_to(&self, to: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
+	async fn copy_to(&self, to: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transit> {
 		let to = to.physical();
 		if self.auth() != to.auth() {
-			return Ok(Transmit::unsupported());
+			return Ok(Transit::unsupported());
 		}
 
 		Ok(ProgressiveCopier::spawn(self.to_url(), to.into(), attrs))
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transmit> {
+	async fn copy_from(&self, from: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transit> {
 		let from = from.physical();
 		if self.auth() != from.auth() {
-			return Ok(Transmit::unsupported());
+			return Ok(Transit::unsupported());
 		}
 
 		Ok(ProgressiveCopier::spawn(from.into(), self.to_url(), attrs))
@@ -164,6 +164,10 @@ impl<'a> Engine for Sftp<'a> {
 	}
 
 	async fn remove_dir(&self) -> io::Result<()> { Ok(self.op().await?.rmdir(self.path).await?) }
+
+	async fn remove_dir_all(&self) -> io::Result<Removal> {
+		Ok(crate::remover::Remover::new(self.to_url()).spawn())
+	}
 
 	async fn remove_file(&self) -> io::Result<()> { Ok(self.op().await?.remove(self.path).await?) }
 

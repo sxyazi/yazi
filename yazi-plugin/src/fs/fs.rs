@@ -221,7 +221,10 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 		let result = match &*r#type.as_bytes() {
 			b"file" => engine::remove_file(&*url).await,
 			b"dir" => engine::remove_dir(&*url).await,
-			b"dir_all" => engine::remove_dir_all(&*url).await,
+			b"dir_all" => match engine::remove_dir_all(&*url).await {
+				Ok(rx) => rx.finish().await,
+				Err(e) => Err(e),
+			},
 			b"dir_clean" => engine::remove_dir_clean(&*url).await,
 			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};

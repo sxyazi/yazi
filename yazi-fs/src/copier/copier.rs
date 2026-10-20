@@ -3,7 +3,7 @@ use std::{io, path::{Path, PathBuf}};
 use tokio::{sync::mpsc, task};
 
 use super::Progress;
-use crate::engine::{Attrs, Transmit};
+use crate::engine::{Attrs, Transit};
 
 pub struct Copier {
 	pub(super) from:  PathBuf,
@@ -44,11 +44,11 @@ impl Copier {
 		})
 	}
 
-	pub(crate) fn spawn(mut self) -> Transmit {
+	pub(crate) fn spawn(mut self) -> Transit {
 		let rx = self.rx.take().unwrap();
 		let tx = self.tx.clone();
 
-		tokio::spawn(async move {
+		let handle = tokio::spawn(async move {
 			let result = task::spawn_blocking(move || {
 				loop {
 					self.check()?;
@@ -65,16 +65,12 @@ impl Copier {
 			.map_err(io::Error::from)
 			.flatten();
 
-			if let Ok(remaining) = &result
-				&& *remaining > 0
-			{
-				tx.send(Ok(*remaining)).await.ok();
+			if !matches!(&result, Ok(0)) {
+				tx.send(result).await.ok();
 			}
-
-			tx.send(result.map(|_| 0)).await.ok();
 		});
 
-		Transmit::new(rx)
+		Transit::new(rx, handle)
 	}
 
 	pub(super) fn check(&self) -> io::Result<()> {

@@ -44,7 +44,7 @@ impl Progress {
 
 	pub(super) fn report(&mut self, tx: &mpsc::Sender<io::Result<u64>>) {
 		if self.written > self.reported
-			&& self.updated.elapsed() >= Duration::from_millis(200)
+			&& self.updated.elapsed() >= Duration::from_millis(250)
 			&& tx.try_send(Ok(self.written - self.reported)).is_ok()
 		{
 			self.reported = self.written;

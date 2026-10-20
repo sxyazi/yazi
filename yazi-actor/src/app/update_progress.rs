@@ -31,7 +31,7 @@ impl Actor for UpdateProgress {
 
 		if !progressed {
 			succ!()
-		} else if tasks.summary.total == 0 {
+		} else if tasks.summary.total_tasks == 0 {
 			succ!(render!())
 		} else {
 			succ!(render_partial!())

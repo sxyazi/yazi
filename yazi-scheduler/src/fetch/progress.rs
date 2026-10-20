@@ -10,10 +10,13 @@ pub struct FetchProg {
 impl From<FetchProg> for TaskSummary {
 	fn from(value: FetchProg) -> Self {
 		Self {
-			total:   1,
-			success: value.success() as u32,
-			failed:  value.failed() as u32,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     1,
+			succeeded_items: value.success() as u64,
+			failed_items:    value.failed() as u64,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }

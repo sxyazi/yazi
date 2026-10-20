@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use crate::{casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transmit}, stat::{Stat, StatMode}};
+use crate::{casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transit}, remover::Removal, stat::{Stat, StatMode}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -42,14 +42,14 @@ impl<'a> Engine for Local<'a> {
 		Casefold::casefold(self.path).await.map(Into::into)
 	}
 
-	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
-		let Some(to) = to.as_local() else { return Ok(Transmit::unsupported()) };
+	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
+		let Some(to) = to.as_local() else { return Ok(Transit::unsupported()) };
 
 		Ok(Copier::new(self.path, to, attrs)?.spawn())
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
-		let Some(from) = from.as_local() else { return Ok(Transmit::unsupported()) };
+	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
+		let Some(from) = from.as_local() else { return Ok(Transit::unsupported()) };
 
 		Ok(Copier::new(from, self.path, attrs)?.spawn())
 	}
@@ -106,7 +106,9 @@ impl<'a> Engine for Local<'a> {
 	async fn remove_dir(&self) -> io::Result<()> { tokio::fs::remove_dir(self.path).await }
 
 	#[inline]
-	async fn remove_dir_all(&self) -> io::Result<()> { tokio::fs::remove_dir_all(self.path).await }
+	async fn remove_dir_all(&self) -> io::Result<Removal> {
+		Ok(crate::remover::Remover::new(self.path).spawn())
+	}
 
 	#[inline]
 	async fn remove_dir_clean(&self) -> io::Result<()> {
