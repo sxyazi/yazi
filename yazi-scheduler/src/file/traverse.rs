@@ -4,7 +4,7 @@ use yazi_fs::{FsUrl, engine::{DirReader, FileHolder}, path::skip_url, stat::Stat
 use yazi_shared::{strand::StrandLike, url::{AsUrl, Url, UrlBuf, UrlLike}};
 use yazi_vfs::engine::{self};
 
-use crate::{ctx, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInMove, FileInUpload}};
+use crate::{ctx, file::{FileInCopy, FileInDownload, FileInHardlink, FileInMove, FileInUpload}};
 
 pub(super) trait Traverse {
 	fn stat(&mut self) -> &mut Option<Stat>;
@@ -87,20 +87,6 @@ impl Traverse for FileInHardlink {
 	}
 
 	fn to(&self) -> Option<Url<'_>> { Some(self.to.as_url()) }
-}
-
-impl Traverse for FileInDelete {
-	fn stat(&mut self) -> &mut Option<Stat> { &mut self.stat }
-
-	fn follow(&self) -> bool { false }
-
-	fn from(&self) -> Url<'_> { self.target.as_url() }
-
-	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, stat: Stat) -> Self {
-		Self { id: self.id, target: from, stat: Some(stat) }
-	}
-
-	fn to(&self) -> Option<Url<'_>> { None }
 }
 
 impl Traverse for FileInDownload {

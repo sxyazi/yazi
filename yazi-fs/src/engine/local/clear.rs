@@ -58,54 +58,46 @@ fn clear_no_follow(dir: rustix::fd::OwnedFd) {
 // --- Windows
 #[cfg(windows)]
 pub(super) fn remove_dir_clean_impl(path: &Path) -> io::Result<()> {
-	match clear_no_reparse(path) {
-		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
-		result => result,
-	}
+	use std::{fs::OpenOptions, os::windows::fs::OpenOptionsExt};
+
+	use windows_sys::Win32::Storage::FileSystem::{DELETE, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FILE_READ_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE};
+
+	crate::ok_or_not_found(
+		OpenOptions::new()
+			.access_mode(DELETE | FILE_READ_ATTRIBUTES)
+			.share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
+			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
+			.open(path)
+			.and_then(clear_no_reparse),
+	)
 }
 
 #[cfg(windows)]
-fn clear_no_reparse(path: &Path) -> io::Result<()> {
-	use std::{fs::OpenOptions, os::windows::fs::{MetadataExt, OpenOptionsExt}};
+fn clear_no_reparse(dir: std::fs::File) -> io::Result<()> {
+	use windows_sys::{Wdk::Storage::FileSystem::{FILE_OPEN_FOR_BACKUP_INTENT, FILE_SYNCHRONOUS_IO_NONALERT}, Win32::Storage::FileSystem::{DELETE, FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_REPARSE_POINT, FILE_LIST_DIRECTORY, FILE_READ_ATTRIBUTES, SYNCHRONIZE}};
+	use yazi_shim::fs::{FileExt, ReadDir};
 
-	use windows_sys::Win32::Storage::FileSystem::{DELETE, FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FILE_READ_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE};
-
-	let dir = OpenOptions::new()
-		.access_mode(DELETE | FILE_READ_ATTRIBUTES)
-		.share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
-		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
-		.open(path)?;
-
-	let attrs = dir.metadata()?.file_attributes();
+	let attrs = dir.basic_info()?.FileAttributes;
 	if attrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT) != FILE_ATTRIBUTE_DIRECTORY {
 		return Ok(());
 	}
 
-	if let Ok(entries) = std::fs::read_dir(path) {
-		for dent in entries.flatten() {
-			if dent.file_type().is_ok_and(|t| t.is_dir()) {
-				clear_no_reparse(&dent.path()).ok();
+	let entries = dir.open_at(&[], FILE_LIST_DIRECTORY | SYNCHRONIZE, FILE_SYNCHRONOUS_IO_NONALERT);
+	if let Ok(mut entries) = entries.and_then(ReadDir::new) {
+		while let Ok(Some(entry)) = entries.next() {
+			if *entry.name == [b'.' as u16] || *entry.name == [b'.' as u16, b'.' as u16] {
+				continue;
+			}
+
+			if entry.is_dir()
+				&& !entry.is_reparse()
+				&& let Ok(child) =
+					entry.dir.open_at(entry.name, DELETE | FILE_READ_ATTRIBUTES, FILE_OPEN_FOR_BACKUP_INTENT)
+			{
+				clear_no_reparse(child).ok();
 			}
 		}
 	}
 
-	remove_dir(&dir)
-}
-
-#[cfg(windows)]
-fn remove_dir(dir: &std::fs::File) -> io::Result<()> {
-	use std::{mem, os::windows::io::AsRawHandle};
-
-	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_DISPOSITION_INFO, FileDispositionInfo, SetFileInformationByHandle}};
-	use yazi_shim::bool_ok;
-
-	let info = FILE_DISPOSITION_INFO { DeleteFile: true };
-	bool_ok(unsafe {
-		SetFileInformationByHandle(
-			dir.as_raw_handle() as HANDLE,
-			FileDispositionInfo,
-			&info as *const FILE_DISPOSITION_INFO as _,
-			mem::size_of::<FILE_DISPOSITION_INFO>() as u32,
-		)
-	})
+	dir.delete()
 }

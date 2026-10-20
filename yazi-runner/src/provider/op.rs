@@ -37,7 +37,6 @@ pub enum ProvideOp {
 	// Write chunks carry requested positions, its ACKs carry actual end positions.
 	Write { url: UrlBuf, handle: Handle, stream: mpsc::Receiver<ProvideChunk> },
 	Close { url: UrlBuf, handle: Handle },
-	// CopyTo/CopyFrom streams must yield 0 only after all writes and cleanup succeed.
 	CopyTo { from: UrlBuf, to: UrlBuf, peer: ProvidePeer, attrs: Attrs },
 	CopyFrom { from: UrlBuf, to: UrlBuf, peer: ProvidePeer, attrs: Attrs },
 	SetLen { url: UrlBuf, size: u64, handle: Handle },

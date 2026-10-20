@@ -5,9 +5,9 @@ use crate::{Progress, TaskSummary};
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct CustomProg {
 	pub(crate) state:     Option<bool>,
-	pub(crate) total:     u32,
-	pub(crate) success:   u32,
-	pub(crate) failed:    u32,
+	pub(crate) total:     u64,
+	pub(crate) succeeded: u64,
+	pub(crate) failed:    u64,
 	pub(crate) workload:  u64,
 	pub(crate) processed: u64,
 	pub(crate) progress:  bool,
@@ -15,20 +15,14 @@ pub struct CustomProg {
 
 impl From<CustomProg> for TaskSummary {
 	fn from(value: CustomProg) -> Self {
-		if value.progress {
-			Self {
-				total:   value.total,
-				success: value.success,
-				failed:  value.failed,
-				percent: value.percent().map(Into::into),
-			}
-		} else {
-			Self {
-				total:   1,
-				success: value.success() as u32,
-				failed:  value.failed() as u32,
-				percent: None,
-			}
+		Self {
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total,
+			succeeded_items: value.succeeded,
+			failed_items:    value.failed,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }

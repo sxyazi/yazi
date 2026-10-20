@@ -24,7 +24,7 @@ impl UserData for Task {
 		methods.add_method("progress", |_, me, t: Table| {
 			TasksProxy::output(me.id, CustomOut::Progress {
 				total:     t.raw_get::<Option<_>>("total")?.unwrap_or_default(),
-				success:   t.raw_get::<Option<_>>("success")?.unwrap_or_default(),
+				succeeded: t.raw_get::<Option<_>>("succeeded")?.unwrap_or_default(),
 				failed:    t.raw_get::<Option<_>>("failed")?.unwrap_or_default(),
 				workload:  t.raw_get::<Option<_>>("workload")?.unwrap_or_default(),
 				processed: t.raw_get::<Option<_>>("processed")?.unwrap_or_default(),

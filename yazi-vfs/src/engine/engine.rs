@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
+use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transit}, file::File, remover::Removal, stat::Stat};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
 use super::{Engines, ProgressiveCopier, ReadDir, RwFile};
@@ -52,7 +52,7 @@ where
 	Engines::new(url.as_url()).await?.casefold().await
 }
 
-pub async fn copy<U, V, A>(from: U, to: V, attrs: A) -> io::Result<Transmit>
+pub async fn copy<U, V, A>(from: U, to: V, attrs: A) -> io::Result<Transit>
 where
 	U: AsUrl,
 	V: AsUrl,
@@ -180,7 +180,7 @@ where
 	Engines::new(url.as_url()).await?.remove_dir().await
 }
 
-pub async fn remove_dir_all<U>(url: U) -> io::Result<()>
+pub async fn remove_dir_all<U>(url: U) -> io::Result<Removal>
 where
 	U: AsUrl,
 {

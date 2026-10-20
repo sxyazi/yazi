@@ -106,7 +106,7 @@ impl Scheduler {
 	}
 
 	pub fn file_delete(&self, target: UrlBuf) {
-		let mut r#in = FileInDelete { id: Id::ZERO, target, stat: None };
+		let mut r#in = FileInDelete { id: Id::ZERO, target };
 		let hook = HookInDelete::new(&r#in.target);
 
 		self.add_hooked(&mut r#in, hook, |_| ());

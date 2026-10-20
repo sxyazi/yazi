@@ -1,13 +1,16 @@
+use std::ops::Deref;
+
 use serde::Serialize;
+use yazi_fs::remover::Delta;
 
 use crate::{CleanupState, Progress, TaskSummary};
 
 // --- Copy
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgCopy {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
+	pub(crate) total_files:     u64,
+	pub(crate) succeeded_files: u64,
+	pub(crate) failed_files:    u64,
 	pub(crate) total_bytes:     u64,
 	pub(crate) processed_bytes: u64,
 	pub(crate) collected:       Option<bool>,
@@ -17,10 +20,13 @@ pub struct FileProgCopy {
 impl From<FileProgCopy> for TaskSummary {
 	fn from(value: FileProgCopy) -> Self {
 		Self {
-			total:   value.total_files,
-			success: value.success_files,
-			failed:  value.failed_files,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total_files,
+			succeeded_items: value.succeeded_files,
+			failed_items:    value.failed_files,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
@@ -28,11 +34,13 @@ impl From<FileProgCopy> for TaskSummary {
 impl Progress for FileProgCopy {
 	fn running(self) -> bool {
 		self.cooking_or_cleaning(
-			self.collected.is_none() || self.success_files + self.failed_files != self.total_files,
+			self.collected.is_none() || self.succeeded_files + self.failed_files != self.total_files,
 		)
 	}
 
-	fn cooked(self) -> bool { self.collected == Some(true) && self.success_files == self.total_files }
+	fn cooked(self) -> bool {
+		self.collected == Some(true) && self.succeeded_files == self.total_files
+	}
 
 	fn failed(self) -> bool { self.cleaned.is_failed() || self.collected == Some(false) }
 
@@ -46,9 +54,9 @@ impl Progress for FileProgCopy {
 // --- Move
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgMove {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
+	pub(crate) total_files:     u64,
+	pub(crate) succeeded_files: u64,
+	pub(crate) failed_files:    u64,
 	pub(crate) total_bytes:     u64,
 	pub(crate) processed_bytes: u64,
 	pub(crate) collected:       Option<bool>,
@@ -58,10 +66,13 @@ pub struct FileProgMove {
 impl From<FileProgMove> for TaskSummary {
 	fn from(value: FileProgMove) -> Self {
 		Self {
-			total:   value.total_files,
-			success: value.success_files,
-			failed:  value.failed_files,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total_files,
+			succeeded_items: value.succeeded_files,
+			failed_items:    value.failed_files,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
@@ -69,11 +80,13 @@ impl From<FileProgMove> for TaskSummary {
 impl Progress for FileProgMove {
 	fn running(self) -> bool {
 		self.cooking_or_cleaning(
-			self.collected.is_none() || self.success_files + self.failed_files != self.total_files,
+			self.collected.is_none() || self.succeeded_files + self.failed_files != self.total_files,
 		)
 	}
 
-	fn cooked(self) -> bool { self.collected == Some(true) && self.success_files == self.total_files }
+	fn cooked(self) -> bool {
+		self.collected == Some(true) && self.succeeded_files == self.total_files
+	}
 
 	fn failed(self) -> bool { self.cleaned.is_failed() || self.collected == Some(false) }
 
@@ -94,10 +107,13 @@ pub struct FileProgLink {
 impl From<FileProgLink> for TaskSummary {
 	fn from(value: FileProgLink) -> Self {
 		Self {
-			total:   1,
-			success: value.success() as u32,
-			failed:  value.failed() as u32,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     1,
+			succeeded_items: value.cooked() as u64,
+			failed_items:    (value.state == Some(false)) as u64,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
@@ -115,9 +131,9 @@ impl Progress for FileProgLink {
 // --- Hardlink
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgHardlink {
-	pub(crate) total:     u32,
-	pub(crate) success:   u32,
-	pub(crate) failed:    u32,
+	pub(crate) total:     u64,
+	pub(crate) succeeded: u64,
+	pub(crate) failed:    u64,
 	pub(crate) collected: Option<bool>,
 	pub(crate) cleaned:   CleanupState,
 }
@@ -125,20 +141,23 @@ pub struct FileProgHardlink {
 impl From<FileProgHardlink> for TaskSummary {
 	fn from(value: FileProgHardlink) -> Self {
 		Self {
-			total:   value.total,
-			success: value.success,
-			failed:  value.failed,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total,
+			succeeded_items: value.succeeded,
+			failed_items:    value.failed,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
 
 impl Progress for FileProgHardlink {
 	fn running(self) -> bool {
-		self.cooking_or_cleaning(self.collected.is_none() || self.success + self.failed != self.total)
+		self.cooking_or_cleaning(self.collected.is_none() || self.succeeded + self.failed != self.total)
 	}
 
-	fn cooked(self) -> bool { self.collected == Some(true) && self.success == self.total }
+	fn cooked(self) -> bool { self.collected == Some(true) && self.succeeded == self.total }
 
 	fn failed(self) -> bool { self.cleaned.is_failed() || self.collected == Some(false) }
 
@@ -148,41 +167,43 @@ impl Progress for FileProgHardlink {
 // --- Delete
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgDelete {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
-	pub(crate) total_bytes:     u64,
-	pub(crate) processed_bytes: u64,
-	pub(crate) collected:       Option<bool>,
-	pub(crate) cleaned:         CleanupState,
+	#[serde(flatten)]
+	pub(crate) delta:   Delta,
+	pub(crate) state:   Option<bool>,
+	pub(crate) cleaned: CleanupState,
+}
+
+impl Deref for FileProgDelete {
+	type Target = Delta;
+
+	fn deref(&self) -> &Self::Target { &self.delta }
 }
 
 impl From<FileProgDelete> for TaskSummary {
 	fn from(value: FileProgDelete) -> Self {
 		Self {
-			total:   value.total_files,
-			success: value.success_files,
-			failed:  value.failed_files,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total,
+			succeeded_items: value.succeeded,
+			failed_items:    value.failed,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
 
 impl Progress for FileProgDelete {
-	fn running(self) -> bool {
-		self.cooking_or_cleaning(
-			self.collected.is_none() || self.success_files + self.failed_files != self.total_files,
-		)
-	}
+	fn running(self) -> bool { self.cooking_or_cleaning(self.state.is_none()) }
 
-	fn cooked(self) -> bool { self.collected == Some(true) && self.success_files == self.total_files }
+	fn cooked(self) -> bool { self.state == Some(true) && self.failed == 0 }
 
-	fn failed(self) -> bool { self.cleaned.is_failed() || self.collected == Some(false) }
+	fn failed(self) -> bool { self.state == Some(false) || self.failed != 0 }
 
 	fn cleaned(self) -> Option<CleanupState> { Some(self.cleaned) }
 
 	fn percent(self) -> Option<f32> {
-		Some(self.work_percent(self.processed_bytes, self.total_bytes, self.total_files))
+		Some(self.work_percent(self.processed, self.workload?, self.total))
 	}
 }
 
@@ -196,10 +217,13 @@ pub struct FileProgTrash {
 impl From<FileProgTrash> for TaskSummary {
 	fn from(value: FileProgTrash) -> Self {
 		Self {
-			total:   1,
-			success: value.success() as u32,
-			failed:  value.failed() as u32,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     1,
+			succeeded_items: value.cooked() as u64,
+			failed_items:    (value.state == Some(false)) as u64,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
@@ -217,9 +241,9 @@ impl Progress for FileProgTrash {
 // --- Download
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgDownload {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
+	pub(crate) total_files:     u64,
+	pub(crate) succeeded_files: u64,
+	pub(crate) failed_files:    u64,
 	pub(crate) total_bytes:     u64,
 	pub(crate) processed_bytes: u64,
 	pub(crate) collected:       Option<bool>,
@@ -229,10 +253,13 @@ pub struct FileProgDownload {
 impl From<FileProgDownload> for TaskSummary {
 	fn from(value: FileProgDownload) -> Self {
 		Self {
-			total:   value.total_files,
-			success: value.success_files,
-			failed:  value.failed_files,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total_files,
+			succeeded_items: value.succeeded_files,
+			failed_items:    value.failed_files,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
@@ -240,11 +267,13 @@ impl From<FileProgDownload> for TaskSummary {
 impl Progress for FileProgDownload {
 	fn running(self) -> bool {
 		self.cooking_or_cleaning(
-			self.collected.is_none() || self.success_files + self.failed_files != self.total_files,
+			self.collected.is_none() || self.succeeded_files + self.failed_files != self.total_files,
 		)
 	}
 
-	fn cooked(self) -> bool { self.collected == Some(true) && self.success_files == self.total_files }
+	fn cooked(self) -> bool {
+		self.collected == Some(true) && self.succeeded_files == self.total_files
+	}
 
 	fn failed(self) -> bool { self.cleaned.is_failed() || self.collected == Some(false) }
 
@@ -258,9 +287,9 @@ impl Progress for FileProgDownload {
 // --- Upload
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct FileProgUpload {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
+	pub(crate) total_files:     u64,
+	pub(crate) succeeded_files: u64,
+	pub(crate) failed_files:    u64,
 	pub(crate) total_bytes:     u64,
 	pub(crate) processed_bytes: u64,
 	pub(crate) collected:       Option<bool>,
@@ -270,10 +299,13 @@ pub struct FileProgUpload {
 impl From<FileProgUpload> for TaskSummary {
 	fn from(value: FileProgUpload) -> Self {
 		Self {
-			total:   value.total_files,
-			success: value.success_files,
-			failed:  value.failed_files,
-			percent: value.percent().map(Into::into),
+			total_tasks:     1,
+			succeeded_tasks: value.success() as u32,
+			failed_tasks:    value.failed() as u32,
+			total_items:     value.total_files,
+			succeeded_items: value.succeeded_files,
+			failed_items:    value.failed_files,
+			percent:         value.percent().map(Into::into),
 		}
 	}
 }
@@ -281,11 +313,13 @@ impl From<FileProgUpload> for TaskSummary {
 impl Progress for FileProgUpload {
 	fn running(self) -> bool {
 		self.cooking_or_cleaning(
-			self.collected.is_none() || self.success_files + self.failed_files != self.total_files,
+			self.collected.is_none() || self.succeeded_files + self.failed_files != self.total_files,
 		)
 	}
 
-	fn cooked(self) -> bool { self.collected == Some(true) && self.success_files == self.total_files }
+	fn cooked(self) -> bool {
+		self.collected == Some(true) && self.succeeded_files == self.total_files
+	}
 
 	fn failed(self) -> bool { self.cleaned.is_failed() || self.collected == Some(false) }
 

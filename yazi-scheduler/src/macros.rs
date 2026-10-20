@@ -11,7 +11,7 @@ macro_rules! ctx {
 }
 
 #[macro_export]
-macro_rules! ok_or_not_found {
+macro_rules! ctx_or_not_found {
 	($task:ident, $result:expr, $not_found:expr) => {
 		match $result {
 			Ok(v) => v,
@@ -20,7 +20,7 @@ macro_rules! ok_or_not_found {
 		}
 	};
 	($task:ident, $result:expr) => {
-		ok_or_not_found!($task, $result, Default::default())
+		$crate::ctx_or_not_found!($task, $result, Default::default())
 	};
 }
 

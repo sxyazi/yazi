@@ -1,4 +1,4 @@
-use crate::{Task, custom::CustomOut, fetch::FetchOutFetch, file::{FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}, impl_from_out, plugin::PluginOutEntry, preload::PreloadOut, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}, size::SizeOut};
+use crate::{Task, custom::CustomOut, fetch::FetchOutFetch, file::{FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}, impl_from_out, plugin::PluginOutEntry, preload::PreloadOut, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}, size::SizeOut};
 
 #[derive(Debug)]
 pub(super) enum TaskOut {
@@ -11,7 +11,6 @@ pub(super) enum TaskOut {
 	FileHardlink(FileOutHardlink),
 	FileHardlinkDo(FileOutHardlinkDo),
 	FileDelete(FileOutDelete),
-	FileDeleteDo(FileOutDeleteDo),
 	FileTrash(FileOutTrash),
 	FileDownload(FileOutDownload),
 	FileDownloadDo(FileOutDownloadDo),
@@ -40,7 +39,7 @@ pub(super) enum TaskOut {
 
 impl_from_out! {
 	// File
-	FileCopy(FileOutCopy), FileCopyDo(FileOutCopyDo), FileMove(FileOutMove), FileMoveDo(FileOutMoveDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
+	FileCopy(FileOutCopy), FileCopyDo(FileOutCopyDo), FileMove(FileOutMove), FileMoveDo(FileOutMoveDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
 	// Plugin
 	PluginEntry(PluginOutEntry),
 	// Fetch
@@ -69,7 +68,6 @@ impl TaskOut {
 			Self::FileHardlink(out) => out.reduce(task),
 			Self::FileHardlinkDo(out) => out.reduce(task),
 			Self::FileDelete(out) => out.reduce(task),
-			Self::FileDeleteDo(out) => out.reduce(task),
 			Self::FileTrash(out) => out.reduce(task),
 			Self::FileDownload(out) => out.reduce(task),
 			Self::FileDownloadDo(out) => out.reduce(task),

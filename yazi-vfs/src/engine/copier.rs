@@ -1,8 +1,8 @@
-use std::{io, panic::AssertUnwindSafe, sync::atomic::{AtomicU64, Ordering}, time::Duration};
+use std::{io, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 
-use futures::{FutureExt, TryStreamExt};
+use futures::TryStreamExt;
 use tokio::{io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt}, pin, select, sync::mpsc};
-use yazi_fs::{engine::{Attrs, Transmit}, stat::Stat};
+use yazi_fs::{engine::{Attrs, Transit}, stat::Stat};
 use yazi_shared::url::UrlBuf;
 
 use crate::engine::{self, FileCursor, RwFile};
@@ -20,19 +20,19 @@ pub(super) struct ProgressiveCopier {
 }
 
 impl ProgressiveCopier {
-	pub(super) fn spawn(from: UrlBuf, to: UrlBuf, attrs: Attrs) -> Transmit {
+	pub(super) fn spawn(from: UrlBuf, to: UrlBuf, attrs: Attrs) -> Transit {
 		let (prog_tx, prog_rx) = mpsc::channel(20);
 		let copier = Self { from, to, attrs, acc: AtomicU64::new(0), prog_tx };
 
-		tokio::spawn(copier.watch());
+		let handle = tokio::spawn(copier.watch());
 
-		Transmit::new(prog_rx)
+		Transit::new(prog_rx, handle)
 	}
 
 	async fn watch(self) {
 		// Drop the work before reporting its result; background I/O keeps shared handles alive until it stops.
 		let result = {
-			let done = AssertUnwindSafe(self.work()).catch_unwind();
+			let done = self.work();
 			pin!(done);
 
 			loop {
@@ -46,8 +46,9 @@ impl ProgressiveCopier {
 			}
 		};
 
-		let result = result.map_err(|_| io::Error::other("task panicked")).flatten().map(|()| 0);
-		self.prog_tx.send(result).await.ok();
+		if let Err(e) = result {
+			self.prog_tx.send(Err(e)).await.ok();
+		}
 	}
 
 	async fn report(&self) {

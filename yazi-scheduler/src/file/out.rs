@@ -67,7 +67,7 @@ impl FileOutCopyDo {
 				prog.processed_bytes += size;
 			}
 			Self::Succ => {
-				prog.success_files += 1;
+				prog.succeeded_files += 1;
 			}
 			Self::Fail(reason) => {
 				prog.failed_files += 1;
@@ -146,7 +146,7 @@ impl FileOutMoveDo {
 				prog.processed_bytes += size;
 			}
 			Self::Succ => {
-				prog.success_files += 1;
+				prog.succeeded_files += 1;
 			}
 			Self::Fail(reason) => {
 				prog.failed_files += 1;
@@ -186,7 +186,7 @@ impl FileOutLink {
 		} else if let TaskProg::FileCopy(prog) = &mut task.prog {
 			match self {
 				Self::Succ => {
-					prog.success_files += 1;
+					prog.succeeded_files += 1;
 				}
 				Self::Fail(reason) => {
 					prog.failed_files += 1;
@@ -197,7 +197,7 @@ impl FileOutLink {
 		} else if let TaskProg::FileMove(prog) = &mut task.prog {
 			match self {
 				Self::Succ => {
-					prog.success_files += 1;
+					prog.succeeded_files += 1;
 				}
 				Self::Fail(reason) => {
 					prog.failed_files += 1;
@@ -269,7 +269,7 @@ impl FileOutHardlinkDo {
 		let TaskProg::FileHardlink(prog) = &mut task.prog else { return };
 		match self {
 			Self::Succ => {
-				prog.success += 1;
+				prog.succeeded += 1;
 			}
 			Self::Fail(reason) => {
 				prog.failed += 1;
@@ -282,10 +282,10 @@ impl FileOutHardlinkDo {
 // --- Delete
 #[derive(Debug)]
 pub(crate) enum FileOutDelete {
-	New(u64),
+	Adv(yazi_fs::remover::Delta),
 	Succ,
 	Fail(String),
-	Clean(io::Result<()>),
+	Clean,
 }
 
 impl From<anyhow::Error> for FileOutDelete {
@@ -296,50 +296,22 @@ impl FileOutDelete {
 	pub(crate) fn reduce(self, task: &mut Task) {
 		let TaskProg::FileDelete(prog) = &mut task.prog else { return };
 		match self {
-			Self::New(size) => {
-				prog.total_files += 1;
-				prog.total_bytes += size;
-			}
+			Self::Adv(delta) => match prog.delta.try_add(delta) {
+				Ok(new) => prog.delta = new,
+				Err(e) => {
+					prog.state = Some(false);
+					task.log(e.to_string());
+				}
+			},
 			Self::Succ => {
-				prog.collected = Some(true);
+				prog.state.get_or_insert(true);
 			}
 			Self::Fail(reason) => {
-				prog.collected = Some(false);
+				prog.state = Some(false);
 				task.log(reason);
 			}
-			Self::Clean(Ok(())) => {
+			Self::Clean => {
 				prog.cleaned = CleanupState::Success;
-			}
-			Self::Clean(Err(reason)) => {
-				prog.cleaned = CleanupState::Failed;
-				task.log(format!("Failed cleaning up deleted file: {reason:?}"));
-			}
-		}
-	}
-}
-
-// --- DeleteDo
-#[derive(Debug)]
-pub(crate) enum FileOutDeleteDo {
-	Succ(u64),
-	Fail(String),
-}
-
-impl From<anyhow::Error> for FileOutDeleteDo {
-	fn from(value: anyhow::Error) -> Self { Self::Fail(format!("{value:?}")) }
-}
-
-impl FileOutDeleteDo {
-	pub(crate) fn reduce(self, task: &mut Task) {
-		let TaskProg::FileDelete(prog) = &mut task.prog else { return };
-		match self {
-			Self::Succ(size) => {
-				prog.success_files += 1;
-				prog.processed_bytes += size;
-			}
-			Self::Fail(reason) => {
-				prog.failed_files += 1;
-				task.log(reason);
 			}
 		}
 	}
@@ -436,7 +408,7 @@ impl FileOutDownloadDo {
 				prog.processed_bytes += size;
 			}
 			Self::Succ => {
-				prog.success_files += 1;
+				prog.succeeded_files += 1;
 			}
 			Self::Fail(reason) => {
 				prog.failed_files += 1;
@@ -507,7 +479,7 @@ impl FileOutUploadDo {
 				prog.processed_bytes += size;
 			}
 			Self::Succ => {
-				prog.success_files += 1;
+				prog.succeeded_files += 1;
 			}
 			Self::Fail(reason) => {
 				prog.failed_files += 1;

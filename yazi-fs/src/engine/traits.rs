@@ -1,10 +1,9 @@
 use std::{io, pin::pin};
 
 use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt};
-use yazi_macro::ok_or_not_found;
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::{AsStrand, StrandCow}, url::{AsUrl, Url, UrlBuf}};
 
-use crate::{engine::{Attrs, Capabilities, Transmit}, file::{File, FileExtra}, stat::{Stat, StatType}};
+use crate::{engine::{Attrs, Capabilities, Transit}, file::{File, FileExtra}, remover::Removal, stat::{Stat, StatType}};
 
 pub trait Engine: Sized + AsUrl {
 	type File: AsyncRead + AsyncSeek + AsyncWrite;
@@ -21,10 +20,10 @@ pub trait Engine: Sized + AsUrl {
 
 	fn casefold(&self) -> impl Future<Output = io::Result<UrlBuf>>;
 
-	fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> impl Future<Output = io::Result<Transmit>>;
+	fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> impl Future<Output = io::Result<Transit>>;
 
-	fn copy_from(&self, _from: Url<'_>, _attrs: Attrs) -> impl Future<Output = io::Result<Transmit>> {
-		async { Ok(Transmit::unsupported()) }
+	fn copy_from(&self, _from: Url<'_>, _attrs: Attrs) -> impl Future<Output = io::Result<Transit>> {
+		async { Ok(Transit::unsupported()) }
 	}
 
 	fn create_dir(&self) -> impl Future<Output = io::Result<()>>;
@@ -120,41 +119,7 @@ pub trait Engine: Sized + AsUrl {
 
 	fn remove_dir(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn remove_dir_all(&self) -> impl Future<Output = io::Result<()>> { self.remove_dir_all_default() }
-
-	fn remove_dir_all_default(&self) -> impl Future<Output = io::Result<()>> {
-		async fn remove_dir_all_impl<P>(url: Url<'_>) -> io::Result<()>
-		where
-			P: Engine,
-		{
-			let mut it = ok_or_not_found!(P::new(url).await?.read_dir().await, return Ok(()));
-			while let Some(dent) = it.next().await? {
-				let stat = ok_or_not_found!(dent.metadata().await, continue);
-				let result = if stat.is_dir() && !stat.is_indirect() {
-					Box::pin(remove_dir_all_impl::<P>(dent.url().as_url())).await
-				} else if stat.is_dir() {
-					P::new(dent.url().as_url()).await?.remove_dir().await
-				} else {
-					P::new(dent.url().as_url()).await?.remove_file().await
-				};
-
-				() = ok_or_not_found!(result);
-			}
-
-			Ok(ok_or_not_found!(P::new(url).await?.remove_dir().await))
-		}
-
-		async move {
-			let stat = ok_or_not_found!(self.symlink_metadata().await, return Ok(()));
-			if !stat.is_indirect() {
-				remove_dir_all_impl::<Self>(self.as_url()).await
-			} else if stat.is_dir() {
-				self.remove_dir().await
-			} else {
-				self.remove_file().await
-			}
-		}
-	}
+	fn remove_dir_all(&self) -> impl Future<Output = io::Result<Removal>>;
 
 	fn remove_dir_clean(&self) -> impl Future<Output = io::Result<()>> {
 		let root = self.as_url().to_owned();

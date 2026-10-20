@@ -124,7 +124,6 @@ impl Worker {
 			FileIn::Hardlink(r#in) => self.file.hardlink(r#in).await.map_err(Into::into),
 			FileIn::HardlinkDo(r#in) => self.file.hardlink_do(r#in).await.map_err(Into::into),
 			FileIn::Delete(r#in) => self.file.delete(r#in).await.map_err(Into::into),
-			FileIn::DeleteDo(r#in) => self.file.delete_do(r#in).await.map_err(Into::into),
 			FileIn::Trash(r#in) => self.file.trash(r#in).await.map_err(Into::into),
 			FileIn::TrashDo(r#in) => self.file.trash_do(r#in).await.map_err(Into::into),
 			FileIn::Download(r#in) => self.file.download(r#in).await.map_err(Into::into),

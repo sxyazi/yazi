@@ -6,10 +6,13 @@ use crate::{Ongoing, Progress};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct TaskSummary {
-	pub total:          u32,
-	pub(crate) success: u32,
-	pub(crate) failed:  u32,
-	pub(crate) percent: Option<OrderedFloat<f32>>,
+	pub total_tasks:            u32,
+	pub(crate) succeeded_tasks: u32,
+	pub(crate) failed_tasks:    u32,
+	pub(crate) total_items:     u64,
+	pub(crate) succeeded_items: u64,
+	pub(crate) failed_items:    u64,
+	pub(crate) percent:         Option<OrderedFloat<f32>>,
 }
 
 impl_data_any!(TaskSummary);
@@ -22,11 +25,15 @@ impl From<&Ongoing> for TaskSummary {
 
 		for task in value.values() {
 			let s: Self = task.prog.into();
-			if s.total == 0 && !task.prog.failed() {
+			if s.total_tasks == 0 {
 				continue;
 			}
 
-			summary.total += 1;
+			summary.total_tasks += 1;
+			summary.total_items = summary.total_items.saturating_add(s.total_items);
+			summary.succeeded_items = summary.succeeded_items.saturating_add(s.succeeded_items);
+			summary.failed_items = summary.failed_items.saturating_add(s.failed_items);
+
 			if let Some(p) = s.percent {
 				percent_sum += p.0 as f64;
 				percent_count += 1;
@@ -35,9 +42,9 @@ impl From<&Ongoing> for TaskSummary {
 			if task.prog.running() {
 				continue;
 			} else if task.prog.success() {
-				summary.success += 1;
+				summary.succeeded_tasks += 1;
 			} else {
-				summary.failed += 1;
+				summary.failed_tasks += 1;
 			}
 		}
 

@@ -35,7 +35,7 @@ function M:setup()
 					task:progress { failed = 1 }
 					task:fail(tostring(dest))
 				elseif dest then
-					task:progress { success = 1 }
+					task:progress { succeeded = 1 }
 					task:succeed { dest }
 				else
 					task:cancel()

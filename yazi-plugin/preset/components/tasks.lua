@@ -79,12 +79,17 @@ function Tasks:progress(snap)
 	if p.total_bytes then
 		local percent = snap.running and snap.cooked and "Cleaning…" or string.format("%3d%%", math.floor(snap.percent))
 		label = string.format("%s - %s / %s", percent, ya.readable_size(p.processed_bytes), ya.readable_size(p.total_bytes))
-		count = string.format("%d/%d", p.success_files, p.total_files)
+		count = string.format("%d/%d", p.succeeded_files, p.total_files)
 		count = p.failed_files == 0 and count or string.format("%s, %d failed", count, p.failed_files)
 		failed = snap.failed or p.failed_files > 0
+	elseif p.kind == "FileDelete" then
+		label = snap.percent and string.format("%3d%%", math.floor(snap.percent))
+		count = string.format("%d/%d", p.succeeded, p.total)
+		count = p.failed == 0 and count or string.format("%s, %d failed", count, p.failed)
+		failed = snap.failed or p.failed > 0
 	elseif p.kind == "Custom" and snap.percent then
 		label = string.format("%3d%%", math.floor(snap.percent))
-		count = string.format("%d/%d", p.success, p.total)
+		count = string.format("%d/%d", p.succeeded, p.total)
 		count = p.failed == 0 and count or string.format("%s, %d failed", count, p.failed)
 		failed = snap.failed or p.failed > 0
 	end
@@ -105,6 +110,7 @@ function Tasks:progress_redraw(snap, y)
 	if not label then
 		return {
 			ui.Line(self:status(snap)):fg("gray"):area(self._chunks[1] { y = y, h = 1 }),
+			ui.Line(count or ""):fg("gray"):area(self._chunks[2] { y = y, h = 1 }):align(ui.Align.RIGHT),
 		}
 	end
 

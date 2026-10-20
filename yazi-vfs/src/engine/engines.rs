@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transmit}, file::File, stat::Stat};
+use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transit}, file::File, remover::Removal, stat::Stat};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 pub(super) enum Engines<'a> {
@@ -40,11 +40,11 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn casefold(&self) -> io::Result<UrlBuf> { dispatch!(self, casefold) }
 
-	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
+	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
 		dispatch!(self, copy_to, to, attrs)
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transmit> {
+	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
 		dispatch!(self, copy_from, from, attrs)
 	}
 
@@ -101,7 +101,7 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn remove_dir(&self) -> io::Result<()> { dispatch!(self, remove_dir) }
 
-	async fn remove_dir_all(&self) -> io::Result<()> { dispatch!(self, remove_dir_all) }
+	async fn remove_dir_all(&self) -> io::Result<Removal> { dispatch!(self, remove_dir_all) }
 
 	async fn remove_dir_clean(&self) -> io::Result<()> { dispatch!(self, remove_dir_clean) }
 
