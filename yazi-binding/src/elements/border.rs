@@ -75,7 +75,7 @@ impl UserData for Border {
 		methods.add_function("type", |lua, (ud, value): (AnyUserData, u8)| {
 			crate::deprecate!(
 				lua,
-				"`ui.Border:type()` has been deprecated, use `ui.Border:set()` instead in your {}."
+				"`ui.Border:type()` has been deprecated, use `ui.Border:set()` instead in your {}.\n\nSee #4439 for more info: https://github.com/sxyazi/yazi/pull/4439"
 			);
 			ud.borrow_mut::<Self>()?.set = BorderType::from(value).into();
 			Ok(ud)
