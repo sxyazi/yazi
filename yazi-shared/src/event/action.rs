@@ -267,7 +267,7 @@ impl FromLua for Action {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
 			Value::String(s) => s.to_str()?.parse()?,
-			Value::UserData(ud) => ud.take()?,
+			Value::UserData(ud) => ud.borrow::<Self>()?.clone(),
 			_ => Err(mlua::Error::FromLuaConversionError {
 				from:    value.type_name(),
 				to:      "Action".to_owned(),

@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Workaround Konsole kitty graphics and keyboard protocol bugs ([#4370])
 - Correct diacritic input for <kbd>Option</kbd> key combos in kitty keyboard protocol ([#4346])
 - Chords given as tables to `which:activate` through `ya.emit()` were silently dropped ([#])
+- Reusing a chord or an action from Lua no longer destroys the original ([#])
 
 ### Improved
 
