@@ -1,74 +1,11 @@
 #[cfg(windows)]
-pub(super) fn valid_wtf8(bytes: &[u8]) -> bool {
-	let mut i = 0;
-	while i < bytes.len() {
-		let b = bytes[i];
-		if b < 0b1000_0000 {
-			// ASCII
-			i += 1;
-			continue;
-		}
-
-		// 2-byte: 110x_xxxx 10xx_xxxx
-		// first byte must be >= 0b1100_0010 to forbid overlongs
-		if (b & 0b1110_0000) == 0b1100_0000 {
-			if b < 0b1100_0010 {
-				return false;
-			}
-			if i + 1 >= bytes.len() {
-				return false;
-			}
-			if (bytes[i + 1] & 0b1100_0000) != 0b1000_0000 {
-				return false;
-			}
-			i += 2;
-			continue;
-		}
-
-		// 3-byte: 1110_xxxx 10xx_xxxx 10xx_xxxx
-		if (b & 0b1111_0000) == 0b1110_0000 {
-			if i + 2 >= bytes.len() {
-				return false;
-			}
-			let (b1, b2) = (bytes[i + 1], bytes[i + 2]);
-			if (b1 & 0b1100_0000) != 0b1000_0000 || (b2 & 0b1100_0000) != 0b1000_0000 {
-				return false;
-			}
-			if b == 0b1110_0000 && b1 < 0b1010_0000 {
-				// to forbid overlongs, second byte must be >= 0xA0
-				return false;
-			}
-			i += 3;
-			continue;
-		}
-
-		// 4-byte: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-		if (b & 0b1111_1000) == 0b1111_0000 {
-			if b > 0b1111_0100 {
-				return false;
-			}
-			if i + 3 >= bytes.len() {
-				return false;
-			}
-			let (b1, b2, b3) = (bytes[i + 1], bytes[i + 2], bytes[i + 3]);
-			if (b1 & 0b1100_0000) != 0b1000_0000
-				|| (b2 & 0b1100_0000) != 0b1000_0000
-				|| (b3 & 0b1100_0000) != 0b1000_0000
-			{
-				return false;
-			}
-			if b == 0b1111_0000 && b1 < 0b1001_0000 {
-				// to forbid overlongs for > U+FFFF, second byte must be >= 0x90
-				return false;
-			} else if b == 0b1111_0100 && b1 > 0b1000_1111 {
-				// to stay <= U+10FFFF, second byte must be <= 0x8F
-				return false;
-			}
-			i += 4;
-			continue;
-		}
-
-		return false;
+pub(super) fn valid_wtf8(mut bytes: &[u8]) -> bool {
+	while let Err(e) = std::str::from_utf8(bytes) {
+		// WTF-8 also permits UTF-8 encodings of surrogate code points.
+		let [0xed, 0xa0..=0xbf, 0x80..=0xbf, rest @ ..] = &bytes[e.valid_up_to()..] else {
+			return false;
+		};
+		bytes = rest;
 	}
 	true
 }

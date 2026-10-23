@@ -44,7 +44,6 @@ anyhow       = { workspace = true }
 either       = { workspace = true }
 futures      = { workspace = true }
 hashbrown    = { workspace = true }
-indexmap     = { workspace = true }
 inventory    = { workspace = true }
 mlua         = { workspace = true }
 paste        = { workspace = true }

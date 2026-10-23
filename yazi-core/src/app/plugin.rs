@@ -36,7 +36,7 @@ impl FromAction<Ctx<'_>> for PluginOpt {
 
 		let args = if let Ok(s) = a.second() {
 			let (words, last) = yazi_shared::shell::unix::split(s, true)?;
-			Cmd::parse_args(words, last)?
+			Cmd::parse_args(words, last)
 		} else {
 			a.take_second().unwrap_or_default()
 		};

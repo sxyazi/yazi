@@ -1,13 +1,13 @@
 use std::borrow::Cow;
 
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, LuaString, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_binding::{Composer, ComposerGet};
 use yazi_fs::Normalizer;
 
 use super::Utils;
 
 impl Utils {
-	pub(super) fn regex(_: &Lua) -> mlua::Result<Composer<ComposerGet, ComposerSet>> {
+	pub(super) fn regex(_: &Lua) -> mlua::Result<Composer<ComposerGet>> {
 		fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 			match key {
 				b"normalize" => Utils::normalize(lua)?.into_lua(lua),
@@ -15,9 +15,7 @@ impl Utils {
 			}
 		}
 
-		fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-		Ok(Composer::new(get, set))
+		Ok(Composer::new(get))
 	}
 
 	fn normalize(lua: &Lua) -> mlua::Result<Function> {

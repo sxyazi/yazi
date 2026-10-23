@@ -1,53 +1,36 @@
-use std::{fmt::Debug, mem, sync::atomic::{AtomicU64, AtomicUsize, Ordering}, time::Duration};
+use std::{mem, time::{Duration, Instant}};
 
 use parking_lot::Mutex;
 
-use crate::timestamp_us;
-
 #[derive(Debug)]
 pub struct Throttle<T> {
-	total:    AtomicUsize,
 	interval: Duration,
-	last:     AtomicU64,
-	buf:      Mutex<Vec<T>>,
+	inner:    Mutex<(usize, Instant, Vec<T>)>,
 }
 
 impl<T> Throttle<T> {
 	pub fn new(total: usize, interval: Duration) -> Self {
-		Self {
-			total: AtomicUsize::new(total),
-			interval,
-			last: AtomicU64::new(timestamp_us() - interval.as_micros() as u64),
-			buf: Default::default(),
-		}
+		Self { interval, inner: Mutex::new((total, Instant::now() - interval, Vec::new())) }
 	}
 
 	pub fn done<F>(&self, data: T, f: F)
 	where
 		F: FnOnce(Vec<T>),
 	{
-		let total = self.total.fetch_sub(1, Ordering::Relaxed);
-		if total == 1 {
-			return self.flush(data, f);
-		}
+		let mut inner = self.inner.lock();
+		let (total, last, buf) = &mut *inner;
 
-		let last = self.last.load(Ordering::Relaxed);
-		let now = timestamp_us();
-		if now > self.interval.as_micros() as u64 + last {
-			self.last.store(now, Ordering::Relaxed);
-			return self.flush(data, f);
-		}
-
-		self.buf.lock().push(data);
-	}
-
-	#[inline]
-	fn flush<F>(&self, data: T, f: F)
-	where
-		F: FnOnce(Vec<T>),
-	{
-		let mut buf = mem::take(&mut *self.buf.lock());
+		*total -= 1;
 		buf.push(data);
+
+		if *total != 0 && last.elapsed() <= self.interval {
+			return;
+		}
+
+		*last = Instant::now();
+		let buf = mem::take(buf);
+		drop(inner);
+
 		f(buf)
 	}
 }

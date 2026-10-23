@@ -1,11 +1,10 @@
 use std::{collections::BTreeMap, fmt};
 
 use anyhow::Result;
-use mlua::{FromLua, Lua, Value};
 use ordered_float::OrderedFloat;
 
 use super::{Decoder, Encoder, WireKey};
-use crate::{id::Id, sendable::Sendable, url::UrlBuf};
+use crate::{id::Id, url::UrlBuf};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub enum Wire {
@@ -68,8 +67,4 @@ impl Wire {
 	}
 
 	pub(crate) fn decode(bytes: &[u8]) -> Result<Self> { Decoder::new(bytes).decode() }
-}
-
-impl FromLua for Wire {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { Sendable::value_to_wire(lua, value) }
 }

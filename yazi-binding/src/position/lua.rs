@@ -1,9 +1,7 @@
-use std::str::FromStr;
+use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_shim::{mlua::LuaTableExt, strum::IntoStr};
 
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_shim::strum::IntoStr;
-
-use crate::{elements::Pad, position::{Offset, Origin, Position}};
+use crate::{elements::Pad, position::Position};
 
 const EXPECTED: &str = "expected a Pos";
 
@@ -18,18 +16,7 @@ impl TryFrom<&AnyUserData> for Position {
 impl TryFrom<Table> for Position {
 	type Error = mlua::Error;
 
-	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		Ok(Self {
-			origin:  Origin::from_str(&t.raw_get::<LuaString>(1)?.to_str()?).into_lua_err()?,
-			offset:  Offset {
-				x:      t.raw_get("x").unwrap_or_default(),
-				y:      t.raw_get("y").unwrap_or_default(),
-				width:  t.raw_get("w").unwrap_or_default(),
-				height: t.raw_get("h").unwrap_or_default(),
-			},
-			padding: Default::default(),
-		})
-	}
+	fn try_from(t: Table) -> Result<Self, Self::Error> { t.deserialize() }
 }
 
 impl FromLua for Position {

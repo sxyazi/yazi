@@ -1,4 +1,4 @@
-use std::{mem, ops::Deref};
+use std::ops::Deref;
 
 use futures::{FutureExt, future::BoxFuture};
 use mlua::{UserData, UserDataMethods};
@@ -33,9 +33,7 @@ impl Permit {
 			if let Some(f) = destruct {
 				f.await;
 			}
-			if let Some(p) = inner {
-				mem::drop(p);
-			}
+			drop(inner);
 		}
 	}
 }

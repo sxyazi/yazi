@@ -2110,6 +2110,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lock_api"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65d91b22da179613dcf4d6ec8349563f52a363f6849e03b00dd0a185ec4a59af"
+dependencies = [
+ "scopeguard",
+]
+
+[[package]]
 name = "log"
 version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2261,7 +2270,7 @@ dependencies = [
  "mlua-sys",
  "mlua_derive",
  "num-traits",
- "parking_lot",
+ "parking_lot 0.12.5",
  "rustc-hash",
  "serde",
  "serde-value",
@@ -2659,8 +2668,18 @@ version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
 dependencies = [
- "lock_api",
- "parking_lot_core",
+ "lock_api 0.4.14",
+ "parking_lot_core 0.9.12",
+]
+
+[[package]]
+name = "parking_lot"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9cf937ca4e1d0b7578784559063422fc39ae7c5a00f02471f2614d5486fd226"
+dependencies = [
+ "lock_api 0.5.0",
+ "parking_lot_core 0.10.0",
 ]
 
 [[package]]
@@ -2671,7 +2690,19 @@ checksum = "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1"
 dependencies = [
  "cfg-if",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.5.18",
+ "smallvec",
+ "windows-link",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9cfff060068cc18aa7815010fcaf80c68c7fb9e85fc7f5c0f9bf142c21d19826"
+dependencies = [
+ "libc",
+ "redox_syscall 0.9.5",
  "smallvec",
  "windows-link",
 ]
@@ -2799,9 +2830,9 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "plist"
-version = "1.10.2"
+version = "1.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65dca778f41c79ebbe8b2b2139fee86f01b766b67130d108c7c2b8ffbd949f77"
+checksum = "327a4cb2ad49dc48adfdc9da89e22c64d488b508c67a044d71ba729e4521a285"
 dependencies = [
  "base64",
  "indexmap 2.14.2",
@@ -3109,6 +3140,15 @@ name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
+dependencies = [
+ "bitflags 2.13.2",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.9.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "580c875845b41ecb1564ad1ae4703044cef774145e3d7a94dc2b3fa7c97868fd"
 dependencies = [
  "bitflags 2.13.2",
 ]
@@ -4195,7 +4235,7 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
+ "parking_lot 0.12.5",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
@@ -5094,7 +5134,6 @@ dependencies = [
  "either",
  "futures",
  "hashbrown 0.17.1",
- "indexmap 2.14.2",
  "inventory",
  "libc",
  "mlua",
@@ -5158,8 +5197,10 @@ version = "26.9.1"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
+ "arc-swap",
  "chrono",
  "compact_str",
+ "form_urlencoded",
  "futures",
  "hashbrown 0.17.1",
  "http-body-util",
@@ -5168,13 +5209,14 @@ dependencies = [
  "image",
  "inventory",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "percent-encoding",
  "ratatui-core",
  "ratatui-widgets",
  "reqwest",
  "rustix",
  "serde",
+ "serde_with",
  "strum 0.28.0",
  "thiserror 2.0.21",
  "tokio",
@@ -5261,7 +5303,6 @@ dependencies = [
  "bitflags 2.13.2",
  "globset",
  "hashbrown 0.17.1",
- "indexmap 2.14.2",
  "inventory",
  "mlua",
  "ratatui-core",
@@ -5290,9 +5331,8 @@ dependencies = [
  "anyhow",
  "dyn-clone",
  "hashbrown 0.17.1",
- "indexmap 2.14.2",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "ratatui-core",
  "ratatui-widgets",
  "serde",
@@ -5325,9 +5365,8 @@ version = "26.9.1"
 dependencies = [
  "anyhow",
  "hashbrown 0.17.1",
- "indexmap 2.14.2",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "paste",
  "serde",
  "serde_json",
@@ -5372,6 +5411,7 @@ dependencies = [
  "rand 0.10.3",
  "rustix",
  "scopeguard",
+ "serde",
  "strum 0.28.0",
  "thiserror 2.0.21",
  "tokio",
@@ -5445,7 +5485,7 @@ dependencies = [
  "mlua",
  "objc2-core-foundation",
  "objc2-disk-arbitration",
- "parking_lot",
+ "parking_lot 0.13.0",
  "percent-encoding",
  "rand 0.10.3",
  "regex",
@@ -5519,7 +5559,7 @@ dependencies = [
  "futures",
  "libc",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "percent-encoding",
  "ratatui-core",
  "ratatui-widgets",
@@ -5582,7 +5622,7 @@ dependencies = [
  "futures",
  "hashbrown 0.17.1",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "strum 0.28.0",
  "thiserror 2.0.21",
  "tokio",
@@ -5606,7 +5646,7 @@ dependencies = [
  "lru 0.19.0",
  "mlua",
  "ordered-float 5.5.0",
- "parking_lot",
+ "parking_lot 0.13.0",
  "rustix",
  "serde",
  "strum 0.28.0",
@@ -5629,7 +5669,7 @@ version = "26.9.1"
 dependencies = [
  "bitflags 2.13.2",
  "hashbrown 0.17.1",
- "parking_lot",
+ "parking_lot 0.13.0",
  "pin-project",
  "russh",
  "serde",
@@ -5648,14 +5688,14 @@ dependencies = [
  "foldhash",
  "futures",
  "hashbrown 0.17.1",
- "indexmap 2.14.2",
  "inventory",
  "memchr",
  "mlua",
  "ordered-float 5.5.0",
- "parking_lot",
+ "parking_lot 0.13.0",
  "paste",
  "percent-encoding",
+ "pin-project",
  "rustix",
  "serde",
  "serde_with",
@@ -5678,6 +5718,7 @@ dependencies = [
  "arc-swap",
  "fdlimit",
  "hashbrown 0.17.1",
+ "indexmap 2.14.2",
  "memchr",
  "mlua",
  "percent-encoding",
@@ -5709,7 +5750,7 @@ dependencies = [
  "compact_str",
  "futures",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "rustix",
  "serde",
  "signal-hook",
@@ -5729,7 +5770,7 @@ dependencies = [
  "base64",
  "bitflags 2.13.2",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "ratatui-core",
  "rustix",
  "windows-sys 0.61.2",
@@ -5772,7 +5813,7 @@ dependencies = [
  "hashbrown 0.17.1",
  "inventory",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "pin-project",
  "russh",
  "tokio",
@@ -5794,9 +5835,8 @@ version = "26.9.1"
 dependencies = [
  "futures",
  "hashbrown 0.17.1",
- "indexmap 2.14.2",
  "notify",
- "parking_lot",
+ "parking_lot 0.13.0",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -5820,7 +5860,7 @@ dependencies = [
  "futures",
  "inventory",
  "mlua",
- "parking_lot",
+ "parking_lot 0.13.0",
  "ratatui-core",
  "ratatui-widgets",
  "serde",

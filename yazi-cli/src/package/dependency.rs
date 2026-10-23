@@ -96,10 +96,7 @@ impl FromStr for Dependency {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-		let mut parts = s.splitn(2, ':');
-
-		let Some(parent) = parts.next() else { bail!("Package URL cannot be empty") };
-		let child = parts.next().unwrap_or_default();
+		let (parent, child) = s.split_once(':').unwrap_or((s, ""));
 
 		let Some((_, repo)) = parent.split_once('/') else {
 			bail!("Package URL `{parent}` must be in the format `owner/repository`")

@@ -59,11 +59,11 @@ fn expand_url_impl(url: UrlCow) -> UrlCow {
 fn expand_variables(p: PathCow) -> PathCow {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
-	let re = regex::bytes::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
+	let re = regex::bytes::regex!(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))");
 
 	// %USERPROFILE%
 	#[cfg(windows)]
-	let re = regex::bytes::Regex::new(r"%([^%]+)%").unwrap();
+	let re = regex::bytes::regex!(r"%([^%]+)%");
 
 	let b = p.encoded_bytes();
 	let b = re.replace_all(b, |caps: &regex::bytes::Captures| {
@@ -71,7 +71,7 @@ fn expand_variables(p: PathCow) -> PathCow {
 		str::from_utf8(name.as_bytes())
 			.ok()
 			.and_then(std::env::var_os)
-			.map_or_else(|| caps.get(0).unwrap().as_bytes().to_owned(), |s| s.into_encoded_bytes())
+			.map_or_else(|| caps.get_match().as_bytes().to_owned(), |s| s.into_encoded_bytes())
 	});
 
 	match b {

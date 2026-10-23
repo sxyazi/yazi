@@ -3,7 +3,6 @@ use std::io;
 use futures::TryStreamExt;
 use http_body_util::{BodyExt, StreamBody, combinators::BoxBody};
 use hyper::body::{Bytes, Frame};
-use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use reqwest::multipart::{Form, Part};
 
 use super::HttpPart;
@@ -45,21 +44,6 @@ impl HttpForm {
 	}
 
 	pub(super) fn to_urlencoded(&self) -> String {
-		self
-			.fields
-			.iter()
-			.map(|(name, value)| format!("{}={}", encode(name), encode(value)))
-			.collect::<Vec<_>>()
-			.join("&")
+		form_urlencoded::Serializer::new(String::new()).extend_pairs(&self.fields).finish()
 	}
-}
-
-fn encode(value: &str) -> String {
-	const SET: &AsciiSet = &NON_ALPHANUMERIC.remove(b'*').remove(b'-').remove(b'.').remove(b'_');
-
-	let mut s = String::with_capacity(value.len());
-	for part in utf8_percent_encode(value, SET) {
-		s.push_str(if part == "%20" { "+" } else { part });
-	}
-	s
 }

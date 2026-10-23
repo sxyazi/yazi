@@ -15,10 +15,7 @@ impl Tasks {
 		for f in paged {
 			let hash = FileSig(f).hash_u64();
 			for g in FetcherMatcher::new(&fetchers, f, mimetype.get(&f.url).unwrap_or_default()) {
-				let fresh = match loaded.get_mut(&hash) {
-					Some(l) => l.mark(g.idx, g.rev),
-					None => loaded.put(hash, Loaded::new(g.idx, g.rev)).is_none(),
-				};
+				let fresh = loaded.get_or_insert_mut(hash, Loaded::default).mark(g.idx, g.rev);
 				if fresh {
 					tasks[g.idx as usize].push(f.clone());
 				}
@@ -39,10 +36,7 @@ impl Tasks {
 			let hash = FileSig(f).hash_u64();
 			let mime = mimetype.get(&f.url).unwrap_or_default();
 			for p in YAZI.plugin.preloaders.matches(f, mime) {
-				let fresh = match loaded.get_mut(&hash) {
-					Some(l) => l.mark(p.idx, p.rev),
-					None => loaded.put(hash, Loaded::new(p.idx, p.rev)).is_none(),
-				};
+				let fresh = loaded.get_or_insert_mut(hash, Loaded::default).mark(p.idx, p.rev);
 				if fresh {
 					self.scheduler.preload_paged(tab, p, f, mime.intern());
 				}

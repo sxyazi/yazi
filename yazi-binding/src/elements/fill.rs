@@ -36,10 +36,7 @@ impl Spatial for Fill {
 }
 
 impl Widget for &Fill {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		if self.style == Default::default() {
 			return;
 		}

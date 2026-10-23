@@ -29,7 +29,6 @@ arc-swap        = { workspace = true }
 bitflags        = { workspace = true }
 globset         = { workspace = true }
 hashbrown       = { workspace = true }
-indexmap        = { workspace = true }
 inventory       = { workspace = true }
 mlua            = { workspace = true }
 ratatui-core    = { workspace = true }

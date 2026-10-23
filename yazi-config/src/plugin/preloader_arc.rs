@@ -32,9 +32,7 @@ impl From<Preloader> for PreloaderArc {
 impl Mixable for PreloaderArc {}
 
 impl FromLua for PreloaderArc {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(lua.from_value::<Preloader>(value)?.into())
-	}
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl UserData for PreloaderArc {

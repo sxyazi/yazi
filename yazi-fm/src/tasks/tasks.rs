@@ -1,5 +1,5 @@
 use ratatui_core::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType};
+use ratatui_widgets::block::Block;
 use yazi_config::THEME;
 use yazi_core::{Core, tasks::TASKS_PERCENT};
 
@@ -35,13 +35,14 @@ impl Widget for Tasks<'_> {
 
 		yazi_widgets::clear::Clear::default().render(area, buf);
 
+		let border_set = THEME.tasks.border_set.load();
 		let block = Block::bordered()
 			.title(Line::styled("Tasks", THEME.tasks.title.get()))
 			.title_alignment(Alignment::Center)
-			.border_type(BorderType::Rounded)
+			.border_set(border_set.as_set())
 			.border_style(THEME.tasks.border.get());
-		(&block).render(area, buf);
 
+		block.as_ref().render(area, buf);
 		List::new(self.core).render(block.inner(area), buf);
 	}
 }

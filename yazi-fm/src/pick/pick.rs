@@ -1,5 +1,5 @@
 use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType};
+use ratatui_widgets::block::Block;
 use yazi_config::THEME;
 use yazi_core::Core;
 
@@ -22,7 +22,7 @@ impl Widget for Pick<'_> {
 
 		Block::bordered()
 			.title(pick.title())
-			.border_type(BorderType::Rounded)
+			.border_set(THEME.pick.border_set.load().as_set())
 			.border_style(THEME.pick.border.get())
 			.render(area, buf);
 

@@ -1,7 +1,7 @@
 use std::{hash::BuildHasher, path::{Path, PathBuf}};
 
 use hashbrown::{HashMap, hash_map::EntryRef};
-use indexmap::{IndexMap, map::RawEntryApiV1};
+use yazi_shim::indexmap::{IndexMap, map::RawEntryApiV1};
 
 use crate::{auth::AuthArc, loc::Loc, url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlCow}};
 
@@ -116,11 +116,8 @@ where
 		U: AsUrl,
 		F: FnOnce(U) -> V,
 	{
-		let key = url.as_url();
-		match self.raw_entry_mut().from_key(&key) {
-			hashbrown::hash_map::RawEntryMut::Occupied(oe) => oe.into_mut(),
-			hashbrown::hash_map::RawEntryMut::Vacant(ve) => ve.insert(key.into(), default(url)).1,
-		}
+		let entry = self.raw_entry_mut().from_key(&url.as_url());
+		entry.or_insert_with(|| (url.as_url().into(), default(url))).1
 	}
 }
 
@@ -141,11 +138,8 @@ where
 		U: AsUrl,
 		F: FnOnce(U) -> V,
 	{
-		let key = url.as_url();
-		match self.raw_entry_mut_v1().from_key(&key) {
-			indexmap::map::raw_entry_v1::RawEntryMut::Occupied(oe) => oe.into_mut(),
-			indexmap::map::raw_entry_v1::RawEntryMut::Vacant(ve) => ve.insert(key.into(), default(url)).1,
-		}
+		let entry = self.raw_entry_mut_v1().from_key(&url.as_url());
+		entry.or_insert_with(|| (url.as_url().into(), default(url))).1
 	}
 }
 

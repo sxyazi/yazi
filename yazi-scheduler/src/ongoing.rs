@@ -75,12 +75,9 @@ impl Ongoing {
 		self.inner.get(&id).is_some_and(|t| !t.is_canceled())
 	}
 
-	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
-		if YAZI.tasks.suppress_preload {
-			Box::new(self.inner.values().filter(|&t| t.prog.is_user()))
-		} else {
-			Box::new(self.inner.values())
-		}
+	pub fn values(&self) -> impl Iterator<Item = &Task> {
+		let suppress = YAZI.tasks.suppress_preload;
+		self.inner.values().filter(move |&t| !suppress || t.prog.is_user())
 	}
 
 	#[inline]

@@ -1,9 +1,9 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_binding::{Composer, ComposerGet};
 
 yazi_macro::mod_flat!(pubsub);
 
-pub(super) fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(super) fn compose() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"pub" => Pubsub::r#pub(lua)?,
@@ -17,7 +17,5 @@ pub(super) fn compose() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }

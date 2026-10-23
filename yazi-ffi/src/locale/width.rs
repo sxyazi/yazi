@@ -1,12 +1,14 @@
-use mlua::{BorrowedBytes, ExternalError, FromLua, Lua, Value};
+use serde::Deserialize;
 use strum::EnumIs;
-use yazi_shim::bytes::BytesExt;
 
-#[derive(Clone, Copy, Default, EnumIs)]
+#[derive(Clone, Copy, Default, Deserialize, EnumIs)]
+#[serde(rename_all = "kebab-case")]
 pub(super) enum Width {
 	#[default]
+	#[serde(skip)]
 	None,
 	Numeric,
+	#[serde(rename = "2-digit")]
 	TwoDigit,
 	System,
 }
@@ -30,17 +32,5 @@ impl Width {
 
 		output.push_str(prefix);
 		output.push(field);
-	}
-}
-
-impl FromLua for Width {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		let value = BorrowedBytes::from_lua(value, lua)?;
-		match &*value {
-			b"numeric" => Ok(Self::Numeric),
-			b"2-digit" => Ok(Self::TwoDigit),
-			b"system" => Ok(Self::System),
-			value => Err(format!("invalid date format width: {}", value.display()).into_lua_err()),
-		}
 	}
 }

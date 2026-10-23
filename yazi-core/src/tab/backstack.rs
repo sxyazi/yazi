@@ -19,12 +19,8 @@ impl Backstack {
 		}
 
 		self.cursor += 1;
-		if self.cursor == self.stack.len() {
-			self.stack.push(url.to_owned());
-		} else {
-			self.stack[self.cursor] = url.to_owned();
-			self.stack.truncate(self.cursor + 1);
-		}
+		self.stack.truncate(self.cursor);
+		self.stack.push(url.to_owned());
 
 		// Only keep 30 URLs before the cursor, the cleanup threshold is 60
 		if self.stack.len() > 60 {

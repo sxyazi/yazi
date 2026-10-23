@@ -34,25 +34,11 @@ impl UserData for Layout {
 			Ok(ud)
 		});
 		methods.add_function("margin_h", |_, (ud, value): (AnyUserData, u16)| {
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				if let Some(margin) = &mut me.margin {
-					margin.horizontal = value;
-				} else {
-					me.margin = Some(ratatui_core::layout::Margin::new(value, 0));
-				}
-			}
+			ud.borrow_mut::<Self>()?.margin.get_or_insert_default().horizontal = value;
 			Ok(ud)
 		});
 		methods.add_function("margin_v", |_, (ud, value): (AnyUserData, u16)| {
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				if let Some(margin) = &mut me.margin {
-					margin.vertical = value;
-				} else {
-					me.margin = Some(ratatui_core::layout::Margin::new(0, value));
-				}
-			}
+			ud.borrow_mut::<Self>()?.margin.get_or_insert_default().vertical = value;
 			Ok(ud)
 		});
 		methods.add_function("constraints", |_, (ud, value): (AnyUserData, Vec<Constraint>)| {

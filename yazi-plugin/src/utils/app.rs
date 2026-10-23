@@ -1,6 +1,6 @@
 use std::any::TypeId;
 
-use mlua::{AnyUserData, ExternalError, Function, IntoLua, Lua, LuaString};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, Function, IntoLua, Lua};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use yazi_binding::{HttpPartTx, Scope};
 use yazi_shared::{path::PathBufDyn, url::UrlBuf};
@@ -37,8 +37,8 @@ impl Utils {
 	}
 
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, r#type: LuaString| {
-			Ok(match &*r#type.as_bytes() {
+		lua.create_function(|_, r#type: BorrowedBytes| {
+			Ok(match &*r#type {
 				b"app" => *yazi_boot::ID,
 				b"ft" => yazi_fs::op::FILES_TICKET.next(),
 				_ => Err("Invalid id type".into_lua_err())?,

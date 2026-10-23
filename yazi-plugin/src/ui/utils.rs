@@ -1,7 +1,7 @@
 use std::{borrow::Cow, iter};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, ObjectLike, Table, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, IntoLua, Lua, LuaString, ObjectLike, Table, Value};
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 use yazi_binding::{Permit, PermitRef, elements::{Line, Rect, Span, Wrap}, runtime};
 use yazi_config::LAYOUT;
@@ -46,8 +46,7 @@ pub(super) fn hide(lua: &Lua) -> mlua::Result<Value> {
 }
 
 pub(super) fn lines(lua: &Lua) -> mlua::Result<Value> {
-	let f = lua.create_function(|lua, (s, opts): (LuaString, Table)| {
-		let b = s.as_bytes();
+	let f = lua.create_function(|lua, (b, opts): (BorrowedBytes, Table)| {
 		let s = &*String::from_utf8_lossy(&b);
 
 		let parsed;

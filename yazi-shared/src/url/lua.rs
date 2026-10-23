@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, BorrowedBytes, ExternalError, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::{log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
 use crate::{auth::{AuthArc, Scheme, View}, domain::Domain, path::{PathBufDyn, StripPrefixError}, spec::Spec, strand::{StrandCow, StrandLike, ToStrand}, url::{AsUrl, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
@@ -163,8 +163,8 @@ impl UserData for UrlBuf {
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 			lua.create_string(me.to_strand().encoded_bytes())
 		});
-		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: LuaString| {
-			lua.create_external_string([lhs.to_strand().encoded_bytes(), &rhs.as_bytes()].concat())
+		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: BorrowedBytes| {
+			lua.create_external_string([lhs.to_strand().encoded_bytes(), &rhs].concat())
 		});
 
 		if !LOG_LEVEL.get().is_none() {

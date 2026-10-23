@@ -52,17 +52,15 @@ impl<'a> IntoIterator for &'a Actions {
 impl FromLua for Actions {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
-			Value::Table(t) => t.sequence_values::<Action>().collect::<mlua::Result<Vec<_>>>()?.into(),
-			v @ Value::String(_) => Action::from_lua(v, lua)?.into(),
+			Value::Table(_) => Vec::<Action>::from_lua(value, lua)?.into(),
+			Value::String(_) => Action::from_lua(value, lua)?.into(),
 			_ => Err("expected a string or a table of actions".into_lua_err())?,
 		})
 	}
 }
 
 impl IntoLua for Actions {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_sequence_from(self.0)?.into_lua(lua)
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.0.into_lua(lua) }
 }
 
 pub fn deserialize_actions<'de, D>(deserializer: D) -> Result<Actions, D::Error>

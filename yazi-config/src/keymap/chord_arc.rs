@@ -37,12 +37,7 @@ impl From<Chord> for ChordArc {
 }
 
 impl From<ChordArc> for Chord {
-	fn from(value: ChordArc) -> Self {
-		match Arc::try_unwrap(value.0) {
-			Ok(c) => c,
-			Err(arc) => Self::clone(&arc),
-		}
-	}
+	fn from(value: ChordArc) -> Self { Arc::unwrap_or_clone(value.0) }
 }
 
 impl From<&ChordArc> for Chord {

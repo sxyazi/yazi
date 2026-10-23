@@ -6,6 +6,7 @@ impl<'de> Deserialize<'de> for Position {
 	fn deserialize<D: Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
 		#[derive(Deserialize)]
 		struct Flat {
+			#[serde(alias = "0")]
 			at: Origin,
 			#[serde(default)]
 			x:  i16,

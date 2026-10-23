@@ -1,11 +1,10 @@
 use std::borrow::Cow;
 
-use indexmap::IndexSet;
 use mlua::{AnyUserData, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
 use yazi_fs::file::FileCov;
 use yazi_macro::impl_data_any;
-use yazi_shim::mlua::get_metatable;
+use yazi_shim::{indexmap::{self, IndexSet}, mlua::get_metatable};
 
 use super::Ember;
 

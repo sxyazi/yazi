@@ -47,7 +47,7 @@ impl Sixel {
 	}
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
-		let alpha = img.color().has_alpha();
+		let alpha = img.has_alpha();
 		if img.width() == 0 || img.height() == 0 {
 			bail!("image is empty");
 		}

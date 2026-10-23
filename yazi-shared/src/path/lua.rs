@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, LuaString, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_shim::{OptionExt, log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
 use crate::{path::{PathBufDyn, PathDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
@@ -11,8 +11,8 @@ impl PathBufDyn {
 			"Path",
 			lua.create_table_from([(
 				"os",
-				lua.create_function(|_, s: LuaString| {
-					Ok(Self::from(s.as_bytes().as_strand().as_os_path().into_lua_err()?))
+				lua.create_function(|_, b: BorrowedBytes| {
+					Ok(Self::from(b.as_strand().as_os_path().into_lua_err()?))
 				})?,
 			)])?,
 		)

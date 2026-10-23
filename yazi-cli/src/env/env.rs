@@ -1,7 +1,7 @@
 use std::{env, ffi::OsStr, fmt::Write, path::Path, process::Command};
 
 use anyhow::Result;
-use regex::Regex;
+use regex::regex;
 use yazi_adapter::drivers::Drivers;
 use yazi_config::{YAZI, build_flavor};
 use yazi_emulator::{Brand, Emulator, Mux};
@@ -60,6 +60,7 @@ impl Env {
 		writeln!(s, "    WSL: {:?}", yazi_shared::in_wsl())?;
 
 		writeln!(s, "\nVariables")?;
+		writeln!(s, "    PATH               : {:?}", env::var_os("PATH"))?;
 		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
 		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
 		writeln!(s, "    VISUAL             : {:?}", env::var_os("VISUAL"))?;
@@ -158,8 +159,7 @@ impl Env {
 						.unwrap_or_default()
 						.to_owned();
 
-				Regex::new(r"\d+\.\d+(\.\d+-\d+|\.\d+|\b)")
-					.unwrap()
+				regex!(r"\d+\.\d+(\.\d+-\d+|\.\d+|\b)")
 					.find(&line)
 					.map(|m| m.as_str())
 					.owned()

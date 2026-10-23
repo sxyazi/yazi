@@ -1,11 +1,11 @@
 use std::ops::Deref;
 
 use hashbrown::HashSet;
-use indexmap::{IndexSet, set::MutableValues};
 use yazi_dds::Pubsub;
 use yazi_fs::file::{File, FileCov};
 use yazi_macro::log_if_err;
 use yazi_shared::url::{Url, UrlBuf, UrlCov, UrlLike};
+use yazi_shim::indexmap::IndexSet;
 
 #[derive(Debug, Default)]
 pub struct Yanked {
@@ -69,10 +69,7 @@ impl Yanked {
 	}
 
 	pub(crate) fn upsert(&mut self, file: &File) {
-		if let Some((_, value)) = self.files.get_full_mut2(&UrlCov::new(&file.url)) {
-			*value = file.into();
-		} else {
-			self.files.insert(file.into());
+		if self.files.replace(file.into()).is_none() {
 			self.revision += 1;
 		}
 	}

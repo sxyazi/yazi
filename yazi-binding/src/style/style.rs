@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::style::Modifier;
-use yazi_shim::{cell::SyncCell, mlua::SER_OPT};
+use yazi_shim::mlua::SER_OPT;
 
 use crate::elements::Color;
 
@@ -13,10 +13,6 @@ impl Deref for Style {
 	type Target = ratatui_core::style::Style;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl From<&SyncCell<Self>> for Style {
-	fn from(value: &SyncCell<Self>) -> Self { value.get() }
 }
 
 impl From<Style> for ratatui_core::style::Style {

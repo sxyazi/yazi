@@ -17,8 +17,12 @@ impl Widget for List<'_> {
 		let inner = area.inner(Margin::new(2, 0));
 
 		// Bottom border
-		let block = Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border.get());
-		block.clone().render(area.inner(Margin::new(1, 0)), buf);
+		let border_set = THEME.confirm.border_set.load();
+		let block = Block::new()
+			.borders(Borders::BOTTOM)
+			.border_set(border_set.as_set())
+			.border_style(THEME.confirm.border.get());
+		block.as_ref().render(area.inner(Margin::new(1, 0)), buf);
 
 		let list = self
 			.core

@@ -1,5 +1,5 @@
 use ratatui_core::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Rect}, symbols::merge::MergeStrategy, widgets::Widget};
-use ratatui_widgets::{block::{Block, Padding}, borders::BorderType};
+use ratatui_widgets::block::{Block, Padding};
 use yazi_config::THEME;
 use yazi_core::Core;
 use yazi_shim::ratatui::Padable;
@@ -25,7 +25,7 @@ impl Widget for Help<'_> {
 		Block::bordered()
 			.title(format!("{}.help", help.layer))
 			.title_alignment(Alignment::Center)
-			.border_type(BorderType::Rounded)
+			.border_set(THEME.help.border_set.load().as_set())
 			.border_style(THEME.help.border.get())
 			.render(area, buf);
 
@@ -38,7 +38,7 @@ impl Widget for Help<'_> {
 
 		// Divider
 		Block::bordered()
-			.border_type(BorderType::Rounded)
+			.border_set(THEME.help.border_set.load().as_set())
 			.border_style(THEME.help.border.get())
 			.merge_borders(MergeStrategy::Fuzzy)
 			.render(chunks[1], buf);

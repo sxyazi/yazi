@@ -1,5 +1,6 @@
 use std::{cell::Cell, cmp::Ordering, fmt::{Debug, Display, Formatter}, ops::Deref};
 
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// [`Cell`], but [`Sync`].
@@ -70,4 +71,8 @@ where
 	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
 		Ok(Self::new(T::deserialize(deserializer)?))
 	}
+}
+
+impl<T: Copy + IntoLua> IntoLua for &SyncCell<T> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.get().into_lua(lua) }
 }

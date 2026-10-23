@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, Value};
+use serde::de::{DeserializeOwned, value::MapAccessDeserializer};
 
-use crate::{mlua::{SequenceIter, is_alive}, toml::DeserializeOverWith};
+use crate::{mlua::{SequenceIter, TableAccess, is_alive}, toml::DeserializeOverWith};
 
 // --- DeserializeOverLua
 pub trait DeserializeOverLua: DeserializeOverWith {
@@ -16,10 +17,18 @@ impl<T: DeserializeOverWith> DeserializeOverLua for T {}
 
 // --- LuaTableExt
 pub trait LuaTableExt {
+	/// Deserializes fields, mapping positive integer keys to zero-based Serde field names.
+	/// Nested values retain mlua's normal deserialization semantics.
+	fn deserialize<T: DeserializeOwned>(&self) -> mlua::Result<T>;
+
 	fn sequence_iter<V: FromLua>(&self, lua: &Lua) -> SequenceIter<V>;
 }
 
 impl LuaTableExt for Table {
+	fn deserialize<T: DeserializeOwned>(&self) -> mlua::Result<T> {
+		T::deserialize(MapAccessDeserializer::new(TableAccess::from(self)))
+	}
+
 	fn sequence_iter<V: FromLua>(&self, lua: &Lua) -> SequenceIter<V> {
 		SequenceIter {
 			lua:      lua.clone(),

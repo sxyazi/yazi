@@ -1,4 +1,4 @@
-use mlua::{Lua, MultiValue};
+use mlua::{FromLua, IntoLua, Lua, MultiValue};
 
 use crate::data::Data;
 
@@ -6,10 +6,10 @@ pub struct Sendable;
 
 impl Sendable {
 	pub fn list_to_values(lua: &Lua, data: Vec<Data>) -> mlua::Result<MultiValue> {
-		data.into_iter().map(|d| Self::data_to_value(lua, d)).collect()
+		data.into_iter().map(|d| d.into_lua(lua)).collect()
 	}
 
 	pub fn values_to_list(lua: &Lua, values: MultiValue) -> mlua::Result<Vec<Data>> {
-		values.into_iter().map(|v| Self::value_to_data(lua, v)).collect()
+		values.into_iter().map(|v| Data::from_lua(v, lua)).collect()
 	}
 }

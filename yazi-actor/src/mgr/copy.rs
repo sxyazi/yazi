@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use either::Either;
 use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::mgr::CopyForm;
@@ -19,9 +20,9 @@ impl Actor for Copy {
 
 		let mut s = Vec::<u8>::new();
 		let mut it = if form.hovered {
-			Box::new(cx.hovered().into_iter())
+			Either::Left(cx.hovered().into_iter())
 		} else {
-			cx.tab().selected_or_hovered_files()
+			Either::Right(cx.tab().selected_or_hovered_files())
 		}
 		.peekable();
 

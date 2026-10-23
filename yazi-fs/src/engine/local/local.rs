@@ -107,7 +107,7 @@ impl<'a> Engine for Local<'a> {
 
 	#[inline]
 	async fn remove_dir_all(&self) -> io::Result<Removal> {
-		Ok(crate::remover::Remover::new(self.path).spawn())
+		Ok(crate::remover::Remover::spawn(self.path))
 	}
 
 	#[inline]

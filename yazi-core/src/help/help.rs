@@ -39,7 +39,7 @@ impl Help {
 
 		if kw.is_empty() {
 			self.keyword.clear();
-			self.bindings = KEYMAP.chords(self.layer).iter().cloned().collect();
+			self.bindings = KEYMAP.chords(self.layer).to_vec();
 		} else if self.keyword != kw {
 			self.keyword = kw.to_owned();
 			self.bindings = Self::filter_chords(&KEYMAP.chords(self.layer), kw);

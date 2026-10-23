@@ -31,6 +31,10 @@ impl Session {
 
 		async fn read(reader: &mut ReadHalf<ChannelStream<Msg>>) -> io::Result<Vec<u8>> {
 			let len = reader.read_u32().await?;
+			if len > 1024 * 1024 {
+				return Err(io::Error::new(ErrorKind::InvalidData, "SFTP packet too large"));
+			}
+
 			let mut buf = vec![0; len as usize];
 			reader.read_exact(&mut buf).await?;
 			Ok(buf)
@@ -62,13 +66,9 @@ impl Session {
 			loop {
 				select! {
 					result = read(&mut reader) => {
-						let buf = match result {
-							Ok(b) => b,
-							Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
-								me_.tx.send(vec![]).ok();
-								break;
-							},
-							Err(_) => continue,
+						let Ok(buf) = result else {
+							me_.tx.send(vec![]).ok();
+							break;
 						};
 
 						if let Ok(packet) = crate::from_bytes(&buf)

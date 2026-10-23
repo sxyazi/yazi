@@ -83,23 +83,23 @@ impl Condition {
 			let op = ConditionOp::new(token);
 			match op {
 				ConditionOp::Or | ConditionOp::And | ConditionOp::Not => {
-					while matches!(stack.last(), Some(last) if last >= &op) {
-						output.push(stack.pop().unwrap());
+					while let Some(last) = stack.pop_if(|last| *last >= op) {
+						output.push(last);
 					}
 					stack.push(op);
 				}
 				ConditionOp::Space => continue,
 				ConditionOp::LeftParen => stack.push(op),
 				ConditionOp::RightParen => {
-					while matches!(stack.last(), Some(last) if last != &ConditionOp::LeftParen) {
-						output.push(stack.pop().unwrap());
+					while let Some(last) = stack.pop_if(|last| *last != ConditionOp::LeftParen) {
+						output.push(last);
 					}
 					stack.pop();
 				}
 				ConditionOp::Unknown => {
 					let mut s = String::from(token);
-					while matches!(chars.peek(), Some(&c) if ConditionOp::new(c) == op) {
-						s.push(chars.next().unwrap());
+					while let Some(c) = chars.next_if(|&c| ConditionOp::new(c) == op) {
+						s.push(c);
 					}
 					output.push(ConditionOp::Term(s));
 				}
@@ -107,9 +107,7 @@ impl Condition {
 			}
 		}
 
-		while let Some(op) = stack.pop() {
-			output.push(op);
-		}
+		output.extend(stack.into_iter().rev());
 
 		Self { ops: output }
 	}

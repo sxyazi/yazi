@@ -1,7 +1,7 @@
-use mlua::{ExternalError, HookTriggers, VmState};
+use mlua::{ExternalError, HookTriggers, IntoLua, VmState};
 use tokio::{runtime::Handle, select};
 use yazi_binding::runtime::RuntimeSeed;
-use yazi_shared::{data::Data, sendable::Sendable};
+use yazi_shared::data::Data;
 
 use crate::{Runner, evaluator::EvaluateError};
 
@@ -33,7 +33,7 @@ impl EvaluateJob {
 			)?;
 
 			let f = lua.load(bytes).set_name(format!("={name}:async-blocking")).into_function()?;
-			let arg = Sendable::data_to_value(&lua, arg)?;
+			let arg = arg.into_lua(&lua)?;
 			Handle::current().block_on(async {
 				select! {
 					_ = scope.cancelled() => Ok(()),

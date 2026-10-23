@@ -1,12 +1,12 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::{Align, Bar, Border, Color, Constraint, Edge, Fill, Gauge, Layout, Line, List, Pad, Rect, Row, Span, Table, Text, Wrap}, position::Position, style::Style};
+use yazi_binding::{Composer, ComposerGet, elements::{Align, Bar, Border, Color, Constraint, Edge, Fill, Gauge, Layout, Line, List, Pad, Rect, Row, Span, Table, Text, Wrap}, position::Position, style::Style};
 use yazi_config::THEME;
 use yazi_dds::Pubsub;
 use yazi_macro::log_if_err;
 use yazi_shim::strum::IntoStr;
 use yazi_widgets::{clear::Clear, input::{InputArc, InputEvent}};
 
-pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			// Elements
@@ -47,9 +47,7 @@ pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
 fn publish_input(event: InputEvent) {

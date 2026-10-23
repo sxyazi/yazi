@@ -1,4 +1,4 @@
-use mlua::{ExternalError, Function, Lua, Table};
+use mlua::{ExternalError, Function, IntoLua, Lua, Table};
 use tokio::sync::mpsc;
 use yazi_binding::runtime;
 use yazi_macro::emit;
@@ -31,10 +31,10 @@ impl Utils {
 			let (tx, mut rx) = mpsc::unbounded_channel();
 			emit!(Call(action.with_replier(tx)));
 
-			Sendable::data_to_value(
-				&lua,
-				rx.recv().await.ok_or_else(|| "channel closed before action response".into_lua_err())??,
-			)
+			rx.recv()
+				.await
+				.ok_or_else(|| "channel closed before action response".into_lua_err())??
+				.into_lua(&lua)
 		})
 	}
 }

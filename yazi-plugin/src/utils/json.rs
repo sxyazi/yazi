@@ -1,4 +1,4 @@
-use mlua::{Function, IntoLuaMulti, Lua, LuaSerdeExt, LuaString, Value};
+use mlua::{BorrowedBytes, Function, IntoLuaMulti, Lua, LuaSerdeExt, Value};
 use yazi_shim::{fs::Error, mlua::SER_OPT};
 
 use super::Utils;
@@ -14,8 +14,8 @@ impl Utils {
 	}
 
 	pub(super) fn json_decode(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(|lua, s: LuaString| async move {
-			match serde_json::from_slice::<serde_json::Value>(&s.as_bytes()) {
+		lua.create_async_function(|lua, b: BorrowedBytes| async move {
+			match serde_json::from_slice::<serde_json::Value>(&b) {
 				Ok(v) => lua.to_value_with(&v, SER_OPT)?.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
 			}

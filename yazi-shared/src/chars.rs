@@ -1,10 +1,7 @@
-use core::str;
 use std::borrow::Cow;
 
 pub fn strip_trailing_newline(mut s: String) -> String {
-	while s.ends_with('\n') || s.ends_with('\r') {
-		s.pop();
-	}
+	s.truncate(s.trim_end_matches(['\r', '\n']).len());
 	s
 }
 
@@ -13,32 +10,7 @@ where
 	T: Into<Cow<'a, str>>,
 {
 	let cow = s.into();
-	match replace_cow_impl(&cow, cow.match_indices(from), to) {
-		Cow::Borrowed(_) => cow,
-		Cow::Owned(new) => Cow::Owned(new),
-	}
-}
-
-fn replace_cow_impl<'a, T>(src: &'a str, mut indices: T, to: &str) -> Cow<'a, str>
-where
-	T: Iterator<Item = (usize, &'a str)>,
-{
-	let Some((first_idx, first_sub)) = indices.next() else {
-		return Cow::Borrowed(src);
-	};
-
-	let mut result = String::with_capacity(src.len());
-	result += unsafe { src.get_unchecked(..first_idx) };
-	result += to;
-
-	let mut last = first_idx + first_sub.len();
-	for (idx, sub) in indices {
-		result += unsafe { src.get_unchecked(last..idx) };
-		result += to;
-		last = idx + sub.len();
-	}
-
-	Cow::Owned(result + unsafe { src.get_unchecked(last..) })
+	if cow.contains(from) { Cow::Owned(cow.replace(from, to)) } else { cow }
 }
 
 pub fn replace_vec_cow<'a>(v: &'a [u8], from: &[u8], to: &[u8]) -> Cow<'a, [u8]> {

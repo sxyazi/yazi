@@ -1,7 +1,7 @@
 use std::{any::TypeId, borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
@@ -31,18 +31,13 @@ impl Line {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, line): (Table, Self)| Ok(line))?;
 
-		let parse = lua.create_function(|_, code: LuaString| {
-			let code = code.as_bytes();
+		let parse = lua.create_function(|_, code: BorrowedBytes| {
 			let Some(line) = code.split_inclusive(|&b| b == b'\n').next() else {
 				return Ok(Self::default());
 			};
 
-			let mut lines = line.into_text().into_lua_err()?.lines;
-			if lines.is_empty() {
-				return Ok(Self::default());
-			}
-
-			Ok(Self { inner: mem::take(&mut lines[0]), ..Default::default() })
+			let inner = line.into_text().into_lua_err()?.lines.into_iter().next().unwrap_or_default();
+			Ok(Self { inner, ..Default::default() })
 		})?;
 
 		let line = lua.create_table_from([("parse", parse)])?;
@@ -108,10 +103,7 @@ impl Spatial for Line {
 }
 
 impl Widget for &Line {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		(&self.inner).render(rect, buf);
 	}
 }

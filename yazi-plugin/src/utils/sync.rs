@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use futures::future::{join_all, select_all};
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, MultiValue, ObjectLike, Value, Variadic};
+use mlua::{BorrowedBytes, ExternalError, ExternalResult, FromLua, Function, IntoLuaMulti, Lua, LuaString, MultiValue, ObjectLike, Value, Variadic};
 use tokio::{select, sync::mpsc, task};
 use yazi_binding::{Handle, MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx, runtime, runtime::RuntimeCo, runtime_mut};
 use yazi_core::{AppProxy, app::PluginOpt};
 use yazi_macro::log_if_err;
 use yazi_runner::{CoHandle, RUNNER, loader::LOADER, sync::SyncJob};
-use yazi_shared::sendable::Sendable;
+use yazi_shared::{data::Data, sendable::Sendable};
 use yazi_shim::{fs::Error, log::LOG_LEVEL};
 
 use super::Utils;
@@ -82,14 +82,14 @@ impl Utils {
 
 			let seed = runtime!(lua)?.child_seed()?;
 			let bytes = f.dump(LOG_LEVEL.get().is_none());
-			let arg = Sendable::value_to_data(lua, arg)?;
+			let arg = Data::from_lua(arg, lua)?;
 			Ok(RUNNER.evaluate(seed, bytes, arg))
 		})
 	}
 
 	pub(super) fn chan(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (r#type, buffer): (LuaString, Option<usize>)| {
-			match (&*r#type.as_bytes(), buffer) {
+		lua.create_function(|lua, (r#type, buffer): (BorrowedBytes, Option<usize>)| {
+			match (&*r#type, buffer) {
 				(b"mpsc", Some(0)) => Err("Buffer size must be greater than 0".into_lua_err()),
 				(b"mpsc", Some(buffer)) => {
 					let (tx, rx) = tokio::sync::mpsc::channel::<Value>(buffer);

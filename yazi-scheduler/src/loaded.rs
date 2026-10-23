@@ -1,13 +1,7 @@
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Loaded(u32);
 
 impl Loaded {
-	pub fn new(idx: u8, rev: u16) -> Self {
-		debug_assert!(idx < 16);
-
-		Self(u32::from(rev) << 16 | 1u32 << idx)
-	}
-
 	pub fn mark(&mut self, idx: u8, rev: u16) -> bool {
 		debug_assert!(idx < 16);
 

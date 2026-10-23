@@ -2,11 +2,10 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::IntoDeserializer};
 use toml::{Spanned, de::DeTable};
 use yazi_codegen::{DeserializeOver, DeserializeOver2, Overlay};
 use yazi_fs::Xdg;
-use yazi_shim::toml::deserialize_spanned;
 
 use crate::error_with_input;
 
@@ -21,7 +20,7 @@ pub struct Flavor {
 impl Flavor {
 	pub(crate) fn from_theme(theme: &Spanned<DeTable>, input: &str) -> Result<Self, toml::de::Error> {
 		if let Some(value) = theme.get_ref().get("flavor").cloned() {
-			error_with_input(deserialize_spanned(value), input)
+			error_with_input(Self::deserialize(value.into_deserializer()), input)
 		} else {
 			Ok(Self::default())
 		}

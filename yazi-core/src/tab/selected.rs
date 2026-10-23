@@ -1,7 +1,7 @@
 use hashbrown::HashMap;
-use indexmap::{IndexMap, map::MutableKeys};
 use yazi_fs::file::{File, FileCov};
 use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlBuf, UrlBufCov, UrlCov, UrlCovMapExt, UrlLike, UrlMapExt}};
+use yazi_shim::indexmap::{IndexMap, map::MutableKeys};
 
 #[derive(Default)]
 pub struct Selected {

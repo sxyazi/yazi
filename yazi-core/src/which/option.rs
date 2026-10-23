@@ -55,7 +55,7 @@ impl FromLua for WhichOpt {
 		Ok(Self {
 			tx:     t.raw_get::<yazi_binding::MpscUnboundedTx<_>>("tx").ok().map(|t| t.0),
 			layer:  t.raw_get("layer")?,
-			cands:  t.raw_get::<Table>("cands")?.sequence_values().collect::<mlua::Result<Vec<_>>>()?,
+			cands:  t.raw_get("cands")?,
 			times:  t.raw_get("times").unwrap_or_default(),
 			silent: t.raw_get("silent")?,
 		})
@@ -69,7 +69,7 @@ impl IntoLua for WhichOpt {
 			.create_table_from([
 				("tx", self.tx.map(yazi_binding::MpscUnboundedTx).into_lua(lua)?),
 				("layer", self.layer.into_lua(lua)?),
-				("cands", lua.create_sequence_from(self.cands)?.into_lua(lua)?),
+				("cands", self.cands.into_lua(lua)?),
 				("times", self.times.into_lua(lua)?),
 				("silent", self.silent.into_lua(lua)?),
 			])?

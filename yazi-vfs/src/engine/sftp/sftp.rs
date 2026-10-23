@@ -166,7 +166,7 @@ impl<'a> Engine for Sftp<'a> {
 	async fn remove_dir(&self) -> io::Result<()> { Ok(self.op().await?.rmdir(self.path).await?) }
 
 	async fn remove_dir_all(&self) -> io::Result<Removal> {
-		Ok(crate::remover::Remover::new(self.to_url()).spawn())
+		Ok(crate::remover::Remover::spawn(self.to_url()))
 	}
 
 	async fn remove_file(&self) -> io::Result<()> { Ok(self.op().await?.remove(self.path).await?) }

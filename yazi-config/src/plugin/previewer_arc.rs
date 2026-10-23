@@ -31,9 +31,7 @@ impl Mixable for PreviewerArc {
 }
 
 impl FromLua for PreviewerArc {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(lua.from_value::<Previewer>(value)?.into())
-	}
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl UserData for PreviewerArc {

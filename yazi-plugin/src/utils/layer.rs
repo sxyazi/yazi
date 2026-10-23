@@ -1,6 +1,6 @@
-use std::{str::FromStr, time::Duration};
+use std::time::Duration;
 
-use mlua::{ExternalError, Function, IntoLuaMulti, Lua, LuaString, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{elements::{Line, Text}, runtime};
 use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
@@ -55,18 +55,16 @@ impl Utils {
 			let opt = InputOpt::try_from(&t)?;
 			let realtime = opt.realtime;
 
+			let secs = t.raw_get::<f64>("debounce").unwrap_or_default();
+			let dur = Duration::try_from_secs_f64(secs).into_lua_err()?;
 			let rx = UnboundedReceiverStream::new(InputProxy::show(opt));
-			if !realtime {
-				return InputStream::consume(rx).await.into_lua_multi(&lua);
-			}
 
-			let debounce = t.raw_get::<f64>("debounce").unwrap_or_default();
-			if debounce < 0.0 {
-				Err("negative debounce duration".into_lua_err())
-			} else if debounce == 0.0 {
+			if !realtime {
+				InputStream::consume(rx).await.into_lua_multi(&lua)
+			} else if dur.is_zero() {
 				InputStream::new(rx).into_lua_multi(&lua)
 			} else {
-				InputStream::new(Debounce::new(rx, Duration::from_secs_f64(debounce))).into_lua_multi(&lua)
+				InputStream::new(Debounce::new(rx, dur)).into_lua_multi(&lua)
 			}
 		})
 	}
@@ -93,18 +91,12 @@ impl Utils {
 	}
 
 	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {
-		Ok(match value {
-			Value::String(s) => {
-				vec![Key::from_str(&s.to_str()?)?]
-			}
+		match value {
+			Value::String(s) => Ok(vec![s.to_str()?.parse()?]),
 			Value::Table(t) => {
-				let mut v = Vec::with_capacity(10);
-				for s in t.sequence_values::<LuaString>() {
-					v.push(Key::from_str(&s?.to_str()?)?);
-				}
-				v
+				t.sequence_values::<LuaString>().map(|s| Ok(s?.to_str()?.parse()?)).collect()
 			}
-			_ => Err("invalid `on`".into_lua_err())?,
-		})
+			_ => Err("invalid `on`".into_lua_err()),
+		}
 	}
 }

@@ -10,7 +10,5 @@ impl<T> IntoLua for Range<T>
 where
 	T: IntoLua,
 {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_sequence_from([self.0.start, self.0.end])?.into_lua(lua)
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { [self.0.start, self.0.end].into_lua(lua) }
 }

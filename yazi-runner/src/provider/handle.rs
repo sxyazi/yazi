@@ -1,5 +1,5 @@
 use mlua::{FromLua, Lua, Table, Value};
-use yazi_shared::{data::Data, id::Id, sendable::Sendable};
+use yazi_shared::{data::Data, id::Id};
 
 #[derive(Clone)]
 pub struct Handle {
@@ -9,10 +9,10 @@ pub struct Handle {
 }
 
 impl Handle {
-	pub(super) fn into_table(self, lua: &Lua, t: &Table) -> mlua::Result<()> {
+	pub(super) fn into_table(self, t: &Table) -> mlua::Result<()> {
 		t.raw_set("id", self.id)?;
 		t.raw_set("seekless", self.seekless)?;
-		t.raw_set("state", Sendable::data_to_value(lua, self.state)?)?;
+		t.raw_set("state", self.state)?;
 		Ok(())
 	}
 }
@@ -24,7 +24,7 @@ impl FromLua for Handle {
 		Ok(Self {
 			id:       t.raw_get("id")?,
 			seekless: t.raw_get("seekless")?,
-			state:    Sendable::value_to_data(lua, t.raw_get("state")?)?,
+			state:    t.raw_get("state")?,
 		})
 	}
 }

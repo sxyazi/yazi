@@ -1,8 +1,8 @@
 use futures::{StreamExt, stream};
-use indexmap::IndexSet;
 use yazi_fs::{FsUrl, file::File};
 use yazi_macro::error;
 use yazi_shared::{LastValue, url::{UrlBuf, UrlCow, UrlLike}};
+use yazi_shim::indexmap::IndexSet;
 
 use crate::{Refresher, Reporter, WATCHED, Watchee, backend::Backend};
 
@@ -30,8 +30,8 @@ impl Watcher {
 		I::Item: Into<File>,
 	{
 		let it = files.into_iter();
-		let mut urls = IndexSet::with_capacity(it.size_hint().0);
-		let mut files = IndexSet::with_capacity(it.size_hint().0);
+		let mut urls = IndexSet::with_capacity_and_hasher(it.size_hint().0, Default::default());
+		let mut files = IndexSet::with_capacity_and_hasher(it.size_hint().0, Default::default());
 
 		for file in it.map(Into::into) {
 			if !file.is_absolute() && file.auth().is_local() {

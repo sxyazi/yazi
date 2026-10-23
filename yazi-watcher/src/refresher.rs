@@ -1,12 +1,12 @@
 use std::{io, mem, ops::Deref, time::Duration};
 
 use hashbrown::{HashMap, hash_map::RawEntryMut};
-use indexmap::IndexSet;
 use tokio::{pin, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::task::AbortOnDropHandle;
 use yazi_fs::{Entries, file::File, op::{FILES_TICKET, FilesOp}};
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike, UrlMapExt}};
+use yazi_shim::indexmap::IndexSet;
 use yazi_vfs::VfsEntries;
 
 #[derive(Clone)]
@@ -177,7 +177,7 @@ impl Refresher {
 		}
 	}
 
-	pub fn shutdown(&self) { self.sync(IndexSet::new()); }
+	pub fn shutdown(&self) { self.sync(Default::default()); }
 }
 
 pub enum Op {

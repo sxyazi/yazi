@@ -1,6 +1,6 @@
-use mlua::{IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, Value};
 use serde::Serialize;
-use yazi_shared::{data::Data, sendable::Sendable};
+use yazi_shared::data::Data;
 
 use super::Ember;
 
@@ -16,7 +16,7 @@ impl EmberCustom {
 	}
 
 	pub(crate) fn from_lua(lua: &Lua, kind: &str, data: Value) -> mlua::Result<Ember<'static>> {
-		Ok(Self { kind: kind.to_owned(), data: Sendable::value_to_data(lua, data)? }.into())
+		Ok(Self { kind: kind.to_owned(), data: Data::from_lua(data, lua)? }.into())
 	}
 }
 
@@ -25,7 +25,7 @@ impl From<EmberCustom> for Ember<'_> {
 }
 
 impl IntoLua for EmberCustom {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Sendable::data_to_value(lua, self.data) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.data.into_lua(lua) }
 }
 
 impl Serialize for EmberCustom {
