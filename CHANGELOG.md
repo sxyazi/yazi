@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 - Windows support for `fs.partitions()` ([#4402])
 - Image preview adaptation for `st-graphics` terminal ([#4414])
+- Create chords from Lua tables, with keys as strings or as `Key` tables ([#])
 
 ### Changed
 

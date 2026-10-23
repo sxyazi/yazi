@@ -79,10 +79,10 @@ impl Mixable for ChordArc {
 }
 
 impl FromLua for ChordArc {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
 			Value::UserData(ud) => ud.take()?,
-			_ => Chord::deserialize(mlua::serde::Deserializer::new(value))?.into(),
+			_ => Chord::from_lua(value, lua)?.into(),
 		})
 	}
 }
