@@ -220,10 +220,6 @@ impl Action {
 		self.args.remove(&name.into()).map(Data::into_any2)
 	}
 
-	pub(crate) fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
-		(0..self.len()).filter_map(|i| self.args.remove(&DataKey::from(i))?.into_any())
-	}
-
 	pub(crate) fn take_replier(&mut self) -> Option<Replier> {
 		let replier: Replier = self.take_any("replier")?;
 		replier.claim();

@@ -3,7 +3,7 @@ use std::{ops::{Deref, DerefMut}, sync::Arc};
 use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 use serde::Deserialize;
 use yazi_macro::impl_data_any;
-use yazi_shared::{Layer, event::ActionCow};
+use yazi_shared::{Layer, data::Data, event::ActionCow};
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{Mixable, keymap::Chord};
@@ -72,6 +72,23 @@ impl ChordArc {
 			Err(arc) => Self(arc).to_seq(layer),
 		}
 	}
+}
+
+impl TryFrom<Data> for ChordArc {
+	type Error = anyhow::Error;
+
+	fn try_from(value: Data) -> Result<Self, Self::Error> {
+		match value {
+			Data::Any(_) => value.into_any2(),
+			_ => Ok(Chord::deserialize(value)?.into()),
+		}
+	}
+}
+
+impl TryFrom<&Data> for ChordArc {
+	type Error = anyhow::Error;
+
+	fn try_from(value: &Data) -> Result<Self, Self::Error> { value.clone().try_into() }
 }
 
 impl Mixable for ChordArc {

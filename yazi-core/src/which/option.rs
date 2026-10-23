@@ -24,7 +24,7 @@ impl<C> FromAction<C> for WhichOpt {
 		Ok(Self {
 			tx:     a.take_any2("tx").transpose()?,
 			layer:  a.get("layer")?,
-			cands:  a.take_any_iter().collect(),
+			cands:  a.take_seq(),
 			times:  a.get("times").unwrap_or(0),
 			silent: a.bool("silent"),
 		})
