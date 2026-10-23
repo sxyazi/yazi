@@ -50,7 +50,5 @@ impl FromLua for Files {
 }
 
 impl IntoLua for Files {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_sequence_from(self.0)?.into_lua(lua)
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.0.into_lua(lua) }
 }

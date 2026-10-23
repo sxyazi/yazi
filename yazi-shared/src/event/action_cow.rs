@@ -1,4 +1,4 @@
-use std::{iter, ops::Deref};
+use std::ops::Deref;
 
 use anyhow::Result;
 use serde::de::DeserializeOwned;
@@ -108,11 +108,13 @@ impl ActionCow {
 		}
 	}
 
-	pub fn take_any_iter<'a, T: 'static>(&'a mut self) -> Box<dyn Iterator<Item = T> + 'a> {
+	pub fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
 		match self {
-			Self::Owned(c) => Box::new(c.take_any_iter()),
-			Self::Borrowed(_) => Box::new(iter::empty()),
+			Self::Owned(c) => Some(c.take_any_iter()),
+			Self::Borrowed(_) => None,
 		}
+		.into_iter()
+		.flatten()
 	}
 
 	pub fn take_replier(&mut self) -> Option<Replier> {

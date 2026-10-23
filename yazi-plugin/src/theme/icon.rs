@@ -1,9 +1,9 @@
 use mlua::{IntoLua, Lua, Table, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_binding::{Composer, ComposerGet};
 use yazi_config::THEME;
 use yazi_fs::file::FileRef;
 
-pub(super) fn icon() -> Composer<ComposerGet, ComposerSet> {
+pub(super) fn icon() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"match" => lua
@@ -17,7 +17,5 @@ pub(super) fn icon() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }

@@ -186,7 +186,7 @@ impl<'a> Engine for Lua<'a> {
 
 	async fn remove_dir_all(&self) -> io::Result<remover::Removal> {
 		if !self.capabilities().await?.remove_dir_all {
-			return Ok(crate::remover::Remover::new(self.to_url()).spawn());
+			return Ok(crate::remover::Remover::spawn(self.to_url()));
 		}
 
 		let (tx, rx) = mpsc::channel(20);

@@ -23,6 +23,7 @@ data-encoding = { workspace = true }
 libc          = { workspace = true }
 mlua          = { workspace = true }
 rand          = { workspace = true }
+serde         = { workspace = true }
 strum         = { workspace = true }
 thiserror     = { workspace = true }
 tokio         = { workspace = true }

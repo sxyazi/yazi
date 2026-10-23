@@ -1,4 +1,4 @@
-use std::{io, mem};
+use std::io;
 
 use tokio::{select, sync::mpsc};
 use yazi_fs::{engine::{DirReader, FileHolder}, remover::{Delta, Progress, Removal}, stat::Stat};
@@ -8,32 +8,23 @@ use yazi_shared::url::UrlBuf;
 use crate::engine;
 
 pub(crate) struct Remover {
-	target: UrlBuf,
-
 	tx:       mpsc::Sender<io::Result<Delta>>,
-	rx:       Option<mpsc::Receiver<io::Result<Delta>>>,
 	progress: Progress,
 }
 
 impl Remover {
-	pub(crate) fn new(target: UrlBuf) -> Self {
+	pub(crate) fn spawn(target: UrlBuf) -> Removal {
 		let (tx, rx) = mpsc::channel(20);
 
-		Self { target, tx, rx: Some(rx), progress: Progress::default() }
-	}
-
-	pub(crate) fn spawn(mut self) -> Removal {
-		let rx = self.rx.take().unwrap();
-		let tx = self.tx.clone();
+		let mut me = Self { tx: tx.clone(), progress: Progress::default() };
 
 		let handle = tokio::spawn(async move {
-			let target = mem::take(&mut self.target);
 			let result = select! {
 				_ = tx.closed() => return,
-				result = self.remove_root(target) => result,
+				result = me.remove_root(target) => result,
 			};
 
-			let remaining = self.progress.remaining();
+			let remaining = me.progress.remaining();
 			if remaining > 0 {
 				tx.send(Ok(remaining.into())).await.ok();
 			}

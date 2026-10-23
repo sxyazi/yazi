@@ -20,11 +20,11 @@ impl Widget for Body<'_> {
 		let inner = area.inner(Margin::new(1, 0));
 
 		// Border
-		let block = if self.border {
-			Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border.get())
-		} else {
-			Block::new()
-		};
+		let border_set = THEME.confirm.border_set.load();
+		let block = Block::new()
+			.borders(if self.border { Borders::BOTTOM } else { Borders::NONE })
+			.border_set(border_set.as_set())
+			.border_style(THEME.confirm.border.get());
 
 		confirm
 			.body

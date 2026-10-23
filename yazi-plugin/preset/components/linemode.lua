@@ -18,9 +18,14 @@ function Linemode:solo()
 		return ""
 	elseif not self[mode] then
 		return " " .. mode
-	else
-		local line = ui.Line(self[mode](self))
+	end
+
+	local ok, line = pcall(function() return ui.Line(self[mode](self)) end)
+	if ok then
 		return line:visible() and ui.Line { " ", line } or line
+	else
+		ya.err("Failed to render linemode `" .. mode .. "`:", line)
+		return " [Lua error]"
 	end
 end
 

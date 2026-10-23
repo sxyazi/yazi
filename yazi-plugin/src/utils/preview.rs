@@ -1,4 +1,4 @@
-use mlua::{ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{elements::Area, runtime};
 use yazi_core::{Highlighter, MgrProxy, tab::PreviewLock};
 use yazi_fs::file::FileRef;
@@ -21,9 +21,7 @@ impl Utils {
 			let inner = match Highlighter::oneshot(path, lock.skip, area.size()).await {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceeded(max)) => return (e, max).into_lua_multi(&lua),
-				Err(e) => {
-					return e.into_lua_multi(&lua);
-				}
+				Err(e) => return e.into_lua_multi(&lua),
 			};
 
 			lock.data = vec![Renderable::Text(inner.into()).with_area(area)];
@@ -38,18 +36,15 @@ impl Utils {
 			let mut lock = PreviewLock::try_from(t)?;
 			lock.data = match value {
 				Value::Nil => vec![],
-				Value::Table(tbl) => tbl.sequence_values::<Renderable>().collect::<mlua::Result<_>>()?,
+				Value::Table(_) => Vec::from_lua(value, &lua)?,
 				Value::UserData(ud) => match Renderable::try_from(&ud) {
 					Ok(r) => vec![r],
 					Err(e) => {
-						if let Ok(err) = ud.take::<Error>() {
-							vec![
-								Renderable::Clear(Default::default()).with_area(lock.area),
-								Renderable::from(err).with_area(lock.area),
-							]
-						} else {
-							Err(e)?
-						}
+						let err = ud.take::<Error>().map_err(|_| e)?;
+						vec![
+							Renderable::Clear(Default::default()).with_area(lock.area),
+							Renderable::from(err).with_area(lock.area),
+						]
 					}
 				},
 				_ => Err("preview widget must be a renderable element or a table of them".into_lua_err())?,

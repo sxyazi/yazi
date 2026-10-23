@@ -1,5 +1,5 @@
 use ratatui_core::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Margin, Rect}, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType};
+use ratatui_widgets::block::Block;
 use yazi_config::THEME;
 use yazi_core::Core;
 
@@ -19,7 +19,7 @@ impl Widget for Confirm<'_> {
 		yazi_widgets::clear::Clear::default().render(area, buf);
 
 		Block::bordered()
-			.border_type(BorderType::Rounded)
+			.border_set(THEME.confirm.border_set.load().as_set())
 			.border_style(THEME.confirm.border.get())
 			.title(confirm.title.clone().style(THEME.confirm.title.get().patch(confirm.title.style)))
 			.title_alignment(Alignment::Center)

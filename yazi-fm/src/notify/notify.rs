@@ -1,5 +1,6 @@
 use ratatui_core::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType, paragraph::{Paragraph, Wrap}};
+use ratatui_widgets::{block::Block, paragraph::{Paragraph, Wrap}};
+use yazi_config::THEME;
 use yazi_core::{Core, notify::Message};
 
 pub(crate) struct Notify<'a> {
@@ -49,7 +50,7 @@ impl Widget for Notify<'_> {
 				.wrap(Wrap { trim: false })
 				.block(
 					Block::bordered()
-						.border_type(BorderType::Rounded)
+						.border_set(THEME.notify.border_set.load().as_set())
 						.title(format!("{} {}", m.level.icon(), m.title))
 						.title_style(m.level.style())
 						.border_style(m.level.style()),

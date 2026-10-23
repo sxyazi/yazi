@@ -10,14 +10,13 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn hash(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(move |_, s: LuaString| async move {
-			Ok(format!("{:x}", XxHash3_128::oneshot(&s.as_bytes())))
+		lua.create_async_function(move |_, b: BorrowedBytes| async move {
+			Ok(format!("{:x}", XxHash3_128::oneshot(&b)))
 		})
 	}
 
 	pub(super) fn quote(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (s, unix): (LuaString, Option<bool>)| {
-			let b = s.as_bytes();
+		lua.create_function(|lua, (b, unix): (BorrowedBytes, Option<bool>)| {
 			let s = match unix {
 				Some(true) => yazi_shared::shell::unix::escape_os_bytes(&b),
 				Some(false) => yazi_shared::shell::windows::escape_os_bytes(&b),
@@ -39,7 +38,7 @@ impl Utils {
 	}
 
 	pub(super) fn base64_decode(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, s: BorrowedBytes| match STANDARD_PAD_INDIFFERENT.decode(&*s) {
+		lua.create_function(|lua, b: BorrowedBytes| match STANDARD_PAD_INDIFFERENT.decode(&*b) {
 			Ok(b) => lua.create_external_string(b)?.into_lua_multi(lua),
 			Err(e) => (Value::Nil, e.into_lua_err()).into_lua_multi(lua),
 		})

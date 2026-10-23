@@ -25,7 +25,7 @@ impl FromStr for Cmd {
 
 		Ok(Self {
 			name: mem::take(&mut words[0]).into(),
-			args: Self::parse_args(words.into_iter().skip(1), last)?,
+			args: Self::parse_args(words.into_iter().skip(1), last),
 		})
 	}
 }
@@ -33,7 +33,7 @@ impl FromStr for Cmd {
 impl Cmd {
 	pub(crate) fn null() -> Self { Self { name: "null".into(), ..Default::default() } }
 
-	pub fn parse_args<I>(words: I, last: Option<String>) -> Result<HashMap<DataKey, Data>>
+	pub fn parse_args<I>(words: I, last: Option<String>) -> HashMap<DataKey, Data>
 	where
 		I: IntoIterator<Item = String>,
 	{
@@ -45,14 +45,14 @@ impl Cmd {
 			.map(|(word, normal)| {
 				let Some(arg) = word.strip_prefix("--").filter(|&s| normal && !s.is_empty()) else {
 					i += 1;
-					return Ok((DataKey::Integer(i - 1), word.into()));
+					return (DataKey::Integer(i - 1), word.into());
 				};
 
 				let mut parts = arg.splitn(2, '=');
 				let key = parts.next().expect("at least one part");
 				let val = parts.next().map_or(Data::Boolean(true), Data::from);
 
-				Ok((key.to_owned().into(), val))
+				(key.to_owned().into(), val)
 			})
 			.collect()
 	}

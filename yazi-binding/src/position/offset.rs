@@ -25,9 +25,6 @@ impl TryFrom<[i16; 4]> for Offset {
 	type Error = anyhow::Error;
 
 	fn try_from(values: [i16; 4]) -> Result<Self, Self::Error> {
-		if values.len() != 4 {
-			bail!("offset must have 4 values: {:?}", values);
-		}
 		if values[2] < 0 || values[3] < 0 {
 			bail!("offset width and height must be positive: {:?}", values);
 		}

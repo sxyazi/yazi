@@ -55,7 +55,13 @@ impl Display for RestoreCursorPos {
 pub struct SetTitle<'a>(pub &'a str);
 
 impl Display for SetTitle<'_> {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "\x1b]2;{}\x1b\\", self.0) }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("\x1b]2;")?;
+		for s in self.0.split(char::is_control) {
+			f.write_str(s)?;
+		}
+		f.write_str("\x1b\\")
+	}
 }
 
 /// Set cursor style

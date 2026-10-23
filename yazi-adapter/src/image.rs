@@ -25,7 +25,7 @@ impl Image {
 			}
 
 			let mut buf = Vec::new();
-			if img.color().has_alpha() {
+			if img.has_alpha() {
 				let encoder = PngEncoder::new(&mut buf);
 				img.write_with_encoder(encoder)?;
 			} else {

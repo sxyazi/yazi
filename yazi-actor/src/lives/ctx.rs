@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, IntoLua, LuaString, MetaMethod, UserData, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, BorrowedBytes, IntoLua, MetaMethod, UserData, UserDataMethods, UserDataRef, Value};
 use paste::paste;
 
 use super::{Lives, PtrCell};
@@ -41,7 +41,7 @@ impl Ctx {
 
 impl UserData for Ctx {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: LuaString| {
+		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: BorrowedBytes| {
 			macro_rules! reuse {
 				($key:ident, $value:expr) => {
 					match paste! { &me.[<c_ $key>] } {
@@ -55,7 +55,7 @@ impl UserData for Ctx {
 				};
 			}
 
-			Ok(match &*key.as_bytes() {
+			Ok(match &*key {
 				b"active" => super::Tab::make(me.mgr.tabs.cursor, me.active())?.into_lua(lua)?,
 				b"tab" => super::Tab::make(me.tab, me.tab())?.into_lua(lua)?,
 				b"tabs" => reuse!(tabs, super::Tabs::make(&me.mgr.tabs)),

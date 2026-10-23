@@ -100,15 +100,13 @@ impl Worker {
 	fn file(&self, rx: async_priority_channel::Receiver<FileIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					let Some(handle) = me.ongoing.lock().get_handle(id) else {
-						continue;
-					};
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				let Some(handle) = me.ongoing.lock().get_handle(id) else {
+					continue;
+				};
 
-					me.work(handle, r#in, Self::file_do).await;
-				}
+				me.work(handle, r#in, Self::file_do).await;
 			}
 		})
 	}
@@ -137,15 +135,13 @@ impl Worker {
 	fn plugin(&self, rx: async_priority_channel::Receiver<PluginIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					let Some(handle) = me.ongoing.lock().get_handle(id) else {
-						continue;
-					};
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				let Some(handle) = me.ongoing.lock().get_handle(id) else {
+					continue;
+				};
 
-					me.work(handle, r#in, Self::plugin_do).await;
-				}
+				me.work(handle, r#in, Self::plugin_do).await;
 			}
 		})
 	}
@@ -160,15 +156,13 @@ impl Worker {
 	fn fetch(&self, rx: async_priority_channel::Receiver<FetchIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					let Some(handle) = me.ongoing.lock().get_handle(id) else {
-						continue;
-					};
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				let Some(handle) = me.ongoing.lock().get_handle(id) else {
+					continue;
+				};
 
-					me.work(handle, r#in, Self::fetch_do).await;
-				}
+				me.work(handle, r#in, Self::fetch_do).await;
 			}
 		})
 	}
@@ -183,15 +177,13 @@ impl Worker {
 	fn preload(&self, rx: async_priority_channel::Receiver<PreloadIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					let Some(handle) = me.ongoing.lock().get_handle(id) else {
-						continue;
-					};
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				let Some(handle) = me.ongoing.lock().get_handle(id) else {
+					continue;
+				};
 
-					me.work(handle, r#in, Self::preload_do).await;
-				}
+				me.work(handle, r#in, Self::preload_do).await;
 			}
 		})
 	}
@@ -206,22 +198,20 @@ impl Worker {
 	fn size(&self, rx: async_priority_channel::Receiver<SizeIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					let Some(handle) = me.ongoing.lock().get_handle(id) else {
-						continue;
-					};
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				let Some(handle) = me.ongoing.lock().get_handle(id) else {
+					continue;
+				};
 
-					handle.start();
-					let result = select! {
-						r = me.size_do(r#in) => r,
-						_ = handle.finished() => Ok(())
-					};
+				handle.start();
+				let result = select! {
+					r = me.size_do(r#in) => r,
+					_ = handle.finished() => Ok(())
+				};
 
-					if let Err(out) = result {
-						me.ops.out(id, out);
-					}
+				if let Err(out) = result {
+					me.ops.out(id, out);
 				}
 			}
 		})
@@ -234,15 +224,13 @@ impl Worker {
 	fn process(&self, rx: async_priority_channel::Receiver<ProcessIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					let Some(handle) = me.ongoing.lock().get_handle(id) else {
-						continue;
-					};
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				let Some(handle) = me.ongoing.lock().get_handle(id) else {
+					continue;
+				};
 
-					me.work(handle, r#in, Self::process_do).await;
-				}
+				me.work(handle, r#in, Self::process_do).await;
 			}
 		})
 	}
@@ -259,14 +247,12 @@ impl Worker {
 	fn hook(&self, rx: async_priority_channel::Receiver<HookIn, u8>) -> JoinHandle<()> {
 		let me = self.clone();
 		tokio::spawn(async move {
-			loop {
-				if let Ok((r#in, _)) = rx.recv().await {
-					let id = r#in.id();
-					if !me.ongoing.lock().exists(id) {
-						continue;
-					}
-					me.hook_do(r#in).await;
+			while let Ok((r#in, _)) = rx.recv().await {
+				let id = r#in.id();
+				if !me.ongoing.lock().exists(id) {
+					continue;
 				}
+				me.hook_do(r#in).await;
 			}
 		})
 	}

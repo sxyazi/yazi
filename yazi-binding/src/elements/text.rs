@@ -1,7 +1,7 @@
 use std::{any::TypeId, mem};
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
 use yazi_shim::{fs::Error, ratatui::TextIter};
 
@@ -24,8 +24,8 @@ impl Text {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, text): (Table, Self)| Ok(text))?;
 
-		let parse = lua.create_function(|_, code: LuaString| {
-			Ok(Self { inner: code.as_bytes().into_text().into_lua_err()?, ..Default::default() })
+		let parse = lua.create_function(|_, code: BorrowedBytes| {
+			Ok(Self { inner: code.into_text().into_lua_err()?, ..Default::default() })
 		})?;
 
 		let text = lua.create_table_from([("parse", parse)])?;
@@ -112,10 +112,7 @@ impl Spatial for Text {
 }
 
 impl Widget for Text {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		if self.needs_upgrade() {
 			ratatui_widgets::paragraph::Paragraph::from(self).render(rect, buf);
 		} else {
@@ -125,10 +122,7 @@ impl Widget for Text {
 }
 
 impl Widget for &Text {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		if self.needs_upgrade() {
 			ratatui_widgets::paragraph::Paragraph::from(self.clone()).render(rect, buf);
 		} else {

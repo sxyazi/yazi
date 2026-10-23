@@ -8,25 +8,20 @@ pub struct Remover {
 	pub(super) path: PathBuf,
 
 	pub(super) tx:       mpsc::Sender<io::Result<Delta>>,
-	rx:                  Option<mpsc::Receiver<io::Result<Delta>>>,
 	pub(super) progress: Progress,
 }
 
 impl Remover {
-	pub fn new(path: &Path) -> Self {
+	pub fn spawn(path: &Path) -> Removal {
 		let (tx, rx) = mpsc::channel(20);
 
-		Self { path: path.to_owned(), tx, rx: Some(rx), progress: Progress::default() }
-	}
-
-	pub fn spawn(mut self) -> Removal {
-		let rx = self.rx.take().unwrap();
-		let tx = self.tx.clone();
+		let mut me =
+			Self { path: path.to_owned(), tx: tx.clone(), progress: Progress::default() };
 
 		let handle = tokio::spawn(async move {
 			let (result, remaining) = task::spawn_blocking(move || {
-				let result = self.check().and_then(|()| self.remove());
-				(result, self.progress.remaining())
+				let result = me.check().and_then(|()| me.remove());
+				(result, me.progress.remaining())
 			})
 			.await
 			.unwrap_or_else(|e| (Err(e.into()), 0));

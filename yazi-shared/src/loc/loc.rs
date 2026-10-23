@@ -95,16 +95,13 @@ where
 			return Self { inner: p, uri: 0, urn: 0, _phantom: PhantomData };
 		};
 
-		let name_len = name.len();
-		let prefix_len = unsafe {
-			name.as_encoded_bytes().as_ptr().offset_from_unsigned(path.as_encoded_bytes().as_ptr())
-		};
+		let bytes = path.as_encoded_bytes();
+		let end = bytes.subslice_range(name.as_encoded_bytes()).unwrap().end;
 
-		let bytes = &path.as_encoded_bytes()[..prefix_len + name_len];
 		Self {
-			inner:    unsafe { P::from_encoded_bytes_unchecked(bytes) },
-			uri:      name_len,
-			urn:      name_len,
+			inner:    unsafe { P::from_encoded_bytes_unchecked(&bytes[..end]) },
+			uri:      name.len(),
+			urn:      name.len(),
 			_phantom: PhantomData,
 		}
 	}

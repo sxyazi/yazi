@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use hashbrown::HashMap;
-use mlua::{ExternalError, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, Lua, Table, Value};
 
 use super::Sendable;
 use crate::{data::{Data, DataKey}, replace_cow};
@@ -13,12 +13,12 @@ impl Sendable {
 			let (k, v) = pair?;
 			match k {
 				Value::Integer(i) if i > 0 => {
-					args.insert(DataKey::Integer(i - 1), Self::value_to_data(lua, v)?);
+					args.insert(DataKey::Integer(i - 1), Data::from_lua(v, lua)?);
 				}
 				Value::String(s) => {
 					args.insert(
 						DataKey::String(Cow::Owned(s.to_str()?.replace('_', "-"))),
-						Self::value_to_data(lua, v)?,
+						Data::from_lua(v, lua)?,
 					);
 				}
 				_ => return Err("invalid key in Action".into_lua_err()),
@@ -32,8 +32,8 @@ impl Sendable {
 		let tbl = lua.create_table_with_capacity(seq_len, args.len() - seq_len)?;
 		for (k, v) in args {
 			match k {
-				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value(lua, v)?),
-				DataKey::String(s) => tbl.raw_set(replace_cow(s, "-", "_"), Self::data_to_value(lua, v)?),
+				DataKey::Integer(i) => tbl.raw_set(i + 1, v),
+				DataKey::String(s) => tbl.raw_set(replace_cow(s, "-", "_"), v),
 				_ => Err("invalid key in Data".into_lua_err()),
 			}?;
 		}
@@ -45,10 +45,8 @@ impl Sendable {
 		let tbl = lua.create_table_with_capacity(seq_len, args.len() - seq_len)?;
 		for (k, v) in args {
 			match k {
-				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value_ref(lua, v)?),
-				DataKey::String(s) => {
-					tbl.raw_set(replace_cow(&**s, "-", "_"), Self::data_to_value_ref(lua, v)?)
-				}
+				DataKey::Integer(i) => tbl.raw_set(i + 1, v),
+				DataKey::String(s) => tbl.raw_set(replace_cow(&**s, "-", "_"), v),
 				_ => Err("invalid key in Data".into_lua_err()),
 			}?;
 		}

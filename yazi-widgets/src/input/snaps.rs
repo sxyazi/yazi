@@ -10,13 +10,7 @@ pub struct InputSnaps {
 }
 
 impl Default for InputSnaps {
-	fn default() -> Self {
-		Self {
-			idx:      0,
-			versions: vec![InputSnap::new(String::new(), false)],
-			current:  InputSnap::new(String::new(), false),
-		}
-	}
+	fn default() -> Self { Self::new(String::new(), false) }
 }
 
 impl InputSnaps {
@@ -34,8 +28,7 @@ impl InputSnaps {
 		// 		Save offset/cursor/etc. of the *current* as the last version,
 		// 		while keeping the *last* value unchanged.
 		let value = mem::take(&mut self.versions[self.idx].value);
-		self.versions[self.idx] = self.current.clone();
-		self.versions[self.idx].value = value;
+		self.versions[self.idx] = InputSnap { value, ..self.current };
 		self.versions[self.idx].resize(limit);
 
 		// If the *current* value is the same as the *last* version

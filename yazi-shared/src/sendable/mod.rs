@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(args data key sendable wire);
+yazi_macro::mod_flat!(args sendable);

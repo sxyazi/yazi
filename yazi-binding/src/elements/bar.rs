@@ -38,10 +38,7 @@ impl Spatial for Bar {
 }
 
 impl Widget for &Bar {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		if rect.area() == 0 {
 			return;
 		}

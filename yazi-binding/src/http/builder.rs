@@ -36,7 +36,7 @@ impl HttpBuilder {
 		let tx = spec.take_tx();
 		let request = HttpRequest { url, method, headers, spec, socket };
 
-		let handle = AbortOnDropHandle::new(tokio::spawn(async move { send(request).await }));
+		let handle = AbortOnDropHandle::new(tokio::spawn(send(request)));
 		HttpSession { handle: Some(handle), tx }
 	}
 }

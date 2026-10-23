@@ -1,6 +1,6 @@
 use std::{ops::DerefMut, process::ExitStatus, time::Duration};
 
-use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, LuaString, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, BorrowedBytes, ExternalError, IntoLua, IntoLuaMulti, MetaMethod, Table, UserData, UserDataMethods, Value};
 use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select, try_join};
 use yazi_shim::fs::Error;
 
@@ -133,11 +133,11 @@ impl UserData for Child {
 			}
 		});
 
-		methods.add_async_method_mut("write_all", |lua, mut me, src: LuaString| async move {
+		methods.add_async_method_mut("write_all", |lua, mut me, src: BorrowedBytes| async move {
 			let Some(stdin) = &mut me.stdin else {
 				return Err("stdin is not piped".into_lua_err());
 			};
-			match stdin.write_all(&src.as_bytes()).await {
+			match stdin.write_all(&src).await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}

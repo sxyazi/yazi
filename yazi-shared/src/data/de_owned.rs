@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use serde::{Deserializer, de::{self, Error, IntoDeserializer, MapAccess, SeqAccess}};
+use serde::{Deserializer, de::{self, Error, IntoDeserializer, MapAccess, value::SeqDeserializer}};
 
 use crate::data::{BytesDeserializer, Data, DataKey, KeyDeserializer};
 
@@ -18,7 +18,7 @@ impl<'de> Deserializer<'de> for Data {
 			Self::Number(n) => visitor.visit_f64(n),
 			Self::String(Cow::Borrowed(s)) => visitor.visit_borrowed_str(s),
 			Self::String(Cow::Owned(s)) => visitor.visit_string(s),
-			Self::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
+			Self::List(l) => visitor.visit_seq(SeqDeserializer::new(l.into_iter())),
 			Self::Dict(d) => visitor.visit_map(MapDeserializer { iter: d.into_iter(), value: None }),
 			Self::Id(i) => visitor.visit_u64(i.get()),
 			Self::Url(u) => u.into_deserializer().deserialize_any(visitor),
@@ -203,7 +203,7 @@ impl<'de> Deserializer<'de> for Data {
 		V: de::Visitor<'de>,
 	{
 		match self {
-			Self::List(l) => visitor.visit_seq(SeqDeserializer { iter: l.into_iter() }),
+			Self::List(l) => visitor.visit_seq(SeqDeserializer::new(l.into_iter())),
 			Self::Bytes(b) => BytesDeserializer(b.into()).deserialize_seq(visitor),
 			_ => Err(Error::custom("not a sequence")),
 		}
@@ -285,24 +285,6 @@ impl<'de> IntoDeserializer<'de, de::value::Error> for Data {
 	type Deserializer = Self;
 
 	fn into_deserializer(self) -> Self::Deserializer { self }
-}
-
-// --- Seq
-struct SeqDeserializer {
-	iter: std::vec::IntoIter<Data>,
-}
-
-impl<'de> SeqAccess<'de> for SeqDeserializer {
-	type Error = de::value::Error;
-
-	fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
-	where
-		T: de::DeserializeSeed<'de>,
-	{
-		self.iter.next().map(|value| seed.deserialize(value)).transpose()
-	}
-
-	fn size_hint(&self) -> Option<usize> { Some(self.iter.len()) }
 }
 
 // --- Map

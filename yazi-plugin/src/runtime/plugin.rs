@@ -1,8 +1,8 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_binding::{Composer, ComposerGet};
 use yazi_config::YAZI;
 
-pub(super) fn plugin() -> Composer<ComposerGet, ComposerSet> {
+pub(super) fn plugin() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"fetchers" => YAZI.plugin.fetchers.into_lua(lua),
@@ -13,7 +13,5 @@ pub(super) fn plugin() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }

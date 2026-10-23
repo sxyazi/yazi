@@ -51,6 +51,7 @@ dispatch2              = { version = "0.3.1", default-features = false, features
 dyn-clone              = "1.0.20"
 either                 = { version = "1.19.0" }
 foldhash               = "0.2.0"
+form_urlencoded        = "1.2.2"
 futures                = "0.3.34"
 globset                = "0.4.20"
 hashbrown              = { version = "0.17.1", features = [ "serde" ] }
@@ -66,7 +67,7 @@ objc2-core-foundation  = { version = "0.3.2", default-features = false, features
 objc2-disk-arbitration = { version = "0.3.2", default-features = false, features = [ "std", "DADisk", "DASession", "dispatch2" ] }
 objc2-foundation       = { version = "0.3.2", default-features = false, features = [ "std", "NSDateFormatter", "NSFormatter", "NSLocale", "NSString" ] }
 ordered-float          = { version = "5.5.0", features = [ "serde" ] }
-parking_lot            = "0.12.5"
+parking_lot            = "0.13.0"
 paste                  = "1.0.15"
 percent-encoding       = "2.3.2"
 pin-project            = "1.1.13"
@@ -86,7 +87,7 @@ serde_with             = "3.24.0"
 strum                  = { version = "0.28.0", features = [ "derive" ] }
 syntect                = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 thiserror              = "2.0.21"
-tokio                  = { version = "1.54.0", features = [ "full" ] }
+tokio                  = { version = "1.54.1", features = [ "full" ] }
 tokio-stream           = "0.1.19"
 tokio-util             = "0.7.20"
 toml                   = { version = "1.1.8" }

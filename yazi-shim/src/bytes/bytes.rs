@@ -34,13 +34,9 @@ impl BytesExt for [u8] {
 	}
 
 	fn rsplit_pred_once<P: BytePredictor>(&self, pred: P) -> Option<(&[u8], &[u8])> {
-		for (i, &byte) in self.iter().enumerate().rev() {
-			if pred.predicate(byte) {
-				let (a, b) = self.split_at(i);
-				return Some((a, &b[1..]));
-			}
-		}
-		None
+		let i = self.iter().rposition(|&byte| pred.predicate(byte))?;
+		let (a, b) = self.split_at(i);
+		Some((a, &b[1..]))
 	}
 
 	fn snake_cased(&self) -> bool {

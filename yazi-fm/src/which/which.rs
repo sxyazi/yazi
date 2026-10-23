@@ -1,5 +1,5 @@
 use ratatui_core::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType};
+use ratatui_widgets::block::Block;
 use yazi_config::THEME;
 use yazi_core::Core;
 use yazi_widgets::clear::Clear;
@@ -39,9 +39,10 @@ impl Widget for Which<'_> {
 		}
 
 		Clear::default().render(area, buf);
+		let border_set = THEME.which.border_set.load();
 		let block = Block::bordered()
 			.style(THEME.which.mask.get())
-			.border_type(BorderType::Rounded)
+			.border_set(border_set.as_set())
 			.border_style(THEME.which.border.get());
 		block.as_ref().render(area, buf);
 

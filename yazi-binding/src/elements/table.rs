@@ -114,10 +114,7 @@ impl Spatial for Table {
 }
 
 impl Widget for Table {
-	fn render(mut self, rect: ratatui_core::layout::Rect, buf: &mut Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(mut self, rect: ratatui_core::layout::Rect, buf: &mut Buffer) {
 		let columns = self.column_widths(rect.width);
 		for row in &mut self.rows {
 			row.measure(&columns);
@@ -150,10 +147,7 @@ impl Widget for Table {
 }
 
 impl Widget for &Table {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut Buffer) {
 		self.clone().render(rect, buf);
 	}
 }

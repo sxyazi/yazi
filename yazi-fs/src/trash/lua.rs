@@ -1,6 +1,6 @@
 use std::io;
 
-use mlua::{ExternalError, ExternalResult, FromLua, IntoLuaMulti, LuaString, UserData, UserDataMethods, Value};
+use mlua::{BorrowedBytes, ExternalError, ExternalResult, FromLua, IntoLuaMulti, UserData, UserDataMethods, Value};
 use tokio::task::spawn_blocking;
 use yazi_shared::path::{PathBufDyn, PathLike};
 use yazi_shim::fs::Error;
@@ -31,7 +31,7 @@ impl UserData for Trash {
 
 		methods.add_async_function("list", |lua, entry: Option<TrashEntry>| async move {
 			match spawn_blocking(move || Self::new()?.list(entry.as_ref())).await.into_lua_err()? {
-				Ok(items) => lua.create_sequence_from(items)?.into_lua_multi(&lua),
+				Ok(items) => items.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
@@ -45,8 +45,8 @@ impl UserData for Trash {
 
 		methods.add_async_function(
 			"remove",
-			|lua, (kind, entry): (LuaString, TrashEntry)| async move {
-				let f: fn(&Self, &TrashEntry) -> io::Result<()> = match &*kind.as_bytes() {
+			|lua, (kind, entry): (BorrowedBytes, TrashEntry)| async move {
+				let f: fn(&Self, &TrashEntry) -> io::Result<()> = match &*kind {
 					b"file" => Self::remove_file,
 					b"dir" => Self::remove_dir,
 					_ => Err("Removal type must be 'file' or 'dir'".into_lua_err())?,

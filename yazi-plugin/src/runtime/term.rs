@@ -1,8 +1,8 @@
 use mlua::{Function, IntoLua, IntoLuaMulti, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet};
+use yazi_binding::{Composer, ComposerGet};
 use yazi_emulator::{Dimension, EMULATOR};
 
-pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
+pub(super) fn term() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"light" => light(lua)?.into_lua(lua),
@@ -11,9 +11,7 @@ pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
 fn light(lua: &Lua) -> mlua::Result<Function> {

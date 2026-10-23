@@ -4,7 +4,7 @@ use yazi_core::Ctx;
 use yazi_macro::succ;
 use yazi_parser::app::LuaForm;
 use yazi_plugin::LUA;
-use yazi_shared::{data::Data, sendable::Sendable};
+use yazi_shared::data::Data;
 
 use crate::{Actor, lives::Lives};
 
@@ -17,9 +17,10 @@ impl Actor for Lua {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let chunk = LUA.load(&*form.code).set_name("anonymous");
-		let result = Lives::scope(cx, |cx| {
-			runtime_scope!(cx, "inline", Sendable::value_to_data(&LUA, chunk.eval()?))
-		});
+
+		let result: mlua::Result<Data> =
+			Lives::scope(cx, |cx| runtime_scope!(cx, "inline", chunk.eval()));
+
 		succ!(result?);
 	}
 }

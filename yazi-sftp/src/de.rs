@@ -70,10 +70,9 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let b = *self.input.first().ok_or(Error::serde("u8 not enough"))?;
+		let b = self.input.split_off_first().ok_or(Error::serde("u8 not enough"))?;
 
-		self.input = &self.input[1..];
-		visitor.visit_u8(b)
+		visitor.visit_u8(*b)
 	}
 
 	fn deserialize_u16<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
@@ -87,17 +86,17 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let b: [u8; 4] = self.input.get(..4).ok_or(Error::serde("u32 not enough"))?.try_into().unwrap();
+		let b = self.input.first_chunk().ok_or(Error::serde("u32 not enough"))?;
 
 		self.input = &self.input[4..];
-		visitor.visit_u32(u32::from_be_bytes(b))
+		visitor.visit_u32(u32::from_be_bytes(*b))
 	}
 
 	fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let b: [u8; 8] = self.input.get(..8).ok_or(Error::serde("u64 not enough"))?.try_into().unwrap();
+		let b = *self.input.first_chunk().ok_or(Error::serde("u64 not enough"))?;
 
 		self.input = &self.input[8..];
 		visitor.visit_u64(u64::from_be_bytes(b))
@@ -128,14 +127,12 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let len: [u8; 4] =
-			self.input.get(..4).ok_or(Error::serde("invalid string length"))?.try_into().unwrap();
-		let len = u32::from_be_bytes(len) as usize;
+		let len = self.input.first_chunk().ok_or(Error::serde("invalid string length"))?;
+		let len = u32::from_be_bytes(*len) as usize;
 
 		self.input = &self.input[4..];
-		let b = self.input.get(..len).ok_or(Error::serde("string not enough"))?;
+		let b = self.input.split_off(..len).ok_or(Error::serde("string not enough"))?;
 
-		self.input = &self.input[len..];
 		visitor.visit_borrowed_str(str::from_utf8(b)?)
 	}
 
@@ -150,9 +147,8 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let len: [u8; 4] =
-			self.input.get(..4).ok_or(Error::serde("invalid bytes length"))?.try_into().unwrap();
-		let len = u32::from_be_bytes(len) as usize;
+		let len = self.input.first_chunk().ok_or(Error::serde("invalid bytes length"))?;
+		let len = u32::from_be_bytes(*len) as usize;
 		let b = self.input.get(4..4 + len).ok_or(Error::serde("bytes not enough"))?;
 
 		self.input = &self.input[4 + len..];
@@ -206,11 +202,10 @@ impl<'de> serde::Deserializer<'de> for &mut Deserializer<'de> {
 	where
 		V: serde::de::Visitor<'de>,
 	{
-		let len: [u8; 4] =
-			self.input.get(..4).ok_or(Error::serde("invalid seq length"))?.try_into().unwrap();
+		let len = self.input.first_chunk().ok_or(Error::serde("invalid seq length"))?;
 
 		self.input = &self.input[4..];
-		visitor.visit_seq(SeqDeserializer { de: self, remaining: u32::from_be_bytes(len) as _ })
+		visitor.visit_seq(SeqDeserializer { de: self, remaining: u32::from_be_bytes(*len) as _ })
 	}
 
 	fn deserialize_tuple<V>(self, len: usize, visitor: V) -> Result<V::Value, Self::Error>
@@ -365,11 +360,10 @@ impl<'de> EnumAccess<'de> for &mut Deserializer<'de> {
 	where
 		V: serde::de::DeserializeSeed<'de>,
 	{
-		let b: [u8; 4] =
-			self.input.get(..4).ok_or(Error::serde("enum not enough"))?.try_into().unwrap();
+		let b = self.input.first_chunk().ok_or(Error::serde("enum not enough"))?;
 		self.input = &self.input[4..];
 
-		let de = U32Deserializer::<Self::Error>::new(u32::from_be_bytes(b));
+		let de = U32Deserializer::<Self::Error>::new(u32::from_be_bytes(*b));
 		Ok((seed.deserialize(de)?, self))
 	}
 }

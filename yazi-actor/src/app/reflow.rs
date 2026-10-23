@@ -1,5 +1,5 @@
 use anyhow::Result;
-use mlua::{LuaString, Value};
+use mlua::{BorrowedBytes, Value};
 use ratatui_core::layout::Position;
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
@@ -33,8 +33,8 @@ impl Actor for Reflow {
 						continue;
 					};
 
-					let id: LuaString = t.get("_id")?;
-					match &*id.as_bytes() {
+					let id: BorrowedBytes = t.get("_id")?;
+					match &*id {
 						b"current" => layout.current = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 						b"preview" => layout.preview = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 						b"progress" => layout.progress = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,

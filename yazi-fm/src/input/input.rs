@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use ratatui_core::{buffer::Buffer, layout::{Margin, Rect}, text::Line, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType};
+use ratatui_widgets::block::Block;
 use yazi_config::{Icon, THEME};
 use yazi_core::Core;
 use yazi_fs::{file::File, stat::{Stat, StatKind}};
@@ -47,14 +47,13 @@ impl Widget for Input<'_> {
 		yazi_widgets::clear::Clear::default().render(outer, buf);
 
 		let mut block = Block::bordered()
-			.border_type(BorderType::Rounded)
 			.border_style(THEME.input.border.get())
 			.title(Line::styled(&self.core.input.main.title, THEME.input.title.get()));
 
 		if let Some(i) = self.icon() {
 			block = block.title_bottom(Line::raw(format!("{} ", i.text)).style(i.style).right_aligned());
 		}
-		block.render(outer, buf);
+		block.border_set(THEME.input.border_set.load().as_set()).render(outer, buf);
 
 		let inner = outer.inner(Margin::new(1, 1));
 		self.core.input.main.repos(inner);

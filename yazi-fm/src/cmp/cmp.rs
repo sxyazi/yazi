@@ -1,7 +1,7 @@
 use std::path::MAIN_SEPARATOR_STR;
 
 use ratatui_core::{buffer::Buffer, layout::Rect, widgets::Widget};
-use ratatui_widgets::{block::Block, borders::BorderType, list::{List, ListItem}};
+use ratatui_widgets::{block::Block, list::{List, ListItem}};
 use yazi_binding::position::{Offset, Position};
 use yazi_config::THEME;
 use yazi_core::Core;
@@ -58,7 +58,9 @@ impl Widget for Cmp<'_> {
 		yazi_widgets::clear::Clear::default().render(area, buf);
 		List::new(items)
 			.block(
-				Block::bordered().border_type(BorderType::Rounded).border_style(THEME.cmp.border.get()),
+				Block::bordered()
+					.border_set(THEME.cmp.border_set.load().as_set())
+					.border_style(THEME.cmp.border.get()),
 			)
 			.render(area, buf);
 	}

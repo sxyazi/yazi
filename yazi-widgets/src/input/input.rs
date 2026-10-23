@@ -137,15 +137,13 @@ impl Input {
 	pub fn cursor_shape(&self) -> SetCursorStyle {
 		use InputMode as M;
 
-		let blink = self.styles.blink.unwrap_or(false);
-		match self.mode() {
-			M::Normal if blink => SetCursorStyle::BlinkingBlock,
-			M::Normal if !blink => SetCursorStyle::SteadyBlock,
-			M::Insert if blink => SetCursorStyle::BlinkingBar,
-			M::Insert if !blink => SetCursorStyle::SteadyBar,
-			M::Replace if blink => SetCursorStyle::BlinkingUnderline,
-			M::Replace if !blink => SetCursorStyle::SteadyUnderline,
-			M::Normal | M::Insert | M::Replace => unreachable!(),
+		match (self.mode(), self.styles.blink.unwrap_or(false)) {
+			(M::Normal, true) => SetCursorStyle::BlinkingBlock,
+			(M::Normal, false) => SetCursorStyle::SteadyBlock,
+			(M::Insert, true) => SetCursorStyle::BlinkingBar,
+			(M::Insert, false) => SetCursorStyle::SteadyBar,
+			(M::Replace, true) => SetCursorStyle::BlinkingUnderline,
+			(M::Replace, false) => SetCursorStyle::SteadyUnderline,
 		}
 	}
 

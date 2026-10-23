@@ -38,10 +38,7 @@ impl Spatial for List {
 }
 
 impl Widget for &List {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		(&self.inner).render(rect, buf);
 	}
 }

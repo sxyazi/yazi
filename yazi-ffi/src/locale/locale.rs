@@ -1,10 +1,11 @@
 use chrono::{DateTime, Local, Utc};
-use mlua::{BorrowedBytes, ExternalError, FromLua, Lua, Table, Value};
-use yazi_shim::bytes::BytesExt;
+use mlua::{FromLua, Lua, LuaSerdeExt, Value};
+use serde::Deserialize;
 
 use super::{TimeField, Width};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Deserialize)]
+#[serde(default)]
 pub struct Locale {
 	pub(super) year:       Width,
 	pub(super) month:      Width,
@@ -84,25 +85,5 @@ impl Locale {
 }
 
 impl FromLua for Locale {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		let t = Table::from_lua(value, lua)?;
-		let mut me = Self::default();
-
-		for pair in t.pairs::<BorrowedBytes, Width>() {
-			let (key, width) = pair?;
-			match &*key {
-				b"year" => me.year = width,
-				b"month" => me.month = width,
-				b"day" => me.day = width,
-				b"hour12" => me.hour12 = width,
-				b"hour24" => me.hour24 = width,
-				b"hour_am_pm" => me.hour_am_pm = width,
-				b"minute" => me.minute = width,
-				b"second" => me.second = width,
-				key => Err(format!("invalid date format field: {}", key.display()).into_lua_err())?,
-			}
-		}
-
-		Ok(me)
-	}
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }

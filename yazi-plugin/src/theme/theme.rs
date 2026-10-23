@@ -1,11 +1,11 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, style::Style};
+use yazi_binding::{Composer, ComposerGet};
 use yazi_config::{THEME, theme::CustomSectionArc};
 use yazi_shared::url::UrlBuf;
 
 use crate::{LUA, theme::icon};
 
-pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"app" => app(),
@@ -29,68 +29,62 @@ pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
 pub fn reset() -> mlua::Result<()> { LUA.globals().raw_set("th", compose()) }
 
-fn app() -> Composer<ComposerGet, ComposerSet> {
+fn app() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let a = &THEME.app;
 		match key {
-			b"overall" => Style::from(&a.overall).into_lua(lua),
+			b"overall" => a.overall.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn mgr() -> Composer<ComposerGet, ComposerSet> {
+fn mgr() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let m = &THEME.mgr;
 		match key {
-			b"cwd" => Style::from(&m.cwd).into_lua(lua),
+			b"cwd" => m.cwd.into_lua(lua),
 
-			b"find_keyword" => Style::from(&m.find_keyword).into_lua(lua),
-			b"find_position" => Style::from(&m.find_position).into_lua(lua),
+			b"find_keyword" => m.find_keyword.into_lua(lua),
+			b"find_position" => m.find_position.into_lua(lua),
 
-			b"symlink_target" => Style::from(&m.symlink_target).into_lua(lua),
+			b"symlink_target" => m.symlink_target.into_lua(lua),
 
-			b"marker_copied" => Style::from(&m.marker_copied).into_lua(lua),
-			b"marker_cut" => Style::from(&m.marker_cut).into_lua(lua),
-			b"marker_marked" => Style::from(&m.marker_marked).into_lua(lua),
-			b"marker_selected" => Style::from(&m.marker_selected).into_lua(lua),
+			b"marker_copied" => m.marker_copied.into_lua(lua),
+			b"marker_cut" => m.marker_cut.into_lua(lua),
+			b"marker_marked" => m.marker_marked.into_lua(lua),
+			b"marker_selected" => m.marker_selected.into_lua(lua),
 			b"marker_symbol" => lua.create_string(&**m.marker_symbol.load())?.into_lua(lua),
 
-			b"count_copied" => Style::from(&m.count_copied).into_lua(lua),
-			b"count_cut" => Style::from(&m.count_cut).into_lua(lua),
-			b"count_selected" => Style::from(&m.count_selected).into_lua(lua),
+			b"count_copied" => m.count_copied.into_lua(lua),
+			b"count_cut" => m.count_cut.into_lua(lua),
+			b"count_selected" => m.count_selected.into_lua(lua),
 
 			b"border_symbol" => lua.create_string(&**m.border_symbol.load())?.into_lua(lua),
-			b"border_style" => Style::from(&m.border_style).into_lua(lua),
+			b"border_style" => m.border_style.into_lua(lua),
 
 			b"syntect_theme" => UrlBuf::from(&**m.syntect_theme.load()).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn tabs() -> Composer<ComposerGet, ComposerSet> {
+fn tabs() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.tabs;
 		match key {
-			b"active" => Style::from(&t.active).into_lua(lua),
-			b"inactive" => Style::from(&t.inactive).into_lua(lua),
+			b"active" => t.active.into_lua(lua),
+			b"inactive" => t.inactive.into_lua(lua),
 
 			b"sep_inner" => lua
 				.create_table_from([
@@ -109,40 +103,36 @@ fn tabs() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn mode() -> Composer<ComposerGet, ComposerSet> {
+fn mode() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.mode;
 		match key {
-			b"normal_main" => Style::from(&t.normal_main).into_lua(lua),
-			b"normal_alt" => Style::from(&t.normal_alt).into_lua(lua),
+			b"normal_main" => t.normal_main.into_lua(lua),
+			b"normal_alt" => t.normal_alt.into_lua(lua),
 
-			b"select_main" => Style::from(&t.select_main).into_lua(lua),
-			b"select_alt" => Style::from(&t.select_alt).into_lua(lua),
+			b"select_main" => t.select_main.into_lua(lua),
+			b"select_alt" => t.select_alt.into_lua(lua),
 
-			b"unset_main" => Style::from(&t.unset_main).into_lua(lua),
-			b"unset_alt" => Style::from(&t.unset_alt).into_lua(lua),
+			b"unset_main" => t.unset_main.into_lua(lua),
+			b"unset_alt" => t.unset_alt.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn indicator() -> Composer<ComposerGet, ComposerSet> {
+fn indicator() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.indicator;
 		match key {
-			b"parent" => Style::from(&t.parent).into_lua(lua),
-			b"current" => Style::from(&t.current).into_lua(lua),
-			b"preview" => Style::from(&t.preview).into_lua(lua),
+			b"parent" => t.parent.into_lua(lua),
+			b"current" => t.current.into_lua(lua),
+			b"preview" => t.preview.into_lua(lua),
 			b"padding" => lua
 				.create_table_from([
 					("open", lua.create_string(&t.padding.load().open)?),
@@ -154,16 +144,14 @@ fn indicator() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn status() -> Composer<ComposerGet, ComposerSet> {
+fn status() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.status;
 		match key {
-			b"overall" => Style::from(&t.overall).into_lua(lua),
+			b"overall" => t.overall.into_lua(lua),
 			b"sep_left" => lua
 				.create_table_from([
 					("open", lua.create_string(&t.sep_left.load().open)?),
@@ -177,100 +165,95 @@ fn status() -> Composer<ComposerGet, ComposerSet> {
 				])?
 				.into_lua(lua),
 
-			b"perm_sep" => Style::from(&t.perm_sep).into_lua(lua),
-			b"perm_type" => Style::from(&t.perm_type).into_lua(lua),
-			b"perm_read" => Style::from(&t.perm_read).into_lua(lua),
-			b"perm_write" => Style::from(&t.perm_write).into_lua(lua),
-			b"perm_exec" => Style::from(&t.perm_exec).into_lua(lua),
+			b"perm_sep" => t.perm_sep.into_lua(lua),
+			b"perm_type" => t.perm_type.into_lua(lua),
+			b"perm_read" => t.perm_read.into_lua(lua),
+			b"perm_write" => t.perm_write.into_lua(lua),
+			b"perm_exec" => t.perm_exec.into_lua(lua),
 
-			b"progress_label" => Style::from(&t.progress_label).into_lua(lua),
-			b"progress_normal" => Style::from(&t.progress_normal).into_lua(lua),
-			b"progress_error" => Style::from(&t.progress_error).into_lua(lua),
+			b"progress_label" => t.progress_label.into_lua(lua),
+			b"progress_normal" => t.progress_normal.into_lua(lua),
+			b"progress_error" => t.progress_error.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn which() -> Composer<ComposerGet, ComposerSet> {
+fn which() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.which;
 		match key {
-			b"cols" => t.cols.get().into_lua(lua),
-			b"mask" => Style::from(&t.mask).into_lua(lua),
-			b"cand" => Style::from(&t.cand).into_lua(lua),
-			b"rest" => Style::from(&t.rest).into_lua(lua),
-			b"desc" => Style::from(&t.desc).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"cols" => t.cols.into_lua(lua),
+			b"mask" => t.mask.into_lua(lua),
+			b"cand" => t.cand.into_lua(lua),
+			b"rest" => t.rest.into_lua(lua),
+			b"desc" => t.desc.into_lua(lua),
 
 			b"separator" => lua.create_string(&**t.separator.load())?.into_lua(lua),
-			b"separator_style" => Style::from(&t.separator_style).into_lua(lua),
+			b"separator_style" => t.separator_style.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn confirm() -> Composer<ComposerGet, ComposerSet> {
+fn confirm() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.confirm;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"title" => Style::from(&t.title).into_lua(lua),
-			b"body" => Style::from(&t.body).into_lua(lua),
-			b"list" => Style::from(&t.list).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"title" => t.title.into_lua(lua),
+			b"body" => t.body.into_lua(lua),
+			b"list" => t.list.into_lua(lua),
 
-			b"btn_yes" => Style::from(&t.btn_yes).into_lua(lua),
-			b"btn_no" => Style::from(&t.btn_no).into_lua(lua),
+			b"btn_yes" => t.btn_yes.into_lua(lua),
+			b"btn_no" => t.btn_no.into_lua(lua),
 			b"btn_labels" => {
-				let labels = t.btn_labels.load();
-				lua
-					.create_sequence_from([lua.create_string(&labels[0])?, lua.create_string(&labels[1])?])?
-					.into_lua(lua)
+				lua.create_sequence_from(t.btn_labels.load().iter().map(String::as_str))?.into_lua(lua)
 			}
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn spot() -> Composer<ComposerGet, ComposerSet> {
+fn spot() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.spot;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"title" => Style::from(&t.title).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"title" => t.title.into_lua(lua),
 
-			b"tbl_col" => Style::from(&t.tbl_col).into_lua(lua),
-			b"tbl_cell" => Style::from(&t.tbl_cell).into_lua(lua),
+			b"tbl_col" => t.tbl_col.into_lua(lua),
+			b"tbl_cell" => t.tbl_cell.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn notify() -> Composer<ComposerGet, ComposerSet> {
+fn notify() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.notify;
 		match key {
-			b"title_info" => Style::from(&t.title_info).into_lua(lua),
-			b"title_warn" => Style::from(&t.title_warn).into_lua(lua),
-			b"title_error" => Style::from(&t.title_error).into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+
+			b"title_info" => t.title_info.into_lua(lua),
+			b"title_warn" => t.title_warn.into_lua(lua),
+			b"title_error" => t.title_error.into_lua(lua),
 
 			b"icon_info" => lua.create_string(&**t.icon_info.load())?.into_lua(lua),
 			b"icon_warn" => lua.create_string(&**t.icon_warn.load())?.into_lua(lua),
@@ -280,53 +263,50 @@ fn notify() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn pick() -> Composer<ComposerGet, ComposerSet> {
+fn pick() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.pick;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"active" => Style::from(&t.active).into_lua(lua),
-			b"inactive" => Style::from(&t.inactive).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"active" => t.active.into_lua(lua),
+			b"inactive" => t.inactive.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn input() -> Composer<ComposerGet, ComposerSet> {
+fn input() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.input;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"title" => Style::from(&t.title).into_lua(lua),
-			b"value" => Style::from(&t.value).into_lua(lua),
-			b"selected" => Style::from(&t.selected).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"title" => t.title.into_lua(lua),
+			b"value" => t.value.into_lua(lua),
+			b"selected" => t.selected.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn cmp() -> Composer<ComposerGet, ComposerSet> {
+fn cmp() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.cmp;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"active" => Style::from(&t.active).into_lua(lua),
-			b"inactive" => Style::from(&t.inactive).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"active" => t.active.into_lua(lua),
+			b"inactive" => t.inactive.into_lua(lua),
 
 			b"icon_file" => lua.create_string(&**t.icon_file.load())?.into_lua(lua),
 			b"icon_folder" => lua.create_string(&**t.icon_folder.load())?.into_lua(lua),
@@ -336,44 +316,40 @@ fn cmp() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn tasks() -> Composer<ComposerGet, ComposerSet> {
+fn tasks() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.tasks;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"title" => Style::from(&t.title).into_lua(lua),
-			b"hovered" => Style::from(&t.hovered).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"title" => t.title.into_lua(lua),
+			b"hovered" => t.hovered.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn help() -> Composer<ComposerGet, ComposerSet> {
+fn help() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.help;
 		match key {
-			b"border" => Style::from(&t.border).into_lua(lua),
-			b"chord" => Style::from(&t.chord).into_lua(lua),
-			b"action" => Style::from(&t.action).into_lua(lua),
-			b"hovered" => Style::from(&t.hovered).into_lua(lua),
+			b"border" => t.border.into_lua(lua),
+			b"border_set" => t.border_set.load_full().into_lua(lua),
+			b"chord" => t.chord.into_lua(lua),
+			b"action" => t.action.into_lua(lua),
+			b"hovered" => t.hovered.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
 fn custom(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {

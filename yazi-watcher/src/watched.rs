@@ -1,9 +1,9 @@
 use std::{ops::Deref, path::{Path, PathBuf}};
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
 use yazi_fs::FsUrl;
 use yazi_shared::{path::PathDyn, url::{AsUrl, UrlBuf}};
+use yazi_shim::indexmap::IndexSet;
 
 use crate::Watchee;
 

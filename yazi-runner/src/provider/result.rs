@@ -34,10 +34,6 @@ impl<T: FromLua> FromLuaMulti for ProvideResult<T> {
 
 impl ProvideResult<bool> {
 	pub fn ok(self) -> Result<(), yazi_shim::fs::Error> {
-		if self.0? {
-			Ok(())
-		} else {
-			Err(yazi_shim::fs::Error::other("Lua VFS returned false without an Error"))
-		}
+		self.0?.ok_or_else(|| yazi_shim::fs::Error::other("Lua VFS returned false without an Error"))
 	}
 }

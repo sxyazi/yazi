@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rclone integration ([#4383])
 - Archive extraction progress ([#4431])
+- Custom border shape ([#4439])
 - Custom sorting ([#4363])
 - Windows drives view ([#4412])
 - Dynamic virtual filesystem Lua API ([#4338])
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Deprecated
 
 - Deprecate `fs.cha()` and `File.cha` in favor of `fs.stat()` and `File.stat` to align with OS terminology ([#4359])
+- Deprecate `ui.Border:type()` in favor of `ui.Border:set()` ([#4439])
 
 ### Fixed
 
@@ -1908,3 +1910,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4414]: https://github.com/sxyazi/yazi/pull/4414
 [#4424]: https://github.com/sxyazi/yazi/pull/4424
 [#4431]: https://github.com/sxyazi/yazi/pull/4431
+[#4439]: https://github.com/sxyazi/yazi/pull/4439

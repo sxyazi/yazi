@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{BorrowedBytes, FromLua, IntoLua, Lua, LuaSerdeExt, LuaString, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
 use serde::Deserialize;
 use yazi_shared::{auth::{AuthArc, AuthKind, Scheme}, path::DynPath, sendable::Sendable};
 use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
@@ -106,28 +106,25 @@ impl UserData for Service {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Index, |lua, me, key: LuaString| {
-			let key = key.as_bytes();
-			match me {
-				Self::Sftp(s) => match &*key {
-					b"host" => lua.create_string(&s.host)?.into_lua(lua),
-					b"user" => lua.create_string(&s.user)?.into_lua(lua),
-					b"port" => s.port.into_lua(lua),
-					b"password" => s.password.as_deref().into_lua(lua),
-					b"key_file" => s.key_file.dyn_path().into_lua(lua),
-					b"key_passphrase" => s.key_passphrase.as_deref().into_lua(lua),
-					b"cert_file" => s.cert_file.dyn_path().into_lua(lua),
-					b"no_cert_verify" => s.no_cert_verify.into_lua(lua),
-					b"identity_agent" => s.identity_agent.dyn_path().into_lua(lua),
-					_ => Ok(Value::Nil),
-				},
-				Self::Mount(s) | Self::Hub(s) | Self::Scope(s) | Self::View(s) => match &*key {
-					b"name" => lua.create_string(&*s.name)?.into_lua(lua),
-					b"args" => Sendable::args_to_table_ref(lua, &s.args)?.into_lua(lua),
-					b"opts" => Sendable::args_to_table_ref(lua, &s.opts)?.into_lua(lua),
-					_ => Ok(Value::Nil),
-				},
-			}
+		methods.add_meta_method(MetaMethod::Index, |lua, me, key: BorrowedBytes| match me {
+			Self::Sftp(s) => match &*key {
+				b"host" => lua.create_string(&s.host)?.into_lua(lua),
+				b"user" => lua.create_string(&s.user)?.into_lua(lua),
+				b"port" => s.port.into_lua(lua),
+				b"password" => s.password.as_deref().into_lua(lua),
+				b"key_file" => s.key_file.dyn_path().into_lua(lua),
+				b"key_passphrase" => s.key_passphrase.as_deref().into_lua(lua),
+				b"cert_file" => s.cert_file.dyn_path().into_lua(lua),
+				b"no_cert_verify" => s.no_cert_verify.into_lua(lua),
+				b"identity_agent" => s.identity_agent.dyn_path().into_lua(lua),
+				_ => Ok(Value::Nil),
+			},
+			Self::Mount(s) | Self::Hub(s) | Self::Scope(s) | Self::View(s) => match &*key {
+				b"name" => lua.create_string(&*s.name)?.into_lua(lua),
+				b"args" => Sendable::args_to_table_ref(lua, &s.args)?.into_lua(lua),
+				b"opts" => Sendable::args_to_table_ref(lua, &s.opts)?.into_lua(lua),
+				_ => Ok(Value::Nil),
+			},
 		});
 	}
 }

@@ -1,12 +1,11 @@
 use std::ops::Deref;
 
 use anyhow::Result;
-use indexmap::IndexSet;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{file::File, stat::StatType};
 use yazi_shared::url::AsUrl;
-use yazi_shim::toml::DeserializeOverHook;
+use yazi_shim::{indexmap::IndexSet, toml::DeserializeOverHook};
 
 use crate::{mix, open::{OpenRule, OpenRuleArc, OpenRules}};
 

@@ -45,7 +45,7 @@ impl Iip {
 			let (w, h) = (img.width(), img.height());
 
 			let mut b = vec![];
-			if img.color().has_alpha() {
+			if img.has_alpha() {
 				PngEncoder::new(&mut b).write_image(&img.into_rgba8(), w, h, ExtendedColorType::Rgba8)?;
 			} else {
 				JpegEncoder::new_with_quality(&mut b, YAZI.preview.image_quality).encode_image(&img)?;

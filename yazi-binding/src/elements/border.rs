@@ -2,44 +2,27 @@ use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMetho
 use ratatui_core::widgets::Widget;
 use ratatui_widgets::borders::Borders;
 
-use super::{Area, Edge};
+use super::{Area, BorderSet, BorderType, Edge};
 use crate::elements::{Line, Spatial};
-
-// Type
-const PLAIN: u8 = 0;
-const ROUNDED: u8 = 1;
-const DOUBLE: u8 = 2;
-const THICK: u8 = 3;
-const QUADRANT_INSIDE: u8 = 4;
-const QUADRANT_OUTSIDE: u8 = 5;
 
 #[derive(Clone, Debug, Default)]
 pub struct Border {
 	pub area: Area,
 
-	pub edge:   Edge,
-	pub r#type: ratatui_widgets::borders::BorderType,
-	pub style:  ratatui_core::style::Style,
-	pub merge:  ratatui_core::symbols::merge::MergeStrategy,
+	pub edge:  Edge,
+	pub set:   BorderSet,
+	pub style: ratatui_core::style::Style,
+	pub merge: ratatui_core::symbols::merge::MergeStrategy,
 
 	pub titles: Vec<(ratatui_widgets::block::TitlePosition, ratatui_core::text::Line<'static>)>,
 }
 
 impl Border {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, edge): (Table, Edge)| {
-			Ok(Self { edge, r#type: ratatui_widgets::borders::BorderType::Rounded, ..Default::default() })
-		})?;
+		let new =
+			lua.create_function(|_, (_, edge): (Table, Edge)| Ok(Self { edge, ..Default::default() }))?;
 
-		let border = lua.create_table_from([
-			// Type
-			("PLAIN", PLAIN),
-			("ROUNDED", ROUNDED),
-			("DOUBLE", DOUBLE),
-			("THICK", THICK),
-			("QUADRANT_INSIDE", QUADRANT_INSIDE),
-			("QUADRANT_OUTSIDE", QUADRANT_OUTSIDE),
-		])?;
+		let border = BorderType::compose(lua)?;
 
 		border.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		border.into_lua(lua)
@@ -59,13 +42,10 @@ impl Spatial for Border {
 }
 
 impl Widget for Border {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		let mut block = ratatui_widgets::block::Block::default()
 			.borders(self.edge.0)
-			.border_type(self.r#type)
+			.border_set(self.set.as_set())
 			.border_style(self.style)
 			.merge_borders(self.merge);
 
@@ -81,10 +61,7 @@ impl Widget for Border {
 }
 
 impl Widget for &Border {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		self.clone().render(rect, buf);
 	}
 }
@@ -94,15 +71,17 @@ impl UserData for Border {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
-		methods.add_function("type", |_, (ud, value): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.r#type = match value {
-				ROUNDED => ratatui_widgets::borders::BorderType::Rounded,
-				DOUBLE => ratatui_widgets::borders::BorderType::Double,
-				THICK => ratatui_widgets::borders::BorderType::Thick,
-				QUADRANT_INSIDE => ratatui_widgets::borders::BorderType::QuadrantInside,
-				QUADRANT_OUTSIDE => ratatui_widgets::borders::BorderType::QuadrantOutside,
-				_ => ratatui_widgets::borders::BorderType::Plain,
-			};
+		// TODO: remove
+		methods.add_function("type", |lua, (ud, value): (AnyUserData, u8)| {
+			crate::deprecate!(
+				lua,
+				"`ui.Border:type()` has been deprecated, use `ui.Border:set()` instead in your {}.\n\nSee #4439 for more info: https://github.com/sxyazi/yazi/pull/4439"
+			);
+			ud.borrow_mut::<Self>()?.set = BorderType::from(value).into();
+			Ok(ud)
+		});
+		methods.add_function("set", |_, (ud, value): (AnyUserData, BorderSet)| {
+			ud.borrow_mut::<Self>()?.set = value;
 			Ok(ud)
 		});
 		methods.add_function("title", |_, (ud, line, position): (AnyUserData, Line, Option<u8>)| {

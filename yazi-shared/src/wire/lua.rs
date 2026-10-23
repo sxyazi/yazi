@@ -1,14 +1,13 @@
 use std::collections::BTreeMap;
 
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 
-use super::Sendable;
 use crate::{id::Id, url::UrlBuf, wire::{Wire, WireKey}};
 
-impl Sendable {
-	pub fn value_to_wire(lua: &Lua, value: Value) -> mlua::Result<Wire> {
+impl FromLua for Wire {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match &value {
-			Value::Nil => Wire::Nil,
+			Value::Nil => Self::Nil,
 			Value::Boolean(b) => (*b).into(),
 			Value::Integer(i) => (*i).into(),
 			Value::Number(n) => (*n).into(),
@@ -19,9 +18,8 @@ impl Sendable {
 			Value::Table(t) => {
 				let mut list = Vec::with_capacity(t.raw_len());
 				let mut dict = BTreeMap::new();
-				for pair in t.pairs::<WireKey, Value>() {
+				for pair in t.pairs::<WireKey, Self>() {
 					let (k, v) = pair?;
-					let v = Self::value_to_wire(lua, v)?;
 					if dict.is_empty() && k == (list.len() as i64 + 1).into() {
 						list.push(v);
 					} else if !dict.is_empty() {
@@ -33,53 +31,45 @@ impl Sendable {
 				}
 				if dict.is_empty() { list.into() } else { dict.into() }
 			}
-			Value::UserData(ud) if let Ok(url) = ud.take::<UrlBuf>() => Wire::Url(url),
+			Value::UserData(ud) if let Ok(url) = ud.take::<UrlBuf>() => Self::Url(url),
 			Value::UserData(ud) if let Ok(id) = ud.borrow::<Id>() => (*id).into(),
 			_ => return Err(format!("unsupported value included: {value:?}").into_lua_err()),
 		})
 	}
+}
 
-	pub fn wire_to_value(lua: &Lua, data: Wire) -> mlua::Result<Value> {
-		Ok(match data {
-			Wire::String(s) => Value::String(lua.create_external_string(s)?),
-			Wire::List(l) => {
-				let mut vec = Vec::with_capacity(l.len());
-				for v in l {
-					vec.push(Self::wire_to_value(lua, v)?);
-				}
-				Value::Table(lua.create_sequence_from(vec)?)
-			}
-			Wire::Dict(d) => {
+impl IntoLua for Wire {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		Ok(match self {
+			Self::String(s) => Value::String(lua.create_external_string(s)?),
+			Self::List(l) => Value::Table(lua.create_sequence_from(l)?),
+			Self::Dict(d) => {
 				let tbl = lua.create_table_with_capacity(0, d.len())?;
 				for (k, v) in d {
-					tbl.raw_set(k.into_lua(lua)?, Self::wire_to_value(lua, v)?)?;
+					tbl.raw_set(k, v)?;
 				}
 				Value::Table(tbl)
 			}
-			Wire::Url(u) => u.into_lua(lua)?,
-			Wire::Bytes(b) => Value::String(lua.create_external_string(b)?),
-			_ => Self::wire_to_value_ref(lua, &data)?,
+			Self::Url(u) => u.into_lua(lua)?,
+			Self::Bytes(b) => Value::String(lua.create_external_string(b)?),
+			data => (&data).into_lua(lua)?,
 		})
 	}
+}
 
-	pub fn wire_to_value_ref(lua: &Lua, data: &Wire) -> mlua::Result<Value> {
-		Ok(match data {
+impl IntoLua for &Wire {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		Ok(match self {
 			Wire::Nil => Value::Nil,
 			Wire::Boolean(b) => Value::Boolean(*b),
 			Wire::Integer(i) => Value::Integer(*i),
 			Wire::Number(n) => Value::Number(n.0),
 			Wire::String(s) => Value::String(lua.create_string(s)?),
-			Wire::List(l) => {
-				let mut vec = Vec::with_capacity(l.len());
-				for v in l {
-					vec.push(Self::wire_to_value_ref(lua, v)?);
-				}
-				Value::Table(lua.create_sequence_from(vec)?)
-			}
+			Wire::List(l) => Value::Table(lua.create_sequence_from(l)?),
 			Wire::Dict(d) => {
 				let tbl = lua.create_table_with_capacity(0, d.len())?;
 				for (k, v) in d {
-					tbl.raw_set(k.into_lua(lua)?, Self::wire_to_value_ref(lua, v)?)?;
+					tbl.raw_set(k, v)?;
 				}
 				Value::Table(tbl)
 			}

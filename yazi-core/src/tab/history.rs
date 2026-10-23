@@ -1,14 +1,12 @@
-use std::collections::VecDeque;
-
 use hashbrown::{HashMap, HashSet};
 use yazi_shared::{path::{PathBufDyn, PathMapExt}, url::{AsUrl, UrlBuf, UrlLike, UrlMapExt}};
+use yazi_shim::indexmap::IndexMap;
 
 use super::Folder;
 
 #[derive(Default)]
 pub struct History {
-	entries: HashMap<UrlBuf, Folder>,
-	queue:   VecDeque<UrlBuf>,
+	entries: IndexMap<UrlBuf, Folder>,
 	indices: HashMap<UrlBuf, HashMap<PathBufDyn, Vec<UrlBuf>>>,
 }
 
@@ -32,12 +30,12 @@ impl History {
 			self.indices.get_or_insert_default(trail).get_or_insert_default(key).push(folder.to_url());
 		}
 
-		self.queue.push_back(folder.to_url());
 		self.entries.insert(folder.to_url(), folder);
 
-		(self.queue.len() > 100).then(|| {
-			let url = self.queue.pop_front().unwrap();
-			self.remove(&url).unwrap()
+		(self.entries.len() > 100).then(|| {
+			let (url, folder) = self.entries.shift_remove_index(0).unwrap();
+			self.unindex(&url);
+			folder
 		})
 	}
 
@@ -64,8 +62,7 @@ impl History {
 	}
 
 	fn remove(&mut self, url: impl AsUrl) -> Option<Folder> {
-		let (url, folder) = self.entries.remove_entry(&url.as_url())?;
-		self.queue.retain(|other| other != url);
+		let (url, folder) = self.entries.shift_remove_entry(&url.as_url())?;
 		self.unindex(&url);
 		Some(folder)
 	}

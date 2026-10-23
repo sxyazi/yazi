@@ -92,20 +92,12 @@ impl Tab {
 		}
 	}
 
-	pub fn selected_or_hovered_files(&self) -> Box<dyn Iterator<Item = &File> + '_> {
-		if self.selected.is_empty() {
-			Box::new(self.hovered().into_iter())
-		} else {
-			Box::new(self.selected.files())
-		}
+	pub fn selected_or_hovered_files(&self) -> impl Iterator<Item = &File> {
+		self.selected.files().chain(self.hovered().filter(|_| self.selected.is_empty()))
 	}
 
-	pub fn selected_or_hovered_urls(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
-		if self.selected.is_empty() {
-			Box::new(self.hovered_url().into_iter())
-		} else {
-			Box::new(self.selected.urls())
-		}
+	pub fn selected_or_hovered_urls(&self) -> impl Iterator<Item = &UrlBuf> {
+		self.selected_or_hovered_files().map(|f| &f.url)
 	}
 
 	// --- History

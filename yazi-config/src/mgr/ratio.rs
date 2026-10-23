@@ -41,6 +41,6 @@ impl FromLua for MgrRatio {
 
 impl IntoLua for MgrRatio {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_sequence_from([self.parent, self.current, self.preview])?.into_lua(lua)
+		[self.parent, self.current, self.preview].into_lua(lua)
 	}
 }

@@ -22,14 +22,7 @@ impl From<ratatui_core::layout::Rect> for Rect {
 }
 
 impl From<ratatui_core::layout::Size> for Rect {
-	fn from(size: ratatui_core::layout::Size) -> Self {
-		Self(ratatui_core::layout::Rect {
-			x:      0,
-			y:      0,
-			width:  size.width,
-			height: size.height,
-		})
-	}
+	fn from(size: ratatui_core::layout::Size) -> Self { Self(size.into()) }
 }
 
 impl Rect {

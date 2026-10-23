@@ -38,10 +38,7 @@ impl Spatial for Gauge {
 }
 
 impl Widget for Gauge {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		let mut gauge = ratatui_widgets::gauge::Gauge::default()
 			.ratio(self.ratio)
 			.style(self.style)
@@ -56,10 +53,7 @@ impl Widget for Gauge {
 }
 
 impl Widget for &Gauge {
-	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer)
-	where
-		Self: Sized,
-	{
+	fn render(self, rect: ratatui_core::layout::Rect, buf: &mut ratatui_core::buffer::Buffer) {
 		self.clone().render(rect, buf);
 	}
 }

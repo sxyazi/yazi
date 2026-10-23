@@ -37,9 +37,8 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.9.1" }
 anyhow          = { workspace = true }
 dyn-clone       = { workspace = true }
 hashbrown       = { workspace = true }
-indexmap        = { workspace = true }
 mlua            = { workspace = true }
-parking_lot     = { workspace = true }
+parking_lot     = { workspace = true, features = [ "arc_lock" ] }
 ratatui-core    = { workspace = true }
 ratatui-widgets = { workspace = true }
 serde           = { workspace = true }

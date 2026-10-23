@@ -32,9 +32,7 @@ impl From<Fetcher> for FetcherArc {
 impl Mixable for FetcherArc {}
 
 impl FromLua for FetcherArc {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
-		Ok(lua.from_value::<Fetcher>(value)?.into())
-	}
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl UserData for FetcherArc {

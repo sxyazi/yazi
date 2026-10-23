@@ -1,5 +1,5 @@
 use mlua::{FromLua, Function, IntoLua, Lua, LuaSerdeExt, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, elements::Wrap, runtime};
+use yazi_binding::{Composer, ComposerGet, elements::Wrap, runtime};
 use yazi_boot::ARGS;
 use yazi_config::{YAZI, mgr::MgrRatio};
 use yazi_fs::Xdg;
@@ -7,7 +7,7 @@ use yazi_shared::{path::PathBufDyn, url::UrlBuf};
 use yazi_shim::mlua::SER_OPT;
 use yazi_tty::TTY;
 
-pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
+pub(crate) fn compose() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"args" => args().into_lua(lua)?,
@@ -28,12 +28,10 @@ pub(crate) fn compose() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn path() -> Composer<ComposerGet, ComposerSet> {
+fn path() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"config_dir" => PathBufDyn::from(Xdg::config_dir()).into_lua(lua),
@@ -42,12 +40,10 @@ fn path() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn args() -> Composer<ComposerGet, ComposerSet> {
+fn args() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"entries" => lua.create_sequence_from(ARGS.entries.as_slice())?.into_lua(lua),
@@ -57,32 +53,30 @@ fn args() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
 fn scope(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, ()| Ok(runtime!(lua)?.scope()))
 }
 
-fn mgr() -> Composer<ComposerGet, ComposerSet> {
+fn mgr() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let m = &YAZI.mgr;
 		match key {
-			b"ratio" => m.ratio.get().into_lua(lua)?,
+			b"ratio" => m.ratio.into_lua(lua)?,
 
 			b"sort_by" => lua.to_value_with(&m.sort_by, SER_OPT)?,
-			b"sort_sensitive" => m.sort_sensitive.get().into_lua(lua)?,
-			b"sort_reverse" => m.sort_reverse.get().into_lua(lua)?,
-			b"sort_dir_first" => m.sort_dir_first.get().into_lua(lua)?,
-			b"sort_translit" => m.sort_translit.get().into_lua(lua)?,
+			b"sort_sensitive" => m.sort_sensitive.into_lua(lua)?,
+			b"sort_reverse" => m.sort_reverse.into_lua(lua)?,
+			b"sort_dir_first" => m.sort_dir_first.into_lua(lua)?,
+			b"sort_translit" => m.sort_translit.into_lua(lua)?,
 			b"sort_fallback" => lua.to_value_with(&m.sort_fallback, SER_OPT)?,
 
 			b"linemode" => lua.create_string(&**m.linemode.load())?.into_lua(lua)?,
-			b"show_hidden" => m.show_hidden.get().into_lua(lua)?,
-			b"show_symlink" => m.show_symlink.get().into_lua(lua)?,
-			b"scrolloff" => m.scrolloff.get().into_lua(lua)?,
+			b"show_hidden" => m.show_hidden.into_lua(lua)?,
+			b"show_symlink" => m.show_symlink.into_lua(lua)?,
+			b"scrolloff" => m.scrolloff.into_lua(lua)?,
 			b"mouse_events" => lua.to_value_with(&m.mouse_events, SER_OPT)?,
 			_ => return Ok(Value::Nil),
 		}
@@ -100,10 +94,10 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 		})
 	}
 
-	Composer::new(get, set)
+	Composer::with_setter(get, set)
 }
 
-fn open() -> Composer<ComposerGet, ComposerSet> {
+fn open() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"rules" => YAZI.open.into_lua(lua),
@@ -111,12 +105,10 @@ fn open() -> Composer<ComposerGet, ComposerSet> {
 		}
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn preview() -> Composer<ComposerGet, ComposerSet> {
+fn preview() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let p = &YAZI.preview;
 		match key {
@@ -136,12 +128,10 @@ fn preview() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }
 
-fn tasks() -> Composer<ComposerGet, ComposerSet> {
+fn tasks() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &YAZI.tasks;
 		match key {
@@ -160,7 +150,5 @@ fn tasks() -> Composer<ComposerGet, ComposerSet> {
 		.into_lua(lua)
 	}
 
-	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
-
-	Composer::new(get, set)
+	Composer::new(get)
 }

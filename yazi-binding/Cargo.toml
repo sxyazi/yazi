@@ -26,8 +26,10 @@ yazi-shim    = { path = "../yazi-shim", version = "26.9.1" }
 # External dependencies
 ansi-to-tui      = { workspace = true }
 anyhow           = { workspace = true }
+arc-swap         = { workspace = true }
 chrono           = { workspace = true }
 compact_str      = { workspace = true }
+form_urlencoded  = { workspace = true }
 futures          = { workspace = true }
 hashbrown        = { workspace = true }
 http-body-util   = "0.1.5"
@@ -42,6 +44,7 @@ ratatui-core     = { workspace = true }
 ratatui-widgets  = { workspace = true }
 reqwest          = { workspace = true }
 serde            = { workspace = true }
+serde_with       = { workspace = true }
 strum            = { workspace = true }
 thiserror        = { workspace = true }
 tokio     	      = { workspace = true }
