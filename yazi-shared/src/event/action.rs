@@ -220,10 +220,6 @@ impl Action {
 		self.args.remove(&name.into()).map(Data::into_any2)
 	}
 
-	pub(crate) fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
-		(0..self.len()).filter_map(|i| self.args.remove(&DataKey::from(i))?.into_any())
-	}
-
 	pub(crate) fn take_replier(&mut self) -> Option<Replier> {
 		let replier: Replier = self.take_any("replier")?;
 		replier.claim();
@@ -271,7 +267,7 @@ impl FromLua for Action {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
 			Value::String(s) => s.to_str()?.parse()?,
-			Value::UserData(ud) => ud.take()?,
+			Value::UserData(ud) => ud.borrow::<Self>()?.clone(),
 			_ => Err(mlua::Error::FromLuaConversionError {
 				from:    value.type_name(),
 				to:      "Action".to_owned(),

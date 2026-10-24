@@ -1,12 +1,13 @@
-use std::{fmt::{Display, Write}, str::FromStr};
+use std::{fmt::{self, Display, Write}, str::FromStr};
 
 use anyhow::bail;
-use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
-use serde::{Deserialize, Serialize};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Value};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 use yazi_shim::mlua::SER_OPT;
 use yazi_term::event::{KeyCode, KeyEvent, Modifiers};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(remote = "Self")]
 pub struct Key {
 	#[serde(flatten)]
 	pub code: KeyCode,
@@ -207,6 +208,48 @@ impl Display for Key {
 
 		write!(f, "{code}>")
 	}
+}
+
+impl<'de> Deserialize<'de> for Key {
+	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+		struct Visitor;
+
+		impl<'de> de::Visitor<'de> for Visitor {
+			type Value = Key;
+
+			fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				f.write_str("a key string or a table of Key")
+			}
+
+			fn visit_str<E: de::Error>(self, s: &str) -> Result<Key, E> { s.parse().map_err(E::custom) }
+
+			fn visit_map<A: de::MapAccess<'de>>(self, map: A) -> Result<Key, A::Error> {
+				Key::deserialize(de::value::MapAccessDeserializer::new(map))
+			}
+		}
+
+		deserializer.deserialize_any(Visitor)
+	}
+}
+
+impl Serialize for Key {
+	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		Self::serialize(self, serializer)
+	}
+}
+
+impl Key {
+	pub fn seq_from_lua(value: Value, lua: &Lua) -> mlua::Result<Vec<Self>> {
+		match value {
+			Value::String(_) => Ok(vec![Self::from_lua(value, lua)?]),
+			Value::Table(_) => Vec::from_lua(value, lua),
+			_ => Err("expected a string or a table of keys".into_lua_err()),
+		}
+	}
+}
+
+impl FromLua for Key {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
 }
 
 impl IntoLua for Key {

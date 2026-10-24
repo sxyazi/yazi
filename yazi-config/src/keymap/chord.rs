@@ -1,12 +1,12 @@
 use std::{borrow::Cow, hash::{Hash, Hasher}, sync::Arc};
 
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, LuaSerdeExt, Table, Value};
 use regex::regex;
 use serde::{Deserialize, Deserializer, de};
-use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
+use serde_with::{DeserializeAs, OneOrMany, Same};
 use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
-use yazi_shared::{event::{Actions, deserialize_actions}, id::Id};
+use yazi_shared::{Source, event::{Actions, deserialize_actions}, id::Id};
 
 use super::{Key, ids::chord_id};
 use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
@@ -76,11 +76,34 @@ impl Mixable for Chord {
 	fn filter(&self) -> bool { self.r#for.matches() && !self.noop() }
 }
 
+impl FromLua for Chord {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		let t = Table::from_lua(value, lua)?;
+
+		let on = Key::seq_from_lua(t.raw_get("on")?, lua)?;
+		if on.is_empty() {
+			return Err("'on' cannot be empty".into_lua_err());
+		}
+
+		let mut run: Actions = t.raw_get("run")?;
+		run.set_source(Source::Key);
+
+		let r#for: Option<Platform> = lua.from_value(t.raw_get("for")?)?;
+		Ok(Self {
+			id: chord_id(),
+			on,
+			run,
+			desc: t.raw_get::<Option<String>>("desc")?.unwrap_or_default(),
+			r#for: r#for.unwrap_or_default(),
+		})
+	}
+}
+
 fn deserialize_on<'de, D>(deserializer: D) -> Result<Vec<Key>, D::Error>
 where
 	D: Deserializer<'de>,
 {
-	let keys: Vec<Key> = OneOrMany::<DisplayFromStr>::deserialize_as(deserializer)?;
+	let keys: Vec<Key> = OneOrMany::<Same>::deserialize_as(deserializer)?;
 	if keys.is_empty() {
 		return Err(de::Error::custom("'on' cannot be empty"));
 	}

@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 - Windows support for `fs.partitions()` ([#4402])
 - Image preview adaptation for `st-graphics` terminal ([#4414])
+- Create chords from Lua tables, with keys as strings or as `Key` tables ([#])
 
 ### Changed
 
@@ -45,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Compatibility with legacy Git symlinks in package cache ([#4319])
 - Workaround Konsole kitty graphics and keyboard protocol bugs ([#4370])
 - Correct diacritic input for <kbd>Option</kbd> key combos in kitty keyboard protocol ([#4346])
+- Chords given as tables to `which:activate` through `ya.emit()` were silently dropped ([#])
+- Reusing a chord or an action from Lua no longer destroys the original ([#])
 
 ### Improved
 

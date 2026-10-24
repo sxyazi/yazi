@@ -3,7 +3,7 @@ use std::{ops::{Deref, DerefMut}, sync::Arc};
 use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 use serde::Deserialize;
 use yazi_macro::impl_data_any;
-use yazi_shared::{Layer, event::ActionCow};
+use yazi_shared::{Layer, data::Data, event::ActionCow};
 use yazi_shim::mlua::UserDataFieldsExt;
 
 use crate::{Mixable, keymap::Chord};
@@ -74,15 +74,32 @@ impl ChordArc {
 	}
 }
 
+impl TryFrom<Data> for ChordArc {
+	type Error = anyhow::Error;
+
+	fn try_from(value: Data) -> Result<Self, Self::Error> {
+		match value {
+			Data::Any(_) => value.into_any2(),
+			_ => Ok(Chord::deserialize(value)?.into()),
+		}
+	}
+}
+
+impl TryFrom<&Data> for ChordArc {
+	type Error = anyhow::Error;
+
+	fn try_from(value: &Data) -> Result<Self, Self::Error> { value.clone().try_into() }
+}
+
 impl Mixable for ChordArc {
 	fn filter(&self) -> bool { self.0.filter() }
 }
 
 impl FromLua for ChordArc {
-	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
-			Value::UserData(ud) => ud.take()?,
-			_ => Chord::deserialize(mlua::serde::Deserializer::new(value))?.into(),
+			Value::UserData(ud) => ud.borrow::<Self>()?.clone(),
+			_ => Chord::from_lua(value, lua)?.into(),
 		})
 	}
 }

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{elements::{Line, Text}, runtime};
 use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
@@ -27,7 +27,7 @@ impl Utils {
 					let cand = cand?;
 					Ok(ChordArc::from(Chord {
 						id:    yazi_config::keymap::chord_id(),
-						on:    Self::parse_keys(cand.raw_get("on")?)?,
+						on:    Key::seq_from_lua(cand.raw_get("on")?, &lua)?,
 						run:   relay!(which:callback, [i + 1]).into(),
 						desc:  cand.raw_get("desc").unwrap_or_default(),
 						r#for: Platform::All,
@@ -88,15 +88,5 @@ impl Utils {
 
 	pub(super) fn notify(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, opt: MessageOpt| Ok(NotifyProxy::push(opt)))
-	}
-
-	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {
-		match value {
-			Value::String(s) => Ok(vec![s.to_str()?.parse()?]),
-			Value::Table(t) => {
-				t.sequence_values::<LuaString>().map(|s| Ok(s?.to_str()?.parse()?)).collect()
-			}
-			_ => Err("invalid `on`".into_lua_err()),
-		}
 	}
 }

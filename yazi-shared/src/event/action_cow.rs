@@ -108,15 +108,6 @@ impl ActionCow {
 		}
 	}
 
-	pub fn take_any_iter<T: 'static>(&mut self) -> impl Iterator<Item = T> {
-		match self {
-			Self::Owned(c) => Some(c.take_any_iter()),
-			Self::Borrowed(_) => None,
-		}
-		.into_iter()
-		.flatten()
-	}
-
 	pub fn take_replier(&mut self) -> Option<Replier> {
 		match self {
 			Self::Owned(c) => c.take_replier(),
