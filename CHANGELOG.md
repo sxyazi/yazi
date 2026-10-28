@@ -23,8 +23,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
-- Windows support for `fs.partitions()` ([#4402])
 - Image preview adaptation for `st-graphics` terminal ([#4414])
+- Random read/write for virtual file systems ([#4451])
+- Windows support for `fs.partitions()` ([#4402])
 
 ### Changed
 
@@ -1911,3 +1912,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4424]: https://github.com/sxyazi/yazi/pull/4424
 [#4431]: https://github.com/sxyazi/yazi/pull/4431
 [#4439]: https://github.com/sxyazi/yazi/pull/4439
+[#4451]: https://github.com/sxyazi/yazi/pull/4451
