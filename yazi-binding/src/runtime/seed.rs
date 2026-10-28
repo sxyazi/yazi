@@ -1,22 +1,18 @@
 use compact_str::CompactString;
-use yazi_shared::id::Id;
-
-use crate::Scope;
+use yazi_shared::scope::{Scope, ScopeLike};
 
 #[derive(Clone, Debug, Default)]
 pub struct RuntimeSeed {
-	pub tab:   Id,
 	pub name:  CompactString,
 	pub scope: Scope,
 }
 
 impl RuntimeSeed {
-	pub fn new(tab: Id, name: impl Into<CompactString>, scope: impl Into<Scope>) -> Self {
-		Self { tab, name: name.into(), scope: scope.into() }
+	pub fn new(name: impl Into<CompactString>, scope: impl Into<Scope>) -> Self {
+		Self { name: name.into(), scope: scope.into() }
 	}
+}
 
-	pub fn fork(&mut self) -> Scope {
-		self.scope = self.scope.child();
-		self.scope.clone()
-	}
+impl ScopeLike for RuntimeSeed {
+	fn scope(&self) -> &Scope { &self.scope }
 }

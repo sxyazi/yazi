@@ -1,11 +1,12 @@
-use std::{fmt::{self, Display}, mem};
+use std::mem;
 
-use strum::EnumIs;
+use strum::{Display, EnumIs};
 
 use super::Visual;
 use crate::tab::VisualIndices;
 
-#[derive(Clone, Debug, Default, EnumIs, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Display, EnumIs, Eq, PartialEq)]
+#[strum(serialize_all = "lowercase")]
 pub enum Mode {
 	#[default]
 	Normal,
@@ -33,15 +34,5 @@ impl Mode {
 			Self::Normal => None,
 			Self::Select(visual) | Self::Unset(visual) => Some(visual.indices(end, len)),
 		}
-	}
-}
-
-impl Display for Mode {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(match self {
-			Self::Normal => "normal",
-			Self::Select(..) => "select",
-			Self::Unset(..) => "unset",
-		})
 	}
 }

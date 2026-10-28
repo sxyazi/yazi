@@ -25,7 +25,7 @@ impl Actor for Stop {
 			succ!();
 		}
 
-		cx.active_mut().preview.reset_image();
+		cx.active_mut().preview_mut().reset_image();
 
 		cx.term = None;
 

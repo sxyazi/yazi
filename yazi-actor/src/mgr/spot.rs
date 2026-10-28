@@ -23,18 +23,13 @@ impl Actor for Spot {
 			"multi/unknown".intern()
 		};
 
-		// if !self.active().spot.same_file(&hovered, &mime) {
-		// self.active_mut().spot.reset();
-		// }
-
 		if let Some(skip) = form.skip {
-			cx.tab_mut().spot.skip = skip;
-		} else if !cx.tab().spot.same_url(&hovered.url) {
-			cx.tab_mut().spot.skip = 0;
+			cx.spot_mut().skip = skip;
+		} else if !cx.spot().same_url(&hovered.url) {
+			cx.spot_mut().skip = 0;
 		}
 
-		let tab = cx.tab_mut();
-		tab.spot.go(tab.id, hovered, mime, form.force);
+		cx.spot_mut().go(hovered, mime, form.force);
 
 		succ!();
 	}

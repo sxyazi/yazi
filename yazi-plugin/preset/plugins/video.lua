@@ -23,7 +23,7 @@ function M:seek(job)
 		ya.emit("peek", {
 			math.max(0, cx.tab.preview.skip + job.units),
 			only_if = job.file.url,
-			tab = job.tab,
+			scope = job.scope,
 		})
 	end
 end
@@ -49,7 +49,7 @@ function M:preload(job)
 	local pic = M.has_pic(meta)
 	local percent = (pic and 0 or 5) + job.skip
 	if percent > 95 then
-		ya.emit("peek", { pic and 95 or 90, only_if = job.file.url, upper_bound = true })
+		ya.emit("peek", { pic and 95 or 90, only_if = job.file.url, upper_bound = true, scope = ya.clone(job.scope) })
 		return false
 	end
 

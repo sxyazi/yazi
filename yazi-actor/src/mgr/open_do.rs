@@ -2,7 +2,7 @@ use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_core::Ctx;
-use yazi_fs::{Splatter, file::File};
+use yazi_fs::{Splatter, file::{File, Files}};
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenDoForm;
 use yazi_proxy::{PickProxy, TasksProxy};
@@ -42,7 +42,7 @@ impl Actor for OpenDo {
 		}
 
 		let pick = PickProxy::show(YAZI.pick.open(openers.iter().map(|o| o.desc()).collect()));
-		let files: Vec<_> = targets.into_iter().map(|(file, _)| file).collect();
+		let files: Files = targets.into_iter().map(|(file, _)| file).collect();
 		tokio::spawn(async move {
 			if let Some(choice) = pick.await {
 				Self::open_with(&openers[choice], &opt.cwd, &files);
@@ -54,7 +54,7 @@ impl Actor for OpenDo {
 
 impl OpenDo {
 	fn match_and_open(cwd: UrlBuf, targets: Vec<(File, &str)>) {
-		let mut openers: HashMap<_, Vec<_>> = Default::default();
+		let mut openers: HashMap<_, Files> = Default::default();
 		for (file, mime) in targets {
 			if let Some(open) = YAZI.open.matches(&file, mime)
 				&& let Some(opener) = YAZI.opener.first(&open)

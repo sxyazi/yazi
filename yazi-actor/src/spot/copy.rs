@@ -15,8 +15,7 @@ impl Actor for Copy {
 	const NAME: &str = "copy";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let spot = &cx.tab().spot;
-		let Some(lock) = &spot.lock else { succ!() };
+		let Some(lock) = &cx.spot().lock else { succ!() };
 		let Some(table) = lock.table() else { succ!() };
 
 		let mut s = String::new();

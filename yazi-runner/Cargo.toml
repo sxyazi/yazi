@@ -32,6 +32,9 @@ futures     = { workspace = true }
 hashbrown   = { workspace = true }
 mlua        = { workspace = true }
 parking_lot = { workspace = true }
+scopeguard  = { workspace = true }
 strum       = { workspace = true }
+syntect     = { workspace = true }
 thiserror   = { workspace = true }
 tokio       = { workspace = true }
+tokio-util  = { workspace = true }

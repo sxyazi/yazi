@@ -3,7 +3,7 @@ use yazi_binding::{Composer, ComposerGet, elements::Wrap, runtime};
 use yazi_boot::ARGS;
 use yazi_config::{YAZI, mgr::MgrRatio};
 use yazi_fs::Xdg;
-use yazi_shared::{path::PathBufDyn, url::UrlBuf};
+use yazi_shared::{path::PathBufDyn, scope::ScopeLike, url::UrlBuf};
 use yazi_shim::mlua::SER_OPT;
 use yazi_tty::TTY;
 
@@ -57,7 +57,7 @@ fn args() -> Composer<ComposerGet> {
 }
 
 fn scope(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|lua, ()| Ok(runtime!(lua)?.scope()))
+	lua.create_function(|lua, ()| Ok(runtime!(lua)?.to_scope()))
 }
 
 fn mgr() -> Composer<ComposerGet> {

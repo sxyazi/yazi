@@ -37,8 +37,9 @@ impl ProgressiveCopier {
 
 			loop {
 				select! {
-					result = &mut done => break result,
+					biased;
 					_ = self.prog_tx.closed() => return,
+					result = &mut done => break result,
 					_ = tokio::time::sleep(Duration::from_secs(3)) => {},
 				}
 
@@ -60,11 +61,11 @@ impl ProgressiveCopier {
 
 	async fn work(&self) -> io::Result<()> {
 		let src = engine::open(&self.from).await?;
-		let stat = if src.seekless() { None } else { Some(src.metadata().await?) };
+		let stat = if src.random().read() { Some(src.metadata().await?) } else { None };
 
 		let dist = RwFile::create(&self.to).await?;
 		let result = match stat {
-			Some(stat) if !dist.seekless() => self.work_random(stat, src, dist).await,
+			Some(stat) if dist.random().write() => self.work_random(stat, src, dist).await,
 			_ => self.work_sequential(src, dist).await,
 		};
 

@@ -21,9 +21,9 @@ impl Actor for ToggleAll {
 		let it = tab.current.entries.iter();
 		let either = match form.state {
 			Some(true) if form.files.is_empty() => Left((vec![], it.collect())),
-			Some(true) => Right((vec![], form.files)),
+			Some(true) => Right((Default::default(), form.files)),
 			Some(false) if form.files.is_empty() => Left((it.collect(), vec![])),
-			Some(false) => Right((form.files, vec![])),
+			Some(false) => Right((form.files, Default::default())),
 			None if form.files.is_empty() => Left(it.partition(|&f| tab.selected.contains(f))),
 			None => Right(form.files.into_iter().partition(|f| tab.selected.contains(f))),
 		};
@@ -35,7 +35,7 @@ impl Actor for ToggleAll {
 			}
 			Right((removal, addition)) => {
 				render!(tab.selected.remove_many(&removal) > 0);
-				addition.len() != render!(tab.selected.add_many(&addition), > 0)
+				addition.len() != render!(tab.selected.add_many(addition), > 0)
 			}
 		};
 

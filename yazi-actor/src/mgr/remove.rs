@@ -19,11 +19,11 @@ impl Actor for Remove {
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		let targets = Files(if form.hovered {
-			cx.hovered().map_or(vec![], |h| vec![h.clone()])
+		let targets: Files = if form.hovered {
+			cx.hovered().cloned().into_iter().collect()
 		} else {
 			cx.tab().selected_or_hovered_files().cloned().collect()
-		});
+		};
 
 		if targets.is_empty() {
 			succ!();

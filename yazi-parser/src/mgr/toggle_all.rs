@@ -1,10 +1,10 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_fs::file::File;
+use yazi_fs::file::Files;
 use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]
 pub struct ToggleAllForm {
-	pub files: Vec<File>,
+	pub files: Files,
 	pub state: Option<bool>,
 }
 
@@ -22,7 +22,7 @@ impl<C> FromAction<C> for ToggleAllForm {
 }
 
 impl From<Option<bool>> for ToggleAllForm {
-	fn from(state: Option<bool>) -> Self { Self { files: vec![], state } }
+	fn from(state: Option<bool>) -> Self { Self { files: Files::default(), state } }
 }
 
 impl FromLua for ToggleAllForm {

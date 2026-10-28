@@ -34,6 +34,13 @@ impl Actor for Quit {
 			let token = ConfirmProxy::show_sync(ConfirmCfg::quit(left, left_titles));
 			loop {
 				select! {
+					biased;
+					b = token.future() => {
+						if b {
+							AppProxy::quit(opt);
+						}
+						return;
+					}
 					_ = time::sleep(Duration::from_millis(50)) => {
 						i += 1;
 						if i > 40 { break }
@@ -41,12 +48,6 @@ impl Actor for Quit {
 							AppProxy::quit(opt);
 							return;
 						}
-					}
-					b = token.future() => {
-						if b {
-							AppProxy::quit(opt);
-						}
-						return;
 					}
 				}
 			}

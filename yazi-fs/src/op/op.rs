@@ -8,21 +8,21 @@ use yazi_macro::{impl_data_any, relay};
 use yazi_shared::{id::{Id, Ids}, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike, UrlMapExt}};
 use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 
-use crate::file::File;
+use crate::file::{File, Files};
 
 pub static FILES_TICKET: Ids = Ids::new();
 
 #[derive(Clone, Debug, FromLuaOwned, IntoStaticStr)]
 #[strum(serialize_all = "lowercase")]
 pub enum FilesOp {
-	Full(File, Vec<File>),
-	Part(UrlBuf, Vec<File>, Id),
+	Full(File, Files),
+	Part(UrlBuf, Files, Id),
 	Done(File, Id),
 	Size(UrlBuf, HashMap<PathBufDyn, u64>),
 	Rank(UrlBuf, HashMap<PathBufDyn, i64>),
 	Fail(UrlBuf, yazi_shim::fs::Error),
 
-	Create(UrlBuf, Vec<File>),
+	Create(UrlBuf, Files),
 	Delete(UrlBuf, HashSet<PathBufDyn>),
 	Update(UrlBuf, HashMap<PathBufDyn, File>),
 	Upsert(UrlBuf, HashMap<PathBufDyn, File>),
@@ -51,8 +51,8 @@ impl FilesOp {
 		yazi_shared::event::Event::Call(relay!(mgr:update_files).with_any("op", self).into()).emit();
 	}
 
-	pub fn create(files: Vec<File>) {
-		let mut trails: HashMap<UrlBuf, Vec<_>> = Default::default();
+	pub fn create(files: Files) {
+		let mut trails: HashMap<UrlBuf, Files> = Default::default();
 		for file in files {
 			let Some((t, _)) = file.pair() else { continue };
 			trails.get_or_insert_default(t).push(file);

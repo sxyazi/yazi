@@ -5,13 +5,14 @@ use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 use serde_with::DeserializeFromStr;
 use yazi_shim::{SStr, mlua::UserDataFieldsExt};
 
-use crate::{Layer, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}};
+use crate::{Layer, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}, scope::Scope};
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Action {
 	pub(crate) cmd: Cmd,
 	pub layer:      Layer,
 	pub source:     Source,
+	pub scope:      Scope,
 }
 
 impl Deref for Action {
@@ -41,7 +42,7 @@ impl Action {
 			}),
 		};
 
-		Ok(Self { cmd: Cmd { name, args: Default::default() }, layer, source })
+		Ok(Self { cmd: Cmd { name, args: Default::default() }, layer, source, ..Self::default() })
 	}
 
 	pub fn new_relay<N>(name: N) -> Self
@@ -63,7 +64,7 @@ impl Action {
 		action
 	}
 
-	fn null() -> Self { Self { cmd: Cmd::null(), layer: Layer::Null, source: Source::Unknown } }
+	fn null() -> Self { Self { cmd: Cmd::null(), ..Self::default() } }
 
 	fn len(&self) -> usize { self.args.len() }
 
@@ -110,6 +111,11 @@ impl Action {
 		self
 	}
 
+	pub fn with_scope(mut self, scope: impl Into<Scope>) -> Self {
+		self.scope = scope.into();
+		self
+	}
+
 	// --- Get
 	pub fn get<'a, T>(&'a self, name: impl Into<DataKey>) -> Result<T>
 	where
@@ -149,21 +155,11 @@ impl Action {
 		self.get(1)
 	}
 
-	pub(crate) fn seq<'a, T>(&'a self) -> Vec<T>
+	pub(crate) fn seq<'a, T>(&'a self) -> impl Iterator<Item = T>
 	where
 		T: TryFrom<&'a Data>,
 	{
-		let mut seq = Vec::with_capacity(self.len());
-		for i in 0..self.len() {
-			if let Ok(data) = self.get::<&Data>(i)
-				&& let Ok(v) = data.try_into()
-			{
-				seq.push(v);
-			} else {
-				break;
-			}
-		}
-		seq
+		(0..self.len()).map_while(|i| self.get::<&Data>(i).ok()?.try_into().ok())
 	}
 
 	// --- Take
@@ -195,21 +191,11 @@ impl Action {
 		self.take(1)
 	}
 
-	pub(crate) fn take_seq<T>(&mut self) -> Vec<T>
+	pub(crate) fn take_seq<T>(&mut self) -> impl Iterator<Item = T>
 	where
 		T: TryFrom<Data>,
 	{
-		let mut seq = Vec::with_capacity(self.len());
-		for i in 0..self.len() {
-			if let Ok(data) = self.take::<Data>(i)
-				&& let Ok(v) = data.try_into()
-			{
-				seq.push(v);
-			} else {
-				break;
-			}
-		}
-		seq
+		(0..self.len()).map_while(|i| self.take::<Data>(i).ok()?.try_into().ok())
 	}
 
 	pub(crate) fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
@@ -250,6 +236,10 @@ impl Display for Action {
 			}
 		}
 
+		if let Some(id) = self.scope.tab.nz() {
+			write!(f, " --scope={id}")?;
+		}
+
 		Ok(())
 	}
 }
@@ -262,6 +252,10 @@ impl FromStr for Action {
 
 		let mut me = Self::new(cmd.name, Source::Unknown, Layer::Null)?;
 		me.args = cmd.args;
+
+		if let Some(scope) = me.args.remove(&DataKey::from("scope")) {
+			me.scope = scope.try_into()?;
+		}
 
 		Ok(me)
 	}

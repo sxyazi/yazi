@@ -25,7 +25,7 @@ yazi-vfs     = { path = "../yazi-vfs", version = "26.9.1" }
 # External dependencies
 futures      = { workspace = true }
 hashbrown    = { workspace = true }
-notify       = { version = "8.2.0", default-features = false, features = [ "macos_fsevent" ] }
+notify       = { version = "8.2.1", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot  = { workspace = true }
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }

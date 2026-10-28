@@ -3,7 +3,7 @@ use std::{io, ops::Deref, sync::Arc};
 use mlua::FromLua;
 use tokio::{sync::mpsc, task::JoinHandle};
 use yazi_config::vfs::ServiceLua;
-use yazi_runner::{RUNNER, provider::{Handle, ProvideJob, ProvideOp}};
+use yazi_runner::{RUNNER, provider::{Handle, ProvideJob, ProvideOp, ProvideResult}};
 use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 
 pub struct FileHandle {
@@ -40,7 +40,17 @@ impl FileHandle {
 		Self { inner, url: url.into(), service }
 	}
 
-	pub(super) fn stream<T>(
+	pub(super) fn provide<T>(
+		self: &Arc<Self>,
+		op: ProvideOp,
+	) -> impl Future<Output = ProvideResult<T>> + Send + Sync + 'static
+	where
+		T: FromLua + Send + 'static,
+	{
+		RUNNER.provide(ProvideJob::new(&self.service, op).with_resource(self))
+	}
+
+	pub(super) fn provide_stream<T>(
 		self: &Arc<Self>,
 		op: ProvideOp,
 		tx: mpsc::Sender<io::Result<T>>,
@@ -48,12 +58,8 @@ impl FileHandle {
 	where
 		T: FromLua + Send + 'static,
 	{
-		let handle = self.clone();
+		let job = ProvideJob::new(&self.service, op).with_resource(self);
 
-		tokio::spawn(async move {
-			RUNNER.provide_stream(ProvideJob::new(&handle.service, op), tx).await;
-			// A stream can outlive its File; keep the resource open until the provider stops.
-			drop(handle);
-		})
+		tokio::spawn(RUNNER.provide_stream(job, tx))
 	}
 }

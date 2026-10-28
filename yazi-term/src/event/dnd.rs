@@ -3,22 +3,34 @@ use strum::{FromRepr, IntoStaticStr};
 
 use crate::{event::mime::MimeList, parser::StateOsc72};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, IntoStaticStr, PartialEq)]
 pub enum DndEvent {
 	// Drag
+	#[strum(serialize = "offer")]
 	DragOffer(DndDragOffer),
+	#[strum(serialize = "accept")]
 	DragAccept(DndDragAccept),
+	#[strum(serialize = "change")]
 	DragChange(DndDragChange),
+	#[strum(serialize = "land")]
 	DragLand,
+	#[strum(serialize = "end")]
 	DragEnd(DndDragEnd),
+	#[strum(serialize = "send")]
 	DragSend(DndDragSend),
+	#[strum(serialize = "error")]
 	DragError(DndDragError),
 
 	// Drop
+	#[strum(serialize = "enter")]
 	DropEnter(DndDropEnter),
+	#[strum(serialize = "leave")]
 	DropLeave,
+	#[strum(serialize = "ready")]
 	DropReady(DndDropReady),
+	#[strum(serialize = "arrive")]
 	DropArrive(DndDropArrive),
+	#[strum(serialize = "error")]
 	DropError(DndDropError),
 }
 
@@ -85,24 +97,6 @@ pub struct DndDropError {
 }
 
 impl DndEvent {
-	pub(crate) fn r#type(&self) -> &'static str {
-		match self {
-			Self::DragOffer(_) => "offer",
-			Self::DragAccept(_) => "accept",
-			Self::DragChange(_) => "change",
-			Self::DragLand => "land",
-			Self::DragEnd(_) => "end",
-			Self::DragSend(_) => "send",
-			Self::DragError(_) => "error",
-
-			Self::DropEnter(_) => "enter",
-			Self::DropLeave => "leave",
-			Self::DropReady(_) => "ready",
-			Self::DropArrive(_) => "arrive",
-			Self::DropError(_) => "error",
-		}
-	}
-
 	pub(crate) fn x(&self) -> Option<u32> {
 		match self {
 			Self::DragOffer(e) => Some(e.x),

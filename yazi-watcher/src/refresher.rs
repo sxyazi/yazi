@@ -4,7 +4,7 @@ use hashbrown::{HashMap, hash_map::RawEntryMut};
 use tokio::{pin, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::task::AbortOnDropHandle;
-use yazi_fs::{Entries, file::File, op::{FILES_TICKET, FilesOp}};
+use yazi_fs::{Entries, file::{File, Files}, op::{FILES_TICKET, FilesOp}};
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike, UrlMapExt}};
 use yazi_shim::indexmap::IndexSet;
 use yazi_vfs::VfsEntries;
@@ -149,14 +149,14 @@ impl Refresher {
 	}
 
 	async fn spawn_part(prev: &mut Entry) -> io::Result<RefreshResponse> {
-		FilesOp::Part(prev.to_url(), vec![], prev.busy).emit();
+		FilesOp::Part(prev.to_url(), Files::default(), prev.busy).emit();
 
 		let rx = UnboundedReceiverStream::new(Entries::from_dir(&prev.url).await?)
 			.chunks_timeout(5000, Duration::from_millis(500));
 		pin!(rx);
 
 		while let Some(chunk) = rx.next().await {
-			FilesOp::Part(prev.to_url(), chunk, prev.busy).emit();
+			FilesOp::Part(prev.to_url(), chunk.into(), prev.busy).emit();
 		}
 		Ok(RefreshResponse::Part)
 	}
@@ -193,7 +193,7 @@ impl Op {
 
 // --- Response
 pub enum RefreshResponse {
-	Full(Vec<File>),
+	Full(Files),
 	Part,
 	Skip,
 }

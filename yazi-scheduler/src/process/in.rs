@@ -1,7 +1,6 @@
 use std::{borrow::Cow, ffi::OsString};
 
-use yazi_binding::Scope;
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, scope::Scope, url::UrlBuf};
 
 use super::ShellOpt;
 use crate::{TaskIn, custom::CustomIn, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};

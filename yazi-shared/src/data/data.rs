@@ -38,6 +38,10 @@ impl From<bool> for Data {
 	fn from(value: bool) -> Self { Self::Boolean(value) }
 }
 
+impl From<i16> for Data {
+	fn from(value: i16) -> Self { Self::Integer(value as i64) }
+}
+
 impl From<i32> for Data {
 	fn from(value: i32) -> Self { Self::Integer(value as i64) }
 }
@@ -60,6 +64,10 @@ impl From<String> for Data {
 
 impl From<SStr> for Data {
 	fn from(value: SStr) -> Self { Self::String(value) }
+}
+
+impl From<HashMap<DataKey, Data>> for Data {
+	fn from(value: HashMap<DataKey, Data>) -> Self { Self::Dict(value) }
 }
 
 impl From<Id> for Data {

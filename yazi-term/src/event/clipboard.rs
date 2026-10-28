@@ -2,26 +2,27 @@ use std::collections::HashMap;
 
 use compact_str::CompactString;
 use mlua::{BString, IntoLua, Lua, Value};
+use strum::IntoStaticStr;
 
 use crate::parser::StateOsc5522;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, IntoStaticStr, PartialEq)]
+#[strum(serialize_all = "lowercase")]
 pub enum ClipboardEvent {
-	Read { primary: bool, pw: String, data: ClipboardData },
+	Read {
+		primary: bool,
+		pw:      String,
+		data:    ClipboardData,
+	},
+	#[strum(serialize = "error")]
 	ReadError(CompactString),
+	#[strum(serialize = "success")]
 	WriteSuccess,
+	#[strum(serialize = "error")]
 	WriteError(CompactString),
 }
 
 impl ClipboardEvent {
-	pub(crate) fn r#type(&self) -> &'static str {
-		match self {
-			Self::Read { .. } => "read",
-			Self::ReadError(_) | Self::WriteError(_) => "error",
-			Self::WriteSuccess => "success",
-		}
-	}
-
 	pub(crate) fn primary(&self) -> Option<bool> {
 		match self {
 			Self::Read { primary, .. } => Some(*primary),

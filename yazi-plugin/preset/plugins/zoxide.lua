@@ -1,6 +1,11 @@
 local M = {}
 
-local state = ya.sync(function(st) return tostring(cx.tab.current.cwd), st.empty end)
+local state = ya.sync(function(st)
+	local tab = cx.tab
+	if tab then
+		return tostring(tab.current.cwd), st.empty
+	end
+end)
 
 local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
@@ -8,15 +13,18 @@ function M:setup(opts)
 	opts = opts or {}
 
 	if opts.update_db then
-		ps.sub("cd", function()
-			local cwd = cx.tab.current.cwd
-			ya.async(function() Command("zoxide"):arg({ "add", tostring(cwd) }):status() end)
+		ps.sub("cd", function(body)
+			ya.async(function() Command("zoxide"):arg({ "add", tostring(body.url) }):status() end)
 		end)
 	end
 end
 
 function M:entry(job)
 	local cwd, empty = state()
+	if not cwd then
+		return
+	end
+
 	if empty == nil then
 		empty = M.is_empty(cwd)
 		set_state(empty)
@@ -38,7 +46,7 @@ function M:entry(job)
 	if not target then
 		ya.notify { title = "Zoxide", content = tostring(err), timeout = 5, level = "error" }
 	elseif target ~= "" then
-		ya.emit("cd", { target, raw = true, tab = job.tab })
+		ya.emit("cd", { target, raw = true, scope = job.scope })
 	end
 end
 

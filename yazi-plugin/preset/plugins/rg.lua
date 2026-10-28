@@ -3,10 +3,19 @@ local search = require("search")
 
 local function warn(content) ya.notify { title = "Rg", content = tostring(content), timeout = 5, level = "warn" } end
 
-local state = ya.sync(function() return cx.tab.current.cwd, cx.tab.pref.show_hidden end)
+local state = ya.sync(function()
+	local tab = cx.tab
+	if tab then
+		return tab.current.cwd, tab.pref.show_hidden
+	end
+end)
 
 function M:entry(job)
 	local root, hidden = state()
+	if not root then
+		return
+	end
+
 	if job.args["in"] then
 		local ok, url = pcall(Url, job.args["in"])
 		root = ok and url or root
@@ -48,7 +57,7 @@ function M:entry(job)
 			data = { subject, a = args, h = hidden },
 		},
 		raw = true,
-		tab = job.tab,
+		scope = job.scope,
 	})
 end
 

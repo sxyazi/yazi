@@ -1,11 +1,11 @@
-use yazi_fs::{Splatable, file::File};
+use yazi_fs::{Splatable, file::{File, Files}};
 
 use crate::{mgr::Mgr, tab::TabSnap};
 
 pub struct MgrSnap {
 	tab:    usize,
 	tabs:   Vec<TabSnap>,
-	yanked: Vec<File>,
+	yanked: Files,
 }
 
 impl From<&Mgr> for MgrSnap {

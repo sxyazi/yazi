@@ -14,24 +14,26 @@ impl Actor for UpdateSpotted {
 	const NAME: &str = "update_spotted";
 
 	fn act(cx: &mut Ctx, mut form: Self::Form) -> Result<Data> {
-		let tab = cx.tab_mut();
-		let Some(hovered) = tab.hovered_url() else {
-			succ!(tab.spot.reset());
+		let Some(hovered) = cx.hovered_url() else {
+			succ!(cx.spot_mut().reset());
 		};
 
 		if form.lock.url != *hovered {
 			succ!();
+		} else if cx.scope.is_cancelled() {
+			succ!();
 		}
 
-		if tab.spot.lock.as_ref().is_none_or(|l| l.id != form.lock.id) {
-			tab.spot.skip = form.lock.selected().unwrap_or_default();
+		let spot = &mut cx.spot_mut();
+		if spot.lock.as_ref().is_none_or(|l| l.id != form.lock.id) {
+			spot.skip = form.lock.selected().unwrap_or_default();
 		} else if let Some(s) = form.lock.selected() {
-			tab.spot.skip = s;
+			spot.skip = s;
 		} else {
-			form.lock.select(Some(tab.spot.skip));
+			form.lock.select(Some(spot.skip));
 		}
 
-		tab.spot.lock = Some(form.lock);
+		spot.lock = Some(form.lock);
 		succ!(render!());
 	}
 }

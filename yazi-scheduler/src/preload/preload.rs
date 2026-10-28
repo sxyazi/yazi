@@ -5,7 +5,6 @@ use lru::LruCache;
 use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use yazi_config::Priority;
-use yazi_fs::{FsHash64, file::FileSig};
 use yazi_macro::error;
 use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
 use yazi_shared::id::Id;
@@ -35,16 +34,9 @@ impl Preload {
 	}
 
 	pub(crate) async fn preload(&self, task: PreloadInPreload) -> Result<(), PreloadOut> {
-		let hash = FileSig(&task.file).hash_u64();
-		let result = RUNNER
-			.preload(PreloadJob {
-				tab:       task.tab,
-				preloader: task.preloader.clone(),
-				file:      task.file,
-				mime:      task.mime,
-				scope:     task.scope,
-			})
-			.await;
+		let PreloadInPreload { id, preloader, file, hash, mime, scope } = task;
+		let result =
+			RUNNER.preload(PreloadJob { preloader: preloader.clone(), file, mime, scope }).await;
 
 		let state = match result {
 			Ok(state) => state,
@@ -53,13 +45,13 @@ impl Preload {
 		};
 
 		if !state.complete {
-			self.loaded.lock().get_mut(&hash).map(|x| x.clear(task.preloader.idx, task.preloader.rev));
+			self.loaded.lock().get_mut(&hash).map(|x| x.clear(preloader.idx, preloader.rev));
 		}
 		if let Some(e) = state.error {
-			error!("Error when running preloader '{}':\n{e}", task.preloader.name);
+			error!("Error when running preloader '{}':\n{e}", preloader.name);
 		}
 
-		Ok(self.ops.out(task.id, PreloadOut::Succ))
+		Ok(self.ops.out(id, PreloadOut::Succ))
 	}
 }
 

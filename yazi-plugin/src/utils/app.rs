@@ -2,8 +2,8 @@ use std::any::TypeId;
 
 use mlua::{AnyUserData, BorrowedBytes, ExternalError, Function, IntoLua, Lua};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use yazi_binding::{HttpPartTx, Scope};
-use yazi_shared::{path::PathBufDyn, url::UrlBuf};
+use yazi_binding::HttpPartTx;
+use yazi_shared::{path::PathBufDyn, scope::Scope, url::UrlBuf};
 use yazi_vfs::engine::RwFile;
 
 use super::Utils;

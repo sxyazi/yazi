@@ -14,7 +14,7 @@ impl Actor for Arrow {
 	const NAME: &str = "arrow";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let spot = &mut cx.tab_mut().spot;
+		let spot = &mut *cx.spot_mut();
 		let Some(lock) = &mut spot.lock else { succ!() };
 
 		let new = form.step.add(spot.skip, lock.len().unwrap_or(u16::MAX as _), 0, 0, 0);

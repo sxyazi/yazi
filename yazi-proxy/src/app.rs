@@ -1,6 +1,6 @@
 use yazi_core::app::{PluginOpt, QuitOpt};
 use yazi_macro::{emit, relay};
-use yazi_shared::id::Id;
+use yazi_shared::{id::Id, scope::Scope};
 
 pub struct AppProxy;
 
@@ -9,8 +9,8 @@ impl AppProxy {
 		emit!(Call(relay!(app:passthrough).with("id", id)));
 	}
 
-	pub fn plugin_do(opt: PluginOpt) {
-		emit!(Call(relay!(app:plugin_do).with_opt("tab", opt.tab.nz()).with_any("opt", opt)));
+	pub fn plugin_do(opt: PluginOpt, scope: impl Into<Scope>) {
+		emit!(Call(relay!(app:plugin_do).with_scope(scope).with_any("opt", opt)));
 	}
 
 	pub fn quit(opt: QuitOpt) {

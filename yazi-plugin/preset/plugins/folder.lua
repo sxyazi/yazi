@@ -12,7 +12,7 @@ function M:peek(job)
 
 	local bound = math.max(0, #folder.files - job.area.h)
 	if job.skip > bound then
-		return ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true, tab = job.tab })
+		return ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true, scope = job.scope })
 	end
 
 	if #folder.files == 0 then
@@ -46,7 +46,7 @@ function M:seek(job)
 		ya.emit("peek", {
 			ya.clamp(0, cx.tab.preview.skip + step, bound),
 			only_if = job.file.url,
-			tab = job.tab,
+			scope = job.scope,
 		})
 	end
 end

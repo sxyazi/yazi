@@ -28,7 +28,7 @@ impl Actor for Theme {
 		log_if_err!(Pubsub::pub_after_theme());
 
 		act!(mgr:peek, cx, true)?;
-		if cx.tab().spot.visible() {
+		if cx.spot().visible() {
 			act!(mgr:spot, cx, true)?;
 		}
 

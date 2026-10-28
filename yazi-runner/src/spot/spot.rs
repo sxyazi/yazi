@@ -1,5 +1,5 @@
-use mlua::{ExternalError, HookTriggers, ObjectLike, VmState};
-use tokio::{runtime::Handle, select};
+use mlua::{ExternalError, ObjectLike};
+use tokio::select;
 use yazi_macro::error;
 
 use crate::{Runner, loader::LOADER, spot::{SpotError, SpotJob}};
@@ -8,13 +8,18 @@ impl Runner {
 	pub fn spot(&'static self, job: SpotJob) {
 		tokio::task::spawn_blocking(move || {
 			let scope = job.scope.clone();
-			Handle::current().block_on(async {
+
+			Self::block_on(async {
 				select! {
+					biased;
 					_ = scope.cancelled() => {},
-					Err(e) = self.spot_do(job) => if !e.downcast_ref().is_some_and(SpotError::is_cancelled) {
-						error!("{e}");
-					},
-					else => {}
+					result = self.spot_do(job) => {
+						if let Err(e) = result
+							&& !e.downcast_ref().is_some_and(SpotError::is_cancelled)
+						{
+							error!("{e}");
+						}
+					}
 				}
 			});
 		});
@@ -24,18 +29,8 @@ impl Runner {
 		LOADER.ensure(&job.spotter.name, |_| ()).await?;
 
 		let lua = self.spawn(&job)?;
-		let scope = job.scope.clone();
 
-		lua.set_hook(
-			HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-			move |_, dbg| {
-				if scope.is_cancelled() && dbg.source().what != "C" {
-					Err(SpotError::Cancelled.into_lua_err())
-				} else {
-					Ok(VmState::Continue)
-				}
-			},
-		)?;
+		job.scope.set_hook(&lua, || SpotError::Cancelled.into_lua_err())?;
 
 		let plugin = LOADER.load(&lua, &job.spotter.name).await?;
 		if job.scope.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }

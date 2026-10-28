@@ -20,6 +20,10 @@ impl_data_any!(Payload<'static>);
 impl<'a> Payload<'a> {
 	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id::ZERO, sender: *ID, body } }
 
+	pub fn tab(&self) -> Id {
+		if self.receiver != 0 && self.receiver == self.sender { self.body.tab() } else { Id::ZERO }
+	}
+
 	pub(super) fn flush(&self) -> Result<()> {
 		writeln!(std::io::stdout(), "{self}")?;
 		Ok(())
@@ -49,9 +53,7 @@ impl<'a> Payload<'a> {
 
 impl Payload<'static> {
 	pub(super) fn emit(self) {
-		let tab = self.body.tab().nz().filter(|_| self.receiver != 0 && self.receiver == self.sender);
-
-		emit!(Call(relay!(app:accept_payload).with_opt("tab", tab).with_any("payload", self)));
+		emit!(Call(relay!(app:accept_payload).with_any("payload", self)));
 	}
 }
 

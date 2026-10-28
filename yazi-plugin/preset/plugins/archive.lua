@@ -12,7 +12,12 @@ function M:peek(job)
 	if err then
 		return ya.preview_widget(job, err)
 	elseif job.skip > 0 and #items < job.skip + limit then
-		return ya.emit("peek", { math.max(0, #items - limit), only_if = job.file.url, upper_bound = true })
+		return ya.emit("peek", {
+			math.max(0, #items - limit),
+			only_if = job.file.url,
+			upper_bound = true,
+			scope = job.scope,
+		})
 	elseif #items == 0 then
 		items = { M.make_item { path = job.file.url.stem } }
 	end

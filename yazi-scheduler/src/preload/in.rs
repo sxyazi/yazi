@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use yazi_binding::Scope;
 use yazi_config::plugin::PreloaderArc;
-use yazi_shared::{id::Id, pool::Symbol};
+use yazi_fs::file::File;
+use yazi_shared::{id::Id, pool::{InternStr, Symbol}, scope::{Scope, ScopeLike}};
 
 use crate::{TaskIn, custom::CustomIn, preload::PreloadProg};
 
@@ -48,13 +48,35 @@ impl TaskIn for PreloadIn {
 impl_from_in!(Preload(PreloadInPreload), Custom(CustomIn));
 
 #[derive(Clone, Debug)]
-pub(crate) struct PreloadInPreload {
-	pub(crate) id:        Id,
-	pub(crate) tab:       Id,
-	pub(crate) preloader: PreloaderArc,
-	pub(crate) file:      yazi_fs::file::File,
-	pub(crate) mime:      Symbol<str>,
-	pub(crate) scope:     Scope,
+pub struct PreloadInPreload {
+	pub id:        Id,
+	pub preloader: PreloaderArc,
+	pub file:      File,
+	pub hash:      u64,
+	pub mime:      Symbol<str>,
+	pub scope:     Scope,
+}
+
+impl PreloadInPreload {
+	pub fn new<F, M>(preloader: PreloaderArc, file: F, hash: u64, mime: M) -> Self
+	where
+		F: Into<File>,
+		M: AsRef<str>,
+	{
+		Self {
+			id: Id::ZERO,
+			preloader,
+			file: file.into(),
+			hash,
+			mime: mime.intern(),
+			scope: Scope::default(),
+		}
+	}
+
+	pub fn scoped(mut self, context: &(impl ScopeLike + ?Sized)) -> Self {
+		self.scope = context.scope().detached();
+		self
+	}
 }
 
 impl TaskIn for PreloadInPreload {

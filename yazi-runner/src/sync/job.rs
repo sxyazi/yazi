@@ -1,12 +1,10 @@
-use yazi_binding::Scope;
-use yazi_shared::{data::Data, id::Id};
+use yazi_shared::{data::Data, scope::{Scope, ScopeLike}};
 use yazi_shim::SStr;
 
 use crate::PluginJob;
 
 #[derive(Clone, Debug)]
 pub struct SyncJob {
-	pub tab:   Id,
 	pub name:  SStr,
 	pub block: usize,
 	pub args:  Vec<Data>,
@@ -14,9 +12,9 @@ pub struct SyncJob {
 }
 
 impl PluginJob for SyncJob {
-	fn tab(&self) -> Id { self.tab }
-
 	fn name(&self) -> &SStr { &self.name }
+}
 
+impl ScopeLike for SyncJob {
 	fn scope(&self) -> &Scope { &self.scope }
 }

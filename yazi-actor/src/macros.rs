@@ -28,6 +28,10 @@ macro_rules! act {
 		<<$crate::act!($layer:$name) as $crate::Actor>::Form as yazi_shared::event::FromAction<_, _>>::from_action($action, &*$cx)
 			.and_then(|opt| $crate::act!(@impl $layer:$name, $cx, opt))
 	};
+	($layer:ident : $name:ident, $cx:expr, $action:expr) => {{
+		let cx = &mut $cx;
+		$crate::act!($layer:$name, cx, $action)
+	}};
 	($layer:ident : $name:ident, $cx:ident) => {
 		$crate::act!($layer:$name, $cx, <<$crate::act!($layer:$name) as $crate::Actor>::Form as Default>::default())
 	};

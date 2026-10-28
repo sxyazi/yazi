@@ -1,5 +1,5 @@
-use mlua::{ExternalResult, HookTriggers, ObjectLike, VmState};
-use tokio::{runtime::Handle, select};
+use mlua::{ExternalResult, ObjectLike};
+use tokio::select;
 
 use crate::{Runner, entry::{EntryError, EntryJob}, loader::LOADER};
 
@@ -13,8 +13,9 @@ impl Runner {
 
 		tokio::task::spawn_blocking(move || {
 			let scope = job.scope.clone();
-			Handle::current().block_on(async {
+			Self::block_on(async {
 				select! {
+					biased;
 					_ = scope.cancelled() => Err(EntryError::Cancelled.into()),
 					r = self.entry_do(job) => r,
 				}
@@ -26,18 +27,8 @@ impl Runner {
 
 	async fn entry_do(&self, job: EntryJob) -> mlua::Result<()> {
 		let lua = self.spawn(&job)?;
-		let scope = job.scope.clone();
 
-		lua.set_hook(
-			HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-			move |_, dbg| {
-				if scope.is_cancelled() && dbg.source().what != "C" {
-					Err(EntryError::Cancelled.into())
-				} else {
-					Ok(VmState::Continue)
-				}
-			},
-		)?;
+		job.scope.set_hook(&lua, || EntryError::Cancelled.into())?;
 
 		let plugin = LOADER.load(&lua, &job.plugin).await?;
 		if job.scope.is_cancelled() {

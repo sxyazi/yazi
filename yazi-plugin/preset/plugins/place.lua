@@ -55,7 +55,7 @@ function M:setup()
 			return args
 		end
 
-		ya.emit("cd", { url, raw = true, tab = cx.tab.id })
+		ya.emit("cd", { url, raw = true, scope = rt.scope() })
 	end
 
 	local function leave(args)
@@ -71,7 +71,7 @@ function M:setup()
 			return args
 		end
 
-		ya.emit("reveal", { Url("place://host//"):join(drive:upper()), raw = true, tab = cx.tab.id })
+		ya.emit("reveal", { Url("place://host//"):join(drive:upper()), raw = true, scope = rt.scope() })
 	end
 
 	for _, source in ipairs { "key", "ind", "emit", "relay" } do

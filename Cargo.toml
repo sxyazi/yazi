@@ -53,7 +53,7 @@ either                 = { version = "1.19.0" }
 foldhash               = "0.2.0"
 form_urlencoded        = "1.2.2"
 futures                = "0.3.34"
-globset                = "0.4.20"
+globset                = "0.4.21"
 hashbrown              = { version = "0.17.1", features = [ "serde" ] }
 image                  = { version = "0.25.10", default-features = false, features = [ "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp" ] }
 indexmap               = { version = "2.14.2", features = [ "serde" ] }
@@ -66,7 +66,7 @@ objc2                  = "0.6.5"
 objc2-core-foundation  = { version = "0.3.2", default-features = false, features = [ "std", "CFDictionary", "CFNumber", "CFString", "CFURL" ] }
 objc2-disk-arbitration = { version = "0.3.2", default-features = false, features = [ "std", "DADisk", "DASession", "dispatch2" ] }
 objc2-foundation       = { version = "0.3.2", default-features = false, features = [ "std", "NSDateFormatter", "NSFormatter", "NSLocale", "NSString" ] }
-ordered-float          = { version = "5.5.0", features = [ "serde" ] }
+ordered-float          = { version = "5.5.1", features = [ "serde" ] }
 parking_lot            = "0.13.0"
 paste                  = "1.0.15"
 percent-encoding       = "2.3.2"
@@ -78,8 +78,8 @@ regex                  = "1.13.1"
 regex-syntax           = "0.8.11"
 reqwest                = { version = "0.13.5", default-features = false, features = [ "rustls-no-provider", "stream", "multipart" ] }
 rustls                 = { version = "0.23.46", default-features = false, features = [ "ring", "std" ] }
-rustix                 = { version = "1.1.5", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event", "process", "system" ] }
-russh                  = { version = "0.64.1", default-features = false, features = [ "ring", "rsa" ] }
+rustix                 = { version = "1.1.6", default-features = false, features = [ "std", "fs", "mm", "shm", "stdio", "termios", "event", "process", "system" ] }
+russh                  = { version = "0.65.0", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard             = "1.2.0"
 serde                  = { version = "1.0.229", features = [ "derive" ] }
 serde_json             = "1.0.154"
@@ -96,7 +96,7 @@ tracing-core           = "0.1.36"
 twox-hash              = { version = "2.1.5", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 typed-path             = "0.13.0"
 unicode-normalization  = "0.1.26"
-unicode-width          = { version = "0.2.2", default-features = false }
+unicode-width          = { version = "0.2.3", default-features = false }
 uzers                  = "0.12.2"
 
 [workspace.lints.clippy]

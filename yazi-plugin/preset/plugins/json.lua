@@ -34,7 +34,7 @@ function M:peek(job)
 	until i >= job.skip + limit
 
 	if job.skip > 0 and i < job.skip + limit then
-		ya.emit("peek", { math.max(0, i - limit), only_if = job.file.url, upper_bound = true })
+		ya.emit("peek", { math.max(0, i - limit), only_if = job.file.url, upper_bound = true, scope = job.scope })
 	else
 		ya.preview_widget(job, ui.Text(lines):area(job.area))
 	end

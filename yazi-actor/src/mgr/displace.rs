@@ -5,7 +5,7 @@ use yazi_core::{Ctx, mgr::DisplaceOpt};
 use yazi_macro::succ;
 use yazi_parser::VoidForm;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::{data::Data, scope::ScopeLike, url::UrlLike};
 use yazi_vfs::engine;
 
 use crate::Actor;
@@ -22,7 +22,7 @@ impl Actor for Displace {
 			succ!();
 		}
 
-		let tab = cx.tab().id;
+		let scope = cx.tab().to_scope();
 		let from = cx.cwd().to_owned();
 		tokio::spawn(async move {
 			let to = match engine::reroute(&from).await {
@@ -31,7 +31,7 @@ impl Actor for Displace {
 				Err(e) => Err(e.into()),
 			};
 
-			MgrProxy::displace_do(tab, DisplaceOpt { to, from });
+			MgrProxy::displace_do(scope, DisplaceOpt { to, from });
 		});
 
 		succ!();

@@ -6,6 +6,10 @@ use crate::file::{File, Files};
 
 impl_data_any!(File, from_into_lua = inherit);
 
+impl From<File> for Data {
+	fn from(value: File) -> Self { Self::Any(Box::new(value)) }
+}
+
 impl TryFrom<Data> for File {
 	type Error = anyhow::Error;
 
@@ -27,7 +31,7 @@ impl TryFrom<Data> for Files {
 
 	fn try_from(value: Data) -> Result<Self, Self::Error> {
 		let Data::List(files) = value else { bail!("not a list of Files") };
-		files.into_iter().map(File::try_from).collect::<Result<_, _>>().map(Self)
+		files.into_iter().map(File::try_from).collect()
 	}
 }
 
@@ -36,6 +40,6 @@ impl TryFrom<&Data> for Files {
 
 	fn try_from(value: &Data) -> Result<Self, Self::Error> {
 		let Data::List(files) = value else { bail!("not a list of Files") };
-		files.iter().map(File::try_from).collect::<Result<_, _>>().map(Self)
+		files.iter().map(File::try_from).collect()
 	}
 }

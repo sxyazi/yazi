@@ -1,9 +1,10 @@
-use crate::{Task, TaskProg};
+use crate::{CleanupState, Task, TaskProg};
 
 #[derive(Debug)]
 pub(crate) enum FetchOutFetch {
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<mlua::Error> for FetchOutFetch {
@@ -20,6 +21,9 @@ impl FetchOutFetch {
 			Self::Fail(reason) => {
 				prog.state = Some(false);
 				task.log(reason);
+			}
+			Self::Clean => {
+				prog.cleaned = CleanupState::Success;
 			}
 		}
 	}

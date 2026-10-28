@@ -26,6 +26,10 @@ impl From<tokio::task::JoinError> for PeekError {
 	fn from(e: tokio::task::JoinError) -> Self { Self::Unexpected(Arc::new(e.into())) }
 }
 
+impl From<syntect::Error> for PeekError {
+	fn from(e: syntect::Error) -> Self { Self::Unexpected(Arc::new(e.into())) }
+}
+
 impl IntoLua for PeekError {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.to_string().into_lua(lua) }
 }
