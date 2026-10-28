@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_macro::impl_data_any;
+use yazi_shared::data::Data;
 use yazi_shim::ratatui::Padable;
 
 use super::Pad;
@@ -23,6 +24,10 @@ impl From<ratatui_core::layout::Rect> for Rect {
 
 impl From<ratatui_core::layout::Size> for Rect {
 	fn from(size: ratatui_core::layout::Size) -> Self { Self(size.into()) }
+}
+
+impl From<Rect> for Data {
+	fn from(value: Rect) -> Self { Self::Any(Box::new(value)) }
 }
 
 impl Rect {

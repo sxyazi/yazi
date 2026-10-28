@@ -164,7 +164,7 @@ impl File {
 				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
-		self.ops.out(task.id, HookInOutLink::new(&task.from, &task.to));
+		self.ops.out(task.id, HookInOutLink::new(&task.to));
 		self.requeue(task, NORMAL);
 		Ok(())
 	}
@@ -225,7 +225,7 @@ impl File {
 				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
 		}
 
-		self.ops.out(task.id, HookInOutHardlink::new(&task.from, &task.to));
+		self.ops.out(task.id, HookInOutHardlink::new(&task.to));
 		super::traverse::<FileOutHardlink, _, _, _, _, _>(
 			task,
 			async |dir| match engine::create_dir(dir).await {

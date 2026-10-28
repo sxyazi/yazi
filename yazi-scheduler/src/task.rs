@@ -1,8 +1,7 @@
 use std::ops::Deref;
 
 use tokio::sync::mpsc;
-use yazi_binding::Scope;
-use yazi_shared::id::Id;
+use yazi_shared::{id::Id, scope::Scope};
 
 use crate::{TaskHandle, TaskIn, TaskProg, hook::HookIn};
 

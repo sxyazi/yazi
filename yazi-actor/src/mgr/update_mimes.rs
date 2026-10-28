@@ -42,14 +42,14 @@ impl Actor for UpdateMimes {
 			.cloned()
 			.collect();
 
-		let repeek = cx.hovered().is_some_and(|f| updates.contains_key(&UrlCov::new(&f.url)));
+		let repeek = cx.hovered_url().is_some_and(|u| updates.contains_key(&UrlCov::new(u)));
 		cx.mgr.mimetype.extend(updates);
 
 		if repeek {
 			act!(mgr:peek, cx)?;
 		}
-		cx.tasks.fetch_paged(cx.tab().id, &affected, &cx.mgr.mimetype);
-		cx.tasks.preload_paged(cx.tab().id, &affected, &cx.mgr.mimetype);
+		cx.tasks.fetch_paged(cx.tab(), &affected, &cx.mgr.mimetype);
+		cx.tasks.preload_paged(cx.tab(), &affected, &cx.mgr.mimetype);
 
 		succ!(render!());
 	}

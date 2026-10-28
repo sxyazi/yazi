@@ -65,6 +65,8 @@ impl Session {
 		tokio::spawn(async move {
 			loop {
 				select! {
+					biased;
+					_ = me_.tx.closed() => break,
 					result = read(&mut reader) => {
 						let Ok(buf) = result else {
 							me_.tx.send(vec![]).ok();
@@ -77,7 +79,6 @@ impl Session {
 							cb.send(packet).ok();
 						}
 					}
-					_ = me_.tx.closed() => break,
 				}
 			}
 		});

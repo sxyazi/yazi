@@ -1,4 +1,4 @@
-use yazi_fs::file::File;
+use yazi_fs::file::Files;
 use yazi_macro::impl_data_any;
 use yazi_shared::{event::{ActionCow, FromAction}, url::UrlBuf};
 
@@ -28,7 +28,7 @@ impl<C> FromAction<C> for OpenOpt {
 #[derive(Clone, Debug, Default)]
 pub struct OpenDoOpt {
 	pub cwd:         UrlBuf,
-	pub targets:     Vec<File>,
+	pub targets:     Files,
 	pub interactive: bool,
 }
 

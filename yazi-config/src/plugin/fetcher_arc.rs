@@ -29,6 +29,10 @@ impl From<Fetcher> for FetcherArc {
 	fn from(value: Fetcher) -> Self { Self { inner: value.into(), idx: 0, rev: 0 } }
 }
 
+impl From<&Self> for FetcherArc {
+	fn from(value: &Self) -> Self { value.clone() }
+}
+
 impl Mixable for FetcherArc {}
 
 impl FromLua for FetcherArc {

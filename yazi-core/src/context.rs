@@ -2,12 +2,13 @@ use std::{mem, ops::{Deref, DerefMut}};
 
 use anyhow::{Result, anyhow};
 use yazi_fs::file::File;
-use yazi_shared::{Source, event::Action, id::Id, url::UrlBuf};
+use yazi_shared::{Source, event::Action, id::Id, scope::{Scope, ScopeLike}, url::UrlBuf};
 
-use crate::{Core, mgr::Tabs, tab::{Folder, Tab}};
+use crate::{Core, mgr::Tabs, spot::{Spot, SpotMut}, tab::{Folder, Preview, PreviewMut, Tab}};
 
 pub struct Ctx<'a> {
 	pub core:      &'a mut Core,
+	pub scope:     Scope,
 	pub tab:       usize,
 	pub level:     usize,
 	source:        Source,
@@ -25,24 +26,36 @@ impl DerefMut for Ctx<'_> {
 	fn deref_mut(&mut self) -> &mut Self::Target { self.core }
 }
 
+impl ScopeLike for Ctx<'_> {
+	fn scope(&self) -> &Scope { &self.scope }
+}
+
 impl<'a> Ctx<'a> {
 	pub fn new(action: &Action, core: &'a mut Core) -> Result<Self> {
-		let tab = if let Ok(id) = action.get::<Id>("tab") {
+		let mut scope = action.scope.clone();
+		let tab = if let Some(id) = scope.tab.nz() {
 			core.mgr.tabs.idx(id).ok_or_else(|| anyhow!("Tab with id {id} not found"))?
 		} else {
-			core.mgr.tabs.cursor
+			let tab = core.mgr.tabs.cursor;
+			scope.tab = core.mgr.tabs[tab].id;
+			tab
 		};
 
-		Ok(Self { tab, source: action.source, ..Self::active(core) })
+		Ok(Self { scope, tab, source: action.source, ..Self::active(core) })
 	}
 
 	pub fn with<F, T>(&mut self, tab: usize, f: F) -> T
 	where
 		F: FnOnce(&mut Self) -> T,
 	{
+		let id = self.mgr.tabs[tab].id;
+		let prev_id = mem::replace(&mut self.scope.tab, id);
 		let prev = mem::replace(&mut self.tab, tab);
+
 		let result = f(self);
+
 		self.tab = prev;
+		self.scope.tab = prev_id;
 		result
 	}
 
@@ -52,7 +65,9 @@ impl<'a> Ctx<'a> {
 
 	pub fn active(core: &'a mut Core) -> Self {
 		let tab = core.mgr.tabs.cursor;
+		let scope = Scope::default().with_tab(core.mgr.tabs[tab].id);
 		Self {
+			scope,
 			core,
 			tab,
 			level: 0,
@@ -60,6 +75,16 @@ impl<'a> Ctx<'a> {
 			#[cfg(debug_assertions)]
 			backtrace: vec![],
 		}
+	}
+
+	pub fn nested(&mut self, action: &Action) -> Result<Ctx<'_>> {
+		let mut cx = Ctx::new(action, self.core)?;
+
+		cx.level = self.level;
+		#[cfg(debug_assertions)]
+		cx.backtrace.clone_from(&self.backtrace);
+
+		Ok(cx)
 	}
 
 	pub fn indices_or_tab(&self, ids: Vec<Id>) -> Vec<usize> {
@@ -112,6 +137,18 @@ impl<'a> Ctx<'a> {
 	pub fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
 		self.tab_mut().hovered_folder_mut()
 	}
+
+	#[inline]
+	pub fn spot(&self) -> &Spot { &self.tab().spot }
+
+	#[inline]
+	pub fn spot_mut(&mut self) -> SpotMut<'_> { self.tab_mut().spot_mut() }
+
+	#[inline]
+	pub fn preview(&self) -> &Preview { &self.tab().preview }
+
+	#[inline]
+	pub fn preview_mut(&mut self) -> PreviewMut<'_> { self.tab_mut().preview_mut() }
 
 	#[inline]
 	pub fn source(&self) -> Source { if self.level == 1 { self.source } else { Source::Ind } }

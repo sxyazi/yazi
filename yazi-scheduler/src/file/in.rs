@@ -2,9 +2,8 @@ use std::{borrow::Cow, path::PathBuf};
 
 use mlua::{FromLua, Lua, Table, Value};
 use tokio::sync::mpsc;
-use yazi_binding::Scope;
 use yazi_fs::stat::Stat;
-use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::Id, scope::Scope, url::{UrlBuf, UrlLike}};
 
 use crate::{TaskIn, custom::CustomIn, file::{FileProgCopy, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgMove, FileProgTrash, FileProgUpload}};
 

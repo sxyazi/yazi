@@ -151,7 +151,7 @@ impl<'a> Engine for Lua<'a> {
 		let url = self.to_url();
 		let (tx, rx) = mpsc::channel(200);
 
-		let job = ProvideJob { service: self.service, op: ProvideOp::ReadDir { url } };
+		let job = ProvideJob::new(&self.service, ProvideOp::ReadDir { url });
 		tokio::spawn(RUNNER.provide_stream(job, tx));
 
 		Ok(ReadDir(rx))

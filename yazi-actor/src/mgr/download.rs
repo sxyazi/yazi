@@ -4,11 +4,11 @@ use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
 use hashbrown::HashSet;
 use yazi_core::{Ctx, mgr::OpenOpt};
-use yazi_fs::{FsAuth, FsUrl, engine::{Engine, local::Local}};
+use yazi_fs::{FsAuth, FsUrl, engine::{Engine, local::Local}, file::Files};
 use yazi_macro::succ;
 use yazi_parser::mgr::DownloadForm;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
+use yazi_shared::{data::Data, scope::ScopeLike, url::{UrlBuf, UrlLike}};
 use yazi_vfs::engine;
 
 use crate::Actor;
@@ -21,8 +21,8 @@ impl Actor for Download {
 	const NAME: &str = "download";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let tab = cx.tab().id;
 		let cwd = cx.cwd().clone();
+		let scope = cx.tab().to_scope();
 		let scheduler = cx.tasks.scheduler.clone();
 
 		tokio::spawn(async move {
@@ -36,7 +36,7 @@ impl Actor for Download {
 
 			let mut wg2 = vec![];
 			let mut urls = Vec::with_capacity(wg1.len());
-			let mut files = Vec::with_capacity(wg1.len());
+			let mut files = Files::with_capacity(wg1.len());
 			let mut instant = Instant::now();
 			while let Some((success, url)) = wg1.next().await {
 				if !success {
@@ -48,15 +48,15 @@ impl Actor for Download {
 				files.push(f);
 
 				if instant.elapsed() >= Duration::from_secs(1) {
-					wg2.push(scheduler.fetch_mimetype(tab, mem::take(&mut files)));
+					wg2.push(scheduler.fetch_mimetype(mem::take(&mut files), &scope));
 					instant = Instant::now();
 				}
 			}
 
 			if !files.is_empty() {
-				wg2.push(scheduler.fetch_mimetype(tab, files));
+				wg2.push(scheduler.fetch_mimetype(files, &scope));
 			}
-			if futures::future::join_all(wg2).await.into_iter().any(|b| !b) {
+			if futures::future::join_all(wg2).await.contains(&false) {
 				return;
 			}
 			if form.open && !urls.is_empty() {

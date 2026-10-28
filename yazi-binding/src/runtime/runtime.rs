@@ -4,10 +4,9 @@ use anyhow::{Context, Result};
 use compact_str::CompactString;
 use hashbrown::HashMap;
 use mlua::Function;
-use yazi_shared::id::Id;
+use yazi_shared::scope::{Scope, ScopeLike};
 
 use super::{RuntimeFrame, RuntimeSeed};
-use crate::Scope;
 
 #[derive(Debug, Default)]
 pub struct Runtime {
@@ -34,31 +33,22 @@ impl Runtime {
 		self.frames.push(RuntimeFrame { seed, blocking });
 	}
 
-	pub fn enter_blocking(&mut self, name: impl Into<CompactString>, tab: Id) {
-		self.enter(RuntimeSeed::new(tab, name, self.scope()), true);
+	pub fn enter_blocking(&mut self, name: impl Into<CompactString>, scope: impl Into<Scope>) {
+		self.enter(RuntimeSeed::new(name, scope), true);
 	}
 
 	pub fn enter_nested(&mut self, name: &str) {
-		self.enter(RuntimeSeed::new(self.tab(), name, self.scope()), self.is_blocking());
+		self.enter(RuntimeSeed::new(name, &*self), self.is_blocking());
 	}
 
 	pub fn leave(&mut self) -> Result<()> {
 		self.frames.pop().map(|_| ()).context("Runtime stack underflow")
 	}
 
-	pub fn tab(&self) -> Id { self.frames.last().map_or(Id::ZERO, |f| f.tab) }
-
 	pub fn is_blocking(&self) -> bool { self.frames.last().is_some_and(|f| f.blocking) }
-
-	pub fn scope(&self) -> Scope { self.frames.last().map(|f| f.scope.clone()).unwrap_or_default() }
 
 	pub fn name(&self) -> Result<&str> {
 		self.frames.last().map(|f| f.name.as_str()).context("No current runtime frame")
-	}
-
-	pub fn child_seed(&self) -> Result<RuntimeSeed> {
-		let f = self.frames.last().context("No current runtime frame")?;
-		Ok(RuntimeSeed::new(f.tab, f.name.clone(), f.scope.child()))
 	}
 
 	pub fn module(&self) -> Result<&str> {
@@ -77,4 +67,8 @@ impl Runtime {
 		blocks.push(f.clone());
 		Some(blocks.len() - 1)
 	}
+}
+
+impl ScopeLike for Runtime {
+	fn scope(&self) -> &Scope { self.frames.last().map_or_else(Default::default, |f| &f.scope) }
 }

@@ -22,7 +22,9 @@ macro_rules! runtime_mut {
 macro_rules! runtime_scope {
 	($cx:expr, $name:expr, $block:expr) => {{
 		(|| {
-			$crate::runtime_mut!(LUA)?.enter_blocking($name, $cx.tab().id);
+			use yazi_shared::scope::ScopeLike;
+
+			$crate::runtime_mut!(LUA)?.enter_blocking($name, $cx.scope());
 			let result = (|| $block)();
 			$crate::runtime_mut!(LUA)?.leave()?;
 			result

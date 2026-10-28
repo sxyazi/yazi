@@ -40,4 +40,4 @@ tokio-stream    = { workspace = true }
 unicode-width   = { workspace = true }
 
 [target."cfg(windows)".dependencies]
-clipboard-win = "5.4.1"
+clipboard-win = "5.4.3"

@@ -1,11 +1,14 @@
 use anyhow::{Result, bail};
 use mlua::{IntoLua, Lua, Value};
+use strum::IntoStaticStr;
 use yazi_shared::id::Id;
+use yazi_shim::strum::IntoStr;
 
 use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberPatch, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
 use crate::Payload;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
 pub enum Ember<'a> {
 	Hi(EmberHi<'a>),
 	Hey(EmberHey),
@@ -17,6 +20,7 @@ pub enum Ember<'a> {
 	Hover(EmberHover<'a>),
 	Rename(EmberRename<'a>),
 	BulkRename(EmberBulkRename<'a>),
+	#[strum(serialize = "@yank")]
 	Yank(EmberYank<'a>),
 	Duplicate(EmberDuplicate<'a>),
 	Move(EmberMove<'a>),
@@ -105,26 +109,8 @@ impl Ember<'static> {
 impl<'a> Ember<'a> {
 	pub fn kind(&self) -> &str {
 		match self {
-			Self::Hi(_) => "hi",
-			Self::Hey(_) => "hey",
-			Self::Bye(_) => "bye",
-			Self::Tab(_) => "tab",
-			Self::Cd(_) => "cd",
-			Self::Load(_) => "load",
-			Self::Patch(_) => "patch",
-			Self::Hover(_) => "hover",
-			Self::Rename(_) => "rename",
-			Self::BulkRename(_) => "bulk-rename",
-			Self::Yank(_) => "@yank",
-			Self::Duplicate(_) => "duplicate",
-			Self::Move(_) => "move",
-			Self::Trash(_) => "trash",
-			Self::Delete(_) => "delete",
-			Self::Download(_) => "download",
-			Self::Input(_) => "input",
-			Self::Mount(_) => "mount",
-			Self::Theme(_) => "theme",
 			Self::Custom(b) => b.kind.as_str(),
+			_ => self.into_str(),
 		}
 	}
 

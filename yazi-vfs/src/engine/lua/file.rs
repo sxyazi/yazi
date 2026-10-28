@@ -5,7 +5,7 @@ use tokio::{io::{AsyncRead, AsyncSeek, AsyncWrite, AsyncWriteExt, ReadBuf}, sync
 use tokio_util::sync::PollSender;
 use yazi_config::vfs::ServiceLua;
 use yazi_fs::{engine::Demand, stat::Stat};
-use yazi_runner::{RUNNER, provider::{Handle, ProvideChunk, ProvideJob, ProvideOp}};
+use yazi_runner::provider::{Handle, ProvideChunk, ProvideOp};
 use yazi_shared::{id::Id, url::{AsUrl, Url, UrlBuf, UrlLike}};
 use yazi_shim::fs;
 
@@ -87,14 +87,14 @@ impl File {
 	}
 
 	pub(crate) async fn set_len(&self, size: u64) -> io::Result<()> {
-		if self.seekless {
+		if !self.random.write() {
 			return Err(ErrorKind::Unsupported.into());
 		} else if self.shutdown.is_some() {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
 		let op = ProvideOp::SetLen { url: self.to_url(), size, handle: self.inner.clone() };
-		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.ok()?)
+		Ok(self.handle.provide(op).await.ok()?)
 	}
 
 	pub(crate) async fn set_attrs(&self, attrs: yazi_fs::engine::Attrs) -> io::Result<()> {
@@ -103,7 +103,7 @@ impl File {
 		}
 
 		let op = ProvideOp::SetAttrs { url: self.to_url(), attrs, handle: Some(self.inner.clone()) };
-		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.ok()?)
+		Ok(self.handle.provide(op).await.ok()?)
 	}
 
 	pub(crate) async fn metadata(&self) -> io::Result<Stat> {
@@ -112,7 +112,7 @@ impl File {
 		}
 
 		let op = ProvideOp::Metadata { url: self.to_url(), handle: Some(self.inner.clone()) };
-		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.0?)
+		Ok(self.handle.provide(op).await.0?)
 	}
 
 	pub(crate) async fn file(&self) -> io::Result<yazi_fs::file::File> {
@@ -121,7 +121,7 @@ impl File {
 		}
 
 		let op = ProvideOp::File { url: self.to_url(), handle: Some(self.inner.clone()) };
-		Ok(RUNNER.provide(ProvideJob::new(&self.service, op)).await.0?)
+		Ok(self.handle.provide(op).await.0?)
 	}
 
 	pub(crate) async fn into_file(mut self) -> io::Result<yazi_fs::file::File> {
@@ -275,7 +275,7 @@ impl AsyncSeek for File {
 		}
 
 		let me = self.get_mut();
-		if me.seekless {
+		if me.random.is_none() {
 			return Err(ErrorKind::Unsupported.into());
 		} else if me.seek.is_some() {
 			return Err(io::Error::other("call poll_complete before start_seek"));
@@ -375,7 +375,7 @@ impl ReadState {
 		let handle = file.inner.clone();
 
 		let (tx, rx) = mpsc::channel(1);
-		file.handle.stream(ProvideOp::Read { url, handle, offset: file.offset }, tx);
+		file.handle.provide_stream(ProvideOp::Read { url, handle, offset: file.offset }, tx);
 
 		Self { rx, buf: Default::default(), done: false }
 	}
@@ -412,13 +412,10 @@ impl SeekState {
 	}
 
 	fn end(file: &File, n: i64) -> Self {
-		let service = file.service.clone();
 		let op = ProvideOp::Metadata { url: file.to_url(), handle: Some(file.inner.clone()) };
+		let fut = file.handle.provide::<Stat>(op);
 
-		Self::End(
-			n,
-			Box::pin(async move { Ok(RUNNER.provide::<Stat>(ProvideJob { service, op }).await.0?.len) }),
-		)
+		Self::End(n, Box::pin(async move { Ok(fut.await.0?.len) }))
 	}
 }
 
@@ -437,7 +434,8 @@ impl WriteState {
 
 		let (ack_tx, ack_rx) = mpsc::channel(1);
 		let (data_tx, data_rx) = mpsc::channel(1);
-		let worker = file.handle.stream(ProvideOp::Write { url, handle, stream: data_rx }, ack_tx);
+		let worker =
+			file.handle.provide_stream(ProvideOp::Write { url, handle, stream: data_rx }, ack_tx);
 
 		Self { ack_rx, data_tx: PollSender::new(data_tx), worker, pending: false, error: None }
 	}

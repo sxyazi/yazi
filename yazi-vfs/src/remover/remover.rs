@@ -20,6 +20,7 @@ impl Remover {
 
 		let handle = tokio::spawn(async move {
 			let result = select! {
+				biased;
 				_ = tx.closed() => return,
 				result = me.remove_root(target) => result,
 			};

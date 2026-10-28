@@ -1,7 +1,9 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, BorrowedBytes, IntoLua, MetaMethod, UserData, UserDataMethods, UserDataRef, Value};
+use mlua::{AnyUserData, BorrowedBytes, IntoLua, Lua, MetaMethod, UserData, UserDataMethods, UserDataRef, Value};
 use paste::paste;
+use yazi_binding::runtime;
+use yazi_shared::scope::ScopeLike;
 
 use super::{Lives, PtrCell};
 
@@ -10,6 +12,7 @@ pub(super) type CtxRef = UserDataRef<Ctx>;
 pub(super) struct Ctx {
 	inner: PtrCell<yazi_core::Ctx<'static>>,
 
+	c_tab:    Option<Value>,
 	c_tabs:   Option<Value>,
 	c_tasks:  Option<Value>,
 	c_yanked: Option<Value>,
@@ -29,6 +32,7 @@ impl Ctx {
 		Lives::scoped_userdata(Self {
 			inner: PtrCell::from(cx).cast(),
 
+			c_tab:    None,
 			c_tabs:   None,
 			c_tasks:  None,
 			c_yanked: None,
@@ -36,6 +40,15 @@ impl Ctx {
 			c_which:  None,
 			c_layer:  None,
 		})
+	}
+
+	fn tab(&self, lua: &Lua) -> mlua::Result<Option<AnyUserData>> {
+		self
+			.mgr
+			.tabs
+			.idx(runtime!(lua)?.scope().tab)
+			.map(|idx| super::Tab::make(idx, &self.mgr.tabs[idx]))
+			.transpose()
 	}
 }
 
@@ -57,7 +70,7 @@ impl UserData for Ctx {
 
 			Ok(match &*key {
 				b"active" => super::Tab::make(me.mgr.tabs.cursor, me.active())?.into_lua(lua)?,
-				b"tab" => super::Tab::make(me.tab, me.tab())?.into_lua(lua)?,
+				b"tab" => reuse!(tab, me.tab(lua)),
 				b"tabs" => reuse!(tabs, super::Tabs::make(&me.mgr.tabs)),
 				b"tasks" => reuse!(tasks, super::Tasks::make(&me.tasks)),
 				b"yanked" => reuse!(yanked, super::Yanked::make(&me.mgr.yanked)),

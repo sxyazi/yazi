@@ -1,12 +1,11 @@
-use std::{ops::Deref, sync::Arc, time::Duration};
+use std::{mem, ops::Deref, sync::Arc, time::Duration};
 
 use tokio::task::JoinHandle;
-use yazi_binding::Scope;
-use yazi_config::{YAZI, plugin::{FetcherArc, PreloaderArc}};
-use yazi_fs::{FsHash64, file::{File, FileSig}};
-use yazi_shared::{Throttle, id::Id, pool::Symbol, url::{UrlBuf, UrlLike}};
+use yazi_config::YAZI;
+use yazi_fs::{FsHash64, file::Files};
+use yazi_shared::{Throttle, id::Id, scope::Scope, url::{UrlBuf, UrlLike}};
 
-use crate::{Behavior, LOW, NORMAL, Task, TaskHandle, TaskIn, TaskProg, Worker, custom::{CustomIn, CustomOut, CustomPool}, fetch::FetchInFetch, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInMove, FileInTrash, FileInUpload, FileOutCopy, FileOutDownload, FileOutHardlink, FileOutMove, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadInPreload, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
+use crate::{Behavior, LOW, NORMAL, Task, TaskHandle, TaskIn, TaskProg, Worker, custom::{CustomIn, CustomOut, CustomPool}, fetch::FetchInFetch, file::{FileInCopy, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInMove, FileInTrash, FileInUpload, FileOutCopy, FileOutDownload, FileOutHardlink, FileOutMove, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInFetch, HookInPreload, HookInTrash, HookInUpload}, plugin::PluginInEntry, preload::PreloadInPreload, process::{ProcessIn, ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt}, size::SizeIn};
 
 pub struct Scheduler {
 	worker:       Worker,
@@ -147,6 +146,8 @@ impl Scheduler {
 	}
 
 	pub fn plugin_entry(&self, mut r#in: PluginInEntry) -> TaskHandle {
+		r#in.scope = r#in.scope.cancellable();
+
 		if r#in.track {
 			self.behavior.reset();
 		}
@@ -157,19 +158,19 @@ impl Scheduler {
 		handle
 	}
 
-	pub fn fetch_paged(&self, tab: Id, fetcher: FetcherArc, targets: Vec<File>) -> TaskHandle {
-		let mut r#in = FetchInFetch { id: Id::ZERO, tab, fetcher, targets, scope: Scope::new() };
+	pub fn fetch_paged(&self, mut r#in: FetchInFetch) -> TaskHandle {
+		let hook = HookInFetch::new(&r#in.fetcher, mem::take(&mut r#in.hashes));
 
-		let handle = self.add(&mut r#in, |t| t.handle.clone());
+		let handle = self.add_hooked(&mut r#in, hook, |t| t.handle.clone());
 		self.fetch.submit(r#in);
 
 		handle
 	}
 
-	pub async fn fetch_mimetype(&self, tab: Id, targets: Vec<File>) -> bool {
+	pub async fn fetch_mimetype(&self, targets: Files, scope: &Scope) -> bool {
 		let mut wg = vec![];
 		for (fetcher, targets) in YAZI.plugin.fetchers.mime(targets) {
-			wg.push(self.fetch_paged(tab, fetcher, targets));
+			wg.push(self.fetch_paged(FetchInFetch::new(fetcher, targets).scoped(scope)));
 		}
 
 		for done in wg {
@@ -180,19 +181,11 @@ impl Scheduler {
 		true
 	}
 
-	pub fn preload_paged(&self, tab: Id, preloader: PreloaderArc, file: &File, mime: Symbol<str>) {
-		let hook = HookInPreload::new(&preloader, FileSig(file).hash_u64());
-		let mut r#in = PreloadInPreload {
-			id: Id::ZERO,
-			tab,
-			preloader,
-			file: file.clone(),
-			mime,
-			scope: Scope::new(),
-		};
+	pub fn preload_paged(&self, mut r#in: PreloadInPreload) {
+		let hook = HookInPreload::new(&r#in.preloader, r#in.hash);
 
 		self.add_hooked(&mut r#in, hook, |_| ());
-		if let Some(prev) = self.preload.loading.lock().put(file.url.hash_u64(), r#in.id) {
+		if let Some(prev) = self.preload.loading.lock().put(r#in.file.url.hash_u64(), r#in.id) {
 			self.cancel(prev, false);
 		}
 

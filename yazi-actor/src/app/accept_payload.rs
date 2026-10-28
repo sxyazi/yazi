@@ -19,6 +19,7 @@ impl Actor for AcceptPayload {
 
 	fn act(cx: &mut Ctx, payload: Payload) -> Result<Data> {
 		let kind = payload.body.kind();
+		let scope = cx.scope.for_tab(payload.tab());
 		let lock = if payload.receiver == 0 || payload.receiver != payload.sender {
 			REMOTE.read()
 		} else {
@@ -29,11 +30,11 @@ impl Actor for AcceptPayload {
 		drop(lock);
 
 		let kind = kind.to_owned();
-		succ!(Lives::scope(cx, |cx| {
+		succ!(Lives::scope(cx, |_| {
 			let body = payload.body.into_lua(&LUA)?;
 			for (name, cb) in handlers {
 				log_if_err!(
-					runtime_scope!(cx, &name, cb.call::<()>(body.clone())),
+					runtime_scope!(scope, &name, cb.call::<()>(body.clone())),
 					"`{kind}` event handler in `{name}` plugin",
 				);
 			}

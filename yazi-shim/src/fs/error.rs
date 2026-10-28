@@ -17,7 +17,9 @@ impl std::error::Error for Error {}
 
 impl From<&io::Error> for Error {
 	fn from(err: &io::Error) -> Self {
-		if err.get_ref().is_some() {
+		if let Some(me) = err.get_ref().and_then(|e| e.downcast_ref::<Self>()) {
+			me.clone()
+		} else if err.get_ref().is_some() {
 			Self::Custom {
 				kind:    err.kind(),
 				code:    err.raw_os_error(),
@@ -106,6 +108,10 @@ impl Error {
 		Ok(Self::Custom { kind: kind_from_str(kind)?, code, message: message.into() })
 	}
 
+	pub fn from_lua_err(value: mlua::Error) -> Self {
+		Self::try_from(value).unwrap_or_else(|e| Self::other(e.to_string()))
+	}
+
 	fn kind(&self) -> io::ErrorKind {
 		match self {
 			Self::Kind(kind) => *kind,
@@ -128,7 +134,7 @@ impl Error {
 impl UserData for Error {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("code", |_, me| Ok(me.raw_os_error()));
-		fields.add_field_method_get("kind", |_, me| Ok(Some(me.kind_str())));
+		fields.add_field_method_get("kind", |_, me| Ok(me.kind_str()));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {

@@ -1,6 +1,6 @@
 use yazi_core::{mgr::{CdSource, DisplaceOpt, FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt}, spot::SpotLock};
 use yazi_macro::{emit, relay};
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{scope::Scope, url::UrlBuf};
 use yazi_shim::{SStr, strum::IntoStr};
 
 pub struct MgrProxy;
@@ -12,8 +12,8 @@ impl MgrProxy {
 		));
 	}
 
-	pub fn displace_do(tab: Id, opt: DisplaceOpt) {
-		emit!(Call(relay!(mgr:displace_do).with("tab", tab).with_any("opt", opt)));
+	pub fn displace_do(scope: impl Into<Scope>, opt: DisplaceOpt) {
+		emit!(Call(relay!(mgr:displace_do).with_scope(scope).with_any("opt", opt)));
 	}
 
 	pub fn filter_do(opt: FilterOpt) {
@@ -42,11 +42,11 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:reveal, [target.into()]).with("raw", true).with("no-dummy", true)));
 	}
 
-	pub fn tab_rename(tab: Id, name: impl Into<SStr>) {
-		emit!(Call(relay!(mgr:tab_rename, [name.into()]).with("tab", tab)));
+	pub fn tab_rename(scope: impl Into<Scope>, name: impl Into<SStr>) {
+		emit!(Call(relay!(mgr:tab_rename, [name.into()]).with_scope(scope)));
 	}
 
 	pub fn update_spotted(lock: SpotLock) {
-		emit!(Call(relay!(mgr:update_spotted).with_any("lock", lock)));
+		emit!(Call(relay!(mgr:update_spotted).with_scope(&lock).with_any("lock", lock)));
 	}
 }

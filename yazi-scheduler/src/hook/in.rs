@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yazi_config::plugin::PreloaderArc;
+use yazi_config::plugin::{FetcherArc, PreloaderArc};
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
 
 use crate::{Task, TaskIn, TaskProg};
@@ -15,6 +15,7 @@ pub(crate) enum HookIn {
 	Hardlink(HookInOutHardlink),
 	Download(HookInDownload),
 	Upload(HookInUpload),
+	Fetch(HookInFetch),
 	Preload(HookInPreload),
 }
 
@@ -27,6 +28,7 @@ impl_from_in!(
 	Hardlink(HookInOutHardlink),
 	Download(HookInDownload),
 	Upload(HookInUpload),
+	Fetch(HookInFetch),
 	Preload(HookInPreload),
 );
 
@@ -43,6 +45,7 @@ impl TaskIn for HookIn {
 			Self::Hardlink(r#in) => r#in.id(),
 			Self::Download(r#in) => r#in.id(),
 			Self::Upload(r#in) => r#in.id(),
+			Self::Fetch(r#in) => r#in.id(),
 			Self::Preload(r#in) => r#in.id(),
 		}
 	}
@@ -57,6 +60,7 @@ impl TaskIn for HookIn {
 			Self::Hardlink(r#in) => r#in.id = id,
 			Self::Download(r#in) => r#in.id = id,
 			Self::Upload(r#in) => r#in.id = id,
+			Self::Fetch(r#in) => r#in.id = id,
 			Self::Preload(r#in) => r#in.id = id,
 		}
 		self
@@ -72,6 +76,7 @@ impl TaskIn for HookIn {
 			Self::Hardlink(r#in) => r#in.title(),
 			Self::Download(r#in) => r#in.title(),
 			Self::Upload(r#in) => r#in.title(),
+			Self::Fetch(r#in) => r#in.title(),
 			Self::Preload(r#in) => r#in.title(),
 		}
 	}
@@ -101,10 +106,7 @@ impl TaskIn for HookInOutCopy {
 }
 
 impl HookInOutCopy {
-	pub(crate) fn new<U>(from: U, to: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
+	pub(crate) fn new(from: impl Into<UrlBuf>, to: impl Into<UrlBuf>) -> Self {
 		Self { id: Id::ZERO, from: from.into(), to: to.into() }
 	}
 
@@ -139,10 +141,7 @@ impl TaskIn for HookInOutMove {
 }
 
 impl HookInOutMove {
-	pub(crate) fn new<U>(from: U, to: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
+	pub(crate) fn new(from: impl Into<UrlBuf>, to: impl Into<UrlBuf>) -> Self {
 		Self { id: Id::ZERO, from: from.into(), to: to.into() }
 	}
 
@@ -174,10 +173,7 @@ impl TaskIn for HookInDelete {
 }
 
 impl HookInDelete {
-	pub(crate) fn new<U>(target: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
+	pub(crate) fn new(target: impl Into<UrlBuf>) -> Self {
 		Self { id: Id::ZERO, target: target.into() }
 	}
 }
@@ -203,10 +199,7 @@ impl TaskIn for HookInTrash {
 }
 
 impl HookInTrash {
-	pub(crate) fn new<U>(target: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
+	pub(crate) fn new(target: impl Into<UrlBuf>) -> Self {
 		Self { id: Id::ZERO, target: target.into() }
 	}
 }
@@ -214,10 +207,8 @@ impl HookInTrash {
 // --- Link
 #[derive(Debug)]
 pub(crate) struct HookInOutLink {
-	pub(crate) id:   Id,
-	#[allow(dead_code)]
-	pub(crate) from: UrlBuf,
-	pub(crate) to:   UrlBuf,
+	pub(crate) id: Id,
+	pub(crate) to: UrlBuf,
 }
 
 impl TaskIn for HookInOutLink {
@@ -230,18 +221,11 @@ impl TaskIn for HookInOutLink {
 		self
 	}
 
-	fn title(&self) -> Cow<'_, str> {
-		format!("Hook: link {} to {}", self.from.display(), self.to.display()).into()
-	}
+	fn title(&self) -> Cow<'_, str> { format!("Hook: link to {}", self.to.display()).into() }
 }
 
 impl HookInOutLink {
-	pub(crate) fn new<U>(from: U, to: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
-		Self { id: Id::ZERO, from: from.into(), to: to.into() }
-	}
+	pub(crate) fn new(to: impl Into<UrlBuf>) -> Self { Self { id: Id::ZERO, to: to.into() } }
 
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileLink(_) = &task.prog {
@@ -253,10 +237,8 @@ impl HookInOutLink {
 // --- Hardlink
 #[derive(Debug)]
 pub(crate) struct HookInOutHardlink {
-	pub(crate) id:   Id,
-	#[allow(dead_code)]
-	pub(crate) from: UrlBuf,
-	pub(crate) to:   UrlBuf,
+	pub(crate) id: Id,
+	pub(crate) to: UrlBuf,
 }
 
 impl TaskIn for HookInOutHardlink {
@@ -269,18 +251,11 @@ impl TaskIn for HookInOutHardlink {
 		self
 	}
 
-	fn title(&self) -> Cow<'_, str> {
-		format!("Hook: hardlink {} to {}", self.from.display(), self.to.display()).into()
-	}
+	fn title(&self) -> Cow<'_, str> { format!("Hook: hardlink to {}", self.to.display()).into() }
 }
 
 impl HookInOutHardlink {
-	pub(crate) fn new<U>(from: U, to: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
-		Self { id: Id::ZERO, from: from.into(), to: to.into() }
-	}
+	pub(crate) fn new(to: impl Into<UrlBuf>) -> Self { Self { id: Id::ZERO, to: to.into() } }
 
 	pub(crate) fn reduce(self, task: &mut Task) {
 		if let TaskProg::FileHardlink(_) = &task.prog {
@@ -310,10 +285,7 @@ impl TaskIn for HookInDownload {
 }
 
 impl HookInDownload {
-	pub(crate) fn new<U>(target: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
+	pub(crate) fn new(target: impl Into<UrlBuf>) -> Self {
 		Self { id: Id::ZERO, target: target.into() }
 	}
 }
@@ -339,11 +311,36 @@ impl TaskIn for HookInUpload {
 }
 
 impl HookInUpload {
-	pub(crate) fn new<U>(target: U) -> Self
-	where
-		U: Into<UrlBuf>,
-	{
+	pub(crate) fn new(target: impl Into<UrlBuf>) -> Self {
 		Self { id: Id::ZERO, target: target.into() }
+	}
+}
+
+// --- Fetch
+#[derive(Debug)]
+pub(crate) struct HookInFetch {
+	pub(crate) id:     Id,
+	pub(crate) idx:    u8,
+	pub(crate) rev:    u16,
+	pub(crate) hashes: Vec<u64>,
+}
+
+impl TaskIn for HookInFetch {
+	type Prog = ();
+
+	fn id(&self) -> Id { self.id }
+
+	fn set_id(&mut self, id: Id) -> &mut Self {
+		self.id = id;
+		self
+	}
+
+	fn title(&self) -> Cow<'_, str> { format!("Hook: run {}-th fetcher", self.idx).into() }
+}
+
+impl HookInFetch {
+	pub(crate) fn new(fetcher: &FetcherArc, hashes: Vec<u64>) -> Self {
+		Self { id: Id::ZERO, idx: fetcher.idx, rev: fetcher.rev, hashes }
 	}
 }
 

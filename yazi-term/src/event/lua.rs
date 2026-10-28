@@ -8,7 +8,7 @@ use crate::event::{ClipboardEvent, DndDropArrive, DndEvent, KeyEvent, MouseButto
 // --- ClipboardEvent
 impl UserData for ClipboardEvent {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_cached_field("type", |_, me| Ok(me.r#type()));
+		fields.add_cached_field("type", |_, me| Ok(me.into_str()));
 		fields.add_field_method_get("write", |_, me| Ok(me.is_write()));
 		fields.add_field_method_get("primary", |_, me| Ok(me.primary()));
 		fields.add_cached_field_mut("data", |_, me| Ok(me.data().map(mem::take)));
@@ -19,7 +19,7 @@ impl UserData for ClipboardEvent {
 // --- DndEvent
 impl UserData for DndEvent {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("type", |_, me| Ok(me.r#type()));
+		fields.add_field_method_get("type", |_, me| Ok(me.into_str()));
 
 		fields.add_field_method_get("x", |_, me| Ok(me.x()));
 

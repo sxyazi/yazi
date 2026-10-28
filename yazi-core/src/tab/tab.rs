@@ -4,14 +4,15 @@ use ratatui_core::layout::Rect;
 use yazi_binding::position::{Origin, Position};
 use yazi_config::LAYOUT;
 use yazi_fs::file::File;
-use yazi_shared::{id::{Id, Ids}, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::{Id, Ids}, scope::{Scope, ScopeLike}, url::{UrlBuf, UrlLike}};
 use yazi_term::TERM;
 
-use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
-use crate::{spot::Spot, tab::Selected};
+use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview, PreviewMut};
+use crate::{spot::{Spot, SpotMut}, tab::Selected};
 
 pub struct Tab {
 	pub id:      Id,
+	pub scope:   Scope,
 	pub mode:    Mode,
 	pub pref:    Preference,
 	pub current: Folder,
@@ -30,26 +31,34 @@ impl Default for Tab {
 	fn default() -> Self {
 		static IDS: Ids = Ids::new();
 
+		let id = IDS.next();
+		let scope = Scope::new(id);
+
 		Self {
-			id:      IDS.next(),
-			mode:    Default::default(),
-			pref:    Default::default(),
+			id,
+			mode: Default::default(),
+			pref: Default::default(),
 			current: Default::default(),
-			parent:  Default::default(),
+			parent: Default::default(),
 
 			backstack: Default::default(),
-			history:   Default::default(),
-			selected:  Default::default(),
+			history: Default::default(),
+			selected: Default::default(),
 
-			spot:    Default::default(),
-			preview: Default::default(),
-			finder:  Default::default(),
+			spot: Spot::new(&scope),
+			preview: Preview::new(&scope),
+			finder: Default::default(),
+
+			scope,
 		}
 	}
 }
 
 impl Tab {
-	pub fn shutdown(&mut self) { self.preview.reset(); }
+	pub fn shutdown(&mut self) {
+		self.scope.cancel();
+		self.preview_mut().reset();
+	}
 }
 
 impl Tab {
@@ -110,4 +119,16 @@ impl Tab {
 	pub fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
 		self.current.hovered_mut().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
 	}
+
+	// --- Spot
+	#[inline]
+	pub fn spot_mut(&mut self) -> SpotMut<'_> { self.into() }
+
+	// --- Preview
+	#[inline]
+	pub fn preview_mut(&mut self) -> PreviewMut<'_> { self.into() }
+}
+
+impl ScopeLike for Tab {
+	fn scope(&self) -> &Scope { &self.scope }
 }

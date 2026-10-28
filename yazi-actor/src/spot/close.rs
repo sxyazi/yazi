@@ -14,6 +14,6 @@ impl Actor for Close {
 	const NAME: &str = "close";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		succ!(cx.tab_mut().spot.reset());
+		succ!(cx.spot_mut().reset());
 	}
 }

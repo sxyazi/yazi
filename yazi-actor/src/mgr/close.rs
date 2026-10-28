@@ -13,11 +13,7 @@ impl Actor for Close {
 	const NAME: &str = "close";
 
 	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
-		if cx.tabs().len() > 1 {
-			act!(mgr:tab_close, cx, cx.tabs().cursor)
-		} else {
-			act!(mgr:quit, cx, opt)
-		}
+		if cx.tabs().len() > 1 { act!(mgr:tab_close, cx, cx.tab) } else { act!(mgr:quit, cx, opt) }
 	}
 
 	fn hook(cx: &Ctx, _form: &Self::Form) -> Option<SparkKind> {

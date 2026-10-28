@@ -5,7 +5,7 @@ use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_core::Ctx;
-use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, op::FilesOp};
+use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, file::Files, op::FilesOp};
 use yazi_macro::{succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
@@ -69,7 +69,7 @@ impl BulkCreate {
 		}
 
 		let _permit = WATCHER.acquire().await.unwrap();
-		let (mut failed, mut succeeded) = (vec![], Vec::with_capacity(todo.len()));
+		let (mut failed, mut succeeded) = (vec![], Files::with_capacity(todo.len()));
 		for entry in todo {
 			let Ok(dist) = cwd.try_join(entry.path) else {
 				failed.push((entry, anyhow!("Invalid path")));

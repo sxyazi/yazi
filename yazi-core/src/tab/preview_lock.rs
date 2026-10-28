@@ -2,13 +2,14 @@ use mlua::Table;
 use yazi_binding::elements::Rect;
 use yazi_fs::file::FileRef;
 use yazi_macro::impl_data_any;
-use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::Id, scope::{Scope, ScopeLike, ScopeRef}, url::{UrlBuf, UrlLike}};
 use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug, Default)]
 pub struct PreviewLock {
 	pub url:        UrlBuf,
 	pub(crate) sig: Id,
+	pub scope:      Scope,
 
 	pub skip: usize,
 	pub area: Rect,
@@ -24,8 +25,9 @@ impl TryFrom<Table> for PreviewLock {
 		let file: FileRef = t.raw_get("file")?;
 		file.borrow(|f| {
 			Ok(Self {
-				url: f.to_url(),
-				sig: t.raw_get("sig")?,
+				url:   f.to_url(),
+				sig:   t.raw_get("sig")?,
+				scope: t.raw_get::<ScopeRef>("scope")?.to_scope(),
 
 				skip: t.raw_get("skip")?,
 				area: t.raw_get("area")?,
@@ -33,4 +35,8 @@ impl TryFrom<Table> for PreviewLock {
 			})
 		})
 	}
+}
+
+impl ScopeLike for PreviewLock {
+	fn scope(&self) -> &Scope { &self.scope }
 }

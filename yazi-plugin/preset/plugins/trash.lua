@@ -173,14 +173,14 @@ function M:peek(job)
 	end
 
 	job.mime, job.args = mime, rule.run.args
-	ya.async(function()
+	job.scope:spawn(function()
 		local chunk, err = ya.chunk(rule.run.name)
 		if not chunk then
 			ya.err(err)
 		elseif chunk.sync_peek then
-			ya.emit("plugin", { rule.run.name, job, method = "peek", scope = rt.scope() })
+			ya.emit("plugin", { rule.run.name, job, method = "peek", scope = ya.clone(job.scope) })
 		else
-			ya.async_blocking(function(cx) require(cx.name):peek(cx.job) end, { name = rule.run.name, job = job }):wait()
+			job.scope:spawn_blocking(function(cx) require(cx.name):peek(cx.job) end, { name = rule.run.name, job = job })
 		end
 	end)
 end
@@ -192,7 +192,7 @@ function M:seek(job)
 	end
 
 	job.mime, job.args = mime, rule.run.args
-	ya.emit("plugin", { rule.run.name, job, method = "seek", scope = rt.scope() })
+	ya.emit("plugin", { rule.run.name, job, method = "seek", scope = ya.clone(job.scope) })
 end
 
 function M:preload(job)

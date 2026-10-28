@@ -1,17 +1,26 @@
 local M = {}
 
 local state = ya.sync(function()
+	local tab = cx.tab
+	if not tab then
+		return
+	end
+
 	local selected = {}
-	for _, f in pairs(cx.tab.selected) do
+	for _, f in pairs(tab.selected) do
 		selected[#selected + 1] = f.url
 	end
-	return cx.tab.current.cwd, selected
+	return tab.current.cwd, selected
 end)
 
 function M:entry(job)
-	ya.emit("escape", { visual = true, tab = job.tab })
+	ya.emit("escape", { visual = true, scope = ya.clone(job.scope) })
 
 	local cwd, selected = state()
+	if not cwd then
+		return
+	end
+
 	if not cwd.spec.is_regular then
 		return ya.notify { title = "Fzf", content = "Only supported for regular paths", timeout = 5, level = "warn" }
 	end
@@ -29,7 +38,7 @@ function M:entry(job)
 		return
 	elseif #urls == 1 then
 		local stat = #selected == 0 and fs.stat(urls[1])
-		return ya.emit(stat and stat.is_dir and "cd" or "reveal", { urls[1], raw = true, tab = job.tab })
+		return ya.emit(stat and stat.is_dir and "cd" or "reveal", { urls[1], raw = true, scope = job.scope })
 	end
 
 	local files = {}
@@ -38,7 +47,7 @@ function M:entry(job)
 	end
 	if #files > 0 then
 		files.state = #selected > 0 and "off" or "on"
-		files.tab = job.tab
+		files.scope = job.scope
 		ya.emit("toggle_all", files)
 	end
 end

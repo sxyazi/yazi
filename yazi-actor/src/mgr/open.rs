@@ -3,10 +3,11 @@ use futures::StreamExt;
 use hashbrown::HashSet;
 use yazi_boot::ARGS;
 use yazi_core::{Ctx, mgr::OpenDoOpt};
+use yazi_fs::file::Files;
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenForm;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{data::Data, url::UrlLike};
+use yazi_shared::{data::Data, scope::ScopeLike};
 use yazi_vfs::engine;
 
 use crate::{Actor, act, mgr::Quit};
@@ -32,7 +33,7 @@ impl Actor for Open {
 
 		if opt.targets.is_empty() {
 			opt.targets = if opt.hovered {
-				cx.hovered().map(|h| vec![h.to_url()]).unwrap_or_default()
+				cx.hovered_url().cloned().into_iter().collect()
 			} else {
 				act!(mgr:escape_visual, cx)?;
 				cx.tab().selected_or_hovered_urls().cloned().collect()
@@ -50,12 +51,12 @@ impl Actor for Open {
 			.map(|(i, _)| i)
 			.collect();
 
-		let tab = cx.tab().id;
 		let cwd = opt.cwd.unwrap_or_else(|| cx.cwd().clone());
+		let scope = cx.tab().to_scope();
 		let scheduler = cx.tasks.scheduler.clone();
 		tokio::spawn(async move {
-			let mut all = Vec::with_capacity(opt.targets.len());
-			let mut part = Vec::with_capacity(todo.len());
+			let mut all = Files::with_capacity(opt.targets.len());
+			let mut part = Files::with_capacity(todo.len());
 
 			let it = futures::stream::iter(opt.targets)
 				.enumerate()
@@ -71,7 +72,7 @@ impl Actor for Open {
 				all.push(file);
 			}
 
-			if !all.is_empty() && scheduler.fetch_mimetype(tab, part).await {
+			if !all.is_empty() && scheduler.fetch_mimetype(part, &scope).await {
 				MgrProxy::open_do(OpenDoOpt { cwd, targets: all, interactive: opt.interactive });
 			}
 		});

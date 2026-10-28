@@ -6,11 +6,12 @@ use yazi_dds::Pump;
 use yazi_fs::ok_or_not_found;
 use yazi_vfs::engine;
 
-use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, file::{FileOutCopy, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutMove, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove, HookInPreload, HookInTrash, HookInUpload}, preload::{Preload, PreloadOut}};
+use crate::{Ongoing, TaskOp, TaskOps, TasksProxy, fetch::{Fetch, FetchOutFetch}, file::{FileOutCopy, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutLink, FileOutMove, FileOutTrash, FileOutUpload}, hook::{HookIn, HookInDelete, HookInDownload, HookInFetch, HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove, HookInPreload, HookInTrash, HookInUpload}, preload::{Preload, PreloadOut}};
 
 pub(crate) struct Hook {
 	ops:     TaskOps,
 	ongoing: Arc<Mutex<Ongoing>>,
+	fetch:   Arc<Fetch>,
 	preload: Arc<Preload>,
 	tx:      async_priority_channel::Sender<HookIn, u8>,
 }
@@ -19,10 +20,17 @@ impl Hook {
 	pub(crate) fn new(
 		ops: &mpsc::UnboundedSender<TaskOp>,
 		ongoing: &Arc<Mutex<Ongoing>>,
+		fetch: &Arc<Fetch>,
 		preload: &Arc<Preload>,
 		tx: async_priority_channel::Sender<HookIn, u8>,
 	) -> Self {
-		Self { ops: ops.into(), ongoing: ongoing.clone(), preload: preload.clone(), tx }
+		Self {
+			ops: ops.into(),
+			ongoing: ongoing.clone(),
+			fetch: fetch.clone(),
+			preload: preload.clone(),
+			tx,
+		}
 	}
 
 	// --- File
@@ -93,6 +101,18 @@ impl Hook {
 			TasksProxy::update_succeed(task.id, [task.target], false);
 		}
 		self.ops.out(task.id, FileOutUpload::Clean);
+	}
+
+	// --- Fetch
+	pub(crate) async fn fetch(&self, task: HookInFetch) {
+		if !self.ongoing.lock().intact(task.id) {
+			let mut loaded = self.fetch.loaded.lock();
+			for hash in task.hashes {
+				loaded.get_mut(&hash).map(|x| x.clear(task.idx, task.rev));
+			}
+		}
+
+		self.ops.out(task.id, FetchOutFetch::Clean);
 	}
 
 	// --- Preload

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use mlua::{ExternalError, ExternalResult, HookTriggers, ObjectLike, VmState};
-use tokio::{runtime::Handle, select};
+use mlua::{ExternalError, ExternalResult, ObjectLike};
+use tokio::select;
 use yazi_macro::error;
 
 use crate::{CoIter, Runner, fetcher::{FetchError, FetchJob, FetchStatus}, loader::LOADER};
@@ -15,8 +15,9 @@ impl Runner {
 		LOADER.ensure(&job.name, |_| ()).await?;
 		tokio::task::spawn_blocking(move || {
 			let scope = job.scope.clone();
-			Handle::current().block_on(async {
+			Self::block_on(async {
 				select! {
+					biased;
 					_ = scope.cancelled() => Err(FetchError::Cancelled.into_lua_err()),
 					r = self.fetch_do(job) => r,
 				}
@@ -32,18 +33,8 @@ impl Runner {
 		let mut statuses = Vec::with_capacity(pending.len());
 
 		let lua = self.spawn(&job)?;
-		let scope = job.scope.clone();
 
-		lua.set_hook(
-			HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-			move |_, dbg| {
-				if scope.is_cancelled() && dbg.source().what != "C" {
-					Err(FetchError::Cancelled.into_lua_err())
-				} else {
-					Ok(VmState::Continue)
-				}
-			},
-		)?;
+		job.scope.set_hook(&lua, || FetchError::Cancelled.into_lua_err())?;
 
 		let plugin = LOADER.load(&lua, &fetcher.name).await?;
 		if job.scope.is_cancelled() {

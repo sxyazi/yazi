@@ -32,7 +32,7 @@ impl Tabs {
 	pub fn set_idx(&mut self, idx: usize) {
 		// Reset the preview of the last active tab
 		if let Some(active) = self.items.get_mut(self.cursor) {
-			active.preview.reset_image();
+			active.preview_mut().reset_image();
 			active.preview.folder_lock = None;
 		}
 

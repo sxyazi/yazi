@@ -41,7 +41,7 @@ impl Worker {
 		let size = Arc::new(Size::new(&op_tx, size_tx));
 		let process = Arc::new(Process::new(&op_tx, process_tx));
 		let custom = Custom::new();
-		let hook = Arc::new(Hook::new(&op_tx, &ongoing, &preload, hook_tx));
+		let hook = Arc::new(Hook::new(&op_tx, &ongoing, &fetch, &preload, hook_tx));
 
 		let ops = TaskOps(op_tx);
 		let me = Self { file, plugin, fetch, preload, size, process, custom, hook, ops, ongoing };
@@ -70,6 +70,7 @@ impl Worker {
 
 		let scope = r#in.scope().clone();
 		let result = select! {
+			biased;
 			_ = handle.finished() => Ok(()),
 			_ = scope.cancelled() => {
 				self.cancel(handle.id, false);
@@ -206,8 +207,9 @@ impl Worker {
 
 				handle.start();
 				let result = select! {
+					biased;
+					_ = handle.finished() => Ok(()),
 					r = me.size_do(r#in) => r,
-					_ = handle.finished() => Ok(())
 				};
 
 				if let Err(out) = result {
@@ -267,6 +269,7 @@ impl Worker {
 			HookIn::Hardlink(r#in) => self.hook.hardlink(r#in).await,
 			HookIn::Download(r#in) => self.hook.download(r#in).await,
 			HookIn::Upload(r#in) => self.hook.upload(r#in).await,
+			HookIn::Fetch(r#in) => self.hook.fetch(r#in).await,
 			HookIn::Preload(r#in) => self.hook.preload(r#in).await,
 		}
 	}

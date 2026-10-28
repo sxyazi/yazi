@@ -17,7 +17,7 @@ pub enum Spark<'a> {
 	AppLua(crate::app::LuaForm),
 	AppMouse(crate::app::MouseForm),
 	AppPlugin(crate::app::PluginForm),
-	AppPluginDo(crate::app::PluginForm),
+	AppPluginDo(crate::app::PluginDoForm),
 	AppPassthrough(crate::app::PassthroughForm),
 	AppQuit(crate::app::QuitForm),
 	AppReport(yazi_term::event::Report),
@@ -396,7 +396,8 @@ try_from_spark!(crate::app::DeprecateForm, app:deprecate);
 try_from_spark!(crate::app::DndForm, app:dnd);
 try_from_spark!(crate::app::LuaForm, app:lua);
 try_from_spark!(crate::app::MouseForm, app:mouse);
-try_from_spark!(crate::app::PluginForm, app:plugin, app:plugin_do);
+try_from_spark!(crate::app::PluginForm, app:plugin);
+try_from_spark!(crate::app::PluginDoForm, app:plugin_do);
 try_from_spark!(crate::app::PassthroughForm, app:passthrough);
 try_from_spark!(crate::app::QuitForm, app:quit, mgr:quit);
 try_from_spark!(yazi_term::event::Report, app:report);

@@ -8,7 +8,7 @@ function M:peek(job)
 
 	local ok, err, bound = self:preload(job)
 	if bound and bound > 0 then
-		return ya.emit("peek", { bound - 1, only_if = job.file.url, upper_bound = true })
+		return ya.emit("peek", { bound - 1, only_if = job.file.url, upper_bound = true, scope = job.scope })
 	elseif not ok or err then
 		return ya.preview_widget(job, err)
 	end
@@ -23,7 +23,7 @@ function M:seek(job)
 	local h = cx.tab.current.hovered
 	if h and h.url == job.file.url then
 		local step = ya.clamp(-1, job.units, 1)
-		ya.emit("peek", { math.max(0, cx.tab.preview.skip + step), only_if = job.file.url, tab = job.tab })
+		ya.emit("peek", { math.max(0, cx.tab.preview.skip + step), only_if = job.file.url, scope = job.scope })
 	end
 end
 

@@ -20,13 +20,14 @@ function Linemode:solo()
 		return " " .. mode
 	end
 
-	local ok, line = pcall(function() return ui.Line(self[mode](self)) end)
-	if ok then
-		return line:visible() and ui.Line { " ", line } or line
-	else
-		ya.err("Failed to render linemode `" .. mode .. "`:", line)
+	local ok, ret = pcall(self[mode], self)
+	if not ok then
+		ya.err("Failed to render linemode `" .. mode .. "`:", ret)
 		return " [Lua error]"
 	end
+
+	local line = ui.Line(ret)
+	return line:visible() and ui.Line { " ", line } or line
 end
 
 function Linemode:size()

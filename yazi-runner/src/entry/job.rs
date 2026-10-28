@@ -1,7 +1,6 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::Scope;
-use yazi_shared::{data::{Data, DataKey}, id::Id, sendable::Sendable};
+use yazi_shared::{data::{Data, DataKey}, id::Id, scope::{Scope, ScopeLike}, sendable::Sendable};
 use yazi_shim::SStr;
 
 use crate::PluginJob;
@@ -9,17 +8,16 @@ use crate::PluginJob;
 #[derive(Clone, Debug, Default)]
 pub struct EntryJob {
 	pub id:     Id,
-	pub tab:    Id,
 	pub args:   HashMap<DataKey, Data>,
 	pub plugin: SStr,
 	pub scope:  Scope,
 }
 
 impl PluginJob for EntryJob {
-	fn tab(&self) -> Id { self.tab }
-
 	fn name(&self) -> &SStr { &self.plugin }
+}
 
+impl ScopeLike for EntryJob {
 	fn scope(&self) -> &Scope { &self.scope }
 }
 
@@ -28,7 +26,7 @@ impl IntoLua for EntryJob {
 		lua
 			.create_table_from([
 				("id", self.id.into_lua(lua)?),
-				("tab", self.tab.into_lua(lua)?),
+				("scope", self.scope.into_lua(lua)?),
 				("args", Sendable::args_to_table(lua, self.args)?.into_lua(lua)?),
 			])?
 			.into_lua(lua)

@@ -1,8 +1,7 @@
 use std::borrow::Cow;
 
 use mlua::{FromLua, Lua, Table, Value};
-use yazi_binding::Scope;
-use yazi_shared::id::Id;
+use yazi_shared::{id::Id, scope::Scope};
 use yazi_shim::SStr;
 
 use crate::{TaskIn, custom::{CustomPool, CustomProg}};

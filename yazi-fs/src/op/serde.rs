@@ -3,7 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use yazi_shared::{id::Id, path::PathBufDyn, url::UrlBuf};
 
 use super::FilesOp;
-use crate::file::File;
+use crate::file::{File, Files};
 
 impl Serialize for FilesOp {
 	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -45,14 +45,14 @@ impl<'de> Deserialize<'de> for FilesOp {
 		#[derive(Deserialize)]
 		#[serde(tag = "kind", rename_all = "lowercase")]
 		enum Repr {
-			Full { file: File, entries: Vec<File> },
-			Part { url: UrlBuf, entries: Vec<File>, id: Id },
+			Full { file: File, entries: Files },
+			Part { url: UrlBuf, entries: Files, id: Id },
 			Done { file: File, id: Id },
 			Size { url: UrlBuf, entries: HashMap<PathBufDyn, u64> },
 			Rank { url: UrlBuf, entries: HashMap<PathBufDyn, i64> },
 			Fail { url: UrlBuf, error: yazi_shim::fs::Error },
 
-			Create { url: UrlBuf, entries: Vec<File> },
+			Create { url: UrlBuf, entries: Files },
 			Delete { url: UrlBuf, entries: HashSet<PathBufDyn> },
 			Update { url: UrlBuf, entries: HashMap<PathBufDyn, File> },
 			Upsert { url: UrlBuf, entries: HashMap<PathBufDyn, File> },

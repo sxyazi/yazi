@@ -1,10 +1,10 @@
-use yazi_fs::file::File;
+use yazi_fs::file::{File, Files};
 
 use crate::tab::Tab;
 
 pub struct TabSnap {
 	pub(crate) hovered:  Option<File>,
-	pub(crate) selected: Vec<File>,
+	pub(crate) selected: Files,
 }
 
 impl From<&Tab> for TabSnap {

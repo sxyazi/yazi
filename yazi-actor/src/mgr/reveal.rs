@@ -27,7 +27,7 @@ impl Actor for Reveal {
 		// If the child is not hovered, which means it doesn't exist,
 		// create a dummy file
 		if !form.no_dummy && tab.hovered().is_none_or(|f| f.key() != key) {
-			let op = FilesOp::Create(trail.into(), vec![File::from_dummy(&form.target, None)]);
+			let op = FilesOp::Create(trail.into(), File::from_dummy(&form.target, None).into());
 			tab.current.update_pub(tab.id, op);
 		}
 

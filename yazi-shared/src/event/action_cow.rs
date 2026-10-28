@@ -82,15 +82,16 @@ impl ActionCow {
 		}
 	}
 
-	pub fn take_seq<'a, T>(&mut self) -> Vec<T>
+	pub fn take_seq<'a, I, T>(&mut self) -> I
 	where
+		I: FromIterator<T>,
 		T: TryFrom<Data> + TryFrom<&'a Data>,
 		<T as TryFrom<Data>>::Error: Into<anyhow::Error>,
 		<T as TryFrom<&'a Data>>::Error: Into<anyhow::Error>,
 	{
 		match self {
-			Self::Owned(c) => c.take_seq(),
-			Self::Borrowed(c) => c.seq(),
+			Self::Owned(c) => c.take_seq().collect(),
+			Self::Borrowed(c) => c.seq().collect(),
 		}
 	}
 

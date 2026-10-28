@@ -1,10 +1,10 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::Composer;
+use yazi_binding::{Composer, ComposerGet};
 
 pub(super) struct Utils;
 
-pub(crate) fn compose(isolate: bool) -> Composer<impl Fn(&Lua, &[u8]) -> mlua::Result<Value>> {
-	fn get(lua: &Lua, key: &[u8], isolate: bool) -> mlua::Result<Value> {
+pub(crate) fn compose() -> Composer<ComposerGet> {
+	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			// App
 			b"clone" => Utils::clone(lua)?,
@@ -58,7 +58,7 @@ pub(crate) fn compose(isolate: bool) -> Composer<impl Fn(&Lua, &[u8]) -> mlua::R
 			// Sync
 			b"co" => Utils::co(lua)?,
 			b"sync" => Utils::sync(lua)?,
-			b"async" => Utils::r#async(lua, isolate)?,
+			b"async" => Utils::r#async(lua)?,
 			b"async_blocking" => Utils::async_blocking(lua)?,
 			b"chan" => Utils::chan(lua)?,
 			b"chunk" => Utils::chunk(lua)?,
@@ -105,5 +105,5 @@ pub(crate) fn compose(isolate: bool) -> Composer<impl Fn(&Lua, &[u8]) -> mlua::R
 		.into_lua(lua)
 	}
 
-	Composer::new(move |lua, key| get(lua, key, isolate))
+	Composer::new(get)
 }

@@ -1,5 +1,5 @@
-use mlua::{ExternalError, HookTriggers, ObjectLike, VmState};
-use tokio::{runtime::Handle, select};
+use mlua::{ExternalError, ObjectLike};
+use tokio::select;
 
 use crate::{Runner, loader::LOADER, previewer::{PeekError, PeekJob}};
 
@@ -12,8 +12,9 @@ impl Runner {
 		let job = job.clone();
 		tokio::task::spawn_blocking(move || {
 			let scope = job.scope.clone();
-			Handle::current().block_on(async {
+			Self::block_on(async {
 				select! {
+					biased;
 					_ = scope.cancelled() => Err(PeekError::Cancelled),
 					r = self.peek_do(job) => r.map_err(|e| {
 						e.downcast_ref::<PeekError>().cloned().unwrap_or_else(|| e.into())
@@ -27,18 +28,8 @@ impl Runner {
 
 	async fn peek_do(&self, job: PeekJob) -> mlua::Result<()> {
 		let lua = self.spawn(&job)?;
-		let scope = job.scope.clone();
 
-		lua.set_hook(
-			HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-			move |_, dbg| {
-				if scope.is_cancelled() && dbg.source().what != "C" {
-					Err(PeekError::Cancelled.into_lua_err())
-				} else {
-					Ok(VmState::Continue)
-				}
-			},
-		)?;
+		job.scope.set_hook(&lua, || PeekError::Cancelled.into_lua_err())?;
 
 		let plugin = LOADER.load(&lua, &job.previewer.name).await?;
 		if job.scope.is_cancelled() {

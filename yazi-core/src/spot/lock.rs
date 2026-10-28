@@ -1,7 +1,7 @@
 use mlua::Table;
 use yazi_fs::{file::FileRef, stat::Stat};
 use yazi_macro::impl_data_any;
-use yazi_shared::{id::Id, url::{UrlBuf, UrlLike}};
+use yazi_shared::{id::Id, scope::{Scope, ScopeLike, ScopeRef}, url::{UrlBuf, UrlLike}};
 use yazi_widgets::Renderable;
 
 #[derive(Clone, Debug)]
@@ -10,6 +10,7 @@ pub struct SpotLock {
 	pub(crate) stat:  Stat,
 	pub(crate) lstat: Stat,
 	pub(crate) mime:  String,
+	pub scope:        Scope,
 
 	pub id:          Id,
 	pub(crate) skip: usize,
@@ -29,6 +30,7 @@ impl TryFrom<Table> for SpotLock {
 				stat:  f.stat,
 				lstat: f.lstat(),
 				mime:  t.raw_get("mime")?,
+				scope: t.raw_get::<ScopeRef>("scope")?.to_scope(),
 
 				id:   t.raw_get("id")?,
 				skip: t.raw_get("skip")?,
@@ -62,4 +64,8 @@ impl SpotLock {
 			_ => None,
 		})
 	}
+}
+
+impl ScopeLike for SpotLock {
+	fn scope(&self) -> &Scope { &self.scope }
 }

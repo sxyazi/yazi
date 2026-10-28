@@ -1,6 +1,6 @@
 extern crate self as yazi_shared;
 
-yazi_macro::mod_pub!(any_data auth data domain event id loc path pool sendable shell spec strand translit twiddle url wire);
+yazi_macro::mod_pub!(any_data auth data domain event id loc path pool scope sendable shell spec strand translit twiddle url wire);
 
 yazi_macro::mod_flat!(chars completion_token condition debounce env kebab_cased_key last_value layer natsort non_empty_string os snake_cased_key source tests throttle time);
 

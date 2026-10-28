@@ -1,11 +1,10 @@
 use anyhow::Result;
-use mlua::ObjectLike;
 use yazi_config::YAZI;
-use yazi_core::{Ctx, app::PluginOpt};
-use yazi_macro::succ;
+use yazi_core::Ctx;
+use yazi_macro::{relay, succ};
 use yazi_parser::mgr::SeekForm;
 use yazi_runner::previewer::SeekJob;
-use yazi_shared::{data::Data, pool::InternStr};
+use yazi_shared::data::Data;
 
 use crate::{Actor, act};
 
@@ -18,27 +17,32 @@ impl Actor for Seek {
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let Some(hovered) = cx.hovered() else {
-			succ!(cx.tab_mut().preview.reset());
+			succ!(cx.preview_mut().reset());
 		};
 
 		let Some(mime) = cx.mgr.mimetype.get(&hovered.url) else {
-			succ!(cx.tab_mut().preview.reset());
+			succ!(cx.preview_mut().reset());
 		};
 
 		let Some(previewer) = YAZI.plugin.previewers.matches(hovered, mime) else {
-			succ!(cx.tab_mut().preview.reset());
+			succ!(cx.preview_mut().reset());
 		};
+
+		// Cancel the previous preview job if any
+		cx.preview().scope.cancel();
 
 		let job = SeekJob {
-			tab: cx.tab().id,
-			previewer,
-			file: hovered.clone(),
-			mime: mime.intern(),
+			file:  hovered.clone(),
+			mime:  mime.to_owned().into(),
 			units: form.units,
-			scope: cx.tab().preview.scope.clone(),
+			scope: cx.scope.clone(),
 		};
 
-		let opt = PluginOpt::new_callback(job, |_, plugin, job| plugin.call_method("seek", job));
-		act!(app:plugin, cx, opt)
+		let action = relay!(app:plugin, [previewer.name.clone()])
+			.with_scope(&job)
+			.with(1, job)
+			.with("method", "seek");
+
+		act!(app:plugin, cx.nested(&action)?, action)
 	}
 }

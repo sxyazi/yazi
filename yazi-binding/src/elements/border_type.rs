@@ -2,8 +2,10 @@ use std::ops::Deref;
 
 use mlua::{Lua, Table};
 use serde::Deserialize;
+use strum::FromRepr;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, FromRepr)]
+#[repr(u8)]
 #[serde(rename_all = "kebab-case")]
 pub enum BorderType {
 	#[default]
@@ -31,16 +33,7 @@ impl Deref for BorderType {
 }
 
 impl From<u8> for BorderType {
-	fn from(value: u8) -> Self {
-		match value {
-			1 => Self::Rounded,
-			2 => Self::Double,
-			3 => Self::Thick,
-			4 => Self::QuadrantInside,
-			5 => Self::QuadrantOutside,
-			_ => Self::Plain,
-		}
-	}
+	fn from(value: u8) -> Self { Self::from_repr(value).unwrap_or_default() }
 }
 
 impl BorderType {

@@ -68,7 +68,7 @@ impl UpdateFiles {
 			Self::update_current(cx, op)
 		} else if matches!(cx.parent(), Some(p) if *url == p.url) {
 			Self::update_parent(cx, op)
-		} else if matches!(cx.hovered(), Some(h) if *url == h.url) {
+		} else if cx.hovered_url() == Some(url) {
 			Self::update_hovered(cx, op)
 		} else {
 			Self::update_history(cx, op)

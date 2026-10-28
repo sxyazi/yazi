@@ -15,7 +15,7 @@ impl Actor for Resume {
 	const NAME: &str = "resume";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		cx.active_mut().preview.reset();
+		cx.active_mut().preview_mut().reset();
 
 		drop(cx.term.take());
 		cx.term = Some(Raterm::start()?);

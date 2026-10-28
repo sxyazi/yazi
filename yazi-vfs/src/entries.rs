@@ -1,7 +1,7 @@
 use std::io;
 
 use tokio::{join, select, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_fs::{Entries, engine::{DirReader, FileHolder}, file::File, mounts::PARTITIONS};
+use yazi_fs::{Entries, engine::{DirReader, FileHolder}, file::{File, Files}, mounts::PARTITIONS};
 use yazi_shared::url::UrlBuf;
 
 use crate::engine::{self, DirEntry};
@@ -9,7 +9,7 @@ use crate::engine::{self, DirEntry};
 pub trait VfsEntries {
 	fn from_dir(dir: &UrlBuf) -> impl Future<Output = io::Result<UnboundedReceiver<File>>>;
 
-	fn from_dir_bulk(dir: &UrlBuf) -> impl Future<Output = io::Result<Vec<File>>>;
+	fn from_dir_bulk(dir: &UrlBuf) -> impl Future<Output = io::Result<Files>>;
 
 	fn revalidate(file: &File) -> impl Future<Output = io::Result<Option<File>>>;
 }
@@ -30,6 +30,7 @@ impl VfsEntries for Entries {
 				};
 
 				select! {
+					biased;
 					_ = tx.closed() => break,
 					file = future => {
 						let Some(file) = file else { break };
@@ -43,7 +44,7 @@ impl VfsEntries for Entries {
 		Ok(rx)
 	}
 
-	async fn from_dir_bulk(dir: &UrlBuf) -> io::Result<Vec<File>> {
+	async fn from_dir_bulk(dir: &UrlBuf) -> io::Result<Files> {
 		let mut it = engine::read_dir(dir).await?;
 		let mut entries = Vec::new();
 		while let Ok(Some(dent)) = it.next().await {
@@ -52,8 +53,8 @@ impl VfsEntries for Entries {
 
 		let (first, rest) = entries.split_at(entries.len() / 3);
 		let (second, third) = rest.split_at(entries.len() / 3);
-		async fn go(entries: &[DirEntry]) -> Vec<File> {
-			let mut files = Vec::with_capacity(entries.len());
+		async fn go(entries: &[DirEntry]) -> Files {
+			let mut files = Files::with_capacity(entries.len());
 			for dent in entries {
 				files.push(match dent.file().await {
 					Ok(file) => file,

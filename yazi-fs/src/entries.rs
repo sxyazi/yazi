@@ -4,12 +4,12 @@ use hashbrown::{HashMap, HashSet};
 use yazi_shared::{id::Id, path::{PathBufDyn, PathDyn, PathLike}};
 
 use super::{FilesSorter, Filter};
-use crate::{SortBy, file::File, op::FILES_TICKET};
+use crate::{SortBy, file::{File, Files}, op::FILES_TICKET};
 
 #[derive(Default)]
 pub struct Entries {
-	hidden:       Vec<File>,
-	items:        Vec<File>,
+	hidden:       Files,
+	items:        Files,
 	ticket:       Id,
 	version:      u64,
 	pub revision: u64,
@@ -23,7 +23,7 @@ pub struct Entries {
 }
 
 impl Deref for Entries {
-	type Target = Vec<File>;
+	type Target = Files;
 
 	fn deref(&self) -> &Self::Target { &self.items }
 }
@@ -35,7 +35,7 @@ impl DerefMut for Entries {
 impl Entries {
 	pub fn new(show_hidden: bool) -> Self { Self { show_hidden, ..Default::default() } }
 
-	pub fn update_full(&mut self, files: Vec<File>) {
+	pub fn update_full(&mut self, files: Files) {
 		self.ticket = FILES_TICKET.next();
 
 		let (hidden, items) = self.split_files(files);
@@ -46,7 +46,7 @@ impl Entries {
 		(self.hidden, self.items) = (hidden, items);
 	}
 
-	pub fn update_part(&mut self, files: Vec<File>, ticket: Id) {
+	pub fn update_part(&mut self, files: Files, ticket: Id) {
 		if !files.is_empty() {
 			if ticket != self.ticket {
 				return;
@@ -116,7 +116,7 @@ impl Entries {
 		self.items.clear();
 	}
 
-	pub fn update_create(&mut self, files: Vec<File>) {
+	pub fn update_create(&mut self, files: Files) {
 		if files.is_empty() {
 			return;
 		}
@@ -249,12 +249,12 @@ impl Entries {
 		true
 	}
 
-	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Vec<File>, Vec<File>) {
+	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Files, Files) {
 		let files = files.into_iter().filter(|f| !f.key().is_empty());
 		if let Some(filter) = &self.filter {
 			files.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
 		} else if self.show_hidden {
-			(vec![], files.collect())
+			(Files::default(), files.collect())
 		} else {
 			files.partition(|f| f.is_hidden())
 		}

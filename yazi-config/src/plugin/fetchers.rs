@@ -4,7 +4,7 @@ use anyhow::{Result, ensure};
 use arc_swap::ArcSwap;
 use mlua::{ExternalError, ExternalResult, MetaMethod, Table, UserData, UserDataMethods};
 use serde::Deserialize;
-use yazi_fs::file::File;
+use yazi_fs::file::Files;
 use yazi_macro::warn;
 use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::VecExt};
 
@@ -31,9 +31,9 @@ impl TryFrom<Vec<FetcherArc>> for Fetchers {
 }
 
 impl Fetchers {
-	pub fn mime(&self, files: Vec<File>) -> impl Iterator<Item = (FetcherArc, Vec<File>)> {
+	pub fn mime(&self, files: Files) -> impl Iterator<Item = (FetcherArc, Files)> {
 		let fetchers = self.load_full();
-		let mut tasks: [Vec<_>; MAX_FETCHERS as usize] = Default::default();
+		let mut tasks: [Files; MAX_FETCHERS as usize] = Default::default();
 
 		for file in files {
 			let found = FetcherMatcher::new(&fetchers, &file, "").find(|f| f.group == "mime");

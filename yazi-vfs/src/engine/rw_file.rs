@@ -1,8 +1,9 @@
 use std::{io, pin::Pin};
 
-use mlua::{AnyUserData, BorrowedBytes, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, Value};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncWrite, AsyncWriteExt};
-use yazi_fs::{engine::{Attrs, FileBuilder}, file::File};
+use mlua::{AnyUserData, BorrowedBytes, IntoLuaMulti, MetaMethod, UserData, UserDataFields, UserDataMethods};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt, AsyncWrite, AsyncWriteExt};
+use yazi_binding::SeekFrom;
+use yazi_fs::{engine::{Attrs, FileBuilder, Random}, file::File};
 use yazi_shared::url::{AsUrl, Url, UrlLike};
 use yazi_shim::fs::Error;
 
@@ -79,10 +80,10 @@ impl RwFile {
 		}
 	}
 
-	pub(crate) fn seekless(&self) -> bool {
+	pub(crate) fn random(&self) -> Random {
 		match self {
-			Self::Local(_) | Self::Sftp(_) => false,
-			Self::Lua(f) => f.seekless,
+			Self::Local(_) | Self::Sftp(_) => Random::Both,
+			Self::Lua(f) => f.random,
 		}
 	}
 
@@ -175,21 +176,31 @@ impl AsyncWrite for RwFile {
 }
 
 impl UserData for RwFile {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("random", |_, me| Ok(me.random()));
+	}
+
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_method("stat", |_, me, ()| async move {
+			Ok(me.metadata().await.map_err(Error::from))
+		});
+		methods.add_async_method_mut("read", |lua, mut me, len: usize| async move {
+			let mut buf = vec![0; len];
+			Ok(match me.read(&mut buf).await {
+				Ok(n) => {
+					buf.truncate(n);
+					Ok(lua.create_external_string(buf)?)
+				}
+				Err(e) => Err(Error::from(e)),
+			})
+		});
+		methods.add_async_method_mut("seek", |_, mut me, from: SeekFrom| async move {
+			Ok(me.seek(from.0).await.map_err(Error::from))
+		});
 		methods.add_async_method_mut("flush", |lua, mut me, ()| async move {
 			match me.flush().await {
 				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
-			}
-		});
-		methods.add_async_method_mut("read", |lua, mut me, len: usize| async move {
-			let mut buf = vec![0; len];
-			match me.read(&mut buf).await {
-				Ok(n) => {
-					buf.truncate(n);
-					lua.create_external_string(buf)?.into_lua_multi(&lua)
-				}
-				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_method_mut("write_all", |lua, mut me, src: BorrowedBytes| async move {

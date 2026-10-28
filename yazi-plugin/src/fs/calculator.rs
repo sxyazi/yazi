@@ -1,4 +1,4 @@
-use mlua::{IntoLuaMulti, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{UserData, UserDataFields, UserDataMethods};
 use yazi_shim::fs::Error;
 
 pub enum SizeCalculator {
@@ -17,16 +17,13 @@ impl UserData for SizeCalculator {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
+		methods.add_async_method_mut("recv", |_, mut me, ()| async move {
 			let next = match &mut *me {
 				Self::Local(c) => c.next().await,
 				Self::Virtual(c) => c.next().await,
 			};
 
-			match next {
-				Ok(value) => value.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
-			}
+			Ok(next.map_err(Error::from))
 		});
 	}
 }
