@@ -7,7 +7,7 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{casefold::Casefold, engine::{self, Engine}, mounts::PARTITIONS, op::FilesOp};
 use yazi_macro::error;
 use yazi_shared::url::{UrlBuf, UrlLike};
-use yazi_vfs::maybe_exists;
+use yazi_vfs::{VfsEntries, apply_dot_hidden, maybe_exists, read_dot_hidden};
 
 use crate::{Reporter, WATCHER, Watchee};
 
@@ -100,7 +100,7 @@ impl Local {
 				let Some(path) = url.as_local() else { continue };
 				let Some((trail, key)) = url.pair() else { continue };
 
-				let file = match engine::local::Local::regular(path).file().await {
+				let mut file = match engine::local::Local::regular(path).file().await {
 					Ok(file) => file,
 					Err(e) if e.kind() == ErrorKind::NotFound => {
 						ops.push(FilesOp::Delete(trail.into(), [key.into()].into()));
@@ -111,6 +111,18 @@ impl Local {
 						continue;
 					}
 				};
+
+				let hidden = read_dot_hidden(&trail.into()).await;
+				apply_dot_hidden(&mut file, hidden.as_ref());
+
+				if key.as_os().ok() == Some(Path::new(".hidden"))
+					&& let Ok(files) = yazi_fs::Entries::from_dir_bulk(&trail.into()).await
+				{
+					ops.push(FilesOp::Full(
+						yazi_fs::file::File::from_dummy(trail, Some(yazi_fs::stat::StatType::Dir)),
+						files,
+					));
+				}
 
 				match Casefold::match_name_case(path).await {
 					Ok(true) => {
