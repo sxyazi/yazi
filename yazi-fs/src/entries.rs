@@ -112,6 +112,8 @@ impl Entries {
 
 	pub fn update_fail(&mut self) {
 		self.ticket = FILES_TICKET.next();
+		self.revision += self.items.is_empty().not() as u64;
+
 		self.hidden.clear();
 		self.items.clear();
 	}

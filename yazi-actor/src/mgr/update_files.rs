@@ -43,7 +43,8 @@ impl Actor for UpdateFiles {
 
 impl UpdateFiles {
 	fn update_tab(cx: &mut Ctx, ops: impl IntoIterator<Item = FilesOp>) -> Result<Data> {
-		let revision = cx.current().entries.revision;
+		let c_revision = cx.current().entries.revision;
+		let p_revision = cx.parent().map(|f| f.entries.revision);
 
 		for op in ops {
 			Self::update_pane(cx, op).ok();
@@ -52,11 +53,13 @@ impl UpdateFiles {
 		act!(mgr:hidden, cx).ok();
 		act!(mgr:sort, cx).ok();
 
-		if revision != cx.current().entries.revision {
+		if c_revision != cx.current().entries.revision {
 			act!(mgr:hover, cx)?;
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx).ok();
 			act!(mgr:update_paged, cx)?;
+		} else if p_revision != cx.parent().map(|f| f.entries.revision) {
+			act!(mgr:hover, cx)?;
 		}
 		succ!();
 	}
@@ -83,7 +86,6 @@ impl UpdateFiles {
 
 		if let Some(f) = tab.parent.as_mut() {
 			render!(f.update_pub(tab.id, op));
-			render!(f.hover(key));
 		}
 
 		if leave {
@@ -111,6 +113,7 @@ impl UpdateFiles {
 		let (folder, _) = cx.tab_mut().history.ensure(url);
 
 		if folder.update_pub(id, op) {
+			act!(mgr:sort, cx).ok();
 			act!(mgr:peek, cx, true)?;
 		}
 		succ!();
