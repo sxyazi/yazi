@@ -1,6 +1,6 @@
 use anyhow::Result;
 use tokio::sync::mpsc;
-use yazi_runner::RUNNER;
+use yazi_runner::Runner;
 
 use crate::{TaskOp, TaskOps, plugin::{PluginIn, PluginInEntry, PluginOutEntry}};
 
@@ -20,7 +20,7 @@ impl Plugin {
 	pub(crate) async fn entry(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
 		let id = task.id;
 
-		RUNNER.entry(task.into()).await?;
+		Runner::entry(task.into()).await?;
 		Ok(self.ops.out(id, PluginOutEntry::Succ))
 	}
 }

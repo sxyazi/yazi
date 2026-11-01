@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use yazi_config::Priority;
 use yazi_macro::error;
-use yazi_runner::RUNNER;
+use yazi_runner::Runner;
 
 use crate::{HIGH, LOW, Loaded, TaskOp, TaskOps, fetch::{FetchIn, FetchInFetch, FetchOutFetch}};
 
@@ -31,7 +31,7 @@ impl Fetch {
 	pub(crate) async fn fetch(&self, task: FetchInFetch) -> Result<(), FetchOutFetch> {
 		let (id, fetcher) = (task.id, task.fetcher.clone());
 
-		for status in RUNNER.fetch(task.into()).await? {
+		for status in Runner::fetch(task.into()).await? {
 			if status.retry {
 				self.loaded.lock().get_mut(&status.hash).map(|x| x.clear(fetcher.idx, fetcher.rev));
 			}

@@ -29,13 +29,12 @@ impl App {
 		}
 	}
 
-	pub(crate) async fn serve() -> Result<()> {
+	pub(crate) async fn serve(mut rx: EventRx) -> Result<()> {
 		let term = Raterm::start()?;
 
 		let mut app = Self::make(term);
 		app.bootstrap()?;
 
-		let mut rx = Event::take();
 		loop {
 			if let Some(t) = app.next_render.take() {
 				select! {

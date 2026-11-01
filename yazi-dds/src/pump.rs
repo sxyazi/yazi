@@ -8,49 +8,51 @@ use yazi_shim::cell::RoCell;
 
 use crate::{Pubsub, ember::{EmberDuplicateItem, EmberMoveItem}};
 
-static DUPLICATE_TX: RoCell<mpsc::UnboundedSender<EmberDuplicateItem>> = RoCell::new();
-static MOVE_TX: RoCell<mpsc::UnboundedSender<EmberMoveItem>> = RoCell::new();
-static TRASH_TX: RoCell<mpsc::UnboundedSender<UrlBuf>> = RoCell::new();
-static DELETE_TX: RoCell<mpsc::UnboundedSender<UrlBuf>> = RoCell::new();
-static DOWNLOAD_TX: RoCell<mpsc::UnboundedSender<UrlBuf>> = RoCell::new();
-static SHUTDOWN_TX: RoCell<mpsc::UnboundedSender<()>> = RoCell::new();
+static PUMP: RoCell<Pump> = RoCell::new();
 
-pub struct Pump;
+pub struct Pump {
+	duplicate_tx: mpsc::UnboundedSender<EmberDuplicateItem>,
+	move_tx:      mpsc::UnboundedSender<EmberMoveItem>,
+	trash_tx:     mpsc::UnboundedSender<UrlBuf>,
+	delete_tx:    mpsc::UnboundedSender<UrlBuf>,
+	download_tx:  mpsc::UnboundedSender<UrlBuf>,
+	shutdown_tx:  mpsc::UnboundedSender<()>,
+}
 
 impl Pump {
 	pub fn push_duplicate<U>(from: U, to: U)
 	where
 		U: Into<UrlBuf>,
 	{
-		DUPLICATE_TX.send(EmberDuplicateItem { from: from.into(), to: to.into() }).ok();
+		PUMP.duplicate_tx.send(EmberDuplicateItem { from: from.into(), to: to.into() }).ok();
 	}
 
 	pub fn push_move<U>(from: U, to: U)
 	where
 		U: Into<UrlBuf>,
 	{
-		MOVE_TX.send(EmberMoveItem { from: from.into(), to: to.into() }).ok();
+		PUMP.move_tx.send(EmberMoveItem { from: from.into(), to: to.into() }).ok();
 	}
 
 	pub fn push_trash<U>(target: U)
 	where
 		U: Into<UrlBuf>,
 	{
-		TRASH_TX.send(target.into()).ok();
+		PUMP.trash_tx.send(target.into()).ok();
 	}
 
 	pub fn push_delete<U>(target: U)
 	where
 		U: Into<UrlBuf>,
 	{
-		DELETE_TX.send(target.into()).ok();
+		PUMP.delete_tx.send(target.into()).ok();
 	}
 
 	pub fn push_download<U>(target: U)
 	where
 		U: Into<UrlBuf>,
 	{
-		DOWNLOAD_TX.send(target.into()).ok();
+		PUMP.download_tx.send(target.into()).ok();
 	}
 
 	pub(super) fn serve() {
@@ -61,12 +63,7 @@ impl Pump {
 		let (download_tx, download_rx) = mpsc::unbounded_channel();
 		let (shutdown_tx, mut shutdown_rx) = mpsc::unbounded_channel();
 
-		DUPLICATE_TX.init(duplicate_tx);
-		MOVE_TX.init(move_tx);
-		TRASH_TX.init(trash_tx);
-		DELETE_TX.init(delete_tx);
-		DOWNLOAD_TX.init(download_tx);
-		SHUTDOWN_TX.init(shutdown_tx);
+		PUMP.init(Self { duplicate_tx, move_tx, trash_tx, delete_tx, download_tx, shutdown_tx });
 
 		tokio::spawn(async move {
 			let duplicate_rx =
@@ -103,7 +100,7 @@ impl Pump {
 	}
 
 	pub(super) async fn shutdown() {
-		SHUTDOWN_TX.send(()).ok();
-		SHUTDOWN_TX.closed().await;
+		PUMP.shutdown_tx.send(()).ok();
+		PUMP.shutdown_tx.closed().await;
 	}
 }

@@ -21,9 +21,15 @@ impl Actor for Close {
 			Self::flush_last_input(cx)?;
 		}
 
+		// On a cache miss, flush_last_input() spawns a query and hides the list,
+		// leaving old matches until the cache is filled.
+		if form.submit && !cx.cmp.visible {
+			succ!();
+		}
+
 		let cmp = &mut cx.cmp;
 		if let Some(item) = cmp.selected().filter(|_| form.submit).cloned() {
-			return act!(input:complete, cx, CompleteOpt { name: item.name, is_dir: item.is_dir, ticket: cmp.ticket });
+			return act!(input:complete, cx, CompleteOpt { item, ticket: cmp.ticket });
 		}
 
 		cmp.caches.clear();

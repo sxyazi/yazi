@@ -1,0 +1,37 @@
+#compdef ya
+
+_ya() {
+	local -a args=("${(@Q)words}") dirs cands
+	local cand prefix="${compstate[quote]}${PREFIX}${compstate[quote]}"
+
+	args[CURRENT]=${(Q)prefix}
+	PREFIX=
+
+	for cand in "${(@f)$(
+		ya cmp zsh --index "$((CURRENT - 1))" -- "${args[@]}" 2>/dev/null
+	)}"; do
+		case $cand in
+			'') ;;
+			*/) dirs+=("${cand%/}") ;;
+			*) cands+=("$cand") ;;
+		esac
+	done
+
+	# Keep directory suffix changes out of other matches.
+	(( $#dirs )) && () {
+		if compset -S '/*'; then
+			_describe -V cands dirs -S ''
+		else
+			_describe -V cands dirs -S / -r /
+		fi
+	}
+
+	(( $#cands )) && _describe -V cands cands
+	return 0
+}
+
+if [[ $funcstack[1] == _ya ]]; then
+	_ya "$@"
+else
+	compdef _ya ya
+fi

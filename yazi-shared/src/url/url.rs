@@ -107,6 +107,9 @@ impl<'a> Url<'a> {
 	pub fn is_regular(self) -> bool { self.auth().is_regular() }
 
 	#[inline]
+	pub fn is_rejoinable(self) -> bool { self.auth().is_rejoinable() }
+
+	#[inline]
 	pub fn is_view(self) -> bool { self.kind().is_view() }
 
 	#[inline]

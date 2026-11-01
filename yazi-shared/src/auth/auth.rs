@@ -42,6 +42,9 @@ impl Auth {
 	pub fn is_remote(&self) -> bool { !self.is_local() }
 
 	#[inline]
+	pub fn is_rejoinable(&self) -> bool { !self.kind.is_hub() }
+
+	#[inline]
 	pub fn physical(&self) -> &Self { self.view.auth().map_or(self, |a| a) }
 
 	#[inline]

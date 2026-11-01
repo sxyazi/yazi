@@ -5,7 +5,7 @@ use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use yazi_shim::SStr;
 
-use crate::{data::{DataAny, DataKey}, id::Id, path::PathBufDyn, strand::{IntoStrand, StrandBuf}, url::{Url, UrlBuf, UrlCow}};
+use crate::{data::{DataAny, DataKey}, id::Id, path::PathBufDyn, strand::StrandBuf, url::{Url, UrlBuf, UrlCow}};
 
 // --- Data
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -239,7 +239,7 @@ impl TryFrom<Data> for StrandBuf {
 	fn try_from(value: Data) -> Result<Self, Self::Error> {
 		Ok(match value {
 			Data::String(s) => s.into_owned().into(),
-			Data::Path(p) => p.into_strand(),
+			Data::Path(p) => p.into(),
 			Data::Bytes(b) => Self::Bytes(b),
 			_ => bail!("cannot convert to StrandBuf"),
 		})
@@ -252,7 +252,7 @@ impl TryFrom<&Data> for StrandBuf {
 	fn try_from(value: &Data) -> Result<Self, Self::Error> {
 		Ok(match value {
 			Data::String(s) => s.to_string().into(),
-			Data::Path(p) => p.into_strand(),
+			Data::Path(p) => p.into(),
 			Data::Bytes(b) => Self::Bytes(b.clone()),
 			_ => bail!("cannot convert to StrandBuf"),
 		})

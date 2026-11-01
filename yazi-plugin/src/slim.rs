@@ -1,7 +1,7 @@
 use mlua::{IntoLua, Lua};
 use yazi_macro::plugin_preset as preset;
 
-pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
+fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	// Base
 	let globals = lua.globals();
 	globals.raw_set("ui", crate::ui::compose())?;
@@ -25,4 +25,10 @@ pub fn slim_lua(lua: &Lua) -> mlua::Result<()> {
 	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
 
 	Ok(())
+}
+
+inventory::submit! {
+	yazi_runner::RunnerInventory {
+		setup: slim_lua,
+	}
 }

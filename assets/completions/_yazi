@@ -1,0 +1,37 @@
+#compdef yazi
+
+_yazi() {
+	local -a args=("${(@Q)words}") dirs cands
+	local cand prefix="${compstate[quote]}${PREFIX}${compstate[quote]}"
+
+	args[CURRENT]=${(Q)prefix}
+	PREFIX=
+
+	for cand in "${(@f)$(
+		yazi --completion=zsh --index "$((CURRENT - 1))" -- "${args[@]}" 2>/dev/null
+	)}"; do
+		case $cand in
+			'') ;;
+			*/) dirs+=("${cand%/}") ;;
+			*) cands+=("$cand") ;;
+		esac
+	done
+
+	# Keep directory suffix changes out of other matches.
+	(( $#dirs )) && () {
+		if compset -S '/*'; then
+			_describe -V cands dirs -S ''
+		else
+			_describe -V cands dirs -S / -r /
+		fi
+	}
+
+	(( $#cands )) && _describe -V cands cands
+	return 0
+}
+
+if [[ $funcstack[1] == _yazi ]]; then
+	_yazi "$@"
+else
+	compdef _yazi yazi
+fi

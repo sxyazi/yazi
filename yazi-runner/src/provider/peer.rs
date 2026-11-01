@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use mlua::{IntoLua, Lua, Value};
-use yazi_config::vfs::{ServiceLua, ServiceSftp, Vfs};
+use yazi_config::{VFS, vfs::{ServiceLua, ServiceSftp}};
 use yazi_shared::{auth::AuthKind, url::Url};
 
 pub enum ProvidePeer {
@@ -14,9 +14,9 @@ impl ProvidePeer {
 	pub fn new(url: Url<'_>) -> std::io::Result<Self> {
 		match url.kind() {
 			AuthKind::Regular => Ok(Self::Local),
-			AuthKind::Sftp => Vfs::service(url.auth()).map(Self::Sftp),
+			AuthKind::Sftp => VFS.service(url.auth()).map(Self::Sftp),
 			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope | AuthKind::View => {
-				Vfs::service(url.auth()).map(Self::Lua)
+				VFS.service(url.auth()).map(Self::Lua)
 			}
 		}
 	}

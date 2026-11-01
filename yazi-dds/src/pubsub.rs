@@ -1,17 +1,20 @@
 use anyhow::Result;
+use foldhash::fast::FixedState;
 use hashbrown::HashMap;
 use mlua::Function;
 use parking_lot::RwLock;
-use yazi_boot::{ARGS, ID};
+use yazi_boot::BOOT;
 use yazi_fs::{FolderStage, file::FileCov, op::FilesOp};
 use yazi_shared::{id::Id, url::{Url, UrlBuf}};
 use yazi_shim::{cell::RoCell, indexmap::IndexSet};
 
 use crate::{Client, PEERS, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};
 
-pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
+pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>, FixedState>>> =
+	RoCell::new_init(RwLock::new(HashMap::with_hasher(FixedState::with_seed(0))));
 
-pub static REMOTE: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
+pub static REMOTE: RoCell<RwLock<HashMap<String, HashMap<String, Function>, FixedState>>> =
+	RoCell::new_init(RwLock::new(HashMap::with_hasher(FixedState::with_seed(0))));
 
 macro_rules! sub {
 	($var:ident) => {
@@ -55,8 +58,8 @@ macro_rules! pub_after {
 				use crate::ember::[<Ember $name:camel>] as B;
 
 				let n = if $static { concat!("@", stringify!($name)) } else { stringify!($name) };
-				if ARGS.local_events.contains(n) {
-					B::borrowed($($borrowed),*).with_receiver(*ID).flush()?;
+				if BOOT.local_events.contains(n) {
+					B::borrowed($($borrowed),*).with_receiver(BOOT.id).flush()?;
 				}
 				if ($static && Self::any_remote_own(n)) || (!$static && PEERS.read().values().any(|p| p.able(n))) {
 					Client::push(B::borrowed($($borrowed),*))?;
@@ -98,14 +101,14 @@ impl Pubsub {
 	}
 
 	pub fn r#pub(body: Ember<'static>) -> Result<()> {
-		let payload = body.with_receiver(*ID);
+		let payload = body.with_receiver(BOOT.id);
 		payload.try_flush()?;
 		payload.emit();
 		Ok(())
 	}
 
 	pub fn pub_to(receiver: Id, body: Ember<'static>) -> Result<()> {
-		if receiver == *ID {
+		if receiver == BOOT.id {
 			return Self::r#pub(body);
 		}
 
@@ -120,7 +123,7 @@ impl Pubsub {
 
 	pub(crate) fn pub_inner_hi() -> bool {
 		let abilities = REMOTE.read().keys().cloned().collect();
-		let abilities = ARGS.remote_events.union(&abilities).map(AsRef::as_ref);
+		let abilities = BOOT.remote_events.union(&abilities).map(AsRef::as_ref);
 
 		// FIXME: handle error
 		Client::push(EmberHi::borrowed(abilities)).ok();
@@ -131,8 +134,8 @@ impl Pubsub {
 	where
 		I: Iterator<Item = (Url<'a>, Url<'a>)> + Clone,
 	{
-		if ARGS.local_events.contains("bulk-rename") {
-			EmberBulkRename::borrowed(changes.clone()).with_receiver(*ID).flush()?;
+		if BOOT.local_events.contains("bulk-rename") {
+			EmberBulkRename::borrowed(changes.clone()).with_receiver(BOOT.id).flush()?;
 		}
 		if PEERS.read().values().any(|p| p.able("bulk-rename")) {
 			Client::push(EmberBulkRename::borrowed(changes.clone()))?;
@@ -146,7 +149,7 @@ impl Pubsub {
 	fn any_remote_own(kind: &str) -> bool {
 		REMOTE.read().contains_key(kind)  // Own remote abilities
 			|| PEERS.read().values().any(|p| p.able(kind))  // Remote peers' abilities
-			|| ARGS.remote_events.contains(kind) // Own abilities from the command-line argument
+			|| BOOT.remote_events.contains(kind) // Own abilities from the command-line argument
 	}
 }
 

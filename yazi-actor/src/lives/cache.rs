@@ -1,5 +1,6 @@
-use std::{mem::MaybeUninit, ops::Range};
+use std::ops::Range;
 
+use foldhash::fast::FixedState;
 use hashbrown::{HashMap, hash_map::Entry};
 use mlua::{AnyUserData, UserData};
 use yazi_plugin::LUA;
@@ -7,17 +8,15 @@ use yazi_plugin::LUA;
 use super::{File, Folder, MutCell, PtrCell, Tab};
 use crate::mgr::MAX_TABS;
 
-pub(super) static TABS: MutCell<MaybeUninit<[TabCache; MAX_TABS]>> =
-	MutCell::new(MaybeUninit::uninit());
+pub(super) static TABS: MutCell<[TabCache; MAX_TABS]> =
+	MutCell::new([const { TabCache::new() }; MAX_TABS]);
 
-#[derive(Default)]
 pub(super) struct TabCache {
 	ud:       Option<AnyUserData>,
 	panes:    [PaneCache; 3],
-	fallback: HashMap<PtrCell<yazi_fs::file::File>, AnyUserData>,
+	fallback: HashMap<PtrCell<yazi_fs::file::File>, AnyUserData, FixedState>,
 }
 
-#[derive(Default)]
 struct PaneCache {
 	folder: Option<PtrCell<yazi_core::tab::Folder>>,
 	window: Range<usize>,
@@ -25,9 +24,15 @@ struct PaneCache {
 }
 
 impl TabCache {
-	pub(super) fn get(idx: usize) -> &'static mut Self {
-		unsafe { &mut (*TABS.get()).assume_init_mut()[idx] }
+	const fn new() -> Self {
+		Self {
+			ud:       None,
+			panes:    [const { PaneCache { folder: None, window: 0..0, files: Vec::new() } }; 3],
+			fallback: HashMap::with_hasher(FixedState::with_seed(0)),
+		}
 	}
+
+	pub(super) fn get(idx: usize) -> &'static mut Self { unsafe { &mut (*TABS.get())[idx] } }
 
 	pub(super) fn tab(&mut self, tab: Tab) -> mlua::Result<AnyUserData> {
 		if self.ud.is_none() {

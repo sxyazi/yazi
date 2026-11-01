@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use futures::executor::block_on;
 use mlua::{Lua, state::GcMode};
 use yazi_binding::{runtime::Runtime, runtime_mut};
 use yazi_fs::Xdg;
@@ -9,12 +8,12 @@ use yazi_shim::cell::RoCell;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
 
-pub(super) fn standard_lua() -> Result<Lua> {
+pub(super) async fn standard_lua() -> Result<Lua> {
 	let lua = Lua::new();
 	lua.gc_set_mode(GcMode::Generational(Default::default()));
 
 	stage_1(&lua).context("Lua setup failed")?;
-	stage_2(&lua).context("Lua runtime failed")?;
+	stage_2(&lua).await.context("Lua runtime failed")?;
 
 	Ok(lua)
 }
@@ -69,13 +68,13 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	Ok(())
 }
 
-fn stage_2(lua: &Lua) -> mlua::Result<()> {
+async fn stage_2(lua: &Lua) -> mlua::Result<()> {
 	lua.load(preset!("setup")).set_name("setup.lua").exec()?;
 	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
 	if let Ok(b) = std::fs::read(Xdg::config_dir().join("init.lua")) {
 		runtime_mut!(lua)?.enter_blocking("init", Scope::default());
-		let result = block_on(lua.load(b).set_name("init.lua").exec_async());
+		let result = lua.load(b).set_name("init.lua").exec_async().await;
 
 		runtime_mut!(lua)?.leave()?;
 		result?;

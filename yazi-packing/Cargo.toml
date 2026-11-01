@@ -24,6 +24,6 @@ assets                    = [
 	[ "target/release/ya", "usr/bin/", "755" ],
 	[ "target/release/yazi", "usr/bin/", "755" ],
 	[ "../README.md",  "usr/share/doc/yazi/README", "644" ],
-	[ "../yazi-cli/completions/ya.bash", "usr/share/bash-completion/completions/ya", "644" ],
-	[ "../yazi-boot/completions/yazi.bash", "usr/share/bash-completion/completions/yazi", "644" ],
+	[ "../assets/completions/ya.bash", "usr/share/bash-completion/completions/ya", "644" ],
+	[ "../assets/completions/yazi.bash", "usr/share/bash-completion/completions/yazi", "644" ],
 ]

@@ -1,4 +1,10 @@
 fn main() {
+	println!("cargo:rerun-if-changed=build.rs");
+
+	aliases();
+}
+
+fn aliases() {
 	cfg_aliases::cfg_aliases! {
 		trash_unsupported: {
 			any(target_os = "android", target_os = "ios")

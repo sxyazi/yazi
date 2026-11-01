@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::builder::{MapValueParser, OsStringValueParser, TypedValueParser, ValueParserFactory};
 use yazi_shim::wtf8::FromWtf8Vec;
 
-use crate::{path::PathDyn, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}};
+use crate::{path::{DynPath, PathBufDyn, PathDyn}, strand::{AsStrand, Strand, StrandCow, StrandError, StrandKind}};
 
 // --- StrandBuf
 #[derive(Clone, Debug, Eq)]
@@ -41,6 +41,19 @@ impl From<PathDyn<'_>> for StrandBuf {
 			PathDyn::Unix(p) => Self::Bytes(p.as_bytes().to_owned()),
 		}
 	}
+}
+
+impl From<PathBufDyn> for StrandBuf {
+	fn from(value: PathBufDyn) -> Self {
+		match value {
+			PathBufDyn::Os(p) => Self::Os(p.into_os_string()),
+			PathBufDyn::Unix(p) => Self::Bytes(p.into_vec()),
+		}
+	}
+}
+
+impl From<&PathBufDyn> for StrandBuf {
+	fn from(value: &PathBufDyn) -> Self { value.dyn_path().into() }
 }
 
 impl From<StrandCow<'_>> for StrandBuf {
@@ -85,7 +98,7 @@ impl StrandBuf {
 		}
 	}
 
-	pub(crate) fn into_string_lossy(self) -> String {
+	pub fn into_string_lossy(self) -> String {
 		match self {
 			Self::Os(s) => match s.to_string_lossy() {
 				Cow::Borrowed(_) => unsafe { String::from_utf8_unchecked(s.into_encoded_bytes()) },

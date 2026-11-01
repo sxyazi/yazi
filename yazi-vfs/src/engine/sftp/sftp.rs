@@ -1,7 +1,8 @@
 use std::{io, sync::Arc};
 
 use deadpool::managed::PoolError;
-use yazi_config::vfs::{ServiceSftp, Vfs};
+use typed_path::UnixPath;
+use yazi_config::{VFS, vfs::ServiceSftp};
 use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileBuilder, FileHolder, Transit}, file::File, remover::Removal};
 use yazi_sftp::fs::Attrs;
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
@@ -11,7 +12,7 @@ use crate::engine::{ProgressiveCopier, sftp::Conn};
 
 pub struct Sftp<'a> {
 	url:             Url<'a>,
-	pub(super) path: &'a typed_path::UnixPath,
+	pub(super) path: &'a UnixPath,
 
 	config: Arc<ServiceSftp>,
 	pool:   deadpool::managed::Pool<Conn>,
@@ -138,9 +139,11 @@ impl<'a> Engine for Sftp<'a> {
 			return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("Not a SFTP URL: {url}")));
 		};
 
-		let config: Arc<ServiceSftp> = Vfs::service(auth)?;
+		// OpenSSH rejects an empty OPENDIR path
+		let path = if loc.is_empty() { UnixPath::new(".") } else { loc.as_inner() };
+		let config: Arc<ServiceSftp> = VFS.service(auth)?;
 		let pool = Conn::pool(config.clone());
-		Ok(Self::Me { url, path: loc.as_inner(), config, pool })
+		Ok(Self::Me { url, path, config, pool })
 	}
 
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {

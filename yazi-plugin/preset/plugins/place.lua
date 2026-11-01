@@ -95,7 +95,11 @@ function M:provide(job)
 		end
 	elseif op == "ReadDir" and not job.url.name then
 		return ya.co(function()
-			for _, p in ipairs(fs.partitions()) do
+			local partitions, err = fs.partitions()
+			if not partitions then
+				return nil, err
+			end
+			for _, p in ipairs(partitions) do
 				local drive = p.dist and tostring(p.dist):match("^([A-Za-z]:)[/\\]$")
 				if drive then
 					coroutine.yield(file(job.url:join(drive:upper())))

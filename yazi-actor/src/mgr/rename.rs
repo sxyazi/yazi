@@ -116,8 +116,8 @@ impl Rename {
 
 		let ext = url.ext();
 		match by {
-			"stem" => ext.map_or_else(String::new, |s| format!(".{}", s.to_string_lossy())),
-			"ext" if ext.is_some() => format!("{}.", url.stem().unwrap().to_string_lossy()),
+			"stem" => ext.map_or_else(String::new, |s| format!(".{}", s.display())),
+			"ext" if ext.is_some() => format!("{}.", url.stem().unwrap().display()),
 			"dot_ext" if ext.is_some() => url.stem().unwrap().to_string_lossy().into_owned(),
 			_ => url.name().unwrap_or_default().to_string_lossy().into_owned(),
 		}

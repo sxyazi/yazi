@@ -1,5 +1,6 @@
 use std::{ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
+use foldhash::fast::FixedState;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use yazi_shared::url::Url;
@@ -7,10 +8,10 @@ use yazi_shared::url::Url;
 use crate::Watched;
 
 #[derive(Default)]
-pub struct Linked(HashMap<PathBuf, PathBuf> /* from ==> to */);
+pub struct Linked(HashMap<PathBuf, PathBuf, FixedState> /* from ==> to */);
 
 impl Deref for Linked {
-	type Target = HashMap<PathBuf, PathBuf>;
+	type Target = HashMap<PathBuf, PathBuf, FixedState>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -20,6 +21,8 @@ impl DerefMut for Linked {
 }
 
 impl Linked {
+	pub(super) const fn new() -> Self { Self(HashMap::with_hasher(FixedState::with_seed(0))) }
+
 	pub fn from_dir<'a, 'b, U>(&'a self, url: U) -> impl Iterator<Item = &'a Path> + 'b
 	where
 		'a: 'b,

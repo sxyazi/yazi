@@ -75,7 +75,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       RUSTC_WRAPPER: sccache
-      YAZI_GEN_COMPLETIONS: true
       CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER: lld-link.exe
       CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER: lld-link.exe
     steps:

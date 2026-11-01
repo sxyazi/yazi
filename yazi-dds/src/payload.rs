@@ -2,7 +2,7 @@ use std::{fmt::Display, io::Write, str::FromStr};
 
 use anyhow::{Result, anyhow};
 use mlua::{IntoLua, Lua, Value};
-use yazi_boot::{ARGS, ID};
+use yazi_boot::BOOT;
 use yazi_macro::{emit, impl_data_any, relay};
 use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 
@@ -18,7 +18,7 @@ pub struct Payload<'a> {
 impl_data_any!(Payload<'static>);
 
 impl<'a> Payload<'a> {
-	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id::ZERO, sender: *ID, body } }
+	pub fn new(body: Ember<'a>) -> Self { Self { receiver: Id::ZERO, sender: BOOT.id, body } }
 
 	pub fn tab(&self) -> Id {
 		if self.receiver != 0 && self.receiver == self.sender { self.body.tab() } else { Id::ZERO }
@@ -31,9 +31,9 @@ impl<'a> Payload<'a> {
 
 	pub(super) fn try_flush(&self) -> Result<()> {
 		let b = if self.receiver == 0 {
-			ARGS.remote_events.contains(self.body.kind())
+			BOOT.remote_events.contains(self.body.kind())
 		} else if let Ember::Custom(b) = &self.body {
-			ARGS.local_events.contains(&b.kind)
+			BOOT.local_events.contains(&b.kind)
 		} else {
 			false
 		};

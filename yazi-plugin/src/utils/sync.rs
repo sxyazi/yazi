@@ -82,7 +82,7 @@ impl Utils {
 		lua.create_async_function(|lua, name: LuaString| async move {
 			match LOADER.ensure(&name.to_str()?, |c| c.sync_peek).await {
 				Ok(sync_peek) => lua.create_table_from([("sync_peek", sync_peek)])?.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		})
 	}

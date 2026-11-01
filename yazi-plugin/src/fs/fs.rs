@@ -137,6 +137,10 @@ fn op(lua: &Lua) -> mlua::Result<Function> {
 
 fn partitions(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, ()| async move {
+		if let Err(e) = yazi_fs::mounts::Partitions::ensure().await {
+			return Ok(Err(Error::from(e)));
+		}
+
 		PARTITIONS
 			.read()
 			.iter()
@@ -153,6 +157,7 @@ fn partitions(lua: &Lua) -> mlua::Result<Function> {
 				])
 			})
 			.collect::<mlua::Result<Vec<Table>>>()
+			.map(Ok)
 	})
 }
 

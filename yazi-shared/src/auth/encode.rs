@@ -3,7 +3,7 @@ use std::{fmt, ops::Deref};
 use super::{Auth, AuthKind};
 
 impl Auth {
-	pub(crate) fn encode(&self, tilde: bool) -> Encode<'_> { Encode(self, tilde) }
+	pub fn encode(&self, tilde: bool) -> Encode<'_> { Encode(self, tilde) }
 }
 
 // --- Encode

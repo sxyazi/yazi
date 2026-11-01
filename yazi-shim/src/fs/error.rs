@@ -41,6 +41,10 @@ impl From<io::ErrorKind> for Error {
 	fn from(kind: io::ErrorKind) -> Self { Self::Kind(kind) }
 }
 
+impl From<anyhow::Error> for Error {
+	fn from(err: anyhow::Error) -> Self { Self::other(err.to_string()) }
+}
+
 impl From<&Error> for io::Error {
 	fn from(value: &Error) -> Self {
 		match value {

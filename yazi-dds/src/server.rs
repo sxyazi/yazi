@@ -1,16 +1,17 @@
 use std::{str::FromStr, time::Duration};
 
 use anyhow::Result;
+use foldhash::fast::FixedState;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
 use yazi_macro::try_format;
 use yazi_shared::id::Id;
-use yazi_shim::cell::RoCell;
 
 use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, ember::{Ember, EmberBye, EmberHey}};
 
-pub(super) static CLIENTS: RoCell<RwLock<HashMap<Id, Client>>> = RoCell::new();
+pub(super) static CLIENTS: RwLock<HashMap<Id, Client, FixedState>> =
+	RwLock::new(HashMap::with_hasher(FixedState::with_seed(0)));
 
 pub(super) struct Server;
 
@@ -110,7 +111,7 @@ impl Server {
 		Self::handle_hey(&clients);
 	}
 
-	fn handle_hey(clients: &HashMap<Id, Client>) {
+	fn handle_hey(clients: &HashMap<Id, Client, FixedState>) {
 		let payload = Payload::new(EmberHey::owned(
 			clients.values().map(|c| (c.id, Peer::new(&c.abilities))).collect(),
 		));

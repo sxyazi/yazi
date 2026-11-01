@@ -3,7 +3,7 @@ use std::{io, ops::Deref, sync::Arc};
 use mlua::FromLua;
 use tokio::{sync::mpsc, task::JoinHandle};
 use yazi_config::vfs::ServiceLua;
-use yazi_runner::{RUNNER, provider::{Handle, ProvideJob, ProvideOp, ProvideResult}};
+use yazi_runner::{Runner, provider::{Handle, ProvideJob, ProvideOp, ProvideResult}};
 use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 
 pub struct FileHandle {
@@ -24,7 +24,7 @@ impl Drop for FileHandle {
 		let job = ProvideJob::new(&self.service, op);
 
 		tokio::spawn(async move {
-			let _ = RUNNER.provide(job).await.ok();
+			let _ = Runner::provide(job).await.ok();
 		});
 	}
 }
@@ -47,7 +47,7 @@ impl FileHandle {
 	where
 		T: FromLua + Send + 'static,
 	{
-		RUNNER.provide(ProvideJob::new(&self.service, op).with_resource(self))
+		Runner::provide(ProvideJob::new(&self.service, op).with_resource(self))
 	}
 
 	pub(super) fn provide_stream<T>(
@@ -60,6 +60,6 @@ impl FileHandle {
 	{
 		let job = ProvideJob::new(&self.service, op).with_resource(self);
 
-		tokio::spawn(RUNNER.provide_stream(job, tx))
+		tokio::spawn(Runner::provide_stream(job, tx))
 	}
 }

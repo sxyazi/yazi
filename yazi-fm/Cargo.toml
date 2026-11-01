@@ -27,10 +27,10 @@ yazi-dds       = { path = "../yazi-dds", version = "26.9.1" }
 yazi-emulator  = { path = "../yazi-emulator", version = "26.9.1" }
 yazi-ffi       = { path = "../yazi-ffi", version = "26.9.1" }
 yazi-fs        = { path = "../yazi-fs", version = "26.9.1" }
+yazi-headless  = { path = "../yazi-headless", version = "26.9.1" }
 yazi-macro     = { path = "../yazi-macro", version = "26.9.1" }
 yazi-plugin    = { path = "../yazi-plugin", version = "26.9.1" }
 yazi-proxy     = { path = "../yazi-proxy", version = "26.9.1" }
-yazi-runner    = { path = "../yazi-runner", version = "26.9.1" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "26.9.1" }
 yazi-shared    = { path = "../yazi-shared", version = "26.9.1" }
 yazi-shim      = { path = "../yazi-shim", version = "26.9.1" }
@@ -44,6 +44,8 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.9.1" }
 
 # External dependencies
 anyhow             = { workspace = true }
+clap               = { workspace = true }
+clap_complete      = { workspace = true }
 log                = { workspace = true }
 mlua               = { workspace = true }
 ratatui-core       = { workspace = true }

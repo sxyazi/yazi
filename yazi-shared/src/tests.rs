@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use crate::auth::{AuthArc, AuthInventory, AuthKind};
 
 pub fn init_tests() {
-	static INIT: OnceLock<()> = OnceLock::new();
+	static INIT: OnceLock<crate::event::EventRx> = OnceLock::new();
 
 	INIT.get_or_init(crate::init);
 }

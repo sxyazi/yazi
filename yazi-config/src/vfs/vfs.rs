@@ -18,11 +18,13 @@ pub struct Vfs {
 }
 
 impl Vfs {
-	pub fn service<P>(auth: &Auth) -> io::Result<P>
+	pub fn matcher(&self) -> VfsMatcher { VfsMatcher::from(&self.authorities) }
+
+	pub fn service<P>(&self, auth: &Auth) -> io::Result<P>
 	where
 		P: TryFrom<Service, Error = &'static str>,
 	{
-		let Some(value) = VFS.authorities.service(&auth.scheme, &auth.domain) else {
+		let Some(value) = self.authorities.service(&auth.scheme, &auth.domain) else {
 			return Err(io::Error::other(format!("No such VFS service: {auth}")));
 		};
 
@@ -78,7 +80,7 @@ impl UserData for &'static Vfs {
 		});
 
 		methods.add_meta_method(MetaMethod::Pairs, |lua, &me, ()| {
-			let mut matcher = VfsMatcher::from(&me.authorities);
+			let mut matcher = me.matcher();
 			let iter = lua.create_function_mut(move |lua, ()| {
 				if let Some((scheme, domains)) = matcher.next() {
 					(scheme, domains).into_lua_multi(lua)

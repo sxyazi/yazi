@@ -9,11 +9,11 @@ use crate::{Runner, evaluator::EvaluateError};
 
 impl Runner {
 	/// The caller must provide a scope owned by this blocking VM.
-	pub fn evaluate(&'static self, seed: RuntimeSeed, bytes: Vec<u8>, args: Vec<Data>) -> Async {
+	pub fn evaluate(seed: RuntimeSeed, bytes: Vec<u8>, args: Vec<Data>) -> Async {
 		Async::AsyncBlocking(AsyncHandle::spawn(seed.name.clone(), async move {
 			let guard = guard(seed.scope.clone(), |scope| scope.cancel());
 			let result =
-				AbortOnDropHandle::new(task::spawn_blocking(move || self.evaluate_do(seed, bytes, args)))
+				AbortOnDropHandle::new(task::spawn_blocking(move || Self::evaluate_do(seed, bytes, args)))
 					.await;
 
 			ScopeGuard::into_inner(guard);
@@ -26,15 +26,10 @@ impl Runner {
 		}))
 	}
 
-	fn evaluate_do(
-		&self,
-		seed: RuntimeSeed,
-		bytes: Vec<u8>,
-		args: Vec<Data>,
-	) -> mlua::Result<Vec<Data>> {
+	fn evaluate_do(seed: RuntimeSeed, bytes: Vec<u8>, args: Vec<Data>) -> mlua::Result<Vec<Data>> {
 		let RuntimeSeed { name, scope } = seed.clone();
 
-		let lua = self.spawn_with(seed)?;
+		let lua = Self::spawn_with(seed)?;
 		scope.set_hook(&lua, || EvaluateError::Cancelled.into_lua_err())?;
 
 		let f = lua.load(bytes).set_name(format!("={name}:async-blocking")).into_function()?;

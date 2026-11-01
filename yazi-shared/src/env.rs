@@ -5,8 +5,17 @@ pub fn env_exists(name: &str) -> bool { std::env::var_os(name).is_some_and(|s| !
 pub fn in_wsl() -> bool {
 	#[cfg(target_os = "linux")]
 	{
-		std::fs::read("/proc/sys/kernel/osrelease")
-			.is_ok_and(|b| b.windows(11).any(|w| w == b"-microsoft-"))
+		use yazi_shim::cell::SyncCell;
+
+		static CACHE: SyncCell<Option<bool>> = SyncCell::new(None);
+		if let Some(value) = CACHE.get() {
+			return value;
+		}
+
+		let value = std::fs::read("/proc/sys/kernel/osrelease")
+			.is_ok_and(|b| b.windows(11).any(|w| w == b"-microsoft-"));
+		CACHE.set(Some(value));
+		value
 	}
 	#[cfg(not(target_os = "linux"))]
 	{

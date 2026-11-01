@@ -1,31 +1,17 @@
-yazi_macro::mod_pub!(cache dds env package shared);
+yazi_macro::mod_pub!(cache cmp dds env package shared);
 
 yazi_macro::mod_flat!(args);
 
 use clap::Parser;
 use yazi_macro::{errln, outln};
+use yazi_shim::anyhow::ErrorExt;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-	yazi_shim::init()?;
-	yazi_shared::init();
-	yazi_fs::init();
+	let _events = yazi_headless::init_common()?;
 
-	match run().await {
-		Ok(()) => Ok(()),
-		Err(e) => {
-			for cause in e.chain() {
-				if let Some(ioerr) = cause.downcast_ref::<std::io::Error>()
-					&& ioerr.kind() == std::io::ErrorKind::BrokenPipe
-				{
-					return Ok(());
-				}
-			}
-
-			errln!("{e:#}").ok();
-			Err(e)
-		}
-	}
+	let Err(e) = run().await else { return Ok(()) };
+	if e.is_io_error(std::io::ErrorKind::BrokenPipe) { Ok(()) } else { Err(e) }
 }
 
 async fn run() -> anyhow::Result<()> {
@@ -34,7 +20,7 @@ async fn run() -> anyhow::Result<()> {
 	match Args::parse().command {
 		Command::Emit(cmd) => {
 			yazi_boot::init_default();
-			yazi_dds::init();
+			let _dds = yazi_dds::init();
 			if let Err(e) = dds::Dds::shot("dds-emit", CommandPub::receiver()?, &cmd.body()?).await {
 				errln!("Cannot emit command: {e}")?;
 				std::process::exit(1);
@@ -43,7 +29,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::EmitTo(cmd) => {
 			yazi_boot::init_default();
-			yazi_dds::init();
+			let _dds = yazi_dds::init();
 			if let Err(e) = dds::Dds::shot("dds-emit", cmd.receiver, &cmd.body()?).await {
 				errln!("Cannot emit command: {e}")?;
 				std::process::exit(1);
@@ -52,7 +38,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::Exec(cmd) => {
 			yazi_boot::init_default();
-			yazi_dds::init();
+			let _dds = yazi_dds::init();
 
 			match dds::Dds::exec(cmd).await {
 				Ok(data) => outln!("{}", serde_json::to_string(&data)?)?,
@@ -78,7 +64,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::Pub(cmd) => {
 			yazi_boot::init_default();
-			yazi_dds::init();
+			let _dds = yazi_dds::init();
 			if let Err(e) = dds::Dds::shot(&cmd.kind, CommandPub::receiver()?, &cmd.body()?).await {
 				errln!("Cannot send message: {e}")?;
 				std::process::exit(1);
@@ -87,7 +73,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::PubTo(cmd) => {
 			yazi_boot::init_default();
-			yazi_dds::init();
+			let _dds = yazi_dds::init();
 			if let Err(e) = dds::Dds::shot(&cmd.kind, cmd.receiver, &cmd.body()?).await {
 				errln!("Cannot send message: {e}")?;
 				std::process::exit(1);
@@ -96,7 +82,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::Sub(cmd) => {
 			yazi_boot::init_default();
-			yazi_dds::init();
+			let _dds = yazi_dds::init();
 			dds::Dds::draw(cmd.kinds.split(',').collect()).await?;
 
 			tokio::signal::ctrl_c().await?;
@@ -119,6 +105,8 @@ async fn run() -> anyhow::Result<()> {
 			yazi_config::setup()?;
 			outln!("{}", env::Env::print().await?)?;
 		}
+
+		Command::Cmp(cmp) => cmp.complete()?,
 	}
 
 	Ok(())

@@ -1,7 +1,6 @@
 use parking_lot::Mutex;
-use yazi_shim::cell::RoCell;
 
-pub static CLIPBOARD: RoCell<Clipboard> = RoCell::new();
+pub static CLIPBOARD: Clipboard = Clipboard { content: Mutex::new(Vec::new()) };
 
 #[derive(Default)]
 pub struct Clipboard {

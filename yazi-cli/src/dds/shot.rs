@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::{Result, bail};
 use hashbrown::HashMap;
 use tokio::io::AsyncWriteExt;
-use yazi_boot::ID;
+use yazi_boot::BOOT;
 use yazi_dds::{Payload, Peer, Stream, ember::{Ember, EmberBye, EmberHi}};
 use yazi_macro::try_format;
 use yazi_shared::id::Id;
@@ -16,9 +16,10 @@ impl Dds {
 		Ember::validate(kind)?;
 
 		let payload = try_format!(
-			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
+			"{}\n{kind},{receiver},{id},{body}\n{}\n",
 			Payload::new(EmberHi::borrowed([])),
-			Payload::new(EmberBye::borrowed())
+			Payload::new(EmberBye::borrowed()),
+			id = BOOT.id,
 		)?;
 
 		let (mut lines, mut writer) = Stream::connect().await?;

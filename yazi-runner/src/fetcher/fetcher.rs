@@ -7,7 +7,7 @@ use yazi_macro::error;
 use crate::{CoIter, Runner, fetcher::{FetchError, FetchJob, FetchStatus}, loader::LOADER};
 
 impl Runner {
-	pub async fn fetch(&'static self, job: FetchJob) -> mlua::Result<Vec<FetchStatus>> {
+	pub async fn fetch(job: FetchJob) -> mlua::Result<Vec<FetchStatus>> {
 		if job.files.is_empty() {
 			return Ok(Default::default());
 		}
@@ -19,7 +19,7 @@ impl Runner {
 				select! {
 					biased;
 					_ = scope.cancelled() => Err(FetchError::Cancelled.into_lua_err()),
-					r = self.fetch_do(job) => r,
+					r = Self::fetch_do(job) => r,
 				}
 			})
 		})
@@ -27,12 +27,12 @@ impl Runner {
 		.into_lua_err()?
 	}
 
-	async fn fetch_do(&self, job: FetchJob) -> mlua::Result<Vec<FetchStatus>> {
+	async fn fetch_do(job: FetchJob) -> mlua::Result<Vec<FetchStatus>> {
 		let fetcher = job.fetcher.clone();
 		let mut pending: HashSet<_> = job.files.hashes().collect();
 		let mut statuses = Vec::with_capacity(pending.len());
 
-		let lua = self.spawn(&job)?;
+		let lua = Self::spawn(&job)?;
 
 		job.scope.set_hook(&lua, || FetchError::Cancelled.into_lua_err())?;
 

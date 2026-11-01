@@ -1,21 +1,22 @@
 use std::{mem, str::FromStr};
 
 use anyhow::Result;
+use foldhash::fast::FixedState;
 use hashbrown::{HashMap, HashSet};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
-use yazi_boot::ID;
+use yazi_boot::BOOT;
 use yazi_macro::{error, try_format};
 use yazi_shared::id::Id;
 use yazi_shim::cell::RoCell;
 
 use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberHey}};
 
-pub(super) static PEERS: RoCell<RwLock<HashMap<Id, Peer>>> = RoCell::new();
+pub(super) static PEERS: RwLock<HashMap<Id, Peer, FixedState>> =
+	RwLock::new(HashMap::with_hasher(FixedState::with_seed(0)));
 
 pub(super) static QUEUE_TX: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();
-pub(super) static QUEUE_RX: RoCell<mpsc::UnboundedReceiver<String>> = RoCell::new();
 
 #[derive(Debug)]
 pub struct Client {
@@ -31,8 +32,7 @@ pub struct Peer {
 
 impl Client {
 	/// Connect to an existing server or start a new one.
-	pub(super) fn serve() {
-		let mut rx = QUEUE_RX.drop();
+	pub(super) fn serve(mut rx: mpsc::UnboundedReceiver<String>) {
 		while rx.try_recv().is_ok() {}
 
 		tokio::spawn(async move {
@@ -88,7 +88,7 @@ impl Client {
 		loop {
 			if let Ok(conn) = Stream::connect().await {
 				Pubsub::pub_inner_hi();
-				yazi_macro::debug!("Connected to existing DDS server on instance {ID}");
+				yazi_macro::debug!("Connected to existing DDS server on instance {}", BOOT.id);
 				return conn;
 			}
 
@@ -97,11 +97,12 @@ impl Client {
 				Ok(h) => {
 					*server = Some(h);
 					super::STATE.load_or_create().await;
-					yazi_macro::debug!("Started new DDS server on instance {ID}");
+					yazi_macro::debug!("Started new DDS server on instance {}", BOOT.id);
 				}
 				Err(e) => {
 					yazi_macro::error!(
-						"Could not connect to or start a new DDS server on instance {ID}: {e}"
+						"Could not connect to or start a new DDS server on instance {}: {e}",
+						BOOT.id
 					);
 				}
 			}
@@ -124,7 +125,7 @@ impl Client {
 		*PEERS.write() = body
 			.peers
 			.iter()
-			.filter(|&(id, _)| *id != *ID)
+			.filter(|&(id, _)| *id != BOOT.id)
 			.map(|(&id, peer)| (id, peer.clone()))
 			.collect();
 	}

@@ -1,7 +1,7 @@
 #[cfg(unix)]
 use mlua::{Function, Lua};
 #[cfg(unix)]
-use yazi_shared::strand::IntoStrand;
+use yazi_shared::strand::StrandBuf;
 
 use super::Utils;
 
@@ -19,14 +19,14 @@ impl Utils {
 	#[cfg(unix)]
 	pub(super) fn user_name(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, uid: Option<u32>| {
-			Ok(yazi_shim::Uzers::user_name(uid).map(|s| s.into_strand()))
+			Ok(yazi_shim::Uzers::user_name(uid).map(StrandBuf::from))
 		})
 	}
 
 	#[cfg(unix)]
 	pub(super) fn group_name(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, gid: Option<u32>| {
-			Ok(yazi_shim::Uzers::group_name(gid).map(|s| s.into_strand()))
+			Ok(yazi_shim::Uzers::group_name(gid).map(StrandBuf::from))
 		})
 	}
 
