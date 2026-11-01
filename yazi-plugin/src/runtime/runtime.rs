@@ -1,6 +1,6 @@
 use mlua::{FromLua, Function, IntoLua, Lua, LuaSerdeExt, Value};
 use yazi_binding::{Composer, ComposerGet, elements::Wrap, runtime};
-use yazi_boot::ARGS;
+use yazi_boot::BOOT;
 use yazi_config::{YAZI, mgr::MgrRatio};
 use yazi_fs::Xdg;
 use yazi_shared::{path::PathBufDyn, scope::ScopeLike, url::UrlBuf};
@@ -46,9 +46,9 @@ fn path() -> Composer<ComposerGet> {
 fn args() -> Composer<ComposerGet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"entries" => lua.create_sequence_from(ARGS.entries.as_slice())?.into_lua(lua),
-			b"cwd_file" => ARGS.cwd_file.as_ref().map(UrlBuf::from).into_lua(lua),
-			b"chooser_file" => ARGS.chooser_file.as_ref().map(UrlBuf::from).into_lua(lua),
+			b"entries" => lua.create_sequence_from(BOOT.entries.as_slice())?.into_lua(lua),
+			b"cwd_file" => BOOT.cwd_file.as_ref().map(UrlBuf::from).into_lua(lua),
+			b"chooser_file" => BOOT.chooser_file.as_ref().map(UrlBuf::from).into_lua(lua),
 			_ => Ok(Value::Nil),
 		}
 	}

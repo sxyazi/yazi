@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use yazi_config::YAZI;
 use yazi_fs::file::File;
 use yazi_macro::render;
-use yazi_runner::{RUNNER, spot::SpotJob};
+use yazi_runner::{Runner, spot::SpotJob};
 use yazi_shared::{pool::Symbol, scope::Scope};
 
 use super::Spot;
@@ -51,6 +51,6 @@ impl SpotMut<'_> {
 		};
 
 		self.renew();
-		RUNNER.spot(SpotJob { spotter, file, mime, skip: self.skip, scope: self.scope.clone() });
+		Runner::spot(SpotJob { spotter, file, mime, skip: self.skip, scope: self.scope.clone() });
 	}
 }

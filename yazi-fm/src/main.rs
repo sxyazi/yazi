@@ -6,53 +6,47 @@ extern crate self as yazi_fm;
 
 yazi_macro::mod_pub!(app cmp confirm help input mgr notify pick spot tasks which);
 
-yazi_macro::mod_flat!(dispatcher executor logs panic renderer root router signals);
+yazi_macro::mod_flat!(completion dispatcher executor logs panic renderer root router signals);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-	yazi_shim::init()?;
+	Completion::complete()?;
 
-	yazi_shared::init();
+	let events = yazi_headless::init_common()?;
 
 	yazi_tty::init();
 
 	yazi_emulator::init();
 
-	yazi_fs::init();
-
 	yazi_boot::init();
 
-	yazi_vfs::init();
+	let _logs = yazi_fm::init()?;
 
-	yazi_runner::init(yazi_plugin::slim_lua);
-
-	yazi_adapter::init();
-
-	yazi_widgets::init();
-
-	yazi_watcher::init();
-
-	yazi_actor::init();
-
-	yazi_ffi::run(yazi_fm::serve()).await
+	yazi_ffi::run(yazi_fm::serve(events)).await
 }
 
-async fn serve() -> anyhow::Result<()> {
-	Logs::start()?;
+fn init() -> anyhow::Result<Logs> {
+	let logs = Logs::start()?;
+
 	Signals::start()?;
 
+	Panic::install();
+
+	Ok(logs)
+}
+
+async fn serve(events: yazi_shared::event::EventRx) -> anyhow::Result<()> {
 	yazi_version::setup!();
 
 	yazi_term::setup()?;
 
 	let _deinit = yazi_emulator::setup()?;
-	Panic::install();
 
 	yazi_config::setup()?;
 
 	yazi_dds::serve();
 
-	yazi_plugin::setup()?;
+	yazi_plugin::setup().await?;
 
-	app::App::serve().await
+	app::App::serve(events).await
 }

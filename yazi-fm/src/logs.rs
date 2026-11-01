@@ -6,18 +6,19 @@ use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
 use yazi_macro::writef;
-use yazi_shim::{cell::RoCell, log::LOG_LEVEL};
+use yazi_shim::log::LOG_LEVEL;
 use yazi_tty::sequence::{SetFg, SetSgr};
 
-static _GUARD: RoCell<WorkerGuard> = RoCell::new();
-
-pub(super) struct Logs;
+#[must_use = "Keep the guard alive to ensure logs are flushed"]
+pub(super) struct Logs {
+	_guard: Option<WorkerGuard>,
+}
 
 impl Logs {
-	pub(super) fn start() -> anyhow::Result<()> {
+	pub(super) fn start() -> anyhow::Result<Self> {
 		let level = LOG_LEVEL.get();
 		if level.is_none() {
-			return Ok(());
+			return Ok(Self { _guard: None });
 		}
 
 		let state_dir = Xdg::state_dir();
@@ -36,12 +37,13 @@ impl Logs {
 			.with_ansi(cfg!(debug_assertions))
 			.init();
 
-		_GUARD.init(guard);
-		Ok(writef!(
+		writef!(
 			io::stderr(),
 			"{}Running with log level `{level}`, logs are written to {log_path:?}\n{}",
 			SetFg(Color::Yellow),
 			SetSgr::Reset,
-		)?)
+		)?;
+
+		Ok(Self { _guard: Some(guard) })
 	}
 }

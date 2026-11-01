@@ -6,18 +6,10 @@ use super::{cargo, is_linux_target, is_sparc64_target, is_windows_target, run};
 
 pub(super) struct Build {
 	pub(super) target: String,
-	completions:       bool,
 }
 
 impl Build {
-	pub(super) fn new(target: impl Into<String>) -> Self {
-		Self { target: target.into(), completions: false }
-	}
-
-	pub(super) fn completions(mut self) -> Self {
-		self.completions = true;
-		self
-	}
+	pub(super) fn new(target: impl Into<String>) -> Self { Self { target: target.into() } }
 
 	pub(super) fn run(&self) -> Result<()> {
 		let mut cmd = Command::new(cargo());
@@ -34,9 +26,6 @@ impl Build {
 
 		if !self.target.is_empty() {
 			cmd.arg("--target").arg(&self.target);
-		}
-		if self.completions {
-			cmd.env("YAZI_GEN_COMPLETIONS", "1");
 		}
 
 		run(&mut cmd).context("failed to build Yazi")

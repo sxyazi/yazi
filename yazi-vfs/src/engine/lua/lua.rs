@@ -2,9 +2,9 @@ use std::{io, sync::Arc};
 
 use mlua::FromLua;
 use tokio::sync::mpsc;
-use yazi_config::vfs::{ServiceLua, Vfs};
+use yazi_config::{VFS, vfs::ServiceLua};
 use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transit}, file::File, remover, stat::Stat};
-use yazi_runner::{RUNNER, provider::{ProvideJob, ProvideOp, ProvidePeer, ProvideResult}};
+use yazi_runner::{Runner, provider::{ProvideJob, ProvideOp, ProvidePeer, ProvideResult}};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
 use crate::engine::lua::ReadDir;
@@ -61,7 +61,7 @@ impl<'a> Engine for Lua<'a> {
 
 		let peer = ProvidePeer::new(to)?;
 		let (tx, rx) = mpsc::channel(20);
-		let handle = tokio::spawn(RUNNER.provide_stream(
+		let handle = tokio::spawn(Runner::provide_stream(
 			ProvideJob::new(&self.service, ProvideOp::CopyTo {
 				from: self.to_url(),
 				to: to.into(),
@@ -81,7 +81,7 @@ impl<'a> Engine for Lua<'a> {
 
 		let peer = ProvidePeer::new(from)?;
 		let (tx, rx) = mpsc::channel(20);
-		let handle = tokio::spawn(RUNNER.provide_stream(
+		let handle = tokio::spawn(Runner::provide_stream(
 			ProvideJob::new(&self.service, ProvideOp::CopyFrom {
 				from: from.into(),
 				to: self.to_url(),
@@ -144,7 +144,7 @@ impl<'a> Engine for Lua<'a> {
 	}
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
-		Ok(Self::Me { url, service: Vfs::service(url.auth())? })
+		Ok(Self::Me { url, service: VFS.service(url.auth())? })
 	}
 
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
@@ -152,7 +152,7 @@ impl<'a> Engine for Lua<'a> {
 		let (tx, rx) = mpsc::channel(200);
 
 		let job = ProvideJob::new(&self.service, ProvideOp::ReadDir { url });
-		tokio::spawn(RUNNER.provide_stream(job, tx));
+		tokio::spawn(Runner::provide_stream(job, tx));
 
 		Ok(ReadDir(rx))
 	}
@@ -190,7 +190,7 @@ impl<'a> Engine for Lua<'a> {
 		}
 
 		let (tx, rx) = mpsc::channel(20);
-		let handle = tokio::spawn(RUNNER.provide_stream(
+		let handle = tokio::spawn(Runner::provide_stream(
 			ProvideJob::new(&self.service, ProvideOp::RemoveDirAll { url: self.to_url() }),
 			tx,
 		));
@@ -249,7 +249,7 @@ impl<'a> Lua<'a> {
 	where
 		T: FromLua + Send + 'static,
 	{
-		RUNNER.provide(ProvideJob::new(&self.service, op)).await
+		Runner::provide(ProvideJob::new(&self.service, op)).await
 	}
 
 	pub(crate) async fn handles(&self, check: fn(Capabilities) -> bool) -> io::Result<bool> {

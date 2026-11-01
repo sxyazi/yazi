@@ -187,7 +187,7 @@ impl<'p> PathDyn<'p> {
 		}
 	}
 
-	pub(crate) fn to_str(self) -> Result<&'p str, std::str::Utf8Error> {
+	pub fn to_str(self) -> Result<&'p str, std::str::Utf8Error> {
 		str::from_utf8(self.encoded_bytes())
 	}
 

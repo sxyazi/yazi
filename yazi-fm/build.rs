@@ -1,6 +1,12 @@
 use std::env;
 
 fn main() {
+	println!("cargo:rerun-if-changed=build.rs");
+
+	check();
+}
+
+fn check() {
 	let dir = env::var("OUT_DIR").unwrap();
 
 	// cargo build

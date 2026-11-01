@@ -1,5 +1,6 @@
 use std::{ops::Deref, path::{Path, PathBuf}};
 
+use foldhash::fast::FixedState;
 use hashbrown::{HashMap, HashSet};
 use yazi_fs::FsUrl;
 use yazi_shared::{path::PathDyn, url::{AsUrl, UrlBuf}};
@@ -9,17 +10,24 @@ use crate::Watchee;
 
 #[derive(Debug, Default)]
 pub struct Watched {
-	urls:   HashSet<Watchee<'static>>,
-	caches: HashMap<PathBuf, UrlBuf>,
+	urls:   HashSet<Watchee<'static>, FixedState>,
+	caches: HashMap<PathBuf, UrlBuf, FixedState>,
 }
 
 impl Deref for Watched {
-	type Target = HashSet<Watchee<'static>>;
+	type Target = HashSet<Watchee<'static>, FixedState>;
 
 	fn deref(&self) -> &Self::Target { &self.urls }
 }
 
 impl Watched {
+	pub(super) const fn new() -> Self {
+		Self {
+			urls:   HashSet::with_hasher(FixedState::with_seed(0)),
+			caches: HashMap::with_hasher(FixedState::with_seed(0)),
+		}
+	}
+
 	pub(super) fn insert(&mut self, watchee: Watchee<'static>) {
 		let url = watchee.as_url();
 		if let Some(cache) = url.cache_bucket() {

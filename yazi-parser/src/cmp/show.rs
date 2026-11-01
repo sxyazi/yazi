@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::Context;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_core::cmp::CmpOpt;
 use yazi_shared::event::{ActionCow, FromAction};
@@ -14,7 +14,7 @@ impl From<CmpOpt> for ShowForm {
 
 impl<C> FromAction<C> for ShowForm {
 	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { opt: a.take_any("opt").ok_or_else(|| anyhow!("Invalid 'opt' in ShowForm"))? })
+		Ok(Self { opt: a.take_any("opt").context("Invalid 'opt' in ShowForm")? })
 	}
 }
 

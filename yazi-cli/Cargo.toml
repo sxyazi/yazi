@@ -19,6 +19,7 @@ yazi-config   = { path = "../yazi-config", version = "26.9.1" }
 yazi-dds      = { path = "../yazi-dds", version = "26.9.1" }
 yazi-emulator = { path = "../yazi-emulator", version = "26.9.1" }
 yazi-fs       = { path = "../yazi-fs", version = "26.9.1" }
+yazi-headless = { path = "../yazi-headless", version = "26.9.1" }
 yazi-macro    = { path = "../yazi-macro", version = "26.9.1" }
 yazi-shared   = { path = "../yazi-shared", version = "26.9.1" }
 yazi-shim     = { path = "../yazi-shim", version = "26.9.1" }
@@ -27,27 +28,16 @@ yazi-tty      = { path = "../yazi-tty", version = "26.9.1" }
 yazi-version  = { path = "../yazi-version", version = "26.9.1" }
 
 # External dependencies
-anyhow     = { workspace = true }
-clap       = { workspace = true }
-hashbrown  = { workspace = true }
-regex      = { workspace = true }
-serde      = { workspace = true }
-serde_json = { workspace = true }
-tokio      = { workspace = true }
-toml       = { workspace = true }
-twox-hash  = { workspace = true }
-
-[build-dependencies]
-yazi-shared = { path = "../yazi-shared", version = "26.9.1" }
-
-# External build dependencies
-anyhow                = { workspace = true }
-clap                  = { workspace = true }
-clap_complete         = "4.6.11"
-clap_complete_fig     = "4.5.2"
-clap_complete_nushell = "4.6.2"
-serde                 = { workspace = true }
-serde_json            = { workspace = true }
+anyhow        = { workspace = true }
+clap          = { workspace = true }
+clap_complete = { workspace = true }
+hashbrown     = { workspace = true }
+regex         = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+tokio         = { workspace = true }
+toml          = { workspace = true }
+twox-hash     = { workspace = true }
 
 [[bin]]
 name = "ya"

@@ -4,7 +4,7 @@ use tokio::select;
 use crate::{Runner, entry::{EntryError, EntryJob}, loader::LOADER};
 
 impl Runner {
-	pub async fn entry(&'static self, job: EntryJob) -> mlua::Result<()> {
+	pub async fn entry(job: EntryJob) -> mlua::Result<()> {
 		LOADER.ensure(&job.plugin, |_| ()).await?;
 
 		if job.scope.is_cancelled() {
@@ -17,7 +17,7 @@ impl Runner {
 				select! {
 					biased;
 					_ = scope.cancelled() => Err(EntryError::Cancelled.into()),
-					r = self.entry_do(job) => r,
+					r = Self::entry_do(job) => r,
 				}
 			})
 		})
@@ -25,8 +25,8 @@ impl Runner {
 		.into_lua_err()?
 	}
 
-	async fn entry_do(&self, job: EntryJob) -> mlua::Result<()> {
-		let lua = self.spawn(&job)?;
+	async fn entry_do(job: EntryJob) -> mlua::Result<()> {
+		let lua = Self::spawn(&job)?;
 
 		job.scope.set_hook(&lua, || EntryError::Cancelled.into())?;
 

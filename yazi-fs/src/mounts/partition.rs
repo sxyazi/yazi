@@ -54,8 +54,8 @@ impl Partition {
 
 impl Partition {
 	#[cfg(any(target_os = "linux", target_os = "macos"))]
-	pub(super) fn new(name: &std::ffi::OsStr) -> Self {
-		Self { src: std::path::Path::new("/dev/").join(name).into(), ..Default::default() }
+	pub(super) fn new(name: impl AsRef<std::ffi::OsStr>) -> Self {
+		Self { src: std::path::Path::new("/dev/").join(name.as_ref()).into(), ..Default::default() }
 	}
 
 	#[cfg(target_os = "linux")]

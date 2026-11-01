@@ -3,6 +3,12 @@ use std::{env, error::Error};
 use vergen_gitcl::{Build, Emitter, Gitcl, Rustc};
 
 fn main() -> Result<(), Box<dyn Error>> {
+	println!("cargo:rerun-if-env-changed=YAZI_NO_GITCL");
+
+	emit()
+}
+
+fn emit() -> Result<(), Box<dyn Error>> {
 	Emitter::default()
 		.add_instructions(&Build::builder().build_date(true).build())?
 		.add_instructions(

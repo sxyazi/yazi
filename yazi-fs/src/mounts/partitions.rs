@@ -1,20 +1,18 @@
 use std::ops::Deref;
 
 use parking_lot::RwLock;
-use yazi_shim::cell::RoCell;
 
 use super::Partition;
 use crate::stat::Stat;
 
 pub(super) type Locked = RwLock<Partitions>;
 
-pub static PARTITIONS: RoCell<Locked> = RoCell::new();
+pub static PARTITIONS: Locked = RwLock::new(Partitions { inner: Vec::new(), loaded: false });
 
 #[derive(Default)]
 pub struct Partitions {
-	pub(super) inner:       Vec<Partition>,
-	#[cfg(target_os = "linux")]
-	pub(super) linux_cache: hashbrown::HashSet<String>,
+	pub(super) inner: Vec<Partition>,
+	loaded:           bool,
 }
 
 impl Deref for Partitions {
@@ -24,6 +22,30 @@ impl Deref for Partitions {
 }
 
 impl Partitions {
+	pub async fn ensure() -> anyhow::Result<()> {
+		if PARTITIONS.read().loaded {
+			return Ok(());
+		}
+
+		tokio::task::spawn_blocking(|| {
+			#[cfg(target_os = "macos")]
+			let new = Self::all_partitions(Self::all_names()?)?;
+			#[cfg(any(target_os = "linux", windows))]
+			let new = Self::all()?;
+			#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+			let new = Vec::new();
+
+			PARTITIONS.write().set(new);
+			Ok(())
+		})
+		.await?
+	}
+
+	pub(super) fn set(&mut self, partitions: Vec<Partition>) {
+		self.inner = partitions;
+		self.loaded = true;
+	}
+
 	#[cfg(unix)]
 	fn by_dev(&self, dev: u64) -> Option<&Partition> {
 		self.inner.iter().find(|p| p.rdev == Some(dev))

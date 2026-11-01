@@ -6,11 +6,10 @@ use parking_lot::RwLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
 use yazi_fs::{Xdg, engine::{Engine, RwFile, local::Local}};
 use yazi_shared::timestamp_us;
-use yazi_shim::cell::RoCell;
 
 use crate::CLIENTS;
 
-pub static STATE: RoCell<State> = RoCell::new();
+pub static STATE: State = State { inner: RwLock::new(None), last: AtomicU64::new(0) };
 
 #[derive(Default)]
 pub struct State {

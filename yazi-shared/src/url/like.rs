@@ -36,6 +36,8 @@ where
 
 	fn is_regular(&self) -> bool { self.as_url().is_regular() }
 
+	fn is_rejoinable(&self) -> bool { self.as_url().is_rejoinable() }
+
 	fn is_view(&self) -> bool { self.as_url().is_view() }
 
 	fn key(&self) -> PathDyn<'_> { self.as_url().key() }

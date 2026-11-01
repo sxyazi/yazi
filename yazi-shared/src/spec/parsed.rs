@@ -20,7 +20,7 @@ impl fmt::Display for ParsedSpec<'_> {
 }
 
 impl<'a> ParsedSpec<'a> {
-	pub(crate) fn parse(bytes: &'a [u8]) -> Result<Self> {
+	pub fn parse(bytes: &'a [u8]) -> Result<Self> {
 		let Some((scheme, _)) = bytes.split_seq_once(b"://") else {
 			return Ok(Self { bytes, skip: 0, scheme: Scheme::Regular, tilde: false });
 		};
@@ -37,8 +37,8 @@ impl<'a> ParsedSpec<'a> {
 	}
 
 	#[inline]
-	pub(crate) fn has_scheme(&self) -> bool { self.skip > 0 }
+	pub fn has_scheme(&self) -> bool { self.skip > 0 }
 
 	#[inline]
-	pub(crate) fn rest(&self) -> &'a [u8] { &self.bytes[self.skip..] }
+	pub fn rest(&self) -> &'a [u8] { &self.bytes[self.skip..] }
 }

@@ -34,7 +34,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   env = {
-    YAZI_GEN_COMPLETIONS = true;
     VERGEN_GIT_SHA = rev;
     VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
     CARGO_NET_OFFLINE = "true";
@@ -57,14 +56,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   postInstall = ''
     installShellCompletion --cmd yazi \
-      --bash ./yazi-boot/completions/yazi.bash \
-      --fish ./yazi-boot/completions/yazi.fish \
-      --zsh  ./yazi-boot/completions/_yazi
+      --bash ./assets/completions/yazi.bash \
+      --fish ./assets/completions/yazi.fish \
+      --zsh  ./assets/completions/_yazi
 
     installShellCompletion --cmd ya \
-      --bash ./yazi-cli/completions/ya.bash \
-      --fish ./yazi-cli/completions/ya.fish \
-      --zsh  ./yazi-cli/completions/_ya
+      --bash ./assets/completions/ya.bash \
+      --fish ./assets/completions/ya.fish \
+      --zsh  ./assets/completions/_ya
 
     # Resize logo
     for RES in 16 24 32 48 64 128 256; do

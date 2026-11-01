@@ -28,7 +28,7 @@ impl Utils {
 
 			match ADAPTOR.image_show(path, *rect).await {
 				Ok(area) => Rect::from(area).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		})
 	}
@@ -44,7 +44,7 @@ impl Utils {
 
 			match Image::precache(src, dist).await {
 				Ok(()) => true.into_lua_multi(&lua),
-				Err(e) => (false, Error::other(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
 		})
 	}

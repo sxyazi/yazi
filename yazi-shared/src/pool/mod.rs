@@ -1,13 +1,12 @@
 yazi_macro::mod_flat!(cow pool ptr symbol traits);
 
-static SYMBOLS: yazi_shim::cell::RoCell<
-	parking_lot::Mutex<hashbrown::HashMap<SymbolPtr, u64, foldhash::fast::FixedState>>,
-> = yazi_shim::cell::RoCell::new();
+const HASHER: foldhash::fast::FixedState = foldhash::fast::FixedState::with_seed(0);
 
-pub(super) fn init() { SYMBOLS.with(Default::default); }
+static SYMBOLS: parking_lot::Mutex<hashbrown::HashMap<SymbolPtr, u64, foldhash::fast::FixedState>> =
+	parking_lot::Mutex::new(hashbrown::HashMap::with_hasher(HASHER));
 
 #[inline]
 pub(super) fn compute_hash<T: std::hash::Hash>(value: T) -> u64 {
 	use core::hash::BuildHasher;
-	foldhash::fast::FixedState::default().hash_one(value)
+	HASHER.hash_one(value)
 }

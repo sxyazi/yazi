@@ -11,10 +11,7 @@ use yazi_shim::{bool_ok, handle_ok};
 use super::{Locked, Partition, Partitions};
 
 impl Partitions {
-	pub fn monitor<F>(me: &'static Locked, cb: F)
-	where
-		F: Fn() + 'static,
-	{
+	pub fn monitor(me: &'static Locked, cb: fn()) {
 		tokio::task::spawn_local(async move {
 			let notify = Arc::new(Notify::new());
 			let monitor = Monitor::new(notify.clone());
@@ -22,7 +19,7 @@ impl Partitions {
 
 			loop {
 				match tokio::task::spawn_blocking(Self::all).await {
-					Ok(Ok(new)) => me.write().inner = new,
+					Ok(Ok(new)) => me.write().set(new),
 					result => error!("Error encountered while updating partitions: {result:?}"),
 				}
 
@@ -32,7 +29,7 @@ impl Partitions {
 		});
 	}
 
-	fn all() -> io::Result<Vec<Partition>> {
+	pub(super) fn all() -> io::Result<Vec<Partition>> {
 		let mut mode = 0;
 		bool_ok(unsafe { SetThreadErrorMode(SEM_FAILCRITICALERRORS, &mut mode) })?;
 		defer! { unsafe { SetThreadErrorMode(mode, ptr::null_mut()); } };

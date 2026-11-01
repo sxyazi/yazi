@@ -5,7 +5,7 @@ use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 use super::Domain;
 
 impl Domain<'_> {
-	pub(crate) fn encode(&self) -> Encode<'_> {
+	pub fn encode(&self) -> Encode<'_> {
 		const SET: &AsciiSet = &CONTROLS.add(b'/').add(b':').add(b'%');
 		Encode(self, SET)
 	}

@@ -39,7 +39,7 @@ impl Utils {
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, r#type: BorrowedBytes| {
 			Ok(match &*r#type {
-				b"app" => *yazi_boot::ID,
+				b"app" => yazi_boot::BOOT.id,
 				b"ft" => yazi_fs::op::FILES_TICKET.next(),
 				_ => Err("Invalid id type".into_lua_err())?,
 			})

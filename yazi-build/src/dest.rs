@@ -13,7 +13,7 @@ impl Dest {
 	pub(super) fn new(target: String) -> Self { Self { target } }
 
 	pub(super) fn run(&self) -> Result<()> {
-		let build = Build::new(&self.target).completions();
+		let build = Build::new(&self.target);
 		build.run()?;
 
 		let to = workspace_root()?.join("target/release");
@@ -56,8 +56,7 @@ impl Dest {
 		copy_file(&root.join(format!("target/release/ya{ext}")), &dest.join(format!("ya{ext}")))?;
 		copy_file(&root.join(format!("target/release/yazi{ext}")), &dest.join(format!("yazi{ext}")))?;
 
-		Self::copy_files(&root.join("yazi-cli/completions"), &completions)?;
-		Self::copy_files(&root.join("yazi-boot/completions"), &completions)?;
+		Self::copy_files(&root.join("assets/completions"), &completions)?;
 
 		copy_file(&root.join("README.md"), &dest.join("README.md"))?;
 		copy_file(&root.join("LICENSE"), &dest.join("LICENSE"))

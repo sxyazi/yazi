@@ -28,7 +28,7 @@ pub fn setup() -> anyhow::Result<()> {
 	Ok(())
 }
 
-fn try_init(merge: bool) -> anyhow::Result<()> {
+pub fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut yazi = Preset::yazi()?;
 	let mut keymap = Preset::keymap()?;
 	let mut vfs = Preset::vfs()?;

@@ -13,10 +13,7 @@ use yazi_shared::natsort;
 use super::{Locked, Partition, Partitions};
 
 impl Partitions {
-	pub fn monitor<F>(me: &'static Locked, cb: F)
-	where
-		F: Fn() + Copy + Send + 'static,
-	{
+	pub fn monitor(me: &'static Locked, cb: fn()) {
 		let Some(session) = (unsafe { DASession::new(None) }) else {
 			return error!("Cannot create a disk arbitration session");
 		};
@@ -53,7 +50,7 @@ impl Partitions {
 				notify.notified().await;
 				_ = tokio::task::spawn_blocking(move || {
 					match Self::all_names().and_then(Self::all_partitions) {
-						Ok(new) => me.write().inner = new,
+						Ok(new) => me.write().set(new),
 						Err(e) => error!("Error encountered while updating mount points: {e:?}"),
 					}
 					cb();
@@ -63,7 +60,7 @@ impl Partitions {
 		});
 	}
 
-	fn all_partitions(names: Vec<CString>) -> Result<Vec<Partition>> {
+	pub(super) fn all_partitions(names: Vec<CString>) -> Result<Vec<Partition>> {
 		fn value<T: ConcreteType>(
 			dict: &CFDictionary<CFString, CFType>,
 			key: &CFString,
@@ -112,7 +109,7 @@ impl Partitions {
 		Ok(disks)
 	}
 
-	fn all_names() -> Result<Vec<CString>> {
+	pub(super) fn all_names() -> Result<Vec<CString>> {
 		let mut iterator = 0;
 		let result = unsafe {
 			IOServiceGetMatchingServices(0, IOServiceMatching(c"IOMedia".as_ptr()), &mut iterator)

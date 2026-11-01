@@ -4,7 +4,7 @@ use tokio::select;
 use crate::{Runner, loader::LOADER, preloader::{PreloadError, PreloadJob, PreloadState}};
 
 impl Runner {
-	pub async fn preload(&'static self, job: PreloadJob) -> Result<PreloadState, PreloadError> {
+	pub async fn preload(job: PreloadJob) -> Result<PreloadState, PreloadError> {
 		LOADER.ensure(&job.preloader.name, |_| ()).await?;
 
 		tokio::task::spawn_blocking(move || {
@@ -13,7 +13,7 @@ impl Runner {
 				select! {
 					biased;
 					_ = scope.cancelled() => Err(PreloadError::Cancelled),
-					r = self.preload_do(job) => r.map_err(|e| {
+					r = Self::preload_do(job) => r.map_err(|e| {
 						e.downcast_ref::<PreloadError>().cloned().unwrap_or_else(|| e.into())
 					}),
 				}
@@ -23,8 +23,8 @@ impl Runner {
 		.unwrap_or(Err(PreloadError::Cancelled))
 	}
 
-	async fn preload_do(&self, job: PreloadJob) -> mlua::Result<PreloadState> {
-		let lua = self.spawn(&job)?;
+	async fn preload_do(job: PreloadJob) -> mlua::Result<PreloadState> {
+		let lua = Self::spawn(&job)?;
 
 		job.scope.set_hook(&lua, || PreloadError::Cancelled.into_lua_err())?;
 

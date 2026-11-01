@@ -21,11 +21,14 @@ yazi-runner  = { path = "../yazi-runner", version = "26.9.1" }
 yazi-sftp    = { path = "../yazi-sftp", version = "26.9.1" }
 yazi-shared  = { path = "../yazi-shared", version = "26.9.1" }
 yazi-shim    = { path = "../yazi-shim", version = "26.9.1" }
+yazi-widgets = { path = "../yazi-widgets", version = "26.9.1" }
 
 # External dependencies
+anyhow      = { workspace = true }
 chrono      = { workspace = true }
 deadpool    = { version = "0.13.1", default-features = false, features = [ "managed", "rt_tokio_1" ] }
 either      = { workspace = true }
+foldhash    = { workspace = true }
 futures     = { workspace = true }
 hashbrown   = { workspace = true }
 inventory   = { workspace = true }

@@ -125,7 +125,7 @@ impl Ueberzug {
 				rect.y,
 				rect.width,
 				rect.height,
-				path.to_string_lossy(),
+				path.display(),
 				'\n'
 			)
 		} else {

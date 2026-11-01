@@ -6,7 +6,13 @@ use yazi_emulator::EMULATOR;
 use yazi_shim::cell::SyncCell;
 use yazi_widgets::clear::ClearInventory;
 
-use crate::{ADAPTOR, drivers::{Driver, Drivers}};
+use crate::drivers::{Driver, Drivers};
+
+pub static ADAPTOR: Adapter = Adapter {
+	driver:    OnceLock::new(),
+	shown:     SyncCell::new(None),
+	collision: SyncCell::new(false),
+};
 
 #[derive(Default)]
 pub struct Adapter {

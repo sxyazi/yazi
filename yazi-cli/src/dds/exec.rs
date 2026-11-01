@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::{Result, bail};
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
-use yazi_boot::ID;
+use yazi_boot::BOOT;
 use yazi_dds::{Payload, Stream, ember::{Ember, EmberHi}};
 use yazi_macro::try_format;
 use yazi_shared::{data::Data, id::Id};
@@ -13,7 +13,7 @@ use crate::{CommandExec, CommandPub, dds::Dds};
 impl Dds {
 	pub(crate) async fn exec(cmd: CommandExec) -> anyhow::Result<Data> {
 		let receiver = CommandPub::receiver()?;
-		let req = cmd.body(*yazi_boot::ID)?;
+		let req = cmd.body(BOOT.id)?;
 		let resp = Self::ask("dds-exec", receiver, &req, "dds-exec-result").await?;
 
 		#[derive(Deserialize)]
@@ -41,8 +41,9 @@ impl Dds {
 		Ember::validate(reply_kind)?;
 
 		let payload = try_format!(
-			"{}\n{kind},{receiver},{ID},{body}\n",
+			"{}\n{kind},{receiver},{id},{body}\n",
 			Payload::new(EmberHi::borrowed([reply_kind])),
+			id = BOOT.id,
 		)?;
 
 		let (mut lines, mut writer) = Stream::connect().await?;

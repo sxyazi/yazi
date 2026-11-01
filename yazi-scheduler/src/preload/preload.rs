@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::sync::mpsc;
 use yazi_config::Priority;
 use yazi_macro::error;
-use yazi_runner::{RUNNER, preloader::{PreloadError, PreloadJob}};
+use yazi_runner::{Runner, preloader::{PreloadError, PreloadJob}};
 use yazi_shared::id::Id;
 
 use crate::{HIGH, LOW, Loaded, NORMAL, TaskOp, TaskOps, preload::{PreloadIn, PreloadInPreload, PreloadOut}};
@@ -36,7 +36,7 @@ impl Preload {
 	pub(crate) async fn preload(&self, task: PreloadInPreload) -> Result<(), PreloadOut> {
 		let PreloadInPreload { id, preloader, file, hash, mime, scope } = task;
 		let result =
-			RUNNER.preload(PreloadJob { preloader: preloader.clone(), file, mime, scope }).await;
+			Runner::preload(PreloadJob { preloader: preloader.clone(), file, mime, scope }).await;
 
 		let state = match result {
 			Ok(state) => state,

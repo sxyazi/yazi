@@ -19,7 +19,7 @@ impl Lives {
 				for ud in (*TO_DESTROY.get()).drain(..) {
 					ud.destroy().expect("failed to destruct scoped userdata");
 				}
-				for tab in (*TABS.get()).assume_init_mut() {
+				for tab in &mut *TABS.get() {
 					tab.clear();
 				}
 			}

@@ -1,7 +1,7 @@
 use mlua::{ExternalError, Function, Lua, MultiValue, UserDataMethods};
 use tokio::select;
 use yazi_binding::{r#async::{Async, AsyncHandle}, runtime, runtime::{RuntimeCo, RuntimeSeed}};
-use yazi_runner::{RUNNER, Runner};
+use yazi_runner::Runner;
 use yazi_shared::{scope::{Scope, ScopeInventory, ScopeLike, ScopeRef}, sendable::Sendable};
 
 pub(crate) trait ScopeExt {
@@ -41,7 +41,7 @@ impl ScopeExt for Scope {
 		let seed = RuntimeSeed::new(runtime!(lua)?.name()?, self);
 		let bytes = f.dump(false);
 		let args = Sendable::values_to_list(lua, args)?;
-		Ok(RUNNER.evaluate(seed, bytes, args))
+		Ok(Runner::evaluate(seed, bytes, args))
 	}
 }
 

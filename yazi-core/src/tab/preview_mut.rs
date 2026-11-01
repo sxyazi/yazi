@@ -5,7 +5,7 @@ use yazi_adapter::ADAPTOR;
 use yazi_config::YAZI;
 use yazi_fs::{FsHash64, file::File};
 use yazi_macro::render;
-use yazi_runner::{RUNNER, previewer::{PeekError, PeekJob}};
+use yazi_runner::{Runner, previewer::{PeekError, PeekJob}};
 use yazi_shared::{pool::Symbol, scope::Scope};
 
 use super::{Preview, PreviewSig, Tab};
@@ -67,7 +67,7 @@ impl PreviewMut<'_> {
 			let result = select! {
 				biased;
 				_ = job.scope.cancelled() => Err(PeekError::Cancelled),
-				r = RUNNER.peek(&job) => r,
+				r = Runner::peek(&job) => r,
 			};
 
 			match result {

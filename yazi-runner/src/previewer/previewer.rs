@@ -4,7 +4,7 @@ use tokio::select;
 use crate::{Runner, loader::LOADER, previewer::{PeekError, PeekJob}};
 
 impl Runner {
-	pub async fn peek(&'static self, job: &PeekJob) -> Result<(), PeekError> {
+	pub async fn peek(job: &PeekJob) -> Result<(), PeekError> {
 		if LOADER.ensure(&job.previewer.name, |c| c.sync_peek).await? {
 			return Err(PeekError::ShouldSync);
 		}
@@ -16,7 +16,7 @@ impl Runner {
 				select! {
 					biased;
 					_ = scope.cancelled() => Err(PeekError::Cancelled),
-					r = self.peek_do(job) => r.map_err(|e| {
+					r = Self::peek_do(job) => r.map_err(|e| {
 						e.downcast_ref::<PeekError>().cloned().unwrap_or_else(|| e.into())
 					}),
 				}
@@ -26,8 +26,8 @@ impl Runner {
 		.unwrap_or(Err(PeekError::Cancelled))
 	}
 
-	async fn peek_do(&self, job: PeekJob) -> mlua::Result<()> {
-		let lua = self.spawn(&job)?;
+	async fn peek_do(job: PeekJob) -> mlua::Result<()> {
+		let lua = Self::spawn(&job)?;
 
 		job.scope.set_hook(&lua, || PeekError::Cancelled.into_lua_err())?;
 

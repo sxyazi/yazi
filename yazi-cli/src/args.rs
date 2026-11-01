@@ -2,7 +2,10 @@ use std::{borrow::Cow, ffi::OsString};
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
+use clap_complete::ArgValueCandidates;
 use yazi_shared::id::Id;
+
+use crate::cmp::Cmp;
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]
@@ -37,6 +40,9 @@ pub(super) enum Command {
 	Cache(CommandCache),
 	/// Print environment and configuration information.
 	Env,
+	/// Complete shell input.
+	#[command(hide = true)]
+	Cmp(Cmp),
 }
 
 #[derive(clap::Args)]
@@ -81,7 +87,7 @@ pub(super) enum CommandPkg {
 	#[command(arg_required_else_help = true)]
 	Delete {
 		/// Packages to delete.
-		#[arg(index = 1, num_args = 1..)]
+		#[arg(index = 1, num_args = 1.., add = ArgValueCandidates::new(Cmp::packages))]
 		ids:     Vec<String>,
 		/// Discard local changes made to packages while deleting.
 		#[arg(long)]
@@ -98,7 +104,7 @@ pub(super) enum CommandPkg {
 	/// Upgrade all packages.
 	Upgrade {
 		/// Packages to upgrade, upgrade all if unspecified.
-		#[arg(index = 1, num_args = 0..)]
+		#[arg(index = 1, num_args = 0.., add = ArgValueCandidates::new(Cmp::packages))]
 		ids:     Vec<String>,
 		/// Discard local changes made to packages while upgrading.
 		#[arg(long)]

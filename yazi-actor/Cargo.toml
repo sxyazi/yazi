@@ -42,6 +42,7 @@ yazi-widgets   = { path = "../yazi-widgets", version = "26.9.1" }
 # External dependencies
 anyhow       = { workspace = true }
 either       = { workspace = true }
+foldhash     = { workspace = true }
 futures      = { workspace = true }
 hashbrown    = { workspace = true }
 inventory    = { workspace = true }

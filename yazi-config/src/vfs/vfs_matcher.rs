@@ -1,9 +1,9 @@
 use std::{mem, sync::Arc};
 
 use hashbrown::{HashMap, hash_map};
-use yazi_shared::auth::Scheme;
+use yazi_shared::auth::{AuthArc, Scheme};
 
-use super::{Authorities, DomainsArc};
+use super::{Authorities, DomainsArc, DomainsMatcher};
 
 pub struct VfsMatcher {
 	iter:         hash_map::Iter<'static, Scheme, DomainsArc>,
@@ -30,5 +30,15 @@ impl Iterator for VfsMatcher {
 
 	fn next(&mut self) -> Option<Self::Item> {
 		self.iter.next().map(|(scheme, domains)| (scheme.clone(), domains.clone()))
+	}
+}
+
+impl VfsMatcher {
+	pub fn domains(self) -> impl Iterator<Item = DomainsMatcher> {
+		self.map(|(_, domains)| DomainsMatcher::from(&domains))
+	}
+
+	pub fn authorities(self) -> impl Iterator<Item = AuthArc> {
+		self.domains().flat_map(DomainsMatcher::authorities)
 	}
 }

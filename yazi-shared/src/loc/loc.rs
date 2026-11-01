@@ -76,6 +76,9 @@ where
 	#[inline]
 	pub fn as_inner(self) -> P { self.inner }
 
+	#[inline]
+	pub fn is_empty(self) -> bool { self.inner.as_encoded_bytes().is_empty() }
+
 	pub(crate) fn ascend(self) -> Option<Self>
 	where
 		P: PathView<'p, P>,

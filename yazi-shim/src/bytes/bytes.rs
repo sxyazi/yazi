@@ -7,6 +7,8 @@ pub trait BytesExt {
 
 	fn kebab_cased(&self) -> bool;
 
+	fn replace_seq_once(&self, from: &[u8], to: &[u8]) -> Vec<u8>;
+
 	fn rsplit_pred_once<P: BytePredictor>(&self, pred: P) -> Option<(&[u8], &[u8])>;
 
 	fn rsplit_seq_once(&self, sep: &[u8]) -> Option<(&[u8], &[u8])>;
@@ -31,6 +33,10 @@ impl BytesExt for [u8] {
 
 	fn kebab_cased(&self) -> bool {
 		self.iter().all(|&b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'-'))
+	}
+
+	fn replace_seq_once(&self, from: &[u8], to: &[u8]) -> Vec<u8> {
+		self.split_seq_once(from).map_or_else(|| self.to_vec(), |(a, b)| [a, to, b].concat())
 	}
 
 	fn rsplit_pred_once<P: BytePredictor>(&self, pred: P) -> Option<(&[u8], &[u8])> {

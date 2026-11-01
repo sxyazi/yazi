@@ -4,22 +4,23 @@ use mlua::Lua;
 use tokio::{runtime::Handle, task::LocalSet};
 use yazi_binding::runtime::{Runtime, RuntimeSeed};
 
-use crate::{PluginJob, entry::EntryError, evaluator::EvaluateError, fetcher::FetchError, preloader::PreloadError, previewer::PeekError, spot::SpotError};
+use crate::{PluginJob, RunnerInventory, entry::EntryError, evaluator::EvaluateError, fetcher::FetchError, preloader::PreloadError, previewer::PeekError, spot::SpotError};
 
-pub struct Runner {
-	pub(super) setter: fn(&Lua) -> mlua::Result<()>,
-}
+pub struct Runner;
 
 impl Runner {
-	pub(crate) fn spawn(&self, job: &impl PluginJob) -> mlua::Result<Lua> {
-		self.spawn_with(RuntimeSeed::new(job.name().as_ref(), job))
+	pub(crate) fn spawn(job: &impl PluginJob) -> mlua::Result<Lua> {
+		Self::spawn_with(RuntimeSeed::new(job.name().as_ref(), job))
 	}
 
-	pub(crate) fn spawn_with(&self, seed: RuntimeSeed) -> mlua::Result<Lua> {
+	pub(crate) fn spawn_with(seed: RuntimeSeed) -> mlua::Result<Lua> {
 		let lua = Lua::new();
 		lua.set_app_data(Runtime::new(seed));
 
-		(self.setter)(&lua)?;
+		for inv in inventory::iter::<RunnerInventory> {
+			(inv.setup)(&lua)?;
+		}
+
 		Ok(lua)
 	}
 

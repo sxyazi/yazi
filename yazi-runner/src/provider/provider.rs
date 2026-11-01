@@ -9,7 +9,7 @@ use yazi_shim::fs::Error as FsError;
 use crate::{CoIter, Runner, loader::LOADER, provider::{ProvideJob, ProvideResult}};
 
 impl Runner {
-	pub async fn provide<T>(&'static self, job: ProvideJob) -> ProvideResult<T>
+	pub async fn provide<T>(job: ProvideJob) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
@@ -17,12 +17,12 @@ impl Runner {
 		defer! { scope.cancel(); }
 
 		match LOADER.ensure(&job.service.name, |_| ()).await {
-			Ok(()) => self.provide_do(job).await,
-			Err(e) => FsError::other(e.to_string()).into(),
+			Ok(()) => Self::provide_do(job).await,
+			Err(e) => FsError::from(e).into(),
 		}
 	}
 
-	async fn provide_do<T>(&'static self, mut job: ProvideJob) -> ProvideResult<T>
+	async fn provide_do<T>(mut job: ProvideJob) -> ProvideResult<T>
 	where
 		T: FromLua + Send + 'static,
 	{
@@ -31,7 +31,7 @@ impl Runner {
 			// Keep the resource alive until the Lua VM has been destroyed.
 			let _resource = job.resource.take();
 
-			let lua = self.spawn(&job)?;
+			let lua = Self::spawn(&job)?;
 			scope.set_hook(&lua, || FsError::from(io::ErrorKind::Interrupted).into())?;
 
 			Self::block_on(async {
@@ -54,14 +54,14 @@ impl Runner {
 		}
 	}
 
-	pub async fn provide_stream<T>(&'static self, job: ProvideJob, tx: mpsc::Sender<io::Result<T>>)
+	pub async fn provide_stream<T>(job: ProvideJob, tx: mpsc::Sender<io::Result<T>>)
 	where
 		T: FromLua + Send + 'static,
 	{
 		let scope = job.to_scope();
 		defer! { scope.cancel(); }
 
-		let mut fut = pin!(self.provide_stream_do(job, tx.clone()));
+		let mut fut = pin!(Self::provide_stream_do(job, tx.clone()));
 		let result = select! {
 			r = &mut fut => r,
 			_ = tx.closed() => {
@@ -76,7 +76,6 @@ impl Runner {
 	}
 
 	async fn provide_stream_do<T>(
-		&'static self,
 		mut job: ProvideJob,
 		tx: mpsc::Sender<io::Result<T>>,
 	) -> io::Result<()>
@@ -89,7 +88,7 @@ impl Runner {
 			let scope = job.to_scope();
 			let _resource = job.resource.take();
 
-			let lua = self.spawn(&job)?;
+			let lua = Self::spawn(&job)?;
 			scope.set_hook(&lua, || FsError::from(io::ErrorKind::Interrupted).into())?;
 
 			let future = async {

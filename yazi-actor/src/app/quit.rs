@@ -2,7 +2,7 @@ use std::process;
 
 use anyhow::Result;
 use tokio::{join, task};
-use yazi_boot::ARGS;
+use yazi_boot::BOOT;
 use yazi_core::Ctx;
 use yazi_emulator::EMULATOR;
 use yazi_fs::engine::{Engine, local::Local};
@@ -45,13 +45,13 @@ impl Actor for Quit {
 
 impl Quit {
 	async fn cwd_to_file(cwd: &UrlBuf, no: bool) {
-		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no) {
+		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no) {
 			Local::regular(p).write(cwd.to_strand().encoded_bytes()).await.ok();
 		}
 	}
 
 	async fn selected_to_file(selected: Option<StrandBuf>) {
-		if let (Some(s), Some(p)) = (selected, &ARGS.chooser_file) {
+		if let (Some(s), Some(p)) = (selected, &BOOT.chooser_file) {
 			Local::regular(p).write(s.encoded_bytes()).await.ok();
 		}
 	}

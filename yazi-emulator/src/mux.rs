@@ -2,6 +2,7 @@ use std::{fmt::{self, Display}, process::Stdio};
 
 use tokio::{process::Command, time::{Duration, timeout}};
 use yazi_macro::error;
+use yazi_shim::bytes::BytesExt;
 
 use crate::EMULATOR;
 
@@ -40,7 +41,7 @@ impl Mux {
 				error!(
 					"Failed to configure tmux passthrough and input buffer: status {:?}, stderr: {}",
 					o.status,
-					String::from_utf8_lossy(&o.stderr)
+					o.stderr.display()
 				);
 			}
 			Ok(Err(e)) => {

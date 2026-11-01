@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 
 use anyhow::Result;
-use yazi_boot::{ARGS, BOOT};
+use yazi_boot::BOOT;
 use yazi_core::{Ctx, mgr::CdSource};
 use yazi_fs::path::clean_url;
 use yazi_macro::succ;
@@ -19,16 +19,16 @@ impl Actor for Bootstrap {
 	const NAME: &str = "bootstrap";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
-		if ARGS.entries.is_empty() {
+		if BOOT.entries.is_empty() {
 			act!(mgr:cd, cx, (BOOT.cwd.clone(), CdSource::Tab))?;
 			succ!();
 		}
 
 		// Resize the tabs to match the number of entries.
-		cx.mgr.tabs.resize_with(ARGS.entries.len(), Default::default);
+		cx.mgr.tabs.resize_with(BOOT.entries.len(), Default::default);
 
 		// Navigate to each entry in concurrent tabs.
-		for (i, ent) in ARGS.entries.iter().enumerate().rev() {
+		for (i, ent) in BOOT.entries.iter().enumerate().rev() {
 			let url = match Self::parse_entry(ent.encoded_bytes()) {
 				Ok(url) => url,
 				Err(e) => UrlBuf::try_from(format!("error://boot//{e}"))?,

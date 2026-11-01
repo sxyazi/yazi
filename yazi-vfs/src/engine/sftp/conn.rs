@@ -1,9 +1,17 @@
 use std::{io, sync::Arc, time::{Duration, SystemTime}};
 
 use chrono::DateTime;
+use deadpool::managed::Pool;
+use foldhash::fast::FixedState;
+use hashbrown::HashMap;
+use parking_lot::Mutex;
 use russh::keys::{PrivateKeyWithHashAlg, PublicKeyOrCertificate, agent::AgentIdentity};
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::engine::local::Local;
+use yazi_shared::auth::AuthArc;
+
+pub(super) static CONN: Mutex<HashMap<AuthArc, Pool<Conn>, FixedState>> =
+	Mutex::new(HashMap::with_hasher(FixedState::with_seed(0)));
 
 #[derive(Clone)]
 pub(super) struct Conn {

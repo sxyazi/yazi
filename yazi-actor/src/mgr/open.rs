@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::StreamExt;
 use hashbrown::HashSet;
-use yazi_boot::ARGS;
+use yazi_boot::BOOT;
 use yazi_core::{Ctx, mgr::OpenDoOpt};
 use yazi_fs::file::Files;
 use yazi_macro::succ;
@@ -20,7 +20,7 @@ impl Actor for Open {
 	const NAME: &str = "open";
 
 	fn act(cx: &mut Ctx, Self::Form { mut opt }: Self::Form) -> Result<Data> {
-		if !opt.interactive && ARGS.chooser_file.is_some() {
+		if !opt.interactive && BOOT.chooser_file.is_some() {
 			succ!(if !opt.targets.is_empty() {
 				Quit::with_selected(opt.targets)
 			} else if opt.hovered {

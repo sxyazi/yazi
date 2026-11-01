@@ -75,7 +75,7 @@ impl Local {
 	}
 
 	pub(crate) async fn soundless(path: &Path) -> bool {
-		if cfg!(target_os = "netbsd") || yazi_adapter::WSL.get() {
+		if cfg!(target_os = "netbsd") || yazi_shared::in_wsl() {
 			return true;
 		}
 

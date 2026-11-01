@@ -10,7 +10,9 @@ use crate::input::{Input, parser::CompleteOpt};
 impl Input {
 	pub fn complete(&mut self, opt: CompleteOpt) -> Result<Data> {
 		let (before, after) = self.partition();
-		let new = if let Some((prefix, _)) = before.rsplit_once(CROSS_SEPARATOR) {
+		let new = if let Some(value) = &opt.value {
+			format!("{value}{after}")
+		} else if let Some((prefix, _)) = before.rsplit_once(CROSS_SEPARATOR) {
 			format!("{prefix}/{}{after}", opt.completable()).replace(CROSS_SEPARATOR, MAIN_SEPARATOR_STR)
 		} else {
 			format!("{}{after}", opt.completable()).replace(CROSS_SEPARATOR, MAIN_SEPARATOR_STR)

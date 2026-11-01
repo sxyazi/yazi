@@ -1,7 +1,7 @@
 use std::{mem, sync::Arc};
 
 use hashbrown::{HashMap, hash_map};
-use yazi_shared::domain::Domain;
+use yazi_shared::{auth::AuthArc, domain::Domain};
 
 use super::{DomainsArc, Service};
 
@@ -30,5 +30,11 @@ impl Iterator for DomainsMatcher {
 
 	fn next(&mut self) -> Option<Self::Item> {
 		self.iter.next().map(|(domain, service)| (domain.clone(), service.clone()))
+	}
+}
+
+impl DomainsMatcher {
+	pub fn authorities(self) -> impl Iterator<Item = AuthArc> {
+		self.map(|(_, service)| service.auth().clone())
 	}
 }
