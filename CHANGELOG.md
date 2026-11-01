@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Fixed
 
 - Tolerate non-conforming orphaned trash items on Linux ([#4343])
+- Allow for omitted fields in the DnD protocol ([#4467])
 - Compatibility with legacy Git symlinks in package cache ([#4319])
 - Workaround Konsole kitty graphics and keyboard protocol bugs ([#4370])
 - Correct diacritic input for <kbd>Option</kbd> key combos in kitty keyboard protocol ([#4346])
@@ -1919,3 +1920,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4439]: https://github.com/sxyazi/yazi/pull/4439
 [#4451]: https://github.com/sxyazi/yazi/pull/4451
 [#4464]: https://github.com/sxyazi/yazi/pull/4464
+[#4467]: https://github.com/sxyazi/yazi/pull/4467
