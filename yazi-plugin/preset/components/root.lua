@@ -88,6 +88,10 @@ function Root:drag(event)
 end
 
 function Root:drop(event)
+	if event.mimes and #event.mimes > 0 then
+		Dnd._mimes = event.mimes
+	end
+
 	local d = Root._dropping
 	local c = event.x and ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow()) or d
 	if d and d.drop and d._id ~= c._id then

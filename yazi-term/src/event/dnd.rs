@@ -42,7 +42,7 @@ pub struct DndDragOffer {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragAccept {
-	idx: u8,
+	idx: u32,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -57,12 +57,12 @@ pub struct DndDragEnd {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragSend {
-	idx: u8,
+	idx: u32,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDragError {
-	idx:  u8,
+	idx:  u32,
 	name: String,
 	desc: String,
 }
@@ -85,13 +85,13 @@ pub struct DndDropReady {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDropArrive {
-	idx:             u8,
+	idx:             u32,
 	pub(crate) data: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DndDropError {
-	idx:  u8,
+	idx:  u32,
 	name: String,
 	desc: String,
 }
@@ -115,7 +115,7 @@ impl DndEvent {
 		}
 	}
 
-	pub(crate) fn idx(&self) -> Option<u8> {
+	pub(crate) fn idx(&self) -> Option<u32> {
 		match self {
 			Self::DragAccept(e) => Some(e.idx),
 			Self::DragSend(e) => Some(e.idx),
@@ -159,38 +159,39 @@ impl DndEvent {
 	pub(crate) fn from_state(s: StateOsc72) -> Option<Self> {
 		Some(match s.r#type.unwrap_or_default() {
 			// Drag
-			b'o' => Self::DragOffer(DndDragOffer { x: s.x?.try_into().ok()?, y: s.y?.try_into().ok()? }),
-			b'e' if s.x? == 1 => Self::DragAccept(DndDragAccept { idx: s.y?.try_into().ok()? }),
-			b'e' if s.x? == 2 => Self::DragChange(DndDragChange { op: DndOp::from_repr(s.op?)? }),
-			b'e' if s.x? == 3 => Self::DragLand,
-			b'e' if s.x? == 4 => Self::DragEnd(DndDragEnd { canceled: s.y? != 0 }),
-			b'e' if s.x? == 5 => Self::DragSend(DndDragSend { idx: s.y?.try_into().ok()? }),
+			b'o' => Self::DragOffer(DndDragOffer { x: s.x.try_into().ok()?, y: s.y.try_into().ok()? }),
+			b'e' if s.x == 1 => Self::DragAccept(DndDragAccept { idx: s.y.try_into().ok()? }),
+			b'e' if s.x == 2 => Self::DragChange(DndDragChange { op: DndOp::from_repr(s.op)? }),
+			b'e' if s.x == 3 => Self::DragLand,
+			b'e' if s.x == 4 => Self::DragEnd(DndDragEnd { canceled: s.y != 0 }),
+			b'e' if s.x == 5 => Self::DragSend(DndDragSend { idx: s.y.try_into().ok()? }),
+			b'E' if s.payload == b"OK" => return None,
 			b'E' => {
 				let (name, desc) = parse_error(s.payload)?;
-				Self::DragError(DndDragError { idx: s.y?.try_into().ok()?, name, desc })
+				Self::DragError(DndDragError { idx: s.y.try_into().ok()?, name, desc })
 			}
 
 			// Drop
-			b'm' if s.x == Some(-1) && s.y == Some(-1) => Self::DropLeave,
+			b'm' if s.x == -1 && s.y == -1 => Self::DropLeave,
 			b'm' => Self::DropEnter(DndDropEnter {
-				x:     s.x?.try_into().ok()?,
-				y:     s.y?.try_into().ok()?,
-				op:    DndOp::from_repr(s.op?)?,
+				x:     s.x.try_into().ok()?,
+				y:     s.y.try_into().ok()?,
+				op:    DndOp::from_repr(s.op)?,
 				mimes: MimeList::new(s.payload)?,
 			}),
 			b'M' => Self::DropReady(DndDropReady {
-				x:     s.x?.try_into().ok()?,
-				y:     s.y?.try_into().ok()?,
-				op:    DndOp::from_repr(s.op?)?,
+				x:     s.x.try_into().ok()?,
+				y:     s.y.try_into().ok()?,
+				op:    DndOp::from_repr(s.op)?,
 				mimes: MimeList::new(s.payload)?,
 			}),
 			b'r' => Self::DropArrive(DndDropArrive {
-				idx:  s.x?.try_into().ok()?,
+				idx:  s.x.try_into().ok()?,
 				data: STANDARD_NO_PAD_INDIFFERENT.decode(&s.payload).ok()?,
 			}),
 			b'R' => {
 				let (name, desc) = parse_error(s.payload)?;
-				Self::DropError(DndDropError { idx: s.x?.try_into().ok()?, name, desc })
+				Self::DropError(DndDropError { idx: s.x.try_into().ok()?, name, desc })
 			}
 
 			_ => return None,
