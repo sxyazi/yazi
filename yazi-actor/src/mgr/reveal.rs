@@ -29,6 +29,7 @@ impl Actor for Reveal {
 		if !form.no_dummy && tab.hovered().is_none_or(|f| f.key() != key) {
 			let op = FilesOp::Create(trail.into(), File::from_dummy(&form.target, None).into());
 			tab.current.update_pub(tab.id, op);
+			act!(mgr:sort, cx).ok();
 		}
 
 		// Now, we can safely hover over the target
