@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Rclone integration ([#4383])
 - Archive extraction progress ([#4431])
+- Autocomplete VFS URLs and package IDs ([#4464])
 - Custom border shape ([#4439])
 - Custom sorting ([#4363])
 - Windows drives view ([#4412])
@@ -52,6 +53,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Rearm file copier ([#4424])
 - Switch Lua to generational GC ([#4397])
 - Asyncly parse the entry arguments to avoid blocking app startup ([#4352])
+
+### Packaging
+
+- Move shell completion templates for `ya` and `yazi` to `assets/completions` ([#4464])
 
 ## [v26.9.1]
 
@@ -1913,3 +1918,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4431]: https://github.com/sxyazi/yazi/pull/4431
 [#4439]: https://github.com/sxyazi/yazi/pull/4439
 [#4451]: https://github.com/sxyazi/yazi/pull/4451
+[#4464]: https://github.com/sxyazi/yazi/pull/4464
