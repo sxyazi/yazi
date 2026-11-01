@@ -2,6 +2,7 @@ Dnd = {
 	_op = "reject",
 	_allowed = "copy",
 	_mime = nil,
+	_mimes = nil,
 	_idx = nil,
 	_dragging = false,
 	_dropping = false,
@@ -83,12 +84,15 @@ function Dnd.drop(event, area)
 
 	local op, dropping = Dnd._op, Dnd._dropping
 	if event.type == "enter" then
+		Dnd.consume_mimes()
 		Dnd._allowed = event.op
-		Dnd._idx, Dnd._mime = Dnd.mime_at(event.mimes)
 		Dnd._op = Dnd._idx and Dnd:new(area):op_at(event.x, event.y) or "reject"
 		rt.tty:queue("AgreeDrop", { type = Dnd._op, mimes = Dnd._mime and { Dnd._mime } or {} })
 	elseif event.type == "ready" then
-		rt.tty:queue("StartDrop", { idx = Dnd._idx })
+		Dnd.consume_mimes()
+		local kind = Dnd._idx and "StartDrop" or "FinishDrop"
+		local data = Dnd._idx and { idx = Dnd._idx } or { type = "reject" }
+		rt.tty:queue(kind, data)
 	elseif event.type == "arrive" then
 		rt.tty:queue("FinishDrop", { type = Dnd._op })
 		require("dnd").drop(Dnd._op, Dnd._mime, event.data)
@@ -109,12 +113,17 @@ function Dnd:op_at(x, y)
 	return "reject"
 end
 
-function Dnd.mime_at(mimes)
+function Dnd.consume_mimes()
+	if not Dnd._mimes then
+		return
+	end
 	for _, wanted in ipairs { "text/uri-list", "image/png" } do
-		for i, mime in ipairs(mimes) do
+		for i, mime in ipairs(Dnd._mimes) do
 			if mime == wanted then
-				return i, mime
+				Dnd._idx, Dnd._mime, Dnd._mimes = i, mime, nil
+				return
 			end
 		end
 	end
+	Dnd._idx, Dnd._mime, Dnd._mimes = nil, nil, nil
 end

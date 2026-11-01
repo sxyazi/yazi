@@ -69,9 +69,9 @@ impl State {
 #[derive(Debug, Default, PartialEq)]
 pub(crate) struct StateOsc72 {
 	pub(crate) r#type:   Option<u8>,
-	pub(crate) x:        Option<i32>,
-	pub(crate) y:        Option<i32>,
-	pub(crate) op:       Option<u8>,
+	pub(crate) x:        i32,
+	pub(crate) y:        i32,
+	pub(crate) op:       u8,
 	pub(crate) payload:  Vec<u8>,
 	pub(crate) has_more: bool,
 }

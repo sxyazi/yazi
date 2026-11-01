@@ -17,9 +17,9 @@ impl Parser {
 		for part in meta.split(':') {
 			match part.split_once('=').ok_or(ParseError::Invalid)? {
 				("t", v) if let Some(b) = v.bytes().next() => state.r#type = Some(b),
-				("x", v) => state.x = Some(v.parse()?),
-				("y", v) => state.y = Some(v.parse()?),
-				("o", v) => state.op = Some(v.parse()?),
+				("x", v) => state.x = v.parse()?,
+				("y", v) => state.y = v.parse()?,
+				("o", v) => state.op = v.parse()?,
 				("m", "1") => state.has_more = true,
 				_ => {}
 			}
