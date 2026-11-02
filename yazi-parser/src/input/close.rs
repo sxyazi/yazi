@@ -5,13 +5,12 @@ use yazi_shim::mlua::SER_OPT;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct CloseForm {
+	#[serde(default)]
 	pub submit: bool,
 }
 
 impl<C> FromAction<C> for CloseForm {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { submit: a.bool("submit") })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl From<bool> for CloseForm {

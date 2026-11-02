@@ -1,15 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct FindArrowForm {
-	pub prev: bool,
+	#[serde(default)]
+	pub previous: bool,
 }
 
 impl<C> FromAction<C> for FindArrowForm {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { prev: a.bool("previous") })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for FindArrowForm {

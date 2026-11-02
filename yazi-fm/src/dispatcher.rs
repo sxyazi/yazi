@@ -21,8 +21,8 @@ impl<'a> Dispatcher<'a> {
 			Event::Term(TermEvent::Key(key)) => self.dispatch_key(key),
 			Event::Term(TermEvent::Mouse(mouse)) => self.dispatch_mouse(mouse),
 			Event::Term(TermEvent::Resize(_)) => self.dispatch_resize(),
-			Event::Term(TermEvent::FocusIn) => self.dispatch_focus(),
-			Event::Term(TermEvent::FocusOut) => Ok(()),
+			Event::Term(TermEvent::FocusIn) => self.dispatch_focus(false),
+			Event::Term(TermEvent::FocusOut) => self.dispatch_focus(true),
 			Event::Term(TermEvent::Paste(str)) => self.dispatch_paste(str),
 			Event::Term(TermEvent::Dnd(dnd)) => self.dispatch_dnd(dnd),
 			Event::Term(TermEvent::Clipboard(clip)) => self.dispatch_clipboard(clip),
@@ -70,9 +70,9 @@ impl<'a> Dispatcher<'a> {
 		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _).map(|_| ())
 	}
 
-	fn dispatch_focus(&mut self) -> Result<()> {
+	fn dispatch_focus(&mut self, lost: bool) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:focus, cx).map(|_| ())
+		act!(app:focus, cx, lost).map(|_| ())
 	}
 
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {

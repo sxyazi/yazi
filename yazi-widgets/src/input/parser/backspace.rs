@@ -1,15 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct BackspaceOpt {
+	#[serde(default)]
 	pub(crate) under: bool,
 }
 
 impl<C> FromAction<C> for BackspaceOpt {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { under: a.bool("under") })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl From<bool> for BackspaceOpt {

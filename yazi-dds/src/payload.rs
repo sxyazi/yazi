@@ -109,6 +109,7 @@ impl Display for Payload<'_> {
 			Ember::Input(b) => serde_json::to_string(b),
 			Ember::Mount(b) => serde_json::to_string(b),
 			Ember::Theme(b) => serde_json::to_string(b),
+			Ember::Focus(b) => serde_json::to_string(b),
 			Ember::Custom(b) => serde_json::to_string(b),
 		};
 

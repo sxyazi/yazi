@@ -1,15 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PasteOpt {
+	#[serde(default)]
 	pub(crate) before: bool,
 }
 
 impl<C> FromAction<C> for PasteOpt {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { before: a.bool("before") })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for PasteOpt {

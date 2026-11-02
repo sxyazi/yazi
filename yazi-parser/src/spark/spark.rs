@@ -13,7 +13,7 @@ pub enum Spark<'a> {
 	AppClipboard(crate::app::ClipboardForm),
 	AppDeprecate(crate::app::DeprecateForm),
 	AppDnd(crate::app::DndForm),
-	AppFocus(crate::VoidForm),
+	AppFocus(crate::app::FocusForm),
 	AppLua(crate::app::LuaForm),
 	AppMouse(crate::app::MouseForm),
 	AppPlugin(crate::app::PluginForm),
@@ -369,7 +369,6 @@ impl<'a> IntoLua for Spark<'a> {
 try_from_spark!(
 	crate::VoidForm,
 	app:bootstrap,
-	app:focus,
 	app:theme,
 	mgr:back,
 	mgr:bulk_rename,
@@ -394,6 +393,7 @@ try_from_spark!(crate::ArrowForm, mgr:arrow, mgr:tab_swap);
 try_from_spark!(crate::app::ClipboardForm, app:clipboard);
 try_from_spark!(crate::app::DeprecateForm, app:deprecate);
 try_from_spark!(crate::app::DndForm, app:dnd);
+try_from_spark!(crate::app::FocusForm, app:focus);
 try_from_spark!(crate::app::LuaForm, app:lua);
 try_from_spark!(crate::app::MouseForm, app:mouse);
 try_from_spark!(crate::app::PluginForm, app:plugin);

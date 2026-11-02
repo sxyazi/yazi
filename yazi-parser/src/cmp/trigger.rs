@@ -1,9 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{event::{ActionCow, FromAction}, id::Id};
 use yazi_shim::SStr;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct TriggerForm {
+	#[serde(alias = "0", default)]
 	pub word:   SStr,
 	pub ticket: Option<Id>,
 }
@@ -13,9 +15,7 @@ impl From<String> for TriggerForm {
 }
 
 impl<C> FromAction<C> for TriggerForm {
-	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { word: a.take_first().unwrap_or_default(), ticket: a.get("ticket").ok() })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for TriggerForm {

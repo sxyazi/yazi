@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Dynamic virtual filesystem Lua API ([#4338])
 - `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
+- New `focus` DDS event for terminal focus changes ([#4474])
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 - Image preview adaptation for `st-graphics` terminal ([#4414])
 - Random read/write for virtual file systems ([#4451])
@@ -1923,3 +1924,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4464]: https://github.com/sxyazi/yazi/pull/4464
 [#4467]: https://github.com/sxyazi/yazi/pull/4467
 [#4473]: https://github.com/sxyazi/yazi/pull/4473
+[#4474]: https://github.com/sxyazi/yazi/pull/4474

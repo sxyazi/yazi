@@ -1,24 +1,22 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct RenameForm {
+	#[serde(default)]
 	pub hovered: bool,
+	#[serde(default)]
 	pub force:   bool,
+	#[serde(default)]
 	pub empty:   SStr,
+	#[serde(default)]
 	pub cursor:  SStr,
 }
 
 impl<C> FromAction<C> for RenameForm {
-	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self {
-			hovered: a.bool("hovered"),
-			force:   a.bool("force"),
-			empty:   a.take("empty").unwrap_or_default(),
-			cursor:  a.take("cursor").unwrap_or_default(),
-		})
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for RenameForm {

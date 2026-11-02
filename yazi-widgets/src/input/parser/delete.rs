@@ -1,16 +1,17 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct DeleteOpt {
+	#[serde(default)]
 	pub(crate) cut:    bool,
+	#[serde(default)]
 	pub(crate) insert: bool,
 }
 
 impl<C> FromAction<C> for DeleteOpt {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { cut: a.bool("cut"), insert: a.bool("insert") })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for DeleteOpt {

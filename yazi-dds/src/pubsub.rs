@@ -184,4 +184,6 @@ impl Pubsub {
 	pub_after!(mount(), ());
 
 	pub_after!(theme(), ());
+
+	pub_after!(focus(lost: bool), (lost));
 }

@@ -4,7 +4,7 @@ use strum::IntoStaticStr;
 use yazi_shared::id::Id;
 use yazi_shim::strum::IntoStr;
 
-use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberPatch, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
+use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberFocus, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberPatch, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
 use crate::Payload;
 
 #[derive(Clone, Debug, IntoStaticStr)]
@@ -30,6 +30,7 @@ pub enum Ember<'a> {
 	Input(EmberInput<'a>),
 	Mount(EmberMount),
 	Theme(EmberTheme),
+	Focus(EmberFocus),
 	Custom(EmberCustom),
 }
 
@@ -55,6 +56,7 @@ impl Ember<'static> {
 			"input" => Self::Input(serde_json::from_str(body)?),
 			"mount" => Self::Mount(serde_json::from_str(body)?),
 			"theme" => Self::Theme(serde_json::from_str(body)?),
+			"focus" => Self::Focus(serde_json::from_str(body)?),
 			_ => EmberCustom::from_str(kind, body)?,
 		})
 	}
@@ -86,6 +88,7 @@ impl Ember<'static> {
 				| "input"
 				| "mount"
 				| "theme"
+				| "focus"
 		) || kind.starts_with("key-")
 			|| kind.starts_with("ind-")
 			|| kind.starts_with("emit-")
@@ -153,6 +156,7 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Input(b) => b.into_lua(lua),
 			Self::Mount(b) => b.into_lua(lua),
 			Self::Theme(b) => b.into_lua(lua),
+			Self::Focus(b) => b.into_lua(lua),
 			Self::Custom(b) => b.into_lua(lua),
 		}
 	}

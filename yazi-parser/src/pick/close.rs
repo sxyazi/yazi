@@ -1,15 +1,15 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct CloseForm {
+	#[serde(default)]
 	pub submit: bool,
 }
 
 impl<C> FromAction<C> for CloseForm {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { submit: a.bool("submit") })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl From<bool> for CloseForm {
