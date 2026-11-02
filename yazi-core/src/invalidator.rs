@@ -1,6 +1,6 @@
 use hashbrown::HashSet;
 use yazi_fs::op::FilesOp;
-use yazi_shared::{path::PathBufDyn, url::{UrlBuf, UrlLike}};
+use yazi_shared::{path::PathBufDyn, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
 use crate::{mgr::Mgr, tab::Tab};
 
@@ -18,19 +18,19 @@ impl<'a> Invalidator<'a> {
 			}
 			FilesOp::Upsert(_, files) => {
 				for file in files.values() {
-					self.invalidate(&file.url);
+					self.invalidate(file.as_url());
 				}
 			}
 			_ => {}
 		}
 	}
 
-	fn invalidate(&mut self, url: &UrlBuf) {
+	pub fn invalidate(&mut self, url: Url<'_>) {
 		for tab in &mut *self.tabs {
-			if tab.current.url == *url {
+			if tab.current.url == url {
 				tab.current.invalidate();
 			}
-			if let Some(parent) = tab.parent.as_mut().filter(|f| f.url == *url) {
+			if let Some(parent) = tab.parent.as_mut().filter(|f| f.url == url) {
 				parent.invalidate();
 			}
 			if let Some(folder) = tab.history.get_mut(url) {

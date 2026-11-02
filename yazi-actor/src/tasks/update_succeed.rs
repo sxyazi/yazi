@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_core::Ctx;
+use yazi_core::{Ctx, Invalidator};
 use yazi_macro::succ;
 use yazi_parser::tasks::UpdateSucceedForm;
 use yazi_shared::{data::Data, url::UrlLike};
@@ -25,6 +25,11 @@ impl Actor for UpdateSucceed {
 		{
 			cx.current_mut().trace = Some(key.into());
 			act!(mgr:hover, cx)?;
+		}
+
+		let mut invalidator = Invalidator::new(&mut cx.mgr);
+		for parent in form.urls.iter().filter_map(|u| u.parent()) {
+			invalidator.invalidate(parent);
 		}
 
 		cx.mgr.watcher.report(form.urls);

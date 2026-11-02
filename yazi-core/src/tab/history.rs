@@ -13,8 +13,8 @@ pub struct History {
 impl History {
 	pub fn get(&self, url: &UrlBuf) -> Option<&Folder> { self.entries.get(url) }
 
-	pub(crate) fn get_mut(&mut self, url: &UrlBuf) -> Option<&mut Folder> {
-		self.entries.get_mut(url)
+	pub(crate) fn get_mut(&mut self, url: impl AsUrl) -> Option<&mut Folder> {
+		self.entries.get_mut(&url.as_url())
 	}
 
 	pub fn ensure(&mut self, url: &UrlBuf) -> (&mut Folder, Option<Folder>) {
