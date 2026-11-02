@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `patch` DDS event for reporting incremental changes to files ([#4365])
 - Image preview adaptation for `st-graphics` terminal ([#4414])
 - Random read/write for virtual file systems ([#4451])
+- Windows MSI installers for stable and nightly releases ([#4473])
 - Windows support for `fs.partitions()` ([#4402])
 
 ### Changed
@@ -1921,3 +1922,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4451]: https://github.com/sxyazi/yazi/pull/4451
 [#4464]: https://github.com/sxyazi/yazi/pull/4464
 [#4467]: https://github.com/sxyazi/yazi/pull/4467
+[#4473]: https://github.com/sxyazi/yazi/pull/4473
