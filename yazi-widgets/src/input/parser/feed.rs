@@ -1,10 +1,12 @@
 use std::borrow::Cow;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct FeedOpt<'a> {
+	#[serde(alias = "0", default)]
 	text: Cow<'a, str>,
 }
 
@@ -13,9 +15,7 @@ impl<'a> AsRef<str> for FeedOpt<'a> {
 }
 
 impl<C> FromAction<C> for FeedOpt<'_> {
-	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { text: a.take_first().unwrap_or_default() })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl<'a> From<String> for FeedOpt<'a> {

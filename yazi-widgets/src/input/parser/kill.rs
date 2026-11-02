@@ -1,16 +1,16 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct KillOpt {
+	#[serde(alias = "0", default)]
 	pub(crate) kind: SStr,
 }
 
 impl<C> FromAction<C> for KillOpt {
-	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { kind: a.take_first().unwrap_or_default() })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for KillOpt {

@@ -1,16 +1,16 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 use yazi_shim::SStr;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct CopyForm {
+	#[serde(alias = "0", default)]
 	pub r#type: SStr,
 }
 
 impl<C> FromAction<C> for CopyForm {
-	fn from_action(mut a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self { r#type: a.take_first().unwrap_or_default() })
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for CopyForm {

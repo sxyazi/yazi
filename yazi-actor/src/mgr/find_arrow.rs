@@ -18,7 +18,7 @@ impl Actor for FindArrow {
 		let Some(finder) = &mut tab.finder else { succ!() };
 
 		render!(finder.catchup(&tab.current));
-		let offset = if form.prev {
+		let offset = if form.previous {
 			finder.prev(&tab.current.entries, tab.current.cursor, false)
 		} else {
 			finder.next(&tab.current.entries, tab.current.cursor, false)

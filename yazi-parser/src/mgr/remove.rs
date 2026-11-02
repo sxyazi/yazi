@@ -1,21 +1,19 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::event::{ActionCow, FromAction};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct RemoveForm {
+	#[serde(default)]
 	pub force:       bool,
+	#[serde(default)]
 	pub permanently: bool,
+	#[serde(default)]
 	pub hovered:     bool,
 }
 
 impl<C> FromAction<C> for RemoveForm {
-	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> {
-		Ok(Self {
-			force:       a.bool("force"),
-			permanently: a.bool("permanently"),
-			hovered:     a.bool("hovered"),
-		})
-	}
+	fn from_action(a: ActionCow, _: &C) -> anyhow::Result<Self> { Ok(a.deserialize()?) }
 }
 
 impl FromLua for RemoveForm {
