@@ -1,0 +1,19 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<Package Name="Yazi" Manufacturer="sxyazi" Version="$(var.Version)" Scope="perMachine" UpgradeCode="BBD15E03-338D-4B0B-965E-648F874D04D2">
+		<MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of Yazi is already installed." Schedule="afterInstallInitialize" />
+		<MediaTemplate EmbedCab="yes" />
+
+		<StandardDirectory Id="ProgramFiles64Folder">
+			<Directory Id="INSTALLFOLDER" Name="Yazi">
+				<Component Id="Yazi">
+					<File Source="$(var.SourceDir)\yazi.exe" KeyPath="yes" />
+					<Environment Id="Path" Name="PATH" Value="[INSTALLFOLDER]" Action="set" Part="last" System="yes" />
+				</Component>
+
+				<Files Include="$(var.SourceDir)\**">
+					<Exclude Files="$(var.SourceDir)\yazi.exe" />
+				</Files>
+			</Directory>
+		</StandardDirectory>
+	</Package>
+</Wix>

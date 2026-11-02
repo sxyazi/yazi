@@ -158,6 +158,40 @@ jobs:
           name: snap-${{ matrix.arch }}
           path: yazi-${{ matrix.arch }}.snap
 
+  build-msi:
+    needs: [build-windows]
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            arch: x64
+          - target: aarch64-pc-windows-msvc
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.target }}
+
+      - name: Package MSI
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet tool install --global wix
+
+          Expand-Archive "yazi-${{ matrix.target }}.zip" -DestinationPath .
+          $source = (Resolve-Path "yazi-${{ matrix.target }}").Path
+          $version = ((cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages | Where-Object name -eq 'yazi-fm').version
+
+          wix build assets/msi.wxs -acceptEula wix7 -arch ${{ matrix.arch }} -d "SourceDir=$source" -d "Version=$version" -pdbtype none -o "yazi-${{ matrix.target }}.msi"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: msi-${{ matrix.target }}
+          path: yazi-${{ matrix.target }}.msi
+
   snap:
     runs-on: ubuntu-latest
     needs: [build-snap]
@@ -189,7 +223,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build-unix, build-windows, build-musl, build-snap]
+    needs: [build-unix, build-windows, build-musl, build-snap, build-msi]
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -203,6 +237,7 @@ jobs:
             yazi-*.zip
             yazi-*.deb
             yazi-*.snap
+            yazi-*.msi
           generate_release_notes: true
 
   nightly:
@@ -210,7 +245,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build-unix, build-windows, build-musl, build-snap]
+    needs: [build-unix, build-windows, build-musl, build-snap, build-msi]
     steps:
       - run: |
           echo 'NIGHTLY_BODY<<EOF' >> $GITHUB_ENV
@@ -239,6 +274,7 @@ jobs:
             yazi-*.zip
             yazi-*.deb
             yazi-*.snap
+            yazi-*.msi
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}
           target_commitish: ${{ github.sha }}
