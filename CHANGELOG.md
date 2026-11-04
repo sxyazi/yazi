@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Added
 
+- Compress files ([#4477])
 - Rclone integration ([#4383])
 - Archive extraction progress ([#4431])
 - Autocomplete VFS URLs and package IDs ([#4464])
@@ -1925,3 +1926,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4467]: https://github.com/sxyazi/yazi/pull/4467
 [#4473]: https://github.com/sxyazi/yazi/pull/4473
 [#4474]: https://github.com/sxyazi/yazi/pull/4474
+[#4477]: https://github.com/sxyazi/yazi/pull/4477
