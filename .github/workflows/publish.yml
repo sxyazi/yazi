@@ -48,7 +48,7 @@ jobs:
         uses: vedantmgoyal9/winget-releaser@main
         with:
           identifier: sxyazi.yazi
-          installers-regex: 'yazi-(x86_64|aarch64)-pc-windows-msvc\.zip$'
+          installers-regex: 'yazi-(x86_64|aarch64)-pc-windows-msvc\.(zip|msi)$'
           token: ${{ secrets.WINGET_TOKEN }}
 
   snapcraft:
