@@ -2,6 +2,7 @@ use std::{cmp::Ordering, str::FromStr};
 
 use anyhow::bail;
 use serde_with::DeserializeFromStr;
+use yazi_shim::CompactString;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ConditionOp {
@@ -16,7 +17,7 @@ pub enum ConditionOp {
 	Unknown,
 
 	// Only used in `eval()`
-	Term(String),
+	Term(CompactString),
 }
 
 impl ConditionOp {
@@ -97,7 +98,7 @@ impl Condition {
 					stack.pop();
 				}
 				ConditionOp::Unknown => {
-					let mut s = String::from(token);
+					let mut s = CompactString::from_display(token);
 					while let Some(c) = chars.next_if(|&c| ConditionOp::new(c) == op) {
 						s.push(c);
 					}

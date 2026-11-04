@@ -33,6 +33,7 @@ impl Stat {
 impl UserData for Stat {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("mode", |_, me| Ok(me.mode.bits()));
+		fields.add_field_method_get("is_file", |_, me| Ok(me.is_file()));
 		fields.add_field_method_get("is_dir", |_, me| Ok(me.is_dir()));
 		fields.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
 		fields.add_field_method_get("is_link", |_, me| Ok(me.is_link()));

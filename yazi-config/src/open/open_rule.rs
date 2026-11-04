@@ -4,6 +4,7 @@ use serde::Deserialize;
 use serde_with::{OneOrMany, formats::PreferOne, serde_as};
 use yazi_codegen::DeserializeOver2;
 use yazi_shared::id::Id;
+use yazi_shim::CompactString;
 
 use crate::{Mixable, Pattern, Selectable, Selector, plugin::open_rule_id};
 
@@ -15,7 +16,7 @@ pub struct OpenRule {
 	#[serde(flatten)]
 	selector:         Selector,
 	#[serde_as(as = "OneOrMany<_, PreferOne>")]
-	pub(crate) r#use: Vec<String>,
+	pub(crate) r#use: Vec<CompactString>,
 }
 
 impl PartialEq for OpenRule {

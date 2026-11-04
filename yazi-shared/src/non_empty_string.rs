@@ -1,14 +1,15 @@
 use std::{borrow::Borrow, ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::Deref};
 
 use serde::{Deserialize, Deserializer, Serialize};
+use yazi_shim::CompactString;
 
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(transparent)]
-pub struct NonEmptyString(String);
+pub struct NonEmptyString(CompactString);
 
 impl NonEmptyString {
 	#[inline]
-	fn new(value: String) -> Option<Self> { Some(Self(value)).filter(|s| !s.is_empty()) }
+	fn new(value: CompactString) -> Option<Self> { Some(Self(value)).filter(|s| !s.is_empty()) }
 }
 
 impl Deref for NonEmptyString {
@@ -23,9 +24,9 @@ impl Borrow<str> for NonEmptyString {
 	fn borrow(&self) -> &str { &self.0 }
 }
 
-impl Borrow<String> for NonEmptyString {
+impl Borrow<CompactString> for NonEmptyString {
 	#[inline]
-	fn borrow(&self) -> &String { &self.0 }
+	fn borrow(&self) -> &CompactString { &self.0 }
 }
 
 impl AsRef<str> for NonEmptyString {
@@ -48,17 +49,17 @@ impl Debug for NonEmptyString {
 
 impl From<NonEmptyString> for String {
 	#[inline]
-	fn from(value: NonEmptyString) -> Self { value.0 }
+	fn from(value: NonEmptyString) -> Self { value.0.into() }
 }
 
 impl From<NonEmptyString> for OsString {
 	#[inline]
-	fn from(value: NonEmptyString) -> Self { value.0.into() }
+	fn from(value: NonEmptyString) -> Self { value.0.into_string().into() }
 }
 
 impl<'de> Deserialize<'de> for NonEmptyString {
 	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-		let value = String::deserialize(deserializer)?;
+		let value = CompactString::deserialize(deserializer)?;
 		Self::new(value).ok_or_else(|| serde::de::Error::custom("must be a non-empty string"))
 	}
 }

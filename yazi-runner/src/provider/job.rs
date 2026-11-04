@@ -3,7 +3,7 @@ use std::sync::Arc;
 use mlua::{IntoLua, Lua, Value};
 use yazi_config::vfs::ServiceLua;
 use yazi_shared::{id::Id, scope::{Scope, ScopeLike}, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 use super::ProvideOp;
 use crate::PluginJob;
@@ -27,7 +27,7 @@ impl ProvideJob {
 }
 
 impl PluginJob for ProvideJob {
-	fn name(&self) -> &SStr { &self.service.name }
+	fn name(&self) -> &CompactString { &self.service.name }
 }
 
 impl ScopeLike for ProvideJob {

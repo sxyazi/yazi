@@ -4,15 +4,15 @@ use arc_swap::ArcSwap;
 use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, IntoLua, IntoLuaMulti, LuaString, MetaMethod, UserData, UserDataMethods, Value};
 use serde::{Deserialize, Deserializer};
-use yazi_shim::{arc_swap::IntoPointee, toml::{DeserializeOverHook, DeserializeOverWith}};
+use yazi_shim::{CompactString, arc_swap::IntoPointee, toml::{DeserializeOverHook, DeserializeOverWith}};
 
 use crate::{open::OpenRule, opener::{OpenerRuleArc, OpenerRuleMatcher, OpenerRulesArc, OpenerRulesMatcher}};
 
 #[derive(Debug, Deserialize)]
-pub struct Opener(ArcSwap<HashMap<String, OpenerRulesArc>>);
+pub struct Opener(ArcSwap<HashMap<CompactString, OpenerRulesArc>>);
 
 impl Deref for Opener {
-	type Target = ArcSwap<HashMap<String, OpenerRulesArc>>;
+	type Target = ArcSwap<HashMap<CompactString, OpenerRulesArc>>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -51,7 +51,7 @@ impl Opener {
 	fn insert(&self, name: &str, rules: &OpenerRulesArc) {
 		self.0.rcu(|inner| {
 			let mut next = HashMap::clone(inner);
-			next.insert(name.to_owned(), rules.clone());
+			next.insert(name.into(), rules.clone());
 			next
 		});
 	}
@@ -64,7 +64,7 @@ impl Opener {
 		});
 	}
 
-	fn unwrap_unchecked(self) -> HashMap<String, OpenerRulesArc> {
+	fn unwrap_unchecked(self) -> HashMap<CompactString, OpenerRulesArc> {
 		Arc::try_unwrap(self.0.into_inner()).expect("unique opener arc")
 	}
 }

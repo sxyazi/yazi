@@ -3,7 +3,7 @@ use std::{fmt::{Display, Write}, str::FromStr};
 use anyhow::bail;
 use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shim::mlua::SER_OPT;
+use yazi_shim::{CompactString, mlua::SER_OPT};
 use yazi_term::event::{KeyCode, KeyEvent, Modifiers};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -83,7 +83,7 @@ impl FromStr for Key {
 
 		let mut it = s[1..s.len() - 1].split_inclusive('-').peekable();
 		while let Some(next) = it.next() {
-			match next.to_ascii_lowercase().as_str() {
+			match &*CompactString::new(next).into_ascii_lowercase() {
 				"s-" => key.shift = true,
 				"c-" => key.ctrl = true,
 				"a-" => key.alt = true,

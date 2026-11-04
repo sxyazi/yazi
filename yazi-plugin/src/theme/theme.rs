@@ -216,9 +216,7 @@ fn confirm() -> Composer<ComposerGet> {
 
 			b"btn_yes" => t.btn_yes.into_lua(lua),
 			b"btn_no" => t.btn_no.into_lua(lua),
-			b"btn_labels" => {
-				lua.create_sequence_from(t.btn_labels.load().iter().map(String::as_str))?.into_lua(lua)
-			}
+			b"btn_labels" => lua.create_sequence_from(t.btn_labels.load().iter())?.into_lua(lua),
 
 			_ => Ok(Value::Nil),
 		}
@@ -290,6 +288,7 @@ fn input() -> Composer<ComposerGet> {
 			b"border_set" => t.border_set.load_full().into_lua(lua),
 			b"title" => t.title.into_lua(lua),
 			b"value" => t.value.into_lua(lua),
+			b"hint" => t.hint.into_lua(lua),
 			b"selected" => t.selected.into_lua(lua),
 
 			_ => Ok(Value::Nil),

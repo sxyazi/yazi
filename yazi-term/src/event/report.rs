@@ -1,6 +1,6 @@
-use compact_str::CompactString;
 use mlua::{ExternalError, IntoLua, Lua, Value};
 use strum::EnumIs;
+use yazi_shim::CompactString;
 
 #[derive(Clone, Debug, EnumIs, Eq, PartialEq)]
 pub enum Report {

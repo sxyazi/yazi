@@ -25,6 +25,7 @@ impl InputArc {
 	pub fn compose(lua: &Lua, styles: InputStyles, cb: fn(InputEvent)) -> mlua::Result<Value> {
 		let new = lua.create_function(move |_, (_, mut opt): (Table, InputOpt)| {
 			opt.styles.normal = opt.styles.normal.or(styles.normal);
+			opt.styles.hint = opt.styles.hint.or(styles.hint);
 			opt.styles.selected = opt.styles.selected.or(styles.selected);
 			opt.styles.blink = opt.styles.blink.or(styles.blink);
 			Ok(Self::from(Input::new(opt.with_cb(cb))?))

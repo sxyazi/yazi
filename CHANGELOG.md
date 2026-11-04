@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
 - New `focus` DDS event for terminal focus changes ([#4474])
-- New `patch` DDS event for reporting incremental changes to files ([#4365])
+- New `patch` DDS event for file incremental changes ([#4365])
 - Image preview adaptation for `st-graphics` terminal ([#4414])
 - Random read/write for virtual file systems ([#4451])
 - Windows MSI installers for stable and nightly releases ([#4473])

@@ -1,9 +1,9 @@
-use std::{borrow::Cow, fmt::{self, Display}, ops::{Deref, DerefMut}, str::FromStr};
+use std::{fmt::{self, Display}, ops::{Deref, DerefMut}, str::FromStr};
 
 use anyhow::{Result, bail};
 use mlua::{FromLua, Lua, UserData, UserDataFields, Value};
 use serde_with::DeserializeFromStr;
-use yazi_shim::{SStr, mlua::UserDataFieldsExt};
+use yazi_shim::{CompactString, mlua::UserDataFieldsExt};
 
 use crate::{Layer, Source, data::{Data, DataAny, DataKey}, event::{Cmd, Replier}, scope::Scope};
 
@@ -26,35 +26,24 @@ impl DerefMut for Action {
 }
 
 impl Action {
-	pub fn new<N>(name: N, source: Source, layer: Layer) -> Result<Self>
-	where
-		N: Into<SStr>,
-	{
-		let cow: SStr = name.into();
-		let (layer, name) = match cow.find(':') {
-			None => (layer, cow),
-			Some(i) => (cow[..i].parse()?, match cow {
-				Cow::Borrowed(s) => Cow::Borrowed(&s[i + 1..]),
-				Cow::Owned(mut s) => {
-					s.drain(..i + 1);
-					Cow::Owned(s)
-				}
-			}),
-		};
+	pub fn new(name: impl Into<CompactString>, source: Source, mut layer: Layer) -> Result<Self> {
+		let mut name = name.into();
+
+		if let Some(i) = name.find(':') {
+			layer = name[..i].parse()?;
+			name.drain(..=i);
+		}
 
 		Ok(Self { cmd: Cmd { name, args: Default::default() }, layer, source, ..Self::default() })
 	}
 
-	pub fn new_relay<N>(name: N) -> Self
-	where
-		N: Into<SStr>,
-	{
+	pub fn new_relay(name: impl Into<CompactString>) -> Self {
 		Self::new(name, Source::Relay, Layer::Null).unwrap_or(Self::null())
 	}
 
 	pub fn new_relay_args<N, D, I>(name: N, args: I) -> Self
 	where
-		N: Into<SStr>,
+		N: Into<CompactString>,
 		D: Into<Data>,
 		I: IntoIterator<Item = D>,
 	{

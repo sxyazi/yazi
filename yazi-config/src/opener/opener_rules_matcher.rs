@@ -1,12 +1,13 @@
 use std::{mem, sync::Arc};
 
 use hashbrown::{HashMap, hash_map};
+use yazi_shim::CompactString;
 
 use crate::opener::{Opener, OpenerRulesArc};
 
 pub struct OpenerRulesMatcher {
-	iter:    hash_map::Iter<'static, String, OpenerRulesArc>,
-	_opener: Arc<HashMap<String, OpenerRulesArc>>,
+	iter:    hash_map::Iter<'static, CompactString, OpenerRulesArc>,
+	_opener: Arc<HashMap<CompactString, OpenerRulesArc>>,
 }
 
 impl From<&Opener> for OpenerRulesMatcher {
@@ -15,8 +16,8 @@ impl From<&Opener> for OpenerRulesMatcher {
 
 		let iter = unsafe {
 			mem::transmute::<
-				hash_map::Iter<'_, String, OpenerRulesArc>,
-				hash_map::Iter<'static, String, OpenerRulesArc>,
+				hash_map::Iter<'_, CompactString, OpenerRulesArc>,
+				hash_map::Iter<'static, CompactString, OpenerRulesArc>,
 			>(opener.iter())
 		};
 
@@ -25,7 +26,7 @@ impl From<&Opener> for OpenerRulesMatcher {
 }
 
 impl Iterator for OpenerRulesMatcher {
-	type Item = (String, OpenerRulesArc);
+	type Item = (CompactString, OpenerRulesArc);
 
 	fn next(&mut self) -> Option<Self::Item> {
 		self.iter.next().map(|(name, rules)| (name.clone(), rules.clone()))

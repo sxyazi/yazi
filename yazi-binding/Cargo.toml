@@ -28,7 +28,6 @@ ansi-to-tui      = { workspace = true }
 anyhow           = { workspace = true }
 arc-swap         = { workspace = true }
 chrono           = { workspace = true }
-compact_str      = { workspace = true }
 form_urlencoded  = { workspace = true }
 futures          = { workspace = true }
 hashbrown        = { workspace = true }

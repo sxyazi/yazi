@@ -6,7 +6,8 @@ use serde::Deserialize;
 use yazi_shared::event::Actions;
 use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::{IndexAtError, VecExt}};
 
-use crate::keymap::{Chord, ChordArc, ChordIter, ChordMatcher};
+use super::ids::chord_id;
+use crate::keymap::{Chord, ChordArc, ChordMatcher};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(transparent)]
@@ -39,7 +40,7 @@ impl Chords {
 		Ok(())
 	}
 
-	fn remove(&self, matcher: ChordMatcher) {
+	pub(super) fn remove(&self, matcher: ChordMatcher) {
 		self.0.rcu(|chords| {
 			let mut next = Vec::clone(chords);
 			next.retain(|arc| !matcher.matches(arc));
@@ -59,7 +60,7 @@ impl Chords {
 					*arc = f(Chord::clone(arc))?.into();
 				}
 			}
-			Ok(Arc::new(next))
+			Ok(next)
 		})?;
 
 		Ok(())
@@ -70,21 +71,24 @@ impl Chords {
 	}
 }
 
-impl UserData for &Chords {
+impl UserData for &'static Chords {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("match", |_, &me, matcher: Option<ChordMatcher>| {
 			Ok(match matcher {
-				Some(matcher) => ChordIter { chords: me.load_full(), matcher, ..Default::default() },
+				Some(matcher) => ChordMatcher { chords: me.load_full(), owner: Some(me), ..matcher },
 				None => me.into(),
 			})
 		});
 
-		methods.add_method("insert", |_, me, (index, chord): (isize, ChordArc)| {
+		methods.add_method("insert", |_, me, (index, mut chord): (isize, ChordArc)| {
 			let index = match index {
 				1.. => index - 1,
 				0 => return Err("index must be 1-based or negative".into_lua_err()),
 				_ => index,
 			};
+
+			Arc::make_mut(&mut chord).id = chord_id();
+			chord.owner = Some(*me);
 
 			me.insert(index, chord.clone()).into_lua_err()?;
 			Ok(chord)

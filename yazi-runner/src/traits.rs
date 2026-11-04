@@ -1,6 +1,6 @@
 use yazi_shared::scope::ScopeLike;
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 pub trait PluginJob: ScopeLike {
-	fn name(&self) -> &SStr;
+	fn name(&self) -> &CompactString;
 }

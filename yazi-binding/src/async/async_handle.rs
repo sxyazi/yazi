@@ -1,9 +1,8 @@
 use std::{cell::Cell, future::Future, rc::Rc, thread};
 
-use compact_str::CompactString;
 use scopeguard::{ScopeGuard, guard};
 use tokio::task::{self, JoinHandle};
-use yazi_shim::fs::Error;
+use yazi_shim::{CompactString, fs::Error};
 
 use super::AsyncResult;
 

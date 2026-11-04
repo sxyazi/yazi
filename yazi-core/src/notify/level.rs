@@ -3,6 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use yazi_binding::style::Style;
 use yazi_config::THEME;
+use yazi_shim::CompactString;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -14,7 +15,7 @@ pub enum MessageLevel {
 }
 
 impl MessageLevel {
-	pub fn icon(self) -> Arc<String> {
+	pub fn icon(self) -> Arc<CompactString> {
 		match self {
 			Self::Info => THEME.notify.icon_info.load_full(),
 			Self::Warn => THEME.notify.icon_info.load_full(),

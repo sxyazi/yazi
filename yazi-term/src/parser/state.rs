@@ -1,6 +1,6 @@
 use std::{num::NonZeroU8, time::Duration};
 
-use compact_str::CompactString;
+use yazi_shim::CompactString;
 
 #[derive(Debug, Default, PartialEq)]
 pub(crate) enum State {

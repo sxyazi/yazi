@@ -1,6 +1,7 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui_core::widgets::Widget;
 use ratatui_widgets::borders::Borders;
+use yazi_shim::CompactString;
 
 use super::{Area, Edge};
 use crate::elements::Spatial;
@@ -10,7 +11,7 @@ pub struct Bar {
 	area: Area,
 
 	edge:   Edge,
-	symbol: String,
+	symbol: CompactString,
 	style:  ratatui_core::style::Style,
 }
 
@@ -87,7 +88,7 @@ impl UserData for Bar {
 			ud.borrow_mut::<Self>()?.edge = edge;
 			Ok(ud)
 		});
-		methods.add_function("symbol", |_, (ud, symbol): (AnyUserData, String)| {
+		methods.add_function("symbol", |_, (ud, symbol): (AnyUserData, CompactString)| {
 			ud.borrow_mut::<Self>()?.symbol = symbol;
 			Ok(ud)
 		});

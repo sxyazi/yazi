@@ -3,7 +3,7 @@ use yazi_binding::elements::Rect;
 use yazi_config::{LAYOUT, plugin::PreloaderArc};
 use yazi_fs::file::File;
 use yazi_shared::{pool::Symbol, scope::{Scope, ScopeLike}, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 use crate::PluginJob;
 
@@ -15,7 +15,7 @@ pub struct PreloadJob {
 }
 
 impl PluginJob for PreloadJob {
-	fn name(&self) -> &SStr { &self.preloader.name }
+	fn name(&self) -> &CompactString { &self.preloader.name }
 }
 
 impl ScopeLike for PreloadJob {

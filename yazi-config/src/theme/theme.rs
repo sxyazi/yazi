@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer, de};
 use yazi_binding::{elements::BorderSet, style::Style};
 use yazi_codegen::{DeserializeOver, DeserializeOver1, DeserializeOver2, Overlay};
 use yazi_fs::{Xdg, ok_or_not_found, path::sanitize_path};
-use yazi_shim::{arc_swap::IntoPointee, cell::SyncCell};
+use yazi_shim::{CompactString, arc_swap::IntoPointee, cell::SyncCell};
 
 use super::{Custom, Filetype, Flavor, Icon};
 use crate::YAZI;
@@ -79,7 +79,7 @@ pub struct Mgr {
 	pub marker_cut:      SyncCell<Style>,
 	pub marker_marked:   SyncCell<Style>,
 	pub marker_selected: SyncCell<Style>,
-	pub marker_symbol:   ArcSwap<String>,
+	pub marker_symbol:   ArcSwap<CompactString>,
 
 	// Count
 	pub count_copied:   SyncCell<Style>,
@@ -87,7 +87,7 @@ pub struct Mgr {
 	pub count_selected: SyncCell<Style>,
 
 	// Border
-	pub border_symbol: ArcSwap<String>,
+	pub border_symbol: ArcSwap<CompactString>,
 	pub border_style:  SyncCell<Style>,
 
 	// Highlighting
@@ -107,8 +107,8 @@ pub struct Tabs {
 
 #[derive(Deserialize)]
 pub struct TabsSep {
-	pub open:  String,
-	pub close: String,
+	pub open:  CompactString,
+	pub close: CompactString,
 }
 
 // --- Mode
@@ -135,8 +135,8 @@ pub struct Indicator {
 
 #[derive(Deserialize)]
 pub struct IndicatorPadding {
-	pub open:  String,
-	pub close: String,
+	pub open:  CompactString,
+	pub close: CompactString,
 }
 
 // --- Status
@@ -161,8 +161,8 @@ pub struct Status {
 
 #[derive(Deserialize)]
 pub struct StatusSep {
-	pub open:  String,
-	pub close: String,
+	pub open:  CompactString,
+	pub close: CompactString,
 }
 
 // --- Which
@@ -177,7 +177,7 @@ pub struct Which {
 	pub rest:       SyncCell<Style>,
 	pub desc:       SyncCell<Style>,
 
-	pub separator:       ArcSwap<String>,
+	pub separator:       ArcSwap<CompactString>,
 	pub separator_style: SyncCell<Style>,
 }
 
@@ -192,7 +192,7 @@ pub struct Confirm {
 
 	pub btn_yes:    SyncCell<Style>,
 	pub btn_no:     SyncCell<Style>,
-	pub btn_labels: ArcSwap<[String; 2]>,
+	pub btn_labels: ArcSwap<[CompactString; 2]>,
 }
 
 // --- Spot
@@ -215,9 +215,9 @@ pub struct Notify {
 	pub title_warn:  SyncCell<Style>,
 	pub title_error: SyncCell<Style>,
 
-	pub icon_info:  ArcSwap<String>,
-	pub icon_warn:  ArcSwap<String>,
-	pub icon_error: ArcSwap<String>,
+	pub icon_info:  ArcSwap<CompactString>,
+	pub icon_warn:  ArcSwap<CompactString>,
+	pub icon_error: ArcSwap<CompactString>,
 }
 
 // --- Pick
@@ -236,6 +236,7 @@ pub struct Input {
 	pub border_set: ArcSwap<BorderSet>,
 	pub title:      SyncCell<Style>,
 	pub value:      SyncCell<Style>,
+	pub hint:       SyncCell<Style>,
 	pub selected:   SyncCell<Style>,
 }
 
@@ -243,6 +244,7 @@ impl From<&Input> for yazi_widgets::input::InputStyles {
 	fn from(input: &Input) -> Self {
 		Self {
 			normal:   Some(input.value.get().into()),
+			hint:     Some(input.hint.get().into()),
 			selected: Some(input.selected.get().into()),
 			blink:    Some(YAZI.input.cursor_blink),
 		}
@@ -257,9 +259,9 @@ pub struct Cmp {
 	pub active:     SyncCell<Style>,
 	pub inactive:   SyncCell<Style>,
 
-	pub icon_file:    ArcSwap<String>,
-	pub icon_folder:  ArcSwap<String>,
-	pub icon_command: ArcSwap<String>,
+	pub icon_file:    ArcSwap<CompactString>,
+	pub icon_folder:  ArcSwap<CompactString>,
+	pub icon_command: ArcSwap<CompactString>,
 }
 
 // --- Tasks

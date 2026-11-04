@@ -10,7 +10,7 @@ pub struct Runner;
 
 impl Runner {
 	pub(crate) fn spawn(job: &impl PluginJob) -> mlua::Result<Lua> {
-		Self::spawn_with(RuntimeSeed::new(job.name().as_ref(), job))
+		Self::spawn_with(RuntimeSeed::new(job.name(), job))
 	}
 
 	pub(crate) fn spawn_with(seed: RuntimeSeed) -> mlua::Result<Lua> {

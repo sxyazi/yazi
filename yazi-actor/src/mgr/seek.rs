@@ -38,10 +38,8 @@ impl Actor for Seek {
 			scope: cx.scope.clone(),
 		};
 
-		let action = relay!(app:plugin, [previewer.name.clone()])
-			.with_scope(&job)
-			.with(1, job)
-			.with("method", "seek");
+		let action =
+			relay!(app:plugin, [&previewer.name]).with_scope(&job).with(1, job).with("method", "seek");
 
 		act!(app:plugin, cx.nested(&action)?, action)
 	}

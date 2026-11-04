@@ -1,8 +1,7 @@
 use std::{borrow::Borrow, ffi::OsStr, fmt::{Display, Formatter}, ops::Deref};
 
-use compact_str::CompactString;
 use serde::{Deserialize, Deserializer, Serialize};
-use yazi_shim::bytes::BytesExt;
+use yazi_shim::{CompactString, bytes::BytesExt};
 
 use crate::SnakeCasedKey;
 

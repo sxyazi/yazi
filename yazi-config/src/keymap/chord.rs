@@ -1,4 +1,4 @@
-use std::{borrow::Cow, hash::{Hash, Hasher}, sync::Arc};
+use std::{borrow::Cow, fmt::Write, hash::{Hash, Hasher}, sync::Arc};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use regex::regex;
@@ -11,7 +11,7 @@ use yazi_shared::{event::{Actions, deserialize_actions}, id::Id};
 use super::{Key, ids::chord_id};
 use crate::{Mixable, Platform, keymap::{ChordArc, Chords}};
 
-#[derive(Debug, Default, Deserialize, DeserializeOver2)]
+#[derive(Clone, Debug, Default, Deserialize, DeserializeOver2)]
 pub struct Chord {
 	#[serde(skip, default = "chord_id")]
 	pub id:    Id,
@@ -23,18 +23,6 @@ pub struct Chord {
 	pub desc:  String,
 	#[serde(default)]
 	pub r#for: Platform,
-}
-
-impl Clone for Chord {
-	fn clone(&self) -> Self {
-		Self {
-			id:    chord_id(),
-			on:    self.on.clone(),
-			run:   self.run.clone(),
-			desc:  self.desc.clone(),
-			r#for: self.r#for,
-		}
-	}
 }
 
 impl AsRef<Self> for Chord {
@@ -52,23 +40,40 @@ impl Hash for Chord {
 }
 
 impl Chord {
-	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
+	pub fn on(&self) -> String {
+		let mut s = String::new();
+		for key in &self.on {
+			write!(s, "{key}").unwrap();
+		}
+		s
+	}
 
 	fn run(&self) -> String {
-		regex!(r"\s+")
-			.replace_all(&self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; "), " ")
-			.into_owned()
+		let mut s = String::new();
+		for (i, action) in self.run.iter().enumerate() {
+			if i > 0 {
+				s.push_str("; ");
+			}
+			write!(s, "{action}").unwrap();
+		}
+
+		match regex!(r"\s{2,}|[^\S ]").replace_all(&s, " ") {
+			Cow::Borrowed(_) => s,
+			Cow::Owned(new) => new,
+		}
 	}
 
-	fn desc(&self) -> Option<Cow<'_, str>> {
-		Some(&self.desc).filter(|s| !s.is_empty()).map(|s| regex!(r"\s+").replace_all(s, " "))
+	pub fn desc_or_run(&self) -> Cow<'_, str> {
+		if self.desc.is_empty() {
+			self.run().into()
+		} else {
+			regex!(r"\s{2,}|[^\S ]").replace_all(&self.desc, " ")
+		}
 	}
-
-	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }
 
 	#[inline]
 	fn noop(&self) -> bool {
-		self.run.len() == 1 && self.run[0].name == "noop" && self.run[0].args.is_empty()
+		matches!(self.run.as_slice(), [action] if action.name == "noop" && action.args.is_empty())
 	}
 }
 
@@ -90,8 +95,21 @@ where
 // --- Matcher
 #[derive(Default)]
 pub struct ChordMatcher {
-	id:  Id,
-	all: bool,
+	pub(super) chords: Arc<Vec<ChordArc>>,
+	pub(super) id:     Id,
+	pub(super) all:    bool,
+	pub(super) offset: usize,
+	pub(super) owner:  Option<&'static Chords>,
+}
+
+impl From<Id> for ChordMatcher {
+	fn from(id: Id) -> Self { Self { id, ..Default::default() } }
+}
+
+impl From<&'static Chords> for ChordMatcher {
+	fn from(owner: &'static Chords) -> Self {
+		Self { chords: owner.load_full(), all: true, owner: Some(owner), ..Default::default() }
+	}
 }
 
 impl ChordMatcher {
@@ -100,13 +118,28 @@ impl ChordMatcher {
 	}
 }
 
+impl Iterator for ChordMatcher {
+	type Item = ChordArc;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		while let Some(chord) = self.chords.get(self.offset) {
+			self.offset += 1;
+			if self.matches(chord) {
+				return Some(match self.owner {
+					Some(owner) => chord.clone_for(owner),
+					None => chord.clone(),
+				});
+			}
+		}
+		None
+	}
+}
+
 impl TryFrom<Table> for ChordMatcher {
 	type Error = mlua::Error;
 
 	fn try_from(value: Table) -> Result<Self, Self::Error> {
-		let id: Id = value.raw_get("id").unwrap_or_default();
-
-		Ok(Self { id, ..Default::default() })
+		Ok(Self { id: value.raw_get("id").unwrap_or_default(), ..Default::default() })
 	}
 }
 
@@ -119,38 +152,6 @@ impl FromLua for ChordMatcher {
 	}
 }
 
-// --- Iter
-#[derive(Default)]
-pub struct ChordIter {
-	pub(crate) chords:  Arc<Vec<ChordArc>>,
-	pub(crate) matcher: ChordMatcher,
-	pub(crate) offset:  usize,
-}
-
-impl From<&Chords> for ChordIter {
-	fn from(chords: &Chords) -> Self {
-		Self {
-			chords: chords.load_full(),
-			matcher: ChordMatcher { all: true, ..Default::default() },
-			..Default::default()
-		}
-	}
-}
-
-impl Iterator for ChordIter {
-	type Item = ChordArc;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		while let Some(chord) = self.chords.get(self.offset) {
-			self.offset += 1;
-			if self.matcher.matches(chord) {
-				return Some(chord.clone());
-			}
-		}
-		None
-	}
-}
-
-impl IntoLua for ChordIter {
+impl IntoLua for ChordMatcher {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
 }

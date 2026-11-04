@@ -1,55 +1,16 @@
 use anyhow::Result;
-use foldhash::fast::FixedState;
-use hashbrown::HashMap;
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::{FolderStage, file::FileCov, op::FilesOp};
 use yazi_shared::{id::Id, url::{Url, UrlBuf}};
-use yazi_shim::{cell::RoCell, indexmap::IndexSet};
+use yazi_shim::indexmap::IndexSet;
 
-use crate::{Client, PEERS, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};
+use crate::{Client, PEERS, Subscription, Subscriptions, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};
 
-pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>, FixedState>>> =
-	RoCell::new_init(RwLock::new(HashMap::with_hasher(FixedState::with_seed(0))));
+pub(crate) static LOCAL: RwLock<Subscriptions> = RwLock::new(Subscriptions::new());
 
-pub static REMOTE: RoCell<RwLock<HashMap<String, HashMap<String, Function>, FixedState>>> =
-	RoCell::new_init(RwLock::new(HashMap::with_hasher(FixedState::with_seed(0))));
-
-macro_rules! sub {
-	($var:ident) => {
-		|plugin: &str, kind: &str, f: Function| {
-			let mut var = $var.write();
-			let Some(map) = var.get_mut(kind) else {
-				var.insert(kind.to_owned(), HashMap::from_iter([(plugin.to_owned(), f)]));
-				return true;
-			};
-
-			if !map.contains_key(plugin) {
-				map.insert(plugin.to_owned(), f);
-				return true;
-			}
-			false
-		}
-	};
-}
-
-macro_rules! unsub {
-	($var:ident) => {
-		|plugin: &str, kind: &str| {
-			let mut var = $var.write();
-			let Some(map) = var.get_mut(kind) else { return false };
-
-			if map.remove(plugin).is_none() {
-				return false;
-			}
-			if map.is_empty() {
-				var.remove(kind);
-			}
-			true
-		}
-	};
-}
+pub(crate) static REMOTE: RwLock<Subscriptions> = RwLock::new(Subscriptions::new());
 
 macro_rules! pub_after {
 	(&impl $name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*), $static:literal) => {
@@ -88,16 +49,31 @@ macro_rules! pub_after {
 pub struct Pubsub;
 
 impl Pubsub {
-	pub fn sub(plugin: &str, kind: &str, f: Function) -> bool { sub!(LOCAL)(plugin, kind, f) }
-
-	pub fn sub_remote(plugin: &str, kind: &str, f: Function) -> bool {
-		sub!(REMOTE)(plugin, kind, f) && Self::pub_inner_hi()
+	pub fn sub(kind: &str, plugin: &str, f: Function) -> Option<Subscription> {
+		LOCAL.write().insert(Subscription::new(kind, plugin, f))
 	}
 
-	pub fn unsub(plugin: &str, kind: &str) -> bool { unsub!(LOCAL)(plugin, kind) }
+	pub fn sub_remote(kind: &str, plugin: &str, f: Function) -> Option<Subscription> {
+		let subscription = REMOTE.write().insert(Subscription::new(kind, plugin, f).with_remote());
+		if subscription.is_some() {
+			Self::pub_inner_hi();
+		}
+		subscription
+	}
 
-	pub fn unsub_remote(plugin: &str, kind: &str) -> bool {
-		unsub!(REMOTE)(plugin, kind) && Self::pub_inner_hi()
+	pub fn unsub(kind: &str, plugin: &str) -> bool { LOCAL.write().remove(kind, plugin) }
+
+	pub fn unsub_remote(kind: &str, plugin: &str) -> bool {
+		let removed = REMOTE.write().remove(kind, plugin);
+		if removed {
+			Self::pub_inner_hi();
+		}
+		removed
+	}
+
+	pub fn subscriptions(kind: &str, remote: bool) -> Vec<Subscription> {
+		let subscriptions = if remote { REMOTE.read() } else { LOCAL.read() };
+		subscriptions.get(kind).into_iter().flatten().cloned().collect()
 	}
 
 	pub fn r#pub(body: Ember<'static>) -> Result<()> {
@@ -121,13 +97,12 @@ impl Pubsub {
 		Ok(())
 	}
 
-	pub(crate) fn pub_inner_hi() -> bool {
-		let abilities = REMOTE.read().keys().cloned().collect();
-		let abilities = BOOT.remote_events.union(&abilities).map(AsRef::as_ref);
+	pub(crate) fn pub_inner_hi() {
+		let subscriptions = REMOTE.read();
+		let abilities = BOOT.remote_events.iter().chain(subscriptions.keys()).map(AsRef::as_ref);
 
 		// FIXME: handle error
 		Client::push(EmberHi::borrowed(abilities)).ok();
-		true
 	}
 
 	pub fn pub_after_bulk_rename<'a, I>(changes: I) -> Result<()>

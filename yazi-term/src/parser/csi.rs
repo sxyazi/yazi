@@ -1,6 +1,6 @@
 use std::str::{self, FromStr};
 
-use compact_str::CompactString;
+use yazi_shim::CompactString;
 
 use super::parser::Parser;
 use crate::{ParseError, Result, bail, event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, Modifiers, MouseEvent, MouseEventKind}};

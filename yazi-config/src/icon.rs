@@ -1,10 +1,11 @@
 use mlua::{IntoLua, Lua, Value};
 use serde::Deserialize;
 use yazi_binding::style::Style;
+use yazi_shim::CompactString;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Icon {
-	pub text:  String,
+	pub text:  CompactString,
 	#[serde(flatten)]
 	pub style: Style,
 }

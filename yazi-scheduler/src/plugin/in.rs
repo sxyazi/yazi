@@ -4,7 +4,7 @@ use hashbrown::HashMap;
 use mlua::{FromLua, Lua, Table, Value};
 use yazi_runner::entry::EntryJob;
 use yazi_shared::{data::{Data, DataKey}, id::Id, scope::Scope, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::{CompactString, SStr};
 
 use crate::{TaskIn, custom::CustomIn, plugin::PluginProgEntry};
 
@@ -53,7 +53,7 @@ impl_from_in!(Entry(PluginInEntry), Custom(CustomIn));
 #[derive(Clone, Debug, Default)]
 pub struct PluginInEntry {
 	pub id:     Id,
-	pub plugin: SStr,
+	pub plugin: CompactString,
 	pub args:   HashMap<DataKey, Data>,
 	pub scope:  Scope,
 	pub title:  SStr,
@@ -97,7 +97,7 @@ impl FromLua for PluginInEntry {
 		let t = Table::from_lua(value, lua)?;
 
 		Ok(Self {
-			plugin: t.raw_get::<String>(1)?.into(),
+			plugin: t.raw_get(1)?,
 			args: Sendable::table_to_args(lua, t.raw_get("args")?)?,
 			scope: t.raw_get("scope")?,
 			track: t.raw_get("track")?,

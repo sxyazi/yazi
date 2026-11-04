@@ -21,7 +21,6 @@ yazi-tty   = { path = "../yazi-tty", version = "26.9.1" }
 anyhow      = { workspace = true }
 base64      = { workspace = true }
 bitflags    = { workspace = true }
-compact_str = { workspace = true }
 futures     = { workspace = true }
 mlua        = { workspace = true }
 parking_lot = { workspace = true }

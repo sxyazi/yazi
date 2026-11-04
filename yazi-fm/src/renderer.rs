@@ -9,11 +9,12 @@ pub(super) struct Renderer<'a> {
 	component:   &'a str,
 	constructor: &'a str,
 	redrawer:    &'a str,
+	focusless:   bool,
 }
 
 impl<'a> Renderer<'a> {
 	pub(super) fn new(core: &'a mut Core, component: &'a str) -> Self {
-		Self { core, component, constructor: "new", redrawer: "redraw" }
+		Self { core, component, constructor: "new", redrawer: "redraw", focusless: false }
 	}
 
 	pub(super) fn with_constructor(mut self, constructor: &'a str) -> Self {
@@ -26,6 +27,11 @@ impl<'a> Renderer<'a> {
 		self
 	}
 
+	pub(super) fn with_focusless(mut self, focusless: bool) -> Self {
+		self.focusless = focusless;
+		self
+	}
+
 	pub(super) fn render(self, area: Rect, buf: &mut Buffer) -> mlua::Result<()> {
 		let area = yazi_binding::elements::Rect::from(area);
 
@@ -35,13 +41,16 @@ impl<'a> Renderer<'a> {
 			.call_method::<Table>(self.constructor, area)?
 			.call_method(self.redrawer, ())?;
 
-		self.core.input.alt = None;
+		if !self.focusless {
+			self.core.input.alt = None;
+		}
+
 		Renderables::reduce(value, |element| {
-			match &element {
-				Renderable::Input(input) if input.focus => {
-					self.core.input.alt = Some(input.into());
-				}
-				_ => {}
+			if let Renderable::Input(input) = &element
+				&& !self.focusless
+				&& input.focus
+			{
+				self.core.input.alt = Some(input.into());
 			}
 
 			element.render_with(buf, |p| self.core.mgr.area(p));

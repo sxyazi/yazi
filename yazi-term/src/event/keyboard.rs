@@ -1,7 +1,7 @@
 use bitflags::bitflags;
-use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use strum::EnumIs;
+use yazi_shim::CompactString;
 
 use crate::{ParseError, Result, bail, event::Modifiers};
 
