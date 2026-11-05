@@ -4,7 +4,7 @@ use yazi_binding::elements::Rect;
 use yazi_config::{LAYOUT, plugin::PreviewerArc};
 use yazi_fs::file::File;
 use yazi_shared::{data::Data, id::Id, pool::Symbol, scope::{Scope, ScopeLike}, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::{CompactString, SStr};
 
 use crate::PluginJob;
 
@@ -19,7 +19,7 @@ pub struct PeekJob {
 }
 
 impl PluginJob for PeekJob {
-	fn name(&self) -> &SStr { &self.previewer.name }
+	fn name(&self) -> &CompactString { &self.previewer.name }
 }
 
 impl ScopeLike for PeekJob {

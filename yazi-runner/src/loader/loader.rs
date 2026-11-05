@@ -6,18 +6,18 @@ use mlua::{ExternalError, Lua, Table, chunk::ChunkMode};
 use parking_lot::RwLock;
 use yazi_fs::{Xdg, engine::local::Local};
 use yazi_macro::plugin_preset as preset;
-use yazi_shim::{bytes::BytesExt, cell::RoCell, log::LOG_LEVEL};
+use yazi_shim::{CompactString, bytes::BytesExt, cell::RoCell, log::LOG_LEVEL};
 
 use super::Chunk;
 
 pub static LOADER: RoCell<Loader> = RoCell::new();
 
 pub struct Loader {
-	cache: RwLock<HashMap<String, Chunk>>,
+	cache: RwLock<HashMap<CompactString, Chunk>>,
 }
 
 impl Deref for Loader {
-	type Target = RwLock<HashMap<String, Chunk>>;
+	type Target = RwLock<HashMap<CompactString, Chunk>>;
 
 	fn deref(&self) -> &Self::Target { &self.cache }
 }
@@ -26,69 +26,69 @@ impl Default for Loader {
 	fn default() -> Self {
 		let cache = HashMap::from_iter([
 			// Plugins
-			("archive".to_owned(), preset!("plugins/archive").into()),
-			("clipboard".to_owned(), preset!("plugins/clipboard").into()),
-			("code".to_owned(), preset!("plugins/code").into()),
-			("dds".to_owned(), preset!("plugins/dds").into()),
-			("dnd".to_owned(), preset!("plugins/dnd").into()),
-			("empty".to_owned(), preset!("plugins/empty").into()),
-			("error".to_owned(), preset!("plugins/error").into()),
-			("extract".to_owned(), preset!("plugins/extract").into()),
-			("fd".to_owned(), preset!("plugins/fd").into()),
-			("file".to_owned(), preset!("plugins/file").into()),
-			("folder".to_owned(), preset!("plugins/folder").into()),
-			("font".to_owned(), preset!("plugins/font").into()),
-			("fzf".to_owned(), preset!("plugins/fzf").into()),
-			("go".to_owned(), preset!("plugins/go").into()),
-			("image".to_owned(), preset!("plugins/image").into()),
-			("init".to_owned(), preset!("plugins/init").into()),
-			("json".to_owned(), preset!("plugins/json").into()),
-			("magick".to_owned(), preset!("plugins/magick").into()),
-			("mime".to_owned(), preset!("plugins/mime").into()),
-			("mime.dir".to_owned(), preset!("plugins/mime-dir").into()),
-			("mime.local".to_owned(), preset!("plugins/mime-local").into()),
-			("mime.remote".to_owned(), preset!("plugins/mime-remote").into()),
-			("mime.trash".to_owned(), preset!("plugins/mime-trash").into()),
-			("multi".to_owned(), preset!("plugins/multi").into()),
-			("noop".to_owned(), preset!("plugins/noop").into()),
-			("pdf".to_owned(), preset!("plugins/pdf").into()),
-			("place".to_owned(), preset!("plugins/place").into()),
-			("rg".to_owned(), preset!("plugins/rg").into()),
-			("search".to_owned(), preset!("plugins/search").into()),
-			("session".to_owned(), preset!("plugins/session").into()),
-			("svg".to_owned(), preset!("plugins/svg").into()),
-			("trash".to_owned(), preset!("plugins/trash").into()),
-			("vfs".to_owned(), preset!("plugins/vfs").into()),
-			("video".to_owned(), preset!("plugins/video").into()),
-			("zoxide".to_owned(), preset!("plugins/zoxide").into()),
+			("archive".into(), preset!("plugins/archive").into()),
+			("clipboard".into(), preset!("plugins/clipboard").into()),
+			("code".into(), preset!("plugins/code").into()),
+			("dds".into(), preset!("plugins/dds").into()),
+			("dnd".into(), preset!("plugins/dnd").into()),
+			("empty".into(), preset!("plugins/empty").into()),
+			("error".into(), preset!("plugins/error").into()),
+			("extract".into(), preset!("plugins/extract").into()),
+			("fd".into(), preset!("plugins/fd").into()),
+			("file".into(), preset!("plugins/file").into()),
+			("folder".into(), preset!("plugins/folder").into()),
+			("font".into(), preset!("plugins/font").into()),
+			("fzf".into(), preset!("plugins/fzf").into()),
+			("go".into(), preset!("plugins/go").into()),
+			("image".into(), preset!("plugins/image").into()),
+			("init".into(), preset!("plugins/init").into()),
+			("json".into(), preset!("plugins/json").into()),
+			("magick".into(), preset!("plugins/magick").into()),
+			("mime".into(), preset!("plugins/mime").into()),
+			("mime.dir".into(), preset!("plugins/mime-dir").into()),
+			("mime.local".into(), preset!("plugins/mime-local").into()),
+			("mime.remote".into(), preset!("plugins/mime-remote").into()),
+			("mime.trash".into(), preset!("plugins/mime-trash").into()),
+			("multi".into(), preset!("plugins/multi").into()),
+			("noop".into(), preset!("plugins/noop").into()),
+			("pdf".into(), preset!("plugins/pdf").into()),
+			("place".into(), preset!("plugins/place").into()),
+			("rg".into(), preset!("plugins/rg").into()),
+			("search".into(), preset!("plugins/search").into()),
+			("session".into(), preset!("plugins/session").into()),
+			("svg".into(), preset!("plugins/svg").into()),
+			("trash".into(), preset!("plugins/trash").into()),
+			("vfs".into(), preset!("plugins/vfs").into()),
+			("video".into(), preset!("plugins/video").into()),
+			("zoxide".into(), preset!("plugins/zoxide").into()),
 			// Components
-			("app".to_owned(), [][..].into()),
-			("backdrop".to_owned(), [][..].into()),
-			("current".to_owned(), [][..].into()),
-			("entity".to_owned(), [][..].into()),
-			("header".to_owned(), [][..].into()),
-			("linemode".to_owned(), [][..].into()),
-			("marker".to_owned(), [][..].into()),
-			("markers".to_owned(), [][..].into()),
-			("modal".to_owned(), [][..].into()),
-			("parent".to_owned(), [][..].into()),
-			("preview".to_owned(), [][..].into()),
-			("progress".to_owned(), [][..].into()),
-			("rail".to_owned(), [][..].into()),
-			("rails".to_owned(), [][..].into()),
-			("root".to_owned(), [][..].into()),
-			("status".to_owned(), [][..].into()),
-			("tab".to_owned(), [][..].into()),
-			("tabs".to_owned(), [][..].into()),
-			("tasks".to_owned(), [][..].into()),
-			("tip".to_owned(), [][..].into()),
+			("app".into(), [][..].into()),
+			("backdrop".into(), [][..].into()),
+			("current".into(), [][..].into()),
+			("entity".into(), [][..].into()),
+			("header".into(), [][..].into()),
+			("linemode".into(), [][..].into()),
+			("marker".into(), [][..].into()),
+			("markers".into(), [][..].into()),
+			("modal".into(), [][..].into()),
+			("parent".into(), [][..].into()),
+			("preview".into(), [][..].into()),
+			("progress".into(), [][..].into()),
+			("rail".into(), [][..].into()),
+			("rails".into(), [][..].into()),
+			("root".into(), [][..].into()),
+			("status".into(), [][..].into()),
+			("tab".into(), [][..].into()),
+			("tabs".into(), [][..].into()),
+			("tasks".into(), [][..].into()),
+			("tip".into(), [][..].into()),
 			// Reserved
-			("history".to_owned(), [][..].into()),
-			("inline".to_owned(), [][..].into()),
-			("none".to_owned(), [][..].into()),
-			("null".to_owned(), [][..].into()),
-			("sftp".to_owned(), [][..].into()),
-			("undo".to_owned(), [][..].into()),
+			("history".into(), [][..].into()),
+			("inline".into(), [][..].into()),
+			("none".into(), [][..].into()),
+			("null".into(), [][..].into()),
+			("sftp".into(), [][..].into()),
+			("undo".into(), [][..].into()),
 		]);
 		Self { cache: RwLock::new(cache) }
 	}
@@ -114,7 +114,7 @@ impl Loader {
 		let result = Self::compatible_or_error(full, &chunk);
 		let inspect = f(&chunk);
 
-		self.cache.write().insert(full.to_owned(), chunk);
+		self.cache.write().insert(full.into(), chunk);
 		result.map(|_| inspect)
 	}
 
@@ -134,8 +134,6 @@ impl Loader {
 	}
 
 	async fn load_new(&self, lua: &Lua, name: &str) -> mlua::Result<Table> {
-		let (name, ..) = Self::explode_name_parts(name)?;
-
 		let mut mode = ChunkMode::Text;
 		let f = match self.cache.read().get(name) {
 			Some(c) => {

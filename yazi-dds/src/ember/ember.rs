@@ -112,7 +112,7 @@ impl Ember<'static> {
 impl<'a> Ember<'a> {
 	pub fn kind(&self) -> &str {
 		match self {
-			Self::Custom(b) => b.kind.as_str(),
+			Self::Custom(b) => &b.kind,
 			_ => self.into_str(),
 		}
 	}

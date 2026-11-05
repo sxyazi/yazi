@@ -5,7 +5,7 @@ use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer};
 use yazi_codegen::Overlay;
 use yazi_shared::{NonEmptyString, strand::AsStrand};
-use yazi_shim::arc_swap::IntoPointee;
+use yazi_shim::{CompactString, arc_swap::IntoPointee};
 
 use crate::Icon;
 
@@ -33,7 +33,7 @@ impl IconNames {
 		}
 
 		let inner = self.0.load();
-		inner.get(name).or_else(|| inner.get(&name.to_ascii_lowercase())).cloned()
+		inner.get(name).or_else(|| inner.get(&CompactString::new(name).into_ascii_lowercase())).cloned()
 	}
 
 	pub(super) fn unwrap_unchecked(self) -> HashMap<NonEmptyString, Icon> {

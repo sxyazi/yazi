@@ -18,7 +18,10 @@ impl Widget for Progress<'_> {
 		let area = LAYOUT.get().progress;
 		log_if_err!(
 			"Redrawing `Progress`",
-			Renderer::new(self.core, "Progress").with_constructor("use").render(area, buf)
+			Renderer::new(self.core, "Progress")
+				.with_constructor("use")
+				.with_focusless(true)
+				.render(area, buf)
 		);
 	}
 }

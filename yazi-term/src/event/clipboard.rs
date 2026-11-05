@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use compact_str::CompactString;
 use mlua::{BString, IntoLua, Lua, Value};
 use strum::IntoStaticStr;
+use yazi_shim::CompactString;
 
 use crate::parser::StateOsc5522;
 

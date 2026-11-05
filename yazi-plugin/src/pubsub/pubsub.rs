@@ -22,34 +22,32 @@ impl Pubsub {
 	pub(super) fn sub(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (kind, f): (LuaString, Function)| {
 			let rt = runtime!(lua)?;
-			if !yazi_dds::Pubsub::sub(rt.name()?, &kind.to_str()?, f) {
-				return Err("`sub()` called twice").into_lua_err();
-			}
-			Ok(())
+			yazi_dds::Pubsub::sub(&kind.to_str()?, rt.name()?, f)
+				.ok_or("`sub()` called twice")
+				.into_lua_err()
 		})
 	}
 
 	pub(super) fn sub_remote(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (kind, f): (LuaString, Function)| {
 			let rt = runtime!(lua)?;
-			if !yazi_dds::Pubsub::sub_remote(rt.name()?, &kind.to_str()?, f) {
-				return Err("`sub_remote()` called twice").into_lua_err();
-			}
-			Ok(())
+			yazi_dds::Pubsub::sub_remote(&kind.to_str()?, rt.name()?, f)
+				.ok_or("`sub_remote()` called twice")
+				.into_lua_err()
 		})
 	}
 
 	pub(super) fn unsub(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, kind: LuaString| {
 			let rt = runtime!(lua)?;
-			Ok(yazi_dds::Pubsub::unsub(rt.name()?, &kind.to_str()?))
+			Ok(yazi_dds::Pubsub::unsub(&kind.to_str()?, rt.name()?))
 		})
 	}
 
 	pub(super) fn unsub_remote(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, kind: LuaString| {
 			let rt = runtime!(lua)?;
-			Ok(yazi_dds::Pubsub::unsub_remote(rt.name()?, &kind.to_str()?))
+			Ok(yazi_dds::Pubsub::unsub_remote(&kind.to_str()?, rt.name()?))
 		})
 	}
 }

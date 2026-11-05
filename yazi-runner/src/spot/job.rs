@@ -2,7 +2,7 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_config::plugin::SpotterArc;
 use yazi_fs::file::File;
 use yazi_shared::{id::Ids, pool::Symbol, scope::{Scope, ScopeLike}, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 use crate::PluginJob;
 
@@ -18,7 +18,7 @@ pub struct SpotJob {
 }
 
 impl PluginJob for SpotJob {
-	fn name(&self) -> &SStr { &self.spotter.name }
+	fn name(&self) -> &CompactString { &self.spotter.name }
 }
 
 impl ScopeLike for SpotJob {

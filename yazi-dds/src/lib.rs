@@ -1,6 +1,6 @@
 yazi_macro::mod_pub!(ember);
 
-yazi_macro::mod_flat!(client payload pubsub pump server state stream);
+yazi_macro::mod_flat!(client payload pubsub pump server state stream subscription subscriptions);
 
 pub fn init() -> tokio::sync::mpsc::UnboundedReceiver<String> {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();

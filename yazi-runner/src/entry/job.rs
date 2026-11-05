@@ -1,7 +1,7 @@
 use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
 use yazi_shared::{data::{Data, DataKey}, id::Id, scope::{Scope, ScopeLike}, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 use crate::PluginJob;
 
@@ -9,12 +9,12 @@ use crate::PluginJob;
 pub struct EntryJob {
 	pub id:     Id,
 	pub args:   HashMap<DataKey, Data>,
-	pub plugin: SStr,
+	pub plugin: CompactString,
 	pub scope:  Scope,
 }
 
 impl PluginJob for EntryJob {
-	fn name(&self) -> &SStr { &self.plugin }
+	fn name(&self) -> &CompactString { &self.plugin }
 }
 
 impl ScopeLike for EntryJob {

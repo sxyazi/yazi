@@ -2,11 +2,12 @@ use std::borrow::Cow;
 
 use mlua::chunk::{AsChunk, ChunkMode};
 use yazi_shared::natsort;
+use yazi_shim::CompactString;
 
 pub struct Chunk {
 	pub(crate) mode:  ChunkMode,
 	pub(crate) bytes: Cow<'static, [u8]>,
-	pub(crate) since: String,
+	pub(crate) since: CompactString,
 	pub sync_peek:    bool,
 	pub sync_entry:   bool,
 }
@@ -32,7 +33,7 @@ impl Chunk {
 				(b"@sync", b"entry") => self.sync_entry = true,
 
 				(b"@since", b"") => continue,
-				(b"@since", b) => self.since = String::from_utf8_lossy(b).to_string(),
+				(b"@since", b) => self.since = CompactString::from_utf8_lossy(b),
 
 				(_, []) => break,
 				(b, _) if b.strip_prefix(b"@").unwrap_or(b"").is_empty() => break,
@@ -42,26 +43,21 @@ impl Chunk {
 	}
 }
 
-impl From<Cow<'static, [u8]>> for Chunk {
-	fn from(b: Cow<'static, [u8]>) -> Self {
+impl<T> From<T> for Chunk
+where
+	T: Into<Cow<'static, [u8]>>,
+{
+	fn from(b: T) -> Self {
 		let mut chunk = Self {
 			mode:       ChunkMode::Text,
-			bytes:      b,
-			since:      String::new(),
+			bytes:      b.into(),
+			since:      CompactString::default(),
 			sync_entry: false,
 			sync_peek:  false,
 		};
 		chunk.analyze();
 		chunk
 	}
-}
-
-impl From<&'static [u8]> for Chunk {
-	fn from(b: &'static [u8]) -> Self { Self::from(Cow::Borrowed(b)) }
-}
-
-impl From<Vec<u8>> for Chunk {
-	fn from(b: Vec<u8>) -> Self { Self::from(Cow::Owned(b)) }
 }
 
 impl AsChunk for &Chunk {

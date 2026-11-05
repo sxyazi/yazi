@@ -7,6 +7,7 @@ use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::file::{File, FileRef};
 use yazi_shared::{event::Cmd, id::Id};
+use yazi_shim::CompactString;
 
 use crate::{Mixable, Pattern, Priority, Selectable, Selector, YAZI, plugin::{FetcherArc, Fetchers, fetcher_id}};
 
@@ -19,7 +20,7 @@ pub struct Fetcher {
 	run:              Cmd,
 	#[serde(default)]
 	pub prio:         Priority,
-	pub(crate) group: String,
+	pub(crate) group: CompactString,
 }
 
 impl Deref for Fetcher {
@@ -45,7 +46,7 @@ pub struct FetcherMatcher<'a> {
 	mime:     Option<Cow<'a, str>>,
 	all:      bool,
 	offset:   usize,
-	seen:     HashSet<String>,
+	seen:     HashSet<CompactString>,
 }
 
 impl From<&Fetchers> for FetcherMatcher<'_> {

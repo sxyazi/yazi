@@ -4,7 +4,7 @@ use mlua::{IntoLua, Lua, Value};
 use yazi_config::plugin::FetcherArc;
 use yazi_fs::file::Files;
 use yazi_shared::{scope::{Scope, ScopeLike}, sendable::Sendable};
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 use crate::PluginJob;
 
@@ -15,7 +15,7 @@ pub struct FetchJob {
 }
 
 impl PluginJob for FetchJob {
-	fn name(&self) -> &SStr { &self.fetcher.name }
+	fn name(&self) -> &CompactString { &self.fetcher.name }
 }
 
 impl ScopeLike for FetchJob {

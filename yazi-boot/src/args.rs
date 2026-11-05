@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::{Parser, builder::{StringValueParser, TypedValueParser}};
 use hashbrown::HashSet;
 use yazi_shared::{id::Id, strand::StrandBuf};
+use yazi_shim::CompactString;
 
 #[derive(Debug, Default, Parser)]
 #[command(name = "yazi")]
@@ -24,17 +25,17 @@ pub struct Args {
 	pub(crate) client_id: Option<Id>,
 	/// Report the specified local events to stdout
 	#[arg(long, default_value = "", hide_default_value = true, value_parser = events())]
-	pub local_events:     HashSet<String>,
+	pub local_events:     HashSet<CompactString>,
 	/// Report the specified remote events to stdout
 	#[arg(long, default_value = "", hide_default_value = true, value_parser = events())]
-	pub remote_events:    HashSet<String>,
+	pub remote_events:    HashSet<CompactString>,
 
 	/// Print version
 	#[arg(short = 'V', long)]
 	pub(crate) version: bool,
 }
 
-fn events() -> impl TypedValueParser<Value = HashSet<String>> {
+fn events() -> impl TypedValueParser<Value = HashSet<CompactString>> {
 	StringValueParser::new()
-		.map(|s| s.split(',').filter(|s| !s.is_empty()).map(str::to_owned).collect())
+		.map(|s| s.split(',').filter(|s| !s.is_empty()).map(CompactString::new).collect())
 }

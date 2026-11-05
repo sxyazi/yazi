@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
 use arc_swap::Guard;
-use compact_str::CompactString;
 use mlua::{FromLua, Lua, LuaSerdeExt, Table, UserData, Value};
 use ratatui_core::symbols::border;
 use serde::{Deserialize, Deserializer, de};
 use unicode_width::UnicodeWidthStr;
-use yazi_shim::mlua::LuaTableExt;
+use yazi_shim::{CompactString, mlua::LuaTableExt};
 
 use super::BorderType;
 

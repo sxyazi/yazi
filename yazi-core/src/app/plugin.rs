@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt, fmt::Debug};
+use std::{fmt, fmt::Debug};
 
 use dyn_clone::DynClone;
 use hashbrown::HashMap;
@@ -9,11 +9,11 @@ use yazi_macro::impl_data_any;
 use yazi_runner::{PluginJob, loader::Chunk};
 use yazi_scheduler::plugin::PluginInEntry;
 use yazi_shared::{data::{Data, DataKey}, scope::Scope};
-use yazi_shim::SStr;
+use yazi_shim::CompactString;
 
 #[derive(Clone, Debug, Default)]
 pub struct PluginOpt {
-	pub name:     SStr,
+	pub name:     CompactString,
 	pub args:     HashMap<DataKey, Data>,
 	pub mode:     PluginMode,
 	pub method:   PluginMethod,
@@ -30,15 +30,10 @@ impl From<PluginOpt> for PluginInEntry {
 }
 
 impl PluginOpt {
-	pub fn new(name: impl Into<SStr>) -> Self {
-		let name = match name.into() {
-			Cow::Borrowed(s) => s.strip_suffix(".main").unwrap_or(s).into(),
-			Cow::Owned(mut s) => {
-				s.truncate(s.strip_suffix(".main").unwrap_or(&s).len());
-				s.into()
-			}
-		};
+	pub fn new(name: impl Into<CompactString>) -> Self {
+		let mut name = name.into();
 
+		name.truncate(name.strip_suffix(".main").unwrap_or(&name).len());
 		Self { name, ..Default::default() }
 	}
 

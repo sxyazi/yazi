@@ -1,5 +1,5 @@
-use compact_str::CompactString;
 use yazi_shared::scope::{Scope, ScopeLike};
+use yazi_shim::CompactString;
 
 #[derive(Clone, Debug, Default)]
 pub struct RuntimeSeed {

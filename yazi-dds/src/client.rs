@@ -9,7 +9,7 @@ use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use yazi_boot::BOOT;
 use yazi_macro::{error, try_format};
 use yazi_shared::id::Id;
-use yazi_shim::cell::RoCell;
+use yazi_shim::{CompactString, cell::RoCell};
 
 use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberHey}};
 
@@ -22,12 +22,12 @@ pub(super) static QUEUE_TX: RoCell<mpsc::UnboundedSender<String>> = RoCell::new(
 pub struct Client {
 	pub(super) id:        Id,
 	pub(super) tx:        mpsc::UnboundedSender<String>,
-	pub(super) abilities: HashSet<String>,
+	pub(super) abilities: HashSet<CompactString>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Peer {
-	abilities: HashSet<String>,
+	abilities: HashSet<CompactString>,
 }
 
 impl Client {
@@ -132,7 +132,9 @@ impl Client {
 }
 
 impl Peer {
-	pub(super) fn new(abilities: &HashSet<String>) -> Self { Self { abilities: abilities.clone() } }
+	pub(super) fn new(abilities: &HashSet<CompactString>) -> Self {
+		Self { abilities: abilities.clone() }
+	}
 
 	pub fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
 }

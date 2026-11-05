@@ -19,12 +19,14 @@ pub struct Message {
 }
 
 impl From<MessageOpt> for Message {
-	fn from(opt: MessageOpt) -> Self {
-		let title = opt.title.lines().next().unwrap_or_default();
+	fn from(mut opt: MessageOpt) -> Self {
+		opt.title.truncate(opt.title.lines().next().unwrap_or_default().len());
+
+		let title_width = opt.title.width();
 		let content_width = opt.content.lines().map(|s| s.width()).max().unwrap_or(0);
 
 		Self {
-			title: title.to_owned(),
+			title: opt.title,
 			content: opt.content,
 			level: opt.level,
 			timeout: opt.timeout,
@@ -32,7 +34,7 @@ impl From<MessageOpt> for Message {
 			instant: Instant::now(),
 			percent: 0,
 
-			title_width: title.width(),
+			title_width,
 			content_width,
 		}
 	}

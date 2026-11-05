@@ -136,8 +136,7 @@ impl Utils {
 		let (tx, mut rx) = mpsc::channel(1);
 		let args = Sendable::values_to_list(lua, args)?;
 
-		let job =
-			SyncJob { name: name.to_owned().into(), block, args, scope: runtime!(lua)?.to_scope() };
+		let job = SyncJob { name: name.into(), block, args, scope: runtime!(lua)?.to_scope() };
 		let opt = PluginOpt::new_callback(job, move |lua, plugin, job| {
 			let Some(block) = runtime!(lua)?.get_block(&job.name, job.block) else {
 				return Err("sync block not found".into_lua_err());

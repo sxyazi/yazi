@@ -1,5 +1,6 @@
 use ratatui_core::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::Widget};
 use yazi_config::{THEME, keymap::Chord};
+use yazi_shim::CompactString;
 
 pub(super) struct Cand<'a> {
 	cand:  &'a Chord,
@@ -9,8 +10,8 @@ pub(super) struct Cand<'a> {
 impl<'a> Cand<'a> {
 	pub(super) fn new(cand: &'a Chord, times: usize) -> Self { Self { times, cand } }
 
-	fn keys(&self) -> Vec<String> {
-		self.cand.on[self.times..].iter().map(ToString::to_string).collect()
+	fn keys(&self) -> Vec<CompactString> {
+		self.cand.on[self.times..].iter().map(CompactString::from_display).collect()
 	}
 }
 
@@ -21,10 +22,11 @@ impl Widget for Cand<'_> {
 		let separator = &**THEME.which.separator.load();
 
 		// Padding
-		spans.push(Span::raw(" ".repeat(10usize.saturating_sub(keys.join("").len()))));
+		spans
+			.push(Span::raw(&"          "[..10usize.saturating_sub(keys.iter().map(|k| k.len()).sum())]));
 
 		// First key
-		spans.push(Span::styled(keys[0].clone(), THEME.which.cand.get()));
+		spans.push(Span::styled(&keys[0], THEME.which.cand.get()));
 
 		// Rest keys
 		spans.extend(keys.iter().skip(1).map(|k| Span::styled(k, THEME.which.rest.get())));

@@ -1,6 +1,5 @@
-use compact_str::CompactString;
 use yazi_macro::error;
-use yazi_shim::fs::Error;
+use yazi_shim::{CompactString, fs::Error};
 
 pub(super) struct AsyncResult<T> {
 	pub(super) name:  CompactString,

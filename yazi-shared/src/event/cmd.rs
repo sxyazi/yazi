@@ -4,13 +4,13 @@ use anyhow::{Result, bail};
 use hashbrown::HashMap;
 use mlua::{UserData, UserDataFields};
 use serde_with::DeserializeFromStr;
-use yazi_shim::{SStr, mlua::UserDataFieldsExt};
+use yazi_shim::{CompactString, mlua::UserDataFieldsExt};
 
 use crate::{data::{Data, DataKey}, sendable::Sendable};
 
 #[derive(Clone, Debug, Default, DeserializeFromStr)]
 pub struct Cmd {
-	pub name: SStr,
+	pub name: CompactString,
 	pub args: HashMap<DataKey, Data>,
 }
 

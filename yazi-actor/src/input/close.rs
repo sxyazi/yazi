@@ -15,23 +15,24 @@ impl Actor for Close {
 	const NAME: &str = "close";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
-		let Some(mut guard) = cx.input.lock_mut() else {
+		let Some(guard) = cx.input.lock_mut() else {
 			succ!();
 		};
 
 		guard.ticket.next();
-		if let Some(cb) = guard.cb.take() {
+		if let Some(cb) = guard.cb.as_ref() {
 			let value = guard.value().to_owned();
 			cb(if form.submit { InputEvent::Submit(value) } else { InputEvent::Cancel(value) });
 		}
 
-		if form.submit
-			&& let InputMutGuard::Main(input) = guard
-		{
-			input.histories.remember(&input.main.history.name, input.main.value());
-		}
+		if let InputMutGuard::Main(input) = guard {
+			if form.submit {
+				input.histories.remember(&input.main.history.name, input.main.value());
+			}
 
-		cx.input.main.visible = false;
+			*input.main = Default::default();
+			input.main.visible = false;
+		}
 
 		act!(cmp:close, cx)?;
 		succ!(render!());

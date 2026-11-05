@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
-use yazi_shim::SStr;
+use yazi_shim::{CompactString, SStr};
 
 use crate::{data::{DataAny, DataKey}, id::Id, path::PathBufDyn, strand::StrandBuf, url::{Url, UrlBuf, UrlCow}};
 
@@ -64,6 +64,14 @@ impl From<String> for Data {
 
 impl From<SStr> for Data {
 	fn from(value: SStr) -> Self { Self::String(value) }
+}
+
+impl From<CompactString> for Data {
+	fn from(value: CompactString) -> Self { Self::String(value.into()) }
+}
+
+impl From<&CompactString> for Data {
+	fn from(value: &CompactString) -> Self { Self::from(value.as_str()) }
 }
 
 impl From<HashMap<DataKey, Data>> for Data {

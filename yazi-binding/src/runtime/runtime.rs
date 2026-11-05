@@ -1,10 +1,10 @@
 use std::mem;
 
 use anyhow::{Context, Result};
-use compact_str::CompactString;
 use hashbrown::HashMap;
 use mlua::Function;
 use yazi_shared::scope::{Scope, ScopeLike};
+use yazi_shim::CompactString;
 
 use super::{RuntimeFrame, RuntimeSeed};
 

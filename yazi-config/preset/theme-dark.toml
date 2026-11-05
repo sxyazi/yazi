@@ -201,6 +201,7 @@ border     = { fg = "blue" }
 border_set = { as = "rounded" }
 title      = {}
 value      = {}
+hint       = { fg = "gray", italic = true }
 selected   = { reversed = true }
 
 # : }}}

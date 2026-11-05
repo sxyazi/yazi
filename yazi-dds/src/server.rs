@@ -7,6 +7,7 @@ use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
 use yazi_macro::try_format;
 use yazi_shared::id::Id;
+use yazi_shim::CompactString;
 
 use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, ember::{Ember, EmberBye, EmberHey}};
 
@@ -105,7 +106,7 @@ impl Server {
 		clients.insert(payload.sender, Client {
 			id: payload.sender,
 			tx,
-			abilities: hi.abilities.into_iter().map(|s| s.into_owned()).collect(),
+			abilities: hi.abilities.into_iter().map(CompactString::from).collect(),
 		});
 
 		Self::handle_hey(&clients);

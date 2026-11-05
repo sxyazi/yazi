@@ -5,7 +5,7 @@ use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{file::File, stat::StatType};
 use yazi_shared::url::AsUrl;
-use yazi_shim::{indexmap::IndexSet, toml::DeserializeOverHook};
+use yazi_shim::{CompactString, indexmap::IndexSet, toml::DeserializeOverHook};
 
 use crate::{mix, open::{OpenRule, OpenRuleArc, OpenRules}};
 
@@ -25,7 +25,7 @@ impl Deref for Open {
 }
 
 impl Open {
-	pub fn match_common(&self, targets: &[(File, &str)]) -> IndexSet<String> {
+	pub fn match_common(&self, targets: &[(File, &str)]) -> IndexSet<CompactString> {
 		let mut targets = targets.iter();
 		let Some((file, mime)) = targets.next() else { return Default::default() };
 		let Some(first) = self.matches(file, mime) else { return Default::default() };

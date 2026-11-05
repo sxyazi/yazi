@@ -41,7 +41,7 @@ impl Help {
 			self.keyword.clear();
 			self.bindings = KEYMAP.chords(self.layer).to_vec();
 		} else if self.keyword != kw {
-			self.keyword = kw.to_owned();
+			kw.clone_into(&mut self.keyword);
 			self.bindings = Self::filter_chords(&KEYMAP.chords(self.layer), kw);
 		}
 
@@ -59,9 +59,13 @@ impl Help {
 			let on = c.on();
 			if on.starts_with(kw) {
 				exact.push(c.clone());
-			} else if on.to_lowercase().starts_with(&lowercased) {
+				continue;
+			}
+
+			let on = on.to_lowercase();
+			if on.starts_with(&lowercased) {
 				icase.push(c.clone());
-			} else if on.to_lowercase().contains(&lowercased) {
+			} else if on.contains(&lowercased) {
 				contains.push(c.clone());
 			} else if c.desc_or_run().to_lowercase().contains(&lowercased) {
 				desc.push(c.clone());

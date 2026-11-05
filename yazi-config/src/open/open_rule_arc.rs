@@ -38,8 +38,6 @@ impl UserData for OpenRuleArc {
 		fields.add_field_method_get("id", |_, me| Ok(me.id));
 		fields.add_cached_field("url", |_, me| Ok(me.url_pat().cloned()));
 		fields.add_cached_field("mime", |_, me| Ok(me.mime_pat().cloned()));
-		fields.add_cached_field("use", |lua, me| {
-			lua.create_sequence_from(me.r#use.iter().map(|s| s.as_str()))
-		});
+		fields.add_cached_field("use", |lua, me| lua.create_sequence_from(me.r#use.iter()));
 	}
 }
