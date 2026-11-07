@@ -5432,6 +5432,7 @@ name = "yazi-headless"
 version = "26.9.1"
 dependencies = [
  "anyhow",
+ "tempfile",
  "tokio",
  "yazi-boot",
  "yazi-config",

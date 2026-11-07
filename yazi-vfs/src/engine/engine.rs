@@ -152,7 +152,18 @@ pub(crate) async fn open<U>(url: U) -> io::Result<RwFile>
 where
 	U: AsUrl,
 {
-	Engines::new(url.as_url()).await?.open().await
+	let engine = Engines::new(url.as_url()).await?;
+	if let Engines::Lua(lua) = &engine
+		&& !lua.is_view()
+		&& !lua.capabilities().await?.open
+	{
+		let file = lua.file().await?;
+		if let Some(backing) = file.extra.backing() {
+			return Ok(yazi_fs::engine::local::Local::regular(backing).open().await?.into());
+		}
+	}
+
+	engine.open().await
 }
 
 pub async fn read_dir<U>(url: U) -> io::Result<ReadDir>
