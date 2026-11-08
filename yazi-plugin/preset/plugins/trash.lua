@@ -273,7 +273,19 @@ end
 function M:provide(job)
 	local op = job.op
 	if op == "Capabilities" then
-		return {}
+		return { copy_to = 1 }
+	elseif op == "CopyTo" then
+		return ya.co(function()
+			local ent, err = entry(job.from)
+			if not ent then
+				return nil, err or Error.fs { kind = "InvalidInput", message = "Cannot copy the trash root" }
+			end
+			local len, err = fs.copy(Url(ent.backing), job.to, job.attrs)
+			if not len then
+				return nil, err
+			end
+			coroutine.yield(len)
+		end)
 	elseif op == "Absolute" or op == "Canonicalize" then
 		return absolute(job.url)
 	elseif op == "Casefold" then
