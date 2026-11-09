@@ -39,7 +39,7 @@ debug = false
 [workspace.dependencies]
 ansi-to-tui            = "8.0.1"
 anyhow                 = "1.0.104"
-arc-swap               = { version = "1.9.3", features = [ "serde" ] }
+arc-swap               = { version = "1.9.4", features = [ "serde" ] }
 base64                 = "0.23.1"
 bitflags               = { version = "2.13.2", features = [ "serde" ] }
 chrono                 = { version = "0.4.45", features = [ "serde" ] }
@@ -91,7 +91,7 @@ thiserror              = "2.0.21"
 tokio                  = { version = "1.54.1", features = [ "full" ] }
 tokio-stream           = "0.1.19"
 tokio-util             = "0.7.20"
-toml                   = { version = "1.2.0" }
+toml                   = { version = "1.2.1" }
 tracing                = { version = "0.1.44", features = [ "max_level_debug", "release_max_level_off" ] }
 tracing-core           = "0.1.36"
 twox-hash              = { version = "2.1.5", default-features = false, features = [ "std", "random", "xxhash3_128" ] }

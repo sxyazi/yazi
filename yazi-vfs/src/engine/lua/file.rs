@@ -106,12 +106,12 @@ impl File {
 		Ok(self.handle.provide(op).await.ok()?)
 	}
 
-	pub(crate) async fn metadata(&self) -> io::Result<Stat> {
+	pub(crate) async fn stat(&self) -> io::Result<Stat> {
 		if self.shutdown.is_some() {
 			return Err(ErrorKind::BrokenPipe.into());
 		}
 
-		let op = ProvideOp::Metadata { url: self.to_url(), handle: Some(self.inner.clone()) };
+		let op = ProvideOp::Stat { url: self.to_url(), handle: Some(self.inner.clone()) };
 		Ok(self.handle.provide(op).await.0?)
 	}
 
@@ -122,6 +122,10 @@ impl File {
 
 		let op = ProvideOp::File { url: self.to_url(), handle: Some(self.inner.clone()) };
 		Ok(self.handle.provide(op).await.0?)
+	}
+
+	pub(crate) fn into_url(self) -> UrlBuf {
+		self.to_url() // The shared handle still needs its URL for shutdown and close.
 	}
 
 	pub(crate) async fn into_file(mut self) -> io::Result<yazi_fs::file::File> {
@@ -412,7 +416,7 @@ impl SeekState {
 	}
 
 	fn end(file: &File, n: i64) -> Self {
-		let op = ProvideOp::Metadata { url: file.to_url(), handle: Some(file.inner.clone()) };
+		let op = ProvideOp::Stat { url: file.to_url(), handle: Some(file.inner.clone()) };
 		let fut = file.handle.provide::<Stat>(op);
 
 		Self::End(n, Box::pin(async move { Ok(fut.await.0?.len) }))

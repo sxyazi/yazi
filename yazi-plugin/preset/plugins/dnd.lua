@@ -3,10 +3,10 @@ local M = {}
 local function date() return os.date("%Y-%m-%d %H-%M-%S") end
 
 function M.selected_uri_list()
-	local paths = {}
-	for _, f in pairs(cx.tab.selected) do
-		paths[#paths + 1] = "file://" .. ya.percent_encode(tostring(f.path))
-	end
+	local paths = ya.iter(pairs(cx.tab.selected))
+		:map(function(_, f) return "file://" .. ya.percent_encode(tostring(f.path)) end)
+		:into()
+
 	if #paths == 0 and cx.tab.current.hovered then
 		paths[1] = "file://" .. ya.percent_encode(tostring(cx.tab.current.hovered.path))
 	end
@@ -74,14 +74,14 @@ function M.drop_http_url(url)
 			return task:fail("HTTP " .. resp.status .. " while downloading " .. url)
 		end
 
-		local uni, err = fs.unique("file", to)
-		if not uni then
+		local file <close>, err = fs.unique_file(to)
+		if not file then
 			return task:fail(tostring(err))
 		end
 
-		local ok, err = resp:write(uni)
+		local ok, err = resp:write(file)
 		if ok then
-			task:succeed { uni }
+			task:succeed { file.url }
 		else
 			task:fail(tostring(err))
 		end
@@ -113,14 +113,17 @@ function M.drop_data_uri(uri)
 			end
 		end
 
-		local uni, err = fs.unique("file", to)
-		if not uni then
+		local file <close>, err = fs.unique_file(to)
+		if not file then
 			return task:fail(tostring(err))
 		end
 
-		local ok, err = fs.write(uni, data)
+		local ok, err = file:write_all(data)
 		if ok then
-			task:succeed { uni }
+			ok, err = file:flush()
+		end
+		if ok then
+			task:succeed { file.url }
 		else
 			task:fail(tostring(err))
 		end
@@ -135,14 +138,17 @@ function M.drop_png(data)
 			return
 		end
 
-		local uni, err = fs.unique("file", to)
-		if not uni then
+		local file <close>, err = fs.unique_file(to)
+		if not file then
 			return task:fail(tostring(err))
 		end
 
-		local ok, err = fs.write(uni, data)
+		local ok, err = file:write_all(data)
 		if ok then
-			task:succeed { uni }
+			ok, err = file:flush()
+		end
+		if ok then
+			task:succeed { file.url }
 		else
 			task:fail(tostring(err))
 		end

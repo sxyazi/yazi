@@ -12,11 +12,15 @@ impl Trash {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 
-	pub fn entry(&self, _id: &TrashId) -> io::Result<TrashEntry> {
+	pub fn stat(&self, _entry: &TrashEntry) -> io::Result<Stat> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 
-	pub fn metadata(&self, _entry: &TrashEntry, _: bool) -> io::Result<Stat> {
+	pub fn lstat(&self, _entry: &TrashEntry) -> io::Result<Stat> {
+		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
+	}
+
+	pub fn entry(&self, _id: &TrashId) -> io::Result<TrashEntry> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 

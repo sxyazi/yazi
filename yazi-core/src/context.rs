@@ -8,8 +8,8 @@ use crate::{Core, mgr::Tabs, spot::{Spot, SpotMut}, tab::{Folder, Preview, Previ
 
 pub struct Ctx<'a> {
 	pub core:      &'a mut Core,
-	pub scope:     Scope,
 	pub tab:       usize,
+	pub scope:     Scope,
 	pub level:     usize,
 	source:        Source,
 	#[cfg(debug_assertions)]
@@ -41,7 +41,7 @@ impl<'a> Ctx<'a> {
 			tab
 		};
 
-		Ok(Self { scope, tab, source: action.source, ..Self::active(core) })
+		Ok(Self { tab, scope, source: action.source, ..Self::active(core) })
 	}
 
 	pub fn with<F, T>(&mut self, tab: usize, f: F) -> T
@@ -67,9 +67,9 @@ impl<'a> Ctx<'a> {
 		let tab = core.mgr.tabs.cursor;
 		let scope = Scope::default().with_tab(core.mgr.tabs[tab].id);
 		Self {
-			scope,
 			core,
 			tab,
+			scope,
 			level: 0,
 			source: Source::Unknown,
 			#[cfg(debug_assertions)]

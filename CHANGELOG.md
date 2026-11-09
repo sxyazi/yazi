@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Custom border shape ([#4439])
 - Custom sorting ([#4363])
 - Windows drives view ([#4412])
+- Experimental `ya.iter()` iterator ([#4483])
 - Dynamic virtual filesystem Lua API ([#4338])
 - `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
@@ -42,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 ### Deprecated
 
 - Deprecate `fs.cha()` and `File.cha` in favor of `fs.stat()` and `File.stat` to align with OS terminology ([#4359])
+- Deprecate `fs.unique()`, `fs.create()`, `fs.remove()`, and `fs.read_dir()` V1 ([#4483])
 - Deprecate `ui.Border:type()` in favor of `ui.Border:set()` ([#4439])
 
 ### Fixed
@@ -1927,3 +1929,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4473]: https://github.com/sxyazi/yazi/pull/4473
 [#4474]: https://github.com/sxyazi/yazi/pull/4474
 [#4477]: https://github.com/sxyazi/yazi/pull/4477
+[#4483]: https://github.com/sxyazi/yazi/pull/4483

@@ -28,7 +28,7 @@ impl SizeCalculator {
 		.await?
 	}
 
-	pub fn stat(&self) -> Stat {
+	pub fn lstat(&self) -> Stat {
 		match *self {
 			Self::Idle(_, stat) | Self::Pending(_, stat) => stat,
 		}

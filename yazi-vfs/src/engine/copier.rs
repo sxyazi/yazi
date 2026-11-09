@@ -61,9 +61,9 @@ impl ProgressiveCopier {
 
 	async fn work(&self) -> io::Result<()> {
 		let src = engine::open(&self.from).await?;
-		let stat = if src.random().read() { Some(src.metadata().await?) } else { None };
+		let stat = if src.random().read() { Some(src.stat().await?) } else { None };
 
-		let dist = RwFile::create(&self.to).await?;
+		let dist = engine::create_file(&self.to).await?;
 		let result = match stat {
 			Some(stat) if dist.random().write() => self.work_random(stat, src, dist).await,
 			_ => self.work_sequential(src, dist).await,

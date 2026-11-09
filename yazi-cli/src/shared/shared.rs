@@ -6,12 +6,12 @@ use yazi_macro::ok_or_not_found;
 
 #[inline]
 pub async fn must_exists(path: impl AsRef<Path>) -> bool {
-	Local::regular(&path).symlink_metadata().await.is_ok()
+	Local::regular(&path).lstat().await.is_ok()
 }
 
 #[inline]
 pub async fn maybe_exists(path: impl AsRef<Path>) -> bool {
-	match Local::regular(&path).symlink_metadata().await {
+	match Local::regular(&path).lstat().await {
 		Ok(_) => true,
 		Err(e) => e.kind() != std::io::ErrorKind::NotFound,
 	}

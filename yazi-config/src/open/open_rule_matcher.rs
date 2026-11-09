@@ -1,7 +1,6 @@
 use std::{borrow::Cow, sync::Arc};
 
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
-use yazi_binding::Iter;
+use mlua::{ExternalError, FromLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use yazi_fs::file::{File, FileRef};
 use yazi_shared::id::Id;
 
@@ -76,6 +75,8 @@ impl FromLua for OpenRuleMatcher<'static> {
 	}
 }
 
-impl IntoLua for OpenRuleMatcher<'static> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
+impl UserData for OpenRuleMatcher<'static> {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method_mut(MetaMethod::Call, |_, me, ()| Ok(me.next()));
+	}
 }

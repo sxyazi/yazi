@@ -27,7 +27,7 @@ impl FileHolder for DirEntry {
 
 	async fn file_type(&self) -> io::Result<StatType> { Ok(**self.0.lstat()) }
 
-	async fn metadata(&self) -> io::Result<Stat> { Ok(self.0.lstat()) }
+	async fn lstat(&self) -> io::Result<Stat> { Ok(self.0.lstat()) }
 
 	fn name(&self) -> StrandCow<'_> { self.0.name().unwrap_or_default().into() }
 

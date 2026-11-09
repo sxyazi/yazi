@@ -52,9 +52,9 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn create_dir_all(&self) -> io::Result<()> { dispatch!(self, create_dir_all) }
 
-	async fn create_file(&self) -> io::Result<()> { dispatch!(self, create_file) }
+	async fn create_file(&self) -> io::Result<Self::File> { dispatch!(self, create_file) }
 
-	async fn create_file_new(&self) -> io::Result<()> { dispatch!(self, create_file_new) }
+	async fn create_file_new(&self) -> io::Result<Self::File> { dispatch!(self, create_file_new) }
 
 	async fn file(&self) -> io::Result<File> { dispatch!(self, file) }
 
@@ -65,7 +65,7 @@ impl<'a> Engine for Engines<'a> {
 		dispatch!(self, hard_link, to)
 	}
 
-	async fn metadata(&self) -> io::Result<Stat> { dispatch!(self, metadata) }
+	async fn lstat(&self) -> io::Result<Stat> { dispatch!(self, lstat) }
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
 		use yazi_shared::auth::AuthKind as K;
@@ -77,14 +77,7 @@ impl<'a> Engine for Engines<'a> {
 		})
 	}
 
-	async fn read_dir(self) -> io::Result<Self::ReadDir> {
-		Ok(match self {
-			Self::Local(p) => p.read_dir().await?.into(),
-			Self::Lua(p) if p.handles(|c| c.read_dir).await? => p.read_dir().await?.into(),
-			Self::Lua(p) => physical!(p, read_dir)?,
-			Self::Sftp(p) => p.read_dir().await?.into(),
-		})
-	}
+	async fn read_dir(self) -> io::Result<Self::ReadDir> { dispatch!(self, read_dir) }
 
 	async fn read_link(&self) -> io::Result<PathBufDyn> { dispatch!(self, read_link) }
 
@@ -116,6 +109,8 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> { dispatch!(self, set_attrs, attrs) }
 
+	async fn stat(&self) -> io::Result<Stat> { dispatch!(self, stat) }
+
 	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
 	where
 		S: AsStrand,
@@ -137,8 +132,6 @@ impl<'a> Engine for Engines<'a> {
 	{
 		dispatch!(self, symlink_file, original)
 	}
-
-	async fn symlink_metadata(&self) -> io::Result<Stat> { dispatch!(self, symlink_metadata) }
 
 	async fn trash(&self) -> io::Result<()> { dispatch!(self, trash) }
 

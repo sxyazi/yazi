@@ -38,7 +38,7 @@ impl Remover {
 	}
 
 	async fn remove_root(&mut self, target: UrlBuf) -> io::Result<()> {
-		let stat = ok_or_not_found!(engine::symlink_metadata(&target).await, return Ok(()));
+		let stat = ok_or_not_found!(engine::lstat(&target).await, return Ok(()));
 		if !stat.is_dir() && !stat.is_indirect() {
 			return Err(io::ErrorKind::NotADirectory.into());
 		}
@@ -50,7 +50,7 @@ impl Remover {
 		if stat.is_dir() && !stat.is_indirect() {
 			let mut it = ok_or_not_found!(engine::read_dir(&target).await, return Ok(()));
 			while let Some(dent) = it.next().await? {
-				let stat = ok_or_not_found!(dent.metadata().await, continue);
+				let stat = ok_or_not_found!(dent.lstat().await, continue);
 				() = ok_or_not_found!(Box::pin(self.remove_children(dent.url(), stat)).await);
 			}
 		}

@@ -6,10 +6,7 @@ local state = ya.sync(function()
 		return
 	end
 
-	local selected = {}
-	for _, f in pairs(tab.selected) do
-		selected[#selected + 1] = f.url
-	end
+	local selected = ya.iter(pairs(tab.selected)):map(function(_, f) return f.url end):into()
 	return tab.current.cwd, selected
 end)
 
@@ -41,10 +38,7 @@ function M:entry(job)
 		return ya.emit(stat and stat.is_dir and "cd" or "reveal", { urls[1], raw = true, scope = job.scope })
 	end
 
-	local files = {}
-	for _, url in ipairs(urls) do
-		files[#files + 1] = fs.file(url)
-	end
+	local files = ya.iter(urls):map(fs.file):into()
 	if #files > 0 then
 		files.state = #selected > 0 and "off" or "on"
 		files.scope = job.scope
@@ -84,12 +78,12 @@ function M.run_with(cwd, selected)
 end
 
 function M.split_urls(cwd, output)
-	local t = {}
-	for line in output:gmatch("[^\r\n]+") do
-		local u = Url(line)
-		t[#t + 1] = u.is_absolute and u or cwd:resolve(u)
-	end
-	return t
+	return ya.iter(output:gmatch("[^\r\n]+"))
+		:map(function(line)
+			local u = Url(line)
+			return u.is_absolute and u or cwd:resolve(u)
+		end)
+		:into()
 end
 
 return M

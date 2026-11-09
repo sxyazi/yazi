@@ -20,7 +20,7 @@ local function stat(url, follow)
 		return nil, Error.fs { kind = "NotFound", message = "Invalid place location" }
 	end
 
-	return fs.stat(source, follow)
+	return (follow and fs.stat or fs.lstat)(source)
 end
 
 local function file(url)
@@ -86,8 +86,8 @@ function M:provide(job)
 		return { reroute = 2 }
 	elseif op == "File" or op == "Revalidate" then
 		return file(job.url or job.file.url)
-	elseif op == "Metadata" or op == "SymlinkMetadata" then
-		return stat(job.url, op == "Metadata")
+	elseif op == "Lstat" or op == "Stat" then
+		return stat(job.url, op == "Stat")
 	elseif op == "Reroute" then
 		local source = target(job.url)
 		if source then
@@ -108,11 +108,16 @@ function M:provide(job)
 		end)
 	elseif op == "ReadDir" and target(job.url) then
 		return ya.co(function()
-			local files, err = fs.read_dir(target(job.url), { resolve = true })
-			if not files then
+			local ents <close>, err = fs.read_dir(target(job.url))
+			if not ents then
 				return nil, err
 			end
-			for _, file in ipairs(files) do
+			for ent, err in ents do
+				if not ent then
+					return nil, err
+				end
+
+				local file = ent:file() or ent:dummy()
 				coroutine.yield(File {
 					url = job.url:join(file.name),
 					stat = file.stat,

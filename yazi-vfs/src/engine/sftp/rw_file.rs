@@ -29,17 +29,20 @@ impl RwFile {
 		Self { inner: self.inner.cursor(offset), url: self.url.clone() }
 	}
 
-	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
+	pub(crate) async fn stat(&self) -> io::Result<yazi_fs::stat::Stat> {
 		let name = self.name().unwrap_or_default().encoded_bytes();
 
 		Ok(Stat::try_from((name, &self.inner.fstat().await?))?.0)
 	}
 
-	pub(crate) async fn into_file(mut self: Pin<Box<Self>>) -> io::Result<File> {
-		let stat = self.metadata().await?;
-		let url = mem::take(self.as_mut().project().url);
+	pub(crate) fn into_url(mut self: Pin<Box<Self>>) -> UrlBuf {
+		mem::take(self.as_mut().project().url)
+	}
 
-		Ok(File { url, stat, extra: Default::default() })
+	pub(crate) async fn into_file(self: Pin<Box<Self>>) -> io::Result<File> {
+		let stat = self.stat().await?;
+
+		Ok(File { url: self.into_url(), stat, extra: Default::default() })
 	}
 
 	pub(crate) async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {

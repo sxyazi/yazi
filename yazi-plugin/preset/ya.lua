@@ -10,12 +10,7 @@ function ya.clamp(min, x, max)
 	end
 end
 
-function ya.list_merge(a, b)
-	for _, v in ipairs(b) do
-		a[#a + 1] = v
-	end
-	return a
-end
+function ya.list_merge(a, b) return table.move(b, 1, #b, #a + 1, a) end
 
 function ya.dict_merge(a, b)
 	for k, v in pairs(b) do

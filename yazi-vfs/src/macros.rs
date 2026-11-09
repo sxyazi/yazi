@@ -13,10 +13,10 @@ macro_rules! dispatch {
 		use yazi_macro::capability;
 
 		match $me {
-			$crate::engine::Engines::Local(p) => p.$method($($arg),*).await,
-			$crate::engine::Engines::Lua(p) if p.handles(capability!($method)).await? => p.$method($($arg),*).await,
+			$crate::engine::Engines::Local(p) => p.$method($($arg),*).await.map(Into::into),
+			$crate::engine::Engines::Lua(p) if p.handles(capability!($method)).await? => p.$method($($arg),*).await.map(Into::into),
 			$crate::engine::Engines::Lua(p) => physical!(p, $method $(, $arg)*),
-			$crate::engine::Engines::Sftp(p) => p.$method($($arg),*).await,
+			$crate::engine::Engines::Sftp(p) => p.$method($($arg),*).await.map(Into::into),
 		}}
 	};
 }

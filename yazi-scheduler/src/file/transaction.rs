@@ -3,7 +3,7 @@ use std::{hash::{BuildHasher, Hash, Hasher}, io};
 use yazi_fs::{engine::Attrs, stat::StatMode};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlBuf}};
-use yazi_vfs::{engine, unique_file};
+use yazi_vfs::{engine::{self, RwFile}, unique_file};
 
 pub(super) struct Transaction;
 
@@ -24,7 +24,7 @@ impl Transaction {
 		url.hash(&mut h);
 		timestamp_us().hash(&mut h);
 
-		unique_file(parent.try_join(format!(".{:x}.yazitmp", h.finish()))?, false).await
+		unique_file(parent.try_join(format!(".{:x}.yazitmp", h.finish()))?).await.map(RwFile::into_url)
 	}
 
 	pub(super) async fn unlink<U>(url: U) -> io::Result<()>
@@ -33,7 +33,7 @@ impl Transaction {
 	{
 		let url = url.as_url();
 
-		let stat = ok_or_not_found!(engine::symlink_metadata(url).await, return Ok(()));
+		let stat = ok_or_not_found!(engine::lstat(url).await, return Ok(()));
 		if stat.is_indirect() {
 			engine::rename(Self::tmp(url).await?, url).await?;
 		} else if !stat.contains(StatMode::U_WRITE) {

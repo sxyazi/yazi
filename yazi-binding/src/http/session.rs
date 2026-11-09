@@ -25,7 +25,7 @@ impl HttpSession {
 
 	async fn flush(&self) -> io::Result<()> {
 		let Some(tx) = &self.tx else { return Ok(()) };
-		tx.reserve().await.map(|_| ()).map_err(|_| io::ErrorKind::BrokenPipe.into())
+		tx.reserve().await.map(drop).map_err(|_| io::ErrorKind::BrokenPipe.into())
 	}
 
 	async fn finish(&mut self) -> io::Result<HttpResponse> {

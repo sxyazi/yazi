@@ -7,7 +7,7 @@ pub(super) fn restore_item(from: &std::path::Path, to: &std::path::Path) -> std:
 		fs::create_dir_all(parent)?;
 	}
 
-	match if is_dir { fs::create_dir(to) } else { fs::File::create_new(to).map(|_| ()) } {
+	match if is_dir { fs::create_dir(to) } else { fs::File::create_new(to).map(drop) } {
 		Ok(()) => fs::rename(from, to),
 		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Err(io::Error::new(
 			io::ErrorKind::AlreadyExists,

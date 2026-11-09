@@ -1,9 +1,9 @@
-use std::{io, mem, ops::Deref};
+use std::{io, mem, ops::{Deref, DerefMut}};
 
 use futures::TryStreamExt;
 use http_body_util::{BodyExt, StreamBody, combinators::BoxBody};
 use hyper::{Response, body::{Body, Bytes, Frame, Incoming}};
-use mlua::{BString, IntoLuaMulti, UserData, UserDataFields, UserDataMethods, UserDataRegistry, Value};
+use mlua::{BString, IntoLuaMulti, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRegistry, Value};
 use tokio::io::{AsyncReadExt, AsyncWrite};
 use tokio_util::io::StreamReader;
 use yazi_shim::{fs::Error, mlua::UserDataFieldsExt};
@@ -20,6 +20,10 @@ impl Deref for HttpResponse {
 	type Target = Response<BoxBody<Bytes, io::Error>>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
+}
+
+impl DerefMut for HttpResponse {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }
 
 impl HttpResponse {
@@ -47,7 +51,7 @@ impl HttpResponse {
 	pub async fn write<W: AsyncWrite + Unpin>(self, output: &mut W) -> io::Result<()> {
 		let mut reader = StreamReader::new(self.inner.into_body().into_data_stream());
 
-		tokio::io::copy_buf(&mut reader, output).await.map(|_| ())
+		tokio::io::copy_buf(&mut reader, output).await.map(drop)
 	}
 
 	async fn bytes(self) -> io::Result<Vec<u8>> {
@@ -55,10 +59,6 @@ impl HttpResponse {
 		StreamReader::new(self.inner.into_body().into_data_stream()).read_to_end(&mut bytes).await?;
 
 		Ok(bytes)
-	}
-
-	async fn chunk(&mut self) -> io::Result<Option<Bytes>> {
-		self.inner.body_mut().into_data_stream().try_next().await
 	}
 }
 
@@ -84,17 +84,14 @@ impl UserData for HttpResponse {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_once("bytes", |lua, me, ()| async move {
-			match me.bytes().await {
-				Ok(bytes) => BString::from(bytes).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
-			}
+		methods.add_async_method_once("bytes", |_, me, ()| async move {
+			Ok(me.bytes().await.map(BString::from).map_err(Error::from))
 		});
-		methods.add_async_method_mut("chunk", |lua, mut me, ()| async move {
-			match me.chunk().await {
-				Ok(Some(chunk)) => lua.create_string(chunk)?.into_lua_multi(&lua),
+		methods.add_async_meta_method_mut(MetaMethod::Call, |lua, mut me, ()| async move {
+			match me.body_mut().into_data_stream().try_next().await {
+				Ok(Some(chunk)) => lua.create_external_string(chunk)?.into_lua_multi(&lua),
 				Ok(None) => Value::Nil.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
 	}

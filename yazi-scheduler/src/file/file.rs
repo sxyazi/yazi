@@ -1,11 +1,9 @@
-use std::mem;
-
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to, stat::Stat};
 use yazi_macro::{ok_or_not_found, warn};
 use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
-use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry}, unique_file};
+use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry, RwFile}, unique_dir, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
@@ -27,9 +25,12 @@ impl File {
 		let id = task.id;
 
 		if !task.force {
-			task.to = unique_file(mem::take(&mut task.to), task.init().await?.is_dir())
-				.await
-				.context("Cannot determine unique destination name")?;
+			task.to = if task.init().await?.is_dir() {
+				unique_dir(task.to).await
+			} else {
+				unique_file(task.to).await.map(RwFile::into_url)
+			}
+			.context("Cannot determine unique destination name")?;
 		}
 
 		self.ops.out(id, HookInOutCopy::new(&task.from, &task.to));
@@ -80,9 +81,12 @@ impl File {
 		let id = task.id;
 
 		if !task.force {
-			task.to = unique_file(mem::take(&mut task.to), task.init().await?.is_dir())
-				.await
-				.context("Cannot determine unique destination name")?;
+			task.to = if task.init().await?.is_dir() {
+				unique_dir(task.to).await
+			} else {
+				unique_file(task.to).await.map(RwFile::into_url)
+			}
+			.context("Cannot determine unique destination name")?;
 		}
 
 		self.ops.out(id, HookInOutMove::new(&task.from, &task.to));
@@ -161,7 +165,7 @@ impl File {
 	pub(crate) async fn link(&self, mut task: FileInLink) -> Result<(), FileOutLink> {
 		if !task.force {
 			task.to =
-				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
+				unique_file(task.to).await.context("Cannot determine unique destination name")?.into_url();
 		}
 
 		self.ops.out(task.id, HookInOutLink::new(&task.to));
@@ -172,7 +176,7 @@ impl File {
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
 		let mut stat = task.stat;
 		if stat.is_none() && (task.follow || task.delete) {
-			stat = Some(ctx!(task, Self::stat(&task.from, task.follow, None).await)?);
+			stat = Some(ctx!(task, Self::dstat(&task.from, task.follow, None).await)?);
 		}
 
 		let mut src: PathCow = task.from.loc().into();
@@ -197,7 +201,7 @@ impl File {
 				Ok(match stat {
 					Some(stat) => stat.is_dir(),
 					None => {
-						stat = Some(Self::stat(&task.from, task.follow, None).await?);
+						stat = Some(Self::dstat(&task.from, task.follow, None).await?);
 						stat.unwrap().is_dir()
 					}
 				})
@@ -222,7 +226,7 @@ impl File {
 
 		if !task.force {
 			task.to =
-				unique_file(task.to, false).await.context("Cannot determine unique destination name")?;
+				unique_file(task.to).await.context("Cannot determine unique destination name")?.into_url();
 		}
 
 		self.ops.out(task.id, HookInOutHardlink::new(&task.to));
@@ -262,7 +266,7 @@ impl File {
 
 	pub(crate) async fn delete(&self, task: FileInDelete) -> Result<(), FileOutDelete> {
 		let result: io::Result<()> = async {
-			let stat = ok_or_not_found!(engine::symlink_metadata(&task.target).await, return Ok(()));
+			let stat = ok_or_not_found!(engine::lstat(&task.target).await, return Ok(()));
 			if stat.is_dir() && !stat.is_indirect() {
 				let mut rx = engine::remove_dir_all(&task.target).await?;
 				while let Some(delta) = rx.recv().await {
@@ -355,7 +359,7 @@ impl File {
 			async |task, stat| {
 				let cache = ctx!(task, task.cache.as_ref(), "Cannot determine cache path")?;
 
-				Ok(match Self::stat(cache, true, None).await {
+				Ok(match Self::dstat(cache, true, None).await {
 					Ok(c) if c.mtime == stat.mtime => {}
 					Ok(c) => {
 						self.ops.out(id, FileOutUpload::New(c.len));
@@ -392,29 +396,29 @@ impl File {
 			}
 		}
 
-		let stat = ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat original file")?;
+		let stat =
+			ctx!(task, Self::dstat(&task.target, true, None).await, "Cannot stat original file")?;
 		if stamp.sig() != stat.hash_u128_str(&mut [0; 26]) {
 			Err(anyhow!("Failed to work on: {task:?}: remote file has changed during upload"))?;
 		}
 
 		ctx!(task, engine::rename(&tmp, &task.target).await, "Cannot persist uploaded file")?;
 
-		let stat = ctx!(task, Self::stat(&task.target, true, None).await, "Cannot stat uploaded file")?;
+		let stat =
+			ctx!(task, Self::dstat(&task.target, true, None).await, "Cannot stat uploaded file")?;
 		ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
 
 		Ok(self.ops.out(task.id, FileOutUploadDo::Succ))
 	}
 
-	pub(super) async fn stat<U>(url: U, follow: bool, dent: Option<DirEntry>) -> io::Result<Stat>
+	pub(super) async fn dstat<U>(url: U, follow: bool, dent: Option<DirEntry>) -> io::Result<Stat>
 	where
 		U: AsUrl,
 	{
-		let stat = if let Some(dent) = dent {
-			dent.metadata().await?
-		} else {
-			engine::symlink_metadata(url.as_url()).await?
-		};
-		Ok(if follow { Stat::from_follow(url, stat).await } else { stat })
+		let lstat =
+			if let Some(dent) = dent { dent.lstat().await? } else { engine::lstat(&url).await? };
+
+		Ok(if follow { Stat::from_follow(url, lstat).await } else { lstat })
 	}
 }
 

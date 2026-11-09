@@ -1,8 +1,7 @@
 use std::{borrow::Cow, ops::Deref, sync::Arc};
 
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use serde::Deserialize;
-use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::file::{File, FileRef};
 use yazi_shared::{event::Cmd, id::Id};
@@ -107,6 +106,8 @@ impl FromLua for PreviewerMatcher<'static> {
 	}
 }
 
-impl IntoLua for PreviewerMatcher<'static> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
+impl UserData for PreviewerMatcher<'static> {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method_mut(MetaMethod::Call, |_, me, ()| Ok(me.next()));
+	}
 }

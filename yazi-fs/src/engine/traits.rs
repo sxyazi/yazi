@@ -49,7 +49,7 @@ pub trait Engine: Sized + AsUrl {
 							return Err(io::Error::other("failed to create whole tree"));
 						}
 					}
-					Err(_) if Self::new(url).await?.metadata().await.is_ok_and(|m| m.is_dir()) => break,
+					Err(_) if Self::new(url).await?.stat().await.is_ok_and(|m| m.is_dir()) => break,
 					Err(e) => return Err(e),
 				}
 			}
@@ -57,7 +57,7 @@ pub trait Engine: Sized + AsUrl {
 			while let Some(u) = stack.pop() {
 				match Self::new(u).await?.create_dir().await {
 					Ok(()) => {}
-					Err(_) if Self::new(u).await?.metadata().await.is_ok_and(|m| m.is_dir()) => {}
+					Err(_) if Self::new(u).await?.stat().await.is_ok_and(|m| m.is_dir()) => {}
 					Err(e) => return Err(e),
 				}
 			}
@@ -66,19 +66,19 @@ pub trait Engine: Sized + AsUrl {
 		}
 	}
 
-	fn create_file(&self) -> impl Future<Output = io::Result<()>>;
+	fn create_file(&self) -> impl Future<Output = io::Result<Self::File>>;
 
-	fn create_file_new(&self) -> impl Future<Output = io::Result<()>>;
+	fn create_file_new(&self) -> impl Future<Output = io::Result<Self::File>>;
 
 	fn demand(&self) -> Self::Demand { Self::Demand::default() }
 
 	fn file(&self) -> impl Future<Output = io::Result<File>> {
 		async move {
-			let lstat = self.symlink_metadata().await?;
+			let lstat = self.lstat().await?;
 
 			let (mut followed, mut link_to) = (None, None);
 			if lstat.is_link() {
-				followed = self.metadata().await.ok();
+				followed = self.stat().await.ok();
 				link_to = self.read_link().await.ok();
 			}
 
@@ -94,7 +94,7 @@ pub trait Engine: Sized + AsUrl {
 	where
 		P: DynPath;
 
-	fn metadata(&self) -> impl Future<Output = io::Result<Stat>>;
+	fn lstat(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	fn new<'a>(url: Url<'a>) -> impl Future<Output = io::Result<Self::Me<'a>>>;
 
@@ -136,7 +136,7 @@ pub trait Engine: Sized + AsUrl {
 					continue;
 				}
 
-				if !engine.symlink_metadata().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
+				if !engine.lstat().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
 					continue;
 				}
 
@@ -144,7 +144,7 @@ pub trait Engine: Sized + AsUrl {
 				stack.push((dir, true));
 
 				while let Ok(Some(dent)) = it.next().await {
-					if dent.metadata().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
+					if dent.lstat().await.is_ok_and(|c| c.is_dir() && !c.is_indirect()) {
 						stack.push((dent.url(), false));
 					}
 				}
@@ -160,6 +160,8 @@ pub trait Engine: Sized + AsUrl {
 		P: DynPath;
 
 	fn set_attrs(&self, attrs: Attrs) -> impl Future<Output = io::Result<()>>;
+
+	fn stat(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	fn symlink<S, F>(&self, original: S, _is_dir: F) -> impl Future<Output = io::Result<()>>
 	where
@@ -179,8 +181,6 @@ pub trait Engine: Sized + AsUrl {
 	{
 		self.symlink(original, async || Ok(false))
 	}
-
-	fn symlink_metadata(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	fn trash(&self) -> impl Future<Output = io::Result<()>>;
 
@@ -215,7 +215,7 @@ pub trait FileHolder {
 	fn file_type(&self) -> impl Future<Output = io::Result<StatType>>;
 
 	#[must_use]
-	fn metadata(&self) -> impl Future<Output = io::Result<Stat>>;
+	fn lstat(&self) -> impl Future<Output = io::Result<Stat>>;
 
 	#[must_use]
 	fn name(&self) -> StrandCow<'_>;

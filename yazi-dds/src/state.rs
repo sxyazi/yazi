@@ -97,7 +97,7 @@ impl State {
 	}
 
 	async fn skip(&self) -> Result<bool> {
-		let stat = Local::regular(&Xdg::state_dir().join(".dds")).symlink_metadata().await?;
+		let stat = Local::regular(&Xdg::state_dir().join(".dds")).lstat().await?;
 		let modified = stat.mtime_dur()?.as_micros();
 		Ok(modified >= self.last.load(Ordering::Relaxed) as u128)
 	}

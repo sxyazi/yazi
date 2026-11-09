@@ -1,10 +1,9 @@
 use std::{borrow::Cow, fmt::Write, hash::{Hash, Hasher}, sync::Arc};
 
-use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use regex::regex;
 use serde::{Deserialize, Deserializer, de};
 use serde_with::{DeserializeAs, DisplayFromStr, OneOrMany};
-use yazi_binding::Iter;
 use yazi_codegen::DeserializeOver2;
 use yazi_shared::{event::{Actions, deserialize_actions}, id::Id};
 
@@ -152,6 +151,8 @@ impl FromLua for ChordMatcher {
 	}
 }
 
-impl IntoLua for ChordMatcher {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Iter::new(self, None).into_lua(lua) }
+impl UserData for ChordMatcher {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method_mut(MetaMethod::Call, |_, me, ()| Ok(me.next()));
+	}
 }

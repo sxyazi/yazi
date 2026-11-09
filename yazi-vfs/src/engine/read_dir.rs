@@ -1,6 +1,8 @@
 use std::io;
 
+use mlua::{AnyUserData, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, Value};
 use yazi_fs::engine::DirReader;
+use yazi_shim::fs::Error;
 
 pub enum ReadDir {
 	Local(yazi_fs::engine::local::ReadDir),
@@ -29,5 +31,17 @@ impl DirReader for ReadDir {
 			Self::Lua(reader) => reader.next().await?.map(Self::Entry::Lua),
 			Self::Sftp(reader) => reader.next().await?.map(Self::Entry::Sftp),
 		})
+	}
+}
+
+impl UserData for ReadDir {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_meta_method_mut(MetaMethod::Call, |lua, mut me, ()| async move {
+			match me.next().await {
+				Ok(ent) => (ent, Value::Nil).into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+			}
+		});
+		methods.add_meta_function(MetaMethod::Close, |_, ud: AnyUserData| ud.destroy());
 	}
 }

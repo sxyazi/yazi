@@ -23,7 +23,7 @@ function M:seek() end
 
 function M:preload(job)
 	local cache = ya.file_cache(job)
-	if not cache or fs.stat(cache) then
+	if not cache or fs.lstat(cache) then
 		return true
 	end
 

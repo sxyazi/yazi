@@ -61,12 +61,10 @@ impl<'a> Engine for Local<'a> {
 	async fn create_dir_all(&self) -> io::Result<()> { tokio::fs::create_dir_all(self.path).await }
 
 	#[inline]
-	async fn create_file(&self) -> io::Result<()> { RwFile::create(self.path).await.map(|_| ()) }
+	async fn create_file(&self) -> io::Result<Self::File> { RwFile::create(self.path).await }
 
 	#[inline]
-	async fn create_file_new(&self) -> io::Result<()> {
-		RwFile::create_new(self.path).await.map(|_| ())
-	}
+	async fn create_file_new(&self) -> io::Result<Self::File> { RwFile::create_new(self.path).await }
 
 	#[inline]
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
@@ -79,8 +77,11 @@ impl<'a> Engine for Local<'a> {
 	}
 
 	#[inline]
-	async fn metadata(&self) -> io::Result<Stat> {
-		Ok(Stat::new(self.path.file_name().unwrap_or_default(), tokio::fs::metadata(self.path).await?))
+	async fn lstat(&self) -> io::Result<Stat> {
+		Ok(Stat::new(
+			self.path.file_name().unwrap_or_default(),
+			tokio::fs::symlink_metadata(self.path).await?,
+		))
 	}
 
 	#[inline]
@@ -145,6 +146,11 @@ impl<'a> Engine for Local<'a> {
 	}
 
 	#[inline]
+	async fn stat(&self) -> io::Result<Stat> {
+		Ok(Stat::new(self.path.file_name().unwrap_or_default(), tokio::fs::metadata(self.path).await?))
+	}
+
+	#[inline]
 	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
 	where
 		S: AsStrand,
@@ -195,14 +201,6 @@ impl<'a> Engine for Local<'a> {
 		{
 			tokio::fs::symlink_file(original, self.path).await
 		}
-	}
-
-	#[inline]
-	async fn symlink_metadata(&self) -> io::Result<Stat> {
-		Ok(Stat::new(
-			self.path.file_name().unwrap_or_default(),
-			tokio::fs::symlink_metadata(self.path).await?,
-		))
 	}
 
 	async fn trash(&self) -> io::Result<()> {

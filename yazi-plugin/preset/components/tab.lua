@@ -37,7 +37,7 @@ end
 function Tab:reflow()
 	local components = { self }
 	for _, child in ipairs(self._children) do
-		components = ya.list_merge(components, child:reflow())
+		ya.iter(child:reflow()):into(components)
 	end
 	return components
 end
@@ -45,7 +45,7 @@ end
 function Tab:redraw()
 	local elements = self._base or {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ui.redraw(child))
+		ya.iter(ui.redraw(child)):into(elements)
 	end
 	return elements
 end

@@ -1,66 +1,47 @@
-use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataMethods, UserDataRefMut, Value};
+use mlua::{AnyUserData, FromLua, IntoLua, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataMethods, UserDataRefMut, Value};
 
-pub struct Iter<I: Iterator<Item = T>, T> {
-	iter: I,
-	len:  Option<usize>,
-
-	count: usize,
+pub struct Iter<I> {
+	iter:  I,
+	len:   usize,
 	cache: Vec<Value>,
 }
 
-impl<I, T> Iter<I, T>
-where
-	I: Iterator<Item = T> + 'static,
-	T: IntoLua + 'static,
-{
-	pub fn new(iter: I, len: Option<usize>) -> Self { Self { iter, len, count: 0, cache: vec![] } }
+impl<I> Iter<I> {
+	pub fn new(iter: I, len: usize) -> Self { Self { iter, len, cache: vec![] } }
 }
 
-impl<I, T> Iter<I, T>
+impl<I> Iter<I>
 where
-	I: Iterator<Item = T> + 'static,
-	T: FromLua + 'static,
+	I: Iterator,
+	I::Item: FromLua,
 {
-	pub fn into_iter(self, lua: &Lua) -> impl Iterator<Item = mlua::Result<T>> {
-		self
-			.cache
-			.into_iter()
-			.map(|cached| T::from_lua(cached, lua))
-			.chain(self.iter.map(|rest| Ok(rest)))
+	pub fn into_iter(self, lua: &Lua) -> impl Iterator<Item = mlua::Result<I::Item>> {
+		self.cache.into_iter().map(|cached| I::Item::from_lua(cached, lua)).chain(self.iter.map(Ok))
 	}
 }
 
-impl<I, T> UserData for Iter<I, T>
+impl<I> UserData for Iter<I>
 where
-	I: Iterator<Item = T> + 'static,
-	T: IntoLua + 'static,
+	I: Iterator + 'static,
+	I::Item: IntoLua,
 {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Len, |_, me, ()| {
-			if let Some(len) = me.len {
-				Ok(len)
-			} else {
-				Err(format!("Length is unknown for {}", std::any::type_name::<Self>()).into_lua_err())
-			}
-		});
+		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len));
 
 		methods.add_meta_function(MetaMethod::Pairs, |lua, ud: AnyUserData| {
-			let iter = lua.create_function(|lua, mut me: UserDataRefMut<Self>| {
-				if let Some(next) = me.cache.get(me.count).cloned() {
-					me.count += 1;
-					(me.count, next).into_lua_multi(lua)
+			let iter = lua.create_function(|lua, (mut me, index): (UserDataRefMut<Self>, usize)| {
+				if let Some(next) = me.cache.get(index).cloned() {
+					(index + 1, next).into_lua_multi(lua)
 				} else if let Some(next) = me.iter.next() {
 					let value = next.into_lua(lua)?;
 					me.cache.push(value.clone());
-					me.count += 1;
-					(me.count, value).into_lua_multi(lua)
+					(index + 1, value).into_lua_multi(lua)
 				} else {
 					().into_lua_multi(lua)
 				}
 			})?;
 
-			ud.borrow_mut::<Self>()?.count = 0;
-			Ok((iter, ud))
+			Ok((iter, ud, 0))
 		});
 	}
 }

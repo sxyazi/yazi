@@ -97,8 +97,11 @@ impl Error {
 			})
 		})?;
 		let other = lua.create_function(|_, msg: String| Ok(Self::other(msg)))?;
+		let is = lua.create_function(|_, value: Value| {
+			Ok(matches!(value, Value::UserData(ud) if ud.is::<Self>()))
+		})?;
 
-		let error = lua.create_table_from([("fs", fs), ("other", other)])?;
+		let error = lua.create_table_from([("fs", fs), ("other", other), ("is", is)])?;
 		error.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		lua.globals().raw_set("Error", error)

@@ -3,7 +3,7 @@ use std::{io, sync::Arc};
 use mlua::FromLua;
 use tokio::sync::mpsc;
 use yazi_config::{VFS, vfs::ServiceLua};
-use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transit}, file::File, remover, stat::Stat};
+use yazi_fs::{engine::{Attrs, Capabilities, Demand, Engine, Transit}, file::File, remover, stat::Stat};
 use yazi_runner::{Runner, provider::{ProvideJob, ProvideOp, ProvidePeer, ProvideResult}};
 use yazi_shared::{path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
@@ -109,16 +109,20 @@ impl<'a> Engine for Lua<'a> {
 		}
 	}
 
-	async fn create_file(&self) -> io::Result<()> {
+	async fn create_file(&self) -> io::Result<Self::File> {
 		let url = self.to_url();
+		let demand = Demand { create: true, truncate: true, write: true, ..Default::default() };
 
-		Ok(self.call(ProvideOp::CreateFile { url }).await.ok()?)
+		let handle = self.call(ProvideOp::CreateFile { url }).await.0?;
+		Ok(Self::File::new(handle, self.url, self.service.clone(), demand))
 	}
 
-	async fn create_file_new(&self) -> io::Result<()> {
+	async fn create_file_new(&self) -> io::Result<Self::File> {
 		let url = self.to_url();
+		let demand = Demand { create_new: true, write: true, ..Default::default() };
 
-		Ok(self.call(ProvideOp::CreateFileNew { url }).await.ok()?)
+		let handle = self.call(ProvideOp::CreateFileNew { url }).await.0?;
+		Ok(super::File::new(handle, self.url, self.service.clone(), demand))
 	}
 
 	async fn file(&self) -> io::Result<File> {
@@ -137,10 +141,10 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::HardLink { from, to }).await.ok()?)
 	}
 
-	async fn metadata(&self) -> io::Result<Stat> {
+	async fn lstat(&self) -> io::Result<Stat> {
 		let url = self.to_url();
 
-		Ok(self.call(ProvideOp::Metadata { url, handle: None }).await.0?)
+		Ok(self.call(ProvideOp::Lstat { url }).await.0?)
 	}
 
 	async fn new<'b>(url: Url<'b>) -> io::Result<Self::Me<'b>> {
@@ -220,6 +224,12 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::SetAttrs { url, attrs, handle: None }).await.ok()?)
 	}
 
+	async fn stat(&self) -> io::Result<Stat> {
+		let url = self.to_url();
+
+		Ok(self.call(ProvideOp::Stat { url, handle: None }).await.0?)
+	}
+
 	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
 	where
 		S: AsStrand,
@@ -229,12 +239,6 @@ impl<'a> Engine for Lua<'a> {
 		let url = self.to_url();
 
 		Ok(self.call(ProvideOp::Symlink { original, url, is_dir: is_dir().await? }).await.ok()?)
-	}
-
-	async fn symlink_metadata(&self) -> io::Result<Stat> {
-		let url = self.to_url();
-
-		Ok(self.call(ProvideOp::SymlinkMetadata { url }).await.0?)
 	}
 
 	async fn trash(&self) -> io::Result<()> {

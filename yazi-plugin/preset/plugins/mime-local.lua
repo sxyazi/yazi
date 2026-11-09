@@ -5,10 +5,7 @@ local M = {}
 
 function M:fetch(job)
 	return ya.co(function()
-		local paths, updates = {}, {}
-		for i, file in ipairs(job.files) do
-			paths[i] = tostring(file.path)
-		end
+		local paths, updates = ya.iter(job.files):map(function(f) return tostring(f.path) end):into(), {}
 
 		local flush = ya.throttle(0.3, function()
 			if next(updates) then

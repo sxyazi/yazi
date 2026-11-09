@@ -15,7 +15,7 @@ pub(super) trait Traverse {
 
 	async fn init(&mut self) -> anyhow::Result<Stat> {
 		if self.stat().is_none() {
-			*self.stat() = Some(super::File::stat(self.from(), self.follow(), None).await?)
+			*self.stat() = Some(super::File::dstat(self.from(), self.follow(), None).await?)
 		}
 		Ok(self.stat().unwrap())
 	}
@@ -112,7 +112,7 @@ impl Traverse for FileInUpload {
 
 	async fn init(&mut self) -> anyhow::Result<Stat> {
 		if self.stat.is_none() {
-			self.stat = Some(super::File::stat(self.from(), self.follow(), None).await?)
+			self.stat = Some(super::File::dstat(self.from(), self.follow(), None).await?)
 		}
 		if self.cache.is_none() {
 			self.cache = self.target.cache_entry();
@@ -179,7 +179,7 @@ where
 		while let Ok(Some(dent)) = it.next().await {
 			let from = dent.url();
 			let stat = err!(
-				super::File::stat(&from, task.follow(), Some(dent)).await,
+				super::File::dstat(&from, task.follow(), Some(dent)).await,
 				"Cannot get metadata for {from}"
 			);
 

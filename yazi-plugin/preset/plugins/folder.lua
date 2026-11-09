@@ -52,12 +52,12 @@ function M:seek(job)
 end
 
 function M:spot(job)
-	local i, url = 0, job.file.url
-	for rows in self:spot_base(job) do
-		i, rows[#rows + 1] = i + 1, ui.Row {}
+	local url = job.file.url
+	for i, rows in ya.iter(self:spot_base(job)):enumerate() do
+		rows[#rows + 1] = ui.Row {}
 		ya.spot_table(
 			job,
-			ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
+			ui.Table(ya.iter(require("file"):spot_base(job)):into(rows))
 				:area(ui.Pos { "center", w = 60, h = 20 })
 				:row(i == 1 and 1 or nil)
 				:col(1)
@@ -83,20 +83,19 @@ function M:spot_base(job)
 	return ya.co(function()
 		yield("0B (?)")
 
-		local it, size, last = fs.calc_size(job.file.url), 0, ya.time(0)
+		local it, size, tick = fs.calc_size(job.file.url), 0, ya.ticker(0.1)
 		if not it then
 			return yield("Error")
 		end
 
-		while true do
-			local next, now = it:recv(), ya.time()
+		for next in it do
 			if not next then
-				break
-			elseif now >= last + 0.1 then
-				last, size = now, size + next
+				return yield("Error")
+			end
+
+			size = size + next
+			if tick() then
 				yield(ya.readable_size(size) .. " (?)")
-			else
-				size = size + next
 			end
 		end
 

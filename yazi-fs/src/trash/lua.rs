@@ -36,8 +36,8 @@ impl UserData for Trash {
 			}
 		});
 
-		methods.add_async_function("metadata", |lua, (entry, follow): (TrashEntry, bool)| async move {
-			match spawn_blocking(move || Self::new()?.metadata(&entry, follow)).await.into_lua_err()? {
+		methods.add_async_function("lstat", |lua, entry: TrashEntry| async move {
+			match spawn_blocking(move || Self::new()?.lstat(&entry)).await.into_lua_err()? {
 				Ok(stat) => stat.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
@@ -91,5 +91,12 @@ impl UserData for Trash {
 				}
 			},
 		);
+
+		methods.add_async_function("stat", |lua, entry: TrashEntry| async move {
+			match spawn_blocking(move || Self::new()?.stat(&entry)).await.into_lua_err()? {
+				Ok(stat) => stat.into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
+			}
+		});
 	}
 }

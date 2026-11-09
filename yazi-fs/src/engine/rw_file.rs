@@ -1,14 +1,14 @@
 use std::{io, ops::Deref, path::{Path, PathBuf}, pin::Pin};
 
 use tokio::{fs, io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf}};
-use yazi_shared::url::{AsUrl, Url, UrlLike};
+use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 
 use super::FileHandle;
 use crate::{file::File, stat::Stat};
 
 pub struct RwFile {
-	handle:   FileHandle,
-	pub path: PathBuf,
+	handle: FileHandle,
+	path:   PathBuf,
 }
 
 impl Deref for RwFile {
@@ -46,14 +46,16 @@ impl RwFile {
 		Ok(Self::new(fs::File::create_new(p).await?, p))
 	}
 
-	pub async fn into_file(self) -> io::Result<File> {
-		let stat = self.metadata().await?;
-
-		Ok(File { url: self.path.into(), stat, extra: Default::default() })
+	pub async fn stat(&self) -> io::Result<Stat> {
+		Ok(Stat::new(self.name().unwrap_or_default(), self.handle.metadata().await?))
 	}
 
-	pub async fn metadata(&self) -> io::Result<Stat> {
-		Ok(Stat::new(self.name().unwrap_or_default(), self.handle.metadata().await?))
+	pub fn into_url(self) -> UrlBuf { self.path.into() }
+
+	pub async fn into_file(self) -> io::Result<File> {
+		let stat = self.stat().await?;
+
+		Ok(File { url: self.path.into(), stat, extra: Default::default() })
 	}
 }
 

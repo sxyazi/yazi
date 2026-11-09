@@ -1,0 +1,3 @@
+local self = ...
+self._fallible = true
+return self, nil, nil, self

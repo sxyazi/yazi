@@ -46,10 +46,6 @@ impl AsUrl for File {
 	fn as_url(&self) -> Url<'_> { self.url.as_url() }
 }
 
-impl AsUrl for &File {
-	fn as_url(&self) -> Url<'_> { self.url.as_url() }
-}
-
 impl UrlLike for File {}
 
 impl Equivalent<File> for Url<'_> {

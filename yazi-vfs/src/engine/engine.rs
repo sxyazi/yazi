@@ -88,14 +88,14 @@ where
 	Engines::new(url.as_url()).await?.create_dir_all().await
 }
 
-pub async fn create_file<U>(url: U) -> io::Result<()>
+pub async fn create_file<U>(url: U) -> io::Result<RwFile>
 where
 	U: AsUrl,
 {
 	Engines::new(url.as_url()).await?.create_file().await
 }
 
-pub async fn create_file_new<U>(url: U) -> io::Result<()>
+pub async fn create_file_new<U>(url: U) -> io::Result<RwFile>
 where
 	U: AsUrl,
 {
@@ -133,11 +133,11 @@ where
 	}
 }
 
-pub async fn metadata<U>(url: U) -> io::Result<Stat>
+pub async fn lstat<U>(url: U) -> io::Result<Stat>
 where
 	U: AsUrl,
 {
-	Engines::new(url.as_url()).await?.metadata().await
+	Engines::new(url.as_url()).await?.lstat().await
 }
 
 pub async fn must_identical<U, V>(a: U, b: V) -> bool
@@ -221,6 +221,13 @@ where
 	Engines::new(url.as_url()).await?.set_attrs(attrs).await
 }
 
+pub async fn stat<U>(url: U) -> io::Result<Stat>
+where
+	U: AsUrl,
+{
+	Engines::new(url.as_url()).await?.stat().await
+}
+
 pub async fn symlink<U, S, F>(link: U, original: S, is_dir: F) -> io::Result<()>
 where
 	U: AsUrl,
@@ -228,13 +235,6 @@ where
 	F: AsyncFnOnce() -> io::Result<bool>,
 {
 	Engines::new(link.as_url()).await?.symlink(original, is_dir).await
-}
-
-pub async fn symlink_metadata<U>(url: U) -> io::Result<Stat>
-where
-	U: AsUrl,
-{
-	Engines::new(url.as_url()).await?.symlink_metadata().await
 }
 
 pub async fn trash<U>(url: U) -> io::Result<()>

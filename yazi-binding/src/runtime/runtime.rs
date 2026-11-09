@@ -42,7 +42,7 @@ impl Runtime {
 	}
 
 	pub fn leave(&mut self) -> Result<()> {
-		self.frames.pop().map(|_| ()).context("Runtime stack underflow")
+		self.frames.pop().map(drop).context("Runtime stack underflow")
 	}
 
 	pub fn is_blocking(&self) -> bool { self.frames.last().is_some_and(|f| f.blocking) }

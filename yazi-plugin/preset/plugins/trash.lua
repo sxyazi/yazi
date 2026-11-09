@@ -76,7 +76,7 @@ restore_recursively = function(id, collision)
 		return false, 1, collision
 	end
 
-	local target = ent.original and fs.stat(Url(ent.original), false)
+	local target = ent.original and fs.lstat(Url(ent.original))
 	if not target or not target.is_dir or target.is_indirect then
 		return false, 1, collision
 	end
@@ -105,9 +105,7 @@ local function match(job, rules)
 	if not mime then
 		return
 	end
-	for _, rule in pairs(rules:match { file = job.file, mime = mime }) do
-		return rule, mime
-	end
+	return rules:match { file = job.file, mime = mime }(), mime
 end
 
 function M:setup()
@@ -220,7 +218,7 @@ function M:spot(job)
 
 	ya.spot_table(
 		job,
-		ui.Table(ya.list_merge(rows, self:spot_base(job)))
+		ui.Table(ya.iter(self:spot_base(job)):into(rows))
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(1)
 			:col(1)
@@ -233,26 +231,16 @@ end
 function M:spot_base(job)
 	local stat, pair = job.file.stat, { file = job.file, mime = job.mime }
 	local proxy = { file = job.file, mime = job.mime:match("^trash/(.+)") or job.mime }
-	local spotter, previewer, fetchers, preloaders = nil, nil, {}, {}
 
-	for _, v in pairs(rt.plugin.spotters:match(pair)) do
-		spotter = v
-		break
-	end
+	local spotter = rt.plugin.spotters:match(pair)()
+	local previewer = rt.plugin.previewers:match(proxy)()
 
-	for _, v in pairs(rt.plugin.previewers:match(proxy)) do
-		previewer = v
-		break
-	end
-
-	for _, v in pairs(rt.plugin.fetchers:match(pair)) do
-		fetchers[#fetchers + 1] = v.run.name
-	end
+	local fetchers = ya.iter(rt.plugin.fetchers:match(pair)):map(function(v) return v.run.name end):into()
 	fetchers = #fetchers ~= 0 and fetchers or { "-" }
 
-	for _, v in pairs(rt.plugin.preloaders:match(proxy)) do
-		preloaders[#preloaders + 1] = string.format("%s (via trash)", v.run.name)
-	end
+	local preloaders = ya.iter(rt.plugin.preloaders:match(proxy))
+		:map(function(v) return string.format("%s (via trash)", v.run.name) end)
+		:into()
 	preloaders = #preloaders ~= 0 and preloaders or { "-" }
 
 	return {
@@ -278,10 +266,10 @@ function M:provide(job)
 		return absolute(job.url)
 	elseif op == "Casefold" then
 		return job.url
-	elseif op == "Metadata" or op == "SymlinkMetadata" then
+	elseif op == "Lstat" or op == "Stat" then
 		local ent, err = entry(job.url)
 		if ent then
-			return fs.trash.metadata(ent, op == "Metadata")
+			return (op == "Lstat" and fs.trash.lstat or fs.trash.stat)(ent)
 		elseif err then
 			return nil, err
 		else
