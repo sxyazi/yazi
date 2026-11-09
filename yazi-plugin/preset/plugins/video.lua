@@ -34,7 +34,7 @@ function M:preload(job)
 		return true
 	end
 
-	local stat = fs.stat(cache)
+	local stat = fs.lstat(cache)
 	if stat and stat.len > 0 then
 		return true
 	end
@@ -91,7 +91,7 @@ function M:spot(job)
 
 	ya.spot_table(
 		job,
-		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
+		ui.Table(ya.iter(require("file"):spot_base(job)):into(rows))
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(1)
 			:col(1)
@@ -151,11 +151,7 @@ function M.list_meta(path, entries)
 end
 
 function M.has_pic(meta)
-	for _, s in ipairs(meta.streams) do
-		if s.disposition and s.disposition.attached_pic == 1 then
-			return true
-		end
-	end
+	return ya.iter(meta.streams):any(function(s) return s.disposition and s.disposition.attached_pic == 1 end)
 end
 
 return M

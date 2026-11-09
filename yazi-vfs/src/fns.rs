@@ -6,61 +6,74 @@ use yazi_shim::OptionExt;
 use crate::engine;
 
 pub async fn maybe_exists(url: impl AsUrl) -> bool {
-	match engine::symlink_metadata(url).await {
+	match engine::lstat(url).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
 }
 
-pub async fn unique_file(u: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
-	let result =
-		if is_dir { engine::create_dir(&u).await } else { engine::create_file_new(&u).await };
+pub async fn unique_dir(mut url: UrlBuf) -> io::Result<UrlBuf> {
+	let mut err = match engine::create_dir(&url).await {
+		Ok(()) => return Ok(url),
+		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => e,
+		Err(e) => return Err(e),
+	};
 
-	match result {
-		Ok(()) => Ok(u),
-		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => _unique_file(u, is_dir).await,
-		Err(e) => Err(e),
+	let Some(name) = url.name().owned() else {
+		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty directory name"));
+	};
+
+	let mut buf = StrandBuf::with_capacity(url.loc().kind(), name.len() + 5);
+	for i in 1..=1000 {
+		buf.clear();
+		buf.try_push(&name)?;
+		buf.push_str(format!("_{i}"));
+
+		url.try_set_name(&buf)?;
+		match engine::create_dir(&url).await {
+			Ok(()) => return Ok(url),
+			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => err = e,
+			Err(e) => return Err(e),
+		}
 	}
+
+	Err(err)
 }
 
-async fn _unique_file(mut url: UrlBuf, is_dir: bool) -> io::Result<UrlBuf> {
+pub async fn unique_file(mut url: UrlBuf) -> io::Result<engine::RwFile> {
+	let mut err = match engine::create_file_new(&url).await {
+		Ok(file) => return Ok(file),
+		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => e,
+		Err(e) => return Err(e),
+	};
+
 	let Some(stem) = url.stem().owned() else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let dot_ext = match url.ext() {
-		Some(e) => {
-			let mut s = StrandBuf::with_capacity(url.loc().kind(), e.len() + 1);
-			s.push_str(".");
-			s.try_push(e)?;
-			s
-		}
-		None => StrandBuf::default(),
-	};
+	let ext = url.ext().owned();
+	let mut buf = StrandBuf::with_capacity(
+		url.loc().kind(),
+		stem.len() + ext.as_ref().map_or(0, |e| e.len()) + 6,
+	);
 
-	let mut name = StrandBuf::with_capacity(url.loc().kind(), stem.len() + dot_ext.len() + 5);
-	for i in 1u64.. {
-		name.clear();
-		name.try_push(&stem)?;
+	for i in 1..=1000 {
+		buf.clear();
+		buf.try_push(&stem)?;
+		buf.push_str(format!("_{i}"));
 
-		if is_dir {
-			name.try_push(&dot_ext)?;
-			name.push_str(format!("_{i}"));
-		} else {
-			name.push_str(format!("_{i}"));
-			name.try_push(&dot_ext)?;
+		if let Some(e) = &ext {
+			buf.push_str(".");
+			buf.try_push(e)?;
 		}
 
-		url.try_set_name(&name)?;
-		let result =
-			if is_dir { engine::create_dir(&url).await } else { engine::create_file_new(&url).await };
-
-		match result {
-			Ok(()) => break,
-			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
+		url.try_set_name(&buf)?;
+		match engine::create_file_new(&url).await {
+			Ok(file) => return Ok(file),
+			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => err = e,
 			Err(e) => return Err(e),
-		};
+		}
 	}
 
-	Ok(url)
+	Err(err)
 }

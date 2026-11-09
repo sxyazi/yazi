@@ -10,7 +10,7 @@ pub fn nz_ok<T: PartialEq + From<u8>>(r: T) -> io::Result<T> {
 
 /// Maps a Win32 BOOL return value to `io::Result<()>`,
 /// 0 becomes `Err(last_os_error())`.
-pub fn bool_ok(r: i32) -> io::Result<()> { nz_ok(r).map(|_| ()) }
+pub fn bool_ok(r: i32) -> io::Result<()> { nz_ok(r).map(drop) }
 
 /// Maps `INVALID_HANDLE_VALUE` to `Err(last_os_error())`; null is not checked.
 pub fn handle_ok(handle: HANDLE) -> io::Result<HANDLE> {

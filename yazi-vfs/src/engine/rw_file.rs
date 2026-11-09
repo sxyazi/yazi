@@ -1,14 +1,15 @@
 use std::{io, pin::Pin};
 
-use mlua::{AnyUserData, BorrowedBytes, IntoLuaMulti, MetaMethod, UserData, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, BorrowedBytes, IntoLuaMulti, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRefMut};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt, AsyncWrite, AsyncWriteExt};
 use yazi_binding::SeekFrom;
-use yazi_fs::{engine::{Attrs, FileBuilder, Random}, file::File};
-use yazi_shared::url::{AsUrl, Url, UrlLike};
-use yazi_shim::fs::Error;
+use yazi_fs::{engine::{Attrs, Random}, file::File};
+use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
+use yazi_shim::{fs::Error, mlua::UserDataFieldsExt};
 
-use super::Demand;
 use crate::VfsFile;
+
+pub type RwFileRef = UserDataRefMut<RwFile>;
 
 pub enum RwFile {
 	Local(yazi_fs::engine::RwFile),
@@ -41,34 +42,28 @@ impl AsUrl for RwFile {
 impl UrlLike for RwFile {}
 
 impl RwFile {
-	pub async fn create<U>(url: U) -> io::Result<Self>
-	where
-		U: AsUrl,
-	{
-		Demand::default().write(true).create(true).truncate(true).open(url).await
-	}
-
-	pub async fn create_new<U>(url: U) -> io::Result<Self>
-	where
-		U: AsUrl,
-	{
-		Demand::default().write(true).create_new(true).open(url).await
-	}
-
-	pub(crate) async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
+	pub(crate) async fn stat(&self) -> io::Result<yazi_fs::stat::Stat> {
 		match self {
-			Self::Local(f) => f.metadata().await,
-			Self::Sftp(f) => f.metadata().await,
-			Self::Lua(f) => f.metadata().await,
+			Self::Local(f) => f.stat().await,
+			Self::Sftp(f) => f.stat().await,
+			Self::Lua(f) => f.stat().await,
 		}
 	}
 
 	pub async fn file(&self) -> io::Result<File> {
 		match self {
 			Self::Local(_) | Self::Sftp(..) => {
-				Ok(File::from_follow(self.to_url(), self.metadata().await?).await)
+				Ok(File::from_follow(self.to_url(), self.stat().await?).await)
 			}
 			Self::Lua(f) => f.file().await,
+		}
+	}
+
+	pub fn into_url(self) -> UrlBuf {
+		match self {
+			Self::Local(f) => f.into_url(),
+			Self::Sftp(f) => f.into_url(),
+			Self::Lua(f) => f.into_url(),
 		}
 	}
 
@@ -177,12 +172,13 @@ impl AsyncWrite for RwFile {
 
 impl UserData for RwFile {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_cached_field("url", |_, me| Ok(me.to_url()));
 		fields.add_field_method_get("random", |_, me| Ok(me.random()));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method("stat", |_, me, ()| async move {
-			Ok(me.metadata().await.map_err(Error::from))
+			Ok(me.stat().await.map_err(Error::from))
 		});
 		methods.add_async_method_mut("read", |lua, mut me, len: usize| async move {
 			let mut buf = vec![0; len];

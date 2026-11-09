@@ -62,17 +62,17 @@ impl<'a> Dispatcher<'a> {
 
 	fn dispatch_mouse(&mut self, mouse: MouseEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:mouse, cx, mouse).map(|_| ())
+		act!(app:mouse, cx, mouse).map(drop)
 	}
 
 	fn dispatch_resize(&mut self) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _).map(|_| ())
+		act!(app:resize, cx, crate::Root::reflow as fn(_) -> _).map(drop)
 	}
 
 	fn dispatch_focus(&mut self, lost: bool) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:focus, cx, lost).map(|_| ())
+		act!(app:focus, cx, lost).map(drop)
 	}
 
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {
@@ -84,16 +84,16 @@ impl<'a> Dispatcher<'a> {
 
 	fn dispatch_dnd(&mut self, dnd: DndEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:dnd, cx, dnd).map(|_| ())
+		act!(app:dnd, cx, dnd).map(drop)
 	}
 
 	fn dispatch_clipboard(&mut self, clip: ClipboardEvent) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:clipboard, cx, clip).map(|_| ())
+		act!(app:clipboard, cx, clip).map(drop)
 	}
 
 	fn dispatch_report(&mut self, report: yazi_term::event::Report) -> Result<()> {
 		let cx = &mut Ctx::active(&mut self.app.core);
-		act!(app:report, cx, report).map(|_| ())
+		act!(app:report, cx, report).map(drop)
 	}
 }

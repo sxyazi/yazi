@@ -56,7 +56,7 @@ pub(super) fn copy_bins(target: &str, profile: &str, to: &Path) -> Result<()> {
 
 pub(super) fn copy_file(from: &Path, to: &Path) -> Result<()> {
 	fs::copy(from, to)
-		.map(|_| ())
+		.map(drop)
 		.with_context(|| format!("failed to copy {} to {}", from.display(), to.display()))
 }
 

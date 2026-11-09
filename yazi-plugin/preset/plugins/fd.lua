@@ -88,20 +88,11 @@ function M:provide(job)
 		end
 
 		local child <close> = child
-		while true do
-			local line, event = child:read_line()
-			if event ~= 0 then
-				break
-			end
-
-			local path = search.relative_url(job.url, line)
-			if path then
-				local file = search.file(path)
-				if file then
-					coroutine.yield(file)
-				end
-			end
-		end
+		ya.iter(function() return child:read_line() end)
+			:take_while(function(_, event) return event == 0 end)
+			:map(function(line) return search.relative_url(job.url, line) end)
+			:map(search.file)
+			:each(coroutine.yield)
 
 		child:wait()
 	end)

@@ -21,7 +21,7 @@ function M:fetch(job)
 				coroutine.yield(file, {})
 			elseif not file.cache then
 				unknown[#unknown + 1] = file
-			elseif not fs.stat(Url(file.cache)) then
+			elseif not fs.lstat(Url(file.cache)) then
 				updates[file.url] = coroutine.yield(file, { "vfs/absent" }) and "vfs/absent" or nil
 			elseif stale_cache(file) then
 				updates[file.url] = coroutine.yield(file, { "vfs/stale" }) and "vfs/stale" or nil
@@ -38,7 +38,7 @@ function M:fetch(job)
 end
 
 function M.fallback_local(job, unknown)
-	local next = require("mime.local"):fetch(ya.dict_merge(job, { files = unknown }))
+	local next = require("mime.local"):fetch(ya.iter({ files = unknown }):kw():into(job))
 	local file, result = next()
 	while file do
 		file, result = next(coroutine.yield(file, result))

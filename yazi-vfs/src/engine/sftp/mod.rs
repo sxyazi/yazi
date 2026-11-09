@@ -1,4 +1,4 @@
-yazi_macro::mod_flat!(conn demand metadata read_dir rw_file sftp);
+yazi_macro::mod_flat!(conn demand read_dir rw_file sftp stat);
 
 pub(super) fn init() {
 	tokio::spawn(async {

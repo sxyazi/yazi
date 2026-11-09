@@ -53,7 +53,7 @@ impl HttpPartTx {
 	}
 
 	async fn flush(&self) -> io::Result<()> {
-		self.0.reserve().await.map(|_| ()).map_err(|_| io::ErrorKind::BrokenPipe.into())
+		self.0.reserve().await.map(drop).map_err(|_| io::ErrorKind::BrokenPipe.into())
 	}
 }
 

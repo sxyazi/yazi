@@ -27,7 +27,7 @@ pub struct DirEntry {
 
 impl FileHolder for DirEntry {
 	async fn file(&self) -> io::Result<File> {
-		let stat = self.metadata().await?;
+		let stat = self.lstat().await?;
 		Ok(File::from_follow(self.url(), stat).await)
 	}
 
@@ -35,7 +35,7 @@ impl FileHolder for DirEntry {
 		Ok(StatMode::try_from(self.dent.attrs())?.0.into())
 	}
 
-	async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> { Ok(Stat::try_from(&self.dent)?.0) }
+	async fn lstat(&self) -> io::Result<yazi_fs::stat::Stat> { Ok(Stat::try_from(&self.dent)?.0) }
 
 	fn name(&self) -> StrandCow<'_> { self.dent.name().into() }
 

@@ -55,7 +55,7 @@ impl<'a> Engine for Sftp<'a> {
 			return Ok(self.to_url());
 		};
 
-		if !self.symlink_metadata().await?.is_link() {
+		if !self.lstat().await?.is_link() {
 			return Ok(match self.canonicalize().await?.name() {
 				Some(name) => parent.try_join(name)?,
 				None => Err(io::Error::other("Cannot get filename"))?,
@@ -112,12 +112,12 @@ impl<'a> Engine for Sftp<'a> {
 		Ok(result?)
 	}
 
-	async fn create_file(&self) -> io::Result<()> {
-		self.demand().write(true).create(true).truncate(true).open(self.as_url()).await.map(|_| ())
+	async fn create_file(&self) -> io::Result<Self::File> {
+		self.demand().write(true).create(true).truncate(true).open(self.as_url()).await
 	}
 
-	async fn create_file_new(&self) -> io::Result<()> {
-		self.demand().write(true).create_new(true).open(self.as_url()).await.map(|_| ())
+	async fn create_file_new(&self) -> io::Result<Self::File> {
+		self.demand().write(true).create_new(true).open(self.as_url()).await
 	}
 
 	async fn hard_link<P>(&self, to: P) -> io::Result<()>
@@ -129,8 +129,8 @@ impl<'a> Engine for Sftp<'a> {
 		Ok(self.op().await?.hardlink(self.path, to).await?)
 	}
 
-	async fn metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
-		let attrs = self.op().await?.stat(self.path).await?;
+	async fn lstat(&self) -> io::Result<yazi_fs::stat::Stat> {
+		let attrs = self.op().await?.lstat(self.path).await?;
 		Ok(Stat::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
 	}
 
@@ -204,6 +204,11 @@ impl<'a> Engine for Sftp<'a> {
 		Ok(self.op().await?.setstat(self.path, attrs).await?)
 	}
 
+	async fn stat(&self) -> io::Result<yazi_fs::stat::Stat> {
+		let attrs = self.op().await?.stat(self.path).await?;
+		Ok(Stat::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
+	}
+
 	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
 	where
 		S: AsStrand,
@@ -212,11 +217,6 @@ impl<'a> Engine for Sftp<'a> {
 		let original = original.as_strand().encoded_bytes();
 
 		Ok(self.op().await?.symlink(original, self.path).await?)
-	}
-
-	async fn symlink_metadata(&self) -> io::Result<yazi_fs::stat::Stat> {
-		let attrs = self.op().await?.lstat(self.path).await?;
-		Ok(Stat::try_from((self.path.file_name().unwrap_or_default(), &attrs))?.0)
 	}
 
 	async fn trash(&self) -> io::Result<()> {

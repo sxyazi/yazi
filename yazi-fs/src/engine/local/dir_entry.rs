@@ -8,7 +8,7 @@ pub struct DirEntry(pub(super) tokio::fs::DirEntry);
 
 impl FileHolder for DirEntry {
 	async fn file(&self) -> io::Result<File> {
-		let lstat = self.metadata().await?;
+		let lstat = self.lstat().await?;
 		let url = self.url();
 
 		let (mut followed, mut link_to) = (None, None);
@@ -24,7 +24,7 @@ impl FileHolder for DirEntry {
 
 	async fn file_type(&self) -> io::Result<StatType> { self.0.file_type().await.map(Into::into) }
 
-	async fn metadata(&self) -> io::Result<Stat> {
+	async fn lstat(&self) -> io::Result<Stat> {
 		let meta = self.0.metadata().await?;
 
 		Ok(Stat::new(self.name(), meta)) // TODO: use `file_name_os_str` when stabilized

@@ -15,19 +15,9 @@ impl AsUrl for Path {
 	fn as_url(&self) -> Url<'_> { Url::Os { loc: Loc::bare(self), auth: &AuthArc::DEFAULT } }
 }
 
-impl AsUrl for &Path {
-	#[inline]
-	fn as_url(&self) -> Url<'_> { (*self).as_url() }
-}
-
 impl AsUrl for PathBuf {
 	#[inline]
 	fn as_url(&self) -> Url<'_> { self.as_path().as_url() }
-}
-
-impl AsUrl for &PathBuf {
-	#[inline]
-	fn as_url(&self) -> Url<'_> { (*self).as_path().as_url() }
 }
 
 impl AsUrl for Url<'_> {
@@ -45,16 +35,6 @@ impl AsUrl for UrlBuf {
 	}
 }
 
-impl AsUrl for &UrlBuf {
-	#[inline]
-	fn as_url(&self) -> Url<'_> { (**self).as_url() }
-}
-
-impl AsUrl for &mut UrlBuf {
-	#[inline]
-	fn as_url(&self) -> Url<'_> { (**self).as_url() }
-}
-
 impl AsUrl for UrlCow<'_> {
 	fn as_url(&self) -> Url<'_> {
 		match self {
@@ -64,12 +44,18 @@ impl AsUrl for UrlCow<'_> {
 	}
 }
 
-impl AsUrl for &UrlCow<'_> {
+impl AsUrl for super::Components<'_> {
+	fn as_url(&self) -> Url<'_> { self.url() }
+}
+
+impl<T: AsUrl + ?Sized> AsUrl for &T {
+	#[inline]
 	fn as_url(&self) -> Url<'_> { (**self).as_url() }
 }
 
-impl AsUrl for super::Components<'_> {
-	fn as_url(&self) -> Url<'_> { self.url() }
+impl<T: AsUrl + ?Sized> AsUrl for &mut T {
+	#[inline]
+	fn as_url(&self) -> Url<'_> { (**self).as_url() }
 }
 
 impl<'a, T> From<&'a T> for Url<'a>
@@ -83,7 +69,7 @@ impl<'a, T> From<&'a mut T> for Url<'a>
 where
 	T: AsUrl + ?Sized,
 {
-	fn from(value: &'a mut T) -> Self { value.as_url() }
+	fn from(value: &'a mut T) -> Self { (*value).as_url() }
 }
 
 // --- UrlMapExt

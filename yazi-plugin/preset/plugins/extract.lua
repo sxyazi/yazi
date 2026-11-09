@@ -93,9 +93,9 @@ function M:unpack()
 end
 
 function M:try_unpack(pwd)
-	local tmp = fs.unique("dir", self.to:join(self.tmp_name(self.from)))
+	local tmp = fs.unique_dir(self.to:join(self.tmp_name(self.from)))
 	if not tmp then
-		fail("Failed to determine a temporary directory for %s", self.from)
+		fail("Failed to determine temporary directory for '%s'", self.from)
 	end
 	self.shared.tmps[#self.shared.tmps + 1] = tmp
 
@@ -111,7 +111,7 @@ function M:try_unpack(pwd)
 		tostring(self.from),
 	}
 	if not child then
-		fail("Failed to start either `7zz` or `7z`, error: " .. err)
+		fail("Failed to start `7zz` or `7z`: %s", err)
 	end
 	self.shared.child = child
 	self.shared.task:progress { workload = 100 }
@@ -120,7 +120,7 @@ function M:try_unpack(pwd)
 	while true do
 		local chunk, event, err = child:read(4096)
 		if not chunk then
-			fail("7zip failed to output when extracting '%s', error: %s", self.from, err)
+			fail("Failed to read 7zip output for '%s': %s", self.from, err)
 		elseif event == 2 then
 			break
 		elseif event == 1 then
@@ -136,7 +136,7 @@ function M:try_unpack(pwd)
 
 	local status, err = child:wait()
 	if not status then
-		fail("7zip failed to output when extracting '%s', error: %s", self.from, err)
+		fail("Failed to wait for 7zip while extracting '%s': %s", self.from, err)
 	end
 	self.shared.task:progress { processed = 100 - last }
 
@@ -144,38 +144,59 @@ function M:try_unpack(pwd)
 	if status.code == 2 and archive.is_encrypted(stderr) then
 		return nil, true -- Needs a retry
 	elseif status.code ~= 0 then
-		fail("7zip exited with error code %s when extracting '%s':\n%s", status.code, self.from, stderr)
+		fail("7zip exited with code %s while extracting '%s':\n%s", status.code, self.from, stderr)
 	end
 
 	return tmp
 end
 
 function M:place(tmp)
-	local outs = fs.read_dir(tmp, { limit = 2 })
+	local only, stat = self:single(tmp)
+	local is_file = only and not stat.is_dir
+
+	if is_file and require("archive").is_tar(only.url) then
+		return self:new(only.url, self.to):run()
+	end
+
+	local dest = self.to:join(only and only.name or self.trim_ext(self.from.name))
+	if is_file then
+		dest = (fs.unique_file(dest) or {}).url
+	else
+		dest = fs.unique_dir(dest)
+	end
+	if not dest then
+		fail("Failed to determine target for '%s'", self.from)
+	end
+
+	local src = only and only.url or tmp
+	if fs.rename(src, dest) then
+		return dest
+	elseif is_file then
+		fs.remove_file(dest)
+	else
+		fs.remove_dir(dest)
+	end
+	fail('Failed to move "%s" to "%s"', src, dest)
+end
+
+function M:single(tmp)
+	local outs, err = ya.iter(fs.read_dir(tmp)):try():take(2):into()
 	if not outs then
-		fail("Failed to read the temporary directory '%s' when extracting '%s'", tmp, self.from)
+		fail("Failed to read extraction directory '%s': %s", tmp, err)
 	elseif #outs == 0 then
 		fail("No files extracted from '%s'", self.from)
 	end
 
 	local only = #outs == 1 and outs[1]
-	if only and not only.stat.is_dir and require("archive").is_tar(only.url) then
-		return self:new(only.url, self.to):run()
+	if not only then
+		return
 	end
 
-	local kind = only and not only.stat.is_dir and "file" or "dir"
-	local dest = fs.unique(kind, self.to:join(only and only.name or self.trim_ext(self.from.name)))
-	if not dest then
-		fail("Failed to determine a target for '%s'", self.from)
+	local stat, err = only:lstat()
+	if not stat then
+		fail("Failed to read metadata for '%s': %s", only.url, err)
 	end
-
-	local src = only and only.url or tmp
-	if not fs.rename(src, dest) then
-		fs.remove(kind, dest)
-		fail('Failed to move "%s" to "%s"', src, dest)
-	end
-
-	return dest
+	return only, stat
 end
 
 function M:cleanup()
@@ -189,7 +210,7 @@ function M:cleanup()
 	end
 
 	for _, tmp in ipairs(self.shared.tmps) do
-		fs.remove("dir_all", tmp)
+		fs.remove_dir_all(tmp)
 	end
 	return true
 end

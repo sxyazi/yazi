@@ -76,11 +76,11 @@ impl BulkCreate {
 				continue;
 			};
 
-			let result: io::Result<()> = if entry.is_dir {
+			let result = if entry.is_dir {
 				engine::create_dir_all(&dist).await
 			} else if let Some(parent) = dist.parent() {
 				engine::create_dir_all(parent).await.ok();
-				engine::create_file_new(&dist).await
+				engine::create_file_new(&dist).await.map(drop)
 			} else {
 				Err(io::Error::other("No parent directory"))
 			};

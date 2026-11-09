@@ -1,0 +1,3 @@
+local self <close> = ...
+
+return self:map(table.pack):into()

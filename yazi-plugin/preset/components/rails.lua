@@ -23,7 +23,7 @@ end
 function Rails:reflow()
 	local components = {}
 	for _, child in ipairs(self._children) do
-		components = ya.list_merge(components, child:reflow())
+		ya.iter(child:reflow()):into(components)
 	end
 	return components
 end
@@ -31,7 +31,7 @@ end
 function Rails:redraw()
 	local elements = {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ui.redraw(child))
+		ya.iter(ui.redraw(child)):into(elements)
 	end
 	return elements
 end

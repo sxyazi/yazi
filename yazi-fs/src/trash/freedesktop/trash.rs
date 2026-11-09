@@ -29,6 +29,10 @@ impl Trash {
 			.collect()
 	}
 
+	pub(crate) fn stat(&self, entry: &TrashEntry) -> io::Result<Stat> { Ok(entry.stat) }
+
+	pub(crate) fn lstat(&self, entry: &TrashEntry) -> io::Result<Stat> { Ok(entry.lstat) }
+
 	pub(crate) fn entry(&self, id: &TrashId) -> io::Result<TrashEntry> {
 		let info = TrashInfo::parse(id.top())?;
 		if !os_limited::trash_folders()
@@ -49,10 +53,6 @@ impl Trash {
 			(info.backing, info.original)
 		};
 		TrashEntry::new(id.clone(), backing, Some(original))
-	}
-
-	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Stat> {
-		Ok(if follow { entry.stat } else { entry.lstat })
 	}
 
 	pub(crate) fn revalidate(

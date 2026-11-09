@@ -2,7 +2,7 @@ local M = {}
 
 function M:peek(job)
 	local start, url = os.clock(), ya.file_cache(job)
-	if not url or not fs.stat(url) then
+	if not url or not fs.lstat(url) then
 		url = Url(job.file.path)
 	end
 
@@ -16,7 +16,7 @@ function M:seek() end
 
 function M:preload(job)
 	local cache = ya.file_cache(job)
-	if not cache or fs.stat(cache) then
+	if not cache or fs.lstat(cache) then
 		return true
 	end
 
@@ -29,7 +29,7 @@ function M:spot(job)
 
 	ya.spot_table(
 		job,
-		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
+		ui.Table(ya.iter(require("file"):spot_base(job)):into(rows))
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(job.skip)
 			:row(1)

@@ -64,4 +64,4 @@ objc2-core-foundation  = { workspace = true }
 objc2-disk-arbitration = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-trash = "5.2.9"
+trash = "5.3.0"

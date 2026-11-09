@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use mlua::{ExternalResult, FromLua, Function, IntoLuaMulti, Lua, Value};
-use yazi_binding::time::Time;
+use yazi_binding::time::{Ticker, Time};
 
 use super::Utils;
 
@@ -33,6 +33,12 @@ impl Utils {
 				}
 				Ok(())
 			})
+		})
+	}
+
+	pub(super) fn ticker(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|_, secs: f64| {
+			Ok(Ticker::new(Duration::try_from_secs_f64(secs).into_lua_err()?))
 		})
 	}
 }

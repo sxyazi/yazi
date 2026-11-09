@@ -17,7 +17,7 @@ impl VfsStat for Stat {
 	#[inline]
 	async fn from_url(url: impl AsUrl) -> io::Result<Self> {
 		let url = url.as_url();
-		Ok(Self::from_follow(url, engine::symlink_metadata(url).await?).await)
+		Ok(Self::from_follow(url, engine::lstat(url).await?).await)
 	}
 
 	async fn from_follow<U>(url: U, stat: Self) -> Self
@@ -25,7 +25,7 @@ impl VfsStat for Stat {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		let followed = if stat.is_link() { engine::metadata(url).await.ok() } else { None };
+		let followed = if stat.is_link() { engine::stat(url).await.ok() } else { None };
 		stat.follow(followed)
 	}
 }

@@ -45,6 +45,10 @@ impl Trash {
 			.collect()
 	}
 
+	pub(crate) fn stat(&self, entry: &TrashEntry) -> io::Result<Stat> { Ok(entry.stat) }
+
+	pub(crate) fn lstat(&self, entry: &TrashEntry) -> io::Result<Stat> { Ok(entry.lstat) }
+
 	pub(crate) fn entry(&self, id: &TrashId) -> io::Result<TrashEntry> {
 		let top = ShellItem::top(id.top())?;
 		let original = top.original()?;
@@ -61,10 +65,6 @@ impl Trash {
 		} else {
 			Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"))
 		}
-	}
-
-	pub(crate) fn metadata(&self, entry: &TrashEntry, follow: bool) -> io::Result<Stat> {
-		Ok(if follow { entry.stat } else { entry.lstat })
 	}
 
 	pub(crate) fn revalidate(

@@ -1,4 +1,4 @@
-use mlua::{FromLua, IntoLua, IntoLuaMulti, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, FromLua, IntoLua, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, Value};
 use yazi_codegen::FromLuaOwned;
 use yazi_shim::fs::Error;
 
@@ -30,7 +30,7 @@ impl<T: FromLua, U: 'static> UserData for MpscTx<T, U> {
 
 impl<T: IntoLua + 'static> UserData for MpscRx<T> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
+		methods.add_async_meta_method_mut(MetaMethod::Call, |lua, mut me, ()| async move {
 			match me.0.recv().await {
 				Some(value) => (value, true).into_lua_multi(&lua),
 				None => (Value::Nil, false).into_lua_multi(&lua),
@@ -54,7 +54,7 @@ impl<T: FromLua> UserData for MpscUnboundedTx<T> {
 
 impl<T: IntoLua + 'static> UserData for MpscUnboundedRx<T> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
+		methods.add_async_meta_method_mut(MetaMethod::Call, |lua, mut me, ()| async move {
 			match me.0.recv().await {
 				Some(value) => (value, true).into_lua_multi(&lua),
 				None => (Value::Nil, false).into_lua_multi(&lua),
@@ -80,11 +80,8 @@ impl<T: FromLua> UserData for OneshotTx<T> {
 
 impl<T: IntoLua + 'static> UserData for OneshotRx<T> {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_async_method_once("recv", |lua, me, ()| async move {
-			match me.0.await {
-				Ok(value) => value.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::other(e.to_string())).into_lua_multi(&lua),
-			}
+		methods.add_async_meta_function(MetaMethod::Call, |_, ud: AnyUserData| async move {
+			Ok(ud.take::<Self>()?.0.await.map_err(|e| Error::other(e.to_string())))
 		});
 	}
 }

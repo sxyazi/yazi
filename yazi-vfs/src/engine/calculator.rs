@@ -17,7 +17,7 @@ impl SizeCalculator {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		let stat = super::symlink_metadata(url).await?;
+		let stat = super::lstat(url).await?;
 		Ok(if stat.is_dir() && !stat.is_indirect() {
 			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]), stat)
 		} else {
@@ -25,7 +25,7 @@ impl SizeCalculator {
 		})
 	}
 
-	pub fn stat(&self) -> Stat {
+	pub fn lstat(&self) -> Stat {
 		match *self {
 			Self::File(_, stat) | Self::Dir(_, stat) => stat,
 		}
@@ -77,7 +77,7 @@ impl SizeCalculator {
 				pop_and_continue!();
 			};
 
-			let Ok(stat) = dent.metadata().await else { continue };
+			let Ok(stat) = dent.lstat().await else { continue };
 			if stat.is_dir() && !stat.is_indirect() {
 				buf.push_back(Either::Left(dent.url()));
 			} else {

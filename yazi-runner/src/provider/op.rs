@@ -15,8 +15,8 @@ pub enum ProvideOp {
 	Absolute { url: UrlBuf },
 	Canonicalize { url: UrlBuf },
 	Casefold { url: UrlBuf },
-	SymlinkMetadata { url: UrlBuf },
-	Metadata { url: UrlBuf, handle: Option<Handle> },
+	Lstat { url: UrlBuf },
+	Stat { url: UrlBuf, handle: Option<Handle> },
 	ReadDir { url: UrlBuf },
 	Revalidate { file: File },
 	File { url: UrlBuf, handle: Option<Handle> },
@@ -56,7 +56,7 @@ impl ProvideOp {
 			| Self::Absolute { url }
 			| Self::Canonicalize { url }
 			| Self::Casefold { url }
-			| Self::SymlinkMetadata { url }
+			| Self::Lstat { url }
 			| Self::ReadDir { url }
 			| Self::CreateDir { url }
 			| Self::CreateDirAll { url }
@@ -68,7 +68,7 @@ impl ProvideOp {
 			| Self::RemoveFile { url }
 			| Self::Trash { url } => t.raw_set("url", url)?,
 
-			Self::Metadata { url, handle } | Self::File { url, handle } => {
+			Self::Stat { url, handle } | Self::File { url, handle } => {
 				t.raw_set("url", url)?;
 				handle.map(|h| h.into_table(&t)).transpose()?;
 			}

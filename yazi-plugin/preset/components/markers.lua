@@ -20,7 +20,7 @@ function Markers:reflow() return {} end
 function Markers:redraw()
 	local elements = {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ui.redraw(child))
+		ya.iter(ui.redraw(child)):into(elements)
 	end
 	return elements
 end

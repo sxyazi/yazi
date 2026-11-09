@@ -8,7 +8,7 @@ use yazi_shim::{indexmap::{self, IndexSet}, mlua::get_metatable};
 
 use super::Ember;
 
-type Iter = yazi_binding::Iter<indexmap::set::IntoIter<FileCov>, FileCov>;
+type Iter = yazi_binding::Iter<indexmap::set::IntoIter<FileCov>>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberYank<'a> {
@@ -50,7 +50,7 @@ impl FromLua for EmberYank<'static> {
 impl IntoLua for EmberYank<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let len = self.files.len();
-		let iter = Iter::new(self.files.into_owned().into_iter(), Some(len));
+		let iter = Iter::new(self.files.into_owned().into_iter(), len);
 		EmberYankIter { cut: self.cut, len, inner: lua.create_userdata(iter)? }.into_lua(lua)
 	}
 }

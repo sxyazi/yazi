@@ -10,7 +10,7 @@ function Modal:new(area) return setmetatable({ _area = area }, { __index = self 
 function Modal:reflow()
 	local components = {}
 	for _, child in ipairs(self._children) do
-		components = ya.list_merge(components, child[1]:new(self._area):reflow())
+		ya.iter(child[1]:new(self._area):reflow()):into(components)
 	end
 	return components
 end
@@ -38,7 +38,7 @@ end
 function Modal:children_redraw()
 	local elements = {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ui.redraw(child[1]:new(self._area)))
+		ya.iter(ui.redraw(child[1]:new(self._area))):into(elements)
 	end
 	return elements
 end

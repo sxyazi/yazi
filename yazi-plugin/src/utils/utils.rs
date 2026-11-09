@@ -12,6 +12,9 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 			b"hold" => Utils::hold(lua)?,
 			b"id" => Utils::id(lua)?,
 
+			// Iter
+			b"iter" => Utils::iter(lua)?,
+
 			// Cache
 			b"file_cache" => Utils::file_cache(lua)?,
 
@@ -81,6 +84,7 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 			b"time" => Utils::time(lua)?,
 			b"sleep" => Utils::sleep(lua)?,
 			b"throttle" => Utils::throttle(lua)?,
+			b"ticker" => Utils::ticker(lua)?,
 
 			// User
 			#[cfg(unix)]

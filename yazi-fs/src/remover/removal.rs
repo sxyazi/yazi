@@ -1,6 +1,8 @@
 use std::io;
 
+use mlua::{AnyUserData, IntoLuaMulti, LuaSerdeExt, MetaMethod, UserData, UserDataMethods, Value};
 use tokio::{sync::mpsc, task::JoinHandle};
+use yazi_shim::{fs::Error, mlua::SER_OPT};
 
 use super::Delta;
 
@@ -42,5 +44,17 @@ impl Removal {
 		} else {
 			Err(io::Error::other(format!("Failed to remove {} entries", total.failed)))
 		}
+	}
+}
+
+impl UserData for Removal {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_meta_method_mut(MetaMethod::Call, |lua, mut me, ()| async move {
+			match me.recv().await.transpose() {
+				Ok(delta) => (lua.to_value_with(&delta, SER_OPT)?, Value::Nil).into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+			}
+		});
+		methods.add_meta_function(MetaMethod::Close, |_, ud: AnyUserData| ud.destroy());
 	}
 }

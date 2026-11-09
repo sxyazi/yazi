@@ -1,17 +1,11 @@
 local M = {}
 
 local selected = ya.sync(function()
-	local urls = {}
-	for _, f in pairs(cx.tab.selected) do
-		urls[#urls + 1] = f.url
-	end
-	return urls
+	return ya.iter(pairs(cx.tab.selected)):map(function(_, f) return f.url end):into()
 end)
 
 function M:spot(job)
-	local i = 0
-	for rows in self:spot_base(job, selected()) do
-		i = i + 1
+	for i, rows in ya.iter(self:spot_base(job, selected())):enumerate() do
 		ya.spot_table(
 			job,
 			ui.Table(rows)
@@ -39,21 +33,24 @@ function M:spot_base(_, selected)
 	return ya.co(function()
 		yield("0B (?)")
 
-		local sum, last = 0, ya.time(0)
+		local sum, tick = 0, ya.ticker(0.1)
 		for _, url in ipairs(selected) do
 			local it, size = fs.calc_size(url), 0
-			while it do
-				local next, now = it:recv(), ya.time()
+			if not it then
+				return yield("Error")
+			end
+
+			for next in it do
 				if not next then
-					self.sizes[url] = it.stat.is_dir and size or nil
-					break
-				elseif now >= last + 0.1 then
-					last, size, sum = now, size + next, sum + next
+					return yield("Error")
+				end
+
+				size, sum = size + next, sum + next
+				if tick() then
 					yield(ya.readable_size(sum) .. " (?)")
-				else
-					size, sum = size + next, sum + next
 				end
 			end
+			self.sizes[url] = it.lstat.is_dir and size or nil
 		end
 
 		yield(ya.readable_size(sum))

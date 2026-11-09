@@ -26,7 +26,7 @@ impl Yanked {
 			inner,
 			iter: Lives::scoped_userdata(Iter::new(
 				inner.as_static().iter().map(File::from),
-				Some(inner.len()),
+				inner.len(),
 			))?,
 		})
 	}
