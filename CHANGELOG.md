@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Dynamic virtual filesystem Lua API ([#4338])
 - `update` methods to dynamic Lua APIs ([#4389])
 - Respect user locale date format ([#4395])
+- New `create` and `bulk-create` DDS events for file creations
 - New `focus` DDS event for terminal focus changes ([#4474])
 - New `patch` DDS event for file incremental changes ([#4365])
 - Image preview adaptation for `st-graphics` terminal ([#4414])

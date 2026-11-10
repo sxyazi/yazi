@@ -1,14 +1,14 @@
-use std::pin::Pin;
-
 use anyhow::{Result, bail};
-use tokio_stream::{Stream, StreamExt, wrappers::UnboundedReceiverStream};
+use futures::future::Either;
+use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_core::Ctx;
+use yazi_dds::Pubsub;
 use yazi_fs::{file::File, op::FilesOp};
-use yazi_macro::{ok_or_not_found, succ};
+use yazi_macro::{log_if_err, ok_or_not_found, succ};
 use yazi_parser::mgr::CreateForm;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
-use yazi_shared::{data::Data, strand::{StrandBuf, StrandLike}, url::{UrlBuf, UrlLike}};
+use yazi_shared::{data::Data, id::Id, strand::StrandLike, url::{UrlBuf, UrlLike}};
 use yazi_shim::bytes::{AnyAsciiChar, BytePredictor};
 use yazi_vfs::{VfsFile, engine};
 use yazi_watcher::WATCHER;
@@ -23,13 +23,13 @@ impl Actor for Create {
 	const NAME: &str = "create";
 
 	fn act(cx: &mut Ctx, CreateForm { target, dir, force }: Self::Form) -> Result<Data> {
-		let cwd = cx.cwd().to_owned();
+		let (tab, cwd) = (cx.tab().id, cx.cwd().to_owned());
 
-		let mut target: Pin<Box<dyn Stream<Item = StrandBuf> + Send>> = if target.is_empty() {
+		let mut target = if target.is_empty() {
 			let input = input!(cx, YAZI.input.create(dir))?;
-			Box::pin(UnboundedReceiverStream::new(input).filter_map(|event| event.map(Into::into)))
+			Either::Left(UnboundedReceiverStream::new(input).filter_map(|event| event.map(Into::into)))
 		} else {
-			Box::pin(tokio_stream::iter(vec![target]))
+			Either::Right(tokio_stream::iter([target]))
 		};
 
 		tokio::spawn(async move {
@@ -50,14 +50,14 @@ impl Actor for Create {
 			}
 
 			let end_sep = AnyAsciiChar::SEP.predicate(*name.encoded_bytes().last().unwrap());
-			Self::r#do(new, dir || end_sep).await
+			Self::r#do(tab, new, dir || end_sep).await
 		});
 		succ!();
 	}
 }
 
 impl Create {
-	async fn r#do(new: UrlBuf, dir: bool) -> Result<()> {
+	async fn r#do(tab: Id, new: UrlBuf, dir: bool) -> Result<()> {
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		if dir {
@@ -82,6 +82,7 @@ impl Create {
 			let file = engine::file(&real).await?;
 			FilesOp::Upsert(trail.into(), [(key.into(), file)].into()).emit();
 			MgrProxy::reveal(&real);
+			log_if_err!(Pubsub::pub_after_create(tab, &real));
 		}
 
 		Ok(())

@@ -1,14 +1,17 @@
 use anyhow::{Result, bail};
 use mlua::{IntoLua, Lua, Value};
-use strum::IntoStaticStr;
+use serde::Serialize;
+use strum::{EnumDiscriminants, IntoStaticStr};
 use yazi_shared::id::Id;
 use yazi_shim::strum::IntoStr;
 
-use super::{EmberBulkRename, EmberBye, EmberCd, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberFocus, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberPatch, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
+use super::{EmberBulkCreate, EmberBulkRename, EmberBye, EmberCd, EmberCreate, EmberCustom, EmberDelete, EmberDownload, EmberDuplicate, EmberFocus, EmberHey, EmberHi, EmberHover, EmberInput, EmberLoad, EmberMount, EmberMove, EmberPatch, EmberRename, EmberTab, EmberTheme, EmberTrash, EmberYank};
 use crate::Payload;
 
-#[derive(Clone, Debug, IntoStaticStr)]
-#[strum(serialize_all = "kebab-case")]
+#[derive(Clone, Debug, EnumDiscriminants, Serialize)]
+#[serde(untagged)]
+#[strum_discriminants(name(EmberKind), derive(IntoStaticStr))]
+#[strum_discriminants(strum(serialize_all = "kebab-case"))]
 pub enum Ember<'a> {
 	Hi(EmberHi<'a>),
 	Hey(EmberHey),
@@ -18,9 +21,11 @@ pub enum Ember<'a> {
 	Load(EmberLoad<'a>),
 	Patch(EmberPatch<'a>),
 	Hover(EmberHover<'a>),
+	Create(EmberCreate<'a>),
+	BulkCreate(EmberBulkCreate<'a>),
 	Rename(EmberRename<'a>),
 	BulkRename(EmberBulkRename<'a>),
-	#[strum(serialize = "@yank")]
+	#[strum_discriminants(strum(serialize = "@yank"))]
 	Yank(EmberYank<'a>),
 	Duplicate(EmberDuplicate<'a>),
 	Move(EmberMove<'a>),
@@ -45,6 +50,8 @@ impl Ember<'static> {
 			"load" => Self::Load(serde_json::from_str(body)?),
 			"patch" => Self::Patch(serde_json::from_str(body)?),
 			"hover" => Self::Hover(serde_json::from_str(body)?),
+			"create" => Self::Create(serde_json::from_str(body)?),
+			"bulk-create" => Self::BulkCreate(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk-rename" => Self::BulkRename(serde_json::from_str(body)?),
 			"@yank" => Self::Yank(serde_json::from_str(body)?),
@@ -77,6 +84,8 @@ impl Ember<'static> {
 				| "load"
 				| "patch"
 				| "hover"
+				| "create"
+				| "bulk-create"
 				| "rename"
 				| "bulk-rename"
 				| "@yank"
@@ -113,7 +122,7 @@ impl<'a> Ember<'a> {
 	pub fn kind(&self) -> &str {
 		match self {
 			Self::Custom(b) => &b.kind,
-			_ => self.into_str(),
+			_ => EmberKind::from(self).into_str(),
 		}
 	}
 
@@ -124,6 +133,7 @@ impl<'a> Ember<'a> {
 			Self::Load(b) => b.tab,
 			Self::Patch(b) => b.tab,
 			Self::Hover(b) => b.tab,
+			Self::Create(b) => b.tab,
 			Self::Rename(b) => b.tab,
 			_ => Id::ZERO,
 		}
@@ -145,6 +155,8 @@ impl<'a> IntoLua for Ember<'a> {
 			Self::Patch(b) => b.into_lua(lua),
 			Self::Hover(b) => b.into_lua(lua),
 			Self::Tab(b) => b.into_lua(lua),
+			Self::Create(b) => b.into_lua(lua),
+			Self::BulkCreate(b) => b.into_lua(lua),
 			Self::Rename(b) => b.into_lua(lua),
 			Self::BulkRename(b) => b.into_lua(lua),
 			Self::Yank(b) => b.into_lua(lua),

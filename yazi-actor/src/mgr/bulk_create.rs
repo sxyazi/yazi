@@ -5,12 +5,13 @@ use scopeguard::defer;
 use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_core::Ctx;
+use yazi_dds::Pubsub;
 use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, file::Files, op::FilesOp};
-use yazi_macro::{succ, writef};
+use yazi_macro::{log_if_err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
 use yazi_scheduler::{AppProxy, NotifyProxy, process::ShellOpt};
-use yazi_shared::{data::Data, strand::Strand, url::{UrlBuf, UrlLike}};
+use yazi_shared::{data::Data, strand::Strand, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_shim::path::CROSS_SEPARATOR;
 use yazi_term::YIELD_TO_SUBPROCESS;
 use yazi_tty::{TTY, sequence::EraseDisplay};
@@ -64,7 +65,7 @@ impl BulkCreate {
 		writef!(TTY.writer(), "{}\n", EraseDisplay::All)?;
 		if todo.is_empty() {
 			return Ok(());
-		} else if !Self::ask_continue(&todo, None)? {
+		} else if !Self::ask_continue(&todo)? {
 			return Ok(()); // TODO: support `bulk_exit`?
 		}
 
@@ -95,13 +96,13 @@ impl BulkCreate {
 		}
 
 		if !succeeded.is_empty() {
-			// log_if_err!(Pubsub::pub_after_bulk_create(it));  // FIXME
+			log_if_err!(Pubsub::pub_after_bulk_create(succeeded.iter().map(AsUrl::as_url)));
 			FilesOp::create(succeeded);
 		}
 		drop(_permit);
 
 		if !failed.is_empty() {
-			Self::output_failed(failed).await?;
+			Self::output_failed(failed)?;
 		}
 		Ok(())
 	}
@@ -113,11 +114,7 @@ impl BulkCreate {
 			.and_then(|r| YAZI.opener.block(&r))
 	}
 
-	fn ask_continue(todo: &[Entry], decision: Option<bool>) -> Result<bool> {
-		if let Some(decision) = decision {
-			return Ok(decision);
-		}
-
+	fn ask_continue(todo: &[Entry]) -> Result<bool> {
 		{
 			let mut w = TTY.lockout();
 			for entry in todo {
@@ -132,7 +129,7 @@ impl BulkCreate {
 		Ok(buf[0] == b'y' || buf[0] == b'Y')
 	}
 
-	async fn output_failed(failed: Vec<(Entry<'_>, anyhow::Error)>) -> Result<()> {
+	fn output_failed(failed: Vec<(Entry<'_>, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
 		writeln!(stdout, "{}", EraseDisplay::All)?;
 
