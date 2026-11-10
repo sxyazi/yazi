@@ -23,7 +23,7 @@ Yazi (means "duck") is a terminal file manager written in Rust, based on non-blo
 - 🧰 Integration with ripgrep, fd, fzf, zoxide, [Rclone](https://github.com/yazi-rs/plugins/tree/main/rclone.yazi)
 - 💫 Vim-like input/pick/confirm/which/notify component, auto-completion for cd paths
 - 🏷️ Multi-Tab Support, Cross-directory selection, Scrollable Preview (for videos, PDFs, archives, code, directories, etc.)
-- 🔄 Bulk Rename/Create, Archive Extraction, Visual Mode, File Chooser, [Git Integration](https://github.com/yazi-rs/plugins/tree/main/git.yazi), [Mount Manager](https://github.com/yazi-rs/plugins/tree/main/mount.yazi)
+- 🔄 Bulk Rename/Create, Archive Extraction, [Compress Files](https://github.com/yazi-rs/plugins/tree/main/compress.yazi), Visual Mode, File Chooser, [Git Integration](https://github.com/yazi-rs/plugins/tree/main/git.yazi), [Mount Manager](https://github.com/yazi-rs/plugins/tree/main/mount.yazi)
 - 🎨 Theme System, Mouse Support, [Drag and Drop](https://yazi-rs.github.io/docs/dnd), Trash Bin, Custom Layouts, CSI u, OSC 52, CSI 2031
 - ... and more!
 

@@ -6,19 +6,19 @@ use yazi_fs::{FolderStage, file::FileCov, op::FilesOp};
 use yazi_shared::{id::Id, url::{Url, UrlBuf}};
 use yazi_shim::indexmap::IndexSet;
 
-use crate::{Client, PEERS, Subscription, Subscriptions, ember::{Ember, EmberBulkRename, EmberDuplicateItem, EmberHi, EmberMoveItem}};
+use crate::{Client, PEERS, Subscription, Subscriptions, ember::{Ember, EmberDuplicateItem, EmberHi, EmberKind, EmberMoveItem}};
 
 pub(crate) static LOCAL: RwLock<Subscriptions> = RwLock::new(Subscriptions::new());
 
 pub(crate) static REMOTE: RwLock<Subscriptions> = RwLock::new(Subscriptions::new());
 
 macro_rules! pub_after {
-	(&impl $name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*), $static:literal) => {
+	(&impl $name:ident $(<$lt:lifetime>)? ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*), $static:literal) => {
 		paste::paste! {
-			pub fn [<pub_after_ $name>]($($param: $param_ty),*) -> Result<()> {
+			pub fn [<pub_after_ $name>]$(<$lt>)?($($param: $param_ty),*) -> Result<()> {
 				use crate::ember::[<Ember $name:camel>] as B;
 
-				let n = if $static { concat!("@", stringify!($name)) } else { stringify!($name) };
+				let n: &'static str = EmberKind::[<$name:camel>].into();
 				if BOOT.local_events.contains(n) {
 					B::borrowed($($borrowed),*).with_receiver(BOOT.id).flush()?;
 				}
@@ -32,17 +32,17 @@ macro_rules! pub_after {
 			}
 		}
 	};
-	($name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*)) => {
-		pub_after!(&impl $name($($param: $param_ty),*), ($($borrowed),*), ($($borrowed),*), false);
+	($name:ident $(<$lt:lifetime>)? ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*)) => {
+		pub_after!(&impl $name$(<$lt>)?($($param: $param_ty),*), ($($borrowed),*), ($($borrowed),*), false);
 	};
-	($name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*)) => {
-		pub_after!(&impl $name($($param: $param_ty),*), ($($borrowed),*), ($($owned),*), false);
+	($name:ident $(<$lt:lifetime>)? ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*)) => {
+		pub_after!(&impl $name$(<$lt>)?($($param: $param_ty),*), ($($borrowed),*), ($($owned),*), false);
 	};
-	(@ $name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*)) => {
-		pub_after!(&impl $name($($param: $param_ty),*), ($($borrowed),*), ($($borrowed),*), true);
+	(@ $name:ident $(<$lt:lifetime>)? ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*)) => {
+		pub_after!(&impl $name$(<$lt>)?($($param: $param_ty),*), ($($borrowed),*), ($($borrowed),*), true);
 	};
-	(@ $name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*)) => {
-		pub_after!(&impl $name($($param: $param_ty),*), ($($borrowed),*), ($($owned),*), true);
+	(@ $name:ident $(<$lt:lifetime>)? ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*)) => {
+		pub_after!(&impl $name$(<$lt>)?($($param: $param_ty),*), ($($borrowed),*), ($($owned),*), true);
 	};
 }
 
@@ -105,22 +105,6 @@ impl Pubsub {
 		Client::push(EmberHi::borrowed(abilities)).ok();
 	}
 
-	pub fn pub_after_bulk_rename<'a, I>(changes: I) -> Result<()>
-	where
-		I: Iterator<Item = (Url<'a>, Url<'a>)> + Clone,
-	{
-		if BOOT.local_events.contains("bulk-rename") {
-			EmberBulkRename::borrowed(changes.clone()).with_receiver(BOOT.id).flush()?;
-		}
-		if PEERS.read().values().any(|p| p.able("bulk-rename")) {
-			Client::push(EmberBulkRename::borrowed(changes.clone()))?;
-		}
-		if LOCAL.read().contains_key("bulk-rename") {
-			Self::r#pub(EmberBulkRename::owned(changes))?;
-		}
-		Ok(())
-	}
-
 	fn any_remote_own(kind: &str) -> bool {
 		REMOTE.read().contains_key(kind)  // Own remote abilities
 			|| PEERS.read().values().any(|p| p.able(kind))  // Remote peers' abilities
@@ -140,7 +124,13 @@ impl Pubsub {
 
 	pub_after!(hover(tab: Id, url: Option<&UrlBuf>), (tab, url));
 
+	pub_after!(create(tab: Id, url: &UrlBuf), (tab, url));
+
+	pub_after!(bulk_create<'a>(urls: impl Iterator<Item = Url<'a>> + Clone), (urls.clone()), (urls));
+
 	pub_after!(rename(tab: Id, from: &UrlBuf, to: &UrlBuf), (tab, from, to));
+
+	pub_after!(bulk_rename<'a>(changes: impl Iterator<Item = (Url<'a>, Url<'a>)> + Clone), (changes.clone()), (changes));
 
 	pub_after!(@yank(cut: bool, files: &IndexSet<FileCov>), (cut, files));
 

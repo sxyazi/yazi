@@ -142,7 +142,7 @@ impl BulkRename {
 		drop(permit);
 
 		if !failed.is_empty() {
-			Self::output_failed(failed).await?;
+			Self::output_failed(failed)?;
 		}
 		Ok(())
 	}
@@ -177,7 +177,7 @@ impl BulkRename {
 		Ok(buf[0] == b'y' || buf[0] == b'Y')
 	}
 
-	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {
+	fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {
 		let mut stdout = TTY.lockout();
 		writeln!(stdout, "{}", EraseDisplay::All)?;
 

@@ -89,35 +89,9 @@ impl<C> FromAction<C> for Payload<'_> {
 
 impl Display for Payload<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let result = match &self.body {
-			Ember::Hi(b) => serde_json::to_string(b),
-			Ember::Hey(b) => serde_json::to_string(b),
-			Ember::Bye(b) => serde_json::to_string(b),
-			Ember::Cd(b) => serde_json::to_string(b),
-			Ember::Load(b) => serde_json::to_string(b),
-			Ember::Patch(b) => serde_json::to_string(b),
-			Ember::Hover(b) => serde_json::to_string(b),
-			Ember::Tab(b) => serde_json::to_string(b),
-			Ember::Rename(b) => serde_json::to_string(b),
-			Ember::BulkRename(b) => serde_json::to_string(b),
-			Ember::Yank(b) => serde_json::to_string(b),
-			Ember::Duplicate(b) => serde_json::to_string(b),
-			Ember::Move(b) => serde_json::to_string(b),
-			Ember::Trash(b) => serde_json::to_string(b),
-			Ember::Delete(b) => serde_json::to_string(b),
-			Ember::Download(b) => serde_json::to_string(b),
-			Ember::Input(b) => serde_json::to_string(b),
-			Ember::Mount(b) => serde_json::to_string(b),
-			Ember::Theme(b) => serde_json::to_string(b),
-			Ember::Focus(b) => serde_json::to_string(b),
-			Ember::Custom(b) => serde_json::to_string(b),
-		};
+		let body = serde_json::to_string(&self.body).map_err(|_| std::fmt::Error)?;
 
-		if let Ok(s) = result {
-			write!(f, "{},{},{},{s}", self.body.kind(), self.receiver, self.sender)
-		} else {
-			Err(std::fmt::Error)
-		}
+		write!(f, "{},{},{},{body}", self.body.kind(), self.receiver, self.sender)
 	}
 }
 
