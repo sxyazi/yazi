@@ -62,7 +62,7 @@ impl MouseEventKind {
 			modifiers |= Modifiers::ALT;
 		}
 		if cb & 0b0001_0000 == 0b0001_0000 {
-			modifiers |= Modifiers::CONTROL;
+			modifiers |= Modifiers::CTRL;
 		}
 
 		Ok((kind, modifiers))
