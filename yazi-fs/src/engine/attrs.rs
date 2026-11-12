@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use mlua::{IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, Table, Value};
 use yazi_binding::time::Time;
 
 use crate::stat::{Stat, StatMode};
@@ -77,6 +77,18 @@ impl Attrs {
 	pub fn atime_dur(self) -> Option<Duration> { self.atime?.try_into().ok() }
 
 	pub fn mtime_dur(self) -> Option<Duration> { self.mtime?.try_into().ok() }
+}
+
+impl FromLua for Attrs {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		let t = Table::from_lua(value, lua)?;
+		Ok(Self {
+			mode:  t.raw_get::<Option<u16>>("mode")?.map(StatMode::from_bits_retain),
+			atime: t.raw_get("atime")?,
+			btime: t.raw_get("btime")?,
+			mtime: t.raw_get("mtime")?,
+		})
+	}
 }
 
 impl IntoLua for Attrs {

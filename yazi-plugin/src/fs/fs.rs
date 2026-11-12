@@ -83,8 +83,9 @@ fn clean_url(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn copy(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|_, (from, to): (UrlRef, UrlRef)| async move {
-		let result = async { engine::copy(&*from, &*to, Attrs::default()).await?.total().await }.await;
+	lua.create_async_function(|_, (from, to, attrs): (UrlRef, UrlRef, Option<Attrs>)| async move {
+		let attrs = attrs.unwrap_or_default();
+		let result = async { engine::copy(&*from, &*to, attrs).await?.total().await }.await;
 		Ok(result.map_err(Error::from))
 	})
 }
