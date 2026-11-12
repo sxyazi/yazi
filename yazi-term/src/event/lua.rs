@@ -52,6 +52,7 @@ impl UserData for MouseEvent {
 		fields.add_field("type", "legacy");
 		fields.add_field_method_get("x", |_, me| Ok(me.column));
 		fields.add_field_method_get("y", |_, me| Ok(me.row));
+		fields.add_cached_field("modifiers", |_, me| Ok(me.modifiers));
 		fields.add_field_method_get("is_left", |_, me| {
 			use MouseEventKind as K;
 			Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Left))

@@ -59,7 +59,7 @@ impl TryFrom<KeyEvent> for Key {
 		Ok(Self {
 			code,
 			shift,
-			ctrl: value.modifiers.contains(Modifiers::CONTROL),
+			ctrl: value.modifiers.contains(Modifiers::CTRL),
 			alt: value.modifiers.contains(Modifiers::ALT),
 			super_: value.modifiers.contains(Modifiers::SUPER),
 		})

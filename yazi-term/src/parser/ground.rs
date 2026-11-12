@@ -8,12 +8,12 @@ impl Parser {
 			b'\r' => Some(KeyCode::Enter.into()),
 			b'\t' => Some(KeyCode::Tab.into()),
 			b'\x7F' => Some(KeyCode::Backspace.into()),
-			b'\0' => Some(KeyEvent::new(KeyCode::Char(' '), Modifiers::CONTROL)),
+			b'\0' => Some(KeyEvent::new(KeyCode::Char(' '), Modifiers::CTRL)),
 			c @ b'\x01'..=b'\x1A' => {
-				Some(KeyEvent::new(KeyCode::Char((c - 0x1 + b'a') as char), Modifiers::CONTROL))
+				Some(KeyEvent::new(KeyCode::Char((c - 0x1 + b'a') as char), Modifiers::CTRL))
 			}
 			c @ b'\x1C'..=b'\x1F' => {
-				Some(KeyEvent::new(KeyCode::Char((c - 0x1c + b'4') as char), Modifiers::CONTROL))
+				Some(KeyEvent::new(KeyCode::Char((c - 0x1c + b'4') as char), Modifiers::CTRL))
 			}
 			b'\x20'..=b'\x7E' => {
 				Some(KeyEvent::new(KeyCode::Char(b as char), Modifiers::for_char(b as char)))
