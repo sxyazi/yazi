@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::Result;
 use yazi_config::YAZI;
 use yazi_core::{Ctx, mgr::MgrSnap};
-use yazi_fs::Splatter;
+use yazi_fs::splatter::Splatter;
 use yazi_macro::succ;
 use yazi_parser::mgr::ShellForm;
 use yazi_proxy::TasksProxy;
@@ -39,19 +39,20 @@ impl Actor for Shell {
 			if let Some(mut rx) = input {
 				match rx.recv().await {
 					Some(InputEvent::Submit(e)) => form.run = Cow::Owned(e),
-					_ => return,
+					_ => return Ok(()),
 				}
 			}
 			if form.run.is_empty() {
-				return;
+				return Ok(());
 			}
 
 			TasksProxy::process_open(ShellOpt {
 				cwd,
-				cmd: Splatter::new(snap).splat(&*form.run),
+				cmd: Splatter::new(snap).splat(&*form.run)?,
 				block: form.block,
 				orphan: form.orphan,
 			});
+			anyhow::Ok(())
 		});
 
 		succ!();

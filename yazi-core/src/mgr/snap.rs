@@ -1,4 +1,4 @@
-use yazi_fs::{Splatable, file::{File, Files}};
+use yazi_fs::{file::{File, FileRef}, files::{FileIter, Files}, splatter::Splatable};
 
 use crate::{mgr::Mgr, tab::TabSnap};
 
@@ -21,23 +21,26 @@ impl From<&Mgr> for MgrSnap {
 impl Splatable for MgrSnap {
 	fn tab(&self) -> usize { self.tab + 1 }
 
-	fn selected(&self, tab: usize, mut idx: Option<usize>) -> impl Iterator<Item = &File> {
-		idx = idx.and_then(|i| i.checked_sub(1));
-
+	fn selected(&self, tab: usize) -> mlua::Result<FileIter<impl Iterator<Item = &File>>> {
 		let files = match tab.checked_sub(1).and_then(|tab| self.tabs.get(tab)) {
 			Some(s) if !s.selected.is_empty() => &s.selected,
 			Some(s) => s.hovered.as_slice(),
 			None => &[],
 		};
-		files.iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX })
+		Ok(FileIter::new(files.iter()))
 	}
 
-	fn hovered(&self, tab: usize) -> Option<&File> {
-		tab.checked_sub(1).and_then(|tab| self.tabs.get(tab)).and_then(|tab| tab.hovered.as_ref())
+	fn hovered(&self, tab: usize) -> mlua::Result<Option<FileRef<'_>>> {
+		Ok(
+			tab
+				.checked_sub(1)
+				.and_then(|tab| self.tabs.get(tab))
+				.and_then(|tab| tab.hovered.as_ref())
+				.map(Into::into),
+		)
 	}
 
-	fn yanked(&self, mut idx: Option<usize>) -> impl Iterator<Item = &File> {
-		idx = idx.and_then(|i| i.checked_sub(1));
-		self.yanked.iter().skip(idx.unwrap_or(0)).take(if idx.is_some() { 1 } else { usize::MAX })
+	fn yanked(&self) -> mlua::Result<FileIter<impl Iterator<Item = &File>>> {
+		Ok(FileIter::new(self.yanked.iter()))
 	}
 }

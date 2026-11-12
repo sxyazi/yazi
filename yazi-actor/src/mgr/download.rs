@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
 use hashbrown::HashSet;
 use yazi_core::{Ctx, mgr::OpenOpt};
-use yazi_fs::{FsAuth, FsUrl, engine::{Engine, local::Local}, file::Files};
+use yazi_fs::{FsAuth, FsUrl, engine::{Engine, local::Local}, files::Files};
 use yazi_macro::succ;
 use yazi_parser::mgr::DownloadForm;
 use yazi_proxy::MgrProxy;

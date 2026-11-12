@@ -1,7 +1,7 @@
 local M = {}
 
 local selected = ya.sync(function()
-	return ya.iter(pairs(cx.tab.selected)):map(function(_, f) return f.url end):into()
+	return ya.iter(cx.tab.selected):map(function(f) return f.url end):into()
 end)
 
 function M:spot(job)

@@ -8,7 +8,7 @@ use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_core::Ctx;
 use yazi_dds::Pubsub;
-use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, max_common_root, op::FilesOp, path::skip_url};
+use yazi_fs::{engine::{Engine, RwFile, local::Local}, max_common_root, op::FilesOp, path::skip_url, splatter::Splatter};
 use yazi_macro::{log_if_err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
@@ -61,7 +61,7 @@ impl Actor for BulkRename {
 			batcher.prime(&tmp);
 			TasksProxy::process_exec(ShellOpt {
 				cwd,
-				cmd: Splatter::new(&[rw.into_file().await?]).splat(&opener.run),
+				cmd: Splatter::new(&[rw.into_file().await?]).splat(&opener.run)?,
 				block: opener.block,
 				orphan: opener.orphan,
 			})

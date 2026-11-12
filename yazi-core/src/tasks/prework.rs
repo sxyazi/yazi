@@ -1,5 +1,5 @@
 use yazi_config::{YAZI, plugin::{FetcherMatcher, MAX_FETCHERS}};
-use yazi_fs::{Entries, FsHash64, SortBy, file::{File, FileSig, Files}};
+use yazi_fs::{Entries, FsHash64, SortBy, file::{File, FileSig}, files::Files};
 use yazi_scheduler::{Loaded, fetch::FetchInFetch, preload::PreloadInPreload};
 
 use super::Tasks;

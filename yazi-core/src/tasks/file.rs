@@ -1,12 +1,13 @@
 use yazi_macro::debug;
 use yazi_scheduler::file::{FileInCopy, FileInLink, FileInMove};
-use yazi_shared::url::{UrlBuf, UrlLike};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 
 use super::Tasks;
 use crate::mgr::Yanked;
 
 impl Tasks {
-	pub fn file_move(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
+	pub fn file_move(&self, src: &Yanked, dest: impl AsUrl, force: bool) {
+		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {
@@ -22,7 +23,8 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
+	pub fn file_copy(&self, src: &Yanked, dest: impl AsUrl, force: bool, follow: bool) {
+		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {
@@ -38,7 +40,15 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_link(&self, src: &Yanked, dest: &UrlBuf, relative: bool, force: bool, follow: bool) {
+	pub fn file_link(
+		&self,
+		src: &Yanked,
+		dest: impl AsUrl,
+		relative: bool,
+		force: bool,
+		follow: bool,
+	) {
+		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {
@@ -54,7 +64,8 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_hardlink(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
+	pub fn file_hardlink(&self, src: &Yanked, dest: impl AsUrl, force: bool, follow: bool) {
+		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
 
 		for u in src.urls() {

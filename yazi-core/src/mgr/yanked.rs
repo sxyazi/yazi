@@ -4,7 +4,7 @@ use hashbrown::HashSet;
 use yazi_dds::Pubsub;
 use yazi_fs::file::{File, FileCov};
 use yazi_macro::log_if_err;
-use yazi_shared::url::{Url, UrlBuf, UrlCov, UrlLike};
+use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlCov, UrlLike};
 use yazi_shim::indexmap::IndexSet;
 
 #[derive(Debug, Default)]
@@ -59,12 +59,14 @@ impl Yanked {
 		self.files.contains(&UrlCov::new(url))
 	}
 
-	pub fn contains_in(&self, dir: &UrlBuf) -> bool {
+	pub fn contains_in(&self, dir: impl AsUrl) -> bool {
+		let dir = dir.as_url();
+
 		self.files.iter().any(|f| {
 			let mut it = f.components();
 			it.next_back().is_some()
 				&& it.covariant(&dir.components())
-				&& f.parent().is_some_and(|p| p == *dir)
+				&& f.parent().is_some_and(|p| p == dir)
 		})
 	}
 

@@ -1,14 +1,13 @@
 use std::borrow::Cow;
 
-use mlua::{AnyUserData, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
+use hashbrown::{HashMap, hash_map::Entry};
+use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use serde::{Deserialize, Serialize};
-use yazi_fs::file::FileCov;
+use yazi_fs::{file::{File, FileCov}, files::{FileSource, FilesInventory}};
 use yazi_macro::impl_data_any;
-use yazi_shim::{indexmap::{self, IndexSet}, mlua::get_metatable};
+use yazi_shim::indexmap::IndexSet;
 
 use super::Ember;
-
-type Iter = yazi_binding::Iter<indexmap::set::IntoIter<FileCov>>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberYank<'a> {
@@ -35,13 +34,13 @@ impl<'a> From<EmberYank<'a>> for Ember<'a> {
 }
 
 impl FromLua for EmberYank<'static> {
-	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
-			Value::UserData(ud) => ud.take::<EmberYankIter>()?.collect(lua),
+			Value::UserData(ud) => Ok(ud.take::<EmberYankFiles>()?.into()),
 			_ => Err(mlua::Error::FromLuaConversionError {
 				from:    value.type_name(),
 				to:      "EmberYank".to_owned(),
-				message: Some("expected EmberYankIter userdata".to_owned()),
+				message: Some("expected EmberYankFiles userdata".to_owned()),
 			}),
 		}
 	}
@@ -49,39 +48,68 @@ impl FromLua for EmberYank<'static> {
 
 impl IntoLua for EmberYank<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		let len = self.files.len();
-		let iter = Iter::new(self.files.into_owned().into_iter(), len);
-		EmberYankIter { cut: self.cut, len, inner: lua.create_userdata(iter)? }.into_lua(lua)
+		EmberYankFiles { cut: self.cut, files: self.files.into_owned(), cache: HashMap::new() }
+			.into_lua(lua)
 	}
 }
 
-// --- Iter
-pub struct EmberYankIter {
+// --- Files
+pub struct EmberYankFiles {
 	cut:   bool,
-	len:   usize,
-	inner: AnyUserData,
+	files: IndexSet<FileCov>,
+	cache: HashMap<usize, AnyUserData>,
 }
 
-impl EmberYankIter {
-	fn collect(self, lua: &Lua) -> mlua::Result<EmberYank<'static>> {
-		Ok(EmberYank {
-			cut:   self.cut,
-			files: Cow::Owned(self.inner.take::<Iter>()?.into_iter(lua).collect::<mlua::Result<_>>()?),
-		})
+impl From<EmberYankFiles> for EmberYank<'static> {
+	fn from(value: EmberYankFiles) -> Self { Self { cut: value.cut, files: Cow::Owned(value.files) } }
+}
+
+impl FileSource for EmberYankFiles {
+	fn len(&self) -> usize { self.files.len() }
+
+	fn borrow(
+		&self,
+		idx: usize,
+		visit: &mut dyn FnMut(&File) -> mlua::Result<()>,
+	) -> mlua::Result<()> {
+		visit(&self.files.get_index(idx).ok_or_else(|| "file index out of bounds".into_lua_err())?.0)
 	}
 }
 
-impl UserData for EmberYankIter {
+impl UserData for EmberYankFiles {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("cut", |_, me| Ok(me.cut));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len));
+		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.files.len()));
 
-		methods.add_meta_method(MetaMethod::Pairs, |lua, me, ()| {
-			get_metatable(lua, &me.inner)?
-				.call_function::<MultiValue>(MetaMethod::Pairs.name(), me.inner.clone())
+		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, idx: usize| {
+			let Some(file) = idx.checked_sub(1).and_then(|i| me.files.get_index(i)) else {
+				return Ok(None);
+			};
+
+			let cached = match me.cache.entry(idx) {
+				Entry::Occupied(oe) => oe.into_mut(),
+				// TODO: remove .clone()
+				Entry::Vacant(ve) => ve.insert(lua.create_userdata(file.0.clone())?),
+			};
+			Ok(Some(cached.clone()))
+		});
+
+		// TODO: remove
+		methods.add_meta_function(MetaMethod::Pairs, |lua, ud: AnyUserData| {
+			let next = lua.create_function(|lua, (me, idx): (UserDataRef<Self>, usize)| {
+				match me.files.get_index(idx) {
+					Some(file) => (idx + 1, file.0.clone()).into_lua_multi(lua),
+					None => ().into_lua_multi(lua),
+				}
+			})?;
+			Ok((next, ud, 0))
 		});
 	}
+}
+
+inventory::submit! {
+	FilesInventory::new::<EmberYankFiles>()
 }

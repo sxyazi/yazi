@@ -14,6 +14,10 @@ impl Selected {
 
 	pub fn is_empty(&self) -> bool { self.inner.is_empty() }
 
+	pub fn file_at(&self, index: usize) -> Option<&File> {
+		self.inner.get_index(index).map(|(file, _)| &file.0)
+	}
+
 	pub fn files(&self) -> impl Iterator<Item = &File> { self.inner.keys().map(|f| &f.0) }
 
 	pub(crate) fn urls(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(|f| &f.url) }

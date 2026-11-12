@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_fs::file::Files;
+use yazi_fs::files::Files;
 use yazi_shared::event::{ActionCow, FromAction};
 
 #[derive(Debug)]

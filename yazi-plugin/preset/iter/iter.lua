@@ -1,4 +1,4 @@
-local load = ...
+local load, ud_callable = ...
 local is_error = Error.is
 local Iter = setmetatable({}, {
 	__index = function(methods, key)
@@ -33,41 +33,24 @@ end
 
 function Iter:__call() return advance(self, self._next()) end
 
-local function array(source)
-	local i = 0
-	local function next()
-		i = i + 1
-		return rawget(source, i)
-	end
-
-	local function collect(out)
-		if i == 0 then
-			table.move(source, 1, #source, #out + 1, out)
-			i = #source
-			return out, nil
-		end
-
-		while true do
-			i = i + 1
-			local value = rawget(source, i)
-			if value == nil then
-				return out, nil
-			end
-			out[#out + 1] = value
-		end
-	end
-
-	return next, collect
-end
+local function index(source, i) return source[i] end
 
 return function(source, state, control, closing)
 	local ty = type(source)
 	local mt = ty == "table" and getmetatable(source)
-	local callable = type(mt) == "table" and rawget(mt, "__call") ~= nil
+
+	local callable = false
+	if ty == "userdata" then
+		callable = ud_callable(source)
+	elseif type(mt) == "table" then
+		callable = rawget(mt, "__call") ~= nil
+	end
 
 	local collect, next = false
 	if ty == "table" and not callable then
-		next, collect = array(source)
+		next, collect = Iter._array(source, rawget)
+	elseif ty == "userdata" and not callable then
+		next, collect = Iter._array(source, index)
 	elseif source == nil then
 		next = function()
 			local err = state
@@ -75,7 +58,7 @@ return function(source, state, control, closing)
 			return nil, err
 		end
 	else
-		assert(ty == "function" or ty == "userdata" or callable, "expected an array or iterator")
+		assert(ty == "function" or callable, "expected an array or iterator")
 		next = source
 	end
 
@@ -89,7 +72,7 @@ return function(source, state, control, closing)
 		_next = pull,
 		_base = pull,
 		_source = source,
-		_kw = false,
+		_kv = false,
 		_collect = collect,
 		_fallible = false,
 		_closing = { closing },

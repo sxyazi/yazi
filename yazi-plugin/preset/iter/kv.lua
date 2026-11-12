@@ -1,6 +1,6 @@
 local self = ...
 
-self._kw = true
+self._kv = true
 if self._next ~= self._base then
 	return self, nil, nil, self
 end

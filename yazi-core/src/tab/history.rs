@@ -1,5 +1,5 @@
 use hashbrown::{HashMap, HashSet};
-use yazi_shared::{path::{PathBufDyn, PathMapExt}, url::{AsUrl, UrlBuf, UrlLike, UrlMapExt}};
+use yazi_shared::{path::{PathBufDyn, PathMapExt}, url::{AsUrl, Url, UrlBuf, UrlLike, UrlMapExt}};
 use yazi_shim::indexmap::IndexMap;
 
 use super::Folder;
@@ -11,16 +11,18 @@ pub struct History {
 }
 
 impl History {
-	pub fn get(&self, url: &UrlBuf) -> Option<&Folder> { self.entries.get(url) }
+	pub fn get(&self, url: impl AsUrl) -> Option<&Folder> { self.entries.get(&url.as_url()) }
 
 	pub(crate) fn get_mut(&mut self, url: impl AsUrl) -> Option<&mut Folder> {
 		self.entries.get_mut(&url.as_url())
 	}
 
-	pub fn ensure(&mut self, url: &UrlBuf) -> (&mut Folder, Option<Folder>) {
+	pub fn ensure(&mut self, url: impl AsUrl) -> (&mut Folder, Option<Folder>) {
+		let url = url.as_url();
 		let evicted =
-			if self.entries.contains_key(url) { None } else { self.insert(Folder::from(url)) };
-		(self.entries.get_mut(url).unwrap(), evicted)
+			if self.entries.contains_key(&url) { None } else { self.insert(Folder::from(url)) };
+
+		(self.entries.get_mut(&url).unwrap(), evicted)
 	}
 
 	pub fn insert(&mut self, folder: Folder) -> Option<Folder> {
@@ -34,7 +36,7 @@ impl History {
 
 		(self.entries.len() > 100).then(|| {
 			let (url, folder) = self.entries.shift_remove_index(0).unwrap();
-			self.unindex(&url);
+			self.unindex(url.as_url());
 			folder
 		})
 	}
@@ -44,13 +46,13 @@ impl History {
 		self.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
-	pub(crate) fn for_each_mut<F>(&mut self, trail: &UrlBuf, keys: &HashSet<PathBufDyn>, mut f: F)
+	pub(crate) fn for_each_mut<F>(&mut self, trail: impl AsUrl, keys: &HashSet<PathBufDyn>, mut f: F)
 	where
 		F: FnMut(&mut Folder),
 	{
 		let urls = self
 			.indices
-			.get(trail)
+			.get(&trail.as_url())
 			.into_iter()
 			.flat_map(|index| keys.iter().filter_map(|key| index.get(key)).flatten());
 
@@ -63,11 +65,11 @@ impl History {
 
 	fn remove(&mut self, url: impl AsUrl) -> Option<Folder> {
 		let (url, folder) = self.entries.shift_remove_entry(&url.as_url())?;
-		self.unindex(&url);
+		self.unindex(url.as_url());
 		Some(folder)
 	}
 
-	fn unindex(&mut self, url: &UrlBuf) {
+	fn unindex(&mut self, url: Url) {
 		let Some((trail, key)) = url.pair() else { return };
 		let Some(index) = self.indices.get_mut(&trail) else { return };
 

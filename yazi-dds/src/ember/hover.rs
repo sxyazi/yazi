@@ -1,15 +1,13 @@
-use std::borrow::Cow;
-
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlCow}};
 
 use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberHover<'a> {
 	pub(super) tab: Id,
-	url:            Option<Cow<'a, UrlBuf>>,
+	url:            Option<UrlCow<'a>>,
 }
 
 impl<'a> EmberHover<'a> {
@@ -33,7 +31,7 @@ impl IntoLua for EmberHover<'_> {
 		lua
 			.create_table_from([
 				("tab", self.tab.into_lua(lua)?),
-				("url", self.url.map(|u| u.into_owned()).into_lua(lua)?),
+				("url", self.url.map(UrlCow::into_owned).into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

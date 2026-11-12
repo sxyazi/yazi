@@ -6,7 +6,7 @@ local state = ya.sync(function()
 		return
 	end
 
-	local selected = ya.iter(pairs(tab.selected)):map(function(_, f) return f.url end):into()
+	local selected = ya.iter(tab.selected):map(function(f) return f.url end):into()
 	return tab.current.cwd, selected
 end)
 

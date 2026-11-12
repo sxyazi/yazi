@@ -3,8 +3,8 @@ local M = {}
 local function date() return os.date("%Y-%m-%d %H-%M-%S") end
 
 function M.selected_uri_list()
-	local paths = ya.iter(pairs(cx.tab.selected))
-		:map(function(_, f) return "file://" .. ya.percent_encode(tostring(f.path)) end)
+	local paths = ya.iter(cx.tab.selected)
+		:map(function(f) return "file://" .. ya.percent_encode(tostring(f.path)) end)
 		:into()
 
 	if #paths == 0 and cx.tab.current.hovered then

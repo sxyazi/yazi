@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt::Formatter, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr};
+use std::{fmt::Formatter, hash::{Hash, Hasher}, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize, de::{self, IntoDeserializer}};
@@ -76,18 +76,6 @@ impl TryFrom<(Spec, PathBufDyn)> for UrlBuf {
 
 impl AsRef<Self> for UrlBuf {
 	fn as_ref(&self) -> &Self { self }
-}
-
-impl<'a> From<&'a UrlBuf> for Cow<'a, UrlBuf> {
-	fn from(url: &'a UrlBuf) -> Self { Cow::Borrowed(url) }
-}
-
-impl From<UrlBuf> for Cow<'_, UrlBuf> {
-	fn from(url: UrlBuf) -> Self { Cow::Owned(url) }
-}
-
-impl From<Cow<'_, Self>> for UrlBuf {
-	fn from(url: Cow<'_, Self>) -> Self { url.into_owned() }
 }
 
 // --- Eq

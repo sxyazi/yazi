@@ -1,5 +1,14 @@
 local M = {}
 
+function M.read_dir(url)
+	return ya.co(function()
+		local _, err = ya.iter(fs.read_dir(url.physical))
+			:try()
+			:each(function(ent) coroutine.yield(ent:file() or ent:dummy()) end)
+		return nil, err
+	end)
+end
+
 function M.relative_url(url, line)
 	line = line:gsub("[\r\n]+$", "")
 	local ok, path = pcall(Path.os, line)

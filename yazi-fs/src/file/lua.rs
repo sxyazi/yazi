@@ -29,7 +29,7 @@ impl TryFrom<AnyUserData> for File {
 	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> {
 		match value.take::<Self>() {
 			Ok(me) => Ok(me),
-			Err(mlua::Error::UserDataTypeMismatch) => FileRef(value).try_into(),
+			Err(mlua::Error::UserDataTypeMismatch) => FileRef::Lua(value).try_into(),
 			Err(e) => Err(e),
 		}
 	}
