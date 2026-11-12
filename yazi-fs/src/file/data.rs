@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail};
 use yazi_macro::impl_data_any;
 use yazi_shared::data::Data;
 
-use crate::file::{File, Files};
+use crate::{file::File, files::Files};
 
 impl_data_any!(File, from_into_lua = inherit);
 

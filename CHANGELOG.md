@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Deprecate `fs.cha()` and `File.cha` in favor of `fs.stat()` and `File.stat` to align with OS terminology ([#4359])
 - Deprecate `fs.unique()`, `fs.create()`, `fs.remove()`, and `fs.read_dir()` V1 ([#4483])
+- Deprecate `__pairs()` metamethod of `mgr::Yanked`, `tab::Selected`, and `@yank` DDS event ([#4494])
 - Deprecate `ui.Border:type()` in favor of `ui.Border:set()` ([#4439])
 
 ### Fixed
@@ -1932,3 +1933,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4477]: https://github.com/sxyazi/yazi/pull/4477
 [#4483]: https://github.com/sxyazi/yazi/pull/4483
 [#4484]: https://github.com/sxyazi/yazi/pull/4484
+[#4494]: https://github.com/sxyazi/yazi/pull/4494

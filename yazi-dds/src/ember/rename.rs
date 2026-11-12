@@ -1,16 +1,14 @@
-use std::borrow::Cow;
-
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlCow}};
 
 use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberRename<'a> {
 	pub(super) tab: Id,
-	from:           Cow<'a, UrlBuf>,
-	to:             Cow<'a, UrlBuf>,
+	from:           UrlCow<'a>,
+	to:             UrlCow<'a>,
 }
 
 impl<'a> EmberRename<'a> {

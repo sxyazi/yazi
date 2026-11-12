@@ -2,7 +2,7 @@ use std::iter;
 
 use hashbrown::{HashMap, HashSet};
 use yazi_fs::{file::File, op::FilesOp};
-use yazi_shared::{path::{PathBufDyn, PathDyn}, url::{UrlBuf, UrlLike}};
+use yazi_shared::{path::{PathBufDyn, PathDyn}, url::{AsUrl, Url, UrlBuf, UrlLike}};
 
 use crate::{mgr::{Mgr, Yanked}, tab::{Folder, History, Selected, Tab}};
 
@@ -23,7 +23,7 @@ impl<'a> Reconciler<'a> {
 	}
 
 	pub fn apply(&mut self, op: &FilesOp) {
-		let cwd = op.cwd();
+		let cwd = op.cwd().as_url();
 
 		match op {
 			FilesOp::Full(_, files) => self.scan(cwd, files, true),
@@ -34,14 +34,12 @@ impl<'a> Reconciler<'a> {
 			}
 			FilesOp::Create(_, files) => self.scan(cwd, files, false),
 			FilesOp::Delete(_, keys) => self.delete(cwd, keys),
-			FilesOp::Update(_, files) | FilesOp::Upsert(_, files) => {
-				self.update(cwd, files);
-			}
+			FilesOp::Update(_, files) | FilesOp::Upsert(_, files) => self.update(cwd, files),
 			_ => {}
 		}
 	}
 
-	fn scan<'f, I>(&mut self, cwd: &UrlBuf, files: I, authoritative: bool)
+	fn scan<'f, I>(&mut self, cwd: Url, files: I, authoritative: bool)
 	where
 		I: IntoIterator<Item = &'f File>,
 	{
@@ -69,7 +67,7 @@ impl<'a> Reconciler<'a> {
 		yanked.apply_yanked(self.yanked);
 	}
 
-	fn delete(&mut self, cwd: &UrlBuf, keys: &HashSet<PathBufDyn>) {
+	fn delete(&mut self, cwd: Url, keys: &HashSet<PathBufDyn>) {
 		let selected = Patch::from_delete(self.selected.urls(), cwd, keys);
 		let yanked = Patch::from_delete(self.yanked.urls(), cwd, keys);
 
@@ -77,7 +75,7 @@ impl<'a> Reconciler<'a> {
 		yanked.apply_yanked(self.yanked);
 	}
 
-	fn update(&mut self, cwd: &UrlBuf, files: &HashMap<PathBufDyn, File>) {
+	fn update(&mut self, cwd: Url, files: &HashMap<PathBufDyn, File>) {
 		let selected = Patch::from_update(self.selected.urls(), cwd, files);
 		let yanked = Patch::from_update(self.yanked.urls(), cwd, files);
 
@@ -85,11 +83,11 @@ impl<'a> Reconciler<'a> {
 		yanked.apply_yanked(self.yanked);
 	}
 
-	fn folder(&self, cwd: &UrlBuf) -> Option<&'a Folder> {
+	fn folder(&self, cwd: Url) -> Option<&'a Folder> {
 		iter::once(self.current)
 			.chain(self.parent.as_ref())
-			.chain(self.history.get(cwd))
-			.find(|f| f.url == *cwd)
+			.find(|f| f.url == cwd)
+			.or_else(|| self.history.get(cwd))
 	}
 }
 
@@ -103,7 +101,7 @@ struct Patch<'a> {
 impl<'a> Patch<'a> {
 	fn from_scan<'u>(
 		urls: impl Iterator<Item = &'u UrlBuf>,
-		cwd: &UrlBuf,
+		cwd: Url,
 		tracked: &HashMap<PathDyn<'u>, Option<&'a File>>,
 		authoritative: bool,
 	) -> Self {
@@ -124,7 +122,7 @@ impl<'a> Patch<'a> {
 
 	fn from_delete<'u>(
 		urls: impl Iterator<Item = &'u UrlBuf>,
-		cwd: &UrlBuf,
+		cwd: Url,
 		keys: &HashSet<PathBufDyn>,
 	) -> Self {
 		Self {
@@ -139,7 +137,7 @@ impl<'a> Patch<'a> {
 
 	fn from_update<'u>(
 		urls: impl Iterator<Item = &'u UrlBuf>,
-		cwd: &UrlBuf,
+		cwd: Url,
 		files: &'a HashMap<PathBufDyn, File>,
 	) -> Self {
 		let mut me = Self::default();
@@ -172,6 +170,6 @@ impl<'a> Patch<'a> {
 }
 
 #[inline]
-fn is_child(url: &UrlBuf, cwd: &UrlBuf) -> bool {
-	url.pair().is_some_and(|(trail, _)| trail == *cwd)
+fn is_child(url: impl AsUrl, cwd: Url) -> bool {
+	url.as_url().pair().is_some_and(|(trail, _)| trail == cwd)
 }

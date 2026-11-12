@@ -1,8 +1,13 @@
 use std::borrow::Cow;
 
 pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
+	let mut buf = Vec::with_capacity(b.len() + 2);
+	escape_os_bytes_into(b, &mut buf);
+	buf.into()
+}
+
+pub fn escape_os_bytes_into(b: &[u8], buf: &mut Vec<u8>) {
 	let quote = needs_quotes(b);
-	let mut buf = Vec::with_capacity(b.len() + quote as usize * 2);
 
 	if quote {
 		buf.push(b'"');
@@ -33,18 +38,6 @@ pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
 	if quote {
 		buf.extend((0..backslashes).map(|_| b'\\'));
 		buf.push(b'"');
-	}
-
-	buf.into()
-}
-
-#[cfg(windows)]
-pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
-	use yazi_shim::wtf8::FromWtf8Vec;
-
-	match escape_os_bytes(s.as_encoded_bytes()) {
-		Cow::Borrowed(_) => Cow::Borrowed(s),
-		Cow::Owned(v) => std::ffi::OsString::from_wtf8_vec(v).expect("valid WTF-8").into(),
 	}
 }
 
@@ -133,8 +126,10 @@ mod tests {
 
 	#[cfg(windows)]
 	#[test]
-	fn test_escape_os_str() {
+	fn test_escape_os_bytes_wtf8() {
 		use std::{ffi::OsString, os::windows::ffi::OsStringExt};
+
+		use yazi_shim::wtf8::{AsWtf8, FromWtf8Vec};
 
 		#[rustfmt::skip]
 		let cases: &[(OsString, OsString)] = &[
@@ -151,8 +146,8 @@ mod tests {
 		];
 
 		for (input, expected) in cases {
-			let escaped = escape_os_str(&input);
-			assert_eq!(&*escaped, expected, "Failed to escape: {:?}", input.to_string_lossy());
+			let escaped = OsString::from_wtf8_vec(escape_os_bytes(input.as_wtf8()).into_owned()).unwrap();
+			assert_eq!(&escaped, expected, "Failed to escape: {:?}", input.to_string_lossy());
 		}
 	}
 }

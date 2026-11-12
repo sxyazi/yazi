@@ -3,7 +3,7 @@ use futures::StreamExt;
 use hashbrown::HashSet;
 use yazi_boot::BOOT;
 use yazi_core::{Ctx, mgr::OpenDoOpt};
-use yazi_fs::file::Files;
+use yazi_fs::files::Files;
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenForm;
 use yazi_proxy::MgrProxy;

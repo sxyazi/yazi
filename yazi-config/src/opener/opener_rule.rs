@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use yazi_fs::Splatter;
+use yazi_fs::splatter::Splatter;
 use yazi_shared::{NonEmptyString, id::Id};
 
 use crate::{Platform, plugin::opener_rule_id};
@@ -32,5 +32,8 @@ impl OpenerRule {
 		}
 	}
 
-	pub(crate) fn fill(&mut self) { self.spread = Splatter::<()>::spread(&self.run); }
+	pub(crate) fn fill(&mut self) -> anyhow::Result<()> {
+		self.spread = Splatter::<()>::spread(&self.run)?;
+		Ok(())
+	}
 }

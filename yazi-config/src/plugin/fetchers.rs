@@ -4,7 +4,7 @@ use anyhow::{Result, ensure};
 use arc_swap::ArcSwap;
 use mlua::{ExternalError, ExternalResult, MetaMethod, Table, UserData, UserDataMethods};
 use serde::Deserialize;
-use yazi_fs::file::Files;
+use yazi_fs::files::Files;
 use yazi_macro::warn;
 use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, mlua::DeserializeOverLua, vec::VecExt};
 

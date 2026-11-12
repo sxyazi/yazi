@@ -7,11 +7,11 @@ else
 	assert(type(out) == "table", "expected a table")
 end
 
-if self._collect and self._next == self._base and (not self._kw or not self._fallible) then
+if self._collect and self._next == self._base and (not self._kv or not self._fallible) then
 	return self._collect(out)
 end
 
-if self._kw then
+if self._kv then
 	while true do
 		local key, value = self()
 		if value and self._fallible and is_error(value) then

@@ -3,7 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use yazi_shared::{id::Id, path::PathBufDyn, url::UrlBuf};
 
 use super::FilesOp;
-use crate::file::{File, Files};
+use crate::{file::File, files::Files};
 
 impl Serialize for FilesOp {
 	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

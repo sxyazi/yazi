@@ -38,7 +38,7 @@ function M:fetch(job)
 end
 
 function M.fallback_local(job, unknown)
-	local next = require("mime.local"):fetch(ya.iter({ files = unknown }):kw():into(job))
+	local next = require("mime.local"):fetch(ya.iter({ files = unknown }):kv():into(job))
 	local file, result = next()
 	while file do
 		file, result = next(coroutine.yield(file, result))

@@ -1,4 +1,4 @@
-use mlua::{BorrowedBytes, Function, Lua};
+use mlua::{AnyUserData, BorrowedBytes, Function, Lua, MetaMethod};
 use yazi_macro::plugin_preset as preset;
 use yazi_shim::cached_chunk;
 
@@ -8,6 +8,7 @@ impl Utils {
 	pub(super) fn iter(lua: &Lua) -> mlua::Result<Function> {
 		let load = lua.create_function(|lua, key: BorrowedBytes| {
 			Ok(Some(match &*key {
+				b"_array" => cached_chunk!(lua, "iter.array.lua", preset!("iter/array"))?,
 				b"all" => cached_chunk!(lua, "iter.all.lua", preset!("iter/all"))?,
 				b"any" => cached_chunk!(lua, "iter.any.lua", preset!("iter/any"))?,
 				b"each" => cached_chunk!(lua, "iter.each.lua", preset!("iter/each"))?,
@@ -17,7 +18,7 @@ impl Utils {
 				b"flat_map" => cached_chunk!(lua, "iter.flat_map.lua", preset!("iter/flat_map"))?,
 				b"fold" => cached_chunk!(lua, "iter.fold.lua", preset!("iter/fold"))?,
 				b"into" => cached_chunk!(lua, "iter.into.lua", preset!("iter/into"))?,
-				b"kw" => cached_chunk!(lua, "iter.kw.lua", preset!("iter/kw"))?,
+				b"kv" => cached_chunk!(lua, "iter.kv.lua", preset!("iter/kv"))?,
 				b"map" => cached_chunk!(lua, "iter.map.lua", preset!("iter/map"))?,
 				b"pack" => cached_chunk!(lua, "iter.pack.lua", preset!("iter/pack"))?,
 				b"skip" => cached_chunk!(lua, "iter.skip.lua", preset!("iter/skip"))?,
@@ -29,6 +30,9 @@ impl Utils {
 			}))
 		})?;
 
-		cached_chunk!(lua, "iter.lua", preset!("iter/iter"))?.call(load)
+		let callable = lua
+			.create_function(|_, ud: AnyUserData| ud.metatable()?.contains(MetaMethod::Call.name()))?;
+
+		cached_chunk!(lua, "iter.lua", preset!("iter/iter"))?.call((load, callable))
 	}
 }

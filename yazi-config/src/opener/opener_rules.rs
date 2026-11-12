@@ -1,7 +1,7 @@
 use std::{ops::Deref, sync::Arc};
 
 use arc_swap::ArcSwap;
-use serde::Deserialize;
+use serde::{Deserialize, de};
 use yazi_shim::{arc_swap::{ArcSwapExt, IntoPointee}, toml::DeserializeOverHook, vec::{IndexAtError, VecExt}};
 
 use crate::opener::{OpenerRuleArc, OpenerRuleMatcher};
@@ -55,7 +55,7 @@ impl DeserializeOverHook for OpenerRules {
 
 		inner.retain(|r| r.r#for.matches());
 		for r in &mut inner {
-			Arc::get_mut(r).expect("unique opener rule arc").fill();
+			Arc::get_mut(r).expect("unique opener rule arc").fill().map_err(de::Error::custom)?;
 		}
 
 		Ok(Self(inner.into_pointee()))

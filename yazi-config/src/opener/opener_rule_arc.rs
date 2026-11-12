@@ -26,7 +26,7 @@ impl From<OpenerRule> for OpenerRuleArc {
 impl FromLua for OpenerRuleArc {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		let mut inner: OpenerRule = lua.from_value(value)?;
-		inner.fill();
+		inner.fill()?;
 
 		Ok(inner.into())
 	}

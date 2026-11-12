@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{IntoLua, Lua, Value};
 use yazi_config::plugin::FetcherArc;
-use yazi_fs::file::Files;
+use yazi_fs::files::Files;
 use yazi_shared::{scope::{Scope, ScopeLike}, sendable::Sendable};
 use yazi_shim::CompactString;
 

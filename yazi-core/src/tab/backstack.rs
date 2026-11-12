@@ -1,3 +1,5 @@
+use std::iter;
+
 use hashbrown::HashSet;
 use yazi_shared::{path::PathBufDyn, url::{AsUrl, Url, UrlBuf}};
 
@@ -30,10 +32,7 @@ impl Backstack {
 		}
 	}
 
-	pub fn replace<U>(&mut self, url: U)
-	where
-		U: AsUrl,
-	{
+	pub fn replace(&mut self, url: impl AsUrl) {
 		let url = url.as_url();
 		let Some(current) = self.stack.get_mut(self.cursor) else { return };
 
@@ -63,11 +62,11 @@ impl Backstack {
 		}
 	}
 
-	pub fn remove_keys(&mut self, trail: &UrlBuf, keys: &HashSet<PathBufDyn>) {
+	pub fn remove_keys(&mut self, trail: impl AsUrl, keys: &HashSet<PathBufDyn>) {
 		let mut old = self.cursor;
 
 		self.stack.retain(|entry| {
-			let rm = Self::matches_keys(entry.as_url(), trail, keys);
+			let rm = Self::match_keys(entry.as_url(), trail.as_url(), keys);
 			old -= (rm && self.cursor > 0) as usize;
 
 			self.cursor = self.cursor.saturating_sub(1);
@@ -78,15 +77,9 @@ impl Backstack {
 		self.dedup();
 	}
 
-	fn matches_keys(mut url: Url, trail: &UrlBuf, keys: &HashSet<PathBufDyn>) -> bool {
-		loop {
-			if url.pair().is_some_and(|(t, k)| t == *trail && keys.contains(&k)) {
-				return true;
-			}
-
-			let Some(parent) = url.parent() else { return false };
-			url = parent;
-		}
+	fn match_keys(url: Url, trail: Url, keys: &HashSet<PathBufDyn>) -> bool {
+		iter::successors(Some(url), |u| u.parent())
+			.any(|u| u.pair().is_some_and(|(t, k)| t == trail && keys.contains(&k)))
 	}
 
 	fn dedup(&mut self) {

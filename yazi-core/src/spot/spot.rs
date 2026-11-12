@@ -1,5 +1,5 @@
 use yazi_fs::file::File;
-use yazi_shared::{scope::Scope, url::UrlBuf};
+use yazi_shared::{scope::Scope, url::AsUrl};
 
 use crate::spot::SpotLock;
 
@@ -15,10 +15,12 @@ impl Spot {
 
 	pub fn visible(&self) -> bool { self.lock.is_some() }
 
-	pub fn same_url(&self, url: &UrlBuf) -> bool { self.lock.as_ref().is_some_and(|l| *url == l.url) }
+	pub fn same_url(&self, url: impl AsUrl) -> bool {
+		self.lock.as_ref().is_some_and(|l| l.url == url.as_url())
+	}
 
 	fn same_file(&self, file: &File, mime: &str) -> bool {
-		self.same_url(&file.url)
+		self.same_url(file)
 			&& self
 				.lock
 				.as_ref()

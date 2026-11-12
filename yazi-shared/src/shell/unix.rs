@@ -3,38 +3,37 @@ use std::{borrow::Cow, mem};
 use crate::shell::SplitError;
 
 pub fn escape_os_bytes(b: &[u8]) -> Cow<'_, [u8]> {
-	if !b.is_empty() && b.iter().copied().all(allowed) {
+	let start = b.iter().position(|&c| !allowed(c)).unwrap_or(b.len());
+	if start == b.len() && !b.is_empty() {
 		return Cow::Borrowed(b);
 	}
 
 	let mut escaped = Vec::with_capacity(b.len() + 2);
-	escaped.push(b'\'');
+	escape_os_bytes_from(b, start, &mut escaped);
+	escaped.into()
+}
 
-	for &c in b {
+pub fn escape_os_bytes_into(b: &[u8], escaped: &mut Vec<u8>) {
+	let start = b.iter().position(|&c| !allowed(c)).unwrap_or(b.len());
+	if start == b.len() && !b.is_empty() {
+		escaped.extend_from_slice(b);
+	} else {
+		escape_os_bytes_from(b, start, escaped);
+	}
+}
+
+fn escape_os_bytes_from(b: &[u8], start: usize, escaped: &mut Vec<u8>) {
+	escaped.push(b'\'');
+	escaped.extend_from_slice(&b[..start]);
+
+	for &c in &b[start..] {
 		match c {
-			b'\'' | b'!' => {
-				escaped.reserve(4);
-				escaped.push(b'\'');
-				escaped.push(b'\\');
-				escaped.push(c);
-				escaped.push(b'\'');
-			}
+			b'\'' | b'!' => escaped.extend_from_slice(&[b'\'', b'\\', c, b'\'']),
 			_ => escaped.push(c),
 		}
 	}
 
 	escaped.push(b'\'');
-	escaped.into()
-}
-
-#[cfg(unix)]
-pub(crate) fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
-	use std::os::unix::ffi::{OsStrExt, OsStringExt};
-
-	match escape_os_bytes(s.as_bytes()) {
-		Cow::Borrowed(_) => Cow::Borrowed(s),
-		Cow::Owned(v) => std::ffi::OsString::from_vec(v).into(),
-	}
 }
 
 fn allowed(b: u8) -> bool {

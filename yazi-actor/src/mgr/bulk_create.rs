@@ -6,7 +6,7 @@ use yazi_binding::Permit;
 use yazi_config::{YAZI, opener::OpenerRuleArc};
 use yazi_core::Ctx;
 use yazi_dds::Pubsub;
-use yazi_fs::{Splatter, engine::{Engine, RwFile, local::Local}, file::Files, op::FilesOp};
+use yazi_fs::{engine::{Engine, RwFile, local::Local}, files::Files, op::FilesOp, splatter::Splatter};
 use yazi_macro::{log_if_err, succ, writef};
 use yazi_parser::VoidForm;
 use yazi_proxy::TasksProxy;
@@ -44,7 +44,7 @@ impl Actor for BulkCreate {
 
 			TasksProxy::process_exec(ShellOpt {
 				cwd:    cwd.clone(),
-				cmd:    Splatter::new(&[file]).splat(&opener.run),
+				cmd:    Splatter::new(&[file]).splat(&opener.run)?,
 				block:  opener.block,
 				orphan: opener.orphan,
 			})

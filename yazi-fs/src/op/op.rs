@@ -8,7 +8,7 @@ use yazi_macro::{impl_data_any, relay};
 use yazi_shared::{id::{Id, Ids}, path::{PathBufDyn, PathLike}, url::{UrlBuf, UrlLike, UrlMapExt}};
 use yazi_shim::{mlua::UserDataFieldsExt, strum::IntoStr};
 
-use crate::file::{File, Files};
+use crate::{file::File, files::Files};
 
 pub static FILES_TICKET: Ids = Ids::new();
 

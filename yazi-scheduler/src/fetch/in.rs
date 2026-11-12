@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_config::plugin::FetcherArc;
-use yazi_fs::file::Files;
+use yazi_fs::files::Files;
 use yazi_runner::fetcher::FetchJob;
 use yazi_shared::{id::Id, scope::{Scope, ScopeLike}};
 

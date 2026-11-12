@@ -4,7 +4,7 @@ use hashbrown::{HashMap, HashSet};
 use yazi_shared::{id::Id, path::{PathBufDyn, PathDyn, PathLike}};
 
 use super::{FilesSorter, Filter};
-use crate::{SortBy, file::{File, Files}, op::FILES_TICKET};
+use crate::{SortBy, file::File, files::Files, op::FILES_TICKET};
 
 #[derive(Default)]
 pub struct Entries {

@@ -1,7 +1,7 @@
 use std::{borrow::Cow, env::{current_dir, set_current_dir}, ops::Deref, path::{Path, PathBuf}, sync::{Arc, atomic::{AtomicBool, Ordering}}};
 
 use arc_swap::ArcSwap;
-use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
+use yazi_shared::url::{AsUrl, Url, UrlBuf};
 use yazi_shim::cell::RoCell;
 
 use crate::{FsUrl, Xdg, path::clean_url};
@@ -32,14 +32,15 @@ impl Default for Cwd {
 impl Cwd {
 	pub(crate) fn path(&self) -> PathBuf { self.0.load().as_url().working_path().into_owned() }
 
-	pub fn set(&self, url: &UrlBuf, callback: fn()) -> bool {
+	pub fn set(&self, url: impl AsUrl, callback: fn()) -> bool {
+		let url = url.as_url();
 		if !url.is_absolute() && url.auth().is_local() {
 			return false;
-		} else if self.0.load().as_ref() == url {
+		} else if self.0.load().as_url() == url {
 			return false;
 		}
 
-		self.0.store(Arc::new(url.clone()));
+		self.0.store(Arc::new(url.to_owned()));
 		Self::sync_cwd(callback);
 
 		true

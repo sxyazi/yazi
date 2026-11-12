@@ -3,14 +3,14 @@ use std::borrow::Cow;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_fs::FolderStage;
-use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shared::{id::Id, url::{UrlBuf, UrlCow}};
 
 use super::Ember;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct EmberLoad<'a> {
 	pub(super) tab: Id,
-	url:            Cow<'a, UrlBuf>,
+	url:            UrlCow<'a>,
 	stage:          Cow<'a, FolderStage>,
 }
 

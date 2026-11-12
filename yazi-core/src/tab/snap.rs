@@ -1,4 +1,4 @@
-use yazi_fs::file::{File, Files};
+use yazi_fs::{file::File, files::Files};
 
 use crate::tab::Tab;
 

@@ -3,7 +3,7 @@ use std::{borrow::Cow, str::FromStr};
 use mlua::{BorrowedBytes, ExternalError, Function, IntoLua, IntoLuaMulti, Lua, LuaString, Table, Value};
 use yazi_binding::{Composer, ComposerGet};
 use yazi_config::Pattern;
-use yazi_fs::{engine::{Attrs, DirReader, FileHolder}, file::{File, Files}, mounts::PARTITIONS};
+use yazi_fs::{engine::{Attrs, DirReader, FileHolder}, file::File, files::Files, mounts::PARTITIONS};
 use yazi_shared::url::{UrlBuf, UrlCow, UrlLike, UrlRef};
 use yazi_shim::fs::Error;
 use yazi_vfs::engine::{self, RwFile};

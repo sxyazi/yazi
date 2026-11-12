@@ -28,7 +28,7 @@ impl From<&Emulator> for Drivers {
 				(false, false) => vec![],
 			}),
 			Brand::Zellij => Self(match (value.kgp.get(), value.sixel.get()) {
-				(true, true) => vec![D::Sixel, D::KgpOld],
+				(true, true) => vec![D::KgpOld, D::Sixel],
 				(true, false) => vec![D::KgpOld],
 				(false, true) => vec![D::Sixel],
 				(false, false) => vec![],
@@ -53,6 +53,7 @@ impl From<Brand> for Drivers {
 			B::Microsoft => vec![D::Sixel],
 			B::StGraphics => vec![D::Kgp],
 			B::Warp => vec![D::Iip, D::KgpOld],
+			B::Rex => vec![D::Kgp],
 			B::Rio => vec![D::Kgp],
 			B::BlackBox => vec![D::Sixel],
 			B::VSCode => vec![D::Iip, D::Sixel],

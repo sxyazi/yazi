@@ -4,7 +4,7 @@ use hashbrown::{HashMap, hash_map::RawEntryMut};
 use tokio::{pin, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::task::AbortOnDropHandle;
-use yazi_fs::{Entries, file::{File, Files}, op::{FILES_TICKET, FilesOp}};
+use yazi_fs::{Entries, file::File, files::Files, op::{FILES_TICKET, FilesOp}};
 use yazi_shared::{id::Id, url::{UrlBuf, UrlLike, UrlMapExt}};
 use yazi_shim::indexmap::IndexSet;
 use yazi_vfs::VfsEntries;

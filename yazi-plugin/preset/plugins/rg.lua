@@ -73,6 +73,10 @@ function M:provide(job)
 		return false, Err("Unsupported search operation: %s", op)
 	end
 
+	if job.url ~= job.url.base then
+		return search.read_dir(job.url)
+	end
+
 	return ya.co(function()
 		local source = job.url.physical
 		if not source.spec.is_regular then
