@@ -136,9 +136,17 @@ impl Conn {
 		let (tx, mut rx) = mpsc::unbounded_channel();
 		let opt = InputOpt {
 			name: "sftp-passphrase".to_owned(),
-			title: format!("Passphrase for {}", self.config.domain),
+			title: format!(
+				"Enter passphrase for {}",
+				self.config.key_file.file_name().unwrap_or_default().to_string_lossy()
+			),
 			obscure: true,
-			position: Position::new(Origin::Center, Offset::default()).with_height(3),
+			position: Position::new(Origin::Center, Offset {
+				x:      0,
+				y:      0,
+				width:  80,
+				height: 3,
+			}),
 			..Default::default()
 		}
 		.with_cb(move |event| {
