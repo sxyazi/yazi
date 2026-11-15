@@ -114,6 +114,7 @@ impl UserData for Service {
 				b"password" => s.password.as_deref().into_lua(lua),
 				b"key_file" => s.key_file.dyn_path().into_lua(lua),
 				b"key_passphrase" => s.key_passphrase.as_deref().into_lua(lua),
+				b"has_key_passphrase" => s.has_key_passphrase.into_lua(lua),
 				b"cert_file" => s.cert_file.dyn_path().into_lua(lua),
 				b"no_cert_verify" => s.no_cert_verify.into_lua(lua),
 				b"identity_agent" => s.identity_agent.dyn_path().into_lua(lua),

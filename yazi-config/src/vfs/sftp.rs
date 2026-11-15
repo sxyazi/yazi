@@ -22,6 +22,9 @@ pub struct ServiceSftp {
 	pub no_cert_verify: bool,
 	#[serde(default = "default_identity_agent", deserialize_with = "deserialize_identity_agent")]
 	pub identity_agent: PathBuf,
+
+	#[serde(default)]
+	pub has_key_passphrase: bool,
 }
 
 impl Deref for ServiceSftp {
