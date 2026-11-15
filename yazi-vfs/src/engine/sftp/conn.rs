@@ -5,10 +5,14 @@ use deadpool::managed::Pool;
 use foldhash::fast::FixedState;
 use hashbrown::HashMap;
 use parking_lot::Mutex;
-use russh::keys::{PrivateKeyWithHashAlg, PublicKeyOrCertificate, agent::AgentIdentity};
+use russh::keys::{PrivateKey, PrivateKeyWithHashAlg, PublicKeyOrCertificate, agent::AgentIdentity};
+use tokio::sync::mpsc;
+use yazi_binding::position::{Offset, Origin, Position};
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::engine::local::Local;
+use yazi_macro::{emit, relay};
 use yazi_shared::auth::AuthArc;
+use yazi_widgets::input::{InputEvent, InputOpt};
 
 pub(super) static CONN: Mutex<HashMap<AuthArc, Pool<Conn>, FixedState>> =
 	Mutex::new(HashMap::with_hasher(FixedState::with_seed(0)));
@@ -16,6 +20,7 @@ pub(super) static CONN: Mutex<HashMap<AuthArc, Pool<Conn>, FixedState>> =
 #[derive(Clone)]
 pub(super) struct Conn {
 	pub(super) config: Arc<ServiceSftp>,
+	passphrase:        Arc<tokio::sync::Mutex<Option<String>>>,
 }
 
 macro_rules! cfg_err {
@@ -72,7 +77,7 @@ impl Conn {
 		}
 
 		let auth = config.auth.clone();
-		let pool = deadpool::managed::Pool::builder(Self { config })
+		let pool = deadpool::managed::Pool::builder(Self { config, passphrase: Default::default() })
 			.runtime(deadpool::Runtime::Tokio1)
 			.max_size(8)
 			.create_timeout(Some(Duration::from_secs(45)))
@@ -106,6 +111,57 @@ impl Conn {
 		let channel = session.channel_open_session().await?;
 		channel.request_subsystem(true, "sftp").await?;
 		Ok(channel)
+	}
+
+	async fn decode_key(&self, key: &str) -> Result<PrivateKey, russh::Error> {
+		if self.config.key_passphrase.is_some() || !self.config.has_key_passphrase {
+			return Ok(russh::keys::decode_secret_key(key, self.config.key_passphrase.as_deref())?);
+		}
+
+		let mut passphrase = self.passphrase.lock().await;
+		loop {
+			match russh::keys::decode_secret_key(key, passphrase.as_deref()) {
+				Ok(key) => return Ok(key),
+				Err(russh::keys::Error::KeyIsEncrypted) if passphrase.is_none() => {}
+				Err(russh::keys::Error::SshKey(_)) if passphrase.is_some() => {}
+				Err(e) => return Err(e.into()),
+			}
+
+			*passphrase =
+				Some(self.ask_passphrase().await.ok_or_else(|| cfg_err!("Key passphrase not provided"))?);
+		}
+	}
+
+	async fn ask_passphrase(&self) -> Option<String> {
+		let (tx, mut rx) = mpsc::unbounded_channel();
+		let opt = InputOpt {
+			name: "sftp-passphrase".to_owned(),
+			title: format!(
+				"Enter passphrase for {}",
+				self.config.key_file.file_name().unwrap_or_default().to_string_lossy()
+			),
+			obscure: true,
+			position: Position::new(Origin::Center, Offset {
+				x:      0,
+				y:      0,
+				width:  80,
+				height: 3,
+			}),
+			..Default::default()
+		}
+		.with_cb(move |event| {
+			tx.send(event).ok();
+		});
+
+		emit!(Call(relay!(input:show).with_any("opt", opt)));
+		while let Some(event) = rx.recv().await {
+			match event {
+				InputEvent::Submit(value) => return Some(value),
+				InputEvent::Cancel(_) => return None,
+				_ => {}
+			}
+		}
+		None
 	}
 
 	async fn session(
@@ -144,7 +200,7 @@ impl Conn {
 			.read_to_string()
 			.await
 			.map_err(|e| cfg_err!("Failed to read key file: {e}"))?;
-		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
+		let key = self.decode_key(&key).await?;
 
 		let mut session = self.session(pref).await?;
 		let result = session
@@ -179,7 +235,7 @@ impl Conn {
 			.read_to_string()
 			.await
 			.map_err(|e| cfg_err!("Failed to read key file: {e}"))?;
-		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
+		let key = self.decode_key(&key).await?;
 
 		let cert = Local::regular(cert_file)
 			.read_to_string()
