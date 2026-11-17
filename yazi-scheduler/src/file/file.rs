@@ -6,7 +6,7 @@ use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
 use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry, RwFile}, unique_dir, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
+use crate::{LOW, NORMAL, NotifyProxy, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
 
 pub(crate) struct File {
 	ops: TaskOps,
@@ -25,7 +25,7 @@ impl File {
 		let id = task.id;
 
 		if task.force && Self::aliased(&task.from, &task.to).await {
-			return Err(anyhow!("Cannot copy {} onto itself", task.from).into());
+			return Err(Self::refuse(format!("Cannot copy {} onto itself", task.from)).into());
 		}
 
 		if !task.force {
@@ -86,7 +86,7 @@ impl File {
 		let id = task.id;
 
 		if task.force && Self::aliased(&task.from, &task.to).await {
-			return Err(anyhow!("Cannot move {} onto itself", task.from).into());
+			return Err(Self::refuse(format!("Cannot move {} onto itself", task.from)).into());
 		}
 
 		if !task.force {
@@ -447,6 +447,12 @@ impl File {
 			(Ok(a), Ok(b)) => a == b,
 			_ => false,
 		}
+	}
+
+	/// Surfaces a refused paste as a toast, since it fails before any progress is shown.
+	fn refuse(reason: String) -> anyhow::Error {
+		NotifyProxy::push_warn("Paste", reason.clone());
+		anyhow!(reason)
 	}
 }
 
