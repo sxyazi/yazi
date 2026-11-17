@@ -24,6 +24,10 @@ impl File {
 	pub(crate) async fn copy(&self, mut task: FileInCopy) -> Result<(), FileOutCopy> {
 		let id = task.id;
 
+		if task.force && Self::aliased(&task.from, &task.to).await {
+			return Err(anyhow!("Cannot copy {} onto itself", task.from).into());
+		}
+
 		if !task.force {
 			task.to = if task.init().await?.is_dir() {
 				unique_dir(task.to).await
@@ -80,6 +84,10 @@ impl File {
 
 	pub(crate) async fn r#move(&self, mut task: FileInMove) -> Result<(), FileOutMove> {
 		let id = task.id;
+
+		if task.force && Self::aliased(&task.from, &task.to).await {
+			return Err(anyhow!("Cannot move {} onto itself", task.from).into());
+		}
 
 		if !task.force {
 			task.to = if task.init().await?.is_dir() {
@@ -421,6 +429,14 @@ impl File {
 			if let Some(dent) = dent { dent.lstat().await? } else { engine::lstat(&url).await? };
 
 		Ok(if follow { Stat::from_follow(url, lstat).await } else { lstat })
+	}
+
+	/// Whether `from` and `to` resolve to the same path, e.g. `to` is a link to `from`.
+	async fn aliased(from: impl AsUrl, to: impl AsUrl) -> bool {
+		match (engine::canonicalize(from).await, engine::canonicalize(to).await) {
+			(Ok(a), Ok(b)) => a == b,
+			_ => false,
+		}
 	}
 }
 
