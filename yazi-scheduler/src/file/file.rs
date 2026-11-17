@@ -65,7 +65,7 @@ impl File {
 	}
 
 	pub(crate) async fn copy_do(&self, task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
+		ctx_or_not_found!(task, Transaction::unlink(&task.from, &task.to).await);
 		let mut rx =
 			ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap(), task.force).await)?;
 
@@ -153,7 +153,7 @@ impl File {
 	}
 
 	pub(crate) async fn move_do(&self, task: FileInMove) -> Result<(), FileOutMoveDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
+		ctx_or_not_found!(task, Transaction::unlink(&task.from, &task.to).await);
 		let mut rx =
 			ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap(), task.force).await)?;
 
@@ -202,6 +202,11 @@ impl File {
 		if task.relative {
 			let canon = ctx!(task, engine::canonicalize(task.to.parent().unwrap()).await)?;
 			src = ctx!(task, path_relative_to(canon.loc(), src))?;
+		}
+
+		// Re-creating a link onto itself would delete it first.
+		if task.force && Transaction::same_inode(&task.from, &task.to).await {
+			return Err(anyhow!("Cannot replace link {} with itself", task.from).into());
 		}
 
 		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
@@ -267,6 +272,11 @@ impl File {
 		} else {
 			UrlCow::from(&task.from)
 		};
+
+		// Removing a destination that is the source itself would delete it before linking.
+		if task.force && Transaction::same_inode(&src, &task.to).await {
+			return Err(anyhow!("Cannot hardlink {} onto itself", task.from).into());
+		}
 
 		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
 		ctx_or_not_found!(task, engine::hard_link(&src, &task.to).await);
