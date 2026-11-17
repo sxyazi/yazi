@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to, stat::Stat};
 use yazi_macro::{ok_or_not_found, warn};
-use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, Url, UrlCow, UrlLike}};
 use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry, RwFile}, unique_dir, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
@@ -442,12 +442,21 @@ impl File {
 	}
 
 	/// Whether `from` and `to` resolve to the same path, e.g. `to` is a link to `from`.
+	/// Two separate links sharing a target do not count.
 	async fn aliased(from: impl AsUrl, to: impl AsUrl) -> bool {
-		match (engine::canonicalize(from).await, engine::canonicalize(to).await) {
-			(Ok(a), Ok(b)) => a == b,
-			_ => false,
-		}
+		let (from, to) = (from.as_url(), to.as_url());
+		let (Ok(a), Ok(b)) = (engine::canonicalize(from).await, engine::canonicalize(to).await) else {
+			return false;
+		};
+
+		// Two distinct links to one target are independent: replacing one cannot reach the other.
+		a == b
+			&& !(Self::is_link(from).await
+				&& Self::is_link(to).await
+				&& !Transaction::same_inode(from, to).await)
 	}
+
+	async fn is_link(url: Url<'_>) -> bool { engine::lstat(url).await.is_ok_and(|s| s.is_link()) }
 
 	/// Surfaces a refused paste as a toast, since it fails before any progress is shown.
 	fn refuse(reason: String) -> anyhow::Error {
