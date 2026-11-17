@@ -52,7 +52,8 @@ where
 	Engines::new(url.as_url()).await?.casefold().await
 }
 
-pub async fn copy<U, V, A>(from: U, to: V, attrs: A) -> io::Result<Transit>
+/// With `guard`, refuse to copy onto the source itself, e.g. through a link.
+pub async fn copy<U, V, A>(from: U, to: V, attrs: A, guard: bool) -> io::Result<Transit>
 where
 	U: AsUrl,
 	V: AsUrl,
@@ -61,12 +62,12 @@ where
 	let (from, to) = (from.as_url(), to.as_url());
 	let attrs = attrs.into();
 
-	let mut rx = Engines::new(from).await?.copy_to(to, attrs).await?;
+	let mut rx = Engines::new(from).await?.copy_to(to, attrs, guard).await?;
 	if rx.is_supported().await {
 		return Ok(rx);
 	}
 
-	let mut rx = Engines::new(to).await?.copy_from(from, attrs).await?;
+	let mut rx = Engines::new(to).await?.copy_from(from, attrs, guard).await?;
 	if rx.is_supported().await {
 		return Ok(rx);
 	}

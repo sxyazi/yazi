@@ -40,12 +40,12 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn casefold(&self) -> io::Result<UrlBuf> { dispatch!(self, casefold) }
 
-	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
-		dispatch!(self, copy_to, to, attrs)
+	async fn copy_to(&self, to: Url<'_>, attrs: Attrs, guard: bool) -> io::Result<Transit> {
+		dispatch!(self, copy_to, to, attrs, guard)
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
-		dispatch!(self, copy_from, from, attrs)
+	async fn copy_from(&self, from: Url<'_>, attrs: Attrs, guard: bool) -> io::Result<Transit> {
+		dispatch!(self, copy_from, from, attrs, guard)
 	}
 
 	async fn create_dir(&self) -> io::Result<()> { dispatch!(self, create_dir) }

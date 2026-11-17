@@ -42,16 +42,16 @@ impl<'a> Engine for Local<'a> {
 		Casefold::casefold(self.path).await.map(Into::into)
 	}
 
-	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
+	async fn copy_to(&self, to: Url<'_>, attrs: Attrs, guard: bool) -> io::Result<Transit> {
 		let Some(to) = to.as_local() else { return Ok(Transit::unsupported()) };
 
-		Ok(Copier::new(self.path, to, attrs)?.spawn())
+		Ok(Copier::new(self.path, to, attrs, guard)?.spawn())
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
+	async fn copy_from(&self, from: Url<'_>, attrs: Attrs, guard: bool) -> io::Result<Transit> {
 		let Some(from) = from.as_local() else { return Ok(Transit::unsupported()) };
 
-		Ok(Copier::new(from, self.path, attrs)?.spawn())
+		Ok(Copier::new(from, self.path, attrs, guard)?.spawn())
 	}
 
 	#[inline]

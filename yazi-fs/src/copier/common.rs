@@ -1,4 +1,4 @@
-use std::{fs::{File, Metadata}, io};
+use std::{fs::{File, Metadata}, io, os::unix::fs::MetadataExt};
 
 use super::Copier;
 
@@ -11,6 +11,14 @@ impl Copier {
 		}
 
 		Ok(meta)
+	}
+
+	pub(super) fn ensure_distinct(&self, src: &Metadata, dist: &Metadata) -> io::Result<()> {
+		if self.guard && src.dev() == dist.dev() && src.ino() == dist.ino() {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Source and destination are the same file"))
+		} else {
+			Ok(())
+		}
 	}
 
 	pub(super) fn skip_attrs(error: io::Error) -> io::Result<()> {

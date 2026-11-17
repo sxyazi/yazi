@@ -9,6 +9,7 @@ pub struct Copier {
 	pub(super) from:  PathBuf,
 	pub(super) to:    PathBuf,
 	pub(super) attrs: Attrs,
+	pub(super) guard: bool,
 
 	pub(super) tx:       mpsc::Sender<io::Result<u64>>,
 	rx:                  Option<mpsc::Receiver<io::Result<u64>>>,
@@ -23,13 +24,14 @@ pub struct Copier {
 }
 
 impl Copier {
-	pub(crate) fn new(from: &Path, to: &Path, attrs: Attrs) -> io::Result<Self> {
+	pub(crate) fn new(from: &Path, to: &Path, attrs: Attrs, guard: bool) -> io::Result<Self> {
 		let (tx, rx) = mpsc::channel(20);
 
 		Ok(Self {
 			from: from.to_owned(),
 			to: to.to_owned(),
 			attrs,
+			guard,
 			tx,
 			rx: Some(rx),
 

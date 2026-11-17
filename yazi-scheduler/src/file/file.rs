@@ -62,7 +62,8 @@ impl File {
 
 	pub(crate) async fn copy_do(&self, task: FileInCopy) -> Result<(), FileOutCopyDo> {
 		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
+		let mut rx =
+			ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap(), task.force).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
@@ -145,7 +146,8 @@ impl File {
 
 	pub(crate) async fn move_do(&self, task: FileInMove) -> Result<(), FileOutMoveDo> {
 		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
+		let mut rx =
+			ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap(), task.force).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
@@ -329,7 +331,7 @@ impl File {
 		let cache = ctx!(task, task.target.cache_entry(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
-		let mut rx = ctx!(task, engine::copy(&task.target, &cache_tmp, stat).await)?;
+		let mut rx = ctx!(task, engine::copy(&task.target, &cache_tmp, stat, false).await)?;
 		while let Some(result) = rx.recv().await {
 			match result {
 				Ok(n) => self.ops.out(task.id, FileOutDownloadDo::Adv(n)),
@@ -387,7 +389,7 @@ impl File {
 
 		let tmp =
 			ctx!(task, Transaction::tmp(&task.target).await, "Cannot determine temporary upload path")?;
-		let mut rx = ctx!(task, engine::copy(cache, &tmp, Attrs::mode(stat.mode)).await)?;
+		let mut rx = ctx!(task, engine::copy(cache, &tmp, Attrs::mode(stat.mode), false).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
