@@ -4,12 +4,25 @@ use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{CALLBACK_STRE
 use yazi_shim::{ToWide, bool_ok};
 
 use super::Copier;
+use crate::engine::local::file_id;
 
 impl Copier {
 	pub(super) fn copy(&mut self) -> io::Result<()> {
 		let from = self.from.to_wide_path()?;
 		let to = self.to.to_wide_path()?;
 		self.check()?;
+
+		// CopyFileExW takes paths and follows links, so compare the followed file IDs up front.
+		if self.guard
+			&& let Ok(dist) = file_id(&self.to, true)
+			&& let Ok(src) = file_id(&self.from, true)
+			&& src == dist
+		{
+			return Err(io::Error::new(
+				io::ErrorKind::InvalidInput,
+				"Source and destination are the same file",
+			));
+		}
 
 		let mut context = Callback::new(self);
 		let result = bool_ok(unsafe {

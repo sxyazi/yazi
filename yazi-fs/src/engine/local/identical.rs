@@ -24,29 +24,32 @@ fn identical_impl(a: PathBuf, b: PathBuf) -> io::Result<bool> {
 
 #[cfg(windows)]
 fn identical_impl(a: PathBuf, b: PathBuf) -> io::Result<bool> {
+	Ok(file_id(&a, false)? == file_id(&b, false)?)
+}
+
+/// Volume serial number and file ID; `follow` resolves a final symlink or junction first.
+#[cfg(windows)]
+pub(crate) fn file_id(path: &Path, follow: bool) -> io::Result<(u64, u128)> {
 	use std::{fs::OpenOptions, mem, os::windows::{fs::OpenOptionsExt, io::AsRawHandle}};
 
 	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, FILE_ID_INFO, FileIdInfo, GetFileInformationByHandleEx}};
 	use yazi_shim::bool_ok;
 
-	fn file_id(path: PathBuf) -> io::Result<(u64, u128)> {
-		let file = OpenOptions::new()
-			.access_mode(0)
-			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
-			.open(path)?;
+	let reparse = if follow { 0 } else { FILE_FLAG_OPEN_REPARSE_POINT };
+	let file = OpenOptions::new()
+		.access_mode(0)
+		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | reparse)
+		.open(path)?;
 
-		let mut info: FILE_ID_INFO = unsafe { mem::zeroed() };
-		bool_ok(unsafe {
-			GetFileInformationByHandleEx(
-				file.as_raw_handle() as HANDLE,
-				FileIdInfo,
-				&mut info as *mut FILE_ID_INFO as _,
-				mem::size_of::<FILE_ID_INFO>() as u32,
-			)
-		})?;
+	let mut info: FILE_ID_INFO = unsafe { mem::zeroed() };
+	bool_ok(unsafe {
+		GetFileInformationByHandleEx(
+			file.as_raw_handle() as HANDLE,
+			FileIdInfo,
+			&mut info as *mut FILE_ID_INFO as _,
+			mem::size_of::<FILE_ID_INFO>() as u32,
+		)
+	})?;
 
-		Ok((info.VolumeSerialNumber, u128::from_le_bytes(info.FileId.Identifier)))
-	}
-
-	Ok(file_id(a)? == file_id(b)?)
+	Ok((info.VolumeSerialNumber, u128::from_le_bytes(info.FileId.Identifier)))
 }
