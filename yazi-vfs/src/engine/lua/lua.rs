@@ -54,7 +54,7 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::Casefold { url }).await.0?)
 	}
 
-	async fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
+	async fn copy_to(&self, to: Url<'_>, attrs: Attrs, _guard: bool) -> io::Result<Transit> {
 		if !self.capabilities().await?.copy_to {
 			return Ok(Transit::unsupported());
 		}
@@ -74,7 +74,7 @@ impl<'a> Engine for Lua<'a> {
 		Ok(Transit::new(rx, handle))
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: Attrs) -> io::Result<Transit> {
+	async fn copy_from(&self, from: Url<'_>, attrs: Attrs, _guard: bool) -> io::Result<Transit> {
 		if !self.capabilities().await?.copy_from {
 			return Ok(Transit::unsupported());
 		}

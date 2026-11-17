@@ -80,7 +80,13 @@ impl<'a> Engine for Sftp<'a> {
 		similar.map(|n| parent.try_join(n)).transpose()?.ok_or(io::ErrorKind::NotFound.into())
 	}
 
-	async fn copy_to(&self, to: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transit> {
+	// SFTP exposes no inode, so `guard` cannot be honoured here.
+	async fn copy_to(
+		&self,
+		to: Url<'_>,
+		attrs: yazi_fs::engine::Attrs,
+		_guard: bool,
+	) -> io::Result<Transit> {
 		let to = to.physical();
 		if self.auth() != to.auth() {
 			return Ok(Transit::unsupported());
@@ -89,7 +95,12 @@ impl<'a> Engine for Sftp<'a> {
 		Ok(ProgressiveCopier::spawn(self.to_url(), to.into(), attrs))
 	}
 
-	async fn copy_from(&self, from: Url<'_>, attrs: yazi_fs::engine::Attrs) -> io::Result<Transit> {
+	async fn copy_from(
+		&self,
+		from: Url<'_>,
+		attrs: yazi_fs::engine::Attrs,
+		_guard: bool,
+	) -> io::Result<Transit> {
 		let from = from.physical();
 		if self.auth() != from.auth() {
 			return Ok(Transit::unsupported());

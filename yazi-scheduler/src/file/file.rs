@@ -2,11 +2,11 @@ use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
 use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to, stat::Stat};
 use yazi_macro::{ok_or_not_found, warn};
-use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, Url, UrlCow, UrlLike}};
 use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry, RwFile}, unique_dir, unique_file};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
+use crate::{LOW, NORMAL, NotifyProxy, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
 
 pub(crate) struct File {
 	ops: TaskOps,
@@ -23,6 +23,10 @@ impl File {
 
 	pub(crate) async fn copy(&self, mut task: FileInCopy) -> Result<(), FileOutCopy> {
 		let id = task.id;
+
+		if task.force && Self::aliased(&task.from, &task.to).await {
+			return Err(Self::refuse(format!("Cannot copy {} onto itself", task.from)).into());
+		}
 
 		if !task.force {
 			task.to = if task.init().await?.is_dir() {
@@ -61,8 +65,9 @@ impl File {
 	}
 
 	pub(crate) async fn copy_do(&self, task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
+		ctx_or_not_found!(task, Transaction::unlink(&task.from, &task.to).await);
+		let mut rx =
+			ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap(), task.force).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
@@ -79,6 +84,10 @@ impl File {
 
 	pub(crate) async fn r#move(&self, mut task: FileInMove) -> Result<(), FileOutMove> {
 		let id = task.id;
+
+		if task.force && Self::aliased(&task.from, &task.to).await {
+			return Err(Self::refuse(format!("Cannot move {} onto itself", task.from)).into());
+		}
 
 		if !task.force {
 			task.to = if task.init().await?.is_dir() {
@@ -144,8 +153,9 @@ impl File {
 	}
 
 	pub(crate) async fn move_do(&self, task: FileInMove) -> Result<(), FileOutMoveDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
-		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
+		ctx_or_not_found!(task, Transaction::unlink(&task.from, &task.to).await);
+		let mut rx =
+			ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap(), task.force).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
@@ -192,6 +202,11 @@ impl File {
 		if task.relative {
 			let canon = ctx!(task, engine::canonicalize(task.to.parent().unwrap()).await)?;
 			src = ctx!(task, path_relative_to(canon.loc(), src))?;
+		}
+
+		// Re-creating a link onto itself would delete it first.
+		if task.force && Transaction::same_inode(&task.from, &task.to).await {
+			return Err(anyhow!("Cannot replace link {} with itself", task.from).into());
 		}
 
 		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
@@ -257,6 +272,11 @@ impl File {
 		} else {
 			UrlCow::from(&task.from)
 		};
+
+		// Removing a destination that is the source itself would delete it before linking.
+		if task.force && Transaction::same_inode(&src, &task.to).await {
+			return Err(anyhow!("Cannot hardlink {} onto itself", task.from).into());
+		}
 
 		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
 		ctx_or_not_found!(task, engine::hard_link(&src, &task.to).await);
@@ -329,7 +349,7 @@ impl File {
 		let cache = ctx!(task, task.target.cache_entry(), "Cannot determine cache path")?;
 		let cache_tmp = ctx!(task, Transaction::tmp(&cache).await, "Cannot determine download cache")?;
 
-		let mut rx = ctx!(task, engine::copy(&task.target, &cache_tmp, stat).await)?;
+		let mut rx = ctx!(task, engine::copy(&task.target, &cache_tmp, stat, false).await)?;
 		while let Some(result) = rx.recv().await {
 			match result {
 				Ok(n) => self.ops.out(task.id, FileOutDownloadDo::Adv(n)),
@@ -387,7 +407,7 @@ impl File {
 
 		let tmp =
 			ctx!(task, Transaction::tmp(&task.target).await, "Cannot determine temporary upload path")?;
-		let mut rx = ctx!(task, engine::copy(cache, &tmp, Attrs::mode(stat.mode)).await)?;
+		let mut rx = ctx!(task, engine::copy(cache, &tmp, Attrs::mode(stat.mode), false).await)?;
 
 		while let Some(result) = rx.recv().await {
 			match result {
@@ -419,6 +439,29 @@ impl File {
 			if let Some(dent) = dent { dent.lstat().await? } else { engine::lstat(&url).await? };
 
 		Ok(if follow { Stat::from_follow(url, lstat).await } else { lstat })
+	}
+
+	/// Whether `from` and `to` resolve to the same path, e.g. `to` is a link to `from`.
+	/// Two separate links sharing a target do not count.
+	async fn aliased(from: impl AsUrl, to: impl AsUrl) -> bool {
+		let (from, to) = (from.as_url(), to.as_url());
+		let (Ok(a), Ok(b)) = (engine::canonicalize(from).await, engine::canonicalize(to).await) else {
+			return false;
+		};
+
+		// Two distinct links to one target are independent: replacing one cannot reach the other.
+		a == b
+			&& !(Self::is_link(from).await
+				&& Self::is_link(to).await
+				&& !Transaction::same_inode(from, to).await)
+	}
+
+	async fn is_link(url: Url<'_>) -> bool { engine::lstat(url).await.is_ok_and(|s| s.is_link()) }
+
+	/// Surfaces a refused paste as a toast, since it fails before any progress is shown.
+	fn refuse(reason: String) -> anyhow::Error {
+		NotifyProxy::push_warn("Paste", reason.clone());
+		anyhow!(reason)
 	}
 }
 

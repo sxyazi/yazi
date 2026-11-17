@@ -16,7 +16,7 @@ impl Copier {
 
 		// New compressed targets need owner access, restore source permissions after copying.
 		let compressed = meta.st_flags() & libc::UF_COMPRESSED != 0;
-		let dist = self.open_dist(if compressed { 0o600 } else { meta.mode() })?;
+		let dist = self.open_dist(if compressed { 0o600 } else { meta.mode() }, &meta)?;
 
 		if compressed {
 			Decmpfs::new(&src, &dist, &meta).copy(self)?;
@@ -135,7 +135,7 @@ impl Copier {
 		OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK).open(&self.from)
 	}
 
-	fn open_dist(&self, mode: u32) -> io::Result<File> {
+	fn open_dist(&self, mode: u32, src: &fs::Metadata) -> io::Result<File> {
 		self.check()?;
 
 		let file = OpenOptions::new()
@@ -145,7 +145,8 @@ impl Copier {
 			.custom_flags(libc::O_NONBLOCK)
 			.open(&self.to)?;
 
-		_ = Self::file_meta(&file)?; // Ensure the file is regular.
+		let meta = Self::file_meta(&file)?; // Ensure the file is regular.
+		self.ensure_distinct(src, &meta)?;
 		file.set_len(0)?;
 
 		Ok(file)

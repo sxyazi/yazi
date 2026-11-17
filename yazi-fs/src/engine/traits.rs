@@ -20,9 +20,20 @@ pub trait Engine: Sized + AsUrl {
 
 	fn casefold(&self) -> impl Future<Output = io::Result<UrlBuf>>;
 
-	fn copy_to(&self, to: Url<'_>, attrs: Attrs) -> impl Future<Output = io::Result<Transit>>;
+	/// With `guard`, refuse to copy onto the source itself, e.g. through a link.
+	fn copy_to(
+		&self,
+		to: Url<'_>,
+		attrs: Attrs,
+		guard: bool,
+	) -> impl Future<Output = io::Result<Transit>>;
 
-	fn copy_from(&self, _from: Url<'_>, _attrs: Attrs) -> impl Future<Output = io::Result<Transit>> {
+	fn copy_from(
+		&self,
+		_from: Url<'_>,
+		_attrs: Attrs,
+		_guard: bool,
+	) -> impl Future<Output = io::Result<Transit>> {
 		async { Ok(Transit::unsupported()) }
 	}
 
