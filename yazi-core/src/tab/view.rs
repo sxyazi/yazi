@@ -304,7 +304,7 @@ impl View {
 		let (top, left) = self.viewport(area.width as usize, area.height as usize - 1);
 		Some(Position {
 			x: area.x + (self.column - left) as u16,
-			y: area.y + 1 + (self.cursor_line() - top) as u16,
+			y: area.y + (self.cursor_line() - top) as u16,
 		})
 	}
 }

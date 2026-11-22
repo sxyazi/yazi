@@ -30,10 +30,15 @@ impl App {
 		let guard = SyncGuard::enter();
 		let collision = ADAPTOR.collision.replace(false);
 		let preview_rect = LAYOUT.get().preview;
+		let clear = std::mem::take(&mut self.clear_on_render);
+		let preserve_image = clear && ADAPTOR.shown_area().is_some();
 		Self::scope(&mut self.core, term, |core, term| {
+			if clear && !preserve_image {
+				term.clear()?;
+			}
 			term.draw(|f| {
 				f.render_widget(Root::new(core), f.area());
-				if self.need_render == /* force */ 3 {
+				if self.need_render == /* force */ 3 || preserve_image {
 					Self::render_forcibly(f.buffer_mut());
 				}
 			})

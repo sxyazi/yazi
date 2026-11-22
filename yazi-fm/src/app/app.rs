@@ -13,9 +13,10 @@ use crate::Dispatcher;
 pub(crate) struct App {
 	pub(crate) core: Core,
 
-	pub(super) need_render: u8,
-	pub(crate) last_render: Instant,
-	next_render:            Option<Duration>,
+	pub(super) need_render:     u8,
+	pub(super) clear_on_render: bool,
+	pub(crate) last_render:     Instant,
+	next_render:                Option<Duration>,
 }
 
 impl App {
@@ -23,9 +24,10 @@ impl App {
 		Self {
 			core: Core::make(term),
 
-			need_render: 0,
-			last_render: Instant::now(),
-			next_render: None,
+			need_render:     0,
+			clear_on_render: false,
+			last_render:     Instant::now(),
+			next_render:     None,
 		}
 	}
 
@@ -81,6 +83,10 @@ impl App {
 		if viewing != now_viewing || (now_viewing && tab_bar != (self.core.mgr.tabs.len() > 1)) {
 			let cx = &mut Ctx::active(&mut self.core);
 			act!(app:resize, cx, crate::Root::reflow as fn(_) -> _)?;
+		}
+		if viewing != now_viewing {
+			self.clear_on_render = true;
+			render!();
 		}
 
 		self.need_render = NEED_RENDER.load(Ordering::Relaxed);

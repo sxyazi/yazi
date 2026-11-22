@@ -116,6 +116,7 @@ pub struct TabsSep {
 pub struct Mode {
 	pub normal_main: SyncCell<Style>,
 	pub normal_alt:  SyncCell<Style>,
+	pub insert_main: SyncCell<Style>,
 
 	pub select_main: SyncCell<Style>,
 	pub select_alt:  SyncCell<Style>,
