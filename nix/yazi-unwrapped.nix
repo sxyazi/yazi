@@ -39,6 +39,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     VERGEN_GIT_SHA = rev;
     VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
     CARGO_NET_OFFLINE = "true";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
   };
 
   nativeBuildInputs = [
