@@ -42,6 +42,7 @@ impl UserData for Tab {
 		fields.add_static_field("selected", |_, me| Selected::make(&me.selected));
 
 		fields.add_static_field("preview", |_, me| Preview::make(*me));
+		fields.add_field_method_get("view_open", |_, me| Ok(me.view.is_some()));
 		fields.add_static_field("finder", |_, me| me.finder.as_ref().map(Finder::make).transpose());
 	}
 

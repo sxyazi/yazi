@@ -69,6 +69,8 @@ impl Core {
 			Layer::Spot
 		} else if self.tasks.visible {
 			Layer::Tasks
+		} else if self.active().view.as_ref().is_some_and(|view| view.focused) {
+			Layer::View
 		} else {
 			Layer::Mgr
 		}

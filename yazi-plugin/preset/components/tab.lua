@@ -24,6 +24,22 @@ end
 
 function Tab:build()
 	local c = self._chunks
+	if self._tab.view_open then
+		local right = c[2] { w = c[2].w + c[3].w }
+		self._view = { _id = "view", _area = right:pad(ui.Pad.x(1)) }
+		self._base = {
+			ui.Bar(ui.Edge.LEFT)
+				:area(right { w = math.min(1, right.w) })
+				:symbol(th.mgr.border_symbol)
+				:style(th.mgr.border_style),
+		}
+		self._children = {
+			Current:new(c[1]:pad(ui.Pad(0, 0, 0, 1)), self._tab),
+			Markers:new({ c[1] { w = 0 }, c[1] }, self._tab),
+		}
+		return
+	end
+
 	local p = c[2].w > 0 and 0 or 1
 	self._children = {
 		Parent:new(c[1]:pad(ui.Pad(0, p, 0, 1)), self._tab),
@@ -38,6 +54,9 @@ function Tab:reflow()
 	local components = { self }
 	for _, child in ipairs(self._children) do
 		ya.iter(child:reflow()):into(components)
+	end
+	if self._view then
+		components[#components + 1] = self._view
 	end
 	return components
 end

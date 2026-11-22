@@ -19,6 +19,7 @@ pub struct Keymap {
 	confirm: KeymapSection,
 	help:    KeymapSection,
 	cmp:     KeymapSection,
+	view:    KeymapSection,
 }
 
 impl Keymap {
@@ -42,6 +43,7 @@ impl Keymap {
 			L::Confirm => &self.confirm,
 			L::Help => &self.help,
 			L::Cmp => &self.cmp,
+			L::View => &self.view,
 			L::Which => None?,
 			L::Notify => None?,
 		})

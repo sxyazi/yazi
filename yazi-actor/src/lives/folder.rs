@@ -30,7 +30,9 @@ impl Folder {
 
 	pub(super) fn window(offset: usize, inner: &yazi_core::tab::Folder) -> Range<usize> {
 		let start = offset.min(inner.entries.len());
-		let limit = LAYOUT.get().preview.height as usize;
+		let layout = LAYOUT.get();
+		let limit =
+			if layout.view.height == 0 { layout.preview.height as usize } else { layout.folder_limit() };
 
 		start..inner.entries.len().min(start + limit)
 	}

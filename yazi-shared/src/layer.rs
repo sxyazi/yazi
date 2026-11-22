@@ -38,6 +38,7 @@ pub enum Layer {
 	Cmp,
 	Which,
 	Notify,
+	View,
 }
 
 impl_data_any!(Layer, from_into_lua = inherit);

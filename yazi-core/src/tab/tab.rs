@@ -7,7 +7,7 @@ use yazi_fs::file::File;
 use yazi_shared::{id::{Id, Ids}, scope::{Scope, ScopeLike}, url::{UrlBuf, UrlLike}};
 use yazi_term::TERM;
 
-use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview, PreviewMut};
+use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview, PreviewMut, View};
 use crate::{spot::{Spot, SpotMut}, tab::Selected};
 
 pub struct Tab {
@@ -22,9 +22,11 @@ pub struct Tab {
 	pub history:   History,
 	pub selected:  Selected,
 
-	pub spot:    Spot,
-	pub preview: Preview,
-	pub finder:  Option<Finder>,
+	pub spot:      Spot,
+	pub preview:   Preview,
+	pub finder:    Option<Finder>,
+	pub view:      Option<View>,
+	pub view_load: Option<Scope>,
 }
 
 impl Default for Tab {
@@ -48,6 +50,8 @@ impl Default for Tab {
 			spot: Spot::new(&scope),
 			preview: Preview::new(&scope),
 			finder: Default::default(),
+			view: None,
+			view_load: None,
 
 			scope,
 		}

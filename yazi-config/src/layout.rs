@@ -5,11 +5,12 @@ pub struct Layout {
 	pub current:  Rect,
 	pub preview:  Rect,
 	pub progress: Rect,
+	pub view:     Rect,
 }
 
 impl Layout {
 	pub(crate) const fn default() -> Self {
-		Self { current: Rect::ZERO, preview: Rect::ZERO, progress: Rect::ZERO }
+		Self { current: Rect::ZERO, preview: Rect::ZERO, progress: Rect::ZERO, view: Rect::ZERO }
 	}
 
 	pub const fn folder_limit(self) -> usize { self.current.height as _ }
