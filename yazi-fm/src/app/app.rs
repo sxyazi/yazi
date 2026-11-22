@@ -73,7 +73,15 @@ impl App {
 	}
 
 	fn dispatch(&mut self, event: Event) -> Result<()> {
+		let viewing = self.core.active().view.is_some();
+		let tab_bar = self.core.mgr.tabs.len() > 1;
 		Dispatcher::new(self).dispatch(event);
+
+		let now_viewing = self.core.active().view.is_some();
+		if viewing != now_viewing || (now_viewing && tab_bar != (self.core.mgr.tabs.len() > 1)) {
+			let cx = &mut Ctx::active(&mut self.core);
+			act!(app:resize, cx, crate::Root::reflow as fn(_) -> _)?;
+		}
 
 		self.need_render = NEED_RENDER.load(Ordering::Relaxed);
 		if self.need_render == 0 {

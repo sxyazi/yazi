@@ -1,6 +1,6 @@
 use anyhow::Result;
 use mlua::{BorrowedBytes, Value};
-use ratatui_core::layout::Position;
+use ratatui_core::layout::{Position, Rect};
 use yazi_actor::lives::Lives;
 use yazi_binding::runtime_scope;
 use yazi_config::LAYOUT;
@@ -22,6 +22,10 @@ impl Actor for Reflow {
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
 		let Some(size) = cx.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
+		if cx.active().view.is_some() {
+			layout.preview = Rect::ZERO;
+		}
+		layout.view = Rect::ZERO;
 
 		let result = Lives::scope(cx, |cx| {
 			runtime_scope!(cx, "root", {
@@ -37,6 +41,7 @@ impl Actor for Reflow {
 					match &*id {
 						b"current" => layout.current = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 						b"preview" => layout.preview = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
+						b"view" => layout.view = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 						b"progress" => layout.progress = *t.raw_get::<yazi_binding::elements::Rect>("_area")?,
 						_ => {}
 					}

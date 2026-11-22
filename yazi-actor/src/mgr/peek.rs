@@ -14,6 +14,9 @@ impl Actor for Peek {
 	const NAME: &str = "peek";
 
 	fn act(cx: &mut Ctx, form: Self::Form) -> Result<Data> {
+		if cx.tab().view.is_some() {
+			succ!();
+		}
 		let Some(hovered) = cx.hovered().cloned() else {
 			succ!(cx.preview_mut().reset());
 		};

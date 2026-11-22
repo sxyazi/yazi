@@ -5,7 +5,7 @@ use yazi_macro::succ;
 use yazi_shared::{Layer, data::Data, event::ActionCow};
 use yazi_widgets::input::InputMode;
 
-use crate::app::App;
+use crate::{View, app::App};
 
 pub(super) struct Executor<'a> {
 	app: &'a mut App,
@@ -29,6 +29,10 @@ impl<'a> Executor<'a> {
 			Layer::Cmp => self.cmp(action),
 			Layer::Which => self.which(action),
 			Layer::Notify => self.notify(action),
+			Layer::View => {
+				let cx = &mut Ctx::new(&action, &mut self.app.core)?;
+				View::action(cx, &action)
+			}
 		}
 	}
 
@@ -64,6 +68,9 @@ impl<'a> Executor<'a> {
 	}
 
 	fn mgr(&mut self, action: ActionCow) -> Result<Data> {
+		if action.scope.is_cancelled() && action.name == "view_opened" {
+			succ!();
+		}
 		let cx = &mut Ctx::new(&action, &mut self.app.core)?;
 
 		macro_rules! on {
@@ -153,6 +160,8 @@ impl<'a> Executor<'a> {
 		on!(displace_do);
 
 		match action.name.as_ref() {
+			"view_open" => View::open(cx, action),
+			"view_opened" => View::opened(cx, action),
 			// Help
 			"help" => act!(help:toggle, cx, Layer::Mgr),
 			// Plugin

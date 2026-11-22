@@ -63,8 +63,9 @@ keymap = [
 	# Operation
 	{ on = "o",         run = "open",                        desc = "Open selected files" },
 	{ on = "O",         run = "open --interactive",          desc = "Open selected files interactively" },
-	{ on = "<Enter>",   run = "open",                        desc = "Open selected files" },
+	{ on = "<Enter>",   run = "view_open",                   desc = "Open a text file in the native view, or open selected files" },
 	{ on = "<S-Enter>", run = "open --interactive",          desc = "Open selected files interactively" },
+	{ on = "<F6>",      run = "view:focus",                  desc = "Focus the text view" },
 	{ on = "y",         run = "yank",                        desc = "Yank selected files (copy)" },
 	{ on = "x",         run = "yank --cut",                  desc = "Yank selected files (cut)" },
 	{ on = "p",         run = "paste",                       desc = "Paste yanked files" },
@@ -184,6 +185,21 @@ keymap = [
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
+]
+
+[view]
+
+keymap = [
+	{ on = "<Esc>",      run = "close",     desc = "Close the text view" },
+	{ on = "<F6>",       run = "focus",     desc = "Focus the file list" },
+	{ on = "k",          run = "up",        desc = "Scroll up" },
+	{ on = "j",          run = "down",      desc = "Scroll down" },
+	{ on = "<Up>",       run = "up",        desc = "Scroll up" },
+	{ on = "<Down>",     run = "down",      desc = "Scroll down" },
+	{ on = "<PageUp>",   run = "page_up",   desc = "Scroll up one page" },
+	{ on = "<PageDown>", run = "page_down", desc = "Scroll down one page" },
+	{ on = "<Home>",     run = "top",       desc = "Scroll to the first line" },
+	{ on = "<End>",      run = "bottom",    desc = "Scroll to the last line" },
 ]
 
 [spot]
