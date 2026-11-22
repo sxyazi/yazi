@@ -199,22 +199,22 @@ fn trial_editor(program: &Program, state: &Path, text: &str) -> Result<[f64; 4]>
 	fs::write(&path, text)?;
 
 	let mut terminal = Terminal::start(&program.path, &fixture, state)?;
-	terminal.wait_frame("editor fixture", b"sample.txt")?;
-	// The terminal diff can split the mode label, so wait for the editor's title suffix.
-	let open = terminal.step(b"\r", "open native editor", b" | sample.txt")?;
-	terminal.step(b"i", "enter insert mode", b"Insert")?;
+	terminal.wait_frame("editor fixture", &[b"sample.txt"])?;
+	// Older builds put the mode and file name in a single title.
+	let open = terminal.step(b"\r", "open native editor", &[b"| sample.txt", b"NORMAL"])?;
+	terminal.step(b"i", "enter insert mode", &[b"Insert", b"INSERT"])?;
 	let mut keys = [b'x'; 48];
 	keys[47] = b'Z';
-	let typing = terminal.step(&keys, "type 48 characters", b"Z")?;
-	terminal.step(b"\x1b", "leave insert mode", b"Normal")?;
-	let undo = terminal.step(b"u", "undo typing", b"undo-witness")?;
+	let typing = terminal.step(&keys, "type 48 characters", &[b"Z"])?;
+	terminal.step(b"\x1b", "leave insert mode", &[b"Normal", b"NORMAL"])?;
+	let undo = terminal.step(b"u", "undo typing", &[b"undo-witness"])?;
 	if fs::read_to_string(&path)? != text {
 		return Err("Typing or undo changed the file before save".into());
 	}
 
-	terminal.step(b"i", "enter insert mode again", b"Insert")?;
-	terminal.step(b"Q", "type save marker", b"Q")?;
-	terminal.step(b"\x1b", "leave insert mode", b"Normal")?;
+	terminal.step(b"i", "enter insert mode again", &[b"Insert", b"INSERT"])?;
+	terminal.step(b"Q", "type save marker", &[b"Q"])?;
+	terminal.step(b"\x1b", "leave insert mode", &[b"Normal", b"NORMAL"])?;
 	let expected_len = text.len() as u64 + 1;
 	let started = Instant::now();
 	terminal.master.write_all(b"\x13")?;
@@ -258,7 +258,7 @@ fn trial(
 	ticks_per_second: f64,
 ) -> Result<[f64; 7]> {
 	let mut terminal = Terminal::start(&program.path, fixture, state)?;
-	let startup = terminal.wait_frame("initial directory list", READY)? - terminal.started;
+	let startup = terminal.wait_frame("initial directory list", &[READY])? - terminal.started;
 	terminal.drain(Duration::from_millis(800))?;
 
 	let proc = PathBuf::from("/proc").join(terminal.child.id().to_string());
@@ -269,9 +269,9 @@ fn trial(
 	let cpu = 100.0 * (ticks as f64) / ticks_per_second / idle_start.elapsed().as_secs_f64();
 	let (rss, pss) = memory_mib(&proc)?;
 
-	let enter = terminal.step(b"l", "enter directory", TOP)?;
-	let bottom = terminal.step(b"G", "jump to bottom", BOTTOM)?;
-	let top = terminal.step(b"gg", "jump to top", TOP)?;
+	let enter = terminal.step(b"l", "enter directory", &[TOP])?;
+	let bottom = terminal.step(b"G", "jump to bottom", &[BOTTOM])?;
+	let top = terminal.step(b"gg", "jump to top", &[TOP])?;
 	terminal.quit()?;
 
 	let ms = |duration: Duration| duration.as_secs_f64() * 1_000.0;
@@ -405,13 +405,13 @@ impl Terminal {
 		Ok(Some(received))
 	}
 
-	fn wait_frame(&mut self, action: &str, marker: &[u8]) -> Result<Instant> {
+	fn wait_frame(&mut self, action: &str, markers: &[&[u8]]) -> Result<Instant> {
 		let deadline = Instant::now() + TIMEOUT;
 		let mut cursor = 0;
 		while let Some(received) = self.read_until(deadline)? {
 			while let Some(end) = find(&self.bytes[cursor..], END_FRAME) {
 				let end = cursor + end;
-				if find(&self.bytes[cursor..end], marker).is_some() {
+				if markers.iter().any(|marker| find(&self.bytes[cursor..end], marker).is_some()) {
 					return Ok(received);
 				}
 				cursor = end + END_FRAME.len();
@@ -429,7 +429,8 @@ impl Terminal {
 				);
 			}
 		}
-		Err(format!("Timed out waiting for {action} ({})", String::from_utf8_lossy(marker)).into())
+		let expected: Vec<_> = markers.iter().map(|marker| String::from_utf8_lossy(marker)).collect();
+		Err(format!("Timed out waiting for {action} ({})", expected.join(" or ")).into())
 	}
 
 	fn clear(&mut self) {
@@ -448,11 +449,11 @@ impl Terminal {
 		Ok(())
 	}
 
-	fn step(&mut self, key: &[u8], action: &str, marker: &[u8]) -> Result<Duration> {
+	fn step(&mut self, key: &[u8], action: &str, markers: &[&[u8]]) -> Result<Duration> {
 		self.clear();
 		let started = Instant::now();
 		self.master.write_all(key)?;
-		Ok(self.wait_frame(action, marker)? - started)
+		Ok(self.wait_frame(action, markers)? - started)
 	}
 
 	fn quit(&mut self) -> Result<()> {

@@ -76,6 +76,7 @@ sep_outer = { open = "", close = "" }
 [mode]
 normal_main = { bg = "blue", bold = true }
 normal_alt  = { fg = "blue", bg = "gray" }
+insert_main = { fg = "black", bg = "green", bold = true }
 
 # Select mode
 select_main = { bg = "red", bold = true }

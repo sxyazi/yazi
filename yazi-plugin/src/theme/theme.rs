@@ -112,6 +112,7 @@ fn mode() -> Composer<ComposerGet> {
 		match key {
 			b"normal_main" => t.normal_main.into_lua(lua),
 			b"normal_alt" => t.normal_alt.into_lua(lua),
+			b"insert_main" => t.insert_main.into_lua(lua),
 
 			b"select_main" => t.select_main.into_lua(lua),
 			b"select_alt" => t.select_alt.into_lua(lua),

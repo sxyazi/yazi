@@ -118,6 +118,8 @@ impl Raterm {
 		Ok(())
 	}
 
+	pub fn clear(&mut self) -> io::Result<()> { self.inner.clear() }
+
 	pub fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<()> {
 		self.inner.draw(|frame| {
 			let buffer = frame.buffer_mut();

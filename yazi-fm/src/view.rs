@@ -4,7 +4,7 @@ use anyhow::{Context, Result, ensure};
 use ratatui_core::{buffer::Buffer, layout::Rect, style::{Modifier, Style}};
 use yazi_actor::act;
 use yazi_boot::BOOT;
-use yazi_config::{LAYOUT, popup::ConfirmCfg};
+use yazi_config::{LAYOUT, THEME, popup::ConfirmCfg};
 use yazi_core::{Ctx, mgr::OpenOpt, tab::{FileStamp, View as DocumentView, cell_width, grapheme_text, graphemes}};
 use yazi_macro::{emit, impl_data_any, relay, render, succ};
 use yazi_proxy::ConfirmProxy;
@@ -386,24 +386,25 @@ impl View {
 		}
 
 		let style = Style::default();
-		let title_style = if view.focused { style.add_modifier(Modifier::REVERSED) } else { style };
-		let title = if view.saving {
-			"Saving"
+		let (mode, mode_style) = if view.saving {
+			(" SAVING ", THEME.status.progress_label.get().0)
 		} else if view.insert {
-			"Insert"
+			(" -- INSERT -- ", THEME.mode.insert_main.get().0)
 		} else {
-			"Normal"
+			(" NORMAL ", THEME.mode.normal_main.get().0)
 		};
+		let mode_style = if view.focused { mode_style } else { style.add_modifier(Modifier::DIM) };
+		let status_y = area.bottom() - 1;
 		let marker = if view.dirty() { " * | " } else { " | " };
-		let (x, _) = buf.set_stringn(area.x, area.y, title, area.width as usize, title_style);
-		let (x, _) = buf.set_stringn(x, area.y, marker, (area.right() - x) as usize, title_style);
+		let (x, _) = buf.set_stringn(area.x, status_y, mode, area.width as usize, mode_style);
+		let (x, _) = buf.set_stringn(x, status_y, marker, (area.right() - x) as usize, style);
 		if let Some(name) = view.url.name() {
-			buf.set_stringn(x, area.y, name.to_string_lossy(), (area.right() - x) as usize, title_style);
+			buf.set_stringn(x, status_y, name.to_string_lossy(), (area.right() - x) as usize, style);
 		}
 
 		let width = area.width as usize;
 		let (top, left) = view.viewport(width, area.height as usize - 1);
-		for (y, row) in ((area.y + 1)..area.bottom()).zip(top..view.line_count()) {
+		for (y, row) in (area.y..status_y).zip(top..view.line_count()) {
 			let mut col = 0;
 			for g in graphemes(view.line(row)) {
 				let start = col;
