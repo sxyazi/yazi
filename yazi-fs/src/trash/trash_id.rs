@@ -2,7 +2,7 @@ use std::{ffi::OsStr, io, path::{Path, PathBuf}};
 
 use mlua::{BorrowedBytes, ExternalError, FromLua, Lua, Table, Value};
 use yazi_shared::{path::PathBufDyn, strand::StrandLike};
-use yazi_shim::{fs::Error, path::PathExt};
+use yazi_shim::{fs::Error, path::OsPathExt};
 
 #[derive(Clone, Debug)]
 pub struct TrashId {

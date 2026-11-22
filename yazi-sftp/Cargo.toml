@@ -19,5 +19,6 @@ parking_lot = { workspace = true }
 pin-project = { workspace = true }
 russh       = { workspace = true }
 serde       = { workspace = true }
+strum       = { workspace = true }
 tokio       = { workspace = true }
 typed-path  = { workspace = true }

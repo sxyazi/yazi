@@ -4,7 +4,7 @@ use scopeguard::{ScopeGuard, guard};
 use windows::{Win32::{Foundation::*, System::Com::*, UI::Shell::*}, core::PCWSTR};
 use yazi_binding::time::Time;
 use yazi_ffi::Com;
-use yazi_shim::{OsStrExt2, ToWide, bytes::BytesExt, path::PathExt, wtf8::FromWtf8};
+use yazi_shim::{OsStrExt2, ToWide, bytes::BytesExt, path::OsPathExt, wtf8::FromWtf8};
 
 use super::{super::{TrashEntries, TrashEntry, TrashId}, shell_item::ShellItem, trash_sig::TrashSig};
 use crate::{file::File, stat::Stat, unique_dir};

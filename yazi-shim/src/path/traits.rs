@@ -1,6 +1,9 @@
 use std::{ffi::OsStr, io, path::{Component, Path, PathBuf}};
 
-pub trait PathExt {
+use typed_path::{UnixComponent, UnixPath};
+
+// --- OsPathExt
+pub trait OsPathExt {
 	/// Canonicalize existing ancestors and append missing trailing components.
 	fn canonicalize_partial(&self) -> io::Result<PathBuf>;
 
@@ -13,7 +16,7 @@ pub trait PathExt {
 	fn pair(&self) -> Option<(&Path, &OsStr)>;
 }
 
-impl PathExt for Path {
+impl OsPathExt for Path {
 	fn canonicalize_partial(&self) -> io::Result<PathBuf> {
 		match self.canonicalize() {
 			Err(e) if e.kind() == io::ErrorKind::NotFound => {
@@ -35,4 +38,27 @@ impl PathExt for Path {
 	fn non_empty(&self) -> Option<&Path> { (!self.as_os_str().is_empty()).then_some(self) }
 
 	fn pair(&self) -> Option<(&Path, &OsStr)> { self.parent().zip(self.file_name()) }
+}
+
+// --- UnixPathExt
+pub trait UnixPathExt {
+	fn has_parent_component(&self) -> bool;
+
+	fn is_joinable(&self) -> bool;
+
+	fn non_empty(&self) -> Option<&UnixPath>;
+
+	fn pair(&self) -> Option<(&UnixPath, &[u8])>;
+}
+
+impl UnixPathExt for UnixPath {
+	fn has_parent_component(&self) -> bool {
+		self.components().any(|c| matches!(c, UnixComponent::ParentDir))
+	}
+
+	fn is_joinable(&self) -> bool { !self.has_root() }
+
+	fn non_empty(&self) -> Option<&UnixPath> { (!self.as_bytes().is_empty()).then_some(self) }
+
+	fn pair(&self) -> Option<(&UnixPath, &[u8])> { self.parent().zip(self.file_name()) }
 }

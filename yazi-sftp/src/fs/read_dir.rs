@@ -57,7 +57,7 @@ impl ReadDir {
 
 		let name: responses::Name = match result {
 			Ok(resp) => resp,
-			Err(Error::Status(status)) if status.is_eof() => {
+			Err(Error::Status(status)) if status.code.is_eof() => {
 				self.done = true;
 				return Ok(());
 			}

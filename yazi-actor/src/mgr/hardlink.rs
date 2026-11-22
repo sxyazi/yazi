@@ -18,7 +18,7 @@ impl Actor for Hardlink {
 		let tab = &mgr.tabs[cx.tab];
 
 		if !mgr.yanked.cut {
-			cx.core.tasks.file_hardlink(&mgr.yanked, tab.cwd(), form.force, form.follow);
+			cx.core.tasks.file_hardlink(&mgr.yanked, tab.cwd(), form.follow, form.force);
 		}
 
 		succ!();

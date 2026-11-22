@@ -9,7 +9,7 @@ use russh::keys::{PrivateKeyWithHashAlg, PublicKeyOrCertificate, agent::AgentIde
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::engine::local::Local;
 use yazi_shared::auth::AuthArc;
-use yazi_shim::path::PathExt;
+use yazi_shim::path::OsPathExt;
 
 pub(super) static CONN: Mutex<HashMap<AuthArc, Pool<Conn>, FixedState>> =
 	Mutex::new(HashMap::with_hasher(FixedState::with_seed(0)));

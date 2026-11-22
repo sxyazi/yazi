@@ -58,11 +58,11 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn file(&self) -> io::Result<File> { dispatch!(self, file) }
 
-	async fn hard_link<P>(&self, to: P) -> io::Result<()>
+	async fn hardlink<P>(&self, to: P, follow: bool, force: bool) -> io::Result<()>
 	where
 		P: DynPath,
 	{
-		dispatch!(self, hard_link, to)
+		dispatch!(self, hardlink, to, follow, force)
 	}
 
 	async fn lstat(&self) -> io::Result<Stat> { dispatch!(self, lstat) }
@@ -109,6 +109,14 @@ impl<'a> Engine for Engines<'a> {
 		U: AsUrl,
 	{
 		dispatch!(self, rename, to)
+	}
+
+	async fn same_entry(&self, other: Url<'_>) -> io::Result<bool> {
+		dispatch!(self, same_entry, other)
+	}
+
+	async fn same_file(&self, other: Url<'_>) -> io::Result<bool> {
+		dispatch!(self, same_file, other)
 	}
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> { dispatch!(self, set_attrs, attrs) }

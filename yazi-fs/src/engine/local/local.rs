@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn, PathDynError}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use crate::{Symlinker, casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transit}, remover::Removal, stat::{Stat, StatMode}};
+use crate::{casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transit}, identity::Identity, remover::Removal, stat::{Stat, StatMode}, symlinker::Symlinker};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -67,13 +67,14 @@ impl<'a> Engine for Local<'a> {
 	async fn create_file_new(&self) -> io::Result<Self::File> { RwFile::create_new(self.path).await }
 
 	#[inline]
-	async fn hard_link<P>(&self, to: P) -> io::Result<()>
+	async fn hardlink<P>(&self, to: P, follow: bool, force: bool) -> io::Result<()>
 	where
 		P: DynPath,
 	{
-		let to = to.dyn_path().as_os()?;
+		let from = self.path.to_owned();
+		let to = to.dyn_path().to_os_owned()?;
 
-		tokio::fs::hard_link(self.path, to).await
+		tokio::task::spawn_blocking(move || Self::hardlink(&from, &to, follow, force)).await?
 	}
 
 	#[inline]
@@ -134,6 +135,20 @@ impl<'a> Engine for Local<'a> {
 			Ok(UrlBuf::Os { loc, auth })
 		})
 		.await?
+	}
+
+	async fn same_entry(&self, other: Url<'_>) -> io::Result<bool> {
+		match other.as_local() {
+			Some(path) => Identity::same_entry(self.path, path).await,
+			None => Ok(false),
+		}
+	}
+
+	async fn same_file(&self, other: Url<'_>) -> io::Result<bool> {
+		match other.as_local() {
+			Some(path) => Identity::same_file(self.path, path).await,
+			None => Ok(false),
+		}
 	}
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {

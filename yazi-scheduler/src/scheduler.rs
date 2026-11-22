@@ -85,8 +85,8 @@ impl Scheduler {
 		self.file.submit(r#in, LOW);
 	}
 
-	pub fn file_hardlink(&self, from: UrlBuf, to: UrlBuf, force: bool, follow: bool) {
-		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, force, stat: None, follow };
+	pub fn file_hardlink(&self, from: UrlBuf, to: UrlBuf, follow: bool, force: bool) {
+		let mut r#in = FileInHardlink { id: Id::ZERO, from, to, follow, force, top: true, stat: None };
 		self.add(&mut r#in, |_| ());
 
 		if !r#in.from.auth().same_service(r#in.to.auth()) {

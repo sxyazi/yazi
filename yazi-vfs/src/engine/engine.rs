@@ -109,28 +109,33 @@ where
 	Engines::new(url.as_url()).await?.file().await
 }
 
-pub async fn hard_link<U, V>(original: U, link: V) -> io::Result<()>
+pub async fn hardlink<U, V>(original: U, link: V, follow: bool, force: bool) -> io::Result<()>
 where
 	U: AsUrl,
 	V: AsUrl,
 {
 	let (original, link) = (original.as_url(), link.as_url());
 	if original.auth().same_service(link.auth()) {
-		Engines::new(original).await?.hard_link(link.loc()).await
+		Engines::new(original).await?.hardlink(link.loc(), follow, force).await
 	} else {
 		Err(io::ErrorKind::CrossesDevices.into())
 	}
 }
 
-async fn identical<U, V>(a: U, b: V) -> io::Result<bool>
+pub async fn same_entry<U, V>(a: U, b: V) -> io::Result<bool>
 where
 	U: AsUrl,
 	V: AsUrl,
 {
-	match (a.as_url().as_local(), b.as_url().as_local()) {
-		(Some(a), Some(b)) => yazi_fs::engine::local::identical(a, b).await,
-		_ => Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem")),
-	}
+	Engines::new(a.as_url()).await?.same_entry(b.as_url()).await
+}
+
+pub async fn same_file<U, V>(a: U, b: V) -> io::Result<bool>
+where
+	U: AsUrl,
+	V: AsUrl,
+{
+	Engines::new(a.as_url()).await?.same_file(b.as_url()).await
 }
 
 pub async fn lstat<U>(url: U) -> io::Result<Stat>
@@ -138,14 +143,6 @@ where
 	U: AsUrl,
 {
 	Engines::new(url.as_url()).await?.lstat().await
-}
-
-pub async fn must_identical<U, V>(a: U, b: V) -> bool
-where
-	U: AsUrl,
-	V: AsUrl,
-{
-	identical(a, b).await.unwrap_or_default()
 }
 
 pub(crate) async fn open<U>(url: U) -> io::Result<RwFile>

@@ -1,4 +1,4 @@
-use std::{fs::{File, Metadata}, io};
+use std::{fs::{File, Metadata}, io::{self, ErrorKind}, os::unix::fs::MetadataExt};
 
 use super::Copier;
 
@@ -7,15 +7,25 @@ impl Copier {
 		let meta = file.metadata()?;
 
 		if !meta.is_file() {
-			return Err(io::Error::new(io::ErrorKind::InvalidInput, "File is not a regular file"));
+			return Err(io::Error::new(ErrorKind::InvalidInput, "File is not a regular file"));
 		}
 
 		Ok(meta)
 	}
 
+	pub(super) fn ensure_distinct(src: &Metadata, dist: &File) -> io::Result<()> {
+		let dist = Self::file_meta(dist)?;
+
+		if src.ino() == dist.ino() && src.dev() == dist.dev() {
+			Err(io::Error::new(ErrorKind::InvalidInput, "Cannot copy a file onto itself"))
+		} else {
+			Ok(())
+		}
+	}
+
 	pub(super) fn skip_attrs(error: io::Error) -> io::Result<()> {
 		match error.kind() {
-			io::ErrorKind::PermissionDenied | io::ErrorKind::Unsupported => Ok(()),
+			ErrorKind::PermissionDenied | ErrorKind::Unsupported => Ok(()),
 			_ => Err(error),
 		}
 	}

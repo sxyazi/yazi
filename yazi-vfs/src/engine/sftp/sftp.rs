@@ -1,11 +1,12 @@
-use std::{io, sync::Arc};
+use std::{io::{self, ErrorKind}, sync::Arc};
 
 use deadpool::managed::PoolError;
-use typed_path::UnixPath;
+use typed_path::{UnixPath, UnixPathBuf};
 use yazi_config::{VFS, vfs::ServiceSftp};
-use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileBuilder, FileHolder, Transit}, file::File, ok_or_not_found, remover::Removal};
-use yazi_sftp::fs::Attrs;
+use yazi_fs::{engine::{Capabilities, DirReader, Engine, FileBuilder, FileHolder, Transit}, file::File, remover::Removal};
+use yazi_sftp::{Operator, fs::Attrs};
 use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shim::path::UnixPathExt;
 
 use super::Stat;
 use crate::engine::{Copier, sftp::Conn};
@@ -102,14 +103,7 @@ impl<'a> Engine for Sftp<'a> {
 		let op = self.op().await?;
 		let result = op.mkdir(self.path, Attrs::default()).await;
 
-		if let Err(yazi_sftp::Error::Status(status)) = &result
-			&& status.is_failure()
-			&& op.lstat(self.path).await.is_ok()
-		{
-			return Err(io::ErrorKind::AlreadyExists.into());
-		}
-
-		Ok(result?)
+		Ok(op.map_exists(self.path, result).await?)
 	}
 
 	async fn create_file(&self) -> io::Result<Self::File> {
@@ -120,13 +114,13 @@ impl<'a> Engine for Sftp<'a> {
 		self.demand().write(true).create_new(true).open(self.as_url()).await
 	}
 
-	async fn hard_link<P>(&self, to: P) -> io::Result<()>
+	async fn hardlink<P>(&self, to: P, follow: bool, force: bool) -> io::Result<()>
 	where
 		P: DynPath,
 	{
 		let to = to.dyn_path().as_unix()?;
 
-		Ok(self.op().await?.hardlink(self.path, to).await?)
+		self.hardlink_imp(to, follow, force).await
 	}
 
 	async fn lstat(&self) -> io::Result<yazi_fs::stat::Stat> {
@@ -184,14 +178,19 @@ impl<'a> Engine for Sftp<'a> {
 		let op = self.op().await?;
 		match op.rename_posix(self.path, loc).await {
 			Ok(()) => {}
-			Err(yazi_sftp::Error::Unsupported) => {
-				ok_or_not_found(op.remove(loc).await.map_err(io::Error::from))?;
-				op.rename(self.path, loc).await?;
-			}
+			Err(yazi_sftp::Error::Unsupported) => Self::rename_fallback(&op, self.path, loc).await?,
 			Err(e) => Err(e)?,
 		}
 
 		Ok(to.to_owned())
+	}
+
+	async fn same_entry(&self, other: Url<'_>) -> io::Result<bool> {
+		crate::Identity::same_entry(self, other).await
+	}
+
+	async fn same_file(&self, other: Url<'_>) -> io::Result<bool> {
+		crate::Identity::same_file(self, other).await
 	}
 
 	async fn set_attrs(&self, attrs: yazi_fs::engine::Attrs) -> io::Result<()> {
@@ -218,12 +217,9 @@ impl<'a> Engine for Sftp<'a> {
 	where
 		S: AsStrand,
 	{
-		let original = original.as_strand().encoded_bytes();
-		if force {
-			self.remove_existing().await?;
-		}
+		let original = UnixPath::new(original.as_strand().encoded_bytes());
 
-		Ok(self.op().await?.symlink(original, self.path).await?)
+		self.symlink(original, force).await
 	}
 
 	async fn trash(&self) -> io::Result<()> {
@@ -240,14 +236,10 @@ impl<'a> Sftp<'a> {
 		})
 	}
 
-	async fn remove_existing(&self) -> io::Result<()> {
-		use io::ErrorKind::{Other, PermissionDenied, Unsupported};
+	pub(super) async fn resolve_entry(op: &Operator, path: &UnixPath) -> io::Result<UnixPathBuf> {
+		let (parent, name) = path.pair().ok_or(ErrorKind::InvalidInput)?;
+		let parent = op.realpath(parent.non_empty().unwrap_or(UnixPath::new("."))).await?;
 
-		match self.remove_file().await {
-			Err(e) if matches!(e.kind(), Other | PermissionDenied | Unsupported) => {}
-			result => return ok_or_not_found(result),
-		}
-
-		ok_or_not_found(self.remove_dir().await)
+		Ok(parent.join(name))
 	}
 }

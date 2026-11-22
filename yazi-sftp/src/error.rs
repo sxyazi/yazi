@@ -1,6 +1,6 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, io::ErrorKind};
 
-use crate::responses;
+use crate::responses::{self, StatusCode};
 
 #[derive(Debug)]
 pub enum Error {
@@ -17,6 +17,14 @@ impl Error {
 	pub(super) fn serde(s: impl Into<Cow<'static, str>>) -> Self { Self::Serde(s.into()) }
 
 	pub(super) fn custom(s: impl Into<Cow<'static, str>>) -> Self { Self::Custom(s.into()) }
+
+	pub fn maybe_exists(&self) -> bool {
+		match self {
+			Self::Status(s) => s.code.is_failure() || s.code.is_file_already_exists(),
+			Self::IO(e) => e.kind() == ErrorKind::AlreadyExists,
+			_ => false,
+		}
+	}
 }
 
 impl serde::ser::Error for Error {
@@ -35,26 +43,26 @@ impl From<Error> for std::io::Error {
 	fn from(err: Error) -> Self {
 		match err {
 			Error::IO(e) => e,
-			Error::Serde(e) => Self::new(std::io::ErrorKind::InvalidData, e),
+			Error::Serde(e) => Self::new(ErrorKind::InvalidData, e),
 			Error::Status(status) => match status.code {
-				responses::StatusCode::Ok => Self::other("unexpected OK"),
-				responses::StatusCode::Eof => Self::from(std::io::ErrorKind::UnexpectedEof),
-				responses::StatusCode::NoSuchFile => Self::from(std::io::ErrorKind::NotFound),
-				responses::StatusCode::PermissionDenied => Self::from(std::io::ErrorKind::PermissionDenied),
-				responses::StatusCode::Failure => Self::from(std::io::ErrorKind::Other),
-				responses::StatusCode::BadMessage => Self::from(std::io::ErrorKind::InvalidData),
-				responses::StatusCode::NoConnection => Self::from(std::io::ErrorKind::NotConnected),
-				responses::StatusCode::ConnectionLost => Self::from(std::io::ErrorKind::ConnectionReset),
-				responses::StatusCode::OpUnsupported => Self::from(std::io::ErrorKind::Unsupported),
-				responses::StatusCode::InvalidHandle => Self::from(std::io::ErrorKind::InvalidInput),
-				responses::StatusCode::NoSuchPath => Self::from(std::io::ErrorKind::NotFound),
-				responses::StatusCode::FileAlreadyExists => Self::from(std::io::ErrorKind::AlreadyExists),
-				responses::StatusCode::WriteProtect => Self::from(std::io::ErrorKind::PermissionDenied),
-				responses::StatusCode::NoMedia => Self::from(std::io::ErrorKind::Other),
+				StatusCode::Ok => Self::other("unexpected OK"),
+				StatusCode::Eof => Self::from(ErrorKind::UnexpectedEof),
+				StatusCode::NoSuchFile => Self::from(ErrorKind::NotFound),
+				StatusCode::PermissionDenied => Self::from(ErrorKind::PermissionDenied),
+				StatusCode::Failure => Self::from(ErrorKind::Other),
+				StatusCode::BadMessage => Self::from(ErrorKind::InvalidData),
+				StatusCode::NoConnection => Self::from(ErrorKind::NotConnected),
+				StatusCode::ConnectionLost => Self::from(ErrorKind::ConnectionReset),
+				StatusCode::OpUnsupported => Self::from(ErrorKind::Unsupported),
+				StatusCode::InvalidHandle => Self::from(ErrorKind::InvalidInput),
+				StatusCode::NoSuchPath => Self::from(ErrorKind::NotFound),
+				StatusCode::FileAlreadyExists => Self::from(ErrorKind::AlreadyExists),
+				StatusCode::WriteProtect => Self::from(ErrorKind::PermissionDenied),
+				StatusCode::NoMedia => Self::from(ErrorKind::Other),
 			},
-			Error::Packet(e) => Self::new(std::io::ErrorKind::InvalidData, e),
-			Error::Timeout => Self::from(std::io::ErrorKind::TimedOut),
-			Error::Unsupported => Self::from(std::io::ErrorKind::Unsupported),
+			Error::Packet(e) => Self::new(ErrorKind::InvalidData, e),
+			Error::Timeout => Self::from(ErrorKind::TimedOut),
+			Error::Unsupported => Self::from(ErrorKind::Unsupported),
 			Error::Custom(_) => Self::other(err),
 		}
 	}

@@ -1,4 +1,4 @@
-use std::{ffi::{CString, c_char, c_void}, fs::{self, File, OpenOptions, Permissions}, io, mem::ManuallyDrop, os::{fd::AsRawFd, macos::fs::MetadataExt as _, unix::{ffi::OsStrExt, fs::{MetadataExt, OpenOptionsExt}}}};
+use std::{ffi::{CString, c_char, c_void}, fs::{self, File, Metadata, OpenOptions, Permissions}, io, mem::ManuallyDrop, os::{fd::AsRawFd, macos::fs::MetadataExt as _, unix::{ffi::OsStrExt, fs::{MetadataExt, OpenOptionsExt}}}};
 
 use scopeguard::guard;
 use yazi_shim::nonneg_ok;
@@ -16,7 +16,7 @@ impl Copier {
 
 		// New compressed targets need owner access, restore source permissions after copying.
 		let compressed = meta.st_flags() & libc::UF_COMPRESSED != 0;
-		let dist = self.open_dist(if compressed { 0o600 } else { meta.mode() })?;
+		let dist = self.open_dist(&meta, if compressed { 0o600 } else { meta.mode() })?;
 
 		if compressed {
 			Decmpfs::new(&src, &dist, &meta).copy(self)?;
@@ -135,20 +135,20 @@ impl Copier {
 		OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK).open(&self.from)
 	}
 
-	fn open_dist(&self, mode: u32) -> io::Result<File> {
+	fn open_dist(&self, src: &Metadata, mode: u32) -> io::Result<File> {
 		self.check()?;
 
-		let file = OpenOptions::new()
+		let dist = OpenOptions::new()
 			.write(true)
 			.create(true)
 			.mode(mode)
 			.custom_flags(libc::O_NONBLOCK)
 			.open(&self.to)?;
 
-		_ = Self::file_meta(&file)?; // Ensure the file is regular.
-		file.set_len(0)?;
+		Self::ensure_distinct(src, &dist)?;
+		dist.set_len(0)?;
 
-		Ok(file)
+		Ok(dist)
 	}
 
 	pub(super) fn retry(&mut self, error: &io::Error) -> bool {

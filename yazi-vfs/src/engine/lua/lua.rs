@@ -131,14 +131,14 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::File { url, handle: None }).await.0?)
 	}
 
-	async fn hard_link<P>(&self, to: P) -> io::Result<()>
+	async fn hardlink<P>(&self, to: P, follow: bool, _force: bool) -> io::Result<()>
 	where
 		P: DynPath,
 	{
 		let from = self.to_url();
 		let to = to.dyn_path().to_owned();
 
-		Ok(self.call(ProvideOp::HardLink { from, to }).await.ok()?)
+		Ok(self.call(ProvideOp::HardLink { from, to, follow }).await.ok()?)
 	}
 
 	async fn lstat(&self) -> io::Result<Stat> {
@@ -229,6 +229,24 @@ impl<'a> Engine for Lua<'a> {
 		}
 
 		Ok(renamed)
+	}
+
+	async fn same_entry(&self, other: Url<'_>) -> io::Result<bool> {
+		if self.capabilities().await?.same_entry {
+			let op = ProvideOp::SameEntry { url: self.to_url(), other: other.into() };
+			Ok(self.call(op).await.0?)
+		} else {
+			crate::Identity::same_entry(self, other).await
+		}
+	}
+
+	async fn same_file(&self, other: Url<'_>) -> io::Result<bool> {
+		if self.capabilities().await?.same_file {
+			let op = ProvideOp::SameFile { url: self.to_url(), other: other.into() };
+			Ok(self.call(op).await.0?)
+		} else {
+			crate::Identity::same_file(self, other).await
+		}
 	}
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {

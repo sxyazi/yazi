@@ -124,7 +124,7 @@ impl BulkRename {
 				continue;
 			};
 
-			if maybe_exists(&new).await && !engine::must_identical(&old, &new).await {
+			if maybe_exists(&new).await && !engine::same_entry(&old, &new).await.unwrap_or(false) {
 				failed.push((o, n, anyhow!("Destination already exists")));
 				continue;
 			}

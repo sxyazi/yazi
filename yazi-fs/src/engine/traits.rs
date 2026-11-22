@@ -90,7 +90,7 @@ pub trait Engine: Sized + AsUrl {
 		}
 	}
 
-	fn hard_link<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
+	fn hardlink<P>(&self, to: P, follow: bool, force: bool) -> impl Future<Output = io::Result<()>>
 	where
 		P: DynPath;
 
@@ -167,6 +167,10 @@ pub trait Engine: Sized + AsUrl {
 	fn rename<U>(&self, to: U) -> impl Future<Output = io::Result<UrlBuf>>
 	where
 		U: AsUrl;
+
+	fn same_entry(&self, other: Url<'_>) -> impl Future<Output = io::Result<bool>>;
+
+	fn same_file(&self, other: Url<'_>) -> impl Future<Output = io::Result<bool>>;
 
 	fn set_attrs(&self, attrs: Attrs) -> impl Future<Output = io::Result<()>>;
 

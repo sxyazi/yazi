@@ -4,7 +4,7 @@ use percent_encoding::percent_encode;
 use scopeguard::{ScopeGuard, guard};
 use trash::os_limited;
 use yazi_macro::ok_or_not_found;
-use yazi_shim::{OsStrExt2, Twox128, Uzers, path::PathExt};
+use yazi_shim::{OsStrExt2, Twox128, Uzers, path::OsPathExt};
 
 use super::{super::{TrashEntries, TrashEntry, TrashId, TrashStat}, trash_info::{ENCODE, TrashInfo}};
 use crate::{file::File, mounts::Partitions, stat::{Stat, StatSig}, unique_file};

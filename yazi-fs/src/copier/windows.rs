@@ -1,15 +1,20 @@
-use std::{ffi::c_void, fs::{File, FileTimes}, io, os::windows::io::BorrowedHandle, ptr};
+use std::{ffi::c_void, fs::{File, FileTimes}, io, io::ErrorKind, os::windows::io::BorrowedHandle, ptr};
 
 use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{CALLBACK_STREAM_SWITCH, CopyFileExW, PROGRESS_CONTINUE, PROGRESS_STOP}};
 use yazi_shim::{ToWide, bool_ok};
 
 use super::Copier;
+use crate::{identity::Identity, ok_or_not_found};
 
 impl Copier {
 	pub(super) fn copy(&mut self) -> io::Result<()> {
 		let from = self.from.to_wide_path()?;
 		let to = self.to.to_wide_path()?;
+
 		self.check()?;
+		if ok_or_not_found(Identity::same_file_impl(&self.to, &self.from))? {
+			return Err(io::Error::new(ErrorKind::InvalidInput, "Cannot copy a file onto itself"));
+		}
 
 		let mut context = Callback::new(self);
 		let result = bool_ok(unsafe {

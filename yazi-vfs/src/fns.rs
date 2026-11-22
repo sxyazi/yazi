@@ -40,9 +40,16 @@ pub async fn unique_dir(mut url: UrlBuf) -> io::Result<UrlBuf> {
 	Err(err)
 }
 
-pub async fn unique_file(mut url: UrlBuf) -> io::Result<engine::RwFile> {
-	let mut err = match engine::create_file_new(&url).await {
-		Ok(file) => return Ok(file),
+pub async fn unique_file(url: UrlBuf) -> io::Result<engine::RwFile> {
+	unique_file_with(url, async |u| engine::create_file_new(u).await).await.map(|(_, f)| f)
+}
+
+pub async fn unique_file_with<F, T>(mut url: UrlBuf, create: F) -> io::Result<(UrlBuf, T)>
+where
+	F: AsyncFn(&UrlBuf) -> io::Result<T>,
+{
+	let mut err = match create(&url).await {
+		Ok(t) => return Ok((url, t)),
 		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => e,
 		Err(e) => return Err(e),
 	};
@@ -68,8 +75,8 @@ pub async fn unique_file(mut url: UrlBuf) -> io::Result<engine::RwFile> {
 		}
 
 		url.try_set_name(&buf)?;
-		match engine::create_file_new(&url).await {
-			Ok(file) => return Ok(file),
+		match create(&url).await {
+			Ok(t) => return Ok((url, t)),
 			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => err = e,
 			Err(e) => return Err(e),
 		}

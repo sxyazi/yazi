@@ -74,7 +74,7 @@ impl AsyncRead for File {
 				buf.put_slice(&data.data[..len]);
 				Ok(())
 			}
-			Ok(Packet::Status(status)) if status.is_eof() => Ok(()),
+			Ok(Packet::Status(status)) if status.code.is_eof() => Ok(()),
 			Ok(Packet::Status(status)) => Err(Error::Status(status).into()),
 			Ok(_) => Err(Error::Packet("not a Data or Status").into()),
 			Err(e) => Err(Error::from(e).into()),
@@ -145,7 +145,7 @@ impl AsyncWrite for File {
 		*me.write_rx = None;
 
 		Poll::Ready(match result {
-			Ok(Packet::Status(status)) if status.is_ok() => {
+			Ok(Packet::Status(status)) if status.code.is_ok() => {
 				*me.cursor += len as u64;
 				Ok(len)
 			}
@@ -178,7 +178,7 @@ impl AsyncWrite for File {
 		};
 
 		Poll::Ready(match result {
-			Ok(Packet::Status(status)) if status.is_ok() => Ok(()),
+			Ok(Packet::Status(status)) if status.code.is_ok() => Ok(()),
 			Ok(Packet::Status(status)) => Err(Error::Status(status).into()),
 			Ok(_) => Err(Error::Packet("not a Status").into()),
 			Err(e) => Err(Error::from(e).into()),
