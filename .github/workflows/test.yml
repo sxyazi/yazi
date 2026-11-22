@@ -28,6 +28,8 @@ jobs:
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.11
+        with:
+          version: ${{ matrix.os == 'windows-latest' && 'v0.16.0' || '' }}
 
       - name: Build
         run: cargo build --verbose
