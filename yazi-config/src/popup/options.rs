@@ -81,6 +81,15 @@ impl ConfirmCfg {
 		)
 	}
 
+	pub fn discard_text(path: String) -> Self {
+		Self::new(
+			"Discard unsaved changes?".into(),
+			YAZI.confirm.quit_position(),
+			None,
+			Some(Text::raw(path)),
+		)
+	}
+
 	fn replace_number(tpl: &str, n: usize) -> String {
 		tpl.replace("{n}", &n.to_string()).replace("{s}", if n > 1 { "s" } else { "" })
 	}

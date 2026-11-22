@@ -190,16 +190,28 @@ keymap = [
 [view]
 
 keymap = [
-	{ on = "<Esc>",      run = "close",     desc = "Close the text view" },
+	{ on = "<Esc>",      run = "close",     desc = "Leave insert mode or close the editor" },
 	{ on = "<F6>",       run = "focus",     desc = "Focus the file list" },
-	{ on = "k",          run = "up",        desc = "Scroll up" },
-	{ on = "j",          run = "down",      desc = "Scroll down" },
-	{ on = "<Up>",       run = "up",        desc = "Scroll up" },
-	{ on = "<Down>",     run = "down",      desc = "Scroll down" },
-	{ on = "<PageUp>",   run = "page_up",   desc = "Scroll up one page" },
-	{ on = "<PageDown>", run = "page_down", desc = "Scroll down one page" },
-	{ on = "<Home>",     run = "top",       desc = "Scroll to the first line" },
-	{ on = "<End>",      run = "bottom",    desc = "Scroll to the last line" },
+	{ on = "<C-s>",      run = "save",      desc = "Save the file" },
+	{ on = "<C-x>",      run = "discard",   desc = "Discard changes and close the editor" },
+	{ on = "i",          run = "insert",    desc = "Enter insert mode" },
+	{ on = "u",          run = "undo",      desc = "Undo the last change" },
+	{ on = "x",          run = "delete",    desc = "Delete the next character" },
+	{ on = "h",          run = "left",      desc = "Move left" },
+	{ on = "l",          run = "right",     desc = "Move right" },
+	{ on = "k",          run = "up",        desc = "Move up" },
+	{ on = "j",          run = "down",      desc = "Move down" },
+	{ on = "<Left>",     run = "left",      desc = "Move left" },
+	{ on = "<Right>",    run = "right",     desc = "Move right" },
+	{ on = "<Up>",       run = "up",        desc = "Move up" },
+	{ on = "<Down>",     run = "down",      desc = "Move down" },
+	{ on = "<Delete>",   run = "delete",    desc = "Delete the next character" },
+	{ on = "<PageUp>",   run = "page_up",   desc = "Move up one page" },
+	{ on = "<PageDown>", run = "page_down", desc = "Move down one page" },
+	{ on = "<Home>",     run = "home",      desc = "Move to the beginning of the line" },
+	{ on = "<End>",      run = "end",       desc = "Move to the end of the line" },
+	{ on = "<C-Home>",   run = "top",       desc = "Move to the first line" },
+	{ on = "<C-End>",    run = "bottom",    desc = "Move to the last line" },
 ]
 
 [spot]

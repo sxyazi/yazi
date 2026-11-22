@@ -19,6 +19,10 @@ impl Actor for Quit {
 	const NAME: &str = "quit";
 
 	fn act(cx: &mut Ctx, Self::Form { opt, .. }: Self::Form) -> Result<Data> {
+		if cx.tabs().iter().filter_map(|tab| tab.view.as_ref()).any(|view| view.protect()) {
+			succ!();
+		}
+
 		let ongoing = cx.tasks.scheduler.ongoing.clone();
 		let (left, left_titles) = {
 			let ongoing = ongoing.lock();

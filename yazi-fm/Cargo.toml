@@ -51,6 +51,7 @@ mlua               = { workspace = true }
 ratatui-core       = { workspace = true }
 ratatui-widgets    = { workspace = true }
 scopeguard         = { workspace = true }
+tempfile           = "3.27"
 tokio              = { workspace = true }
 tokio-stream       = { workspace = true }
 tracing            = { workspace = true }
