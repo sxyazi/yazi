@@ -10,6 +10,8 @@
   fetchFromGitHub,
   rust-jemalloc-sys,
 
+  pkg-config,
+  oniguruma,
   imagemagick,
 }:
 let
@@ -37,15 +39,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
     VERGEN_GIT_SHA = rev;
     VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
     CARGO_NET_OFFLINE = "true";
+    RUSTONIG_SYSTEM_LIBONIG = "1";
   };
 
   nativeBuildInputs = [
     installShellFiles
+    pkg-config
     imagemagick
   ];
 
   buildInputs = [
     rust-jemalloc-sys
+    oniguruma
   ];
 
   buildPhase = ''
@@ -86,7 +91,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
       hash = "sha256-kEVXejDg4ChFoMNBvKlwdFEyUuTcY2VuK9j0PdafKus=";
     };
   };
-
 
   meta = {
     description = "Blazing fast terminal file manager written in Rust, based on async I/O";
