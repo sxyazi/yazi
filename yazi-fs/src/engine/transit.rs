@@ -1,6 +1,8 @@
 use std::io;
 
+use mlua::{AnyUserData, IntoLuaMulti, MetaMethod, UserData, UserDataMethods};
 use tokio::{sync::mpsc, task::JoinHandle};
+use yazi_shim::fs::Error;
 
 /// Producers send work increments and errors; their task must finish normally for the operation to succeed.
 /// Dropping the receiver cancels the operation.
@@ -53,5 +55,18 @@ impl Transit {
 			total += n?;
 		}
 		Ok(total)
+	}
+}
+
+impl UserData for Transit {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_meta_method_mut(MetaMethod::Call, |lua, mut me, ()| async move {
+			match me.recv().await {
+				Some(Ok(n)) => n.into_lua_multi(&lua),
+				Some(Err(e)) => (false, Error::from(e)).into_lua_multi(&lua),
+				None => ().into_lua_multi(&lua),
+			}
+		});
+		methods.add_meta_function(MetaMethod::Close, |_, ud: AnyUserData| ud.destroy());
 	}
 }

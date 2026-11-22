@@ -20,14 +20,45 @@ local function entry(url)
 	}
 end
 
-local function file(url, ent)
-	return File {
-		url = url,
-		stat = ent.stat,
-		lstat = ent.lstat,
-		link_to = ent.link_to,
-		backing = ent.backing,
-	}
+local function backing(url)
+	local name = url.name
+	if not name or Path.os(name).name ~= name then
+		return nil, Err("Invalid trash entry name")
+	end
+
+	local ent, err = entry(url.parent)
+	if err then
+		return nil, err
+	elseif not ent then
+		ent, err = entry(url) -- Trash root has no entry of its own, get backing path from child target
+		return ent and Url(ent.backing), err
+	end
+
+	local stat, err = ent:lstat()
+	if not stat then
+		return nil, err
+	elseif not stat.is_dir or stat.is_indirect then
+		return nil, Err("Trash parent is not a directory")
+	end
+
+	return Url(ent.backing):join(name)
+end
+
+local function copy(from, to, attrs)
+	if from.path == to.path then
+		return nil, Err("Cannot copy an item onto itself")
+	end
+
+	local stream <close>, err = fs.copy_stream(from, to, attrs)
+	if not stream then
+		return nil, err
+	end
+	for n, err in stream do
+		if not n then
+			return nil, err
+		end
+		coroutine.yield(n)
+	end
 end
 
 local function notify(action, err)
@@ -56,6 +87,36 @@ local function absolute(url)
 	return fs.clean_url(url:join(root:join(url.path)))
 end
 
+local remove_recursively
+local function remove(ent)
+	if not ent then
+		return fs.trash.empty()
+	end
+
+	local stat, err = ent:stat()
+	if not stat then
+		return false, err
+	elseif stat.is_dir and not stat.is_indirect then
+		return remove_recursively(ent)
+	else
+		return fs.trash.remove("file", ent)
+	end
+end
+
+remove_recursively = function(ent)
+	local ents, err = fs.trash.list(ent)
+	if not ents then
+		return false, err
+	end
+	for _, child in ipairs(ents) do
+		local ok, err = remove(child)
+		if not ok then
+			return false, err
+		end
+	end
+	return fs.trash.remove("dir", ent)
+end
+
 local restore_recursively
 local function restore(ent)
 	local id = { top = ent.top, rel = ent.rel }
@@ -72,7 +133,12 @@ restore_recursively = function(id, collision)
 	local ent, err = fs.trash.entry(id)
 	if not ent then
 		return false, 1, err
-	elseif not ent.stat.is_dir or ent.stat.is_indirect then
+	end
+
+	local stat, err = ent:stat()
+	if not stat then
+		return false, 1, err
+	elseif not stat.is_dir or stat.is_indirect then
 		return false, 1, collision
 	end
 
@@ -81,7 +147,7 @@ restore_recursively = function(id, collision)
 		return false, 1, collision
 	end
 
-	local ents, err = fs.trash.list(fs.trash.entry(ent))
+	local ents, err = fs.trash.list(ya.clone(ent))
 	if not ents then
 		return false, 1, err
 	end
@@ -261,15 +327,117 @@ end
 function M:provide(job)
 	local op = job.op
 	if op == "Capabilities" then
-		return {}
+		return {
+			copy_from = 1,
+			copy_to = 1,
+			create_dir = 1,
+			create_file_new = 1,
+			prepare = 1,
+			remove_dir_all = 1,
+			rename = 1,
+			set_attrs = 1,
+			symlink_dir = 1,
+			symlink_file = 1,
+		}
 	elseif op == "Absolute" or op == "Canonicalize" then
 		return absolute(job.url)
 	elseif op == "Casefold" then
 		return job.url
-	elseif op == "Lstat" or op == "Stat" then
+	elseif op == "Prepare" then
+		if not job.to.parent or job.to.parent.name then
+			return -- Only prepare new entries directly under the trash root
+		end
+
+		local original
+		if job.from.spec.is_local then
+			original = job.from.path
+		elseif job.from.spec.scheme == job.to.spec.scheme then
+			local ent, err = entry(job.from)
+			if not ent then
+				return nil, err or Err("Cannot copy trash root")
+			end
+			original = ent.original
+		else
+			return nil, Error.fs { kind = "Unsupported", message = "Only local or trash sources are supported" }
+		end
+
+		local ent, err = fs.trash.create(job.to.name, job.stat, original)
+		return ent and job.to:with_domain(ent.key), err
+	elseif op == "CopyTo" then
+		return ya.co(function()
+			local url, err
+			if job.to.spec.is_local then
+				url = job.to
+			elseif job.to.spec.scheme == job.from.spec.scheme then
+				url, err = backing(job.to)
+			else
+				err = Error.fs { kind = "Unsupported", message = "Only local or trash copy destinations are supported" }
+			end
+			if not url then
+				return nil, err
+			end
+
+			local ent, err = entry(job.from)
+			if not ent then
+				return nil, err or Err("Cannot copy trash root")
+			end
+			return copy(Url(ent.backing), url, job.attrs)
+		end)
+	elseif op == "CopyFrom" then
+		return ya.co(function()
+			if not job.from.spec.is_local then
+				return nil, Error.fs { kind = "Unsupported", message = "Only local copy sources are supported" }
+			end
+
+			local url, err = backing(job.to)
+			if not url then
+				return nil, err
+			end
+			return copy(job.from, url, job.attrs)
+		end)
+	elseif op == "CreateDir" then
+		local url, err = backing(job.url)
+		if url then
+			return fs.create_dir(url)
+		else
+			return false, err
+		end
+	elseif op == "CreateFileNew" then
+		local url, err = backing(job.url)
+		if not url then
+			return nil, err
+		end
+
+		local handle, err = fs.create_file_new(url)
+		if not handle then
+			return nil, err
+		end
+		return { id = 0, random = "none", state = handle:into_shared() }
+	elseif op == "Write" then
+		return ya.co(function()
+			for chunk in job.stream do
+				local ok, err = job.state:write_all_at(chunk.from, chunk.bytes)
+				if not ok then
+					return nil, err
+				end
+				coroutine.yield(chunk.to)
+			end
+		end)
+	elseif op == "Close" then
+		return true
+	elseif op == "Lstat" then
 		local ent, err = entry(job.url)
 		if ent then
-			return (op == "Lstat" and fs.trash.lstat or fs.trash.stat)(ent)
+			return ent:lstat()
+		elseif err then
+			return nil, err
+		else
+			return Stat { mode = tonumber("40700", 8) }
+		end
+	elseif op == "Stat" then
+		local ent, err = entry(job.url)
+		if ent then
+			return ent:stat()
 		elseif err then
 			return nil, err
 		else
@@ -287,7 +455,7 @@ function M:provide(job)
 			end
 			for _, ent in ipairs(ents) do
 				local url = job.url:join(ent.name):with_domain(ent.key)
-				coroutine.yield(file(url, ent))
+				coroutine.yield(ent:file(url) or ent:dummy(url))
 			end
 		end)
 	elseif op == "Revalidate" then
@@ -298,18 +466,90 @@ function M:provide(job)
 			return fs.trash.revalidate(ent, job.file)
 		end
 	elseif op == "File" then
+		if job.url.spec.domain == "" then
+			return nil, Error.fs { kind = "NotFound", message = "Trash target has no key" }
+		end
+
 		local ent, err = entry(job.url)
 		if ent then
-			return file(job.url, ent)
+			return ent:file(job.url)
 		else
 			return nil, err
 		end
+	elseif op == "SetAttrs" then
+		local ent, err = entry(job.url)
+		if ent then
+			return fs.set_attrs(Url(ent.backing), job.attrs)
+		else
+			return false, err or Err("Cannot change trash root attributes")
+		end
+	elseif op == "SymlinkDir" or op == "SymlinkFile" then
+		local url, err = backing(job.url)
+		if not url then
+			return false, err
+		end
+
+		local link = op == "SymlinkDir" and fs.symlink_dir or fs.symlink_file
+		return link(url, job.original, job.force)
+	elseif op == "Rename" then
+		local ent, err = entry(job.from)
+		if not ent then
+			return nil, err or Err("Cannot rename trash root")
+		elseif not ent.rel.name and job.from.parent ~= job.to.parent then
+			return nil, Error.fs { kind = "Unsupported", message = "Top-level trash items can only be renamed in place" }
+		elseif not ent.rel.name then
+			local name = job.to.name
+			if ent.original then
+				local ok, err = fs.trash.set_original(ent, ent.original.parent:join(name))
+				return ok and job.to:with_domain(ent.key) or nil, err
+			end
+
+			local lstat, err = ent:lstat()
+			if not lstat then
+				return nil, err
+			elseif name == ent.name then
+				return job.from
+			end
+
+			local target, err = fs.trash.create(name, lstat, Path.os(""))
+			if not target then
+				return nil, err
+			end
+
+			local ok, err = fs.trash.rename(ent, target.backing)
+			return ok and job.to.parent:join(target.name):with_domain(target.key) or nil, err
+		end
+
+		local url, err = backing(job.to)
+		if not url then
+			return nil, err
+		end
+
+		local ok, err = fs.trash.rename(ent, url.path)
+		if not ok then
+			return nil, err
+		end
+
+		ent, err = entry(job.to)
+		return ent and job.to:with_domain(ent.key), err
+	elseif op == "RemoveDirAll" then
+		return ya.co(function()
+			local ent, err = entry(job.url)
+			if err then
+				return nil, err
+			end
+
+			local ok, err = remove(ent)
+			if not ok then
+				return nil, err
+			end
+		end)
 	elseif op == "RemoveFile" or op == "RemoveDir" then
 		local ent, err = entry(job.url)
 		if ent then
 			return fs.trash.remove(op == "RemoveDir" and "dir" or "file", ent)
 		else
-			return false, err
+			return false, err or Err("Cannot remove trash root")
 		end
 	end
 

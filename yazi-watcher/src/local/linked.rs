@@ -4,6 +4,7 @@ use foldhash::fast::FixedState;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use yazi_shared::url::Url;
+use yazi_shim::path::PathExt;
 
 use crate::Watched;
 
@@ -37,7 +38,7 @@ impl Linked {
 
 	pub fn from_file(&self, url: Url) -> Vec<PathBuf> {
 		let Some(path) = url.as_local() else { return vec![] };
-		if let Some((parent, name)) = path.parent().zip(path.file_name()) {
+		if let Some((parent, name)) = path.pair() {
 			self.from_dir(parent).map(|p| p.join(name)).collect()
 		} else {
 			vec![]

@@ -158,7 +158,7 @@ impl<'a> Entry<'a> {
 			None => (s, false),
 		};
 
-		(!path.is_empty()).then_some(Self { path: path.into(), is_dir })
+		Some(Self { path: Strand::from(path).non_empty()?, is_dir })
 	}
 }
 

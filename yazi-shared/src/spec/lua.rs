@@ -9,6 +9,7 @@ impl UserData for Spec {
 		fields.add_cached_field("scheme", |lua, me| (&me.scheme).into_lua(lua));
 		fields.add_cached_field("domain", |lua, me| (&me.domain).into_lua(lua));
 		fields.add_cached_field("data", |lua, me| me.view.data().into_lua(lua));
+		fields.add_field_method_get("is_local", |_, me| Ok(me.is_local()));
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.kind.is_regular()));
 		fields.add_field_method_get("is_view", |_, me| Ok(me.kind.is_view()));
 	}

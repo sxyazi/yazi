@@ -1,12 +1,13 @@
-use std::{fs, io, path::{Path, PathBuf}, time::Duration};
+use std::{env, ffi::OsStr, fs, io::{self, ErrorKind, Read}, path::{Path, PathBuf}, time::Duration};
 
+use scopeguard::{ScopeGuard, guard};
 use windows::{Win32::{Foundation::*, System::Com::*, UI::Shell::*}, core::PCWSTR};
 use yazi_binding::time::Time;
 use yazi_ffi::Com;
-use yazi_shim::ToWide;
+use yazi_shim::{OsStrExt2, ToWide, bytes::BytesExt, path::PathExt, wtf8::FromWtf8};
 
 use super::{super::{TrashEntries, TrashEntry, TrashId}, shell_item::ShellItem, trash_sig::TrashSig};
-use crate::{file::File, stat::Stat};
+use crate::{file::File, stat::Stat, unique_dir};
 
 thread_local! {
 	static COM: io::Result<Com> = Com::new();
@@ -21,18 +22,43 @@ impl Trash {
 		})
 	}
 
+	pub(crate) fn create(&self, name: &OsStr, stat: Stat, original: &Path) -> io::Result<TrashEntry> {
+		if !name.is_filename() {
+			return Err(io::Error::new(ErrorKind::InvalidInput, "invalid trash entry name"));
+		} else if !original.is_absolute() || original.file_name().is_none() {
+			return Err(io::Error::new(ErrorKind::InvalidInput, "invalid trash original path"));
+		}
+
+		let tmp =
+			unique_dir(env::temp_dir().join(format!(".yazi-trash-{:016x}", rand::random::<u64>())))?;
+		let tmp = guard(tmp, |p| _ = fs::remove_dir_all(p));
+
+		let path = tmp.join(name);
+		if stat.is_dir() {
+			fs::create_dir(&path)?;
+		} else {
+			fs::File::create_new(&path)?;
+		}
+
+		let item = guard(ShellItem::new(&path)?.recycle()?, |i| _ = i.delete());
+		let id = TrashId::new(item.display_name(SIGDN_PARENTRELATIVEPARSING)?, PathBuf::new())?;
+
+		let entry = item.entry(id, Some(original.into()))?;
+		Self::write_info(&entry, original, Some(stat.len))?;
+
+		ScopeGuard::into_inner(item);
+		Ok(entry)
+	}
+
 	pub(crate) fn list(&self, entry: Option<&TrashEntry>) -> io::Result<Vec<TrashEntry>> {
 		let Some(entry) = entry else {
 			return self.tops();
 		};
 
-		if !entry.lstat.is_dir() || entry.lstat.is_indirect() {
-			return Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"));
+		let lstat = entry.lstat()?;
+		if !lstat.is_dir() || lstat.is_indirect() {
+			return Err(io::Error::new(ErrorKind::InvalidInput, "trash item is not a directory"));
 		}
-
-		let original = entry.original.as_deref().ok_or_else(|| {
-			io::Error::new(io::ErrorKind::NotFound, "trash item has no put-back location")
-		})?;
 
 		self
 			.resolve(entry)?
@@ -40,14 +66,10 @@ impl Trash {
 			.into_iter()
 			.map(|item| {
 				let name = item.display_name(SIGDN_PARENTRELATIVEPARSING)?;
-				item.entry(entry.id.child(&name)?, Some(original.join(&name)))
+				item.entry(entry.id.child(&name)?, entry.original.as_ref().map(|p| p.join(&name)))
 			})
 			.collect()
 	}
-
-	pub(crate) fn stat(&self, entry: &TrashEntry) -> io::Result<Stat> { Ok(entry.stat) }
-
-	pub(crate) fn lstat(&self, entry: &TrashEntry) -> io::Result<Stat> { Ok(entry.lstat) }
 
 	pub(crate) fn entry(&self, id: &TrashId) -> io::Result<TrashEntry> {
 		let top = ShellItem::top(id.top())?;
@@ -63,7 +85,7 @@ impl Trash {
 		if stat.is_dir() && !stat.is_indirect() {
 			top.resolve(id.rel())?.entry(id.clone(), Some(original))
 		} else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "trash item is not a directory"))
+			Err(io::Error::new(ErrorKind::InvalidInput, "trash item is not a directory"))
 		}
 	}
 
@@ -73,7 +95,7 @@ impl Trash {
 		current: &File,
 	) -> io::Result<Option<File>> {
 		let latest = if let Some(entry) = entry {
-			File { stat: TrashSig::item(&self.resolve(entry)?)?, ..entry.clone().into_file(&current.url) }
+			File { stat: TrashSig::item(&self.resolve(entry)?)?, ..entry.file(&current.url)? }
 		} else {
 			File { stat: TrashSig::root()?, ..current.clone() }
 		};
@@ -87,19 +109,19 @@ impl Trash {
 
 	pub(crate) fn remove_dir(&self, entry: &TrashEntry) -> io::Result<()> {
 		let item = self.resolve(entry)?;
-		if !entry.has_rel() {
+		if entry.lstat()?.is_indirect() {
 			item.delete()
-		} else if !item.is_empty()? {
-			Err(io::Error::new(io::ErrorKind::DirectoryNotEmpty, "trash directory is not empty"))
+		} else if item.is_empty()? {
+			item.delete()
 		} else {
-			item.delete()
+			Err(io::Error::new(ErrorKind::DirectoryNotEmpty, "trash directory is not empty"))
 		}
 	}
 
 	pub(crate) fn restore(&self, entries: TrashEntries) -> io::Result<()> {
 		for entry in entries {
 			let to = entry.original.as_deref().ok_or_else(|| {
-				io::Error::new(io::ErrorKind::NotFound, "trash item has no put-back location")
+				io::Error::new(ErrorKind::NotFound, "trash item has no put-back location")
 			})?;
 
 			self.restore_do(&self.resolve(&entry)?, to)?;
@@ -107,33 +129,24 @@ impl Trash {
 		Ok(())
 	}
 
-	pub(crate) fn rename(&self, entry: &TrashEntry, path: &Path) -> io::Result<()> {
-		fs::rename(&entry.backing, path)
-	}
-
 	fn restore_do(&self, item: &ShellItem, to: &Path) -> io::Result<()> {
 		match fs::symlink_metadata(to) {
 			Ok(_) => {
 				return Err(io::Error::new(
-					io::ErrorKind::AlreadyExists,
+					ErrorKind::AlreadyExists,
 					format!("restore target already exists: {to:?}"),
 				));
 			}
-			Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+			Err(e) if e.kind() == ErrorKind::NotFound => {}
 			Err(e) => return Err(e),
 		}
 
-		// Create parent directories
-		let parent = to
-			.parent()
-			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid restore target"))?;
-		fs::create_dir_all(parent)?;
+		let (parent, name) =
+			to.pair().ok_or_else(|| io::Error::new(ErrorKind::InvalidInput, "invalid restore target"))?;
 
+		fs::create_dir_all(parent)?;
 		let parent = ShellItem::new(parent)?;
-		let name = to
-			.file_name()
-			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid restore target"))?
-			.to_wide();
+		let name = name.to_wide();
 
 		operate(FOF_NO_UI | FOFX_EARLYFAILURE, |operation| unsafe {
 			operation.MoveItem(&item.0, &parent.0, PCWSTR(name.as_ptr()), None)
@@ -149,6 +162,52 @@ impl Trash {
 			)
 		}
 		.map_err(error)
+	}
+
+	pub(crate) fn forget(entry: &TrashEntry) -> io::Result<()> {
+		if !entry.has_rel() {
+			fs::remove_file(Self::info(entry)?)?;
+		}
+		Ok(())
+	}
+
+	fn info(entry: &TrashEntry) -> io::Result<PathBuf> {
+		let Some(name) = entry.backing.file_name().filter(|s| s.as_encoded_bytes().starts_with(b"$R"))
+		else {
+			return Err(io::Error::new(ErrorKind::InvalidInput, "invalid recycle bin item path"));
+		};
+
+		let name = name.as_encoded_bytes().replace_seq_once(b"$R", b"$I");
+		Ok(entry.backing.with_file_name(OsStr::from_wtf8(&name).expect("valid WTF-8")))
+	}
+
+	pub(crate) fn write_info(
+		entry: &TrashEntry,
+		original: &Path,
+		len: Option<u64>,
+	) -> io::Result<()> {
+		let info = Self::info(entry)?;
+
+		let mut buf = vec![0; 24];
+		fs::File::open(&info)?.read_exact(&mut buf)?;
+
+		let mut original = original.to_wide();
+		match u64::from_le_bytes(buf[..8].try_into().unwrap()) {
+			// Version 1 stores 260 UTF-16 code units including NUL terminator, pad with zeros.
+			1 if original.len() <= 260 => original.resize(260, 0),
+			// Reject paths that cannot fit in the fixed-size version 1 field.
+			1 => Err(io::Error::new(ErrorKind::InvalidInput, "trash original path is too long"))?,
+			// Version 2 stores a 4-byte count of UTF-16 code units (including NUL), followed by the path.
+			2 => buf.extend_from_slice(&(original.len() as u32).to_le_bytes()),
+			_ => Err(io::Error::new(ErrorKind::Unsupported, "unsupported recycle bin metadata version"))?,
+		}
+
+		if let Some(len) = len {
+			buf[8..16].copy_from_slice(&len.to_le_bytes());
+		}
+
+		buf.extend(original.into_iter().flat_map(u16::to_le_bytes));
+		fs::write(info, buf)
 	}
 
 	fn resolve(&self, entry: &TrashEntry) -> io::Result<ShellItem> {
@@ -189,7 +248,7 @@ pub(super) fn error(error: windows::core::Error) -> io::Error {
 	if error.code() == ERROR_FILE_NOT_FOUND.to_hresult()
 		|| error.code() == ERROR_PATH_NOT_FOUND.to_hresult()
 	{
-		io::Error::new(io::ErrorKind::NotFound, error)
+		io::Error::new(ErrorKind::NotFound, error)
 	} else {
 		io::Error::other(error)
 	}

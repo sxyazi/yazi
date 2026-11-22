@@ -9,24 +9,23 @@ use crate::engine::{self, FileCursor, RwFile};
 
 const PER_CHUNK: u64 = 8 * 1024 * 1024;
 
-// --- ProgressiveCopier
-pub(super) struct ProgressiveCopier {
+pub(super) struct Copier {
 	from:  UrlBuf,
 	to:    UrlBuf,
 	attrs: Attrs,
 
-	acc:     AtomicU64,
-	prog_tx: mpsc::Sender<io::Result<u64>>,
+	acc: AtomicU64,
+	tx:  mpsc::Sender<io::Result<u64>>,
 }
 
-impl ProgressiveCopier {
+impl Copier {
 	pub(super) fn spawn(from: UrlBuf, to: UrlBuf, attrs: Attrs) -> Transit {
-		let (prog_tx, prog_rx) = mpsc::channel(20);
-		let copier = Self { from, to, attrs, acc: AtomicU64::new(0), prog_tx };
+		let (tx, rx) = mpsc::channel(20);
+		let copier = Self { from, to, attrs, acc: AtomicU64::new(0), tx };
 
 		let handle = tokio::spawn(copier.watch());
 
-		Transit::new(prog_rx, handle)
+		Transit::new(rx, handle)
 	}
 
 	async fn watch(self) {
@@ -38,7 +37,7 @@ impl ProgressiveCopier {
 			loop {
 				select! {
 					biased;
-					_ = self.prog_tx.closed() => return,
+					_ = self.tx.closed() => return,
 					result = &mut done => break result,
 					_ = tokio::time::sleep(Duration::from_secs(3)) => {},
 				}
@@ -48,14 +47,14 @@ impl ProgressiveCopier {
 		};
 
 		if let Err(e) = result {
-			self.prog_tx.send(Err(e)).await.ok();
+			self.tx.send(Err(e)).await.ok();
 		}
 	}
 
 	async fn report(&self) {
 		let n = self.acc.swap(0, Ordering::Relaxed);
 		if n > 0 {
-			self.prog_tx.send(Ok(n)).await.ok();
+			self.tx.send(Ok(n)).await.ok();
 		}
 	}
 

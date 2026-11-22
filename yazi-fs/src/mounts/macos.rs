@@ -50,7 +50,7 @@ impl Partitions {
 				notify.notified().await;
 				_ = tokio::task::spawn_blocking(move || {
 					match Self::all_names().and_then(Self::all_partitions) {
-						Ok(new) => me.write().set(new),
+						Ok(new) => *me.write() = new,
 						Err(e) => error!("Error encountered while updating mount points: {e:?}"),
 					}
 					cb();
@@ -60,7 +60,7 @@ impl Partitions {
 		});
 	}
 
-	pub(super) fn all_partitions(names: Vec<CString>) -> Result<Vec<Partition>> {
+	pub(super) fn all_partitions(names: Vec<CString>) -> Result<Self> {
 		fn value<T: ConcreteType>(
 			dict: &CFDictionary<CFString, CFType>,
 			key: &CFString,
@@ -106,7 +106,7 @@ impl Partitions {
 			}
 		}
 
-		Ok(disks)
+		Ok(disks.into())
 	}
 
 	pub(super) fn all_names() -> Result<Vec<CString>> {

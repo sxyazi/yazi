@@ -84,13 +84,13 @@ impl Partitions {
 
 	async fn update(me: &'static Locked, cb: fn()) {
 		match task::spawn_blocking(Self::all).await {
-			Ok(Ok(new)) => me.write().set(new),
+			Ok(Ok(new)) => *me.write() = new,
 			r => error!("Error encountered while updating partitions: {r:?}"),
 		}
 		cb();
 	}
 
-	pub(super) fn all() -> Result<Vec<Partition>> {
+	pub(super) fn all() -> Result<Self> {
 		let mut mounts = Self::mounts().context("Parsing /proc/mounts")?;
 		let mut partitions = Self::partitions().context("Parsing /proc/partitions")?;
 
@@ -101,7 +101,7 @@ impl Partitions {
 		let labels = Self::labels();
 		let removable = Self::removable(&mounts);
 
-		for mount in &mut mounts {
+		for mount in mounts.iter_mut() {
 			if !mount.src.as_bytes().starts_with(b"/dev/") {
 				continue;
 			}
@@ -116,7 +116,7 @@ impl Partitions {
 		Ok(mounts)
 	}
 
-	fn mounts() -> Result<Vec<Partition>> {
+	pub(crate) fn mounts() -> std::io::Result<Self> {
 		let mut vec = vec![];
 		let s = fs::read_to_string("/proc/mounts")?;
 		for line in s.lines() {
@@ -131,7 +131,7 @@ impl Partitions {
 				..Default::default()
 			});
 		}
-		Ok(vec)
+		Ok(vec.into())
 	}
 
 	fn labels() -> HashMap<(u64, u64), OsString> {

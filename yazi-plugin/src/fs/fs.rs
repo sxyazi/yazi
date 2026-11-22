@@ -18,6 +18,7 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 			b"cha" => cha(lua)?, // TODO: remove
 			b"clean_url" => clean_url(lua)?,
 			b"copy" => copy(lua)?,
+			b"copy_stream" => copy_stream(lua)?,
 			b"create" => create(lua)?,
 			b"create_dir" => create_dir(lua)?,
 			b"create_dir_all" => create_dir_all(lua)?,
@@ -31,6 +32,7 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 			b"partitions" => partitions(lua)?,
 			b"prune_dir" => prune_dir(lua)?,
 			b"read_dir" => read_dir(lua)?,
+			b"read_link" => read_link(lua)?,
 			b"remove" => remove(lua)?,
 			b"remove_dir" => remove_dir(lua)?,
 			b"remove_dir_all" => remove_dir_all(lua)?,
@@ -39,7 +41,10 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 			b"rename" => rename(lua)?,
 			b"reroute" => reroute(lua)?,
 			b"safename" => safename(lua)?,
+			b"set_attrs" => set_attrs(lua)?,
 			b"stat" => stat(lua)?,
+			b"symlink_dir" => symlink_dir(lua)?,
+			b"symlink_file" => symlink_file(lua)?,
 			b"trash" => return yazi_fs::trash::Trash.into_lua(lua),
 			b"unique" => unique(lua)?,
 			b"unique_dir" => unique_dir(lua)?,
@@ -54,7 +59,9 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 }
 
 fn access(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, ()| Ok(yazi_vfs::engine::Demand::default()))
+	lua.create_function(|_, demand: yazi_fs::engine::Demand| {
+		Ok(demand.build::<yazi_vfs::engine::Demand>())
+	})
 }
 
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
@@ -86,6 +93,12 @@ fn copy(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|_, (from, to): (UrlRef, UrlRef)| async move {
 		let result = async { engine::copy(&*from, &*to, Attrs::default()).await?.total().await }.await;
 		Ok(result.map_err(Error::from))
+	})
+}
+
+fn copy_stream(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|_, (from, to, attrs): (UrlRef, UrlRef, Attrs)| async move {
+		Ok(engine::copy(&*from, &*to, attrs).await.map_err(Error::from))
 	})
 }
 
@@ -275,6 +288,12 @@ async fn read_dir_old(dir: UrlRef, options: Table) -> mlua::Result<Result<Files,
 	Ok(Ok(files))
 }
 
+fn read_link(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|_, url: UrlRef| async move {
+		Ok(engine::read_link(&*url).await.map_err(Error::from))
+	})
+}
+
 // TODO: remove
 fn remove(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (BorrowedBytes, UrlRef)| async move {
@@ -327,11 +346,8 @@ fn remove_file(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn rename(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (from, to): (UrlRef, UrlRef)| async move {
-		match engine::rename(&*from, &*to).await {
-			Ok(()) => true.into_lua_multi(&lua),
-			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
-		}
+	lua.create_async_function(|_, (from, to): (UrlRef, UrlRef)| async move {
+		Ok(engine::rename(&*from, &*to).await.map_err(Error::from))
 	})
 }
 
@@ -352,10 +368,41 @@ fn safename(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
+fn set_attrs(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (url, attrs): (UrlRef, Attrs)| async move {
+		match engine::set_attrs(&*url, attrs).await {
+			Ok(()) => true.into_lua_multi(&lua),
+			Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
 fn stat(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|_, url: UrlRef| async move {
 		Ok(engine::stat(&*url).await.map_err(Error::from))
 	})
+}
+
+fn symlink_dir(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(
+		|lua, (url, original, force): (UrlRef, BorrowedBytes, bool)| async move {
+			match engine::symlink_dir(&*url, original, force).await {
+				Ok(()) => true.into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+			}
+		},
+	)
+}
+
+fn symlink_file(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(
+		|lua, (url, original, force): (UrlRef, BorrowedBytes, bool)| async move {
+			match engine::symlink_file(&*url, original, force).await {
+				Ok(()) => true.into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+			}
+		},
+	)
 }
 
 // TODO: remove

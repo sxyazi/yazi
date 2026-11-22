@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, BorrowedBytes, ExternalError, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry, Value};
 use yazi_shim::{log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
-use crate::{auth::{AuthArc, Scheme, View}, domain::Domain, path::{PathBufDyn, StripPrefixError}, spec::Spec, strand::{StrandCow, StrandLike, ToStrand}, url::{AsUrl, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
+use crate::{auth::{AuthArc, Scheme, View}, domain::Domain, path::{PathBufDyn, StripPrefixError}, spec::Spec, strand::{StrandLike, ToStrand}, url::{AsUrl, UrlBuf, UrlBufInventory, UrlCow, UrlLike}};
 
 pub type UrlRef = UserDataRef<UrlBuf>;
 
@@ -64,10 +64,7 @@ impl UrlBuf {
 
 	fn join(&self, lua: &Lua, other: Value) -> mlua::Result<Value> {
 		match other {
-			Value::String(s) => {
-				let bytes = s.as_bytes();
-				self.try_join(StrandCow::with(self.loc().kind(), &*bytes)?)?.into_lua(lua)
-			}
+			Value::String(s) => self.try_join(s.as_bytes())?.into_lua(lua),
 			Value::UserData(ud) if let Ok(path) = ud.borrow::<PathBufDyn>() => {
 				self.try_join(&*path)?.into_lua(lua)
 			}

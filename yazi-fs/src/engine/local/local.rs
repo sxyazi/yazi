@@ -1,8 +1,8 @@
 use std::{io, path::Path};
 
-use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{auth::AuthKind, path::{DynPath, PathBufDyn, PathDynError}, strand::AsStrand, url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike}};
 
-use crate::{casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transit}, remover::Removal, stat::{Stat, StatMode}};
+use crate::{Symlinker, casefold::Casefold, copier::Copier, engine::{Attrs, Capabilities, Engine, RwFile, Transit}, remover::Removal, stat::{Stat, StatMode}};
 
 #[derive(Clone)]
 pub struct Local<'a> {
@@ -120,14 +120,20 @@ impl<'a> Engine for Local<'a> {
 	#[inline]
 	async fn remove_file(&self) -> io::Result<()> { tokio::fs::remove_file(self.path).await }
 
-	#[inline]
-	async fn rename<P>(&self, to: P) -> io::Result<()>
+	async fn rename<U>(&self, to: U) -> io::Result<UrlBuf>
 	where
-		P: DynPath,
+		U: AsUrl,
 	{
-		let to = to.dyn_path().as_os()?;
+		let from = self.path.to_owned();
+		let UrlBuf::Os { loc, auth } = to.as_url().to_owned() else {
+			return Err(PathDynError::AsOs.into());
+		};
 
-		tokio::fs::rename(self.path, to).await
+		tokio::task::spawn_blocking(move || {
+			std::fs::rename(&from, &*loc)?;
+			Ok(UrlBuf::Os { loc, auth })
+		})
+		.await?
 	}
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
@@ -151,56 +157,25 @@ impl<'a> Engine for Local<'a> {
 	}
 
 	#[inline]
-	async fn symlink<S, F>(&self, original: S, _is_dir: F) -> io::Result<()>
+	async fn symlink_dir<S>(&self, original: S, force: bool) -> io::Result<()>
 	where
 		S: AsStrand,
-		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		#[cfg(unix)]
-		{
-			let original = original.as_strand().as_os()?;
-			tokio::fs::symlink(original, self.path).await
-		}
-		#[cfg(windows)]
-		if _is_dir().await? {
-			self.symlink_dir(original).await
-		} else {
-			self.symlink_file(original).await
-		}
+		let original = original.as_strand().to_os()?;
+		let link = self.path.to_owned();
+
+		tokio::task::spawn_blocking(move || Symlinker::dir(&original, &link, force)).await?
 	}
 
 	#[inline]
-	async fn symlink_dir<S>(&self, original: S) -> io::Result<()>
+	async fn symlink_file<S>(&self, original: S, force: bool) -> io::Result<()>
 	where
 		S: AsStrand,
 	{
-		let original = original.as_strand().as_os()?;
+		let original = original.as_strand().to_os()?;
+		let link = self.path.to_owned();
 
-		#[cfg(unix)]
-		{
-			tokio::fs::symlink(original, self.path).await
-		}
-		#[cfg(windows)]
-		{
-			tokio::fs::symlink_dir(original, self.path).await
-		}
-	}
-
-	#[inline]
-	async fn symlink_file<S>(&self, original: S) -> io::Result<()>
-	where
-		S: AsStrand,
-	{
-		let original = original.as_strand().as_os()?;
-
-		#[cfg(unix)]
-		{
-			tokio::fs::symlink(original, self.path).await
-		}
-		#[cfg(windows)]
-		{
-			tokio::fs::symlink_file(original, self.path).await
-		}
+		tokio::task::spawn_blocking(move || Symlinker::file(&original, &link, force)).await?
 	}
 
 	async fn trash(&self) -> io::Result<()> {

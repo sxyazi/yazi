@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{self, Display}};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, fmt::{self, Display}};
 
 use anyhow::Result;
 use yazi_shim::{OptionExt, bytes::BytesExt, wtf8::FromWtf8};
@@ -98,9 +98,7 @@ impl<'a> Strand<'a> {
 	}
 
 	#[inline]
-	pub fn to_os_path(self) -> Result<std::path::PathBuf, StrandError> {
-		self.as_os().map(std::path::PathBuf::from)
-	}
+	pub fn to_os(self) -> Result<OsString, StrandError> { self.as_os().map(OsStr::to_os_string) }
 
 	#[inline]
 	pub(crate) fn as_unix_path(self) -> &'a typed_path::UnixPath {
@@ -176,6 +174,8 @@ impl<'a> Strand<'a> {
 	}
 
 	pub fn len(self) -> usize { self.encoded_bytes().len() }
+
+	pub fn non_empty(self) -> Option<Self> { (!self.is_empty()).then_some(self) }
 
 	pub fn starts_with(self, needle: impl AsStrand) -> bool {
 		self.encoded_bytes().starts_with(needle.as_strand().encoded_bytes())

@@ -9,6 +9,7 @@ use russh::keys::{PrivateKeyWithHashAlg, PublicKeyOrCertificate, agent::AgentIde
 use yazi_config::vfs::ServiceSftp;
 use yazi_fs::engine::local::Local;
 use yazi_shared::auth::AuthArc;
+use yazi_shim::path::PathExt;
 
 pub(super) static CONN: Mutex<HashMap<AuthArc, Pool<Conn>, FixedState>> =
 	Mutex::new(HashMap::with_hasher(FixedState::with_seed(0)));
@@ -135,8 +136,7 @@ impl Conn {
 		&self,
 		pref: Arc<russh::client::Config>,
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let key_file = &self.config.key_file;
-		if key_file.as_os_str().is_empty() {
+		let Some(key_file) = self.config.key_file.non_empty() else {
 			return Err(cfg_err!("Key file not provided"));
 		};
 
@@ -164,13 +164,11 @@ impl Conn {
 		&self,
 		pref: Arc<russh::client::Config>,
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let key_file = &self.config.key_file;
-		if key_file.as_os_str().is_empty() {
+		let Some(key_file) = self.config.key_file.non_empty() else {
 			return Err(cfg_err!("Key file not provided"));
 		};
 
-		let cert_file = &self.config.cert_file;
-		if cert_file.as_os_str().is_empty() {
+		let Some(cert_file) = self.config.cert_file.non_empty() else {
 			return Err(cfg_err!("Cert file not provided"));
 		};
 
@@ -217,8 +215,7 @@ impl Conn {
 		&self,
 		pref: Arc<russh::client::Config>,
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let identity_agent = &self.config.identity_agent;
-		if identity_agent.as_os_str().is_empty() {
+		let Some(identity_agent) = self.config.identity_agent.non_empty() else {
 			return Err(cfg_err!("Identity agent not provided"));
 		};
 

@@ -375,6 +375,7 @@ pub(crate) struct FileInUpload {
 	pub(crate) target: UrlBuf,
 	pub(crate) stat:   Option<Stat>,
 	pub(crate) cache:  Option<PathBuf>,
+	pub(crate) top:    bool,
 }
 
 impl TaskIn for FileInUpload {

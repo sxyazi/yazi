@@ -1,7 +1,7 @@
-use std::{any::{self, Any, TypeId}, fmt::{self, Debug}};
+use std::{any::{self, Any, TypeId}, fmt::{self, Debug}, sync::Arc};
 
 use dyn_clone::DynClone;
-use mlua::{IntoLua, Lua, Value};
+use mlua::{AnyUserData, FromLua, IntoLua, Lua, UserData, Value};
 
 use crate::any_data::AnyData;
 
@@ -43,6 +43,26 @@ impl Clone for Box<dyn DataAny> {
 impl Debug for dyn DataAny {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.debug_struct("DataAny").finish_non_exhaustive()
+	}
+}
+
+impl<T: Send + Sync + 'static> DataAny for Arc<T>
+where
+	Self: UserData,
+{
+	fn as_any(&self, id: TypeId) -> Option<&dyn Any> {
+		(id == TypeId::of::<Self>()).then_some(self as &dyn Any)
+	}
+
+	fn into_any(self: Box<Self>, id: TypeId) -> Result<Box<dyn Any>, Box<dyn DataAny>> {
+		if id == TypeId::of::<Self>() { Ok(self) } else { Err(self) }
+	}
+
+	fn into_lua(self: Box<Self>, lua: &Lua) -> mlua::Result<Value> { (*self).into_lua(lua) }
+
+	fn from_lua(value: &Value, lua: &Lua) -> mlua::Result<Box<dyn DataAny>> {
+		let ud = AnyUserData::from_lua(value.clone(), lua)?;
+		Ok(Box::new(ud.borrow::<Self>()?.clone()))
 	}
 }
 

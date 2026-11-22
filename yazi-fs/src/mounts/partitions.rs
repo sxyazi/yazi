@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{ops::{Deref, DerefMut}, path::Path};
 
 use parking_lot::RwLock;
 
@@ -9,7 +9,7 @@ pub(super) type Locked = RwLock<Partitions>;
 
 pub static PARTITIONS: Locked = RwLock::new(Partitions { inner: Vec::new(), loaded: false });
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Partitions {
 	pub(super) inner: Vec<Partition>,
 	loaded:           bool,
@@ -19,6 +19,23 @@ impl Deref for Partitions {
 	type Target = Vec<Partition>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
+}
+
+impl DerefMut for Partitions {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
+}
+
+impl From<Vec<Partition>> for Partitions {
+	fn from(inner: Vec<Partition>) -> Self { Self { inner, loaded: true } }
+}
+
+impl FromIterator<Partition> for Partitions {
+	fn from_iter<I>(iter: I) -> Self
+	where
+		I: IntoIterator<Item = Partition>,
+	{
+		Vec::from_iter(iter).into()
+	}
 }
 
 impl Partitions {
@@ -33,22 +50,25 @@ impl Partitions {
 			#[cfg(any(target_os = "linux", windows))]
 			let new = Self::all()?;
 			#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
-			let new = Vec::new();
+			let new = vec![].into();
 
-			PARTITIONS.write().set(new);
+			*PARTITIONS.write() = new;
 			Ok(())
 		})
 		.await?
 	}
 
-	pub(super) fn set(&mut self, partitions: Vec<Partition>) {
-		self.inner = partitions;
-		self.loaded = true;
-	}
-
 	#[cfg(unix)]
-	fn by_dev(&self, dev: u64) -> Option<&Partition> {
-		self.inner.iter().find(|p| p.rdev == Some(dev))
+	fn by_dev(&self, dev: u64) -> Option<&Partition> { self.iter().find(|p| p.rdev == Some(dev)) }
+
+	pub fn mount_point(&self, path: impl AsRef<Path>) -> Option<&Path> {
+		let path = path.as_ref();
+
+		self
+			.iter()
+			.filter_map(|p| p.dist.as_deref())
+			.filter(|p| path.starts_with(p))
+			.max_by_key(|p| p.as_os_str().len())
 	}
 
 	pub fn timeless(&self, _stat: Stat) -> bool {

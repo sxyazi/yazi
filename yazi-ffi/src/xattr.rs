@@ -33,7 +33,8 @@ impl<'a> Xattr<'a> {
 	pub fn set(&self, name: &CStr, data: &[u8]) -> io::Result<()> { self.write_at(name, data, 0) }
 
 	pub fn remove(&self, name: &CStr) -> io::Result<()> {
-		nonneg_ok(unsafe { libc::fremovexattr(self.fd.as_raw_fd(), name.as_ptr(), self.options) })
+		nonneg_ok(unsafe { libc::fremovexattr(self.fd.as_raw_fd(), name.as_ptr(), self.options) })?;
+		Ok(())
 	}
 
 	/// Nonzero positions are supported only for com.apple.ResourceFork.
@@ -63,6 +64,7 @@ impl<'a> Xattr<'a> {
 				pos,
 				self.options,
 			)
-		})
+		})?;
+		Ok(())
 	}
 }

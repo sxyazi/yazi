@@ -1,18 +1,17 @@
 use std::{ffi::{OsStr, OsString}, io::{self, ErrorKind}, os::{fd::AsFd, unix::ffi::OsStrExt}, path::Path};
 
 use rustix::fs::{AtFlags, FileType, Mode, OFlags, Stat, open, statat};
+use yazi_shim::path::PathExt;
 
 use super::Casefold;
 use crate::scanner::Scanner;
 
 impl Casefold {
 	pub(super) fn final_name(path: &Path) -> io::Result<OsString> {
-		let (parent, name) = path
-			.parent()
-			.zip(path.file_name())
-			.ok_or_else(|| io::Error::new(ErrorKind::InvalidInput, "Missing filename"))?;
+		let (parent, name) =
+			path.pair().ok_or_else(|| io::Error::new(ErrorKind::InvalidInput, "Missing filename"))?;
 
-		let parent = if parent.as_os_str().is_empty() { Path::new(".") } else { parent };
+		let parent = parent.non_empty().unwrap_or(Path::new("."));
 		let fd = open(parent, OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC, Mode::empty())?;
 		let meta = statat(&fd, name, AtFlags::SYMLINK_NOFOLLOW)?;
 

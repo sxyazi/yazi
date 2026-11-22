@@ -27,15 +27,12 @@ impl Transaction {
 		unique_file(parent.try_join(format!(".{:x}.yazitmp", h.finish()))?).await.map(RwFile::into_url)
 	}
 
-	pub(super) async fn unlink<U>(url: U) -> io::Result<()>
-	where
-		U: AsUrl,
-	{
-		let url = url.as_url();
-
+	pub(super) async fn unlink(target: &mut UrlBuf) -> io::Result<()> {
+		let url = target.as_url();
 		let stat = ok_or_not_found!(engine::lstat(url).await, return Ok(()));
+
 		if stat.is_indirect() {
-			engine::rename(Self::tmp(url).await?, url).await?;
+			*target = engine::rename(Self::tmp(url).await?, url).await?;
 		} else if !stat.contains(StatMode::U_WRITE) {
 			engine::set_attrs(url, Attrs::mode(stat.mode | StatMode::U_WRITE)).await?;
 		}

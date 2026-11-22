@@ -137,6 +137,10 @@ impl AsStrand for &StrandCow<'_> {
 	fn as_strand(&self) -> Strand<'_> { (**self).as_strand() }
 }
 
+impl AsStrand for mlua::BorrowedBytes {
+	fn as_strand(&self) -> Strand<'_> { Strand::Bytes(self) }
+}
+
 // --- ToStrand
 pub trait ToStrand {
 	fn to_strand(&self) -> StrandCow<'_>;

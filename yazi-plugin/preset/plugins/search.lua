@@ -12,7 +12,7 @@ end
 function M.relative_url(url, line)
 	line = line:gsub("[\r\n]+$", "")
 	local ok, path = pcall(Path.os, line)
-	return ok and not path.is_absolute and url:join(path) or nil
+	return ok and not path.has_root and url:join(path) or nil
 end
 
 function M.file(url)

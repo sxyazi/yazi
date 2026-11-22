@@ -22,12 +22,15 @@ impl<'a> From<std::path::PathBuf> for PathCow<'a> {
 	fn from(value: std::path::PathBuf) -> Self { Self::Owned(value.into()) }
 }
 
-impl<'a> From<&'a PathCow<'_>> for PathCow<'a> {
-	fn from(value: &'a PathCow<'_>) -> Self { Self::Borrowed(value.dyn_path()) }
-}
-
 impl From<PathCow<'_>> for PathBufDyn {
 	fn from(value: PathCow<'_>) -> Self { value.into_owned() }
+}
+
+impl<'a, T> From<&'a T> for PathCow<'a>
+where
+	T: DynPath + ?Sized,
+{
+	fn from(value: &'a T) -> Self { Self::Borrowed(value.dyn_path()) }
 }
 
 impl PartialEq for PathCow<'_> {

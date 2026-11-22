@@ -77,6 +77,10 @@ impl<'a> Engine for Engines<'a> {
 		})
 	}
 
+	async fn prepare(&self, from: Url<'_>, stat: Stat, force: bool) -> io::Result<Option<UrlBuf>> {
+		dispatch!(self, prepare, from, stat, force)
+	}
+
 	async fn read_dir(self) -> io::Result<Self::ReadDir> { dispatch!(self, read_dir) }
 
 	async fn read_link(&self) -> io::Result<PathBufDyn> { dispatch!(self, read_link) }
@@ -100,9 +104,9 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn remove_file(&self) -> io::Result<()> { dispatch!(self, remove_file) }
 
-	async fn rename<P>(&self, to: P) -> io::Result<()>
+	async fn rename<U>(&self, to: U) -> io::Result<UrlBuf>
 	where
-		P: DynPath,
+		U: AsUrl,
 	{
 		dispatch!(self, rename, to)
 	}
@@ -111,26 +115,18 @@ impl<'a> Engine for Engines<'a> {
 
 	async fn stat(&self) -> io::Result<Stat> { dispatch!(self, stat) }
 
-	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
+	async fn symlink_dir<S>(&self, original: S, force: bool) -> io::Result<()>
 	where
 		S: AsStrand,
-		F: AsyncFnOnce() -> io::Result<bool>,
 	{
-		dispatch!(self, symlink, original, is_dir)
+		dispatch!(self, symlink_dir, original, force)
 	}
 
-	async fn symlink_dir<S>(&self, original: S) -> io::Result<()>
+	async fn symlink_file<S>(&self, original: S, force: bool) -> io::Result<()>
 	where
 		S: AsStrand,
 	{
-		dispatch!(self, symlink_dir, original)
-	}
-
-	async fn symlink_file<S>(&self, original: S) -> io::Result<()>
-	where
-		S: AsStrand,
-	{
-		dispatch!(self, symlink_file, original)
+		dispatch!(self, symlink_file, original, force)
 	}
 
 	async fn trash(&self) -> io::Result<()> { dispatch!(self, trash) }

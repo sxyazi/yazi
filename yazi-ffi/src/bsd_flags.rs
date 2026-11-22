@@ -32,7 +32,8 @@ impl BsdFlags {
 			}
 		}
 
-		nonneg_ok(unsafe { libc::fchflags(file.as_raw_fd(), flags | (current & preserve)) })
+		nonneg_ok(unsafe { libc::fchflags(file.as_raw_fd(), flags | (current & preserve)) })?;
+		Ok(())
 	}
 }
 

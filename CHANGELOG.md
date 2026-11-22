@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Archive extraction progress ([#4431])
 - Autocomplete VFS URLs and package IDs ([#4464])
 - Custom border shape ([#4439])
+- Support copy/move/rename/create/symlink/etc. capabilities for the trash VFS ([#4514])
 - Custom sorting ([#4363])
 - Windows drives view ([#4412])
 - Experimental `ya.iter()` iterator ([#4483])
@@ -37,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 - Supersede `search` action with `plugin rg` and `plugin fd` ([#4335])
 - Return `Time` instead of number from `ya.time()`, `Stat.atime`, `Stat.btime`, `Stat.ctime`, `Stat.mtime` ([#4395])
+- Return `Url?, Error?` instead of `bool, Error?` from `fs.rename()` so filesystems that allow duplicate names can return a unique `Url` ([#4514])
 - Rename `Spec::is_search` property and `escape --search` action to `Spec::is_view` and `escape --view`, respectively ([#4335])
 - Move `search_title`, `search_origin`, and `search_offset` from `[input]` in `yazi.toml` to `[rg]`/`[fd]` in `theme.toml` as `title` and `position` ([#4335])
 - Remove `[tasks].bizarre_retry` in `yazi.toml` as it's no longer needed ([#4424])
@@ -1934,3 +1936,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4483]: https://github.com/sxyazi/yazi/pull/4483
 [#4484]: https://github.com/sxyazi/yazi/pull/4484
 [#4494]: https://github.com/sxyazi/yazi/pull/4494
+[#4514]: https://github.com/sxyazi/yazi/pull/4514

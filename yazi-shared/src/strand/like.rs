@@ -1,6 +1,6 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::Display};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, fmt::Display};
 
-use crate::strand::{AsStrand, StrandBuf, StrandCow, StrandError, StrandKind};
+use crate::strand::{AsStrand, Strand, StrandBuf, StrandCow, StrandError, StrandKind};
 
 // --- StrandLike
 pub trait StrandLike: AsStrand {
@@ -29,6 +29,8 @@ pub trait StrandLike: AsStrand {
 
 	fn len(&self) -> usize { self.as_strand().len() }
 
+	fn non_empty(&self) -> Option<Strand<'_>> { self.as_strand().non_empty() }
+
 	fn starts_with(&self, needle: impl AsStrand) -> bool { self.as_strand().starts_with(needle) }
 
 	fn starts_with_ignore_ascii_case(&self, needle: impl AsStrand) -> bool {
@@ -36,6 +38,8 @@ pub trait StrandLike: AsStrand {
 	}
 
 	fn to_owned(&self) -> StrandBuf { self.as_strand().to_owned() }
+
+	fn to_os(&self) -> Result<OsString, StrandError> { self.as_strand().to_os() }
 
 	fn to_str(&self) -> Result<&str, std::str::Utf8Error> { self.as_strand().to_str() }
 
@@ -51,3 +55,4 @@ where
 
 impl StrandLike for StrandBuf {}
 impl StrandLike for StrandCow<'_> {}
+impl StrandLike for mlua::BorrowedBytes {}

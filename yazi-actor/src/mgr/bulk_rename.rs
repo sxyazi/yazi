@@ -1,6 +1,7 @@
 use std::{hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
 
 use anyhow::{Result, anyhow};
+use futures::TryFutureExt;
 use hashbrown::HashMap;
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
@@ -125,12 +126,12 @@ impl BulkRename {
 
 			if maybe_exists(&new).await && !engine::must_identical(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
-			} else if let Err(e) = engine::rename(&old, &new).await {
-				failed.push((o, n, e.into()));
-			} else if let Ok(f) = engine::file(new).await {
-				succeeded.insert(old, f);
-			} else {
-				failed.push((o, n, anyhow!("Failed to retrieve file info")));
+				continue;
+			}
+
+			match engine::rename(&old, &new).and_then(engine::file).await {
+				Ok(file) => _ = succeeded.insert(old, file),
+				Err(e) => failed.push((o, n, e.into())),
 			}
 		}
 

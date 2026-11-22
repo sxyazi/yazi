@@ -1,6 +1,7 @@
-use std::{io, path::Path};
+use std::{ffi::OsString, fs, io, path::{Path, PathBuf}};
 
 use yazi_shared::url::{Component, UrlBuf, UrlLike};
+use yazi_shim::OptionExt;
 
 #[inline]
 pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
@@ -9,6 +10,73 @@ pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
 		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(T::default()),
 		Err(_) => result,
 	}
+}
+
+pub fn unique_dir(mut path: PathBuf) -> io::Result<PathBuf> {
+	let mut err = match fs::create_dir(&path) {
+		Ok(()) => return Ok(path),
+		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => e,
+		Err(e) => return Err(e),
+	};
+
+	let Some(name) = path.file_name().owned() else {
+		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty directory name"));
+	};
+
+	let mut buf = OsString::with_capacity(name.len() + 5);
+	for i in 1..=1000 {
+		buf.clear();
+		buf.push(&name);
+		buf.push(format!("_{i}"));
+
+		path.set_file_name(&buf);
+		match fs::create_dir(&path) {
+			Ok(()) => return Ok(path),
+			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => err = e,
+			Err(e) => return Err(e),
+		}
+	}
+
+	Err(err)
+}
+
+pub fn unique_file(
+	mut path: PathBuf,
+	options: &fs::OpenOptions,
+) -> io::Result<(PathBuf, fs::File)> {
+	let mut options = options.clone();
+	let mut err = match options.create_new(true).open(&path) {
+		Ok(file) => return Ok((path, file)),
+		Err(e) if e.kind() == io::ErrorKind::AlreadyExists => e,
+		Err(e) => return Err(e),
+	};
+
+	let Some(stem) = path.file_stem().owned() else {
+		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
+	};
+
+	let ext = path.extension().owned();
+	let mut buf = OsString::with_capacity(stem.len() + ext.as_ref().map_or(0, |s| s.len()) + 6);
+
+	for i in 1..=1000 {
+		buf.clear();
+		buf.push(&stem);
+		buf.push(format!("_{i}"));
+
+		if let Some(e) = &ext {
+			buf.push(".");
+			buf.push(e);
+		}
+
+		path.set_file_name(&buf);
+		match options.open(&path) {
+			Ok(file) => return Ok((path, file)),
+			Err(e) if e.kind() == io::ErrorKind::AlreadyExists => err = e,
+			Err(e) => return Err(e),
+		}
+	}
+
+	Err(err)
 }
 
 // Find the max common root in a list of urls

@@ -121,7 +121,13 @@ impl Traverse for FileInUpload {
 	}
 
 	fn spawn(&self, from: UrlBuf, _to: Option<UrlBuf>, stat: Stat) -> Self {
-		Self { id: self.id, stat: Some(stat), cache: from.cache_entry(), target: from }
+		Self {
+			id:     self.id,
+			stat:   Some(stat),
+			cache:  from.cache_entry(),
+			target: from,
+			top:    false,
+		}
 	}
 
 	fn to(&self) -> Option<Url<'_>> { None }
