@@ -3,7 +3,7 @@ use std::io;
 use yazi_fs::{engine::{Attrs, Capabilities, Engine, Transit}, file::File, remover::Removal, stat::Stat};
 use yazi_shared::{path::PathBufDyn, strand::AsStrand, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 
-use super::{Engines, ProgressiveCopier, ReadDir, RwFile};
+use super::{Copier, Engines, ReadDir, RwFile};
 
 pub async fn absolute<'a, U>(url: &'a U) -> io::Result<UrlCow<'a>>
 where
@@ -71,7 +71,7 @@ where
 		return Ok(rx);
 	}
 
-	Ok(ProgressiveCopier::spawn(from.into(), to.into(), attrs))
+	Ok(Copier::spawn(from.into(), to.into(), attrs))
 }
 
 pub async fn create_dir<U>(url: U) -> io::Result<()>
@@ -155,6 +155,14 @@ where
 	Engines::new(url.as_url()).await?.open().await
 }
 
+pub async fn prepare<U, V>(from: U, to: V, stat: Stat, force: bool) -> io::Result<Option<UrlBuf>>
+where
+	U: AsUrl,
+	V: AsUrl,
+{
+	Engines::new(to.as_url()).await?.prepare(from.as_url(), stat, force).await
+}
+
 pub async fn read_dir<U>(url: U) -> io::Result<ReadDir>
 where
 	U: AsUrl,
@@ -201,14 +209,14 @@ where
 	Engines::new(url.as_url()).await?.remove_file().await
 }
 
-pub async fn rename<U, V>(from: U, to: V) -> io::Result<()>
+pub async fn rename<U, V>(from: U, to: V) -> io::Result<UrlBuf>
 where
 	U: AsUrl,
 	V: AsUrl,
 {
 	let (from, to) = (from.as_url(), to.as_url());
 	if from.auth().same_service(to.auth()) {
-		Engines::new(from).await?.rename(to.loc()).await
+		Engines::new(from).await?.rename(to).await
 	} else {
 		Err(io::ErrorKind::CrossesDevices.into())
 	}
@@ -228,13 +236,20 @@ where
 	Engines::new(url.as_url()).await?.stat().await
 }
 
-pub async fn symlink<U, S, F>(link: U, original: S, is_dir: F) -> io::Result<()>
+pub async fn symlink_dir<U, S>(link: U, original: S, force: bool) -> io::Result<()>
 where
 	U: AsUrl,
 	S: AsStrand,
-	F: AsyncFnOnce() -> io::Result<bool>,
 {
-	Engines::new(link.as_url()).await?.symlink(original, is_dir).await
+	Engines::new(link.as_url()).await?.symlink_dir(original, force).await
+}
+
+pub async fn symlink_file<U, S>(link: U, original: S, force: bool) -> io::Result<()>
+where
+	U: AsUrl,
+	S: AsStrand,
+{
+	Engines::new(link.as_url()).await?.symlink_file(original, force).await
 }
 
 pub async fn trash<U>(url: U) -> io::Result<()>

@@ -68,24 +68,24 @@ impl Actor for Rename {
 impl Rename {
 	async fn r#do(tab: Id, old: UrlBuf, new: UrlBuf) -> Result<()> {
 		let Some((old_t, old_k)) = old.pair() else { return Ok(()) };
-		let Some(_) = new.pair() else { return Ok(()) };
+		let Some(_) = new.urn().non_empty() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		let overwritten = engine::casefold(&new).await;
-		engine::rename(&old, &new).await?;
+		let mut renamed = engine::rename(&old, &new).await?;
 
 		if let Ok(u) = overwritten
 			&& u != new
 			&& let Some((trail, key)) = u.pair()
 		{
-			ok_or_not_found!(engine::rename(&u, &new).await);
+			renamed = ok_or_not_found!(engine::rename(&u, &new).await, renamed);
 			FilesOp::Delete(trail.to_owned(), [key.into()].into()).emit();
 		}
 
-		let new = engine::casefold(&new).await?;
-		let Some((new_t, new_k)) = new.pair() else { return Ok(()) };
+		renamed = engine::casefold(renamed).await?;
+		let Some((new_t, new_k)) = renamed.pair() else { return Ok(()) };
 
-		let file = engine::file(&new).await?;
+		let file = engine::file(&renamed).await?;
 		if new_t == old_t {
 			FilesOp::Upsert(old_t.into(), [(old_k.into(), file)].into()).emit();
 		} else {
@@ -93,8 +93,8 @@ impl Rename {
 			FilesOp::Upsert(new_t.into(), [(new_k.into(), file)].into()).emit();
 		}
 
-		MgrProxy::reveal(&new);
-		log_if_err!(Pubsub::pub_after_rename(tab, &old, &new));
+		MgrProxy::reveal(&renamed);
+		log_if_err!(Pubsub::pub_after_rename(tab, &old, &renamed));
 		Ok(())
 	}
 

@@ -37,7 +37,7 @@ impl Copier {
 			nonneg_ok(unsafe { libc::fclonefileat(src.as_raw_fd(), libc::AT_FDCWD, path.as_ptr(), 0) });
 
 		match result {
-			Ok(()) => {
+			Ok(_) => {
 				self.progress.update(len);
 				if let Ok(times) = self.attrs.try_into() {
 					fs::set_times(&self.to, times).ok();
@@ -69,7 +69,7 @@ impl Copier {
 			}) {
 				// An attribute may disappear during copying: retry ENOATTR with fresh metadata.
 				Err(e) if e.raw_os_error() == Some(libc::ENOATTR) && self.retry(&e) => self.reset()?,
-				Ok(()) => return Ok(true),
+				Ok(_) => return Ok(true),
 				Err(e) => {
 					Self::skip_attrs(e)?;
 					// Failed calls can cache incomplete metadata; start DATA and SECURITY with a fresh state.
@@ -117,7 +117,7 @@ impl Copier {
 
 			match self.error.take().map_or(result, Err) {
 				Err(e) if e.raw_os_error() == Some(libc::ENOATTR) && self.retry(&e) => {}
-				Ok(()) => return Ok(()),
+				Ok(_) => return Ok(()),
 				Err(e) => break Self::skip_attrs(e)?,
 			}
 		}

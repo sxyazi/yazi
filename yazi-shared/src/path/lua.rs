@@ -1,9 +1,9 @@
 use mlua::{AnyUserData, BorrowedBytes, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_shim::{OptionExt, log::LOG_LEVEL, mlua::UserDataFieldsExt};
 
-use crate::{path::{PathBufDyn, PathDyn, PathLike, StripPrefixError}, strand::{AsStrand, StrandCow}};
+use crate::{path::{PathBufDyn, PathDyn, PathLike, StripPrefixError}, strand::AsStrand};
 
-type PathRef = UserDataRef<PathBufDyn>;
+pub type PathRef = UserDataRef<PathBufDyn>;
 
 impl PathBufDyn {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
@@ -20,7 +20,7 @@ impl PathBufDyn {
 
 	fn ends_with(&self, child: Value) -> mlua::Result<bool> {
 		Ok(match child {
-			Value::String(s) => self.try_ends_with(StrandCow::with(self.kind(), &*s.as_bytes())?)?,
+			Value::String(s) => self.try_ends_with(s.as_bytes())?,
 			Value::UserData(ud) => self.try_ends_with(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Path".into_lua_err())?,
 		})
@@ -28,7 +28,7 @@ impl PathBufDyn {
 
 	fn join(&self, other: Value) -> mlua::Result<Self> {
 		Ok(match other {
-			Value::String(s) => self.try_join(StrandCow::with(self.kind(), &*s.as_bytes())?)?,
+			Value::String(s) => self.try_join(s.as_bytes())?,
 			Value::UserData(ref ud) => self.try_join(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Path".into_lua_err())?,
 		})
@@ -36,7 +36,7 @@ impl PathBufDyn {
 
 	fn starts_with(&self, base: Value) -> mlua::Result<bool> {
 		Ok(match base {
-			Value::String(s) => self.try_starts_with(StrandCow::with(self.kind(), &*s.as_bytes())?)?,
+			Value::String(s) => self.try_starts_with(s.as_bytes())?,
 			Value::UserData(ud) => self.try_starts_with(&*ud.borrow::<Self>()?)?,
 			_ => Err("must be a string or Path".into_lua_err())?,
 		})
@@ -44,7 +44,7 @@ impl PathBufDyn {
 
 	fn strip_prefix(&self, base: Value) -> mlua::Result<Option<Self>> {
 		let strip = match base {
-			Value::String(s) => self.try_strip_prefix(StrandCow::with(self.kind(), &*s.as_bytes())?),
+			Value::String(s) => self.try_strip_prefix(s.as_bytes()),
 			Value::UserData(ud) => self.try_strip_prefix(&*ud.borrow::<Self>()?),
 			_ => Err("must be a string or Path".into_lua_err())?,
 		};

@@ -1,6 +1,6 @@
 use std::io;
 
-use yazi_fs::{file::{File, FileExtra}, stat::Stat};
+use yazi_fs::{file::{File, FileExtra}, ok_or_not_found, stat::Stat};
 use yazi_shared::url::{UrlBuf, UrlCow};
 
 use crate::{VfsStat, engine};
@@ -14,11 +14,7 @@ pub trait VfsFile: Sized {
 impl VfsFile for File {
 	async fn maybe_new<'a>(url: impl Into<UrlCow<'a>>) -> io::Result<Option<Self>> {
 		let url = url.into();
-		Ok(match engine::file(&url).await {
-			Ok(file) => Some(file),
-			Err(e) if e.kind() == io::ErrorKind::NotFound => None,
-			Err(e) => return Err(e),
-		})
+		ok_or_not_found(engine::file(&url).await.map(Some))
 	}
 
 	async fn from_follow(url: UrlBuf, lstat: Stat) -> Self {

@@ -58,6 +58,14 @@ impl Auth {
 			|| self.kind.is_hub() && other.kind.is_hub() && self.scheme == other.scheme
 	}
 
+	pub fn same_namespace(&self, other: &Self) -> bool {
+		if self.kind.is_hub() {
+			other.kind.is_hub() && self.scheme == other.scheme
+		} else {
+			self == other
+		}
+	}
+
 	pub(crate) fn validate(&self) -> Result<()> {
 		match (self.kind.is_view(), self.view.auth()) {
 			(true, None) => bail!("View auth requires view metadata"),

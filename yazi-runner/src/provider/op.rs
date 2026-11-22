@@ -2,7 +2,7 @@ use mlua::{Lua, Table};
 use strum::AsRefStr;
 use tokio::sync::mpsc;
 use yazi_binding::MpscRx;
-use yazi_fs::{engine::{Attrs, Demand}, file::File};
+use yazi_fs::{engine::{Attrs, Demand}, file::File, stat::Stat};
 use yazi_shared::{id::Id, path::PathBufDyn, url::UrlBuf};
 
 use super::{Handle, ProvideChunk, ProvidePeer};
@@ -18,6 +18,7 @@ pub enum ProvideOp {
 	Lstat { url: UrlBuf },
 	Stat { url: UrlBuf, handle: Option<Handle> },
 	ReadDir { url: UrlBuf },
+	Prepare { from: UrlBuf, to: UrlBuf, stat: Stat, force: bool },
 	Revalidate { file: File },
 	File { url: UrlBuf, handle: Option<Handle> },
 	Open { url: UrlBuf, attrs: Attrs, demand: Demand },
@@ -30,8 +31,9 @@ pub enum ProvideOp {
 	RemoveDir { url: UrlBuf },
 	RemoveDirAll { url: UrlBuf },
 	RemoveFile { url: UrlBuf },
-	Rename { from: UrlBuf, to: PathBufDyn },
-	Symlink { original: Vec<u8>, url: UrlBuf, is_dir: bool },
+	Rename { from: UrlBuf, to: UrlBuf },
+	SymlinkDir { original: Vec<u8>, url: UrlBuf, force: bool },
+	SymlinkFile { original: Vec<u8>, url: UrlBuf, force: bool },
 	Trash { url: UrlBuf },
 	Read { url: UrlBuf, handle: Handle, offset: u64 },
 	// Write chunks carry requested positions, its ACKs carry actual end positions.
@@ -77,14 +79,24 @@ impl ProvideOp {
 				t.raw_set("attrs", attrs)?;
 				t.raw_set("demand", demand)?;
 			}
-			Self::HardLink { from, to } | Self::Rename { from, to } => {
+			Self::HardLink { from, to } => {
 				t.raw_set("from", from)?;
 				t.raw_set("to", to)?;
 			}
-			Self::Symlink { original, url, is_dir } => {
+			Self::Prepare { from, to, stat, force } => {
+				t.raw_set("from", from)?;
+				t.raw_set("to", to)?;
+				t.raw_set("stat", stat)?;
+				t.raw_set("force", force)?;
+			}
+			Self::Rename { from, to } => {
+				t.raw_set("from", from)?;
+				t.raw_set("to", to)?;
+			}
+			Self::SymlinkDir { original, url, force } | Self::SymlinkFile { original, url, force } => {
 				t.raw_set("original", lua.create_external_string(original)?)?;
 				t.raw_set("url", url)?;
-				t.raw_set("is_dir", is_dir)?;
+				t.raw_set("force", force)?;
 			}
 			Self::Read { url, handle, offset } => {
 				t.raw_set("url", url)?;

@@ -19,7 +19,7 @@ impl Partitions {
 
 			loop {
 				match tokio::task::spawn_blocking(Self::all).await {
-					Ok(Ok(new)) => me.write().set(new),
+					Ok(Ok(new)) => *me.write() = new,
 					result => error!("Error encountered while updating partitions: {result:?}"),
 				}
 
@@ -29,7 +29,7 @@ impl Partitions {
 		});
 	}
 
-	pub(super) fn all() -> io::Result<Vec<Partition>> {
+	pub(super) fn all() -> io::Result<Self> {
 		let mut mode = 0;
 		bool_ok(unsafe { SetThreadErrorMode(SEM_FAILCRITICALERRORS, &mut mode) })?;
 		defer! { unsafe { SetThreadErrorMode(mode, ptr::null_mut()); } };
@@ -43,7 +43,7 @@ impl Partitions {
 		Self::drives(&mut result);
 
 		result.sort_unstable_by(|a, b| (&a.src, &a.dist).cmp(&(&b.src, &b.dist)));
-		Ok(result)
+		Ok(result.into())
 	}
 
 	fn volumes(

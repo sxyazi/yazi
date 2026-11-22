@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use mlua::{IntoLua, Lua, Value};
+use mlua::{FromLua, IntoLua, Lua, Table, Value};
 use yazi_binding::time::Time;
 
 use crate::stat::{Stat, StatMode};
@@ -65,6 +65,19 @@ impl TryFrom<Attrs> for std::fs::Permissions {
 	}
 }
 
+impl TryFrom<Table> for Attrs {
+	type Error = mlua::Error;
+
+	fn try_from(t: Table) -> Result<Self, Self::Error> {
+		Ok(Self {
+			mode:  t.raw_get::<Option<u16>>("mode")?.map(StatMode::try_from).transpose()?,
+			atime: t.raw_get("atime")?,
+			btime: t.raw_get("btime")?,
+			mtime: t.raw_get("mtime")?,
+		})
+	}
+}
+
 impl Attrs {
 	pub fn mode(mode: StatMode) -> Self { Self { mode: Some(mode), ..Default::default() } }
 
@@ -77,6 +90,15 @@ impl Attrs {
 	pub fn atime_dur(self) -> Option<Duration> { self.atime?.try_into().ok() }
 
 	pub fn mtime_dur(self) -> Option<Duration> { self.mtime?.try_into().ok() }
+}
+
+impl FromLua for Attrs {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::Nil => Ok(Self::default()),
+			_ => Table::from_lua(value, lua)?.try_into(),
+		}
+	}
 }
 
 impl IntoLua for Attrs {

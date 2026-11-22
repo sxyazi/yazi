@@ -102,6 +102,15 @@ pub trait Engine: Sized + AsUrl {
 		async move { self.demand().read(true).open(self.as_url()).await }
 	}
 
+	fn prepare(
+		&self,
+		_from: Url<'_>,
+		_stat: Stat,
+		_force: bool,
+	) -> impl Future<Output = io::Result<Option<UrlBuf>>> {
+		async { Ok(None) }
+	}
+
 	fn read_dir(self) -> impl Future<Output = io::Result<Self::ReadDir>>;
 
 	fn read_link(&self) -> impl Future<Output = io::Result<PathBufDyn>>;
@@ -155,32 +164,21 @@ pub trait Engine: Sized + AsUrl {
 
 	fn remove_file(&self) -> impl Future<Output = io::Result<()>>;
 
-	fn rename<P>(&self, to: P) -> impl Future<Output = io::Result<()>>
+	fn rename<U>(&self, to: U) -> impl Future<Output = io::Result<UrlBuf>>
 	where
-		P: DynPath;
+		U: AsUrl;
 
 	fn set_attrs(&self, attrs: Attrs) -> impl Future<Output = io::Result<()>>;
 
 	fn stat(&self) -> impl Future<Output = io::Result<Stat>>;
 
-	fn symlink<S, F>(&self, original: S, _is_dir: F) -> impl Future<Output = io::Result<()>>
+	fn symlink_dir<S>(&self, original: S, force: bool) -> impl Future<Output = io::Result<()>>
 	where
-		S: AsStrand,
-		F: AsyncFnOnce() -> io::Result<bool>;
+		S: AsStrand;
 
-	fn symlink_dir<S>(&self, original: S) -> impl Future<Output = io::Result<()>>
+	fn symlink_file<S>(&self, original: S, force: bool) -> impl Future<Output = io::Result<()>>
 	where
-		S: AsStrand,
-	{
-		self.symlink(original, async || Ok(true))
-	}
-
-	fn symlink_file<S>(&self, original: S) -> impl Future<Output = io::Result<()>>
-	where
-		S: AsStrand,
-	{
-		self.symlink(original, async || Ok(false))
-	}
+		S: AsStrand;
 
 	fn trash(&self) -> impl Future<Output = io::Result<()>>;
 

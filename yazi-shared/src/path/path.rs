@@ -148,6 +148,8 @@ impl<'p> PathDyn<'p> {
 		})
 	}
 
+	pub fn non_empty(self) -> Option<Self> { (!self.is_empty()).then_some(self) }
+
 	pub fn parent(self) -> Option<Self> {
 		Some(match self {
 			Self::Os(p) => Self::Os(p.parent()?),

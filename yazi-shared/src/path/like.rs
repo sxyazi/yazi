@@ -35,6 +35,8 @@ pub trait PathLike: DynPath {
 
 	fn name(&self) -> Option<Strand<'_>> { self.dyn_path().name() }
 
+	fn non_empty(&self) -> Option<PathDyn<'_>> { self.dyn_path().non_empty() }
+
 	fn parent(&self) -> Option<PathDyn<'_>> { self.dyn_path().parent() }
 
 	fn rsplit_pred<T>(&self, pred: T) -> Option<(PathDyn<'_>, PathDyn<'_>)>

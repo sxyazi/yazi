@@ -1,4 +1,4 @@
-use std::{io, sync::Arc};
+use std::{io::{self, ErrorKind}, sync::Arc};
 
 use mlua::FromLua;
 use tokio::sync::mpsc;
@@ -151,6 +151,14 @@ impl<'a> Engine for Lua<'a> {
 		Ok(Self::Me { url, service: VFS.service(url.auth())? })
 	}
 
+	async fn prepare(&self, from: Url<'_>, stat: Stat, force: bool) -> io::Result<Option<UrlBuf>> {
+		if !self.capabilities().await?.prepare {
+			return Ok(None);
+		}
+
+		Ok(self.call(ProvideOp::Prepare { from: from.into(), to: self.to_url(), stat, force }).await.0?)
+	}
+
 	async fn read_dir(self) -> io::Result<Self::ReadDir> {
 		let url = self.to_url();
 		let (tx, rx) = mpsc::channel(200);
@@ -171,7 +179,7 @@ impl<'a> Engine for Lua<'a> {
 		let cap = self.capabilities().await?.reroute;
 		let mask = if self.is_absolute() { 0b10 } else { 0b01 };
 		if cap & mask == 0 {
-			return Err(io::ErrorKind::Unsupported.into());
+			return Err(ErrorKind::Unsupported.into());
 		}
 
 		let url = self.to_url();
@@ -208,14 +216,19 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::RemoveFile { url }).await.ok()?)
 	}
 
-	async fn rename<P>(&self, to: P) -> io::Result<()>
+	async fn rename<U>(&self, to: U) -> io::Result<UrlBuf>
 	where
-		P: DynPath,
+		U: AsUrl,
 	{
-		let from = self.to_url();
-		let to = to.dyn_path().to_owned();
+		let to = to.as_url();
+		let op = ProvideOp::Rename { from: self.to_url(), to: to.to_owned() };
 
-		Ok(self.call(ProvideOp::Rename { from, to }).await.ok()?)
+		let renamed: UrlBuf = self.call(op).await.0?;
+		if renamed.loc() != to.loc() || !renamed.auth().same_namespace(to.auth()) {
+			return Err(io::Error::new(ErrorKind::InvalidData, "rename returned an unrelated URL"));
+		}
+
+		Ok(renamed)
 	}
 
 	async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
@@ -230,15 +243,24 @@ impl<'a> Engine for Lua<'a> {
 		Ok(self.call(ProvideOp::Stat { url, handle: None }).await.0?)
 	}
 
-	async fn symlink<S, F>(&self, original: S, is_dir: F) -> io::Result<()>
+	async fn symlink_dir<S>(&self, original: S, force: bool) -> io::Result<()>
 	where
 		S: AsStrand,
-		F: AsyncFnOnce() -> io::Result<bool>,
 	{
 		let original = original.as_strand().encoded_bytes().to_vec();
 		let url = self.to_url();
 
-		Ok(self.call(ProvideOp::Symlink { original, url, is_dir: is_dir().await? }).await.ok()?)
+		Ok(self.call(ProvideOp::SymlinkDir { original, url, force }).await.ok()?)
+	}
+
+	async fn symlink_file<S>(&self, original: S, force: bool) -> io::Result<()>
+	where
+		S: AsStrand,
+	{
+		let original = original.as_strand().encoded_bytes().to_vec();
+		let url = self.to_url();
+
+		Ok(self.call(ProvideOp::SymlinkFile { original, url, force }).await.ok()?)
 	}
 
 	async fn trash(&self) -> io::Result<()> {

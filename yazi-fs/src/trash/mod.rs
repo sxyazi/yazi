@@ -1,6 +1,6 @@
 yazi_macro::mod_flat!(entries entry lua trash_id);
 
-#[cfg(trash_unix)]
+#[cfg(not(trash_unsupported))]
 yazi_macro::mod_flat!(common);
 
 #[cfg(target_os = "macos")]
@@ -15,5 +15,4 @@ yazi_macro::mod_flat!(freedesktop);
 #[cfg(trash_unsupported)]
 yazi_macro::mod_flat!(unsupported);
 
-#[cfg(not(trash_unsupported))]
 yazi_macro::mod_flat!(traits);

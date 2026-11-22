@@ -19,6 +19,7 @@ pub struct Capabilities {
 	pub hard_link:        bool,
 	pub lstat:            bool,
 	pub open:             bool,
+	pub prepare:          bool,
 	pub read_dir:         bool,
 	pub read_link:        bool,
 	pub remove_dir:       bool,
@@ -30,7 +31,6 @@ pub struct Capabilities {
 	pub revalidate:       bool,
 	pub set_attrs:        bool,
 	pub stat:             bool,
-	pub symlink:          bool,
 	pub symlink_dir:      bool,
 	pub symlink_file:     bool,
 	pub trash:            bool,
@@ -52,6 +52,7 @@ impl Capabilities {
 			hard_link:        true,
 			lstat:            true,
 			open:             true,
+			prepare:          false,
 			read_dir:         true,
 			read_link:        true,
 			remove_dir:       true,
@@ -63,7 +64,6 @@ impl Capabilities {
 			revalidate:       true,
 			set_attrs:        true,
 			stat:             true,
-			symlink:          true,
 			symlink_dir:      true,
 			symlink_file:     true,
 			trash:            true,
@@ -93,6 +93,7 @@ impl Capabilities {
 			b"hard_link" => self.hard_link = get(0..=1)? != 0,
 			b"lstat" => self.lstat = get(0..=1)? != 0,
 			b"open" => self.open = get(0..=1)? != 0,
+			b"prepare" => self.prepare = get(0..=1)? != 0,
 			b"read_dir" => self.read_dir = get(0..=1)? != 0,
 			b"read_link" => self.read_link = get(0..=1)? != 0,
 			b"remove_dir" => self.remove_dir = get(0..=1)? != 0,
@@ -104,7 +105,6 @@ impl Capabilities {
 			b"revalidate" => self.revalidate = get(0..=1)? != 0,
 			b"set_attrs" => self.set_attrs = get(0..=1)? != 0,
 			b"stat" => self.stat = get(0..=1)? != 0,
-			b"symlink" => self.symlink = get(0..=1)? != 0,
 			b"symlink_dir" => self.symlink_dir = get(0..=1)? != 0,
 			b"symlink_file" => self.symlink_file = get(0..=1)? != 0,
 			b"trash" => self.trash = get(0..=1)? != 0,
@@ -129,7 +129,6 @@ impl Capabilities {
 			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope => {
 				caps.copy_from = false;
 				caps.hard_link = false;
-				caps.symlink = false;
 				caps.symlink_dir = false;
 				caps.symlink_file = false;
 				caps.trash = false;
@@ -138,6 +137,9 @@ impl Capabilities {
 			AuthKind::View => Self::default(),
 		}
 	}
+
+	#[inline]
+	pub fn has_symlink(self) -> bool { self.symlink_dir || self.symlink_file }
 }
 
 impl FromLua for Capabilities {

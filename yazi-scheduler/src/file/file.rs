@@ -24,7 +24,12 @@ impl File {
 	pub(crate) async fn copy(&self, mut task: FileInCopy) -> Result<(), FileOutCopy> {
 		let id = task.id;
 
-		if !task.force {
+		if engine::capabilities(&task.to).await?.prepare
+			&& let stat = task.init().await?
+			&& let Some(u) = engine::prepare(&task.from, &task.to, stat, task.force).await?
+		{
+			task.to = u;
+		} else if !task.force {
 			task.to = if task.init().await?.is_dir() {
 				unique_dir(task.to).await
 			} else {
@@ -60,8 +65,8 @@ impl File {
 		Ok(self.ops.out(id, FileOutCopy::Succ))
 	}
 
-	pub(crate) async fn copy_do(&self, task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
+	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
+		ctx_or_not_found!(task, Transaction::unlink(&mut task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
 		while let Some(result) = rx.recv().await {
@@ -80,7 +85,12 @@ impl File {
 	pub(crate) async fn r#move(&self, mut task: FileInMove) -> Result<(), FileOutMove> {
 		let id = task.id;
 
-		if !task.force {
+		if engine::capabilities(&task.to).await?.prepare
+			&& let stat = task.init().await?
+			&& let Some(u) = engine::prepare(&task.from, &task.to, stat, task.force).await?
+		{
+			task.to = u;
+		} else if !task.force {
 			task.to = if task.init().await?.is_dir() {
 				unique_dir(task.to).await
 			} else {
@@ -89,15 +99,15 @@ impl File {
 			.context("Cannot determine unique destination name")?;
 		}
 
-		self.ops.out(id, HookInOutMove::new(&task.from, &task.to));
-		TasksProxy::update_succeed(id, [&task.to], true);
-
-		if !task.follow && ok_or_not_found(engine::rename(&task.from, &task.to).await).is_ok() {
+		if task.follow {
+			self.ops.out(id, HookInOutMove::new(&task.from, &task.to));
+			TasksProxy::update_succeed(id, [&task.to], true);
+		} else if ok_or_not_found(self.move_fast(&task).await).is_ok() {
 			return Ok(self.ops.out(id, FileOutMove::Succ));
 		}
 
 		let (mut links, mut files) = (vec![], vec![]);
-		let reorder = task.follow && ctx!(task, engine::capabilities(&task.from).await)?.symlink;
+		let reorder = task.follow && ctx!(task, engine::capabilities(&task.from).await)?.has_symlink();
 
 		super::traverse::<FileOutMove, _, _, _, _, _>(
 			task,
@@ -143,8 +153,18 @@ impl File {
 		Ok(self.ops.out(id, FileOutMove::Succ))
 	}
 
-	pub(crate) async fn move_do(&self, task: FileInMove) -> Result<(), FileOutMoveDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&task.to).await);
+	async fn move_fast(&self, task: &FileInMove) -> io::Result<()> {
+		let renamed = engine::rename(&task.from, &task.to).await;
+		let to = renamed.as_ref().unwrap_or(&task.to);
+
+		self.ops.out(task.id, HookInOutMove::new(&task.from, to));
+		TasksProxy::update_succeed(task.id, [to], true);
+
+		renamed.map(|_| ())
+	}
+
+	pub(crate) async fn move_do(&self, mut task: FileInMove) -> Result<(), FileOutMoveDo> {
+		ctx_or_not_found!(task, Transaction::unlink(&mut task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
 		while let Some(result) = rx.recv().await {
@@ -174,47 +194,39 @@ impl File {
 	}
 
 	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
-		let mut stat = task.stat;
-		if stat.is_none() && (task.follow || task.delete) {
-			stat = Some(ctx!(task, Self::dstat(&task.from, task.follow, None).await)?);
-		}
+		let file = ctx!(task, engine::file(&task.from).await)?;
+		let path = file.extra.backing().map_or(task.from.loc(), Into::into);
 
-		let mut src: PathCow = task.from.loc().into();
-		if task.follow && stat.unwrap().is_link() {
-			match engine::read_link(&task.from).await {
-				Ok(p) if p.is_absolute() => src = p.into(),
-				Ok(p) => src = ctx!(task, task.from.loc().parent().unwrap().try_join(p))?.into(),
-				Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-				Err(e) => ctx!(task, Err(e))?,
+		let mut target: PathCow = path.into();
+		if task.follow && file.is_link() {
+			target = ctx!(task, file.extra.link_to(), "Cannot determine symbolic link target")?.into();
+
+			if !target.is_absolute() {
+				let p = ctx!(task, path.parent(), "Symbolic link path has no parent")?;
+				target = ctx!(task, p.try_join(&target))?.into();
 			}
 		}
 
 		if task.relative {
 			let canon = ctx!(task, engine::canonicalize(task.to.parent().unwrap()).await)?;
-			src = ctx!(task, path_relative_to(canon.loc(), src))?;
+			target = ctx!(task, path_relative_to(canon.loc(), target))?;
 		}
 
-		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
 		ctx!(
 			task,
-			engine::symlink(&task.to, src, async || {
-				Ok(match stat {
-					Some(stat) => stat.is_dir(),
-					None => {
-						stat = Some(Self::dstat(&task.from, task.follow, None).await?);
-						stat.unwrap().is_dir()
-					}
-				})
-			})
-			.await
+			if file.is_dir() {
+				engine::symlink_dir(&task.to, target, true).await
+			} else {
+				engine::symlink_file(&task.to, target, true).await
+			}
 		)?;
 
 		if task.delete {
-			let stat = stat.unwrap();
+			let stat = task.stat.unwrap_or(file.lstat());
 			if stat.is_dir() && stat.is_indirect() {
-				engine::remove_dir(&task.from).await.ok();
+				ctx_or_not_found!(task, engine::remove_dir(&task.from).await);
 			} else {
-				engine::remove_file(&task.from).await.ok();
+				ctx_or_not_found!(task, engine::remove_file(&task.from).await);
 			}
 		}
 
@@ -378,7 +390,7 @@ impl File {
 		Ok(self.ops.out(id, FileOutUpload::Succ))
 	}
 
-	pub(crate) async fn upload_do(&self, task: FileInUpload) -> Result<(), FileOutUploadDo> {
+	pub(crate) async fn upload_do(&self, mut task: FileInUpload) -> Result<(), FileOutUploadDo> {
 		let stat = task.stat.unwrap();
 		let cache = ctx!(task, task.cache.as_ref(), "Cannot determine cache path")?;
 
@@ -402,13 +414,14 @@ impl File {
 			Err(anyhow!("Failed to work on: {task:?}: remote file has changed during upload"))?;
 		}
 
-		ctx!(task, engine::rename(&tmp, &task.target).await, "Cannot persist uploaded file")?;
+		task.target =
+			ctx!(task, engine::rename(&tmp, &task.target).await, "Cannot persist uploaded file")?;
 
 		let stat =
 			ctx!(task, Self::dstat(&task.target, true, None).await, "Cannot stat uploaded file")?;
 		ctx!(task, Stamp::write(stat, task.target.as_url()).await)?;
 
-		Ok(self.ops.out(task.id, FileOutUploadDo::Succ))
+		Ok(self.ops.out(task.id, FileOutUploadDo::Succ(task.top.then_some(task.target))))
 	}
 
 	pub(super) async fn dstat<U>(url: U, follow: bool, dent: Option<DirEntry>) -> io::Result<Stat>

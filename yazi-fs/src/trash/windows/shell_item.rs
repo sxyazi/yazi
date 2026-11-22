@@ -1,9 +1,9 @@
 use std::{ffi::{OsStr, OsString, c_void}, io, os::windows::ffi::OsStringExt, path::{Path, PathBuf}};
 
-use windows::{Win32::{Foundation::*, Storage::EnhancedStorage::*, System::{Com::{StructuredStorage::PropVariantToBSTR, *}, SystemServices::*}, UI::Shell::*}, core::{Interface, PCWSTR}};
+use windows::{Win32::{Foundation::*, Storage::EnhancedStorage::*, System::{Com::{StructuredStorage::PropVariantToBSTR, *}, SystemServices::*}, UI::Shell::*}, core::{ComObject, Interface, PCWSTR}};
 use yazi_shim::ToWide;
 
-use super::{super::{TrashEntry, TrashId, TrashStat}, trash::{error, operate, time}};
+use super::{super::{TrashEntry, TrashId, TrashStat}, RecycleSink, trash::{error, operate, time}};
 use crate::stat::Stat;
 
 pub(super) struct ShellItem(pub(super) IShellItem);
@@ -90,12 +90,23 @@ impl ShellItem {
 
 	pub(super) fn entry(&self, id: TrashId, original: Option<PathBuf>) -> io::Result<TrashEntry> {
 		let backing: PathBuf = self.display_name(SIGDN_FILESYSPATH)?.into();
-		let (lstat, stat) = Stat::from_trash(&backing, backing.file_name().unwrap_or_default())?;
-		Ok(TrashEntry { id, stat, lstat, original, link_to: None, backing })
+		Ok(TrashEntry { id, original, backing })
 	}
 
 	pub(super) fn delete(&self) -> io::Result<()> {
 		operate(FOF_NO_UI, |operation| unsafe { operation.DeleteItem(&self.0, None) })
+	}
+
+	pub(super) fn recycle(&self) -> io::Result<Self> {
+		let sink = ComObject::new(RecycleSink::default());
+		operate(
+			FOF_NO_UI | FOF_ALLOWUNDO | FOFX_RECYCLEONDELETE | FOFX_EARLYFAILURE,
+			|operation| unsafe {
+				operation.DeleteItem(&self.0, sink.as_interface::<IFileOperationProgressSink>())
+			},
+		)?;
+
+		sink.0.replace(Err(E_ABORT.into())).map(Self).map_err(error)
 	}
 
 	pub(super) fn display_name(&self, kind: SIGDN) -> io::Result<OsString> {

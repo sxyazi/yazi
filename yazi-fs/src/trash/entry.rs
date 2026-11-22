@@ -1,21 +1,19 @@
-use std::{ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
 #[cfg(trash_unix)]
-use std::{ffi::OsString, io};
+use std::ffi::OsString;
+use std::{ffi::OsStr, fs, io, ops::Deref, path::{Path, PathBuf}};
 
-use mlua::{AnyUserData, FromLua, Lua, UserData, UserDataFields, Value};
-use yazi_shared::path::PathBufDyn;
-use yazi_shim::mlua::UserDataFieldsExt;
+use mlua::{AnyUserData, ExternalResult, FromLua, Lua, UserData, UserDataFields, UserDataMethods, Value};
+use tokio::task::spawn_blocking;
+use yazi_shared::{path::PathBufDyn, url::UrlBuf};
+use yazi_shim::{fs::Error, mlua::UserDataFieldsExt};
 
-use super::TrashId;
-use crate::stat::Stat;
+use super::{TrashId, TrashStat};
+use crate::{file::{File, FileExtra}, stat::{Stat, StatType}};
 
 #[derive(Clone, Debug)]
-pub(crate) struct TrashEntry {
+pub struct TrashEntry {
 	pub(super) id:       TrashId,
-	pub(super) stat:     Stat,
-	pub(super) lstat:    Stat,
 	pub(super) original: Option<PathBuf>,
-	pub(super) link_to:  Option<PathBuf>,
 	pub(super) backing:  PathBuf,
 }
 
@@ -31,21 +29,16 @@ impl TrashEntry {
 	where
 		B: Into<PathBuf>,
 	{
-		use super::TrashStat;
 		let backing = backing.into();
 
-		let name = id
-			.rel()
+		id.rel()
 			.file_name()
 			.or_else(|| original.as_deref().and_then(Path::file_name))
 			.or_else(|| backing.file_name())
 			.filter(|name| !name.is_empty())
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid trash item path"))?;
 
-		let (lstat, stat) = Stat::from_trash(&backing, name)?;
-		let link_to = if lstat.is_link() { std::fs::read_link(&backing).ok() } else { None };
-
-		Ok(Self { id, stat, lstat, original, link_to, backing })
+		Ok(Self { id, original, backing })
 	}
 
 	#[cfg(trash_unix)]
@@ -74,15 +67,27 @@ impl TrashEntry {
 			.expect("trash entry must have a name")
 	}
 
-	#[cfg(any(trash_unix, windows))]
-	pub(super) fn into_file(self, url: impl Into<yazi_shared::url::UrlBuf>) -> crate::file::File {
-		use crate::file::{File, FileExtra};
+	pub(super) fn file_type(&self) -> io::Result<StatType> {
+		Ok(fs::symlink_metadata(&self.backing)?.file_type().into())
+	}
 
-		File {
-			url:   url.into(),
-			stat:  self.stat,
-			extra: FileExtra::new(self.lstat, self.link_to.map(Into::into), Some(self.backing)),
-		}
+	pub(super) fn lstat(&self) -> io::Result<Stat> {
+		Ok(Stat::new(self.name(), fs::symlink_metadata(&self.backing)?))
+	}
+
+	fn stat(&self) -> io::Result<Stat> {
+		Stat::from_trash(&self.backing, self.name()).map(|(_, stat)| stat)
+	}
+
+	pub(super) fn file(&self, url: impl Into<UrlBuf>) -> io::Result<File> {
+		let (lstat, stat) = Stat::from_trash(&self.backing, self.name())?;
+		let link_to = if lstat.is_link() { fs::read_link(&self.backing).ok() } else { None };
+
+		Ok(File {
+			url: url.into(),
+			stat,
+			extra: FileExtra::new(lstat, link_to.map(Into::into), Some(self.backing.clone())),
+		})
 	}
 }
 
@@ -100,10 +105,30 @@ impl UserData for TrashEntry {
 		});
 		fields.add_cached_field("rel", |_, me| Ok(PathBufDyn::from(me.rel())));
 		fields.add_cached_field("name", |lua, me| lua.create_string(me.name().as_encoded_bytes()));
-		fields.add_cached_field("stat", |_, me| Ok(me.stat));
-		fields.add_cached_field("lstat", |_, me| Ok(me.lstat));
 		fields.add_cached_field("original", |_, me| Ok(me.original.clone().map(PathBufDyn::Os)));
-		fields.add_cached_field("link_to", |_, me| Ok(me.link_to.clone().map(PathBufDyn::Os)));
 		fields.add_cached_field("backing", |_, me| Ok(PathBufDyn::Os(me.backing.clone())));
+	}
+
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_method("lstat", |_, me, ()| async move {
+			let me = me.clone();
+
+			Ok(spawn_blocking(move || me.lstat()).await.into_lua_err()?.map_err(Error::from))
+		});
+		methods.add_async_method("stat", |_, me, ()| async move {
+			let me = me.clone();
+
+			Ok(spawn_blocking(move || me.stat()).await.into_lua_err()?.map_err(Error::from))
+		});
+		methods.add_async_method("file", |_, me, url: UrlBuf| async move {
+			let me = me.clone();
+
+			Ok(spawn_blocking(move || me.file(url)).await.into_lua_err()?.map_err(Error::from))
+		});
+		methods.add_async_method("dummy", |_, me, url: UrlBuf| async move {
+			let me = me.clone();
+
+			spawn_blocking(move || File::from_dummy(url, me.file_type().ok())).await.into_lua_err()
+		});
 	}
 }

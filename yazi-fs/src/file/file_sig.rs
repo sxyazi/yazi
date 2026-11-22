@@ -15,13 +15,12 @@ impl Deref for FileSig<'_> {
 
 impl Hash for FileSig<'_> {
 	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.url.hash(state);
+		StatSig(self.stat).hash(state);
+
 		if let Some(backing) = self.extra.backing() {
 			Url::regular(backing).hash(state);
-		} else {
-			self.url.hash(state);
 		}
-
-		StatSig(self.stat).hash(state);
 		if self.is_link() {
 			StatSig(self.lstat()).hash(state);
 		}

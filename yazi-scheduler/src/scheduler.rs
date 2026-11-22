@@ -134,7 +134,7 @@ impl Scheduler {
 	}
 
 	pub fn file_upload(&self, target: UrlBuf) {
-		let mut r#in = FileInUpload { id: Id::ZERO, target, stat: None, cache: None };
+		let mut r#in = FileInUpload { id: Id::ZERO, target, stat: None, cache: None, top: true };
 		let hook = HookInUpload::new(&r#in.target);
 		self.add_hooked(&mut r#in, hook, |_| ());
 

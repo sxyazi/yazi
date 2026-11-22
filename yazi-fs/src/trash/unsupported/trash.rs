@@ -1,4 +1,4 @@
-use std::{io, path::Path};
+use std::{ffi::OsStr, io, path::Path};
 
 use super::super::{TrashEntries, TrashEntry, TrashId};
 use crate::{file::File, stat::Stat};
@@ -8,15 +8,20 @@ pub struct Trash;
 impl Trash {
 	pub fn new() -> io::Result<Self> { Ok(Self) }
 
+	pub(crate) fn create(
+		&self,
+		_name: &OsStr,
+		_stat: Stat,
+		_original: &Path,
+	) -> io::Result<TrashEntry> {
+		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
+	}
+
+	pub(crate) fn rename(&self, _entry: &TrashEntry, _to: &Path) -> io::Result<()> {
+		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
+	}
+
 	pub fn list(&self, _entry: Option<&TrashEntry>) -> io::Result<Vec<TrashEntry>> {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
-	}
-
-	pub fn stat(&self, _entry: &TrashEntry) -> io::Result<Stat> {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
-	}
-
-	pub fn lstat(&self, _entry: &TrashEntry) -> io::Result<Stat> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 
@@ -44,7 +49,7 @@ impl Trash {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 
-	pub fn rename(&self, _entry: &TrashEntry, _path: &Path) -> io::Result<()> {
+	pub(crate) fn set_original(_entry: &TrashEntry, _original: &Path) -> io::Result<()> {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "trash is not supported on this platform"))
 	}
 

@@ -169,8 +169,9 @@ function M:place(tmp)
 	end
 
 	local src = only and only.url or tmp
-	if fs.rename(src, dest) then
-		return dest
+	local renamed = fs.rename(src, dest)
+	if renamed then
+		return renamed
 	elseif is_file then
 		fs.remove_file(dest)
 	else

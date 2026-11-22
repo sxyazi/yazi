@@ -2,14 +2,30 @@ use std::io;
 
 use mlua::{BorrowedBytes, ExternalError, ExternalResult, FromLua, IntoLuaMulti, UserData, UserDataMethods, Value};
 use tokio::task::spawn_blocking;
-use yazi_shared::path::{PathBufDyn, PathLike};
+use yazi_shared::{path::{PathLike, PathRef}, strand::StrandLike};
 use yazi_shim::fs::Error;
 
 use super::{Trash, TrashEntries, TrashEntry, TrashId};
-use crate::file::File;
+use crate::{file::File, stat::Stat};
 
 impl UserData for Trash {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_function(
+			"create",
+			|lua, (name, stat, original): (BorrowedBytes, Stat, Option<PathRef>)| async move {
+				let name = name.to_os()?;
+				let original = original.map(|p| p.to_os_owned()).transpose()?.unwrap_or_default();
+
+				match spawn_blocking(move || Self::new()?.create(&name, stat, &original))
+					.await
+					.into_lua_err()?
+				{
+					Ok(entry) => entry.into_lua_multi(&lua),
+					Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
+				}
+			},
+		);
+
 		methods.add_async_function("empty", |lua, ()| async move {
 			match spawn_blocking(|| Self::new()?.empty()).await.into_lua_err()? {
 				Ok(()) => true.into_lua_multi(&lua),
@@ -18,11 +34,11 @@ impl UserData for Trash {
 		});
 
 		methods.add_async_function("entry", |lua, value: Value| async move {
-			if let Value::UserData(ud) = value {
-				return ud.borrow::<TrashEntry>()?.clone().into_lua_multi(&lua);
-			}
+			let id = match TrashId::from_lua(value, &lua) {
+				Ok(id) => id,
+				Err(e) => return (Value::Nil, Error::from_lua_err(e)).into_lua_multi(&lua),
+			};
 
-			let id = TrashId::from_lua(value, &lua)?;
 			match spawn_blocking(move || Self::new()?.entry(&id)).await.into_lua_err()? {
 				Ok(entry) => entry.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
@@ -32,13 +48,6 @@ impl UserData for Trash {
 		methods.add_async_function("list", |lua, entry: Option<TrashEntry>| async move {
 			match spawn_blocking(move || Self::new()?.list(entry.as_ref())).await.into_lua_err()? {
 				Ok(items) => items.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
-			}
-		});
-
-		methods.add_async_function("lstat", |lua, entry: TrashEntry| async move {
-			match spawn_blocking(move || Self::new()?.lstat(&entry)).await.into_lua_err()? {
-				Ok(stat) => stat.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
 			}
 		});
@@ -59,18 +68,14 @@ impl UserData for Trash {
 			},
 		);
 
-		methods.add_async_function(
-			"rename",
-			|lua, (entry, path): (TrashEntry, PathBufDyn)| async move {
-				match spawn_blocking(move || Self::new()?.rename(&entry, path.as_os()?))
-					.await
-					.into_lua_err()?
-				{
-					Ok(()) => true.into_lua_multi(&lua),
-					Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
-				}
-			},
-		);
+		methods.add_async_function("rename", |lua, (entry, to): (TrashEntry, PathRef)| async move {
+			let to = to.to_os_owned()?;
+
+			match spawn_blocking(move || Self::rename(&entry, &to)).await.into_lua_err()? {
+				Ok(()) => true.into_lua_multi(&lua),
+				Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+			}
+		});
 
 		methods.add_async_function("restore", |lua, entries: TrashEntries| async move {
 			match spawn_blocking(move || Self::new()?.restore(entries)).await.into_lua_err()? {
@@ -92,11 +97,16 @@ impl UserData for Trash {
 			},
 		);
 
-		methods.add_async_function("stat", |lua, entry: TrashEntry| async move {
-			match spawn_blocking(move || Self::new()?.stat(&entry)).await.into_lua_err()? {
-				Ok(stat) => stat.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::from(e)).into_lua_multi(&lua),
-			}
-		});
+		methods.add_async_function(
+			"set_original",
+			|lua, (entry, original): (TrashEntry, PathRef)| async move {
+				let original = original.to_os_owned()?;
+
+				match spawn_blocking(move || Self::set_original(&entry, &original)).await.into_lua_err()? {
+					Ok(()) => true.into_lua_multi(&lua),
+					Err(e) => (false, Error::from(e)).into_lua_multi(&lua),
+				}
+			},
+		);
 	}
 }

@@ -8,3 +8,9 @@ yazi_macro::mod_flat!(macos);
 
 #[cfg(windows)]
 yazi_macro::mod_flat!(windows);
+
+#[cfg(mount_bsd)]
+yazi_macro::mod_flat!(bsd);
+
+#[cfg(mount_unsupported)]
+yazi_macro::mod_flat!(unsupported);

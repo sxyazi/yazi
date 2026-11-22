@@ -1,6 +1,8 @@
 use std::io;
 
-use crate::{CleanupState, Task, TaskProg};
+use yazi_shared::url::UrlBuf;
+
+use crate::{CleanupState, Task, TaskProg, hook::HookIn};
 
 // --- Copy
 #[derive(Debug)]
@@ -463,7 +465,7 @@ impl FileOutUpload {
 #[derive(Debug)]
 pub(crate) enum FileOutUploadDo {
 	Adv(u64),
-	Succ,
+	Succ(Option<UrlBuf>),
 	Fail(String),
 }
 
@@ -478,7 +480,11 @@ impl FileOutUploadDo {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
 			}
-			Self::Succ => {
+			Self::Succ(Some(target)) if let Some(HookIn::Upload(hook)) = &mut task.hook => {
+				hook.target = target;
+				prog.succeeded_files += 1;
+			}
+			Self::Succ(_) => {
 				prog.succeeded_files += 1;
 			}
 			Self::Fail(reason) => {

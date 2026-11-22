@@ -12,6 +12,14 @@ macro_rules! impl_data_any {
 			$crate::impl_data_any!(@into_lua_default);
 		}
 	};
+	// --- register
+	(register $ty:ty) => {
+		$crate::inventory::submit! {
+			::yazi_shared::data::DataInventory {
+				from_lua: <$ty as ::yazi_shared::data::DataAny>::from_lua,
+			}
+		}
+	};
 	// --- from_into_lua
 	($ty:ty, from_into_lua = inherit) => {
 		impl ::yazi_shared::data::DataAny for $ty {
@@ -19,7 +27,7 @@ macro_rules! impl_data_any {
 			$crate::impl_data_any!(@from_lua_inherit);
 			$crate::impl_data_any!(@into_lua_inherit);
 		}
-		$crate::impl_data_any!(@from_lua_register $ty);
+		$crate::impl_data_any!(register $ty);
 	};
 	($ty:ty => $($target:ty),+ ; from_into_lua = inherit) => {
 		impl ::yazi_shared::data::DataAny for $ty {
@@ -27,7 +35,7 @@ macro_rules! impl_data_any {
 			$crate::impl_data_any!(@from_lua_inherit);
 			$crate::impl_data_any!(@into_lua_inherit);
 		}
-		$crate::impl_data_any!(@from_lua_register $ty);
+		$crate::impl_data_any!(register $ty);
 	};
 	// --- to_lua
 	($ty:ty, to_lua = $body:expr) => {
@@ -37,7 +45,7 @@ macro_rules! impl_data_any {
 			$crate::impl_data_any!(@into_lua_default);
 			$crate::impl_data_any!(@to_lua $body);
 		}
-		$crate::impl_data_any!(@from_lua_register $ty);
+		$crate::impl_data_any!(register $ty);
 	};
 	($ty:ty => $($target:ty),+ ; to_lua = $body:expr) => {
 		impl ::yazi_shared::data::DataAny for $ty {
@@ -46,7 +54,7 @@ macro_rules! impl_data_any {
 			$crate::impl_data_any!(@into_lua_default);
 			$crate::impl_data_any!(@to_lua $body);
 		}
-		$crate::impl_data_any!(@from_lua_register $ty);
+		$crate::impl_data_any!(register $ty);
 	};
 
 	(@core $($target:ty),*) => {
@@ -104,13 +112,6 @@ macro_rules! impl_data_any {
 
 			<Self as FromLua>::from_lua(value.clone(), lua)
 				.map(|v| Box::new(v) as Box<dyn ::yazi_shared::data::DataAny>)
-		}
-	};
-	(@from_lua_register $ty:ty) => {
-		$crate::inventory::submit! {
-			::yazi_shared::data::DataInventory {
-				from_lua: <$ty as ::yazi_shared::data::DataAny>::from_lua,
-			}
 		}
 	};
 }
