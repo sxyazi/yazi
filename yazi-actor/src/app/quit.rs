@@ -21,6 +21,12 @@ impl Actor for Quit {
 	const NAME: &str = "quit";
 
 	fn act(cx: &mut Ctx, Self::Form { opt }: Self::Form) -> Result<Data> {
+		if !opt.forced
+			&& cx.tabs().iter().filter_map(|tab| tab.view.as_ref()).any(|view| view.protect())
+		{
+			succ!();
+		}
+
 		cx.tasks.shutdown();
 		cx.mgr.shutdown();
 		yazi_plugin::shutdown();

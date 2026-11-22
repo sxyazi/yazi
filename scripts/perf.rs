@@ -1,5 +1,6 @@
 //! Build on Debian with `rustc --edition=2024 -O scripts/perf.rs -o target/yazi-perf`.
 //! Run `target/yazi-perf BASELINE [CANDIDATE]` with release binaries.
+//! Use `target/yazi-perf --editor BUILD [BUILD]` for builds with the native editor.
 
 #[cfg(not(all(target_os = "linux", target_arch = "x86_64")))]
 compile_error!("This benchmark currently targets Linux x86_64");
@@ -57,8 +58,9 @@ unsafe extern "C" {
 }
 
 fn main() -> Result<()> {
-	let mut args = env::args_os().skip(1);
-	let usage = "Usage: yazi-perf BASELINE [CANDIDATE]";
+	let mut args = env::args_os().skip(1).peekable();
+	let editor = args.next_if(|arg| arg == "--editor").is_some();
+	let usage = "Usage: yazi-perf [--editor] BASELINE [CANDIDATE]";
 	let baseline = fs::canonicalize(args.next().ok_or(usage)?)?;
 	let candidate = args.next().map(fs::canonicalize).transpose()?;
 	if args.next().is_some() {
@@ -78,6 +80,10 @@ fn main() -> Result<()> {
 			);
 		}
 		print!("{}", String::from_utf8_lossy(&version.stdout));
+	}
+
+	if editor {
+		return editor_bench(&programs);
 	}
 
 	let ticks = Command::new("getconf").arg("CLK_TCK").output()?;
@@ -138,6 +144,98 @@ fn main() -> Result<()> {
 		}
 	}
 	Ok(())
+}
+
+fn editor_bench(programs: &[Program]) -> Result<()> {
+	const METRICS: [&str; 4] = ["open_ms", "type_ms", "undo_ms", "save_ms"];
+	let temp = TempDir::new()?;
+	for target in [4 * 1024, 10 * 1024 * 1024] {
+		let mut text = String::from("undo-witness\n");
+		let line = "sample text \t示例内容 編集\n";
+		while text.len() < target {
+			text.push_str(line);
+		}
+		println!("{WIDTH}x{HEIGHT} cells, {} bytes, 48 typed keys", text.len());
+		println!("run  build         open_ms   type_ms   undo_ms   save_ms");
+
+		let mut samples = vec![Vec::with_capacity(RUNS); programs.len()];
+		for run in 0..=RUNS {
+			for i in 0..programs.len() {
+				let index = (run + i) % programs.len();
+				let program = &programs[index];
+				let state = temp.0.join(format!("{target}-{}-{run}", program.label));
+				let result = trial_editor(program, &state, &text)?;
+				if run > 0 {
+					print!("{run:>3}  {:<10}", program.label);
+					for value in result {
+						print!(" {value:>9.2}");
+					}
+					println!();
+					samples[index].push(result);
+				}
+			}
+		}
+		for (program, samples) in programs.iter().zip(samples) {
+			println!("{} (median and observed range)", program.label);
+			for (index, metric) in METRICS.iter().enumerate() {
+				let mut values: Vec<_> = samples.iter().map(|s| s[index]).collect();
+				values.sort_unstable_by(f64::total_cmp);
+				println!(
+					"  {metric:<12} {:>8.2}  [{:.2} .. {:.2}]",
+					values[RUNS / 2],
+					values[0],
+					values[RUNS - 1]
+				);
+			}
+		}
+	}
+	Ok(())
+}
+
+fn trial_editor(program: &Program, state: &Path, text: &str) -> Result<[f64; 4]> {
+	let fixture = state.join("fixture");
+	fs::create_dir_all(&fixture)?;
+	let path = fixture.join("sample.txt");
+	fs::write(&path, text)?;
+
+	let mut terminal = Terminal::start(&program.path, &fixture, state)?;
+	terminal.wait_frame("editor fixture", b"sample.txt")?;
+	// The terminal diff can split the mode label, so wait for the editor's title suffix.
+	let open = terminal.step(b"\r", "open native editor", b" | sample.txt")?;
+	terminal.step(b"i", "enter insert mode", b"Insert")?;
+	let mut keys = [b'x'; 48];
+	keys[47] = b'Z';
+	let typing = terminal.step(&keys, "type 48 characters", b"Z")?;
+	terminal.step(b"\x1b", "leave insert mode", b"Normal")?;
+	let undo = terminal.step(b"u", "undo typing", b"undo-witness")?;
+	if fs::read_to_string(&path)? != text {
+		return Err("Typing or undo changed the file before save".into());
+	}
+
+	terminal.step(b"i", "enter insert mode again", b"Insert")?;
+	terminal.step(b"Q", "type save marker", b"Q")?;
+	terminal.step(b"\x1b", "leave insert mode", b"Normal")?;
+	let expected_len = text.len() as u64 + 1;
+	let started = Instant::now();
+	terminal.master.write_all(b"\x13")?;
+	// Measure until the replacement is visible, then verify its contents outside the timer.
+	while fs::metadata(&path)?.len() != expected_len {
+		if started.elapsed() >= TIMEOUT {
+			return Err("Timed out waiting for the editor to save sample.txt".into());
+		}
+		thread::sleep(Duration::from_millis(1));
+	}
+	let save = started.elapsed();
+	let saved = fs::read_to_string(&path)?;
+	if saved.strip_prefix('Q') != Some(text) {
+		return Err("Saved bytes differ from the expected editor contents".into());
+	}
+	terminal.drain(Duration::from_millis(100))?;
+	terminal.master.write_all(b"\x1b")?;
+	terminal.drain(Duration::from_millis(150))?;
+	terminal.quit()?;
+
+	Ok([open, typing, undo, save].map(|duration| duration.as_secs_f64() * 1_000.0))
 }
 
 struct Program {

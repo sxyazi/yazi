@@ -1,12 +1,21 @@
-use anyhow::Result;
+use std::{fs::{self, File, OpenOptions}, io::{self, BufReader, BufWriter, Write}, path::Path};
+
+use anyhow::{Context, Result, ensure};
 use ratatui_core::{buffer::Buffer, layout::Rect, style::{Modifier, Style}};
-use tokio::{fs::OpenOptions, io::{AsyncBufReadExt, AsyncReadExt, BufReader}, select};
 use yazi_actor::act;
 use yazi_boot::BOOT;
-use yazi_config::LAYOUT;
-use yazi_core::{Ctx, mgr::OpenOpt, tab::View as DocumentView};
-use yazi_macro::{emit, relay, render, succ};
-use yazi_shared::{data::Data, event::{Action, ActionCow}, url::{UrlBuf, UrlLike}};
+use yazi_config::{LAYOUT, popup::ConfirmCfg};
+use yazi_core::{Ctx, mgr::OpenOpt, tab::{FileStamp, View as DocumentView, cell_width, grapheme_text, graphemes}};
+use yazi_macro::{emit, impl_data_any, relay, render, succ};
+use yazi_proxy::ConfirmProxy;
+use yazi_scheduler::NotifyProxy;
+use yazi_shared::{data::Data, event::ActionCow, scope::Scope, url::{UrlBuf, UrlLike}};
+use yazi_term::event::{KeyCode, KeyEvent, KeyEventKind};
+
+#[derive(Clone, Debug)]
+struct SaveResult(Result<Option<FileStamp>, String>);
+
+impl_data_any!(SaveResult);
 
 pub(super) struct View;
 
@@ -37,15 +46,24 @@ impl View {
 			succ!(render!());
 		}
 
+		if cx.tab().view.as_ref().is_some_and(DocumentView::protect) {
+			succ!();
+		}
+
 		let cwd = cx.cwd().clone();
 		let scope = cx.tab().scope.child();
 		cx.tab_mut().view_load = Some(scope.clone());
 		tokio::spawn(async move {
-			let view = select! {
-				biased;
-				_ = scope.cancelled() => return,
-				view = Self::load(&url) => view,
-			};
+			let view = tokio::task::spawn_blocking({
+				let (url, scope) = (url.clone(), scope.clone());
+				move || Self::load(url, &scope)
+			})
+			.await
+			.ok()
+			.flatten();
+			if scope.is_cancelled() {
+				return;
+			}
 
 			let mut action = relay!(mgr:view_opened).with_scope(scope).with("cwd", cwd).with("url", url);
 			if let Some(view) = view {
@@ -56,32 +74,38 @@ impl View {
 		succ!();
 	}
 
-	async fn load(url: &UrlBuf) -> Option<DocumentView> {
+	fn load(url: UrlBuf, scope: &Scope) -> Option<DocumentView> {
 		let mut options = OpenOptions::new();
 		options.read(true);
 		#[cfg(unix)]
-		options.custom_flags(rustix::fs::OFlags::NONBLOCK.bits() as i32);
-
-		let file = options.open(url.as_local()?).await.ok()?;
-		if !file.metadata().await.ok()?.is_file() {
-			return None;
-		}
-
-		let mut file = BufReader::new(file);
-		let first = file.fill_buf().await.ok()?;
-		if first.contains(&0) || std::str::from_utf8(first).is_err_and(|err| err.error_len().is_some())
 		{
+			use std::os::unix::fs::OpenOptionsExt;
+			options.custom_flags(rustix::fs::OFlags::NONBLOCK.bits() as i32);
+		}
+
+		if scope.is_cancelled() {
+			return None;
+		}
+		let file = options.open(url.as_local()?).ok()?;
+		let meta = file.metadata().ok()?;
+		if !meta.is_file() {
 			return None;
 		}
 
-		let mut body = String::new();
-		file.read_to_string(&mut body).await.ok()?;
-		DocumentView::new(url.clone(), body)
+		let mut document =
+			DocumentView::read(url, BufReader::with_capacity(64 * 1024, &file), scope).ok()?;
+		let before = FileStamp::new(&meta).ok();
+		let after = FileStamp::new(&file.metadata().ok()?).ok();
+		document.stamp = before.filter(|_| before == after);
+		Some(document)
 	}
 
 	pub(super) fn opened(cx: &mut Ctx, mut action: ActionCow) -> Result<Data> {
 		cx.tab_mut().view_load = None;
 		if let Some(view) = action.take_any("view") {
+			if cx.tab().view.as_ref().is_some_and(DocumentView::protect) {
+				succ!();
+			}
 			if cx.tab == cx.mgr.tabs.cursor && cx.tab().view.is_none() {
 				cx.preview_mut().reset();
 			}
@@ -101,35 +125,258 @@ impl View {
 		)
 	}
 
-	pub(super) fn action(cx: &mut Ctx, action: &Action) -> Result<Data> {
-		let tab = cx.tab_mut();
-		if action.name == "close" {
-			if let Some(scope) = tab.view_load.take() {
-				scope.cancel();
+	pub(super) fn action(cx: &mut Ctx, mut action: ActionCow) -> Result<Data> {
+		match action.name.as_ref() {
+			"save" => return Self::save(cx),
+			"saved" => return Self::saved(cx, action),
+			"discard" => return Self::discard(cx),
+			"discard_confirmed" => {
+				let url: UrlBuf = action.take("url")?;
+				if cx.tab().view.as_ref().is_some_and(|v| v.url == url && v.dirty() && !v.saving) {
+					return Self::close(cx);
+				}
+				succ!();
 			}
-			succ!(render!(tab.view.take().is_some()));
+			_ => {}
 		}
 
-		let Some(view) = &mut tab.view else { succ!() };
+		let Some(view) = &mut cx.tab_mut().view else { succ!() };
 		if action.name == "focus" {
+			view.end_change();
 			view.focused = !view.focused;
 			succ!(render!());
 		}
 
-		let height = usize::from(LAYOUT.get().view.height.saturating_sub(1));
-		let last = view.last_offset(height);
-		let current = view.offset.min(last);
-		let next = match action.name.as_ref() {
-			"up" => current.saturating_sub(1),
-			"down" => (current + 1).min(last),
-			"page_up" => current.saturating_sub(height),
-			"page_down" => current.saturating_add(height).min(last),
-			"top" => 0,
-			"bottom" => last,
+		if action.name == "close" {
+			if view.insert {
+				view.end_change();
+				view.insert = false;
+				succ!(render!());
+			}
+			if view.protect() {
+				succ!();
+			}
+			return Self::close(cx);
+		}
+
+		let height = LAYOUT.get().view.height.saturating_sub(1).max(1) as isize;
+		match action.name.as_ref() {
+			"insert" if !view.saving => view.insert = true,
+			"undo" if !view.saving => {
+				let changed = view.undo();
+				succ!(Self::redraw(view, changed));
+			}
+			"delete" if !view.saving => {
+				let changed = view.delete(false);
+				succ!(Self::redraw(view, changed));
+			}
+			"left" => view.horizontal(true),
+			"right" => view.horizontal(false),
+			"up" => view.vertical(-1),
+			"down" => view.vertical(1),
+			"page_up" => view.vertical(-height),
+			"page_down" => view.vertical(height),
+			"home" => view.line_edge(false),
+			"end" => view.line_edge(true),
+			"top" => view.move_to_line(0),
+			"bottom" => view.move_to_line(view.line_count() - 1),
 			_ => succ!(),
+		}
+		succ!(Self::redraw(view, true));
+	}
+
+	pub(super) fn insert_key(view: &mut DocumentView, key: &KeyEvent) -> bool {
+		if !view.insert || key.kind == KeyEventKind::Release {
+			return false;
+		}
+
+		let mut bytes = [0; 4];
+		let changed = if key.modifiers.is_literal() && key.code == KeyCode::Backspace {
+			!view.saving && view.delete(true)
+		} else if key.modifiers.is_literal() && key.code == KeyCode::Enter {
+			!view.saving && view.type_text(view.newline())
+		} else if key.modifiers.is_literal() && key.code == KeyCode::Tab {
+			!view.saving && view.type_text("\t")
+		} else if let Some(text) = key.text(&mut bytes) {
+			!view.saving
+				&& if text.contains(char::is_control) { view.paste(text) } else { view.type_text(text) }
+		} else {
+			return false;
 		};
-		view.offset = next;
-		succ!(render!(next != current));
+		Self::redraw(view, changed);
+		true
+	}
+
+	pub(super) fn paste(view: &mut DocumentView, text: &str) {
+		let changed = view.insert && !view.saving && view.paste(text);
+		Self::redraw(view, changed);
+	}
+
+	fn redraw(view: &mut DocumentView, changed: bool) {
+		if changed {
+			let area = LAYOUT.get().view;
+			view.reveal(area.width as usize, area.height.saturating_sub(1) as usize);
+			render!();
+		}
+	}
+
+	fn close(cx: &mut Ctx) -> Result<Data> {
+		let tab = cx.tab_mut();
+		if let Some(scope) = tab.view_load.take() {
+			scope.cancel();
+		}
+		succ!(render!(tab.view.take().is_some()));
+	}
+
+	fn discard(cx: &mut Ctx) -> Result<Data> {
+		let Some(view) = cx.tab().view.as_ref().filter(|v| !v.insert && v.dirty() && !v.saving) else {
+			succ!();
+		};
+		let url = view.url.clone();
+		let cfg = ConfirmCfg::discard_text(url.display().to_string());
+		let scope = cx.tab().scope.clone();
+		tokio::spawn(async move {
+			if ConfirmProxy::show(cfg).await {
+				emit!(Call(relay!(view:discard_confirmed).with_scope(scope).with("url", url)));
+			}
+		});
+		succ!();
+	}
+
+	fn save(cx: &mut Ctx) -> Result<Data> {
+		if cx.tabs().iter().any(|tab| tab.view.as_ref().is_some_and(|v| v.saving)) {
+			NotifyProxy::push_warn("Saving text", "Wait for the current save to finish.");
+			succ!();
+		}
+
+		let scope = cx.tab().scope.clone();
+		let Some(view) = cx.tab_mut().view.as_mut().filter(|v| v.dirty()) else { succ!() };
+		let Some(stamp) = view.stamp else {
+			NotifyProxy::push_error(
+				"Save failed",
+				"File changed or could not be verified. Changes are still in the editor.",
+			);
+			succ!();
+		};
+		let url = view.url.clone();
+		let (text, bom) = view.snapshot();
+		tokio::spawn(async move {
+			let result = tokio::task::spawn_blocking(move || {
+				let path = url.as_local().context("The file is no longer local")?;
+				Self::write_file(path, stamp, |file| {
+					if bom {
+						file.write_all("\u{feff}".as_bytes())?;
+					}
+					text.write_to(file)
+				})
+			})
+			.await
+			.unwrap_or_else(|e| Err(e.into()));
+			let result = SaveResult(result.map_err(|e| format!("{e:#}")));
+			emit!(Call(relay!(view:saved).with_scope(scope).with_any("result", result)));
+		});
+		succ!(render!());
+	}
+
+	fn saved(cx: &mut Ctx, mut action: ActionCow) -> Result<Data> {
+		let SaveResult(result) = action.take_any("result").context("Missing save result")?;
+		let Some(view) = cx.tab_mut().view.as_mut() else { succ!() };
+		view.saving = false;
+		match result {
+			Ok(stamp) => view.mark_saved(stamp),
+			Err(e) => {
+				NotifyProxy::push_error("Save failed", format!("{e}. Changes are still in the editor."))
+			}
+		}
+		succ!(render!());
+	}
+
+	fn write_file(
+		path: &Path,
+		stamp: FileStamp,
+		write: impl FnOnce(&mut dyn Write) -> io::Result<()>,
+	) -> Result<Option<FileStamp>> {
+		let meta = Self::check_file(path, stamp)?;
+		let dir =
+			path.parent().filter(|p| !p.as_os_str().is_empty()).context("Missing parent directory")?;
+		let mut opts = fs::OpenOptions::new();
+		opts.write(true);
+		#[cfg(unix)]
+		{
+			use std::os::unix::fs::OpenOptionsExt;
+
+			use rustix::fs::OFlags;
+			opts.custom_flags((OFlags::NOFOLLOW | OFlags::NONBLOCK).bits() as i32);
+		}
+		let original = opts.open(path).context("Cannot open the original file for writing")?;
+		ensure!(FileStamp::new(&original.metadata()?)? == stamp, "The file changed on disk");
+
+		let mut pending =
+			tempfile::NamedTempFile::new_in(dir).context("Cannot create a temporary file")?;
+		{
+			let mut writer = BufWriter::with_capacity(64 * 1024, pending.as_file_mut());
+			write(&mut writer).context("Cannot write the temporary file")?;
+			writer.flush().context("Cannot flush the temporary file")?;
+		}
+		#[cfg(unix)]
+		{
+			use std::os::unix::fs::MetadataExt;
+
+			use rustix::{fs::fchown, process::{Gid, Uid}};
+			let current = pending.as_file().metadata()?;
+			let uid = (meta.uid() != current.uid()).then(|| Uid::from_raw(meta.uid()));
+			let gid = (meta.gid() != current.gid()).then(|| Gid::from_raw(meta.gid()));
+			if uid.is_some() || gid.is_some() {
+				fchown(pending.as_file(), uid, gid).context("Cannot preserve file ownership")?;
+			}
+		}
+		pending
+			.as_file()
+			.set_permissions(meta.permissions())
+			.context("Cannot preserve file permissions")?;
+		#[cfg(target_os = "linux")]
+		Self::copy_attributes(&original, pending.as_file())
+			.context("Cannot preserve file attributes")?;
+		pending.as_file().sync_all().context("Cannot sync the temporary file")?;
+
+		Self::check_file(path, stamp)?;
+		drop(original);
+		let saved =
+			pending.persist(path).map_err(|e| e.error).context("Cannot replace the original file")?;
+		Ok(saved.metadata().ok().and_then(|m| FileStamp::new(&m).ok()))
+	}
+
+	fn check_file(path: &Path, stamp: FileStamp) -> Result<fs::Metadata> {
+		let meta = fs::symlink_metadata(path).context("Cannot verify the original file")?;
+		ensure!(meta.is_file(), "Saving requires a regular file, without a symbolic link");
+		#[cfg(unix)]
+		{
+			use std::os::unix::fs::MetadataExt;
+			ensure!(meta.nlink() == 1, "Saving a file with hard links would break the links");
+		}
+		ensure!(FileStamp::new(&meta)? == stamp, "The file changed on disk");
+		Ok(meta)
+	}
+
+	#[cfg(target_os = "linux")]
+	fn copy_attributes(original: &File, pending: &File) -> Result<()> {
+		use rustix::{fs::{XattrFlags, fgetxattr, fgetxattr_query, flistxattr, flistxattr_query, fsetxattr}, io::Errno};
+
+		let len = match flistxattr_query(original) {
+			Err(Errno::OPNOTSUPP) => return Ok(()),
+			result => result?,
+		};
+		if len == 0 {
+			return Ok(());
+		}
+		let mut names = vec![0; len];
+		let n = flistxattr(original, names.as_mut_slice())?;
+		for name in names[..n].split(|&b| b == 0).filter(|s| !s.is_empty()) {
+			let mut value = vec![0; fgetxattr_query(original, name)?];
+			let n = fgetxattr(original, name, value.as_mut_slice())?;
+			fsetxattr(pending, name, &value[..n], XattrFlags::empty())?;
+		}
+		Ok(())
 	}
 
 	pub(super) fn render(view: &DocumentView, area: Rect, buf: &mut Buffer) {
@@ -140,21 +387,32 @@ impl View {
 
 		let style = Style::default();
 		let title_style = if view.focused { style.add_modifier(Modifier::REVERSED) } else { style };
-		let (x, _) = buf.set_stringn(area.x, area.y, "Read only | ", area.width as usize, title_style);
+		let title = if view.saving {
+			"Saving"
+		} else if view.insert {
+			"Insert"
+		} else {
+			"Normal"
+		};
+		let marker = if view.dirty() { " * | " } else { " | " };
+		let (x, _) = buf.set_stringn(area.x, area.y, title, area.width as usize, title_style);
+		let (x, _) = buf.set_stringn(x, area.y, marker, (area.right() - x) as usize, title_style);
 		if let Some(name) = view.url.name() {
 			buf.set_stringn(x, area.y, name.to_string_lossy(), (area.right() - x) as usize, title_style);
 		}
 
-		for (y, line) in ((area.y + 1)..area.bottom()).zip(view.visible((area.height - 1) as usize)) {
-			let mut x = area.x;
-			for part in line.split_inclusive('\t') {
-				let text = part.strip_suffix('\t').unwrap_or(part);
-				(x, _) = buf.set_stringn(x, y, text, (area.right() - x) as usize, style);
-				if part.ends_with('\t') {
-					x = x.saturating_add(4 - (x - area.x) % 4).min(area.right());
-				}
-				if x == area.right() {
+		let width = area.width as usize;
+		let (top, left) = view.viewport(width, area.height as usize - 1);
+		for (y, row) in ((area.y + 1)..area.bottom()).zip(top..view.line_count()) {
+			let mut col = 0;
+			for g in graphemes(view.line(row)) {
+				let start = col;
+				col += cell_width(g, col);
+				if col > left + width {
 					break;
+				}
+				if start >= left && col > start && g.char(0) != '\t' {
+					buf.set_stringn(area.x + (start - left) as u16, y, grapheme_text(g), col - start, style);
 				}
 			}
 		}

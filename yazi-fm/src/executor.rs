@@ -31,7 +31,7 @@ impl<'a> Executor<'a> {
 			Layer::Notify => self.notify(action),
 			Layer::View => {
 				let cx = &mut Ctx::new(&action, &mut self.app.core)?;
-				View::action(cx, &action)
+				View::action(cx, action)
 			}
 		}
 	}

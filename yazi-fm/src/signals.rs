@@ -50,7 +50,7 @@ impl Signals {
 		match signal {
 			Signal::INT => { /* ignored */ }
 			Signal::QUIT | Signal::HUP | Signal::TERM => {
-				yazi_proxy::AppProxy::quit(Default::default());
+				yazi_proxy::AppProxy::quit(yazi_core::app::QuitOpt { forced: true, ..Default::default() });
 				return false;
 			}
 			Signal::TSTP => {

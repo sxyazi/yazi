@@ -1,4 +1,5 @@
 use ratatui_core::layout::{Position, Rect};
+use yazi_config::LAYOUT;
 use yazi_shared::Layer;
 use yazi_shim::ratatui::Padable;
 use yazi_tty::sequence::SetCursorStyle;
@@ -47,6 +48,13 @@ impl Core {
 				InputGuard::Alt(_) => self.mgr.area(self.input.position()?),
 			};
 			return Some((Position { x: x + guard.cursor(), y }, guard.cursor_shape()));
+		}
+
+		if self.layer() == Layer::View
+			&& let Some(view) = &self.active().view
+		{
+			let shape = if view.insert { SetCursorStyle::SteadyBar } else { SetCursorStyle::SteadyBlock };
+			return Some((view.screen_cursor(LAYOUT.get().view)?, shape));
 		}
 
 		None

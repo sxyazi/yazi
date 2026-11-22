@@ -3192,6 +3192,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ropey"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93411e420bcd1a75ddd1dc3caf18c23155eda2c090631a85af21ba19e97093b5"
+dependencies = [
+ "smallvec",
+ "str_indices",
+]
+
+[[package]]
 name = "rsa"
 version = "0.10.0-rc.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3870,6 +3880,12 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "str_indices"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d08889ec5408683408db66ad89e0e1f93dff55c73a4ccc71c427d5b277ee47e6"
 
 [[package]]
 name = "strsim"
@@ -5184,11 +5200,13 @@ dependencies = [
  "parking_lot 0.13.0",
  "ratatui-core",
  "ratatui-widgets",
+ "ropey",
  "serde",
  "serde_with",
  "strum 0.28.0",
  "syntect",
  "tokio",
+ "unicode-segmentation",
  "unicode-width",
  "yazi-adapter",
  "yazi-binding",
@@ -5286,6 +5304,7 @@ dependencies = [
  "rustix",
  "scopeguard",
  "signal-hook-tokio",
+ "tempfile",
  "tikv-jemallocator",
  "tokio",
  "tokio-stream",

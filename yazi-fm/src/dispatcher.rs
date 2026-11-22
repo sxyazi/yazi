@@ -2,10 +2,10 @@ use anyhow::Result;
 use yazi_actor::act;
 use yazi_core::Ctx;
 use yazi_macro::{emit, warn};
-use yazi_shared::event::{ActionCow, Event};
+use yazi_shared::{Layer, event::{ActionCow, Event}};
 use yazi_term::event::{ClipboardEvent, DndEvent, Event as TermEvent, KeyEvent, MouseEvent};
 
-use crate::{Executor, Router, app::App};
+use crate::{Executor, Router, View, app::App};
 
 pub(super) struct Dispatcher<'a> {
 	app: &'a mut App,
@@ -78,6 +78,10 @@ impl<'a> Dispatcher<'a> {
 	fn dispatch_paste(&mut self, str: String) -> Result<()> {
 		if let Some(mut guard) = self.app.core.input.lock_mut() {
 			guard.feed(str.into())?;
+		} else if self.app.core.layer() == Layer::View
+			&& let Some(view) = &mut self.app.core.active_mut().view
+		{
+			View::paste(view, &str);
 		}
 		Ok(())
 	}

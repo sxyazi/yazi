@@ -12,6 +12,8 @@ pub struct QuitOpt {
 	pub selected:    Option<StrandBuf>,
 	#[serde(default, alias = "no-cwd-file")]
 	pub no_cwd_file: bool,
+	#[serde(skip)]
+	pub forced:      bool,
 }
 
 impl_data_any!(QuitOpt);

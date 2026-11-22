@@ -3,9 +3,9 @@ use yazi_actor::act;
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
 use yazi_core::{Ctx, which::WhichOpt};
 use yazi_shared::Layer;
-use yazi_term::event::KeyEvent;
+use yazi_term::event::{KeyEvent, KeyEventKind};
 
-use crate::{Dispatcher, app::App};
+use crate::{Dispatcher, View, app::App};
 
 pub(super) struct Router<'a> {
 	app: &'a mut App,
@@ -29,6 +29,17 @@ impl<'a> Router<'a> {
 		}
 
 		let layer = core.layer();
+		if layer == L::View {
+			if key.kind == KeyEventKind::Release {
+				return Ok(true);
+			}
+			if let Some(view) = &mut core.active_mut().view
+				&& View::insert_key(view, &key)
+			{
+				return Ok(true);
+			}
+		}
+
 		let Ok(key) = Key::try_from(key) else { return Ok(false) };
 		Ok(match layer {
 			L::Null | L::App | L::Notify => unreachable!(),
