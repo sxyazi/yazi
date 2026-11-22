@@ -1936,3 +1936,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#4483]: https://github.com/sxyazi/yazi/pull/4483
 [#4484]: https://github.com/sxyazi/yazi/pull/4484
 [#4494]: https://github.com/sxyazi/yazi/pull/4494
+[#4514]: https://github.com/sxyazi/yazi/pull/4514
