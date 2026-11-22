@@ -56,7 +56,7 @@ rustix = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows      = { version = "0.62.2", features = [ "Win32_Foundation", "Win32_Storage_EnhancedStorage", "Win32_System_Com_StructuredStorage", "Win32_System_SystemServices", "Win32_System_Variant", "Win32_UI_Shell_PropertiesSystem" ] }
-windows-core = "0.100.0"
+windows-core = "0.62.2"
 windows-sys  = { version = "0.61.2", features = [ "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Diagnostics_Debug", "Win32_System_Ioctl", "Win32_System_WindowsProgramming" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
