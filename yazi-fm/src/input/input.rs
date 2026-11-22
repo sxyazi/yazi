@@ -42,7 +42,19 @@ impl<'a> Input<'a> {
 }
 
 impl Widget for Input<'_> {
-	fn render(self, _: Rect, buf: &mut Buffer) {
+	fn render(self, window: Rect, buf: &mut Buffer) {
+		if let Some(area) = self.core.input.main.command_area() {
+			let area = area.intersection(window);
+			if !area.is_empty() {
+				yazi_widgets::clear::Clear::default().render(area, buf);
+				buf.set_stringn(area.x, area.y, ":", 1, THEME.input.title.get());
+				let inner = self.core.input.main_field_area(&self.core.mgr).intersection(area);
+				self.core.input.main.repos(inner);
+				self.core.input.main.render(inner, buf);
+			}
+			return;
+		}
+
 		let outer = self.core.mgr.area(self.core.input.main.position);
 		yazi_widgets::clear::Clear::default().render(outer, buf);
 

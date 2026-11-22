@@ -15,6 +15,10 @@ impl Actor for Escape {
 	const NAME: &str = "escape";
 
 	fn act(cx: &mut Ctx, _: Self::Form) -> Result<Data> {
+		if cx.input.main.visible && cx.input.main.is_view_command() {
+			return act!(input:close, cx);
+		}
+
 		use yazi_widgets::input::InputMode as M;
 		let Some(mut guard) = cx.input.lock_mut() else {
 			succ!();

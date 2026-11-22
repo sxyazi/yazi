@@ -192,8 +192,7 @@ keymap = [
 keymap = [
 	{ on = "<Esc>",      run = "close",     desc = "Leave insert mode or close the editor" },
 	{ on = "<F6>",       run = "focus",     desc = "Focus the file list" },
-	{ on = "<C-s>",      run = "save",      desc = "Save the file" },
-	{ on = "<C-x>",      run = "discard",   desc = "Discard changes and close the editor" },
+	{ on = ":",          run = "command",   desc = "Open the editor command line" },
 	{ on = "i",          run = "insert",    desc = "Enter insert mode" },
 	{ on = "u",          run = "undo",      desc = "Undo the last change" },
 	{ on = "x",          run = "delete",    desc = "Delete the next character" },

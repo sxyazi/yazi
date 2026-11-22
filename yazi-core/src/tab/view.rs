@@ -110,7 +110,7 @@ impl View {
 		} else if self.dirty() {
 			NotifyProxy::push_warn(
 				"Unsaved changes",
-				format!("{}: save with Ctrl+S or discard with Ctrl+X.", self.url.display()),
+				format!("{}: save with :w or discard with :q!.", self.url.display()),
 			);
 		} else {
 			return false;

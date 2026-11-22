@@ -1,10 +1,14 @@
 use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use parking_lot::Mutex;
+use ratatui_core::layout::Rect;
 use ratatui_widgets::block::Padding;
 use yazi_binding::{elements::Spatial, position::Position};
+use yazi_config::LAYOUT;
+use yazi_shared::{id::Id, url::UrlBuf};
+use yazi_shim::ratatui::Padable;
 
-use crate::input::{InputGuard, InputHistories, InputMutGuard};
+use crate::{input::{InputGuard, InputHistories, InputMutGuard}, mgr::Mgr};
 
 #[derive(Default)]
 pub struct Input {
@@ -17,6 +21,14 @@ impl Input {
 	pub(crate) fn focus(&self) -> bool { self.main.visible || self.alt.is_some() }
 
 	pub fn padding(&self) -> Padding { Padding::new(1, 1, 1, 1) }
+
+	pub fn main_field_area(&self, mgr: &Mgr) -> Rect {
+		if let Some(area) = self.main.command_area() {
+			area.padding(Padding::left(1))
+		} else {
+			mgr.area(self.main.position).padding(self.padding())
+		}
+	}
 
 	pub(crate) fn position(&self) -> Option<Position> {
 		if self.main.visible {
@@ -53,11 +65,24 @@ impl Input {
 // --- InputMain
 #[derive(Default)]
 pub struct InputMain {
-	pub(super) inner: yazi_widgets::input::Input,
-	pub name:         String,
-	pub title:        String,
-	pub position:     Position,
-	pub visible:      bool,
+	pub(super) inner:   yazi_widgets::input::Input,
+	pub name:           String,
+	pub title:          String,
+	pub position:       Position,
+	pub visible:        bool,
+	pub command_target: Option<(Id, UrlBuf)>,
+}
+
+impl InputMain {
+	pub fn is_view_command(&self) -> bool { self.command_target.is_some() }
+
+	pub fn command_area(&self) -> Option<Rect> {
+		if !self.is_view_command() {
+			return None;
+		}
+		let area = LAYOUT.get().view;
+		Some(Rect::new(area.x, area.bottom().saturating_sub(1), area.width, area.height.min(1)))
+	}
 }
 
 impl Deref for InputMain {

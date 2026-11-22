@@ -11,9 +11,13 @@ use yazi_proxy::ConfirmProxy;
 use yazi_scheduler::NotifyProxy;
 use yazi_shared::{data::Data, event::ActionCow, scope::Scope, url::{UrlBuf, UrlLike}};
 use yazi_term::event::{KeyCode, KeyEvent, KeyEventKind};
+use yazi_widgets::input::InputOpt;
 
 #[derive(Clone, Debug)]
-struct SaveResult(Result<Option<FileStamp>, String>);
+struct SaveResult {
+	result: Result<Option<FileStamp>, String>,
+	close:  bool,
+}
 
 impl_data_any!(SaveResult);
 
@@ -127,7 +131,8 @@ impl View {
 
 	pub(super) fn action(cx: &mut Ctx, mut action: ActionCow) -> Result<Data> {
 		match action.name.as_ref() {
-			"save" => return Self::save(cx),
+			"command" => return Self::command(cx),
+			"save" => return Self::save(cx, false),
 			"saved" => return Self::saved(cx, action),
 			"discard" => return Self::discard(cx),
 			"discard_confirmed" => {
@@ -228,6 +233,56 @@ impl View {
 		succ!(render!(tab.view.take().is_some()));
 	}
 
+	fn command(cx: &mut Ctx) -> Result<Data> {
+		let tab = cx.tab_mut();
+		let Some(view) = tab.view.as_ref().filter(|view| view.focused && !view.insert) else {
+			succ!();
+		};
+		let url = view.url.clone();
+		let tab_id = tab.id;
+		if let Some(load) = tab.view_load.take() {
+			load.cancel();
+		}
+
+		act!(input:show, cx, InputOpt::default())?;
+		cx.input.main.command_target = Some((tab_id, url));
+		let area = cx.input.main_field_area(&cx.mgr);
+		cx.input.main.repos(area);
+		succ!();
+	}
+
+	pub(super) fn command_submit(cx: &mut Ctx, action: ActionCow) -> Result<Data> {
+		let Some((tab_id, url)) = cx.input.main.command_target.take() else { succ!() };
+		let command = cx.input.main.value().to_owned();
+		act!(input:close, cx, action)?;
+
+		let Some(view) = cx.tab().view.as_ref().filter(|view| view.url == url && view.focused) else {
+			succ!();
+		};
+		if cx.tab != cx.mgr.tabs.cursor || cx.tab().id != tab_id || view.insert {
+			succ!();
+		}
+
+		match command.trim() {
+			"" => succ!(),
+			"w" => Self::save(cx, false),
+			"wq" => Self::save(cx, true),
+			"q" => {
+				if view.protect() {
+					succ!();
+				}
+				Self::close(cx)
+			}
+			"q!" => {
+				if view.saving {
+					succ!(view.protect());
+				}
+				Self::close(cx)
+			}
+			other => succ!(NotifyProxy::push_warn("Unknown editor command", format!(":{other}"))),
+		}
+	}
+
 	fn discard(cx: &mut Ctx) -> Result<Data> {
 		let Some(view) = cx.tab().view.as_ref().filter(|v| !v.insert && v.dirty() && !v.saving) else {
 			succ!();
@@ -243,7 +298,11 @@ impl View {
 		succ!();
 	}
 
-	fn save(cx: &mut Ctx) -> Result<Data> {
+	fn save(cx: &mut Ctx, close: bool) -> Result<Data> {
+		if close && cx.tab().view.as_ref().is_some_and(|view| !view.dirty() && !view.saving) {
+			return Self::close(cx);
+		}
+
 		if cx.tabs().iter().any(|tab| tab.view.as_ref().is_some_and(|v| v.saving)) {
 			NotifyProxy::push_warn("Saving text", "Wait for the current save to finish.");
 			succ!();
@@ -272,18 +331,23 @@ impl View {
 			})
 			.await
 			.unwrap_or_else(|e| Err(e.into()));
-			let result = SaveResult(result.map_err(|e| format!("{e:#}")));
+			let result = SaveResult { result: result.map_err(|e| format!("{e:#}")), close };
 			emit!(Call(relay!(view:saved).with_scope(scope).with_any("result", result)));
 		});
 		succ!(render!());
 	}
 
 	fn saved(cx: &mut Ctx, mut action: ActionCow) -> Result<Data> {
-		let SaveResult(result) = action.take_any("result").context("Missing save result")?;
+		let SaveResult { result, close } = action.take_any("result").context("Missing save result")?;
 		let Some(view) = cx.tab_mut().view.as_mut() else { succ!() };
 		view.saving = false;
 		match result {
-			Ok(stamp) => view.mark_saved(stamp),
+			Ok(stamp) => {
+				view.mark_saved(stamp);
+				if close {
+					return Self::close(cx);
+				}
+			}
 			Err(e) => {
 				NotifyProxy::push_error("Save failed", format!("{e}. Changes are still in the editor."))
 			}

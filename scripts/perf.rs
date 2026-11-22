@@ -198,6 +198,14 @@ fn trial_editor(program: &Program, state: &Path, text: &str) -> Result<[f64; 4]>
 	let path = fixture.join("sample.txt");
 	fs::write(&path, text)?;
 
+	// Use the same save action for builds with either default keymap.
+	let config = state.join("config");
+	fs::create_dir_all(&config)?;
+	fs::write(
+		config.join("keymap.toml"),
+		b"[view]\nprepend_keymap = [{ on = \"<C-s>\", run = \"save\" }]\n",
+	)?;
+
 	let mut terminal = Terminal::start(&program.path, &fixture, state)?;
 	terminal.wait_frame("editor fixture", &[b"sample.txt"])?;
 	// Older builds put the mode and file name in a single title.

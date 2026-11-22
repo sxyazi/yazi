@@ -43,11 +43,18 @@ impl Core {
 		}
 
 		if let Some(guard) = self.input.lock() {
-			let Rect { x, y, .. } = match &guard {
-				InputGuard::Main(_) => self.mgr.area(self.input.position()?).padding(self.input.padding()),
+			let area = match &guard {
+				InputGuard::Main(_) => self.input.main_field_area(&self.mgr),
 				InputGuard::Alt(_) => self.mgr.area(self.input.position()?),
 			};
-			return Some((Position { x: x + guard.cursor(), y }, guard.cursor_shape()));
+			if self.input.main.visible && self.input.main.is_view_command() {
+				if area.is_empty() {
+					return None;
+				}
+				let x = area.x + guard.cursor().min(area.width - 1);
+				return Some((Position { x, y: area.y }, guard.cursor_shape()));
+			}
+			return Some((Position { x: area.x + guard.cursor(), y: area.y }, guard.cursor_shape()));
 		}
 
 		if self.layer() == Layer::View
