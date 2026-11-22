@@ -8,7 +8,7 @@ use yazi_shim::{ToWide, handle_ok, nz_ok};
 use super::Casefold;
 
 impl Casefold {
-	pub(super) fn final_name(path: &Path) -> io::Result<OsString> {
+	pub(crate) fn final_name(path: &Path) -> io::Result<OsString> {
 		if let Ok(name) = Self::by_find(path) {
 			return Ok(name);
 		}

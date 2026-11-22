@@ -68,15 +68,10 @@ impl FileBuilder for Demand {
 		let attrs = super::Attrs(self.0.attrs).try_into().unwrap_or_default();
 		let result = conn.open(engine.path, flags, &attrs).await;
 
-		if self.0.create_new
-			&& let Err(yazi_sftp::Error::Status(status)) = &result
-			&& status.is_failure()
-			&& conn.lstat(engine.path).await.is_ok()
-		{
-			return Err(io::ErrorKind::AlreadyExists.into());
-		}
-
-		Ok(super::RwFile::new(result?, url.as_url()))
+		Ok(super::RwFile::new(
+			if self.0.create_new { conn.map_exists(engine.path, result).await? } else { result? },
+			url.as_url(),
+		))
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

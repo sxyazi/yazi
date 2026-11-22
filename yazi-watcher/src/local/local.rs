@@ -29,7 +29,7 @@ impl Local {
 			}
 		};
 
-		let primary = RecommendedWatcher::new(handler.clone(), config);
+		let primary = RecommendedWatcher::new(handler.clone(), config.clone());
 		let alternative = PollWatcher::new(handler, config).unwrap();
 
 		if let Err(e) = &primary {

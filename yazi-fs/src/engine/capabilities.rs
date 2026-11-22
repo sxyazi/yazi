@@ -16,7 +16,7 @@ pub struct Capabilities {
 	pub create_file:      bool,
 	pub create_file_new:  bool,
 	pub file:             bool,
-	pub hard_link:        bool,
+	pub hardlink:         bool,
 	pub lstat:            bool,
 	pub open:             bool,
 	pub prepare:          bool,
@@ -29,6 +29,8 @@ pub struct Capabilities {
 	pub rename:           bool,
 	pub reroute:          u8,
 	pub revalidate:       bool,
+	pub same_entry:       bool,
+	pub same_file:        bool,
 	pub set_attrs:        bool,
 	pub stat:             bool,
 	pub symlink_dir:      bool,
@@ -49,7 +51,7 @@ impl Capabilities {
 			create_file:      true,
 			create_file_new:  true,
 			file:             true,
-			hard_link:        true,
+			hardlink:         true,
 			lstat:            true,
 			open:             true,
 			prepare:          false,
@@ -62,6 +64,8 @@ impl Capabilities {
 			rename:           true,
 			reroute:          0b11,
 			revalidate:       true,
+			same_entry:       true,
+			same_file:        true,
 			set_attrs:        true,
 			stat:             true,
 			symlink_dir:      true,
@@ -90,7 +94,7 @@ impl Capabilities {
 			b"create_file" => self.create_file = get(0..=1)? != 0,
 			b"create_file_new" => self.create_file_new = get(0..=1)? != 0,
 			b"file" => self.file = get(0..=1)? != 0,
-			b"hard_link" => self.hard_link = get(0..=1)? != 0,
+			b"hardlink" => self.hardlink = get(0..=1)? != 0,
 			b"lstat" => self.lstat = get(0..=1)? != 0,
 			b"open" => self.open = get(0..=1)? != 0,
 			b"prepare" => self.prepare = get(0..=1)? != 0,
@@ -103,6 +107,8 @@ impl Capabilities {
 			b"rename" => self.rename = get(0..=1)? != 0,
 			b"reroute" => self.reroute = get(0..=3)?,
 			b"revalidate" => self.revalidate = get(0..=1)? != 0,
+			b"same_entry" => self.same_entry = get(0..=1)? != 0,
+			b"same_file" => self.same_file = get(0..=1)? != 0,
 			b"set_attrs" => self.set_attrs = get(0..=1)? != 0,
 			b"stat" => self.stat = get(0..=1)? != 0,
 			b"symlink_dir" => self.symlink_dir = get(0..=1)? != 0,
@@ -128,7 +134,9 @@ impl Capabilities {
 			}
 			AuthKind::Mount | AuthKind::Hub | AuthKind::Scope => {
 				caps.copy_from = false;
-				caps.hard_link = false;
+				caps.hardlink = false;
+				caps.same_entry = false;
+				caps.same_file = false;
 				caps.symlink_dir = false;
 				caps.symlink_file = false;
 				caps.trash = false;

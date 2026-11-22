@@ -5,9 +5,9 @@ use yazi_shared::event::{ActionCow, FromAction};
 #[derive(Debug, Deserialize)]
 pub struct PasteForm {
 	#[serde(default)]
-	pub force:  bool,
-	#[serde(default)]
 	pub follow: bool,
+	#[serde(default)]
+	pub force:  bool,
 }
 
 impl<C> FromAction<C> for PasteForm {

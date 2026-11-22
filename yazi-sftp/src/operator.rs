@@ -195,4 +195,23 @@ impl Operator {
 			self.send(requests::Extended::new("hardlink@openssh.com", data)).await?;
 		status.into()
 	}
+
+	pub async fn map_exists<'a, P, T>(
+		&self,
+		path: P,
+		mut result: Result<T, Error>,
+	) -> Result<T, Error>
+	where
+		P: AsSftpPath<'a>,
+	{
+		// SFTP v3 can report an existing destination as a generic failure.
+		if let Err(Error::Status(status)) = &mut result
+			&& status.is_failure()
+			&& self.lstat(path).await.is_ok()
+		{
+			status.code = responses::StatusCode::FileAlreadyExists;
+		}
+
+		result
+	}
 }

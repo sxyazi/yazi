@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, fs::{self, File}, io::{self, BufRead, BufRead
 
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode, percent_encode};
 use regex::bytes::regex;
-use yazi_shim::{OsStrExt2, Uzers, path::PathExt};
+use yazi_shim::{OsStrExt2, Uzers, path::OsPathExt};
 
 pub(super) const ENCODE: &AsciiSet = &NON_ALPHANUMERIC.remove(b'/');
 
@@ -23,7 +23,7 @@ impl TrashInfo {
 		// /home/alice/.local/share/Trash
 		let (root, _) = info
 			.parent()
-			.and_then(PathExt::pair)
+			.and_then(OsPathExt::pair)
 			.filter(|(_, name)| *name == "info")
 			.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid trash info path"))?;
 

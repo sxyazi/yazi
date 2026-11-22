@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, anyhow};
-use tokio::{io::{self, ErrorKind::NotFound}, sync::mpsc};
-use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, ok_or_not_found, path::path_relative_to, stat::Stat};
+use tokio::{io::{self, ErrorKind::{self, NotFound}}, sync::mpsc};
+use yazi_fs::{Cwd, FsHash128, FsUrl, engine::{Attrs, Engine, FileHolder, local::Local}, path::path_relative_to, stat::Stat};
 use yazi_macro::{ok_or_not_found, warn};
-use yazi_shared::{path::{PathCow, PathLike}, url::{AsUrl, UrlCow, UrlLike}};
-use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry, RwFile}, unique_dir, unique_file};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
+use yazi_vfs::{Stamp, VfsStat, engine::{self, DirEntry, RwFile}, unique_dir, unique_file, unique_file_with};
 
 use super::{FileInCopy, FileInDelete, FileInHardlink, FileInLink, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskOps, TasksProxy, ctx, ctx_or_not_found, file::{FileIn, FileInDownload, FileInMove, FileInUpload, FileOutCopy, FileOutCopyDo, FileOutDelete, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutMove, FileOutMoveDo, FileOutTrash, FileOutUpload, FileOutUploadDo, Transaction, Traverse}, hook::{HookInOutCopy, HookInOutHardlink, HookInOutLink, HookInOutMove}};
@@ -38,13 +38,17 @@ impl File {
 			.context("Cannot determine unique destination name")?;
 		}
 
+		if task.force && ctx_or_not_found!(task, engine::same_entry(&task.from, &task.to).await) {
+			return Ok(self.ops.out(id, FileOutCopy::Succ));
+		}
+
 		self.ops.out(id, HookInOutCopy::new(&task.from, &task.to));
 		TasksProxy::update_succeed(id, [&task.to], true);
 
 		super::traverse::<FileOutCopy, _, _, _, _, _>(
 			task,
-			async |dir| match engine::create_dir(dir).await {
-				Err(e) if e.kind() != io::ErrorKind::AlreadyExists => Err(e)?,
+			async |_, dir| match engine::create_dir(dir).await {
+				Err(e) if e.kind() != ErrorKind::AlreadyExists => Err(e)?,
 				_ => Ok(()),
 			},
 			async |task, stat| {
@@ -66,7 +70,7 @@ impl File {
 	}
 
 	pub(crate) async fn copy_do(&self, mut task: FileInCopy) -> Result<(), FileOutCopyDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&mut task.to).await);
+		ctx_or_not_found!(task, Transaction::prepare(&task.from, &mut task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
 		while let Some(result) = rx.recv().await {
@@ -99,10 +103,7 @@ impl File {
 			.context("Cannot determine unique destination name")?;
 		}
 
-		if task.follow {
-			self.ops.out(id, HookInOutMove::new(&task.from, &task.to));
-			TasksProxy::update_succeed(id, [&task.to], true);
-		} else if ok_or_not_found(self.move_fast(&task).await).is_ok() {
+		if self.move_fast(&task).await? {
 			return Ok(self.ops.out(id, FileOutMove::Succ));
 		}
 
@@ -111,9 +112,9 @@ impl File {
 
 		super::traverse::<FileOutMove, _, _, _, _, _>(
 			task,
-			async |dir| match engine::create_dir(dir).await {
-				Err(e) if e.kind() != io::ErrorKind::AlreadyExists => Err(e)?,
-				_ => Ok(()),
+			async |_, dir| match engine::create_dir(dir).await {
+				Err(e) if e.kind() == ErrorKind::AlreadyExists => Ok(()),
+				result => result.map_err(Into::into),
 			},
 			|task, stat| {
 				let nofollow = stat.is_orphan() || (stat.is_indirect() && !task.follow);
@@ -121,13 +122,13 @@ impl File {
 
 				if nofollow {
 					self.requeue(task.into_link(), NORMAL);
+				} else if !reorder {
+					self.requeue(task, LOW);
+				} else if stat.is_link() {
+					links.push(task);
 				} else {
-					match (stat.is_link(), reorder) {
-						(_, false) => self.requeue(task, LOW),
-						(true, true) => links.push(task),
-						(false, true) => files.push(task),
-					}
-				};
+					files.push(task);
+				}
 
 				async { Ok(()) }
 			},
@@ -153,18 +154,35 @@ impl File {
 		Ok(self.ops.out(id, FileOutMove::Succ))
 	}
 
-	async fn move_fast(&self, task: &FileInMove) -> io::Result<()> {
-		let renamed = engine::rename(&task.from, &task.to).await;
-		let to = renamed.as_ref().unwrap_or(&task.to);
+	async fn move_fast(&self, task: &FileInMove) -> Result<bool> {
+		let renamed = if task.follow {
+			None
+		} else {
+			match engine::rename(&task.from, &task.to).await {
+				Err(e) if e.kind() == ErrorKind::CrossesDevices => None,
+				result => Some(ctx!(task, result)?),
+			}
+		};
 
-		self.ops.out(task.id, HookInOutMove::new(&task.from, to));
+		if task.force
+			&& renamed.is_none()
+			&& ctx_or_not_found!(task, engine::same_entry(&task.from, &task.to).await)
+		{
+			return Ok(true); // Mark as succeeded if the source and destination are the same entry
+		}
+
+		let (to, hook) = match &renamed {
+			Some(to) => (to, HookInOutMove::new(&task.from, to)),
+			None => (&task.to, HookInOutMove::with_cleanup(&task.from, &task.to)),
+		};
+
+		self.ops.out(task.id, hook);
 		TasksProxy::update_succeed(task.id, [to], true);
-
-		renamed.map(|_| ())
+		Ok(renamed.is_some())
 	}
 
 	pub(crate) async fn move_do(&self, mut task: FileInMove) -> Result<(), FileOutMoveDo> {
-		ctx_or_not_found!(task, Transaction::unlink(&mut task.to).await);
+		ctx_or_not_found!(task, Transaction::prepare(&task.from, &mut task.to).await);
 		let mut rx = ctx!(task, engine::copy(&task.from, &task.to, task.stat.unwrap()).await)?;
 
 		while let Some(result) = rx.recv().await {
@@ -182,35 +200,50 @@ impl File {
 		Ok(self.ops.out(task.id, FileOutMoveDo::Succ))
 	}
 
-	pub(crate) async fn link(&self, mut task: FileInLink) -> Result<(), FileOutLink> {
-		if !task.force {
-			task.to =
-				unique_file(task.to).await.context("Cannot determine unique destination name")?.into_url();
+	pub(crate) async fn link(&self, task: FileInLink) -> Result<(), FileOutLink> {
+		if task.force && ctx_or_not_found!(task, engine::same_entry(&task.from, &task.to).await) {
+			return Ok(self.ops.out(task.id, FileOutLink::Succ));
 		}
 
-		self.ops.out(task.id, HookInOutLink::new(&task.to));
-		self.requeue(task, NORMAL);
-		Ok(())
-	}
-
-	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
 		let file = ctx!(task, engine::file(&task.from).await)?;
-		let path = file.extra.backing().map_or(task.from.loc(), Into::into);
-
-		let mut target: PathCow = path.into();
-		if task.follow && file.is_link() {
-			target = ctx!(task, file.extra.link_to(), "Cannot determine symbolic link target")?.into();
-
-			if !target.is_absolute() {
-				let p = ctx!(task, path.parent(), "Symbolic link path has no parent")?;
-				target = ctx!(task, p.try_join(&target))?.into();
-			}
-		}
+		let mut target = ctx!(task, task.target(&file))?;
 
 		if task.relative {
 			let canon = ctx!(task, engine::canonicalize(task.to.parent().unwrap()).await)?;
 			target = ctx!(task, path_relative_to(canon.loc(), target))?;
 		}
+
+		let target = target.into_owned();
+		let create = async move |u: &UrlBuf| {
+			if file.is_dir() {
+				engine::symlink_dir(u, &target, task.force).await
+			} else {
+				engine::symlink_file(u, &target, task.force).await
+			}
+		};
+
+		let (to, ()) = if task.force {
+			ctx!(task, create(&task.to).await)?;
+			(task.to, ())
+		} else {
+			ctx!(
+				task,
+				unique_file_with(task.to.clone(), create).await,
+				"Cannot determine unique destination name"
+			)?
+		};
+
+		self.ops.out(task.id, HookInOutLink::new(to));
+		Ok(self.ops.out(task.id, FileOutLink::Succ))
+	}
+
+	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
+		if ctx_or_not_found!(task, engine::same_entry(&task.from, &task.to).await) {
+			return Err(anyhow!("Cannot replace the source link with itself").into());
+		}
+
+		let file = ctx!(task, engine::file(&task.from).await)?;
+		let target = ctx!(task, task.target(&file))?;
 
 		ctx!(
 			task,
@@ -235,18 +268,30 @@ impl File {
 
 	pub(crate) async fn hardlink(&self, mut task: FileInHardlink) -> Result<(), FileOutHardlink> {
 		let id = task.id;
+		let stat = ctx!(task, task.init().await)?;
+		let traverse = task.traversable(stat);
 
-		if !task.force {
-			task.to =
-				unique_file(task.to).await.context("Cannot determine unique destination name")?.into_url();
+		if traverse && !task.force {
+			task.to = ctx!(task, unique_dir(task.to.clone()).await)?;
+		} else if traverse && ctx_or_not_found!(task, engine::same_file(&task.from, &task.to).await) {
+			return Err(anyhow!("Cannot hardlink a directory onto itself").into());
 		}
 
-		self.ops.out(task.id, HookInOutHardlink::new(&task.to));
+		if traverse || task.force {
+			self.ops.out(id, HookInOutHardlink::new(&task.to));
+		}
+
 		super::traverse::<FileOutHardlink, _, _, _, _, _>(
 			task,
-			async |dir| match engine::create_dir(dir).await {
-				Err(e) if e.kind() != io::ErrorKind::AlreadyExists => Err(e)?,
-				_ => Ok(()),
+			async |task, dir| {
+				if !task.force && dir == task.to {
+					return Ok(()); // Non-forced directory is already created with `unique_dir()` above.
+				}
+
+				match engine::create_dir(dir).await {
+					Err(e) if e.kind() == ErrorKind::AlreadyExists => Ok(()),
+					result => result.map_err(Into::into),
+				}
 			},
 			async |task, _stat| {
 				self.ops.out(id, FileOutHardlink::New);
@@ -262,16 +307,19 @@ impl File {
 	}
 
 	pub(crate) async fn hardlink_do(&self, task: FileInHardlink) -> Result<(), FileOutHardlinkDo> {
-		let src = if !task.follow {
-			UrlCow::from(&task.from)
-		} else if let Ok(p) = engine::canonicalize(&task.from).await {
-			UrlCow::from(p)
-		} else {
-			UrlCow::from(&task.from)
-		};
+		let from = task.from.clone();
+		let create = async move |u: &UrlBuf| engine::hardlink(&from, u, task.follow, task.force).await;
 
-		ctx_or_not_found!(task, engine::remove_file(&task.to).await);
-		ctx_or_not_found!(task, engine::hard_link(&src, &task.to).await);
+		if task.top && !task.force {
+			let (to, ()) = ctx!(
+				task,
+				unique_file_with(task.to.clone(), create).await,
+				"Cannot determine unique destination name"
+			)?;
+			self.ops.out(task.id, HookInOutHardlink::new(to));
+		} else {
+			ctx!(task, create(&task.to).await)?;
+		}
 
 		Ok(self.ops.out(task.id, FileOutHardlinkDo::Succ))
 	}
@@ -313,7 +361,7 @@ impl File {
 
 		super::traverse::<FileOutDownload, _, _, _, _, _>(
 			task,
-			async |dir| {
+			async |_, dir| {
 				let dir = dir.to_owned();
 				tokio::task::spawn_blocking(move || _ = Cwd::ensure(dir.as_url())).await.ok();
 				Ok(())
@@ -367,7 +415,7 @@ impl File {
 
 		super::traverse::<FileOutUpload, _, _, _, _, _>(
 			task,
-			async |_dir| Ok(()),
+			async |_, _| Ok(()),
 			async |task, stat| {
 				let cache = ctx!(task, task.cache.as_ref(), "Cannot determine cache path")?;
 

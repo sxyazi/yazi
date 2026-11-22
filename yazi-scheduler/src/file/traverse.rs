@@ -11,6 +11,11 @@ pub(super) trait Traverse {
 
 	fn follow(&self) -> bool;
 
+	fn traversable(&self, stat: Stat) -> bool {
+		let follow_symlink = stat.is_link() && self.follow();
+		stat.is_dir() && (follow_symlink || !stat.is_indirect())
+	}
+
 	fn from(&self) -> Url<'_>;
 
 	async fn init(&mut self) -> anyhow::Result<Stat> {
@@ -37,9 +42,9 @@ impl Traverse for FileInCopy {
 			id: self.id,
 			from,
 			to: to.unwrap(),
+			follow: self.follow,
 			force: self.force,
 			stat: Some(stat),
-			follow: self.follow,
 		}
 	}
 
@@ -58,9 +63,9 @@ impl Traverse for FileInMove {
 			id: self.id,
 			from,
 			to: to.unwrap(),
+			follow: self.follow,
 			force: self.force,
 			stat: Some(stat),
-			follow: self.follow,
 			drop: self.drop.clone(),
 		}
 	}
@@ -80,9 +85,10 @@ impl Traverse for FileInHardlink {
 			id: self.id,
 			from,
 			to: to.unwrap(),
-			force: self.force,
-			stat: Some(stat),
 			follow: self.follow,
+			force: self.force,
+			top: false,
+			stat: Some(stat),
 		}
 	}
 
@@ -143,14 +149,13 @@ pub(super) async fn traverse<O, I, D, FC, FR, E>(
 where
 	O: Debug + From<anyhow::Error>,
 	I: Debug + Traverse,
-	D: AsyncFn(Url) -> Result<(), O>,
+	D: AsyncFn(&I, Url) -> Result<(), O>,
 	FC: FnMut(I, Stat) -> FR,
 	FR: Future<Output = Result<(), O>>,
 	E: Fn(String),
 {
 	let stat = ctx!(task, task.init().await)?;
-	let follow_symlink = stat.is_link() && task.follow();
-	if !stat.is_dir() || (!follow_symlink && stat.is_indirect()) {
+	if !task.traversable(stat) {
 		return on_file(task, stat).await;
 	}
 
@@ -180,7 +185,7 @@ where
 			src
 		};
 
-		() = err!(on_dir(dest.as_url()).await, "Cannot process directory {dest}");
+		() = err!(on_dir(&task, dest.as_url()).await, "Cannot process directory {dest}");
 
 		while let Ok(Some(dent)) = it.next().await {
 			let from = dent.url();
@@ -189,8 +194,7 @@ where
 				"Cannot get metadata for {from}"
 			);
 
-			let follow_symlink = stat.is_link() && task.follow();
-			if stat.is_dir() && (follow_symlink || !stat.is_indirect()) {
+			if task.traversable(stat) {
 				dirs.push_back(from);
 				continue;
 			}

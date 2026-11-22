@@ -2,7 +2,7 @@ use std::{ffi::OsStr, fs::{self, OpenOptions}, io::{self, ErrorKind}, os::unix::
 
 use scopeguard::{ScopeGuard, guard};
 use yazi_macro::ok_or_not_found;
-use yazi_shim::{OptionExt, OsStrExt2, path::PathExt};
+use yazi_shim::{OptionExt, OsStrExt2, path::OsPathExt};
 
 use super::{super::{TrashEntries, TrashEntry, TrashId, TrashStat}, DsStore};
 use crate::{file::File, stat::Stat, unique_dir, unique_file};

@@ -120,9 +120,10 @@ impl HookInOutCopy {
 // --- Move
 #[derive(Debug)]
 pub(crate) struct HookInOutMove {
-	pub(crate) id:   Id,
-	pub(crate) from: UrlBuf,
-	pub(crate) to:   UrlBuf,
+	pub(crate) id:    Id,
+	pub(crate) from:  UrlBuf,
+	pub(crate) to:    UrlBuf,
+	pub(crate) clean: bool,
 }
 
 impl TaskIn for HookInOutMove {
@@ -142,7 +143,11 @@ impl TaskIn for HookInOutMove {
 
 impl HookInOutMove {
 	pub(crate) fn new(from: impl Into<UrlBuf>, to: impl Into<UrlBuf>) -> Self {
-		Self { id: Id::ZERO, from: from.into(), to: to.into() }
+		Self { id: Id::ZERO, from: from.into(), to: to.into(), clean: false }
+	}
+
+	pub(crate) fn with_cleanup(from: impl Into<UrlBuf>, to: impl Into<UrlBuf>) -> Self {
+		Self { clean: true, ..Self::new(from, to) }
 	}
 
 	pub(crate) fn reduce(self, task: &mut Task) {

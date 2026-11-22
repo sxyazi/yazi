@@ -26,12 +26,14 @@ pub enum ProvideOp {
 	CreateDirAll { url: UrlBuf },
 	CreateFile { url: UrlBuf },
 	CreateFileNew { url: UrlBuf },
-	HardLink { from: UrlBuf, to: PathBufDyn },
+	HardLink { from: UrlBuf, to: PathBufDyn, follow: bool },
 	ReadLink { url: UrlBuf },
 	RemoveDir { url: UrlBuf },
 	RemoveDirAll { url: UrlBuf },
 	RemoveFile { url: UrlBuf },
 	Rename { from: UrlBuf, to: UrlBuf },
+	SameEntry { url: UrlBuf, other: UrlBuf },
+	SameFile { url: UrlBuf, other: UrlBuf },
 	SymlinkDir { original: Vec<u8>, url: UrlBuf, force: bool },
 	SymlinkFile { original: Vec<u8>, url: UrlBuf, force: bool },
 	Trash { url: UrlBuf },
@@ -79,9 +81,10 @@ impl ProvideOp {
 				t.raw_set("attrs", attrs)?;
 				t.raw_set("demand", demand)?;
 			}
-			Self::HardLink { from, to } => {
+			Self::HardLink { from, to, follow } => {
 				t.raw_set("from", from)?;
 				t.raw_set("to", to)?;
+				t.raw_set("follow", follow)?;
 			}
 			Self::Prepare { from, to, stat, force } => {
 				t.raw_set("from", from)?;
@@ -92,6 +95,10 @@ impl ProvideOp {
 			Self::Rename { from, to } => {
 				t.raw_set("from", from)?;
 				t.raw_set("to", to)?;
+			}
+			Self::SameEntry { url, other } | Self::SameFile { url, other } => {
+				t.raw_set("url", url)?;
+				t.raw_set("other", other)?;
 			}
 			Self::SymlinkDir { original, url, force } | Self::SymlinkFile { original, url, force } => {
 				t.raw_set("original", lua.create_external_string(original)?)?;

@@ -15,15 +15,11 @@ impl Tasks {
 				debug!("file_move: cannot join {u} with {dest}");
 				continue;
 			};
-			if force && u == to {
-				debug!("file_move: same file, skip {to}");
-			} else {
-				self.scheduler.file_move(FileInMove::new(u.clone(), to, force));
-			}
+			self.scheduler.file_move(FileInMove::new(u.clone(), to, force));
 		}
 	}
 
-	pub fn file_copy(&self, src: &Yanked, dest: impl AsUrl, force: bool, follow: bool) {
+	pub fn file_copy(&self, src: &Yanked, dest: impl AsUrl, follow: bool, force: bool) {
 		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
 
@@ -32,11 +28,7 @@ impl Tasks {
 				debug!("file_copy: cannot join {u} with {dest}");
 				continue;
 			};
-			if force && u == to {
-				debug!("file_copy: same file, skip {to}");
-			} else {
-				self.scheduler.file_copy(FileInCopy::new(u.clone(), to, force, follow));
-			}
+			self.scheduler.file_copy(FileInCopy::new(u.clone(), to, follow, force));
 		}
 	}
 
@@ -45,8 +37,8 @@ impl Tasks {
 		src: &Yanked,
 		dest: impl AsUrl,
 		relative: bool,
-		force: bool,
 		follow: bool,
+		force: bool,
 	) {
 		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
@@ -56,15 +48,11 @@ impl Tasks {
 				debug!("file_link: cannot join {u} with {dest}");
 				continue;
 			};
-			if force && u == to {
-				debug!("file_link: same file, skip {to}");
-			} else {
-				self.scheduler.file_link(FileInLink::new(u.clone(), to, relative, force, follow));
-			}
+			self.scheduler.file_link(FileInLink::new(u.clone(), to, relative, follow, force));
 		}
 	}
 
-	pub fn file_hardlink(&self, src: &Yanked, dest: impl AsUrl, force: bool, follow: bool) {
+	pub fn file_hardlink(&self, src: &Yanked, dest: impl AsUrl, follow: bool, force: bool) {
 		let dest = dest.as_url();
 		self.scheduler.behavior.reset();
 
@@ -73,11 +61,7 @@ impl Tasks {
 				debug!("file_hardlink: cannot join {u} with {dest}");
 				continue;
 			};
-			if force && u == to {
-				debug!("file_hardlink: same file, skip {to}");
-			} else {
-				self.scheduler.file_hardlink(u.clone(), to, force, follow);
-			}
+			self.scheduler.file_hardlink(u.clone(), to, follow, force);
 		}
 	}
 

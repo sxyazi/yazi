@@ -104,7 +104,7 @@ impl Rename {
 		};
 
 		Ok(
-			engine::must_identical(old, new).await
+			engine::same_entry(old, new).await.unwrap_or(false)
 				|| ConfirmProxy::show(ConfirmCfg::overwrite(&file)).await,
 		)
 	}

@@ -5,7 +5,7 @@ use yazi_shim::nonneg_ok;
 use super::Casefold;
 
 impl Casefold {
-	pub(super) fn final_name(path: &Path) -> io::Result<OsString> {
+	pub(crate) fn final_name(path: &Path) -> io::Result<OsString> {
 		let path = CString::new(path.as_os_str().as_bytes())?;
 		let mut attrs = libc::attrlist {
 			bitmapcount: libc::ATTR_BIT_MAP_COUNT,

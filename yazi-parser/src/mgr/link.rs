@@ -7,9 +7,9 @@ pub struct LinkForm {
 	#[serde(default)]
 	pub relative: bool,
 	#[serde(default)]
-	pub force:    bool,
-	#[serde(default)]
 	pub follow:   bool,
+	#[serde(default)]
+	pub force:    bool,
 }
 
 impl<C> FromAction<C> for LinkForm {

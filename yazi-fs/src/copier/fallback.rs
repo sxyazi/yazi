@@ -1,4 +1,4 @@
-use std::{fs::{File, OpenOptions}, io::{self, Read, Write}, os::unix::fs::{MetadataExt, OpenOptionsExt}};
+use std::{fs::{File, Metadata, OpenOptions}, io::{self, Read, Write}, os::unix::fs::{MetadataExt, OpenOptionsExt}};
 
 use super::Copier;
 
@@ -7,7 +7,7 @@ impl Copier {
 		let src = self.open_src()?;
 		let meta = Self::file_meta(&src)?;
 
-		let dist = self.open_dist(meta.mode())?;
+		let dist = self.open_dist(&meta)?;
 		dist.set_permissions(meta.permissions()).or_else(Self::skip_attrs)?;
 
 		self.copy_buffered(&src, &dist)?;
@@ -49,20 +49,20 @@ impl Copier {
 		OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK).open(&self.from)
 	}
 
-	fn open_dist(&self, mode: u32) -> io::Result<File> {
+	fn open_dist(&self, src: &Metadata) -> io::Result<File> {
 		self.check()?;
 
-		let file = OpenOptions::new()
+		let dist = OpenOptions::new()
 			.write(true)
 			.create(true)
-			.mode(mode)
+			.mode(src.mode())
 			.custom_flags(libc::O_NONBLOCK)
 			.open(&self.to)?;
 
-		_ = Self::file_meta(&file)?; // Ensure the file is regular.
-		file.set_len(0)?;
+		Self::ensure_distinct(src, &dist)?;
+		dist.set_len(0)?;
 
-		Ok(file)
+		Ok(dist)
 	}
 
 	pub(super) fn reset(&mut self) -> io::Result<()> { Ok(()) }

@@ -4,7 +4,7 @@ use foldhash::fast::FixedState;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
 use yazi_shared::url::Url;
-use yazi_shim::path::PathExt;
+use yazi_shim::path::OsPathExt;
 
 use crate::Watched;
 

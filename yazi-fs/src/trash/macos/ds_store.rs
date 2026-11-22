@@ -2,7 +2,7 @@ use std::{ffi::{OsStr, OsString}, fs, io::{self, Write}, path::{Path, PathBuf}};
 
 use ds_parser::{FieldKey, Record, Value};
 use hashbrown::HashMap;
-use yazi_shim::{OsStrExt2, path::PathExt};
+use yazi_shim::{OsStrExt2, path::OsPathExt};
 
 #[derive(Default)]
 pub(super) struct DsStore {

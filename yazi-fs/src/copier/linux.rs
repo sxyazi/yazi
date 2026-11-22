@@ -1,4 +1,4 @@
-use std::{fs::{File, OpenOptions}, io::{self, Read, Write}, os::unix::fs::{MetadataExt, OpenOptionsExt}, ptr, sync::atomic::{AtomicBool, AtomicU8, Ordering}, thread, time::Duration};
+use std::{fs::{File, Metadata, OpenOptions}, io::{self, Read, Write}, os::unix::fs::{MetadataExt, OpenOptionsExt}, ptr, sync::atomic::{AtomicBool, AtomicU8, Ordering}, thread, time::Duration};
 
 use rustix::io::Errno;
 
@@ -15,7 +15,7 @@ impl Copier {
 		let src = self.open_src()?;
 		let meta = Self::file_meta(&src)?;
 
-		let dist = self.open_dist(meta.mode())?;
+		let dist = self.open_dist(&meta)?;
 		dist.set_permissions(meta.permissions()).or_else(Self::skip_attrs)?;
 
 		// Virtual files may report zero length while still containing data: use buffered reads for them.
@@ -177,11 +177,11 @@ impl Copier {
 		}
 	}
 
-	fn open_dist(&self, mode: u32) -> io::Result<File> {
+	fn open_dist(&self, src: &Metadata) -> io::Result<File> {
 		let mut options = OpenOptions::new();
-		options.write(true).create(true).mode(mode).custom_flags(libc::O_NONBLOCK);
+		options.write(true).create(true).mode(src.mode()).custom_flags(libc::O_NONBLOCK);
 
-		let file = loop {
+		let dist = loop {
 			self.check()?;
 
 			match options.open(&self.to) {
@@ -193,10 +193,12 @@ impl Copier {
 			}
 		};
 
-		// Linux ftruncate rejects non-regular files: truncate here without a separate metadata check.
-		file.set_len(0)?;
+		Self::ensure_distinct(src, &dist)?;
 
-		Ok(file)
+		// Linux ftruncate rejects non-regular files: truncate here without a separate metadata check.
+		dist.set_len(0)?;
+
+		Ok(dist)
 	}
 
 	pub(super) fn reset(&mut self) -> io::Result<()> { Ok(()) }

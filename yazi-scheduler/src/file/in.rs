@@ -1,9 +1,10 @@
 use std::{borrow::Cow, path::PathBuf};
 
+use anyhow::Context;
 use mlua::{FromLua, Lua, Table, Value};
 use tokio::sync::mpsc;
-use yazi_fs::stat::Stat;
-use yazi_shared::{id::Id, scope::Scope, url::{UrlBuf, UrlLike}};
+use yazi_fs::{file::File, stat::Stat};
+use yazi_shared::{id::Id, path::{PathCow, PathLike}, scope::Scope, url::{UrlBuf, UrlLike}};
 
 use crate::{TaskIn, custom::CustomIn, file::{FileProgCopy, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgMove, FileProgTrash, FileProgUpload}};
 
@@ -129,9 +130,9 @@ pub struct FileInCopy {
 	pub(crate) id:     Id,
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
+	pub(crate) follow: bool,
 	pub(crate) force:  bool,
 	pub(crate) stat:   Option<Stat>,
-	pub(crate) follow: bool,
 }
 
 impl TaskIn for FileInCopy {
@@ -150,7 +151,7 @@ impl TaskIn for FileInCopy {
 }
 
 impl FileInCopy {
-	pub fn new(from: UrlBuf, to: UrlBuf, force: bool, follow: bool) -> Self {
+	pub fn new(from: UrlBuf, to: UrlBuf, follow: bool, force: bool) -> Self {
 		Self {
 			id: Id::ZERO,
 			follow: follow || !from.auth().same_service(to.auth()),
@@ -167,8 +168,8 @@ impl FileInCopy {
 			from:     self.from,
 			to:       self.to,
 			relative: false,
-			force:    true,
 			follow:   true,
+			force:    true,
 			delete:   false,
 			stat:     self.stat,
 		}
@@ -178,7 +179,7 @@ impl FileInCopy {
 impl FromLua for FileInCopy {
 	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> {
 		let t = Table::from_lua(value, lua)?;
-		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("force")?, t.raw_get("follow")?))
+		Ok(Self::new(t.raw_get("from")?, t.raw_get("to")?, t.raw_get("follow")?, t.raw_get("force")?))
 	}
 }
 // --- Move
@@ -187,9 +188,9 @@ pub struct FileInMove {
 	pub(crate) id:     Id,
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
+	pub(crate) follow: bool,
 	pub(crate) force:  bool,
 	pub(crate) stat:   Option<Stat>,
-	pub(crate) follow: bool,
 	pub(crate) drop:   Option<mpsc::Sender<()>>,
 }
 
@@ -227,8 +228,8 @@ impl FileInMove {
 			from:     self.from,
 			to:       self.to,
 			relative: false,
-			force:    true,
 			follow:   true,
+			force:    true,
 			delete:   true,
 			stat:     self.stat,
 		}
@@ -254,15 +255,30 @@ pub struct FileInLink {
 	pub(crate) from:     UrlBuf,
 	pub(crate) to:       UrlBuf,
 	pub(crate) relative: bool,
-	pub(crate) force:    bool,
 	pub(crate) follow:   bool,
+	pub(crate) force:    bool,
 	pub(crate) delete:   bool,
 	pub(crate) stat:     Option<Stat>,
 }
 
 impl FileInLink {
-	pub fn new(from: UrlBuf, to: UrlBuf, relative: bool, force: bool, follow: bool) -> Self {
-		Self { id: Id::ZERO, from, to, relative, force, follow, delete: false, stat: None }
+	pub fn new(from: UrlBuf, to: UrlBuf, relative: bool, follow: bool, force: bool) -> Self {
+		Self { id: Id::ZERO, from, to, relative, follow, force, delete: false, stat: None }
+	}
+
+	pub(super) fn target<'a>(&'a self, file: &'a File) -> anyhow::Result<PathCow<'a>> {
+		let path = file.extra.backing().map_or(self.from.loc(), Into::into);
+		if !file.is_link() || !self.follow {
+			return Ok(path.into());
+		}
+
+		let target = file.extra.link_to().context("Cannot determine symbolic link target")?;
+		if target.is_absolute() {
+			return Ok(target.into());
+		}
+
+		let parent = path.parent().context("Symbolic link path has no parent")?;
+		Ok(parent.try_join(target)?.into())
 	}
 }
 
@@ -287,9 +303,10 @@ pub(crate) struct FileInHardlink {
 	pub(crate) id:     Id,
 	pub(crate) from:   UrlBuf,
 	pub(crate) to:     UrlBuf,
-	pub(crate) force:  bool,
-	pub(crate) stat:   Option<Stat>,
 	pub(crate) follow: bool,
+	pub(crate) force:  bool,
+	pub(crate) top:    bool,
+	pub(crate) stat:   Option<Stat>,
 }
 
 impl TaskIn for FileInHardlink {

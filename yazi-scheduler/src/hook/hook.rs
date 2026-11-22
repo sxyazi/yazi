@@ -48,7 +48,9 @@ impl Hook {
 			return self.ops.out(task.id, FileOutMove::Clean(Ok(())));
 		}
 
-		let result = ok_or_not_found(engine::remove_dir_clean(&task.from).await);
+		let result =
+			if task.clean { ok_or_not_found(engine::remove_dir_clean(&task.from).await) } else { Ok(()) };
+
 		TasksProxy::update_succeed(task.id, [&task.to, &task.from], true);
 		Pump::push_move(task.from, task.to);
 

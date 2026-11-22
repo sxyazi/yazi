@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use strum::EnumIs;
 
 use crate::Error;
 
@@ -12,7 +13,7 @@ pub struct Status {
 
 impl From<Status> for Result<(), Error> {
 	fn from(status: Status) -> Self {
-		if status.is_ok() { Ok(()) } else { Err(Error::Status(status)) }
+		if status.code.is_ok() { Ok(()) } else { Err(Error::Status(status)) }
 	}
 }
 
@@ -26,11 +27,7 @@ impl Status {
 			+ self.language.len()
 	}
 
-	pub(crate) fn is_ok(&self) -> bool { self.code == StatusCode::Ok }
-
-	pub(crate) fn is_eof(&self) -> bool { self.code == StatusCode::Eof }
-
-	pub fn is_failure(&self) -> bool { self.code == StatusCode::Failure }
+	pub fn is_failure(&self) -> bool { self.code.is_failure() }
 
 	pub(crate) fn connection_lost(id: u32) -> Self {
 		Self {
@@ -42,7 +39,7 @@ impl Status {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize, EnumIs)]
 pub enum StatusCode {
 	Ok                = 0,
 	Eof               = 1,
