@@ -27,7 +27,7 @@ function M:peek(job)
 		left[#left + 1], right[#right + 1] = entity:redraw(), Linemode:new(f):redraw()
 
 		local max = math.max(0, job.area.w - right[#right]:width())
-		left[#left]:truncate { max = max, ellipsis = entity:ellipsis(max) }
+		left[#left]:truncate { max = max, middle = true }
 	end
 
 	local marker_area = job.area { x = math.max(0, job.area.x - 1) }

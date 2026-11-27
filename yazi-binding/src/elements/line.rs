@@ -157,6 +157,91 @@ impl UserData for Line {
 				}
 			};
 
+			let middle = t.raw_get("middle")?;
+			if middle {
+				if me.width() <= max {
+					return Ok(ud);
+				}
+
+				let budget = max.saturating_sub(ellipsis.0);
+				if budget == 0 {
+					me.spans.clear();
+					me.spans.push(ellipsis.1);
+					return Ok(ud);
+				}
+
+				fn left_cut(spans: &[ratatui_core::text::Span<'static>], budget: usize) -> (usize, usize) {
+					let mut adv = 0;
+					for (x, s) in spans.iter().enumerate() {
+						for (y, c) in s.content.char_indices() {
+							let w = c.width().unwrap_or(0);
+							if adv + w > budget {
+								return (x, y);
+							}
+							adv += w;
+						}
+					}
+					(spans.len(), 0)
+				}
+
+				fn right_cut(spans: &[ratatui_core::text::Span<'static>], budget: usize) -> (usize, usize) {
+					let mut adv = 0;
+					for (x, s) in spans.iter().enumerate().rev() {
+						for (y, c) in s.content.char_indices().rev() {
+							let w = c.width().unwrap_or(0);
+							if adv + w > budget {
+								return (x, y + c.len_utf8());
+							}
+							adv += w;
+						}
+					}
+					(0, 0)
+				}
+
+				let (lx, ly) = left_cut(&me.spans, budget / 2);
+				let (rx, ry) = right_cut(&me.spans, budget - budget / 2);
+
+				let mut spans = mem::take(&mut me.spans);
+				let mut right = spans.split_off(rx.min(spans.len()));
+
+				if lx == rx {
+					let mut left = right[0].clone();
+					match &mut left.content {
+						Cow::Borrowed(s) => left.content = Cow::Borrowed(&s[..ly]),
+						Cow::Owned(s) => s.truncate(ly),
+					}
+					spans.truncate(lx);
+					if !left.content.is_empty() {
+						spans.push(left);
+					}
+				} else {
+					spans.truncate(lx + 1);
+					match &mut spans[lx].content {
+						Cow::Borrowed(s) => spans[lx].content = Cow::Borrowed(&s[..ly]),
+						Cow::Owned(s) => s.truncate(ly),
+					}
+					if spans[lx].content.is_empty() {
+						spans.pop();
+					}
+				}
+
+				spans.push(ellipsis.1);
+
+				if !right.is_empty() {
+					match &mut right[0].content {
+						Cow::Borrowed(s) => right[0].content = Cow::Borrowed(&s[ry..]),
+						Cow::Owned(s) => _ = s.drain(..ry),
+					}
+					if right[0].content.is_empty() {
+						right.remove(0);
+					}
+					spans.append(&mut right);
+				}
+
+				me.spans = spans;
+				return Ok(ud);
+			}
+
 			let bytes: usize = me.iter().map(|s| s.content.len()).sum();
 			if bytes > 0 && bytes <= max - ellipsis.0 {
 				return Ok(ud);
