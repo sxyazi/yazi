@@ -15,6 +15,7 @@ pub struct PickCfg {
 	pub title:    String,
 	pub items:    Vec<String>,
 	pub position: Position,
+	pub cursor:   usize,
 }
 
 impl_data_any!(PickCfg);

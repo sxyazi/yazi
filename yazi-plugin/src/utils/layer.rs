@@ -2,11 +2,11 @@ use std::time::Duration;
 
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, LuaString, Table, Value};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_binding::{elements::{Line, Text}, runtime};
-use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::ConfirmCfg};
+use yazi_binding::{elements::{Line, Text}, position::Position, runtime};
+use yazi_config::{Platform, keymap::{Chord, ChordArc, Key}, popup::{ConfirmCfg, PickCfg}};
 use yazi_core::notify::MessageOpt;
 use yazi_macro::relay;
-use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, WhichProxy};
+use yazi_proxy::{ConfirmProxy, InputProxy, NotifyProxy, PickProxy, WhichProxy};
 use yazi_shared::{Debounce, Layer};
 use yazi_widgets::input::{InputOpt, InputStream};
 
@@ -88,6 +88,34 @@ impl Utils {
 
 	pub(super) fn notify(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, opt: MessageOpt| Ok(NotifyProxy::push(opt)))
+	}
+
+	pub(super) fn pick(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|lua, t: Table| async move {
+			if runtime!(lua)?.is_blocking() {
+				return Err("Cannot call `ya.pick()` while main thread is blocked".into_lua_err());
+			}
+
+			let items: Vec<String> =
+				t.raw_get::<Table>("items")?.sequence_values().collect::<mlua::Result<_>>()?;
+
+			let mut position: Position = t.raw_get("pos")?;
+			position.height = position.height.min(
+				yazi_config::popup::Pick::BORDER
+					.saturating_add(u16::try_from(items.len()).unwrap_or(u16::MAX)),
+			);
+
+			let idx = PickProxy::show(PickCfg {
+				title: t.raw_get("title")?,
+				items,
+				position,
+				cursor: t.raw_get::<usize>("cursor").unwrap_or(1).saturating_sub(1),
+			})
+			.await
+			.map(|i| i + 1);
+
+			Ok(idx)
+		})
 	}
 
 	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {

@@ -36,6 +36,7 @@ pub(crate) fn compose() -> Composer<ComposerGet> {
 			b"input" => Utils::input(lua)?,
 			b"confirm" => Utils::confirm(lua)?,
 			b"notify" => Utils::notify(lua)?,
+			b"pick" => Utils::pick(lua)?,
 
 			// Log
 			b"dbg" => Utils::dbg(lua)?,
