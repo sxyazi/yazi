@@ -25,6 +25,7 @@ impl Pick {
 			title: self.open_title.clone(),
 			items,
 			position: Position::new(self.open_origin, Offset { height: max_height, ..self.open_offset }),
+			cursor: 0,
 		}
 	}
 }
