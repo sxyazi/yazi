@@ -23,7 +23,7 @@ function Parent:redraw()
 		left[#left + 1], right[#right + 1] = entity:redraw(), Linemode:new(f):redraw()
 
 		local max = math.max(0, self._area.w - right[#right]:width())
-		left[#left]:truncate { max = max, ellipsis = entity:ellipsis(max) }
+		left[#left]:truncate { max = max, middle = true }
 	end
 
 	return {
